@@ -1,0 +1,2 @@
+deliverable1 contains CUDA code to be called from python
+deliverable2 contains OpenCL code to be called from python
