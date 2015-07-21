@@ -8,7 +8,8 @@ import mumpy as np
 def multivariate_te(source_set, target, delta_min, delta_max):
 
     """ multivariate_te finds the effective network for the given source and
-    target processes. Uses non uniform embedding as proposed by Faes.
+    target processes. Uses non uniform embedding as proposed by Faes and the
+    algorithm proposed by Lizier.
     """
 
     # find embedding, first for target then for sources
