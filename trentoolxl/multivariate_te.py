@@ -1,7 +1,8 @@
 import nonuniform_embedding as nu
-import mumpy as np
+import numpy as np
 
-# idea: have a data matrix, use indices to access data, i.e., (a,b,c), where a is the time series, b is point in time, c is trial
+# idea: have a data matrix, use indices to access data, i.e., (a,b,c), where a
+# is the time series, b is point in time, c is trial
 # is passing indices and ALL data more expensive than cutting and passing data?
 
 
@@ -14,8 +15,8 @@ def multivariate_te(source_set, target, delta_min, delta_max):
 
     # find embedding, first for target then for sources
     idx_current_value = delta_max
-    idx_candidate_set_target = np.array([0 idx_current_value-1])
-    idx_candidate_set_source = np.array([0 idx_current_value-delta_min])
+    idx_candidate_set_target = np.arange(idx_current_value)
+    idx_candidate_set_source = np.arange(idx_current_value - delta_min + 1)
     embedding_target = nu.nonuniform_embedding(target, idx_current_value, idx_candidate_set_target)
     embedding_source = nu.nonuniform_embedding(source_set, idx_current_value, idx_candidate_set_source, embedding_target)
 
@@ -27,5 +28,14 @@ def multivariate_te(source_set, target, delta_min, delta_max):
         temp_cmi = cmi_calculator_kraskov(realisations_current_value, realisations_current_candidate, realisations_current_conditional)
         significant = maximum_statistic(data, conditional, max_cmi)
 
-        if !significant:
+        if not significant:
             conditional = current_conditional
+
+if __name__ == "__main__":
+    N = 1000
+    n_sources = 5
+    target = np.random.randn(1, N)
+    source_set = np.random.randn(n_sources, N)
+    delta_max = 10
+    delta_min = 5
+    multivariate_te(source_set, target, delta_min, delta_max)
