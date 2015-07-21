@@ -1,0 +1,1 @@
+folder contains example data from an experiment described in Gruetzner C, Uhlhaas PJ, Genc E, Kohler A, Singer W, et al. (2010), J Neurosci 30:8342–8352. Files with extension .csv contain individual matrices, either raw data or embedded point sets (*_ps*.csv). Data were embedded for the first three trials using a dim of 5, tau of 3 and delay of 3 (see 'embed_data.m').
