@@ -8,7 +8,7 @@ with open('README.txt') as file:
 
 setup(
     name = 'trentoolxl',
-    packages = ['chardet'],
+    packages = ['trentoolxl'],
     version = '1.0',
     description = 'Multivariate transfer entropy estimator',
     author = 'Patricia Wollstadt',
