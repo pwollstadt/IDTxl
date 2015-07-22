@@ -9,9 +9,10 @@ from set_estimator import Estimator_cmi
 
 def multivariate_te(source_set, target, delta_min, delta_max, cmi_estimator_name):
 
-    """ multivariate_te finds the effective network for the given source and
-    target processes. Uses non uniform embedding as proposed by Faes and the
-    algorithm proposed by Lizier.
+    """ Find the effective network for the given source and target processes. 
+    
+    Uses non uniform embedding as proposed by Faes and the algorithm proposed by 
+    Lizier.
     """
     
     cmi_estimator = Estimator_cmi(cmi_estimator)

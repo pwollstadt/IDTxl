@@ -1,5 +1,5 @@
 from jpype import *
-
+import pyinfo
 #def jidt_kraskov_intialise(self):
 
 def jidt_kraskov(self, source, target, knn, history_length):
@@ -13,3 +13,6 @@ def jidt_kraskov(self, source, target, knn, history_length):
     teCalc.setProperty("k", str(knn))
     teCalc.setObservations(JArray(JDouble, 1)(source), JArray(JDouble, 1)(target))
     return teCalc.computeAverageLocalOfObservations()
+
+def pyinfo_kraskov(self, source, target, knn, history_length):
+    return pyinfo.te_kraskov(source, target)
