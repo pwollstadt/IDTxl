@@ -3,7 +3,8 @@ import random
 import math
 
 jarLocation = "/home/patriciaw/jidt_1_3/infodynamics-dist-1.3/infodynamics.jar"
-startJVM(getDefaultJVMPath(), "-ea", "-Djava.class.path=" + jarLocation)
+if not isJVMStarted():
+    startJVM(getDefaultJVMPath(), "-ea", "-Djava.class.path=" + jarLocation)
 
 # Generate some random normalised data.
 numObservations = 1000
