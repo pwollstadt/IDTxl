@@ -16,10 +16,7 @@ conditional = [random.normalvariate(0,1) for r in range(numObservations)]
 
 cmiCalcClass = JPackage("infodynamics.measures.continuous.kraskov").ConditionalMutualInfoCalculatorMultiVariateKraskov2
 cmiCalc = cmiCalcClass()
-#cmiCalc.setProperty("NORMALISE", "true") # Normalise the individual variables
 cmiCalc.initialise(1, 1, 1)               # needs the dimensions of all three vars
-cmiCalc.setProperty("k", "4")             # Use Kraskov parameter K=4 for 4 nearest points (knn search)
-
 cmiCalc.setObservations(JArray(JDouble, 1)(source), 
                         JArray(JDouble, 1)(target),
                         JArray(JDouble, 1)(conditional))
