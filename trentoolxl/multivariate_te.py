@@ -17,8 +17,11 @@ def multivariate_te(source_set, target, delta_min, delta_max):
     idx_current_value = delta_max
     idx_candidate_set_target = np.arange(idx_current_value)
     idx_candidate_set_source = np.arange(idx_current_value - delta_min + 1)
-    embedding_target = nu.nonuniform_embedding(target, idx_current_value, idx_candidate_set_target)
-    embedding_source = nu.nonuniform_embedding(source_set, idx_current_value, idx_candidate_set_source, embedding_target)
+    embedding_target = nu.nonuniform_embedding(target, idx_current_value,
+                                               idx_candidate_set_target)
+    embedding_source = nu.nonuniform_embedding(source_set, idx_current_value,
+                                               idx_candidate_set_source,
+                                               embedding_target)
 
     # additiional pruning step
     for candidate in conditional:
