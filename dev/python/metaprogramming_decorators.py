@@ -2,9 +2,12 @@ import types
 
 # example taken from:
 # http://stackoverflow.com/questions/962962/python-changing-methods-and-attributes-at-runtime
+# more info here:
+# coding.derkeiler.com/Archive/Python/comp.lang.python/2005-02/1294.html
+# -> class methods are a way to define multiple constructors
 
 class SpecialClass(object):
-    @classmethod
+    @classmethod # With classmethods, the class of the object instance is implicitly passed as the first argument instead of self
     def removeVariable(cls, name):
         return delattr(cls, name)
     @classmethod
