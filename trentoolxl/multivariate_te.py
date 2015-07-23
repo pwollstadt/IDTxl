@@ -35,10 +35,11 @@ def multivariate_te(source_set, target, delta_min, delta_max):
             conditional = current_conditional
 
 if __name__ == "__main__":
-    N = 1000
+    n_samples = 1000
     n_sources = 5
-    target = np.random.randn(1, N)
-    source_set = np.random.randn(n_sources, N)
+    n_trials = 10
+    target = np.random.randn(1, n_samples, n_trials)
+    source_set = np.random.randn(n_sources, n_samples, n_trials)
     delta_max = 10
     delta_min = 5
     multivariate_te(source_set, target, delta_min, delta_max)

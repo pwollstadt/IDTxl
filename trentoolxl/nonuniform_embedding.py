@@ -1,5 +1,6 @@
 import get_realisations
 import numpy as np
+import statistics as st
 
 def nonuniform_embedding(data, idx_current_value, idx_candidate_set, conditional = np.array([])):
 
@@ -25,7 +26,7 @@ def nonuniform_embedding(data, idx_current_value, idx_candidate_set, conditional
                 if temp_cmi > max_cmi:
                     max_cmi = temp_cmi
                     idx_max_cmi = np.array([process, idx_sample])
-        significant = maximum_statistic(data, conditional, max_cmi)
+        significant = st.maximum_statistic(data, conditional, max_cmi)
         conditional.append(idx_max_cmi)
 
     conditional.pop() # if the while loop is left the last addition wasn't significant and needs to be removed
