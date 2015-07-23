@@ -1,6 +1,8 @@
 import types
 import random
 import estimators_te
+import estimators_cmi
+import estimators_mi
 
 class Estimator(object):
     """Set the estimator requested by the user."""
@@ -29,7 +31,6 @@ class Estimator_te(Estimator):
         else:
             self.estimator_name = estimator_name
             self.addMethodAs(estimator, "estimate")
-
 
 class Estimator_cmi(Estimator):
     """Set the conditional mutual information estimator requested by the user."""
