@@ -3,6 +3,16 @@ import numpy as np
 import statistics as st
 
 def nonuniform_embedding(data, idx_current_value, idx_candidate_set, conditional = np.array([])):
+    """Do a non-uniform embedding of the provided data.
+    
+    Take samples from the candidate set and add those to the embedding vector if
+    they contribute a significant amount of information about the current value.
+    Information contribution is quantified by the conditional mutual information 
+    between the current value and the current candidate, conditional on the 
+    current embedding vector.
+    
+    See Faes et al., 2011, Phys Rev E 83, 051112
+    """
 
     significant = True
     max_mi = -float("inf")
