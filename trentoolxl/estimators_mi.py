@@ -12,8 +12,8 @@ def jidt_kraskov(self, var1, var2, knn):
     calc = calcClass()
     calc.setProperty("NORMALISE", "true")
     calc.setProperty("k", str(knn))
-    #calc.initialise(var1.size[1]+var2.size[2])
-    calc.initialise(len(var1[1])+len(var2[1]))
+    #calc.initialise(var1.size[0]+var2.size[0])
+    calc.initialise(len(var1[0])+len(var2[0]))
     calc.setObservations(JArray(JDouble, 2)(var1), 
                          JArray(JDouble, 2)(var2))
     return calc.computeAverageLocalOfObservations()
