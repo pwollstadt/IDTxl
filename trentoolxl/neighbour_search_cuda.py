@@ -13,7 +13,7 @@ def knn_search(pointset, queryset, knn_k, theiler_t, n_chunks=1, gpuid=0):
     success = cudaFindKnnSetGPU(indexes, distances, pointset, queryset, knn_k, 
                                 theiler_t, n_chunks, pointdim, n_points, gpuid)
     if success:
-        return {"indexes":indexes, "distances":distances}
+        return (indexes, distances)
     else:
         print("Error in CUDA knn search!")
         return 1
@@ -31,7 +31,7 @@ def range_search(pointset, queryset, radius, theiler_t, n_chunks=1, gpuid=0):
                                   theiler_t, n_chunks, pointdim, n_points, 
                                   gpuid)
     if success:
-        return {"pointcount":pointcount}
+        return pointcount
     else:
         print("Error in OpenCl range search!")
         return 1
