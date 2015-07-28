@@ -6,3 +6,4 @@
 # Logs and databases #
 ######################
 *.log
+.directory
