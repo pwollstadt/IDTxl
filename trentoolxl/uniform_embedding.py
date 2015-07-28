@@ -2,10 +2,11 @@ import numpy as np
 from errors import *
 import neighbour_search_opencl as ns
 
-VERBOSE = False
+#VERBOSE = False
+VERBOSE = True
 
 def uniform_embedding(data, candidate_dimension, candidate_tau, cfg):
-    """Find uniform embedding using the Ragwitz criterion.
+    """Find a uniform embedding using the Ragwitz criterion.
     
     Find embedding parameters dim and tau to uniformly embed the time series 
     given in data. The time series is assumed to be an [1xN] numpy array.
@@ -18,10 +19,6 @@ def uniform_embedding(data, candidate_dimension, candidate_tau, cfg):
     except IdtxlParamError as e:
         print("Parameter missing: " + e.missing_parameter)
     try:
-        pred_points = cfg["pred_points"]
-    except IdtxlParamError as e:
-        print("Parameter missing: " + e.missing_parameter)
-    try:
         knn = cfg["knn"]
     except IdtxlParamError as e:
         print("Parameter missing: " + e.missing_parameter)
@@ -29,51 +26,69 @@ def uniform_embedding(data, candidate_dimension, candidate_tau, cfg):
         theiler_t = cfg["theiler_t"]
     except IdtxlParamError as e:
         print("Parameter missing: " + e.missing_parameter)
+    try:
+        ragwitz_query_points = cfg["ragwitz_query_points"]
+    except IdtxlParamError as e:
+        print("Parameter missing: " + e.missing_parameter)
     
+    data_length = data.shape[0]
     mse = np.empty([candidate_dimension.shape[0], candidate_tau.shape[0]])
     count_dim = 0
-    count_tau = 0
     for dim in candidate_dimension:
+        count_tau = 0
         for tau in candidate_tau:
-            pointset = embed_timeseries(data, dim, tau, pred_points)
-            mse[count_dim, count_tau]= prediction_error(data, pointset, knn, theiler_t)
-            count_dim += 1
+            if VERBOSE:
+                print("Testing dim = ", dim, " and tau = ", tau)
+            embedding_length = (dim - 1) * tau
+            pred_data = data[0:data_length - embedding_length - 1]
+            pointset = embed_timeseries(pred_data, dim, tau)
+            mse[count_dim, count_tau]= ragwitz_error(data, pointset, knn, 
+                                                     theiler_t, embedding_length,
+                                                     ragwitz_query_points)
             count_tau += 1
+        count_dim += 1
+    
+    idx_min_mse = np.unravel_index(mse.argmin(), mse.shape)
+    opt_dim = candidate_dimension[idx_min_mse[0]]
+    opt_tau = candidate_tau[idx_min_mse[1]]
+    
+    return (opt_dim, opt_tau)
 
-
-def prediction_error(data, pointset, knn, theiler_t):
-    """ Calculate the prediction error given the current embedding of pointset.
+def ragwitz_error(data, pointset, knn, theiler_t, embedding_length, n_query_points):
+    """ Calculate the prediction error given the current embedding of pointset 
+    as proposed by Ragwitz.
     
     Return the mean squared error between the point predicted by the current 
     embedding and the actual next point in the time series.
     """
     
-    queryset = pointset
-    [knn_neighbour, distance] = ns.knn_search(pointset, queryset, knn, theiler_t)
-    predicted_point = np.empty(pointset.shape[0])
-    actual_point = np.empty(pointset.shape[0])
-    for point in pointset:
-        predicted_point = data(knn_neighbour[point,:]) + 1 + embedding_length / knn
-        actual_point = data[point] + 1 + embedding_length
+    queryset = pointset[0:n_query_points,:]
+    (neighbours, distance) = ns.knn_search(pointset, queryset, knn, theiler_t)
+    #predicted_point = np.empty([n_query_points, pointset.shape[1]])
+    #actual_point = np.empty([n_query_points, pointset.shape[1]])
+    predicted_point = np.empty(n_query_points)
+    actual_point = np.empty(n_query_points)
+    for point in range(n_query_points):
+        #predicted_point[point,:] = data[neighbours[:, point] + 1 + embedding_length].sum() / knn
+        #actual_point[point,:] = data[point + 1 + embedding_length]
+        predicted_point[point] = data[neighbours[:, point] + 1 + embedding_length].sum() / knn
+        actual_point[point] = data[point + 1 + embedding_length]
     
     raw_error = predicted_point - actual_point
-    return (sum(np.power(raw_error,2))/pointset.size[0])/std(timeSeries)
+    return (sum(np.power(raw_error, 2)) / n_query_points) / np.std(data)
 
 
-def embed_timeseries(timeseries, dim, tau, pred_points=None):
+def embed_timeseries(timeseries, dim, tau):
     """Do a uniform embedding of the time series using a fixed dim and tau.
     """
     
-    if pred_points is None:
-        pred_points = timeseries.shape[0]+1
-        
     embedding_length = (dim-1) * tau
     timeseries_length = timeseries.shape[0]
     n_embedded_points = timeseries_length - embedding_length
     pointset = np.empty((n_embedded_points, dim))
     count = 0
-    for point in range(embedding_length+1, pred_points):
-        if VERBOSE: print("point no {0}".format(point))
+    for point in range(embedding_length+1, timeseries_length+1):
+        #if VERBOSE: print("point no {0}".format(point))
         pointset[count,:] = timeseries[point-(embedding_length+1):point:tau]
         count += 1
     
@@ -140,12 +155,14 @@ if __name__ == "__main__":
     print("Embedding 1 correct: {0}".format((embedding_1_correct==embedding_1).all()))
     print("Embedding 2 correct: {0}".format((embedding_2_correct==embedding_2).all()))
     
+    timeseries = np.arange(350)
     dim_cand = np.arange(1,11)
     tau_cand = np.arange(1,5)
     cfg = {
         "source_target_delay": 3, 
-        "pred_points": 5,
         "theiler_t": 1,
-        "knn": 4
+        "knn": 4,
+        "ragwitz_query_points": 3
         }
-    uniform_embedding(timeseries, dim_cand, tau_cand, cfg)
+    (opt_dim, opt_tau) = uniform_embedding(timeseries, dim_cand, tau_cand, cfg)
+    print("Optimized embedding parameters: dim =", opt_dim, ", tau =", opt_tau)
