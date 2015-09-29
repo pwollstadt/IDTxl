@@ -2,8 +2,8 @@ import numpy as np
 from errors import *
 import neighbour_search_opencl as ns
 
-#VERBOSE = False
-VERBOSE = True
+VERBOSE = False
+#VERBOSE = True
 
 def uniform_embedding(data, candidate_dimension, candidate_tau, cfg):
     """Find a uniform embedding using the Ragwitz criterion.
@@ -55,11 +55,19 @@ def uniform_embedding(data, candidate_dimension, candidate_tau, cfg):
     return (opt_dim, opt_tau)
 
 def ragwitz_error(data, pointset, knn, theiler_t, embedding_length, n_query_points):
-    """ Calculate the prediction error given the current embedding of pointset 
-    as proposed by Ragwitz.
+    """ Calculate the error given the current embedding of pointset as proposed 
+    by Ragwitz.
     
     Return the mean squared error between the point predicted by the current 
     embedding and the actual next point in the time series.
+    
+    Keyword arguments:
+    data -- original time series, for which to find the optimal embedding
+    pointset -- embedded time series
+    knn -- number of nearest neighbours in knn search
+    theiler_t -- number of points for Theiler correction
+    embedding_length -- length of the embedding in samples
+    n_query_points -- number of points for which to check the error
     """
     
     queryset = pointset[0:n_query_points,:]
@@ -79,8 +87,7 @@ def ragwitz_error(data, pointset, knn, theiler_t, embedding_length, n_query_poin
 
 
 def embed_timeseries(timeseries, dim, tau):
-    """Do a uniform embedding of the time series using a fixed dim and tau.
-    """
+    """Do a uniform embedding of the time series using a fixed dim and tau."""
     
     embedding_length = (dim-1) * tau
     timeseries_length = timeseries.shape[0]
@@ -88,7 +95,7 @@ def embed_timeseries(timeseries, dim, tau):
     pointset = np.empty((n_embedded_points, dim))
     count = 0
     for point in range(embedding_length+1, timeseries_length+1):
-        #if VERBOSE: print("point no {0}".format(point))
+        if VERBOSE: print("point no {0}".format(point))
         pointset[count,:] = timeseries[point-(embedding_length+1):point:tau]
         count += 1
     
@@ -159,7 +166,7 @@ if __name__ == "__main__":
     dim_cand = np.arange(1,11)
     tau_cand = np.arange(1,5)
     cfg = {
-        "source_target_delay": 3, 
+        "source_target_delay": 3,
         "theiler_t": 1,
         "knn": 4,
         "ragwitz_query_points": 3
