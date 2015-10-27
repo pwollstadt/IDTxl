@@ -1,0 +1,5 @@
+check how errors and custom error classes work
+the Ragwitz criterion uses the scalar values in time to check the prediction 
+    -> is this correct or should we look at the next *state* in time
+the Ragwitz function in TRENTOOL always embeds the same point, using different 
+    historys -> do we need to do that?
