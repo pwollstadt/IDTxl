@@ -101,9 +101,9 @@ def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, theiler_t,
     cl.enqueue_copy(queue, h_bf_distances, d_bf_distances)
     cl.enqueue_copy(queue, h_bf_indexes, d_bf_indexes)
 
-    # Increase indexes so it starts at index 1 instead of index 0
-    for n in range(kth):
-        h_bf_indexes[n] += 1
+    ## Increase indexes so it starts at index 1 instead of index 0
+    #for n in range(kth):
+    #    h_bf_indexes[n] += 1
     
     # Free buffers
     d_bf_distances.release()
