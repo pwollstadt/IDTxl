@@ -320,7 +320,7 @@ if __name__ == '__main__':
     cfg = {
         'alphabetsize': 2, 
         'jarpath': '/home/patriciaw/jidt_1_3/infodynamics-dist-1.3/infodynamics.jar',
-        'iterations': 1000
+        'iterations': 10000
     }
     print "Testing PID estimator on binary XOR, iterations: " + \
         str(n) + ", N: " + str(n)
