@@ -1,0 +1,178 @@
+ 
+%% Basierend auf einer TeXnicCenter-Vorlage von Mark Müller
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Wählen Sie die Optionen aus, indem Sie % vor der Option entfernen  
+% Dokumentation des KOMA-Script-Packets: scrguide
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Optionen zum Layout des Artikels                                  %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[%
+%a5paper,							% alle weiteren Papierformat einstellbar
+%landscape,						% Querformat
+10pt,								% Schriftgröße (12pt, 11pt (Standard))
+%BCOR1cm,							% Bindekorrektur, bspw. 1 cm
+%DIVcalc,							% führt die Satzspiegelberechnung neu aus
+%											  s. scrguide 2.4
+%twoside,							% Doppelseiten
+%twocolumn,						% zweispaltiger Satz
+%halfparskip*,				% Absatzformatierung s. scrguide 3.1
+%headsepline,					% Trennline zum Seitenkopf	
+%footsepline,					% Trennline zum Seitenfuß
+%titlepage,						% Titelei auf eigener Seite
+%normalheadings,			% Überschriften etwas kleiner (smallheadings)
+%idxtotoc,						% Index im Inhaltsverzeichnis
+%liststotoc,					% Abb.- und Tab.verzeichnis im Inhalt
+%bibtotoc,						% Literaturverzeichnis im Inhalt
+%abstracton,					% Überschrift über der Zusammenfassung an	
+%leqno,   						% Nummerierung von Gleichungen links
+%fleqn,								% Ausgabe von Gleichungen linksbündig
+%draft								% überlangen Zeilen in Ausgabe gekennzeichnet
+]
+{scrartcl}
+
+%\pagestyle{empty}		% keine Kopf und Fußzeile (k. Seitenzahl)
+%\pagestyle{headings}	% lebender Kolumnentitel  
+
+
+%% Deutsche Anpassungen %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[ansinew]{inputenc}
+\usepackage{listings}
+\usepackage{lmodern} %Type1-Schriftart für nicht-englische Texte
+\usepackage{color}
+\usepackage{url}
+\usepackage{float}
+%% Packages für Grafiken & Abbildungen %%%%%%%%%%%%%%%%%%%%%%
+\usepackage{graphicx} %%Zum Laden von Grafiken
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{textcomp}
+\usepackage{hyperref}
+%% Bibliographiestil %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\usepackage{natbib}
+
+\begin{document}
+
+\pagestyle{empty} %%Keine Kopf-/Fusszeilen auf den ersten Seiten.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Ihr Artikel                                                       %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% eigene Titelseitengestaltung %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+%\begin{titlepage}
+%Einsetzen der TXC Vorlage "Deckblatt" möglich
+%\end{titlepage}
+
+%% Angaben zur Standardformatierung des Titels %%%%%%%%%%%%%%%%%%%%%%%%
+%\titlehead{Titelkopf }
+%\subject{Typisierung}
+\title{TRENTOOL XL -- Styleguide}
+\author{Patricia Wollstadt}
+%\and{Der Name des Co-Autoren}
+%\thanks{Fußnote}			% entspr. \footnote im Fließtext
+%\date{}							% falls anderes, als das aktuelle gewünscht
+%\publishers{Herausgeber}
+
+%% Widmungsseite %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\dedication{Widmung}
+
+%\maketitle 						% Titelei wird erzeugt
+
+%% Zusammenfassung nach Titel, vor Inhaltsverzeichnis %%%%%%%%%%%%%%%%%
+%\begin{abstract}
+% Für eine kurze Zusammenfassung des folgenden Artikels.
+% Für die Überschrift s. \documentclass[abstracton].
+%\end{abstract}
+
+%% Erzeugung von Verzeichnissen %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\tableofcontents			% Inhaltsverzeichnis
+%\listoftables				% Tabellenverzeichnis
+%\listoffigures				% Abbildungsverzeichnis
+
+
+%% Der Text %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Python Convenstions}
+
+\begin{enumerate}
+    \item PEP 8
+    \item PEP 257 for docstrings
+    \item Google-Styleguide for Python
+    \item Auto-Documentation with Sphinx (uses markdown for layout) 
+\end{enumerate}
+
+\section{IDTxl Units}
+
+\begin{itemize}
+ \item SI units for user input/output
+ \item internally, everything is handled in samples, i.e., user input should be translated into samples asap
+ \item in general, arrays denote any non-scalar variable
+\end{itemize}
+
+
+\section{IDTxl Variable and Function Names}
+
+\begin{longtable}{p{0.1em}lp{9cm}}
+ \multicolumn{3}{l}{\textbf{Measures}} \\ \hline
+ & ent & entropy \\
+ & cent & conditional entropy \\
+ & mi & mutual information \\
+ & cmi & conditional mutual information \\
+ & multi & multiinformation \\
+ & lais & local active information storage \\
+ & ais & active information storage \\
+ & lte & local transfer entropy \\
+ & te & transfer entropy \\
+ & mi\_syn & synergistic information\\
+ & mi\_unq & unique information\\
+ & mi\_shd & shared information\\ 
+ &&\\
+ \multicolumn{3}{l}{\textbf{Variable Types}} \\ \hline
+ & variable & random variable\\
+ & process & most generic name for a series of realisation (e.g. realisations over time, i.e., a time series) \\
+ & sample & individual realisation of a variable, i.e., one entry in a data array \\
+ & source(\_set) & ordered series of realisations of some variable (e.g. a time series) that is investigated as source of information for a second, \textit{target} variable (e.g. in TE estimation); may be a set of vectors \\
+ & target & ordered series of realisations of some variable (e.g. a time series) that is investigated as target variable in TE estimation or other directed measures \\
+ & current\_value & present sample to be predicted by past states/values (e.g. in AIS or TE estimation) \\ 
+ & past/history & past values with respect to the current value/present of a time series (e.g. in TE or AIS estimation for time series) \\
+ & conditional & variable to be conditioned on (e.g. in CMI estimation) \\
+ &&\\
+ \multicolumn{3}{l}{\textbf{Function Names}} \\ \hline 
+ & \textlangle measure\textrangle\_calculator\_\textlangle type\textrangle & estimator that takes raw variables or embedded variables as input \\
+ &&\\
+ \multicolumn{3}{l}{\textbf{Estimator Types}} \\ \hline 
+ & kraskov & Kraskov estimator \\
+ & kl & Kozachenko-Leonenko estimator \\
+ & gaussian & Gaussian estimator \\
+ & kernel & Gaussian estimator \\
+ &&\\
+ \multicolumn{3}{l}{\textbf{Data Properties}} \\ \hline 
+ & continuous & variable that takes continuous values \\
+ & discrete & variable that takes discrete values \\
+ & alphabet\_size & number of symbols in a variable \\
+ & replication & repetition of a recording, e.g., trial in neuro-experiment\\
+ &&\\
+ \multicolumn{3}{l}{\textbf{Algorithm}} \\ \hline
+ & idx\_\textlangle variable \textrangle(\_\textlangle set\textrangle) & index of a single sample or set of indices\\
+ & candidate(\_set) & potential sample or set of samples for (non-)uniform embedding \\
+ & max\_lag & maximum lag for samples entering the candidate set \\
+ & min\_lag & minimum lag for samples entering the candidate set \\
+ & embedding\_dimension & dimension of the embedding, i.e., n.o. samples taken from a varibales past to reconstruct a variable's current state \\
+ & embedding\_delay & delay of the embedding, i.e., the step size in n.o. samples between two past samples to reconstruct a variable's current state \\
+ & theiler\_k & n.o. samples to be excluded in neighbour searches, Theiler correction \\
+ & kraskov\_k & n.o. nearest neighbours for the Kraskov estimator \\
+ & lag_max & max. past sample used as a candidate \\
+ & lag_min & min. past sample used as a candidate \\
+ & source\_target\_delay & input delay in samples, i.e., something that is passed  to an estimator \\
+ & interaction\_delay & output of the estimation (e.g. reconstructed delay in TE estimation) \\
+ & surrogate\_\textlangle variable\textrangle & surrogate data set for a variable \\
+\end{longtable}
+
+
+
+\end{document}
