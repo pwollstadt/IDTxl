@@ -1,0 +1,9 @@
+# ================================= #
+              TEST CASES 
+# ================================= #
+
+
+# Multivariate TE
+    - data with one trial
+    - data with no reps over time, i.e., all samples other than the 
+    current value are checked as candidates for embedding
