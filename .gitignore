@@ -7,3 +7,5 @@
 ######################
 *.log
 .directory
+.spyderproject
+*.bac*
