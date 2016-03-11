@@ -11,3 +11,4 @@ class IdtxlParamError(Exception):
     def __init__(self, value, missing_param):
         self.value = value
         self.missing_param = missing_param
+
