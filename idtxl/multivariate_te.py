@@ -13,6 +13,8 @@ from data import Data
 from network_analysis import Network_analyses
 from set_estimator import Estimator_cmi
 
+VERBOSE = True
+
 
 class Multivariate_te(Network_analyses):
     """Set up a network analysis using multivariate transfer entropy.
@@ -88,8 +90,8 @@ class Multivariate_te(Network_analyses):
             significant transfer of all individual samples in the set)
         """
         self._current_value_realisations = data.get_realisations(
-                                        analysis_setup=self,
-                                        idx_realisations=[self.current_value])
+                                                    analysis_setup=self,
+                                                    idx=[self.current_value])
         self._check_source_set(data.n_processes)
 
         print('---------------------------- (1) include target candidates')
@@ -105,14 +107,19 @@ class Multivariate_te(Network_analyses):
         print('---------------------------- (4) final statistics')
         self._test_final_conditional(data)
 
+        if VERBOSE:
+            print('finalsource samples: {0}'.format(self.conditional_sources))
+            print('final target samples: {0}'.format(self.conditional_target))
         self._clean_up()
         return
 
     def _check_source_set(self, n_processes):
         """Set default if no source set was provided by the user."""
         if self.source_set is None:
-            source_set = [x for x in range(n_processes)]
-            source_set.pop(self.target)
+            self.source_set = [x for x in range(n_processes)]
+            self.source_set.pop(self.target)
+            if VERBOSE:
+                print('Testing sources {0}'.format(self.source_set))
         else:
             if type(self.source_set) is not list:
                 raise TypeError('Source set has to be a list.')
@@ -130,7 +137,7 @@ class Multivariate_te(Network_analyses):
             self._append_conditional_idx(idx)
             self._append_conditional_realisations(realisations)
 
-    def _include_source_candidates(self, data):
+    def _include_source_candidates(self, data):  # TODO something's slow here
         """Test candidates in the source's past."""
         candidates = self._define_candidates(
                                          processes=self.source_set,
@@ -198,6 +205,8 @@ class Multivariate_te(Network_analyses):
         """
         success = False
         while candidate_set:
+            if VERBOSE:
+                print('find conditionals in set {0}'.format(candidate_set))
             temp_te = np.empty(len(candidate_set))
             i = 0
             for candidate in candidate_set:
@@ -240,10 +249,11 @@ class Multivariate_te(Network_analyses):
         test_set = cp.copy(self.conditional_sources)
         i = 0
         for candidate in reversed(test_set):
-            if len(test_set) == 1: # TODO is this alright?
+            if len(test_set) == 1:  # TODO is this alright?
                 break
 
-            print('pruning candidate {0}'.format(i + 1))
+            if VERBOSE:
+                print('pruning candidate {0}'.format(i + 1))
             # TODO 2 options: (1) use the conditional realisations from
             # earlier, cut current candidate from the array and use the
             # rest as temp conditional; (2) stick with the current
@@ -316,3 +326,8 @@ if __name__ == '__main__':
     network_analysis = Multivariate_te(max_lag, min_lag, cmi_estimator, target,
                                        sources)
     network_analysis.analyse_network(dat)
+
+    min_lag2 = 1
+    network_analysis2 = Multivariate_te(max_lag, min_lag2, cmi_estimator,
+                                        target)
+    network_analysis2.analyse_network(dat)

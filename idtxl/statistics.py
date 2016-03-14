@@ -4,6 +4,7 @@ Created on Mon Mar  7 18:13:27 2016
 
 @author: patricia
 """
+import sys
 import copy as cp
 import numpy as np
 import utils
@@ -87,8 +88,8 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
     [significance, pvalue] = _find_pvalue(te_max_candidate,
                                           max_distribution[0, ])
     # return np.random.rand() > 0.5
-    return True
-    # return significance, pvalue
+    # return True
+    return significance, pvalue
 
 
 def max_statistic_sequential(analysis_setup, data, n_permutations=5):
@@ -147,8 +148,8 @@ def max_statistic_sequential(analysis_setup, data, n_permutations=5):
     significance = significance[conditional_order]
     pvalue = pvalue[conditional_order]
 
-    return True
-    # return significance, pvalue
+    # return True
+    return significance, pvalue
 
 
 def min_statistic(analysis_setup, data, candidate_set, te_max_candidate,
@@ -179,8 +180,8 @@ def min_statistic(analysis_setup, data, candidate_set, te_max_candidate,
     min_distribution = _sort_table_min(stats_table)
     [significance, critical_value] = _find_pvalue(te_max_candidate,
                                                   min_distribution[0, ])
-    return np.random.rand() > 0.5
-    # return significance
+    # return np.random.rand() > 0.5
+    return significance
 
 
 def _fill_surrogate_table(analysis_setup, data, idx_test_set, n_permutations):
@@ -203,10 +204,12 @@ def _fill_surrogate_table(analysis_setup, data, idx_test_set, n_permutations):
     stats_table = np.zeros((len(idx_test_set), n_permutations))
     current_value_realisations = analysis_setup._current_value_realisations
     idx_c = 0
+    print('fill surrogates table')
     for candidate in idx_test_set:
+        print('\tcand. {0}, n_perm: {1}. Done:   '.format(candidate,
+                                                          n_permutations),
+              end='')
         for perm in range(n_permutations):
-            print('candidate {0}, permutation: {1}'.format(idx_c + 1,
-                                                           perm + 1))
             surr_candidate_realisations = data.generate_surrogates(
                                                                 [candidate],
                                                                 analysis_setup)
@@ -214,6 +217,9 @@ def _fill_surrogate_table(analysis_setup, data, idx_test_set, n_permutations):
                         surr_candidate_realisations,
                         current_value_realisations,
                         analysis_setup._conditional_realisations)  # TODO remove current candidate from this
+            print('\b\b{num:02d}'.format(num=perm + 1), end='')
+            sys.stdout.flush()
+        print(' ')
         idx_c += 1
 
     return stats_table

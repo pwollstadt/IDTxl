@@ -17,7 +17,30 @@ import numpy as np
 import utils as utils
 
 class Network_analyses(): # TODO which 'algorithms' do we want to provide for this? biv TE, mult TE, mult granger, biv granger, ...?
+    """Provide an analysis setup for multivariate network inference.
 
+    Hold variables that are relevant for multivariate network inference.
+    The class holds
+        (1) analysis parameters
+        (2) data
+        (3) 'analysis pattern', i.e., indices of random variables used for
+            network inference (e.g. current value and conditional in transfer
+            entropy estimation)
+    The class provide routines to check user input and set defaults. The
+    'analysis pattern' is represented by tuples or list of tuples (process
+    index, sample index), where a tuple indicates where to find realisations in
+    the data.
+
+    Args:
+        max_lag (int): maximum search depth when looking for conditionals
+        target (int): index of the target process in the data
+
+    Attributes:
+        current_value: index of the current value
+        conditional_full: full set of random variables to be conditioned on
+        conditional_sources: set of conditionals coming from souce processes
+        conditional_target: set of conditionals coming from the target process
+    """
     def __init__(self, max_lag, target): # TODO a lot of these needs to go into the child class
         self.target = target
         self.current_value = (target, max_lag)

@@ -91,14 +91,15 @@ class Data():
 
         return realisations
 
-    def get_realisations(self, analysis_setup, idx_realisations):
+    def get_realisations(self, analysis_setup, idx):
         """Return realisations over samples and replications.
 
-        Return realisations for a list of indices. An index is expected to
-        have the form (process index, sample index).
+        Return realisations of random variables represented by a list of
+        indices. An index is expected to have the form (process index, sample
+        index).
 
         Args:
-            idx_realisations: list of indices
+            idx: list of indices
 
         Returns:
             realisations: numpy array with dimensions replications x number
