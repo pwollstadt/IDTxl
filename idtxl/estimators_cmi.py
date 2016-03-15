@@ -40,10 +40,11 @@ def jidt_kraskov(self, var1, var2, conditional, knn=4):
         calcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
                      ConditionalMutualInfoCalculatorMultiVariateKraskov1)
 
+    # TODO add the following properties as kwargs to the function
     calc = calcClass()
     calc.setProperty('NORMALISE', 'true')  # this is slightly different to what is done in TRENTOOL -> maybe do this 'outside'
     calc.setProperty('k', str(knn))
-    calc.setProperty('DYN_CORR_EXCL', str(0)  # Theiler window, this ignores trial boundaries! (TRENTOOL does too)
+    calc.setProperty('DYN_CORR_EXCL', str(0))  # Theiler window, this ignores trial boundaries! (TRENTOOL does too)
     calc.setProperty('NOISE_LEVEL_TO_ADD', str(1e-8))  # JIDT default -> set to 0 by default, to make calculations replicable
     calc.setProperty('NUM_THREADS', 'USE_ALL')  # or an int
 
