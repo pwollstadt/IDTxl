@@ -221,7 +221,7 @@ class Multivariate_te(Network_analysis):
                                         self._current_value_realisations,
                                         self._conditional_realisations)
             te_max_candidate = max(temp_te)
-            max_candidate = candidate_set.pop(np.argmax(temp_te)) # TO_DO correct?
+            max_candidate = candidate_set.pop(np.argmax(temp_te))
             significant = stats.max_statistic(self, data, candidate_set,
                                               te_max_candidate)
             if significant:
@@ -250,31 +250,28 @@ class Multivariate_te(Network_analysis):
             conditional_set_pruned: list of indices of samples in the
             conditional set after removal of spurious samples
         """
-        test_set_1 = cp.copy(self.conditional_sources)
-        i = 0
-        for candidate in reversed(test_set_1):  # TODO loop over all, take minimum (see steps 1 and 2)
-            if len(test_set_1) == 1:  # TODO is this alright?
-                break
+        significant = True
+        while self.conditional_sources:
+            temp_te = np.empty(len(self.conditional_sources))
+            i = 0
+            for candidate in self.conditional_sources: # TODO I only loop over source candidates, ok?
+                [temp_cond, temp_cand] = self._remove_realisation(
+                                                    self.conditional_sources,
+                                                    candidate)
+                temp_te[i] = self._cmi_estimator.estimate(
+                                            temp_cand,
+                                            self._current_value_realisations,
+                                            temp_cond)
 
-            if VERBOSE:
-                print('pruning candidate {0}'.format(i + 1))
-            # TODO 2 options: (1) use the conditional realisations from
-            # earlier, cut current candidate from the array and use the
-            # rest as temp conditional; (2) stick with the current
-            # implementation and always read stuff from data
-            # we currently do option (1) -> profile this
-            [temp_cond, temp_cand] = self._remove_realisation(
-                                                self.conditional_sources,
-                                                candidate)
-            temp_te = self._cmi_estimator.estimate(
-                                        temp_cand,
-                                        self._current_value_realisations,
-                                        temp_cond)
-            test_set_2 = cp.copy(self.conditional_sources)  # TODO check this
-            test_set_2.pop(test_set.index(candidate))
-            significant = stats.min_statistic(self, data, test_set_2, temp_te)
+            te_min_candidate = min(temp_te)
+            test_set = cp.copy(self.conditional_sources)  # TODO check this
+            test_set.pop(test_set.index(candidate))
+            significant = stats.min_statistic(self, data, test_set,
+                                              te_min_candidate)
             if not significant:
                 self._remove_candidate(candidate)
+            else:
+                break
             i += 1
 
     def _remove_realisation(self, idx_full, idx_single):

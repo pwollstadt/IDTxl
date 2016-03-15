@@ -67,6 +67,8 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
         """Realisations of the current_value."""
         if self.__current_value_realisations is None:
             print('Attribute has not been set yet.')
+        if type(self.__current_value_realisations) is tuple:
+            raise TypeError('something went wrong')
         return self.__current_value_realisations
 
     @_current_value_realisations.setter
@@ -207,4 +209,4 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
 if __name__ == '__main__':
     max_lag = 5
     target = 0
-    n = Network_analyses(max_lag, target)
+    n = Network_analysis(max_lag, target)

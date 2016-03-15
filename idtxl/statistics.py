@@ -35,24 +35,22 @@ def omnibus_test(analysis_setup, data, n_permutations=3):
     # TODO I'm doing this, b/c reals for sources and targets are created on the
     # fly, which is costly, this sucks b/c current_value_realisations are the
     # actual data
+    cond_source_realisations = analysis_setup._conditional_sources_realisations
+    cond_target_realisations = analysis_setup._conditional_target_realisations
     te_orig = analysis_setup._cmi_estimator.estimate(
-                            analysis_setup._conditional_sources_realisations,
-                            analysis_setup._current_value_realisations,
-                            analysis_setup._conditional_target_realisations)
+                                    cond_source_realisations,
+                                    analysis_setup._current_value_realisations,
+                                    cond_target_realisations)
 
     surr_distribution = np.zeros(n_permutations)
     for perm in range(n_permutations):
         surr_conditional_realisations = data.generate_surrogates(
                                         analysis_setup.conditional_sources,
                                         analysis_setup)
-        if surr_conditional_realisations.size == 0:
-            print('var1 is empty')
-        if current_value.size == 0:
-            print('var2 is empty')
         surr_distribution[perm] = analysis_setup._cmi_estimator.estimate(
-                                                surr_conditional_realisations,
-                                                current_value,
-                                                target_conditionals)
+                                    surr_conditional_realisations,
+                                    analysis_setup._current_value_realisations,
+                                    cond_target_realisations)
     [significance, pvalue] = _find_pvalue(te_orig, surr_distribution)
     return significance, pvalue
 

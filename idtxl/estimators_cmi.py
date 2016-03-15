@@ -14,7 +14,7 @@ def jidt_kraskov(self, var1, var2, conditional, knn=4):
     as a method in the Estimator_cmi class.
 
     Args:
-        self: instance of Estimator_cmi
+        self (Estimator_cmi): instance of Estimator_cmi
         var1: numpy array with realisations of the first random variable, where
             dimensions are realisations x variable dimension
         var2: numpy array with realisations of the second random variable
