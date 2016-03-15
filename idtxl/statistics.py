@@ -35,12 +35,10 @@ def omnibus_test(analysis_setup, data, n_permutations=3):
     # TODO I'm doing this, b/c reals for sources and targets are created on the
     # fly, which is costly, this sucks b/c current_value_realisations are the
     # actual data
-    source_conditionals = analysis_setup._conditional_sources_realisations
-    current_value = analysis_setup._current_value_realisations
-    target_conditionals = analysis_setup._conditional_target_realisations
-    te_orig = analysis_setup._cmi_estimator.estimate(source_conditionals,
-                                                     current_value,
-                                                     target_conditionals)
+    te_orig = analysis_setup._cmi_estimator.estimate(
+                            analysis_setup._conditional_sources_realisations,
+                            analysis_setup._current_value_realisations,
+                            analysis_setup._conditional_target_realisations)
 
     surr_distribution = np.zeros(n_permutations)
     for perm in range(n_permutations):
@@ -114,7 +112,7 @@ def max_statistic_sequential(analysis_setup, data, n_permutations=5):
     """
     conditional_te = np.empty(len(analysis_setup.conditional_full))
     i = 0
-    for conditional in analysis_setup.conditional_full:
+    for conditional in analysis_setup.conditional_full:  # TODO only test source candidates
         [temp_cond, temp_cand] = analysis_setup._remove_realisation(
                                             analysis_setup.conditional_full,
                                             conditional)
@@ -129,7 +127,7 @@ def max_statistic_sequential(analysis_setup, data, n_permutations=5):
 
     # TODO not sure about this, because the surrogate table also contains the
     # candidate we're testing
-    stats_table = _fill_surrogate_table(analysis_setup, data,
+    stats_table = _fill_surrogate_table(analysis_setup, data,  # TODO call this 'create..'
                                         analysis_setup.conditional_full,
                                         n_permutations)
     max_distribution = _sort_table_max(stats_table)
@@ -145,6 +143,7 @@ def max_statistic_sequential(analysis_setup, data, n_permutations=5):
         if not s:
             break
 
+    # get back original order
     significance = significance[conditional_order]
     pvalue = pvalue[conditional_order]
 
@@ -224,15 +223,17 @@ def _fill_surrogate_table(analysis_setup, data, idx_test_set, n_permutations):
 
     return stats_table
 
+def _find_max:
+def _find_min:
 
-def _sort_table_max(table):
+def _sort_table_max(table):  # TODO just search the max for each permutation
     """Sort each column in a table in ascending order."""
     for permutation in range(table.shape[1]):
         table[:, permutation].sort()
     return table
 
 
-def _sort_table_min(table):
+def _sort_table_min(table):  # TODO just search the minimum for each permutation
     """Sort each column in a table in descending order."""
     table_sorted = np.empty(table.shape)
     for permutation in range(0, table.shape[1]):

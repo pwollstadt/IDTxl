@@ -80,11 +80,11 @@ class Data():
             replications_order = np.arange(self.n_replications)
 
         i = 0
-        for idx in idx_list:
+        for idx in idx_list:  # TODO this should work for single trials!
             r = 0
             for sample in range(n_realisations_time):
                 for replication in replications_order:
-                    realisations[r, i] = self.data[idx[0], idx[1] + sample,
+                    realisations[r, i] = self.data[idx[0], idx[1] + sample,  # TODO change to lags
                                                    replication]
                     r += 1
         i += 1
@@ -108,10 +108,10 @@ class Data():
         Raises:
             TypeError if idx_realisations is not a list
         """
-        if type(idx_realisations) is not list:
+        if type(idx) is not list:
             e = TypeError('idx_realisations must be a list of tuples.')
             raise(e)
-        return self._get_data(idx_realisations, analysis_setup, shuffle=False)
+        return self._get_data(idx, analysis_setup, shuffle=False)
 
     def add_realisations(self, idx_realisations, realisations):
         """Add realisations of (a set of) RV to existing realisations.

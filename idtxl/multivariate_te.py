@@ -15,6 +15,9 @@ from set_estimator import Estimator_cmi
 
 VERBOSE = True
 
+# TODO create surrogates from embeddings/realisations and surrogates from data/
+# replications
+
 
 class Multivariate_te(Network_analyses):
     """Set up a network analysis using multivariate transfer entropy.
@@ -69,7 +72,7 @@ class Multivariate_te(Network_analyses):
         self.pvalues_individual_sources = None
         super(Multivariate_te, self).__init__(max_lag, target)
 
-    def analyse_network(self, data):
+    def analyse_network(self, data):  # this should allow for multiple targets
         """Find multivariate transfer entropy between sources and a target.
 
         Find multivariate transfer entropy between all source processes and the
@@ -127,7 +130,8 @@ class Multivariate_te(Network_analyses):
     def _include_target_candidates(self, data):
         """Test candidates from the target's past."""
         candidates = self._define_candidates(processes=[self.target],
-                                             samples=np.arange(self.max_lag))
+                                             samples=np.arange(self.max_lag))  # TODO switch back to actual *lags'*
+                                             # samples=np.arange(self.max_lag, 0, -1))
         sources_found = self._find_conditional(candidates, data)
         if not sources_found:
             print(('No informative sources in the target''s past - ' +
@@ -217,7 +221,7 @@ class Multivariate_te(Network_analyses):
                                         self._current_value_realisations,
                                         self._conditional_realisations)
             te_max_candidate = max(temp_te)
-            max_candidate = candidate_set.pop(np.argmax(te_max_candidate))
+            max_candidate = candidate_set.pop(np.argmax(temp_te)) # TO_DO correct?
             significant = stats.max_statistic(self, data, candidate_set,
                                               te_max_candidate)
             if significant:
@@ -246,10 +250,10 @@ class Multivariate_te(Network_analyses):
             conditional_set_pruned: list of indices of samples in the
             conditional set after removal of spurious samples
         """
-        test_set = cp.copy(self.conditional_sources)
+        test_set_1 = cp.copy(self.conditional_sources)
         i = 0
-        for candidate in reversed(test_set):
-            if len(test_set) == 1:  # TODO is this alright?
+        for candidate in reversed(test_set_1):  # TODO loop over all, take minimum (see steps 1 and 2)
+            if len(test_set_1) == 1:  # TODO is this alright?
                 break
 
             if VERBOSE:
@@ -266,9 +270,9 @@ class Multivariate_te(Network_analyses):
                                         temp_cand,
                                         self._current_value_realisations,
                                         temp_cond)
-            test_set = cp.copy(self.conditional_sources)
-            test_set.pop(test_set.index(candidate))
-            significant = stats.min_statistic(self, data, test_set, temp_te)
+            test_set_2 = cp.copy(self.conditional_sources)  # TODO check this
+            test_set_2.pop(test_set.index(candidate))
+            significant = stats.min_statistic(self, data, test_set_2, temp_te)
             if not significant:
                 self._remove_candidate(candidate)
             i += 1
@@ -320,12 +324,18 @@ if __name__ == '__main__':
     min_lag = 4
     cmi_estimator = 'jidt_kraskov'
     target = 0
-    sources = [1]
+    sources = [1, 2, 3]
     # for t in range(dat.n_processes):
     #     multivariate_te(dat, max_lag, min_lag, cmi_estimator, t)
     network_analysis = Multivariate_te(max_lag, min_lag, cmi_estimator, target,
                                        sources)
     network_analysis.analyse_network(dat)
+
+
+    # test cases:
+    #   - bivariately coupled Lorenz
+    #   - independent random samples (for false positives)
+    #   - lagged copy of white noise
 
     min_lag2 = 1
     network_analysis2 = Multivariate_te(max_lag, min_lag2, cmi_estimator,

@@ -32,17 +32,20 @@ def jidt_kraskov(self, var1, var2, conditional, knn=4):
                     jarLocation))
 
     # print('Size var1: {0}, var2: {1}'.format(var1.size, var2.size))
-    if conditional is not None:
+    if conditional is None:
+        calcClass = (jp.JPackage("infodynamics.measures.continuous.kraskov").
+                     MutualInfoCalculatorMultiVariateKraskov1)
+    else:
         assert(conditional.size != 0), 'Conditional Array is empty.'
         calcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
-                     ConditionalMutualInfoCalculatorMultiVariateKraskov2)
-    else:
-        calcClass = (jp.JPackage("infodynamics.measures.continuous.kraskov").
-                     MultiInfoCalculatorKraskov2)
+                     ConditionalMutualInfoCalculatorMultiVariateKraskov1)
 
     calc = calcClass()
-    calc.setProperty('NORMALISE', 'true')
+    calc.setProperty('NORMALISE', 'true')  # this is slightly different to what is done in TRENTOOL -> maybe do this 'outside'
     calc.setProperty('k', str(knn))
+    calc.setProperty('DYN_CORR_EXCL', str(0)  # Theiler window, this ignores trial boundaries! (TRENTOOL does too)
+    calc.setProperty('NOISE_LEVEL_TO_ADD', str(1e-8))  # JIDT default -> set to 0 by default, to make calculations replicable
+    calc.setProperty('NUM_THREADS', 'USE_ALL')  # or an int
 
     if conditional is not None:
         calc.initialise(var1.shape[1], var2.shape[1],  # needs dims of vars
@@ -53,7 +56,7 @@ def jidt_kraskov(self, var1, var2, conditional, knn=4):
         calc.setObservations(var1, var2, conditional)
         return calc.computeAverageLocalOfObservations()
     else:
-        calc.initialise(var1.shape[1] + var2.shape[1])
+        calc.initialise(var1.shape[1], var2.shape[1])
         # calc.setObservations(jp.JArray(jp.JDouble, 2)(var1),
         #                      jp.JArray(jp.JDouble, 2)(var2))
         calc.setObservations(var1, var2)

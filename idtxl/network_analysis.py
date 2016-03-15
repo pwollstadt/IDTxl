@@ -43,7 +43,7 @@ class Network_analyses(): # TODO which 'algorithms' do we want to provide for th
     """
     def __init__(self, max_lag, target): # TODO a lot of these needs to go into the child class
         self.target = target
-        self.current_value = (target, max_lag)
+        self.current_target_variable = (target, max_lag)
         self.conditional_full = None  # TODO this is not consistent with the other two
         self.conditional_sources = []
         self.conditional_target = []
@@ -146,8 +146,11 @@ class Network_analyses(): # TODO which 'algorithms' do we want to provide for th
         self.__conditional_target_realisations = realisations
 
     @property
-    def _conditional_sources_realisations(self):
-        """Realisations of the source samples in the conditional."""
+    def _conditional_sources_realisations(self):  # TODO these are slow, write that into the docstring for both functions
+        """Realisations of the source samples in the conditional.
+
+        Get realisations from the whole set of realisations -> this is slow!!
+        """
         indices = np.zeros(len(self.conditional_sources)).astype(int)
         i = 0
         for idx in self.conditional_sources:
