@@ -10,7 +10,7 @@ import copy as cp
 import statistics as stats
 import utils as utils
 from data import Data
-from network_analysis import Network_analyses
+from network_analysis import Network_analysis
 from set_estimator import Estimator_cmi
 
 VERBOSE = True
@@ -19,7 +19,7 @@ VERBOSE = True
 # replications
 
 
-class Multivariate_te(Network_analyses):
+class Multivariate_te(Network_analysis):
     """Set up a network analysis using multivariate transfer entropy.
 
     Set parameters necessary for network inference using transfer entropy (TE).

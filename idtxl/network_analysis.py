@@ -16,7 +16,7 @@ Usage:
 import numpy as np
 import utils as utils
 
-class Network_analyses(): # TODO which 'algorithms' do we want to provide for this? biv TE, mult TE, mult granger, biv granger, ...?
+class Network_analysis(): # TODO which 'algorithms' do we want to provide for this? biv TE, mult TE, mult granger, biv granger, ...?
     """Provide an analysis setup for multivariate network inference.
 
     Hold variables that are relevant for multivariate network inference.
@@ -43,7 +43,7 @@ class Network_analyses(): # TODO which 'algorithms' do we want to provide for th
     """
     def __init__(self, max_lag, target): # TODO a lot of these needs to go into the child class
         self.target = target
-        self.current_target_variable = (target, max_lag)
+        self.current_value = (target, max_lag)  # TODO rename this to current_target_variable??
         self.conditional_full = None  # TODO this is not consistent with the other two
         self.conditional_sources = []
         self.conditional_target = []

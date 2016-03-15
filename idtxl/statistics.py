@@ -82,9 +82,8 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
 
     stats_table = _fill_surrogate_table(analysis_setup, data, test_set,
                                         n_permutations)
-    max_distribution = _sort_table_max(stats_table)
-    [significance, pvalue] = _find_pvalue(te_max_candidate,
-                                          max_distribution[0, ])
+    max_distribution = _find_table_max(stats_table)
+    [significance, pvalue] = _find_pvalue(te_max_candidate, max_distribution)
     # return np.random.rand() > 0.5
     # return True
     return significance, pvalue
@@ -151,7 +150,7 @@ def max_statistic_sequential(analysis_setup, data, n_permutations=5):
     return significance, pvalue
 
 
-def min_statistic(analysis_setup, data, candidate_set, te_max_candidate,
+def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
                   n_permutations=3):
     """Perform minimum statistics for one candidate source.
 
@@ -162,12 +161,12 @@ def min_statistic(analysis_setup, data, candidate_set, te_max_candidate,
         analysis_setup: instance of Multivariate_te class
         data: instance of Data class
         candidate_set: list of indices of remaning candidates
-        te_max_candidate: transfer entropy value to be tested
+        te_min_candidate: transfer entropy value to be tested
         n_permutations: number of permutations for testing (default=500)
 
     Returns:
-        boolean indicating statistical significance
-        the test's p-value
+        boolean indicating statistical significance of the test's p-value
+        pvalue
     """
     test_set = cp.copy(candidate_set)
 
@@ -176,11 +175,10 @@ def min_statistic(analysis_setup, data, candidate_set, te_max_candidate,
 
     stats_table = _fill_surrogate_table(analysis_setup, data, test_set,
                                         n_permutations)
-    min_distribution = _sort_table_min(stats_table)
-    [significance, critical_value] = _find_pvalue(te_max_candidate,
-                                                  min_distribution[0, ])
+    min_distribution = _find_table_min(stats_table)
+    [significance, pvalue] = _find_pvalue(te_min_candidate, min_distribution)
     # return np.random.rand() > 0.5
-    return significance
+    return significance, pvalue
 
 
 def _fill_surrogate_table(analysis_setup, data, idx_test_set, n_permutations):
@@ -223,10 +221,18 @@ def _fill_surrogate_table(analysis_setup, data, idx_test_set, n_permutations):
 
     return stats_table
 
-def _find_max:
-def _find_min:
 
-def _sort_table_max(table):  # TODO just search the max for each permutation
+def _find_table_max(table):
+    """Find maximum for each column of a table."""
+    return np.max(table, axis=0)
+
+
+def _find_table_min(table):
+    """Find minimum for each column of a table."""
+    return np.min(table, axis=0)
+
+
+def _sort_table_max(table):
     """Sort each column in a table in ascending order."""
     for permutation in range(table.shape[1]):
         table[:, permutation].sort()
