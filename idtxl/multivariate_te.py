@@ -38,23 +38,21 @@ class Multivariate_te(Network_analysis):
             process)
 
     Attributes:
-        analyse_network: perform network inference on data, has to be run to
-            first to write results to other attributes
-        conditional_full: samples in the full conditional set
-        conditional_sources: samples in the conditional set coming from souces
-        conditional_target: samples in the conditional set coming from target
-        current_value: index of the current value in TE estimation
-        estimator_name: estimator used for TE estimation
-        max_lag: maximum temporal search depth
-        min_lag: minimum temporal search depth
-        pvalue_omnibus: p-value of the omnibus test
-        pvalue_individual_sources: array of p-values for TE from individual
-            sources to the target
-        sign_ominbus: statistical significance of the over-all TE
-        sign_individual: array of booleans, indicates statistical significance
-            of TE from individual sources to the target
-        source_set: list with indices of source processes
-        target: index of target process
+        conditional_full (list): samples in the full conditional set
+        conditional_sources (list): source samples in the conditional set
+        conditional_target (list): target samples in the conditional set
+        current_value (tuple): index of the current value in TE estimation
+        estimator_name (string): estimator used for TE estimation
+        max_lag (int): maximum temporal search depth
+        min_lag (int): minimum temporal search depth
+        pvalue_omnibus (float): p-value of the omnibus test
+        pvalue_individual_sources (numpy array): array of p-values for TE from
+            individual sources to the target
+        sign_ominbus (bool): statistical significance of the over-all TE
+        sign_individual (numpy array): array of booleans, indicates statistical
+            significance of TE from individual sources to the target
+        source_set (list): list with indices of source processes
+        target (int): index of target process
     """
     def __init__(self, max_lag, min_lag, cmi_calculator_name, target,
                  source_set=None):
@@ -78,6 +76,7 @@ class Multivariate_te(Network_analysis):
         target process. Uses multivariate, non-uniform embedding found through
         information maximisation (see Faes, ???, and Lizier, 2012). This is
         done in four steps (see Lizier and Faes for details):
+
         (1) find all relevant samples in the target processes' own past, by
             iteratively adding candidate samples that have significant
             conditional mutual information (CMI) with the current value
@@ -90,6 +89,9 @@ class Multivariate_te(Network_analysis):
         (4) statistics on the final set of sources (test for over-all transfer
             between the final conditional set and the current value, and for
             significant transfer of all individual samples in the set)
+
+        Args:
+            data (Data): object holding raw data
         """
         self._current_value_realisations = data.get_realisations(
                                                     analysis_setup=self,
