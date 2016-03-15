@@ -27,14 +27,13 @@ class Multivariate_te(Network_analysis):
     data class.
 
     Args:
-        max_lag: maximum number of steps into the past to look for informative
-            samples (maximum temporal search depth)
-        min_lag: minimum number of steps into the past to look for informative
-            samples (minimum temporal search depth)
-        cmi_calculator_name: string with the name of the calculator to be used
-            for TE estimation
-        target: index of the target process
-        source_set: list of process indices used as potential sources (default:
+        max_lag (int): maximum number of steps into the past to look for
+            informative samples (maximum temporal search depth)
+        min_lag (int): minimum number of steps into the past to look for
+            informative samples (minimum temporal search depth)
+        cmi_calculator_name (string): name of the TE calculator to be used
+        target (int): the target processes' index in the data
+        source_set (list): process indices used as potential sources (default:
             all possible processes, i.e., all processes other than the target
             process)
 
