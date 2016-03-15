@@ -1,54 +1,54 @@
 """Partical information decomposition for discrete random variables.
 
-This module provides an estimator for partial information decomposition 
+This module provides an estimator for partial information decomposition
 as proposed in
 
 Bertschinger, Rauh, Olbrich, Jost, Ay; Quantifying Unique Information,
 Entropy 2014, 16, 2161-2183; doi:10.3390/e16042161
 
-The pid estimator returns estimates of shared information, unique 
-information and synergistic information that two random variables X and 
+The pid estimator returns estimates of shared information, unique
+information and synergistic information that two random variables X and
 Y have about a third variable Z. The estimator finds these estimates by
-permuting the initial joint probability distribution of X, Y, and Z to 
-find a permuted distribution Q that minimizes the unique information in  
+permuting the initial joint probability distribution of X, Y, and Z to
+find a permuted distribution Q that minimizes the unique information in
 X about Z (as proposed by Bertschinger and colleagues). The unique in-
 formation is defined as the conditional mutual information I(X;Z|Y).
 
-The estimator iteratively permutes the joint probability distribution of 
-X, Y, and Z under the constraint that the marginal distributions (X, Z) 
-and (Y, Z) stay constant. This is done by swapping two realizations of X 
+The estimator iteratively permutes the joint probability distribution of
+X, Y, and Z under the constraint that the marginal distributions (X, Z)
+and (Y, Z) stay constant. This is done by swapping two realizations of X
 which have the same corresponding value in Z, e.g.:
 
     X [1, 0, 1, 1, 0, 1, 0, 0, 1, 1]
     Y [0, 0, 1, 1, 1, 0, 0, 0, 1, 1]
     ---------------------------------
     Z [1, 1, 0, 0, 0, 1, 1, 0, 1, 0]
-    
+
     Possible swaps: X[0] and X[1]; X[0] and X[4]; X[2] and X[8]; ...
-    
-After each swap, I(X;Z|Y) is re-calculated under the new distribution; 
-if the CMI is lower than the current permutation is kept and the next 
-swap is tested. The iteration stops after the provided number of 
+
+After each swap, I(X;Z|Y) is re-calculated under the new distribution;
+if the CMI is lower than the current permutation is kept and the next
+swap is tested. The iteration stops after the provided number of
 iterations.
 
 Example:
     import numpy as np
     import pid
-    
+
     n = 5000
     alph = 2
     x = np.random.randint(0, alph, n)
     y = np.random.randint(0, alph, n)
     z = np.logical_xor(x, y).astype(int)
     cfg = {
-        'alphabetsize': 2, 
+        'alphabetsize': 2,
         'jarpath': '/home/user/infodynamics-dist-1.3/infodynamics.jar',
         'iterations': 10000
     }
     [est, opt] = pid(x, y, z, cfg)
-    
-This program is free software; you can redistribute it and/or modify it 
-under the terms of the GNU General Public License as published by the 
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
 Free Software Foundation;
 
 This program is distributed in the hope that it will be useful,
@@ -68,73 +68,73 @@ if __name__ == '__main__':
 
 def pid(x, y, z, cfg):
     """Estimate partial information decomposition of discrete variables.
-    
-    The estimator finds shared information, unique information and 
+
+    The estimator finds shared information, unique information and
     synergistic information between three discrete input variables.
-    
+
     Args:
-        x (numpy array): 1D array containing realizations of a discrete 
+        x (numpy array): 1D array containing realizations of a discrete
             random variable
-        y (numpy array): 1D array containing realizations of a discrete 
+        y (numpy array): 1D array containing realizations of a discrete
             random variable
-        z (numpy array): 1D array containing realizations of a discrete 
-            random variable 
-        cfg (dict): dictionary with estimation parameters, must contain 
+        z (numpy array): 1D array containing realizations of a discrete
+            random variable
+        cfg (dict): dictionary with estimation parameters, must contain
             values for 'alphabetsize' (no. values in each variable x, y,
-            z), 'jarpath' (string with path to JIDT jar file), 
+            z), 'jarpath' (string with path to JIDT jar file),
             'iterations' (no. iterations of the estimator)
-    
+
     Returns:
-        dict: estimated decomposition, contains: MI/CMI values computed 
-            from non-permuted distributions; PID estimates (shared, 
-            synergistic, unique information); I(X;Y,Z) under permuted 
+        dict: estimated decomposition, contains: MI/CMI values computed
+            from non-permuted distributions; PID estimates (shared,
+            synergistic, unique information); I(X;Y,Z) under permuted
             distribution Q
-        dict: additional information about iterative optimization, 
+        dict: additional information about iterative optimization,
             contains: final permutation Q; cfg dictionary; array with
-            I(X;Z|Y) for each iteration; array with delta I(X;Z|Y) for 
+            I(X;Z|Y) for each iteration; array with delta I(X;Z|Y) for
             each iteration; I(X;Y,Z) for each iteration
     """
     if x.ndim != 1 or y.ndim != 1 or z.ndim != 1:
-        raise ValueError('Inputs x, y, z have to be vectors' 
+        raise ValueError('Inputs x, y, z have to be vectors'
                          '(1D-arrays).')
-    
+
     try:
         jarpath = cfg['jarpath']
     except TypeError:
-        print "The cfg argument should be a dictionary."
+        print('The cfg argument should be a dictionary.')
         raise
     except KeyError:
-        print "'jarpath' is missing from the cfg dictionary."
+        print('"jarpath" is missing from the cfg dictionary.')
         raise
     try:
         alphabet = cfg['alphabetsize']
     except KeyError:
-        print "'alphabetsize' is missing from the cfg dictionary."
+        print('"alphabetsize" is missing from the cfg dictionary.')
         raise
     try:
         iterations = cfg['iterations']
     except KeyError:
-        print "'iterations' is missing from the cfg dictionary."
+        print('"iterations" is missing from the cfg dictionary.')
         raise
-    
+
     if not jp.isJVMStarted():
-        jp.startJVM(jp.getDefaultJVMPath(), 
-                    "-ea", "-Djava.class.path=" + jarpath)
-    
-    Cmi_calc_class = (jp.JPackage("infodynamics.measures.discrete")
+        jp.startJVM(jp.getDefaultJVMPath(),
+                    '-ea', '-Djava.class.path=' + jarpath)
+
+    Cmi_calc_class = (jp.JPackage('infodynamics.measures.discrete')
                       .ConditionalMutualInformationCalculatorDiscrete)
-    Mi_calc_class = (jp.JPackage("infodynamics.measures.discrete")
+    Mi_calc_class = (jp.JPackage('infodynamics.measures.discrete')
                      .MutualInformationCalculatorDiscrete)
-    
+
     cmi_calc = Cmi_calc_class(alphabet,alphabet,alphabet)
     mi_calc  = Mi_calc_class(alphabet)
     multimi_calc  = Mi_calc_class(alphabet ** 2)
-    
+
     cmi_xz_y = _calculate_cmi(cmi_calc, z, x, y)
     mi_xyz = _calculate_multimi(multimi_calc, x, y, z)
     mi_xz = _calculate_mi(mi_calc, x, z)
     mi_yz = _calculate_mi(mi_calc, y, z)
-    
+
     n = z.shape[0]
     reps = iterations + 1
     ind = np.arange(n)
@@ -143,56 +143,56 @@ def pid(x, y, z, cfg):
     mi_q_xyz_all = _nan(reps)  # collect joint MI of all three vars
     cmi_q_xz_y_all[0] = cmi_xz_y  # initial I(X;Z|Y)
     unsuccessful = 0
-    
-    print 'Starting [                   ]',
-    print '\b' * 21,
+
+    print('Starting [                   ]', end='')
+    print('\b' * 21, end='')
     sys.stdout.flush()
     for i in range(1, reps):
         steps = reps/20
         if i%steps == 0:
-            print '\b.',
+            print('\b.', end='')
             sys.stdout.flush()
-        
-        #print "iteration " + str(i + 1) + " of " + str(reps - 1)
-        
+
+        #print('iteration ' + str(i + 1) + ' of ' + str(reps - 1)
+
         x_new  = x
         ind_new = ind
-        
-        # swapping: pick sample at random, find all other samples that 
+
+        # swapping: pick sample at random, find all other samples that
         # are potential matches (have the same value in Z), pick one of
         # the matches for the actual swap
         swap_1 = np.random.randint(n)
         swap_candidates = np.where(z == z[swap_1])[0]
         swap_2 = np.random.choice(swap_candidates)
-        
+
         # swap value in X and index to keep track
         x_new[swap_1], x_new[swap_2] = x_new[swap_2], x_new[swap_1]
-        ind_new[swap_1], ind_new[swap_2] = (ind_new[swap_2], 
+        ind_new[swap_1], ind_new[swap_2] = (ind_new[swap_2],
                                             ind_new[swap_1])
-        
+
         # calculate CMI under new swapped distribution
         cmi_new = _calculate_cmi(cmi_calc, x_new, z, y)
-        
+
         if cmi_new < cmi_q_xz_y_all[i - 1]:
             x = x_new
             ind = ind_new
             cmi_q_xz_y_all[i] = cmi_new
-            cmi_q_xz_y_delta[i] = cmi_q_xz_y_all[i - 1] - cmi_new 
+            cmi_q_xz_y_delta[i] = cmi_q_xz_y_all[i - 1] - cmi_new
             mi_q_xyz_all[i] = _calculate_multimi(multimi_calc, x, y, z)
         else:
             cmi_q_xz_y_all[i] = cmi_q_xz_y_all[i - 1]
             unsuccessful += 1
-    
-    print '\b]  Done!\n',
-    print 'Unsuccessful swaps: ' + str(unsuccessful)
-    
+
+    print('\b]  Done!\n', end='')
+    print('Unsuccessful swaps: {0}'.format(unsuccessful))
+
     # estimate unq/syn/shd information
     mi_q_xyz = _get_last_value(mi_q_xyz_all)
     unq_x = _get_last_value(cmi_q_xz_y_all)  # Bertschinger, 2014, p. 2163
     unq_y = _calculate_cmi(cmi_calc, z, y, x)  # Bertschinger, 2014, p. 2166
     syn_xy = mi_xyz - mi_q_xyz  # Bertschinger, 2014, p. 2163
     shd_xy = mi_xz + mi_yz - mi_q_xyz  # Bertschinger, 2014, p. 2167
-    
+
     estimate = {
         'unq_x': unq_x,
         'unq_y': unq_y,
@@ -218,10 +218,10 @@ def pid(x, y, z, cfg):
 
 def _nan(shape):
     """Return 1D numpy array of nans.
-    
+
     Args:
         shape (int): length of array
-    
+
     Returns:
         numpy array: array filled with nans
     """
@@ -232,15 +232,15 @@ def _nan(shape):
 
 def _calculate_cmi(cmi_calc, var_1, var_2, cond):
     """Calculate conditional MI from three variables usind JIDT.
-    
+
     Args:
         cmi_calc (JIDT calculator object): JIDT calculator for conditio-
             nal mutual information
-        var_1, var_2 (1D numpy array): realizations of two discrete 
+        var_1, var_2 (1D numpy array): realizations of two discrete
             random variables
-        cond (1D numpy array): realizations of a discrete random 
+        cond (1D numpy array): realizations of a discrete random
             variable for conditioning
-    
+
     Returns:
         double: conditional mutual information between var_1 and var_2
             conditional on cond
@@ -256,13 +256,13 @@ def _calculate_cmi(cmi_calc, var_1, var_2, cond):
 
 def _calculate_mi(mi_calc, var_1, var_2):
     """Calculate MI from two variables usind JIDT.
-    
+
     Args:
-        mi_calc (JIDT calculator object): JIDT calculator for mutual 
+        mi_calc (JIDT calculator object): JIDT calculator for mutual
             information
         var_1, var_2, (1D numpy array): realizations of some discrete
             random variables
-    
+
     Returns:
         double: mutual information between input variables
     """
@@ -272,32 +272,33 @@ def _calculate_mi(mi_calc, var_1, var_2):
     return mi
 
 
-def _calculate_multimi(multimi_calc, var_1, var_2, var_3):
+def _calculate_multimi(multimi_calc, x, y, z):
     """Calculate MI from three variables usind JIDT.
-    
+
     Args:
-        multimi_calc (JIDT calculator object): JIDT calculator for 
+        multimi_calc (JIDT calculator object): JIDT calculator for
             mutual information
-        var_1, var_2, var_3 (1D numpy array): realizations of some 
+        var_1, var_2, var_3 (1D numpy array): realizations of some
             discrete random variables
-    
+
     Returns:
         double: mutual information between all three input variables
     """
-    mUtils = jp.JPackage('infodynamics.utils').MatrixUtils
-    xy = mUtils.computeCombinedValues(np.column_stack((x, y)), 2)
+    # mUtils = jp.JPackage('infodynamics.utils').MatrixUtils
+    # xy = mUtils.computeCombinedValues(np.column_stack((x, y)), 2)
+    [xy, alph_joined] = _join_variables(x, y, 2, 2)
     multimi_calc.initialise()
-    multimi_calc.addObservations(xy, z)
+    multimi_calc.addObservations(xy.T, z)
     multimi = multimi_calc.computeAverageLocalOfObservations()
     return multimi
 
 
 def _get_last_value(x):
     """Return the highest-index value that is not a NaN from an array.
-    
+
     Args:
         x (1D numpy array): array where some entries are nan
-    
+
     Returns:
         int/double: entry in x with highest index, which is not nan (if
             no such value exists, nan is returned)
@@ -306,29 +307,76 @@ def _get_last_value(x):
     try:
         return x[ind[-1]]
     except IndexError:
-        print "Couldn't find a value that is not NaN."
+        print('Couldn not find a value that is not NaN.')
         return np.NaN
 
 
+def _join_variables(a, b, alph_a, alph_b):
+    """Join two sequences of random variables (RV) into a new RV.
+
+    Works like the method 'computeCombinedValues' implemented in JIDT
+    (https://github.com/jlizier/jidt/blob/master/java/source/
+    infodynamics/utils/MatrixUtils.java).
+
+    Args:
+        a, b (np array): sequence of integer numbers of arbitrary base
+            (representing observations from two RVs)
+        alph_a, alph_b (int): alphabet size of a and b
+
+    Returns:
+        np array, int: joined RV
+        int: alphabet size of new RV
+    """
+    if a.shape[0] != b.shape[0]:
+        raise Error
+
+    if alph_b < alph_a:
+        a, b = b, a
+        alph_a, alph_b = alph_b, alph_a
+
+    joined = np.zeros(a.shape[0])
+
+    for i in range(joined.shape[0]):
+        mult = 1
+        joined[i] += mult * b[i]
+        mult *= alph_a
+        joined[i] += mult * a[i]
+
+    alph_new = max(a) * alph_a + alph_b
+    '''
+    for (int r = 0; r < rows; r++) {
+        // For each row in vec1
+        int combinedRowValue = 0;
+        int multiplier = 1;
+        for (int c = columns - 1; c >= 0; c--) {
+            // Add in the contribution from each column
+            combinedRowValue += separateValues[r][c] * multiplier;
+            multiplier *= base;
+        }
+        combinedValues[r] = combinedRowValue;
+    } '''
+
+    return joined.astype(int), alph_new
+
 if __name__ == '__main__':
-    
+
     n = 10000
     alph = 2
     x = np.random.randint(0, alph, n)
     y = np.random.randint(0, alph, n)
     z = np.logical_xor(x, y).astype(int)
     cfg = {
-        'alphabetsize': 2, 
-        'jarpath': '/home/patriciaw/jidt_1_3/infodynamics-dist-1.3/infodynamics.jar',
+        'alphabetsize': 2,
+        'jarpath': 'infodynamics.jar',
         'iterations': 10000
     }
-    print "Testing PID estimator on binary XOR, iterations: " + \
-        str(n) + ", N: " + str(n)
+    print('Testing PID estimator on binary XOR, iterations: {0}, {1}'.format(
+                                                        n, cfg['iterations']))
     tic = tm.clock()
     [est, opt] = pid(x, y, z, cfg)
     toc = tm.clock()
-    print "Elapsed time: " + str(toc - tic) + " seconds"
-    
+    print('Elapsed time: {0} seconds'.format(toc - tic))
+
     # plot results
     text_x_pos = opt['cfg']['iterations'] * 0.05
     plt.figure
