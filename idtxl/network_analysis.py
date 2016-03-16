@@ -2,15 +2,6 @@
 """
 Created on Mon Mar  7 18:13:27 2016
 
-Greedy algorithm for multivariate network inference using transfer entropy.
-For details see Lizier ??? and Faes ???.
-
-If executed as standalone, the script applies the algorithm to example data
-presented in Montalto, PLOS ONE, 2014, (eq. 14).
-
-Usage:
-    python multivariate_te.py
-
 @author: patricia
 """
 import numpy as np
@@ -21,25 +12,33 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
 
     Hold variables that are relevant for multivariate network inference.
     The class holds
+
         (1) analysis parameters
-        (2) data
-        (3) 'analysis pattern', i.e., indices of random variables used for
+        (2) 'analysis pattern', i.e., indices of random variables used for
             network inference (e.g. current value and conditional in transfer
             entropy estimation)
+        (3) temporary data for analysis, i.e., realisations of the variables
+
     The class provide routines to check user input and set defaults. The
     'analysis pattern' is represented by tuples or list of tuples (process
     index, sample index), where a tuple indicates where to find realisations in
     the data.
 
     Args:
-        max_lag (int): maximum search depth when looking for conditionals
-        target (int): index of the target process in the data
+        max_lag : int
+            maximum search depth when looking for conditionals
+        target : int
+            index of the target process in the data
 
     Attributes:
-        current_value: index of the current value
-        conditional_full: full set of random variables to be conditioned on
-        conditional_sources: set of conditionals coming from souce processes
-        conditional_target: set of conditionals coming from the target process
+        current_value : tuple
+            index of the current value
+        conditional_full : list of tuples
+            full set of random variables to be conditioned on
+        conditional_sources : list of tuples
+            set of conditionals coming from souce processes
+        conditional_target : list of tuples
+            set of conditionals coming from the target process
     """
     def __init__(self, max_lag, target): # TODO a lot of these needs to go into the child class
         self.target = target
@@ -132,8 +131,14 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
         self.__conditional_realisations = realisations
 
     @property
-    def _conditional_target_realisations(self): # TODO this may be rather slow, but it is not called often
-        """Realisations of the target samples in the conditional."""
+    def _conditional_target_realisations(self):
+        """Realisations of the target samples in the conditional.
+
+        Note:
+            Each time this property is called, realisations are actually
+            extracted from the array of all realisations, which may be slow!
+            Use temporary variables to speed things up.
+        """
         indices = np.zeros(len(self.conditional_target)).astype(int)
         i = 0
         for idx in self.conditional_target:
@@ -148,10 +153,13 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
         self.__conditional_target_realisations = realisations
 
     @property
-    def _conditional_sources_realisations(self):  # TODO these are slow, write that into the docstring for both functions
+    def _conditional_sources_realisations(self):
         """Realisations of the source samples in the conditional.
 
-        Get realisations from the whole set of realisations -> this is slow!!
+        Note:
+            Each time this property is called, realisations are actually
+            extracted from the array of all realisations, which may be slow!
+            Use temporary variables to speed things up.
         """
         indices = np.zeros(len(self.conditional_sources)).astype(int)
         i = 0

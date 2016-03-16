@@ -2,6 +2,18 @@
 """
 Created on Thu Mar 10 14:24:31 2016
 
+Greedy algorithm for multivariate network inference using transfer entropy.
+For details see Lizier ??? and Faes ???.
+
+If executed as standalone, the script applies the algorithm to example data
+presented in Montalto, PLOS ONE, 2014, (eq. 14).
+
+Eample:
+    python multivariate_te.py
+
+Note:
+    Written for Python 3.4+
+
 @author: patricia
 """
 import numpy as np
@@ -108,7 +120,8 @@ class Multivariate_te(Network_analysis):
             significant transfer of all individual samples in the set)
 
         Args:
-            data (Data): object holding raw data
+            data : Data instance
+                raw data for analysis
         """
         self._current_value_realisations = data.get_realisations(
                                                     analysis_setup=self,
@@ -346,7 +359,7 @@ if __name__ == '__main__':
                                        sources)
     network_analysis.analyse_network(dat)
 
-
+    # TODO
     # test cases:
     #   - bivariately coupled Lorenz
     #   - independent random samples (for false positives)

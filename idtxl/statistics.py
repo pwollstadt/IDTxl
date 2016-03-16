@@ -20,13 +20,18 @@ def omnibus_test(analysis_setup, data, n_permutations=3):
     distribution.
 
     Args:
-        analysis_setup: instance of Multivariate_te class
-        data: instance of Data class
-        n_permutations: number of permutations for testing (default=500)
+        analysis_setup : Multivariate_te instance
+            instance holding temporary data to be tested
+        data: Data instance
+            raw data
+        n_permutations : int [optional]
+            number of permutations for testing
 
     Returns:
-        boolean indicating statistical significance
-        the test's p-value
+        bool
+            True if test significant
+        float
+            the test's p-value
     """
     print('no. target sourcesces: {0}, no. sources: {1}'.format(
                                     len(analysis_setup.conditional_target),
@@ -63,22 +68,29 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
     values obtained from surrogates of all remanining candidates.
 
     Args:
-        analysis_setup: instance of Multivariate_te class
-        data: instance of Data class
-        candidate_set: list of indices of remaning candidates
-        te_max_candidate: transfer entropy value to be tested
-        n_permutations: number of permutations for testing (default=500)
+        analysis_setup : Multivariate_te instance
+            instance holding temporary data to be tested
+        data: Data instance
+            raw data
+        candidate_set : list of int
+            indices of remaning candidates
+        te_max_candidate : float
+            transfer entropy value to be tested
+        n_permutations : int [optional]
+            number of permutations for testing
 
     Returns:
-        boolean indicating statistical significance
-        the test's p-value
+        bool
+            True if test significant
+        float
+            the test's p-value
     """
     test_set = cp.copy(candidate_set)
 
     if not test_set:  # TODO this is an interim thing -> decide what to do
         return True
 
-    stats_table = _fill_surrogate_table(analysis_setup, data, test_set,
+    stats_table = _create_surrogate_table(analysis_setup, data, test_set,
                                         n_permutations)
     max_distribution = _find_table_max(stats_table)
     [significance, pvalue] = _find_pvalue(te_max_candidate, max_distribution)
@@ -99,13 +111,18 @@ def max_statistic_sequential(analysis_setup, data, n_permutations=5):
     considered non-significant as well.
 
     Args:
-        analysis_setup: instance of Multivariate_te class
-        data: instance of Data class
-        n_permutations: number of permutations for testing (default=500)
+        analysis_setup : Multivariate_te instance
+            instance holding temporary data to be tested
+        data: Data instance
+            raw data
+        n_permutations : int [optional]
+            number of permutations for testing
 
     Returns:
-        boolean indicating statistical significance
-        the test's p-value
+        bool
+            True if test significant
+        float
+            the test's p-value
     """
     conditional_te = np.empty(len(analysis_setup.conditional_full))
     i = 0
@@ -124,7 +141,7 @@ def max_statistic_sequential(analysis_setup, data, n_permutations=5):
 
     # TODO not sure about this, because the surrogate table also contains the
     # candidate we're testing
-    stats_table = _fill_surrogate_table(analysis_setup, data,  # TODO call this 'create..'
+    stats_table = _create_surrogate_table(analysis_setup, data,  # TODO call this 'create..'
                                         analysis_setup.conditional_full,
                                         n_permutations)
     max_distribution = _sort_table_max(stats_table)
@@ -156,22 +173,29 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
     values obtained from surrogates of all remanining candidates.
 
     Args:
-        analysis_setup: instance of Multivariate_te class
-        data: instance of Data class
-        candidate_set: list of indices of remaning candidates
-        te_min_candidate: transfer entropy value to be tested
-        n_permutations: number of permutations for testing (default=500)
+        analysis_setup : Multivariate_te instance
+            instance holding temporary data to be tested
+        data: Data instance
+            raw data
+        candidate_set : list of int
+            indices of remaning candidates
+        te_min_candidate : float
+            transfer entropy value to be tested
+        n_permutations : int [optional]
+            number of permutations for testing
 
     Returns:
-        boolean indicating statistical significance of the test's p-value
-        pvalue
+        bool
+            True if test significant
+        float
+            the test's p-value
     """
     test_set = cp.copy(candidate_set)
 
     if not test_set:  # TODO this is an interim thing -> decide what to do
         return True
 
-    stats_table = _fill_surrogate_table(analysis_setup, data, test_set,
+    stats_table = _create_surrogate_table(analysis_setup, data, test_set,
                                         n_permutations)
     min_distribution = _find_table_min(stats_table)
     [significance, pvalue] = _find_pvalue(te_min_candidate, min_distribution)
@@ -179,7 +203,7 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
     return significance, pvalue
 
 
-def _fill_surrogate_table(analysis_setup, data, idx_test_set, n_permutations):
+def _create_surrogate_table(analysis_setup, data, idx_test_set, n_permutations):
     """Create a table of surrogate transfer entropy values.
 
     Calculate transfer entropy between surrogates for each source in the test
@@ -187,14 +211,19 @@ def _fill_surrogate_table(analysis_setup, data, idx_test_set, n_permutations):
     the analysis setup.
 
     Args:
-        analysis_setup: instance of Multivariate_te
-        data: instance of Data
-        idx_test_set: list od indices indicating samples to be used as sources
-        n_permutations: number of permutations per source in test set
+        analysis_setup : Multivariate_te instance
+            instance holding temporary data to be tested
+        data: Data instance
+            raw data
+        idx_test_set : list of tuples
+            samples to be used as sources
+        n_permutations : int [optional]
+            number of permutations for testing
 
     Returns:
-        numpy array of te values with dimensions (length test set, number of
-        surrogates)
+        numpy array
+            surrogate TE values, has dimensions (len(idx_test_set),
+            n_permutations)
     """
     stats_table = np.zeros((len(idx_test_set), n_permutations))
     current_value_realisations = analysis_setup._current_value_realisations
@@ -237,7 +266,7 @@ def _sort_table_max(table):
     return table
 
 
-def _sort_table_min(table):  # TODO just search the minimum for each permutation
+def _sort_table_min(table):
     """Sort each column in a table in descending order."""
     table_sorted = np.empty(table.shape)
     for permutation in range(0, table.shape[1]):
@@ -250,21 +279,30 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
     """Find p-value of a test statistic under some distribution.
 
     Args:
-        statistic: value to be tested against distribution
-        distribution: 1-dimensional numpy array
-        alpha: critical alpha level
-        tail: 'one' or 'two' for one-/two-tailed testing
+        statistic : numeric
+            value to be tested against distribution
+        distribution : numpy array
+            distribution under which statistic is tested (1-dimensional)
+        alpha : float
+            critical alpha level (has to be < 1)
+        tail : str
+            'one' for one-tailed, 'two' for two-tailed testing
 
     Returns:
-        boolean indicating statistical significance
-        the test's p-value
+        bool
+            True if test significant
+        float
+            the test's p-value
     """
     assert(distribution.ndim == 1)
+    assert(alpha <= 1)
     if tail == 'one':
         pvalue = sum(distribution > statistic) / distribution.shape[0]
-    else:
+    elif tail == 'two':
         p_bigger = sum(distribution > statistic) / distribution.shape[0]
         p_smaller = sum(distribution < statistic) / distribution.shape[0]
         pvalue = min(p_bigger, p_smaller)
+    else:
+        raise ValueError('Tail of a test has to be set to "one" or "two".')
     significance = pvalue < alpha
     return significance, pvalue
