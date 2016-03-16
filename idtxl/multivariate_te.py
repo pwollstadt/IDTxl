@@ -27,32 +27,49 @@ class Multivariate_te(Network_analysis):
     data class.
 
     Args:
-        max_lag (int): maximum number of steps into the past to look for
-            informative samples (maximum temporal search depth)
-        min_lag (int): minimum number of steps into the past to look for
-            informative samples (minimum temporal search depth)
-        cmi_calculator_name (string): name of the TE calculator to be used
-        target (int): the target processes' index in the data
-        source_set (list): process indices used as potential sources (default:
+        max_lag : int
+            maximum temporal search depth
+        min_lag : int
+            minimum temporal search depth
+        cmi_calculator_name : string
+            name of the TE calculator to be used
+        target : int
+            the target processes' index in the data
+        source_set : list
+            process indices used as potential sources (default:
             all possible processes, i.e., all processes other than the target
             process)
 
     Attributes:
-        conditional_full (list): samples in the full conditional set
-        conditional_sources (list): source samples in the conditional set
-        conditional_target (list): target samples in the conditional set
-        current_value (tuple): index of the current value in TE estimation
-        estimator_name (string): estimator used for TE estimation
-        max_lag (int): maximum temporal search depth
-        min_lag (int): minimum temporal search depth
-        pvalue_omnibus (float): p-value of the omnibus test
-        pvalue_individual_sources (numpy array): array of p-values for TE from
+        conditional_full : list
+            samples in the full conditional set
+        conditional_sources : list
+            source samples in the conditional set
+        conditional_target : list
+            target samples in the conditional set
+        current_value : tuple
+            index of the current value in TE estimation
+        estimator_name : string
+            estimator used for TE estimation
+        max_lag : int
+            maximum temporal search depth
+        min_lag : int
+            minimum temporal search depth
+        pvalue_omnibus : float
+            p-value of the omnibus test
+        pvalue_individual_sources : numpy array
+            array of p-values for TE from
             individual sources to the target
-        sign_ominbus (bool): statistical significance of the over-all TE
-        sign_individual (numpy array): array of booleans, indicates statistical
+        sign_ominbus : bool
+            statistical significance of the over-all TE
+        sign_individual : numpy array
+            array of booleans, indicates statistical
             significance of TE from individual sources to the target
-        source_set (list): list with indices of source processes
-        target (int): index of target process
+        source_set : list
+            list with indices of source processes
+        target : int
+            index of target process
+
     """
     def __init__(self, max_lag, min_lag, cmi_calculator_name, target,
                  source_set=None):
