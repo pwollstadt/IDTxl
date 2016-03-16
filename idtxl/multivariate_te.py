@@ -7,7 +7,7 @@ Created on Thu Mar 10 14:24:31 2016
 import numpy as np
 import itertools as it
 import copy as cp
-import statistics as stats
+import stats as stats
 import utils as utils
 from data import Data
 from network_analysis import Network_analysis
