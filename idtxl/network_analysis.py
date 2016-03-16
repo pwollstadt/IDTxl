@@ -40,9 +40,9 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
         conditional_target : list of tuples
             set of conditionals coming from the target process
     """
-    def __init__(self, max_lag, target): # TODO a lot of these needs to go into the child class
-        self.target = target
-        self.current_value = (target, max_lag)  # TODO rename this to current_target_variable??
+    def __init__(self): # TODO a lot of these needs to go into the child class
+        self.target = None
+        self.current_value = None  # TODO rename this to current_target_variable??
         self.conditional_full = None  # TODO this is not consistent with the other two
         self.conditional_sources = []
         self.conditional_target = []
@@ -56,7 +56,7 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
 
     @current_value.setter
     def current_value(self, idx):
-        if type(idx) is not tuple:
+        if (idx is not None) and (type(idx) is not tuple):
             raise TypeError(('The current value should be a tuple (index ' +
                              'process, index sample).'))
         self._current_value = idx
@@ -217,4 +217,4 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
 if __name__ == '__main__':
     max_lag = 5
     target = 0
-    n = Network_analysis(max_lag, target)
+    n = Network_analysis()

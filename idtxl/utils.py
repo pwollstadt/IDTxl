@@ -1,14 +1,26 @@
 import numpy as np
 
 
-def standardize(A, dimension=0, dof=1):
-    """ Z-standardization of an numpy array A
-    along the axis defined in dimension using the
-    denominator (N-dof) for the calculation of
-    the standard deviation.
+def standardise(a, dimension=0, df=1):
+    """ Z-standardise a numpy array along a given dimension.
+
+    Standardise array along the axis defined in dimension using the denominator
+    (N - df) for the calculation of the standard deviation.
+
+    Args:
+        a : numpy array
+            data to be standardised
+        dimension : int [optional]
+            dimension along which array should be standardised
+        df : int
+            degrees of freedom for the denominator of the standard derivation
+
+    Returns:
+        numpy array
+            standardised data
     """
-    A = (A - A.mean(axis=dimension)) / A.std(axis=dimension, ddof=dof)
-    return A
+    a = (a - a.mean(axis=dimension)) / a.std(axis=dimension, ddof=df)
+    return a
 
 
 def sort_descending(a):

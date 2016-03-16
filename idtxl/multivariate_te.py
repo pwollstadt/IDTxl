@@ -79,26 +79,23 @@ class Multivariate_te(Network_analysis):
             significance of TE from individual sources to the target
         source_set : list
             list with indices of source processes
-        target : int
+        target : list
             index of target process
 
     """
-    def __init__(self, max_lag, min_lag, cmi_calculator_name, target,
-                 source_set=None):
+    def __init__(self, max_lag, min_lag, cmi_calculator_name):
         self.max_lag = max_lag
         self.min_lag = min_lag
         self.estimator_name = cmi_calculator_name
         self._cmi_estimator = Estimator_cmi(cmi_calculator_name)  # TODO should be 'calculator'
         # TODO add kwargs for the estimator
-        self.source_set = source_set
-        self.target = target
         self.sign_omnibus = None
         self.sign_individual_sources = None
         self.pvalue_omnibus = None
         self.pvalues_individual_sources = None
-        super(Multivariate_te, self).__init__(max_lag, target)
+        super().__init__()
 
-    def analyse_network(self, data):  # this should allow for multiple targets
+    def analyse_single_target(self, data, target, sources='all'):
         """Find multivariate transfer entropy between sources and a target.
 
         Find multivariate transfer entropy between all source processes and the
@@ -122,11 +119,17 @@ class Multivariate_te(Network_analysis):
         Args:
             data : Data instance
                 raw data for analysis
+            target : int
+                index of target process
+            sources : list of int or 'all'
+                indices of source processes, if 'all', all sources are tested
         """
+        self._check_source_set(sources, data.n_processes)
+        self.target = target
+        self._current_value = (target, self.max_lag)
         self._current_value_realisations = data.get_realisations(
                                                     analysis_setup=self,
                                                     idx=[self.current_value])
-        self._check_source_set(data.n_processes)
 
         print('---------------------------- (1) include target candidates')
         self._include_target_candidates(data)
@@ -147,16 +150,17 @@ class Multivariate_te(Network_analysis):
         self._clean_up()
         return
 
-    def _check_source_set(self, n_processes):
+    def _check_source_set(self, sources, n_processes):
         """Set default if no source set was provided by the user."""
-        if self.source_set is None:
-            self.source_set = [x for x in range(n_processes)]
+        if sources == 'all':
+            self.source_set = [x for x in range(self.n_processes)]
             self.source_set.pop(self.target)
             if VERBOSE:
                 print('Testing sources {0}'.format(self.source_set))
+        elif type(sources) is not list:
+            raise TypeError('Source set has to be a list.')
         else:
-            if type(self.source_set) is not list:
-                raise TypeError('Source set has to be a list.')
+            self.source_set = sources
 
     def _include_target_candidates(self, data):
         """Test candidates from the target's past."""
@@ -355,9 +359,8 @@ if __name__ == '__main__':
     sources = [1, 2, 3]
     # for t in range(dat.n_processes):
     #     multivariate_te(dat, max_lag, min_lag, cmi_estimator, t)
-    network_analysis = Multivariate_te(max_lag, min_lag, cmi_estimator, target,
-                                       sources)
-    network_analysis.analyse_network(dat)
+    network_analysis = Multivariate_te(max_lag, min_lag, cmi_estimator)
+    network_analysis.analyse_single_target(dat, target, sources)
 
     # TODO
     # test cases:
@@ -365,7 +368,3 @@ if __name__ == '__main__':
     #   - independent random samples (for false positives)
     #   - lagged copy of white noise
 
-    min_lag2 = 1
-    network_analysis2 = Multivariate_te(max_lag, min_lag2, cmi_estimator,
-                                        target)
-    network_analysis2.analyse_network(dat)

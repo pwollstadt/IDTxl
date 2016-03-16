@@ -5,45 +5,143 @@ Created on Mon Mar  7 18:13:27 2016
 @author: patricia
 """
 import numpy as np
+import utils as utils
 
 
 class Data():
-    """Hold data for information dynamics estimation.
+    """Store data for information dynamics estimation.
 
-    Data are realisations for processes over time and replications (where a
-    replication is a repetition of the process in time or space). Data are
-    storend in a 3-dimensional array, where axes represent processes, samples
-    over time, and replications.
+    Data takes a 1- to 3-dimensional array representing realisations of random
+    variables in dimensions processes, samples (over time), and replications.
+    If necessary, data reshapes provided realisations to fit the format
+    expected by IDTxl, which is a 3-dimensional array with axes representing
+    (process index, sample index, replication index). Indicate the actual order
+    of dimensions in the provided array in a three-character string, e.g. 'spr'
+    for an array with realisations over (1) samples in time, (2) processes, (3)
+    replications.
+
+    Examples:
+        d_mute = Data()              # initialise empty data object
+        d_mute.generate_mute_data()  # simulate data from MuTE paper
+        dat = np.arange(10000).reshape((2, 1000, 5))  # random data: 2 procs.,
+        d1 = Data(dat, dim_order='psr')               # 1000 samples, 5 repl.
+        dat = np.arange(3000).reshape((3, 1000))  # random data: 3 procs.,
+        d2 = Data(dat, dim_order='ps')            # 1000 samples
+        dat_new = np.arange(5000)
+        d2.set_data(dat_new, 's')  # set new data for the existing object
+
+    Note:
+        Realisations are stored as attribute 'data'. This can't be set
+        directly, but only via the method 'set_data'
+
+    Args:
+        data : numpy array [optional]
+            2/3-dimensional array with raw data
+        dim_order : string [optional]
+                order of dimensions, accepts any combination of the characters
+                'p', 's', and 'r' for processes, samples, and replications
+        normalise : bool
+            if True, data gets normalised
 
     Attributes:
-        data: 3-dimensional array that holds realizations
-        current_value: index of the current value
-        source_set: realisations of all source processes
-        n_replications: number of replications
-        n_samples: number of samples
+        data : numpy array
+            realisations, can only be set via 'set_data' method
+        n_processes : int
+            number of processes
+        n_replications : int
+            number of replications
+        n_samples : int
+            number of samples in time
+        normalise : bool
+            if true, all data gets z-standardised per process
+
     """
-    def __init__(self, data=None, dim_order="psr"):  # TODO check dimorder in Python
-        """Check and assign input to attributes."""
-
+    def __init__(self, data=None, dim_order='psr', normalise=True):
+        self.normalise = normalise
         if data is not None:
-            self.data = self._check_dim_order(data, dim_order)
-            self._set_data_size()
-            self.current_value = None
-            self.current_value_realisations = None
+            self.set_data(data, dim_order)
 
-    def _check_dim_order(self, data, dim_order):
-        """Reshape data array to processes x samples x replications."""
+    @property
+    def data(self):
+        return self._data
+
+    @data.setter
+    def data(self, d):
+        if hasattr(self, 'data'):
+            raise AttributeError('You can not assign a value to this attribute'
+                                 ' directly, use the set_data method instead.')
+        else:
+            self._data = d
+
+    @data.deleter
+    def data(self):
+        print('deleting existing data')
+        del(self._data)
+
+    def set_data(self, data, dim_order):
+        """Overwrite data in an existing Data object.
+
+        Args:
+            data : numpy array
+                1- to 3-dimensional array of realisations
+            dim_order : string
+                order of dimensions, accepts any combination of the characters
+                'p', 's', and 'r' for processes, samples, and replications
+        """
+        assert(len(dim_order) <= 3), ('dim_order can not have more than three '
+                                      'entries')
+        data_ordered = self._reorder_data(data, dim_order)
+        self._set_data_size(data_ordered)
+        print('Adding data with properties: {0} processes, {1} samples, {2} '
+              'replications'.format(self.n_processes, self.n_samples,
+                                    self.n_replications))
+        try:
+            delattr(self, 'data')
+        except AttributeError:
+            pass
+        if self.normalise:
+            self.data = self._normalise_data(data_ordered)
+        else:
+            self.data = data_ordered
+
+    def _normalise_data(self, d):
+        """Z-standardise data sperately for each process."""
+        n_realisations = self.n_samples * self.n_replications
+        d_standardised = np.empty(d.shape)
+        for process in range(self.n_processes):
+            s = utils.standardise(d[process, :, :].reshape(1, n_realisations),
+                                  dimension=1)
+            d_standardised[process, :, :] = s.reshape(self.n_samples,
+                                                      self.n_replications)
+        return d_standardised
+
+    def _reorder_data(self, data, dim_order):
+        """Reorder data dimensioins to processes x samples x replications."""
+
+        assert(len(dim_order) == data.ndim), ('Data array dimension ({0}) and '
+        'length of dim_order ({1}) are not equal.'.format(data.ndim,
+                                                          len(dim_order)))
+
+        # add singletons for missing dimensions
+        missing_dims = 'psr'
+        for dim in dim_order:
+            missing_dims = missing_dims.replace(dim, '')
+        for dim in missing_dims:
+            data = np.expand_dims(data, data.ndim)
+            dim_order += dim
+
+        # reorder array dims if necessary
         if dim_order[0] != 'p':
             data = data.swapaxes(0, dim_order.index('p'))
         if dim_order[1] != 's':
             data = data.swapaxes(1, dim_order.index('s'))
         return data
 
-    def _set_data_size(self):
+    def _set_data_size(self, data):
         """Set the data size."""
-        self.n_processes = self.data.shape[0]
-        self.n_samples = self.data.shape[1]
-        self.n_replications = self.data.shape[2]
+        self.n_processes = data.shape[0]
+        self.n_samples = data.shape[1]
+        self.n_replications = data.shape[2]
 
     def _get_data(self, idx_list, analysis_setup, shuffle=False):
         """Return realisations for a list of indices.
@@ -92,45 +190,35 @@ class Data():
         return realisations
 
     def get_realisations(self, analysis_setup, idx):
-        """Return realisations over samples and replications.
+        """Return all realisations of a random variable in the data.
 
         Return realisations of random variables represented by a list of
         indices. An index is expected to have the form (process index, sample
-        index).
+        index). The analysis_setup contains information like for example the
+        current_value in TE analysis, which are needed to identify variable
+        realisations in the raw data.
 
         Args:
-            idx: list of indices
+            analysis_setup : Network_analysis instance
+                contains information on the current analysis
+            idx : list of tuples
+                indices of variables
 
         Returns:
-            realisations: numpy array with dimensions replications x number
-                of indices
+            numpy array
+                Realisations, has dimensions n_replications x len(idx)
 
         Raises:
-            TypeError if idx_realisations is not a list
+            TypeError
+                If idx is not a list
         """
         if type(idx) is not list:
             e = TypeError('idx_realisations must be a list of tuples.')
             raise(e)
         return self._get_data(idx, analysis_setup, shuffle=False)
 
-    def add_realisations(self, idx_realisations, realisations):
-        """Add realisations of (a set of) RV to existing realisations.
-
-        Args:
-            idx_realisations: list od tuples, where each tuple represents one
-                sample as (process index, sample index)
-
-        Returns:
-            realisations: one-dimensional numpy array of realisations.
-        """
-        new_realisations = self.get_realisations(idx_realisations)
-        if realisations is None:
-            return realisations
-        else:
-            return np.vstack((realisations, new_realisations))
-
-    def generate_surrogates(self, idx_candidates, analysis_setup):
-        """Return realisations over samples and permuted replications.
+    def permute_data(self, analysis_setup, idx):
+        """Return realisations permuted over replications.
 
         Return realisations for a list of indices, where realisations are
         shuffled over replications to create surrogate data. An index is
@@ -145,17 +233,23 @@ class Data():
             rep.:   3 3 3 3 1 1 1 1 4 4 4 4 6 6 6 6 2 2 2 2 5 5 5 5 ...
             sample: 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 ...
 
+        Args:
+            analysis_setup : Network_analysis instance
+                contains information on the current analysis
+            idx : list of tuples
+                indices of variables
+
         Returns:
-            shuffled realisations: numpy array with dimensions replications x
-                number of indices
+            numpy array
+                Permuted realisations, has dimensions n_replications x len(idx)
 
         Raises:
             TypeError if idx_realisations is not a list
         """
-        if type(idx_candidates) is not list:
-            e = TypeError('idx_realisations needs to be a list of tuples.')
+        if type(idx) is not list:
+            e = TypeError('idx needs to be a list of tuples.')
             raise(e)
-        return self._get_data(idx_candidates, analysis_setup, shuffle=True)
+        return self._get_data(idx, analysis_setup, shuffle=True)
 
     def generate_mute_data(self, n_samples=1000, n_replications=10):
         """Generate example data for a 5-process network.
@@ -201,17 +295,20 @@ class Data():
                 x[4, n, r] = (term_3 * x[3, n - 1, r] +
                               term_2 * x[4, n - 1, r] +
                               np.random.normal())
-
-        self.data = x[:, 3:, :]
-        self._set_data_size()
+        self.set_data(x[:, 3:, :], 'psr')
 
 
 if __name__ == '__main__':
-    d_mute = Data()  # initialise an empty data object
-    d_mute.generate_mute_data()  # simulate data from the MuTE paper
+    d_mute = Data()              # initialise empty data object
+    d_mute.generate_mute_data()  # simulate data from MuTE paper
 
     dat = np.arange(10000).reshape((2, 1000, 5))  # random data with correct
-    d = Data(dat)                                 # order od dimensions
+    d1 = Data(dat, dim_order='psr')               # order od dimensions
 
-    dat = np.arange(10000).reshape((5, 1000, 2))  # random data with incorrect
-    d = Data(dat, 'rsp')                          # order of dimensions
+    dat = np.arange(3000).reshape((3, 1000))  # random data with incorrect
+    d2 = Data(dat, dim_order='ps')            # order of dimensions
+    dat_new = np.arange(5000)
+    d2.set_data(dat_new, 's')
+
+    # d3 = Data(np.arange(1), 'p')
+    # d3.data = dat  # this crashes, because it's not allowed

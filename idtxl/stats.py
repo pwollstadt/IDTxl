@@ -44,9 +44,9 @@ def omnibus_test(analysis_setup, data, n_permutations=3):
 
     surr_distribution = np.zeros(n_permutations)
     for perm in range(n_permutations):
-        surr_conditional_realisations = data.generate_surrogates(
-                                        analysis_setup.conditional_sources,
-                                        analysis_setup)
+        surr_conditional_realisations = data.permute_data(
+                                        analysis_setup,
+                                        analysis_setup.conditional_sources)
         surr_distribution[perm] = analysis_setup._cmi_estimator.estimate(
                                     surr_conditional_realisations,
                                     analysis_setup._current_value_realisations,
@@ -205,9 +205,8 @@ def _fill_surrogate_table(analysis_setup, data, idx_test_set, n_permutations):
                                                           n_permutations),
               end='')
         for perm in range(n_permutations):
-            surr_candidate_realisations = data.generate_surrogates(
-                                                                [candidate],
-                                                                analysis_setup)
+            surr_candidate_realisations = data.permute_data(analysis_setup,
+                                                            [candidate])
             stats_table[idx_c, perm] = analysis_setup._cmi_estimator.estimate(
                         surr_candidate_realisations,
                         current_value_realisations,

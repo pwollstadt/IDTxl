@@ -49,9 +49,9 @@ def omnibus_test(analysis_setup, data, n_permutations=3):
 
     surr_distribution = np.zeros(n_permutations)
     for perm in range(n_permutations):
-        surr_conditional_realisations = data.generate_surrogates(
-                                        analysis_setup.conditional_sources,
-                                        analysis_setup)
+        surr_conditional_realisations = data.permute_data(
+                                        analysis_setup,
+                                        analysis_setup.conditional_sources)
         surr_distribution[perm] = analysis_setup._cmi_estimator.estimate(
                                     surr_conditional_realisations,
                                     analysis_setup._current_value_realisations,
@@ -91,7 +91,7 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
         return True
 
     stats_table = _create_surrogate_table(analysis_setup, data, test_set,
-                                        n_permutations)
+                                          n_permutations)
     max_distribution = _find_table_max(stats_table)
     [significance, pvalue] = _find_pvalue(te_max_candidate, max_distribution)
     # return np.random.rand() > 0.5
@@ -141,9 +141,9 @@ def max_statistic_sequential(analysis_setup, data, n_permutations=5):
 
     # TODO not sure about this, because the surrogate table also contains the
     # candidate we're testing
-    stats_table = _create_surrogate_table(analysis_setup, data,  # TODO call this 'create..'
-                                        analysis_setup.conditional_full,
-                                        n_permutations)
+    stats_table = _create_surrogate_table(analysis_setup, data,
+                                          analysis_setup.conditional_full,
+                                          n_permutations)
     max_distribution = _sort_table_max(stats_table)
 
     significance = np.zeros(len(analysis_setup.conditional_full)).astype(bool)
@@ -196,14 +196,15 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
         return True
 
     stats_table = _create_surrogate_table(analysis_setup, data, test_set,
-                                        n_permutations)
+                                          n_permutations)
     min_distribution = _find_table_min(stats_table)
     [significance, pvalue] = _find_pvalue(te_min_candidate, min_distribution)
     # return np.random.rand() > 0.5
     return significance, pvalue
 
 
-def _create_surrogate_table(analysis_setup, data, idx_test_set, n_permutations):
+def _create_surrogate_table(analysis_setup, data, idx_test_set,
+                            n_permutations):
     """Create a table of surrogate transfer entropy values.
 
     Calculate transfer entropy between surrogates for each source in the test
@@ -234,9 +235,8 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_permutations):
                                                           n_permutations),
               end='')
         for perm in range(n_permutations):
-            surr_candidate_realisations = data.generate_surrogates(
-                                                                [candidate],
-                                                                analysis_setup)
+            surr_candidate_realisations = data.permute_data(analysis_setup,
+                                                            [candidate])
             stats_table[idx_c, perm] = analysis_setup._cmi_estimator.estimate(
                         surr_candidate_realisations,
                         current_value_realisations,
