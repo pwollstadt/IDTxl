@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+
+
+
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    
+    <title>network_analysis &mdash; IDTxl 0.1 documentation</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    
+
+<link rel="stylesheet" href="../_static/css/basicstrap-base.css" type="text/css" />
+<link rel="stylesheet" id="current-theme" href="../_static/css/bootstrap3/bootswatch-spacelab.css" type="text/css" />
+<link rel="stylesheet" id="current-adjust-theme" href="../_static/css/adjust_theme/bootswatch-spacelab.css" type="text/css" />
+
+<link rel="stylesheet" href="../_static/css/font-awesome.min.css">
+
+<style type="text/css">
+  body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+  }
+</style>
+
+<link rel="stylesheet" href="../_static/css/basicstrap.css" type="text/css" />
+<link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+<script type="text/javascript">
+  var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:    '../',
+            VERSION:     '0.1',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE:  true
+  };
+</script>
+    <script type="text/javascript" src="../_static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/bootstrap3.min.js"></script>
+<script type="text/javascript" src="../_static/js/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="../_static/js/basicstrap.js"></script>
+<script type="text/javascript">
+</script>
+    <link rel="top" title="IDTxl 0.1 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div id="navbar-top" class="navbar navbar-fixed-top navbar-default" role="navigation" aria-label="top navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../index.html">IDTxl 0.1 documentation</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+
+            
+              <li><a href="../genindex.html" title="General Index" accesskey="I">index </a></li>
+              <li><a href="index.html" accesskey="U">Module code</a></li>
+            
+
+            <li class="visible-xs">
+                <form class="search form-search form-inline navbar-form navbar-right sp-searchbox" action="../search.html" method="get">
+                  <div class="input-append input-group">
+                    <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+                    <span class="input-group-btn">
+                    <input type="submit" class="btn" value="Go" />
+                    </span>
+                  </div>
+                  <input type="hidden" name="check_keywords" value="yes" />
+                  <input type="hidden" name="area" value="default" />
+                </form>
+            </li>
+
+            
+
+          </ul>
+
+        </div>
+      </div>
+    </div>
+    
+
+    <!-- container -->
+    <div class="container">
+
+      <!-- row -->
+      <div class="row">
+        
+        
+
+        <div class="col-md-9" id="content-wrapper">
+          <div class="document" role="main">
+            <div class="documentwrapper">
+              <div class="bodywrapper">
+                <div class="body">
+                  
+  <h1>Source code for network_analysis</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Mon Mar  7 18:13:27 2016</span>
+
+<span class="sd">Greedy algorithm for multivariate network inference using transfer entropy.</span>
+<span class="sd">For details see Lizier ??? and Faes ???.</span>
+
+<span class="sd">If executed as standalone, the script applies the algorithm to example data</span>
+<span class="sd">presented in Montalto, PLOS ONE, 2014, (eq. 14).</span>
+
+<span class="sd">Usage:</span>
+<span class="sd">    python multivariate_te.py</span>
+
+<span class="sd">@author: patricia</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">utils</span> <span class="kn">as</span> <span class="nn">utils</span>
+
+<div class="viewcode-block" id="Network_analysis"><a class="viewcode-back" href="../idtxl.html#network_analysis.Network_analysis">[docs]</a><span class="k">class</span> <span class="nc">Network_analysis</span><span class="p">():</span> <span class="c1"># TODO which &#39;algorithms&#39; do we want to provide for this? biv TE, mult TE, mult granger, biv granger, ...?</span>
+    <span class="sd">&quot;&quot;&quot;Provide an analysis setup for multivariate network inference.</span>
+
+<span class="sd">    Hold variables that are relevant for multivariate network inference.</span>
+<span class="sd">    The class holds</span>
+<span class="sd">        (1) analysis parameters</span>
+<span class="sd">        (2) data</span>
+<span class="sd">        (3) &#39;analysis pattern&#39;, i.e., indices of random variables used for</span>
+<span class="sd">            network inference (e.g. current value and conditional in transfer</span>
+<span class="sd">            entropy estimation)</span>
+<span class="sd">    The class provide routines to check user input and set defaults. The</span>
+<span class="sd">    &#39;analysis pattern&#39; is represented by tuples or list of tuples (process</span>
+<span class="sd">    index, sample index), where a tuple indicates where to find realisations in</span>
+<span class="sd">    the data.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        max_lag (int): maximum search depth when looking for conditionals</span>
+<span class="sd">        target (int): index of the target process in the data</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        current_value: index of the current value</span>
+<span class="sd">        conditional_full: full set of random variables to be conditioned on</span>
+<span class="sd">        conditional_sources: set of conditionals coming from souce processes</span>
+<span class="sd">        conditional_target: set of conditionals coming from the target process</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span> <span class="c1"># TODO a lot of these needs to go into the child class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span> <span class="o">=</span> <span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">)</span>  <span class="c1"># TODO rename this to current_target_variable??</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conditional_full</span> <span class="o">=</span> <span class="bp">None</span>  <span class="c1"># TODO this is not consistent with the other two</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conditional_sources</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conditional_target</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_value_realisations</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conditional_realisations</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">current_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Index of the current_value.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_value</span>
+
+    <span class="nd">@current_value.setter</span>
+    <span class="k">def</span> <span class="nf">current_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">tuple</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">((</span><span class="s1">&#39;The current value should be a tuple (index &#39;</span> <span class="o">+</span>
+                             <span class="s1">&#39;process, index sample).&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_value</span> <span class="o">=</span> <span class="n">idx</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_current_value_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Realisations of the current_value.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__current_value_realisations</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Attribute has not been set yet.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__current_value_realisations</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">tuple</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;something went wrong&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__current_value_realisations</span>
+
+    <span class="nd">@_current_value_realisations.setter</span>
+    <span class="k">def</span> <span class="nf">_current_value_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realisations</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__current_value_realisations</span> <span class="o">=</span> <span class="n">realisations</span>
+
+    <span class="nd">@_current_value_realisations.deleter</span>
+    <span class="k">def</span> <span class="nf">_current_value_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">__current_value_realisations</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">conditional_full</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;List of indices of the full conditional set.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_value_realisations</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Attribute has not been set yet.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditional_full</span>
+
+    <span class="nd">@conditional_full.setter</span>
+    <span class="k">def</span> <span class="nf">conditional_full</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx_list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">idx_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">idx_list</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span> <span class="ow">or</span>
+                                       <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">idx_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">((</span><span class="s1">&#39;Expected a list of tuples (index process, &#39;</span> <span class="o">+</span>
+                             <span class="s1">&#39;index sample).&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conditional_full</span> <span class="o">=</span> <span class="n">idx_list</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">conditional_target</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;List of indices of target samples in the conditional set.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_value_realisations</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Attribute has not been set yet.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditional_target</span>
+
+    <span class="nd">@conditional_target.setter</span>
+    <span class="k">def</span> <span class="nf">conditional_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx_list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">idx_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">idx_list</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">((</span><span class="s1">&#39;Expected a list of tuples (index process, &#39;</span> <span class="o">+</span>
+                             <span class="s1">&#39;index sample).&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conditional_target</span> <span class="o">=</span> <span class="n">idx_list</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">conditional_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;List of indices of source samples in the conditional set.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_value_realisations</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Attribute has not been set yet.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditional_sources</span>
+
+    <span class="nd">@conditional_sources.setter</span>
+    <span class="k">def</span> <span class="nf">conditional_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx_list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">idx_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">idx_list</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">((</span><span class="s1">&#39;Expected a list of tuples (index process, &#39;</span> <span class="o">+</span>
+                             <span class="s1">&#39;index sample).&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conditional_sources</span> <span class="o">=</span> <span class="n">idx_list</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_conditional_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Realisations of the full conditional set.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__conditional_realisations</span>
+
+    <span class="nd">@_conditional_realisations.setter</span>
+    <span class="k">def</span> <span class="nf">_conditional_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realisations</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__conditional_realisations</span> <span class="o">=</span> <span class="n">realisations</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_conditional_target_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="c1"># TODO this may be rather slow, but it is not called often</span>
+        <span class="sd">&quot;&quot;&quot;Realisations of the target samples in the conditional.&quot;&quot;&quot;</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditional_target</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">conditional_target</span><span class="p">:</span>
+            <span class="n">indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conditional_full</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conditional_target_realisations</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span>
+                                        <span class="n">_conditional_realisations</span><span class="p">[:,</span> <span class="n">indices</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__conditional_target_realisations</span>
+
+    <span class="nd">@_conditional_target_realisations.setter</span>
+    <span class="k">def</span> <span class="nf">_conditional_target_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realisations</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__conditional_target_realisations</span> <span class="o">=</span> <span class="n">realisations</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_conditional_sources_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># TODO these are slow, write that into the docstring for both functions</span>
+        <span class="sd">&quot;&quot;&quot;Realisations of the source samples in the conditional.</span>
+
+<span class="sd">        Get realisations from the whole set of realisations -&gt; this is slow!!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditional_sources</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">conditional_sources</span><span class="p">:</span>
+            <span class="n">indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conditional_full</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conditional_sources_realisations</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span>
+                                     <span class="n">_conditional_realisations</span><span class="p">[:,</span> <span class="n">indices</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__conditional_sources_realisations</span>
+
+    <span class="nd">@_conditional_sources_realisations.setter</span>
+    <span class="k">def</span> <span class="nf">_conditional_sources_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realisations</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__conditional_sources_realisations</span> <span class="o">=</span> <span class="n">realisations</span>
+
+    <span class="k">def</span> <span class="nf">_append_conditional_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Append indices of conditionals to existing list.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">conditional_full</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conditional_full</span> <span class="o">=</span> <span class="n">idx</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">conditional_full</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="c1"># separate indexes into source and target indixes</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">conditional_target</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">conditional_sources</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_append_conditional_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realisations</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Append realisations of conditionals to existing realisations.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            realisations: numpy array with dimensions replications x number</span>
+<span class="sd">                of indices.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditional_realisations</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">realisations</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conditional_realisations</span> <span class="o">=</span> <span class="n">realisations</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conditional_realisations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span>
+                                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_conditional_realisations</span><span class="p">,</span> <span class="n">realisations</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_remove_candidate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove a candidate and its realisations from the object.&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conditional_realisations</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">remove_column</span><span class="p">(</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">_conditional_realisations</span><span class="p">,</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">conditional_full</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conditional_full</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditional_full</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conditional_target</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditional_target</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conditional_sources</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditional_sources</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span></div>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">max_lag</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">Network_analysis</span><span class="p">(</span><span class="n">max_lag</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+</pre></div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+         
+<div class="col-md-3 hidden-xs" id="sidebar-wrapper">
+  <div class="sidebar hidden-xs" role="navigation" aria-label="main navigation">
+<div id="searchbox" role="search">
+  <h3>Quick search</h3>
+  <form class="search form-inline" action="../search.html" method="get">
+      <div class="input-append input-group">
+        <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+        <span class="input-group-btn">
+        <input type="submit" class="btn" value="Go" />
+        </span>
+      </div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+  </div>
+</div> 
+        
+      </div><!-- /row -->
+
+      <!-- row -->
+      <div class="row footer-relbar">
+<div id="navbar-related" class=" related navbar navbar-default" role="navigation" aria-label="related navigation">
+  <div class="navbar-inner">
+    <ul class="nav navbar-nav ">
+        <li><a href="../index.html">IDTxl 0.1 documentation</a></li>
+    </ul>
+<ul class="nav navbar-nav pull-right hidden-xs hidden-sm">
+      
+        <li><a href="../genindex.html" title="General Index" >index</a></li>
+        <li><a href="index.html" >Module code</a></li>
+        <li><a href="#">top</a></li> 
+      
+    </ul>
+  </div>
+</div>
+      </div><!-- /row -->
+
+      <!-- footer -->
+      <footer role="contentinfo">
+          &copy; Copyright 2016, Patricia Wollstadt, Joseph T. Lizier, Michael Wibral.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.3.6.
+      </footer>
+      <!-- /footer -->
+
+    </div>
+    <!-- /container -->
+
+  </body>
+</html>

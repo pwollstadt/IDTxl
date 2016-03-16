@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+
+
+
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    
+    <title>idtxl package &mdash; IDTxl 0.1 documentation</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    
+
+<link rel="stylesheet" href="_static/css/basicstrap-base.css" type="text/css" />
+<link rel="stylesheet" id="current-theme" href="_static/css/bootstrap3/bootswatch-spacelab.css" type="text/css" />
+<link rel="stylesheet" id="current-adjust-theme" href="_static/css/adjust_theme/bootswatch-spacelab.css" type="text/css" />
+
+<link rel="stylesheet" href="_static/css/font-awesome.min.css">
+
+<style type="text/css">
+  body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+  }
+</style>
+
+<link rel="stylesheet" href="_static/css/basicstrap.css" type="text/css" />
+<link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+<script type="text/javascript">
+  var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:    './',
+            VERSION:     '0.1',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE:  true
+  };
+</script>
+    <script type="text/javascript" src="_static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/bootstrap3.min.js"></script>
+<script type="text/javascript" src="_static/js/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="_static/js/basicstrap.js"></script>
+<script type="text/javascript">
+</script>
+    <link rel="top" title="IDTxl 0.1 documentation" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div id="navbar-top" class="navbar navbar-fixed-top navbar-default" role="navigation" aria-label="top navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="index.html">IDTxl 0.1 documentation</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+              <li class="dropdown visible-xs">
+                <a role="button" id="localToc" data-toggle="dropdown" data-target="#" href="#">Table Of Contents <b class="caret"></b></a>
+                <ul class="dropdown-menu localtoc sp-localtoc" role="menu" aria-labelledby="localToc">
+                <ul>
+<li><a class="reference internal" href="#">idtxl package</a><ul>
+<li><a class="reference internal" href="#idtxl-multivariate-te-module">idtxl.multivariate_te module</a></li>
+</ul>
+</li>
+</ul>
+
+                </ul>
+              </li>
+
+            
+              <li><a href="genindex.html" title="General Index" accesskey="I">index </a></li>
+            
+            <li class="visible-xs"><a href="_sources/idtxl.txt" rel="nofollow">Show Source</a></li>
+
+            <li class="visible-xs">
+                <form class="search form-search form-inline navbar-form navbar-right sp-searchbox" action="search.html" method="get">
+                  <div class="input-append input-group">
+                    <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+                    <span class="input-group-btn">
+                    <input type="submit" class="btn" value="Go" />
+                    </span>
+                  </div>
+                  <input type="hidden" name="check_keywords" value="yes" />
+                  <input type="hidden" name="area" value="default" />
+                </form>
+            </li>
+
+            
+
+          </ul>
+
+        </div>
+      </div>
+    </div>
+    
+
+    <!-- container -->
+    <div class="container">
+
+      <!-- row -->
+      <div class="row">
+        
+        
+
+        <div class="col-md-9" id="content-wrapper">
+          <div class="document" role="main">
+            <div class="documentwrapper">
+              <div class="bodywrapper">
+                <div class="body">
+                  
+  <div class="section" id="idtxl-package">
+<h1>idtxl package<a class="headerlink" href="#idtxl-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="idtxl-multivariate-te-module">
+<h2>idtxl.multivariate_te module<a class="headerlink" href="#idtxl-multivariate-te-module" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="multivariate_te.Multivariate_te">
+<em class="property">class </em><code class="descclassname">multivariate_te.</code><code class="descname">Multivariate_te</code><span class="sig-paren">(</span><em>max_lag</em>, <em>min_lag</em>, <em>cmi_calculator_name</em>, <em>target</em>, <em>source_set=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/multivariate_te.html#Multivariate_te"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#multivariate_te.Multivariate_te" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#network_analysis.Network_analysis" title="network_analysis.Network_analysis"><code class="xref py py-class docutils literal"><span class="pre">network_analysis.Network_analysis</span></code></a></p>
+<p>Set up a network analysis using multivariate transfer entropy.</p>
+<p>Set parameters necessary for network inference using transfer entropy (TE).
+To perform network inference call analyse_network() on an instance of the
+data class.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first docutils">
+<dt>max_lag (int): maximum number of steps into the past to look for</dt>
+<dd>informative samples (maximum temporal search depth)</dd>
+<dt>min_lag (int): minimum number of steps into the past to look for</dt>
+<dd>informative samples (minimum temporal search depth)</dd>
+</dl>
+<p>cmi_calculator_name (string): name of the TE calculator to be used
+target (int): the target processes&#8217; index in the data
+source_set (list): process indices used as potential sources (default:</p>
+<blockquote class="last">
+<div>all possible processes, i.e., all processes other than the target
+process)</div></blockquote>
+</dd>
+<dt>Attributes:</dt>
+<dd><p class="first">conditional_full (list): samples in the full conditional set
+conditional_sources (list): source samples in the conditional set
+conditional_target (list): target samples in the conditional set
+current_value (tuple): index of the current value in TE estimation
+estimator_name (string): estimator used for TE estimation
+max_lag (int): maximum temporal search depth
+min_lag (int): minimum temporal search depth
+pvalue_omnibus (float): p-value of the omnibus test
+pvalue_individual_sources (numpy array): array of p-values for TE from</p>
+<blockquote>
+<div>individual sources to the target</div></blockquote>
+<p>sign_ominbus (bool): statistical significance of the over-all TE
+sign_individual (numpy array): array of booleans, indicates statistical</p>
+<blockquote>
+<div>significance of TE from individual sources to the target</div></blockquote>
+<p class="last">source_set (list): list with indices of source processes
+target (int): index of target process</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="multivariate_te.Multivariate_te.analyse_network">
+<code class="descname">analyse_network</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/multivariate_te.html#Multivariate_te.analyse_network"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#multivariate_te.Multivariate_te.analyse_network" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find multivariate transfer entropy between sources and a target.</p>
+<p>Find multivariate transfer entropy between all source processes and the
+target process. Uses multivariate, non-uniform embedding found through
+information maximisation (see Faes, ???, and Lizier, 2012). This is
+done in four steps (see Lizier and Faes for details):</p>
+<ol class="arabic simple">
+<li>find all relevant samples in the target processes&#8217; own past, by
+iteratively adding candidate samples that have significant
+conditional mutual information (CMI) with the current value
+(conditional on all samples that were added previously)</li>
+<li>find all relevant samples in the source processes&#8217; pasts (again
+by finding all candidates with significant CMI)</li>
+<li>prune the final conditional set by testing the CMI between each
+sample in the final set and the current value, conditional on all
+other samples in the final set</li>
+<li>statistics on the final set of sources (test for over-all transfer
+between the final conditional set and the current value, and for
+significant transfer of all individual samples in the set)</li>
+</ol>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>data (Data): object holding raw data</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="network_analysis.Network_analysis">
+<em class="property">class </em><code class="descclassname">network_analysis.</code><code class="descname">Network_analysis</code><span class="sig-paren">(</span><em>max_lag</em>, <em>target</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/network_analysis.html#Network_analysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_analysis.Network_analysis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide an analysis setup for multivariate network inference.</p>
+<p>Hold variables that are relevant for multivariate network inference.
+The class holds</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>analysis parameters</li>
+<li>data</li>
+<li>&#8216;analysis pattern&#8217;, i.e., indices of random variables used for
+network inference (e.g. current value and conditional in transfer
+entropy estimation)</li>
+</ol>
+</div></blockquote>
+<p>The class provide routines to check user input and set defaults. The
+&#8216;analysis pattern&#8217; is represented by tuples or list of tuples (process
+index, sample index), where a tuple indicates where to find realisations in
+the data.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>max_lag (int): maximum search depth when looking for conditionals
+target (int): index of the target process in the data</dd>
+<dt>Attributes:</dt>
+<dd>current_value: index of the current value
+conditional_full: full set of random variables to be conditioned on
+conditional_sources: set of conditionals coming from souce processes
+conditional_target: set of conditionals coming from the target process</dd>
+</dl>
+<dl class="attribute">
+<dt id="network_analysis.Network_analysis.conditional_full">
+<code class="descname">conditional_full</code><a class="headerlink" href="#network_analysis.Network_analysis.conditional_full" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of indices of the full conditional set.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="network_analysis.Network_analysis.conditional_sources">
+<code class="descname">conditional_sources</code><a class="headerlink" href="#network_analysis.Network_analysis.conditional_sources" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of indices of source samples in the conditional set.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="network_analysis.Network_analysis.conditional_target">
+<code class="descname">conditional_target</code><a class="headerlink" href="#network_analysis.Network_analysis.conditional_target" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of indices of target samples in the conditional set.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="network_analysis.Network_analysis.current_value">
+<code class="descname">current_value</code><a class="headerlink" href="#network_analysis.Network_analysis.current_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Index of the current_value.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+         
+<div class="col-md-3 hidden-xs" id="sidebar-wrapper">
+  <div class="sidebar hidden-xs" role="navigation" aria-label="main navigation">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">idtxl package</a><ul>
+<li><a class="reference internal" href="#idtxl-multivariate-te-module">idtxl.multivariate_te module</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/idtxl.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" role="search">
+  <h3>Quick search</h3>
+  <form class="search form-inline" action="search.html" method="get">
+      <div class="input-append input-group">
+        <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+        <span class="input-group-btn">
+        <input type="submit" class="btn" value="Go" />
+        </span>
+      </div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+  </div>
+</div> 
+        
+      </div><!-- /row -->
+
+      <!-- row -->
+      <div class="row footer-relbar">
+<div id="navbar-related" class=" related navbar navbar-default" role="navigation" aria-label="related navigation">
+  <div class="navbar-inner">
+    <ul class="nav navbar-nav ">
+        <li><a href="index.html">IDTxl 0.1 documentation</a></li>
+    </ul>
+<ul class="nav navbar-nav pull-right hidden-xs hidden-sm">
+      
+        <li><a href="genindex.html" title="General Index" >index</a></li>
+        <li><a href="#">top</a></li> 
+      
+    </ul>
+  </div>
+</div>
+      </div><!-- /row -->
+
+      <!-- footer -->
+      <footer role="contentinfo">
+          &copy; Copyright 2016, Patricia Wollstadt, Joseph T. Lizier, Michael Wibral.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.3.6.
+      </footer>
+      <!-- /footer -->
+
+    </div>
+    <!-- /container -->
+
+  </body>
+</html>
