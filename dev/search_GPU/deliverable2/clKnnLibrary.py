@@ -5,7 +5,7 @@ from time import time
 
 def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, thelier, nchunks, pointdim, signallength, gpuid):
  
-    triallength = signallength / nchunks
+    triallength = int(signallength / nchunks)
     #print 'Values:', pointdim, triallength, signallength, kth, thelier
 
     '''for platform in cl.get_platforms():
@@ -31,14 +31,14 @@ def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, thelier, n
     my_gpu_devices = platform[0].get_devices(device_type=cl.device_type.GPU)
     context = cl.Context(devices=my_gpu_devices)
     queue = cl.CommandQueue(context, my_gpu_devices[gpuid])
-    print "Selected Device: ", my_gpu_devices[gpuid].name
+    print(("Selected Device: ", my_gpu_devices[gpuid].name))
 
     #Check memory resources.
-    usedmem = (h_query.nbytes + h_pointset.nbytes + h_bf_distances.nbytes + h_bf_indexes.nbytes)//1024//1024
-    totalmem = my_gpu_devices[gpuid].global_mem_size//1024//1024
+    usedmem =int( (h_query.nbytes + h_pointset.nbytes + h_bf_distances.nbytes + h_bf_indexes.nbytes)//1024//1024)
+    totalmem = int(my_gpu_devices[gpuid].global_mem_size//1024//1024)
 
     if (totalmem*0.90) < usedmem:
-        print "WARNING:", usedmem, "Mb used out of", totalmem, "Mb. The GPU could run out of memory."
+        print(("WARNING:", usedmem, "Mb used out of", totalmem, "Mb. The GPU could run out of memory."))
     
 
     # Create OpenCL buffers
@@ -71,7 +71,7 @@ def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, thelier, n
     #Local memory for distances and indexes
     localmem = (numpy.dtype(numpy.float32).itemsize*kth*workitems_x + numpy.dtype(numpy.int32).itemsize*kth*workitems_x)/1024
     if localmem > my_gpu_devices[gpuid].local_mem_size/1024:
-        print "Localmem alocation will fail.", my_gpu_devices[gpuid].local_mem_size/1024, "kb available, and it needs", localmem, "kb."
+        print(( "Localmem alocation will fail.", my_gpu_devices[gpuid].local_mem_size/1024, "kb available, and it needs", localmem, "kb."))
     localmem1 = cl.LocalMemory(numpy.dtype(numpy.float32).itemsize*kth*workitems_x)
     localmem2 = cl.LocalMemory(numpy.dtype(numpy.int32).itemsize*kth*workitems_x)
 
@@ -83,9 +83,6 @@ def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, thelier, n
     cl.enqueue_copy(queue, h_bf_distances, d_bf_distances)
     cl.enqueue_copy(queue, h_bf_indexes, d_bf_indexes)
 
-    # Increase indexes so it starts at index 1 instead of index 0
-    for n in range(kth):
-        h_bf_indexes[n] += 1
 
     # Free buffers
     d_bf_distances.release()
@@ -101,7 +98,7 @@ def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, thelier, n
 
 def clFindRSAll(h_bf_npointsrange, h_pointset, h_query, h_vecradius, thelier, nchunks, pointdim, signallength, gpuid):
 
-    triallength = signallength / nchunks
+    triallength = int(signallength / nchunks)
     #print 'Values:', pointdim, triallength, signallength, kth, thelier
 
     '''for platform in cl.get_platforms():
@@ -126,14 +123,14 @@ def clFindRSAll(h_bf_npointsrange, h_pointset, h_query, h_vecradius, thelier, nc
     my_gpu_devices = platform[0].get_devices(device_type=cl.device_type.GPU)
     context = cl.Context(devices=my_gpu_devices)
     queue = cl.CommandQueue(context, my_gpu_devices[gpuid])
-    print "Selected Device: ", my_gpu_devices[gpuid].name
+    print(("Selected Device: ", my_gpu_devices[gpuid].name))
 
     #Check memory resources.
-    usedmem = (h_query.nbytes + h_pointset.nbytes + h_vecradius.nbytes + h_bf_npointsrange.nbytes)//1024//1024
-    totalmem = my_gpu_devices[gpuid].global_mem_size//1024//1024
+    usedmem = int((h_query.nbytes + h_pointset.nbytes + h_vecradius.nbytes + h_bf_npointsrange.nbytes)//1024//1024)
+    totalmem = int(my_gpu_devices[gpuid].global_mem_size//1024//1024)
 
     if (totalmem*0.90) < usedmem:
-        print "WARNING:", usedmem, "Mb used from a total of", totalmem, "Mb. GPU could get without memory"
+        print(("WARNING:", usedmem, "Mb used from a total of", totalmem, "Mb. GPU could get without memory"))
 
     # Create OpenCL buffers
     d_bf_query = cl.Buffer(context, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=h_query)
