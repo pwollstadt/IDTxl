@@ -45,7 +45,9 @@ def omnibus_test(analysis_setup, data, n_permutations=3):
                                     cond_target_realisations)
 
     surr_distribution = np.zeros(n_permutations)
-    if data.n_replications > 1:     # TODO make this a kwarg
+    # Check if n_replications is high enough to allow for the requested number
+    # of permutations.
+    if np.math.factorial(data.n_replications) > n_permutations:
         permute_over_replications = True
     else:
         permute_over_replications = False
@@ -212,7 +214,10 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set,
     stats_table = np.zeros((len(idx_test_set), n_permutations))
     current_value_realisations = analysis_setup._current_value_realisations
     idx_c = 0
-    if data.n_replications > 1:
+
+    # Check if n_replications is high enough to allow for the requested number
+    # of permutations.
+    if np.math.factorial(data.n_replications) > n_permutations:
         permute_over_replications = True
     else:
         permute_over_replications = False
