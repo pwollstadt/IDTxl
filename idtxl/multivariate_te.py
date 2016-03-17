@@ -53,14 +53,18 @@ class Multivariate_te(Network_analysis):
             process)
 
     Attributes:
-        conditional_full : list
-            samples in the full conditional set
-        conditional_sources : list
-            source samples in the conditional set
-        conditional_target : list
-            target samples in the conditional set
+        conditional_full : list of tuples
+            samples in the full conditional set, (idx process, lag wrt current
+            value)
+        conditional_sources : list of tuples
+            source samples in the conditional set, (idx process, lag wrt current
+            value)
+        conditional_target : list of tuples
+            target samples in the conditional set, (idx process, lag wrt current
+            value)
         current_value : tuple
-            index of the current value in TE estimation
+            index of the current value in TE estimation, (idx process,
+            idx sample)
         estimator_name : string
             estimator used for TE estimation
         max_lag : int
@@ -148,6 +152,7 @@ class Multivariate_te(Network_analysis):
             print('finalsource samples: {0}'.format(self.conditional_sources))
             print('final target samples: {0}'.format(self.conditional_target))
         self._clean_up()
+        self._indices_to_lags()
         return
 
     def _check_source_set(self, sources, n_processes):
@@ -165,8 +170,11 @@ class Multivariate_te(Network_analysis):
     def _include_target_candidates(self, data):
         """Test candidates from the target's past."""
         candidates = self._define_candidates(processes=[self.target],
-                                             samples=np.arange(self.max_lag))  # TODO switch back to actual *lags'*
-                                             # samples=np.arange(self.max_lag, 0, -1))
+                                             samples=np.arange(self.max_lag))
+        # TODO switch back to actual *lags'* -> this makes things messy,
+        # because then we have some variables (e.g. candidates) in lags and
+        # others in indices (e.g. current value) -> I'd rather restructure the
+        # output from indices to lags
         sources_found = self._find_conditional(candidates, data)
         if not sources_found:
             print(('No informative sources in the target''s past - ' +
@@ -348,6 +356,17 @@ class Multivariate_te(Network_analysis):
         self._conditional_target_realisations = None
         self._current_value_realisations = None
 
+    def _indices_to_lags(self):
+        """Change sample indices to lags for each candidate set."""
+        for i in range(len(self.conditional_full)):
+            cond = self.conditional_full[i]
+            self.conditional_full[i] = (cond[0], self.max_lag - cond[1])
+        for i in range(len(self.conditional_sources)):
+            cond = self.conditional_sources[i]
+            self.conditional_sources[i] = (cond[0], self.max_lag - cond[1])
+        for i in range(len(self.conditional_target)):
+            cond = self.conditional_target[i]
+            self.conditional_target[i] = (cond[0], self.max_lag - cond[1])
 
 if __name__ == '__main__':
     dat = Data()  # initialise an empty data object
