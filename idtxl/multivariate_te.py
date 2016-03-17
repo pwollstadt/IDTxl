@@ -57,11 +57,11 @@ class Multivariate_te(Network_analysis):
             samples in the full conditional set, (idx process, lag wrt current
             value)
         conditional_sources : list of tuples
-            source samples in the conditional set, (idx process, lag wrt current
-            value)
+            source samples in the conditional set, (idx process, lag wrt
+            current value)
         conditional_target : list of tuples
-            target samples in the conditional set, (idx process, lag wrt current
-            value)
+            target samples in the conditional set, (idx process, lag wrt
+            current value)
         current_value : tuple
             index of the current value in TE estimation, (idx process,
             idx sample)
@@ -127,13 +127,16 @@ class Multivariate_te(Network_analysis):
                 index of target process
             sources : list of int or 'all'
                 indices of source processes, if 'all', all sources are tested
+
+        Note:
+            The methods finds the sets conditional_full, conditional_target,
+            conditional_sources. Internally these lists contain tuples (idx
+            process, idx sample), before the function returns these lists are
+            converted to the actual outpus, which is lists of tuples (idx
+            process, lag wrt current value).
         """
-        self._check_source_set(sources, data.n_processes)
-        self.target = target
-        self._current_value = (target, self.max_lag)
-        self._current_value_realisations = data.get_realisations(
-                                                    analysis_setup=self,
-                                                    idx=[self.current_value])
+        # Check input and clean up object if it was used before.
+        self._initialise(data, sources, target)
 
         print('---------------------------- (1) include target candidates')
         self._include_target_candidates(data)
@@ -155,10 +158,26 @@ class Multivariate_te(Network_analysis):
         self._indices_to_lags()
         return
 
+    def _initialise(self, data, sources, target):
+        """Check input and set everything to initial values."""
+        self._check_source_set(sources, data.n_processes)
+        self.target = target
+        self._current_value = (target, self.max_lag)
+        self._current_value_realisations = data.get_realisations(
+                                                    analysis_setup=self,
+                                                    idx=[self.current_value])
+        if self.conditional_full is not None:
+            self.conditional_full = []
+            self._conditional_realisations = None
+        if self.conditional_sources is not None:
+            self.conditional_sources = []
+        if self.conditional_target is not None:
+            self.conditional_target = []
+
     def _check_source_set(self, sources, n_processes):
         """Set default if no source set was provided by the user."""
         if sources == 'all':
-            self.source_set = [x for x in range(self.n_processes)]
+            self.source_set = [x for x in range(n_processes)]
             self.source_set.pop(self.target)
             if VERBOSE:
                 print('Testing sources {0}'.format(self.source_set))
@@ -171,10 +190,6 @@ class Multivariate_te(Network_analysis):
         """Test candidates from the target's past."""
         candidates = self._define_candidates(processes=[self.target],
                                              samples=np.arange(self.max_lag))
-        # TODO switch back to actual *lags'* -> this makes things messy,
-        # because then we have some variables (e.g. candidates) in lags and
-        # others in indices (e.g. current value) -> I'd rather restructure the
-        # output from indices to lags
         sources_found = self._find_conditional(candidates, data)
         if not sources_found:
             print(('No informative sources in the target''s past - ' +
@@ -369,21 +384,17 @@ class Multivariate_te(Network_analysis):
             self.conditional_target[i] = (cond[0], self.max_lag - cond[1])
 
 if __name__ == '__main__':
-    dat = Data()  # initialise an empty data object
+    dat = Data()
     dat.generate_mute_data()
     max_lag = 5
     min_lag = 4
     cmi_estimator = 'jidt_kraskov'
     target = 0
     sources = [1, 2, 3]
-    # for t in range(dat.n_processes):
-    #     multivariate_te(dat, max_lag, min_lag, cmi_estimator, t)
+
     network_analysis = Multivariate_te(max_lag, min_lag, cmi_estimator)
     network_analysis.analyse_single_target(dat, target, sources)
 
-    # TODO
-    # test cases:
-    #   - bivariately coupled Lorenz
-    #   - independent random samples (for false positives)
-    #   - lagged copy of white noise
-
+    d = np.arange(2000).reshape((2, 1000))
+    dat2 = Data(d, dim_order='ps')
+    network_analysis.analyse_single_target(dat2, target)

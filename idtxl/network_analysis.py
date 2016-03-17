@@ -43,7 +43,7 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
     def __init__(self): # TODO a lot of these needs to go into the child class
         self.target = None
         self.current_value = None  # TODO rename this to current_target_variable??
-        self.conditional_full = None  # TODO this is not consistent with the other two
+        self.conditional_full = []
         self.conditional_sources = []
         self.conditional_target = []
         self._current_value_realisations = None
@@ -81,14 +81,13 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
     @property
     def conditional_full(self):
         """List of indices of the full conditional set."""
-        if self._current_value_realisations is None:
+        if self._conditional_full is None:
             print('Attribute has not been set yet.')
         return self._conditional_full
 
     @conditional_full.setter
     def conditional_full(self, idx_list):
-        if (idx_list is not None) and (type(idx_list) is not list or
-                                       (type(idx_list[0]) is not tuple)):
+        if (type(idx_list) is not list and (type(idx_list[0]) is not tuple)):
             raise TypeError(('Expected a list of tuples (index process, ' +
                              'index sample).'))
         self._conditional_full = idx_list
@@ -96,7 +95,7 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
     @property
     def conditional_target(self):
         """List of indices of target samples in the conditional set."""
-        if self._current_value_realisations is None:
+        if self._conditional_target is None:
             print('Attribute has not been set yet.')
         return self._conditional_target
 
@@ -110,7 +109,7 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
     @property
     def conditional_sources(self):
         """List of indices of source samples in the conditional set."""
-        if self._current_value_realisations is None:
+        if self._conditional_sources is None:
             print('Attribute has not been set yet.')
         return self._conditional_sources
 
