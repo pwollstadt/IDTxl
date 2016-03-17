@@ -48,6 +48,7 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
         self.conditional_target = []
         self._current_value_realisations = None
         self._conditional_realisations = None
+        self._replication_index = None
 
     @property
     def current_value(self):

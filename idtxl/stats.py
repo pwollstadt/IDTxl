@@ -9,6 +9,8 @@ import copy as cp
 import numpy as np
 import utils
 
+VERBOSE = True
+
 
 def omnibus_test(analysis_setup, data, n_permutations=3):
     """Perform an omnibus test on identified conditional variables.
@@ -32,9 +34,9 @@ def omnibus_test(analysis_setup, data, n_permutations=3):
                                     len(analysis_setup.conditional_target),
                                     len(analysis_setup.conditional_sources)))
 
-    # TODO I'm doing this, b/c reals for sources and targets are created on the
-    # fly, which is costly, this sucks b/c current_value_realisations are the
-    # actual data
+    # Create temporary variables b/c realisations for sources and targets are
+    # created on the fly, which is costly (this does not apply to the current
+    # value realisations).
     cond_source_realisations = analysis_setup._conditional_sources_realisations
     cond_target_realisations = analysis_setup._conditional_target_realisations
     te_orig = analysis_setup._cmi_estimator.estimate(
@@ -43,10 +45,20 @@ def omnibus_test(analysis_setup, data, n_permutations=3):
                                     cond_target_realisations)
 
     surr_distribution = np.zeros(n_permutations)
+    if data.n_replications > 1:     # TODO make this a kwarg
+        permute_over_replications = True
+    else:
+        permute_over_replications = False
+
     for perm in range(n_permutations):
-        surr_conditional_realisations = data.permute_data(
-                                        analysis_setup,
-                                        analysis_setup.conditional_sources)
+        if permute_over_replications:
+            surr_conditional_realisations = data.permute_data(
+                                        analysis_setup.current_value,
+                                        analysis_setup.conditional_sources)[0]
+        else:
+            surr_conditional_realisations = (_permute_realisations(
+                                            cond_source_realisations,
+                                            analysis_setup._replication_index))
         surr_distribution[perm] = analysis_setup._cmi_estimator.estimate(
                                     surr_conditional_realisations,
                                     analysis_setup._current_value_realisations,
@@ -78,8 +90,8 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
     if not test_set:  # TODO this is an interim thing -> decide what to do
         return True
 
-    stats_table = _fill_surrogate_table(analysis_setup, data, test_set,
-                                        n_permutations)
+    stats_table = _create_surrogate_table(analysis_setup, data, test_set,
+                                          n_permutations)
     max_distribution = _find_table_max(stats_table)
     [significance, pvalue] = _find_pvalue(te_max_candidate, max_distribution)
     # return np.random.rand() > 0.5
@@ -124,9 +136,9 @@ def max_statistic_sequential(analysis_setup, data, n_permutations=5):
 
     # TODO not sure about this, because the surrogate table also contains the
     # candidate we're testing
-    stats_table = _fill_surrogate_table(analysis_setup, data,  # TODO call this 'create..'
-                                        analysis_setup.conditional_full,
-                                        n_permutations)
+    stats_table = _create_surrogate_table(analysis_setup, data,
+                                          analysis_setup.conditional_full,
+                                          n_permutations)
     max_distribution = _sort_table_max(stats_table)
 
     significance = np.zeros(len(analysis_setup.conditional_full)).astype(bool)
@@ -171,15 +183,16 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
     if not test_set:  # TODO this is an interim thing -> decide what to do
         return True
 
-    stats_table = _fill_surrogate_table(analysis_setup, data, test_set,
-                                        n_permutations)
+    stats_table = _create_surrogate_table(analysis_setup, data, test_set,
+                                          n_permutations)
     min_distribution = _find_table_min(stats_table)
     [significance, pvalue] = _find_pvalue(te_min_candidate, min_distribution)
     # return np.random.rand() > 0.5
     return significance, pvalue
 
 
-def _fill_surrogate_table(analysis_setup, data, idx_test_set, n_permutations):
+def _create_surrogate_table(analysis_setup, data, idx_test_set,
+                            n_permutations):
     """Create a table of surrogate transfer entropy values.
 
     Calculate transfer entropy between surrogates for each source in the test
@@ -199,21 +212,38 @@ def _fill_surrogate_table(analysis_setup, data, idx_test_set, n_permutations):
     stats_table = np.zeros((len(idx_test_set), n_permutations))
     current_value_realisations = analysis_setup._current_value_realisations
     idx_c = 0
-    print('fill surrogates table')
+    if data.n_replications > 1:
+        permute_over_replications = True
+    else:
+        permute_over_replications = False
+
+    if VERBOSE:
+        print('create surrogates table')
     for candidate in idx_test_set:
-        print('\tcand. {0}, n_perm: {1}. Done:   '.format(candidate,
-                                                          n_permutations),
-              end='')
+        if VERBOSE:
+            print('\tcand. {0}, n_perm: {1}. Done:    '.format(candidate,
+                                                               n_permutations),
+                  end='')
         for perm in range(n_permutations):
-            surr_candidate_realisations = data.permute_data(analysis_setup,
-                                                            [candidate])
+            if permute_over_replications:
+                surr_candidate_realisations = data.permute_data(
+                                                analysis_setup.current_value,
+                                                [candidate])[0]
+            else:
+                [real, repl_idx] = data.get_realisations(
+                                                analysis_setup.current_value,
+                                                [candidate])
+                surr_candidate_realisations = _permute_realisations(real,
+                                                                    repl_idx)
             stats_table[idx_c, perm] = analysis_setup._cmi_estimator.estimate(
                         surr_candidate_realisations,
                         current_value_realisations,
                         analysis_setup._conditional_realisations)  # TODO remove current candidate from this
-            print('\b\b{num:02d}'.format(num=perm + 1), end='')
-            sys.stdout.flush()
-        print(' ')
+            if VERBOSE:
+                print('\b\b\b{num:03d}'.format(num=perm + 1), end='')
+                sys.stdout.flush()
+        if VERBOSE:
+            print(' ')
         idx_c += 1
 
     return stats_table
@@ -236,13 +266,63 @@ def _sort_table_max(table):
     return table
 
 
-def _sort_table_min(table):  # TODO just search the minimum for each permutation
+def _sort_table_min(table):
     """Sort each column in a table in descending order."""
     table_sorted = np.empty(table.shape)
     for permutation in range(0, table.shape[1]):
         table_sorted[:, permutation] = utils.sort_descending(
                                             table[:, permutation])
     return table_sorted
+
+
+def _permute_realisations(realisations, replication_idx, perm_range='max'):
+    """Permute realisations in time within each replication.
+
+    Permute realisations in time within each replication. This is the fall-back
+    option if the number of replications is too small to allow a sufficient
+    number of permutations for the generation of surrogate data.
+
+    Args:
+        realisations : numpy array
+            shape[0] realisations of shape[1] variables
+        replication_idx : numpy array
+            the index of the replication each realisation came from
+        perm_range : int or 'max'
+            range in which realisations can be permutet, if 'max' realisations
+            are permuted within the whole replication, otherwise blocks of
+            length perm_range are permuted one at a time
+
+    Returns:
+        numpy array
+            realisations permuted over time
+    """
+    if type(perm_range) is not str:
+        assert(perm_range > 2), ('Permutation range has to be larger than 2',
+                                 'otherwise there is nothing to permute.')
+    realisations_perm = cp.copy(realisations)
+
+    # Build a permuation mask that can be applied to all realisation from one
+    # replication at a time.
+    n_per_repl = sum(replication_idx == 0)
+    if perm_range == 'max':
+        perm = np.random.permutation(n_per_repl)
+    else:
+        perm = np.empty(n_per_repl, dtype=int)
+        remainder = n_per_repl % perm_range
+        i = 0
+        for p in range(0, n_per_repl // perm_range):
+            perm[i:i + perm_range] = np.random.permutation(perm_range) + i
+            i += perm_range
+        if remainder > 0:
+            perm[-remainder:] = np.random.permutation(remainder) + i
+
+    # Apply permutation to data.
+    for replication in range(max(replication_idx) + 1):
+        mask = replication_idx == replication
+        d = realisations_perm[mask, :]
+        realisations_perm[mask, :] = d[perm, :]
+
+    return realisations_perm
 
 
 def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):

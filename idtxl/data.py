@@ -75,7 +75,7 @@ class Data():
 
     @data.deleter
     def data(self):
-        print('deleting existing data')
+        print('overwriting existing data')
         del(self._data)
 
     def set_data(self, data, dim_order):
@@ -143,7 +143,7 @@ class Data():
         self.n_samples = data.shape[1]
         self.n_replications = data.shape[2]
 
-    def _get_data(self, idx_list, analysis_setup, shuffle=False):
+    def _get_data(self, idx_list, current_value, shuffle=False):
         """Return realisations for a list of indices.
 
         Return realisations for indices in list. Optionally, realisations can
@@ -163,14 +163,14 @@ class Data():
             shuffle: boolean flag, permute blocks of replications over trials
 
         Returns:
-            realisations: numpy array with dimensions replications x number
-                of indices
+            numpy array
+                realisations with dimensions replications x number of indices
+            numpy array
+                replication index for each realisation
         """
-        n_realisations_time = self.n_samples - analysis_setup.current_value[1]
-        n_realisations_replications = self.n_replications
-        realisations = np.empty((n_realisations_time *
-                                 n_realisations_replications,
-                                 len(idx_list)))
+        n_real_time = self.n_samples - current_value[1]
+        n_real_repl = self.n_replications
+        realisations = np.empty((n_real_time * n_real_repl, len(idx_list)))
 
         if shuffle:
             replications_order = np.random.permutation(self.n_replications)
@@ -178,18 +178,30 @@ class Data():
             replications_order = np.arange(self.n_replications)
 
         i = 0
-        for idx in idx_list:  # TODO this should work for single trials!
+        for idx in idx_list:
             r = 0
-            for sample in range(n_realisations_time):
-                for replication in replications_order:
-                    realisations[r, i] = self.data[idx[0], idx[1] + sample,  # TODO change to lags
-                                                   replication]
-                    r += 1
-        i += 1
+            last_sample = idx[1] - current_value[1]  # indexing is much faster
+            if last_sample == 0:                     # than looping over time!
+                last_sample = None
+            for replication in replications_order:
+                realisations[r:r + n_real_time, i] = self.data[
+                                                        idx[0],
+                                                        idx[1]: last_sample,
+                                                        replication]
+                r += n_real_time
 
-        return realisations
+            if np.isnan(realisations[:, i]).any():
+                    print('boom')
+            i += 1
 
-    def get_realisations(self, analysis_setup, idx):
+        replications_index = np.repeat(replications_order, n_real_time)
+        assert(replications_index.shape[0] == realisations.shape[0]), ('There '
+            'seems to be a problem with the replications index.')
+
+        return realisations, replications_index
+
+
+    def get_realisations(self, current_value, idx):
         """Return all realisations of a random variable in the data.
 
         Return realisations of random variables represented by a list of
@@ -199,14 +211,16 @@ class Data():
         realisations in the raw data.
 
         Args:
-            analysis_setup : Network_analysis instance
-                contains information on the current analysis
+            current_value : tuple
+                index of the current_value in the data
             idx : list of tuples
                 indices of variables
 
         Returns:
             numpy array
-                Realisations, has dimensions n_replications x len(idx)
+                realisations with dimensions replications x number of indices
+            numpy array
+                replication index for each realisation
 
         Raises:
             TypeError
@@ -215,10 +229,10 @@ class Data():
         if type(idx) is not list:
             e = TypeError('idx_realisations must be a list of tuples.')
             raise(e)
-        return self._get_data(idx, analysis_setup, shuffle=False)
+        return self._get_data(idx, current_value, shuffle=False)
 
-    def permute_data(self, analysis_setup, idx):
-        """Return realisations permuted over replications.
+    def permute_data(self, current_value, idx):
+        """Return realisations with permuted replications (time stays intact).
 
         Return realisations for a list of indices, where realisations are
         shuffled over replications to create surrogate data. An index is
@@ -234,14 +248,18 @@ class Data():
             sample: 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 ...
 
         Args:
-            analysis_setup : Network_analysis instance
-                contains information on the current analysis
+            current_value : tuple
+                index of the current_value in the data
             idx : list of tuples
                 indices of variables
 
         Returns:
             numpy array
-                Permuted realisations, has dimensions n_replications x len(idx)
+                permuted realisations with dimensions replications x number of
+                indices
+            numpy array
+                replication index for each realisation
+
 
         Raises:
             TypeError if idx_realisations is not a list
@@ -249,7 +267,7 @@ class Data():
         if type(idx) is not list:
             e = TypeError('idx needs to be a list of tuples.')
             raise(e)
-        return self._get_data(idx, analysis_setup, shuffle=True)
+        return self._get_data(idx, current_value, shuffle=True)
 
     def generate_mute_data(self, n_samples=1000, n_replications=10):
         """Generate example data for a 5-process network.

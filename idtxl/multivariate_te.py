@@ -138,21 +138,21 @@ class Multivariate_te(Network_analysis):
         # Check input and clean up object if it was used before.
         self._initialise(data, sources, target)
 
-        print('---------------------------- (1) include target candidates')
+        print('\n---------------------------- (1) include target candidates')
         self._include_target_candidates(data)
 
-        print('---------------------------- (2) include source candidates')
+        print('\n---------------------------- (2) include source candidates')
         self._include_source_candidates(data)
 
-        print('---------------------------- (3) pruning step for {0} '
+        print('\n---------------------------- (3) pruning step for {0} '
               'candidates'.format(len(self.conditional_sources)))
         self._prune_candidates(data)
 
-        print('---------------------------- (4) final statistics')
+        print('\n---------------------------- (4) final statistics')
         self._test_final_conditional(data)
 
         if VERBOSE:
-            print('finalsource samples: {0}'.format(self.conditional_sources))
+            print('final source samples: {0}'.format(self.conditional_sources))
             print('final target samples: {0}'.format(self.conditional_target))
         self._clean_up()
         self._indices_to_lags()
@@ -160,12 +160,16 @@ class Multivariate_te(Network_analysis):
 
     def _initialise(self, data, sources, target):
         """Check input and set everything to initial values."""
-        self._check_source_set(sources, data.n_processes)
         self.target = target
+        self._check_source_set(sources, data.n_processes)
         self._current_value = (target, self.max_lag)
-        self._current_value_realisations = data.get_realisations(
-                                                    analysis_setup=self,
-                                                    idx=[self.current_value])
+        [cv_realisation, repl_idx] = data.get_realisations(
+                                             current_value=self.current_value,
+                                             idx=[self.current_value])
+        self._current_value_realisations = cv_realisation
+        self._replication_index = repl_idx  # remember which realisations come
+                                            # from which replication
+
         if self.conditional_full is not None:
             self.conditional_full = []
             self._conditional_realisations = None
@@ -195,7 +199,7 @@ class Multivariate_te(Network_analysis):
             print(('No informative sources in the target''s past - ' +
                    'adding point at t-1 in the target'))
             idx = (self.current_value[0], self.current_value[1] - 1)
-            realisations = data.get_realisations(self, [idx])
+            realisations = data.get_realisations(self.current_value, [idx])
             self._append_conditional_idx(idx)
             self._append_conditional_realisations(realisations)
 
@@ -272,8 +276,9 @@ class Multivariate_te(Network_analysis):
             temp_te = np.empty(len(candidate_set))
             i = 0
             for candidate in candidate_set:
-                candidate_realisations = data.get_realisations(self,
-                                                               [candidate])
+                candidate_realisations = data.get_realisations(
+                                                            self.current_value,
+                                                            [candidate])[0]
                 temp_te[i] = self._cmi_estimator.estimate(
                                         candidate_realisations,
                                         self._current_value_realisations,
@@ -286,7 +291,8 @@ class Multivariate_te(Network_analysis):
                 success = True
                 self._append_conditional_idx([max_candidate])
                 self._append_conditional_realisations(
-                                data.get_realisations(self, [max_candidate]))
+                            data.get_realisations(self.current_value,
+                                                  [max_candidate])[0])
             else:
                 break
 
