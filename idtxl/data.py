@@ -227,8 +227,7 @@ class Data():
                 If idx is not a list
         """
         if type(idx) is not list:
-            e = TypeError('idx_realisations must be a list of tuples.')
-            raise(e)
+            raise TypeError('idx_realisations must be a list of tuples.')
         return self._get_data(idx, current_value, shuffle=False)
 
     def permute_data(self, current_value, idx):
@@ -265,8 +264,7 @@ class Data():
             TypeError if idx_realisations is not a list
         """
         if type(idx) is not list:
-            e = TypeError('idx needs to be a list of tuples.')
-            raise(e)
+            raise TypeError('idx needs to be a list of tuples.')
         return self._get_data(idx, current_value, shuffle=True)
 
     def generate_mute_data(self, n_samples=1000, n_replications=10):

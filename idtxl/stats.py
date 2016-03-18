@@ -82,7 +82,7 @@ def network_fdr(results, alpha=0.05):
     return results
 
 
-def omnibus_test(analysis_setup, data, n_permutations=3):
+def omnibus_test(analysis_setup, data, opts):
     """Perform an omnibus test on identified conditional variables.
 
     Test the joint information transfer from all identified sources to the
@@ -96,13 +96,23 @@ def omnibus_test(analysis_setup, data, n_permutations=3):
             information on the current analysis
         data : Data instance
             raw data
-        n_permutations : int [optional]
-            number of permutations for testing (default=500)
+        opts : dict [optional]
+            parameters for statistical testing, can contain
+            'n_perm_omnibus' - number of permutations (default=500)
+            'alpha_omnibus' - critical alpha level (default=0.05)
 
     Returns:
         boolean indicating statistical significance
         the test's p-value
     """
+    try:
+        n_permutations = opts['n_perm_omnibus']
+    except KeyError:
+        n_permutations = 3  # 200
+    try:
+        alpha = opts['alpha_omnibus']
+    except KeyError:
+        alpha = 0.05
     print('no. target sourcesces: {0}, no. sources: {1}'.format(
                                     len(analysis_setup.conditional_target),
                                     len(analysis_setup.conditional_sources)))
@@ -112,10 +122,11 @@ def omnibus_test(analysis_setup, data, n_permutations=3):
     # value realisations).
     cond_source_realisations = analysis_setup._conditional_sources_realisations
     cond_target_realisations = analysis_setup._conditional_target_realisations
-    te_orig = analysis_setup._cmi_estimator.estimate(
+    te_orig = analysis_setup._cmi_calculator.estimate(
                                     cond_source_realisations,
                                     analysis_setup._current_value_realisations,
-                                    cond_target_realisations)
+                                    cond_target_realisations,
+                                    analysis_setup.options)
 
     surr_distribution = np.zeros(n_permutations)
     # Check if n_replications is high enough to allow for the requested number
@@ -134,16 +145,17 @@ def omnibus_test(analysis_setup, data, n_permutations=3):
             surr_conditional_realisations = (_permute_realisations(
                                             cond_source_realisations,
                                             analysis_setup._replication_index))
-        surr_distribution[perm] = analysis_setup._cmi_estimator.estimate(
+        surr_distribution[perm] = analysis_setup._cmi_calculator.estimate(
                                     surr_conditional_realisations,
                                     analysis_setup._current_value_realisations,
-                                    cond_target_realisations)
-    [significance, pvalue] = _find_pvalue(te_orig, surr_distribution)
+                                    cond_target_realisations,
+                                    analysis_setup.options)
+    [significance, pvalue] = _find_pvalue(te_orig, surr_distribution, alpha)
     return significance, pvalue
 
 
 def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
-                  n_permutations=3):
+                  opts=None):
     """Perform maximum statistics for one candidate source.
 
     Test if a transfer entropy value is significantly bigger than the maximum
@@ -158,28 +170,38 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
             list of indices of remaning candidates
         te_max_candidate : float
             transfer entropy value to be tested
-        n_permutations : int [optional]
-            number of permutations for testing (default=500)
+        opts : dict [optional]
+            parameters for statistical testing, can contain
+            'n_perm_max_stat' - number of permutations (default=500)
+            'alpha_max_stat' - critical alpha level (default=0.05)
 
     Returns:
         boolean indicating statistical significance
         the test's p-value
     """
+    try:
+        n_perm = opts['n_perm_max_stat']
+    except KeyError:
+        n_perm = 3  # 200
+    try:
+        alpha = opts['alpha_max_stat']
+    except KeyError:
+        alpha = 0.05
     test_set = cp.copy(candidate_set)
 
     if not test_set:  # TODO this is an interim thing -> decide what to do
         return True
 
     stats_table = _create_surrogate_table(analysis_setup, data, test_set,
-                                          n_permutations)
+                                          n_perm)
     max_distribution = _find_table_max(stats_table)
-    [significance, pvalue] = _find_pvalue(te_max_candidate, max_distribution)
-    # return np.random.rand() > 0.5
-    # return True
+    [significance, pvalue] = _find_pvalue(te_max_candidate,
+                                          max_distribution,
+                                          alpha)
     return significance, pvalue
 
 
-def max_statistic_sequential(analysis_setup, data, n_permutations=5):
+def max_statistic_sequential(analysis_setup, data, opts=None):
     """Perform sequential maximum statistics for a set of candidate sources.
 
     Test if sorted transfer entropy (TE) values are significantly bigger than
@@ -195,8 +217,10 @@ def max_statistic_sequential(analysis_setup, data, n_permutations=5):
             information on the current analysis
         data : Data instance
             raw data
-        n_permutations : int [optional]
-            number of permutations for testing (default=500)
+        opts : dict [optional]
+            parameters for statistical testing, can contain
+            'n_perm_max_seq' - number of permutations (default=500)
+            'alpha_max_seq' - critical alpha level (default=0.05)
 
     Returns:
         bool
@@ -204,13 +228,21 @@ def max_statistic_sequential(analysis_setup, data, n_permutations=5):
         numpy array
             the test's p-values for each source
     """
+    try:
+        n_permutations = opts['n_perm_max_seq']
+    except KeyError:
+        n_permutations = 3  # 200
+    try:
+        alpha = opts['alpha_max_seq']
+    except KeyError:
+        alpha = 0.05
     conditional_te = np.empty(len(analysis_setup.conditional_sources))
     i = 0
     for conditional in analysis_setup.conditional_sources:
         [temp_cond, temp_cand] = analysis_setup._remove_realisation(
                                             analysis_setup.conditional_sources,
                                             conditional)
-        conditional_te[i] = analysis_setup._cmi_estimator.estimate(
+        conditional_te[i] = analysis_setup._cmi_calculator.estimate(
                                     temp_cand,
                                     analysis_setup._current_value_realisations,
                                     temp_cond)
@@ -230,7 +262,7 @@ def max_statistic_sequential(analysis_setup, data, n_permutations=5):
     pvalue = np.zeros(conditional_te.shape[0])
     for c in range(conditional_te.shape[0]):
         [s, v] = _find_pvalue(conditional_te_sorted[c],
-                              max_distribution[c, ])
+                              max_distribution[c, ], alpha)
         significance[c] = s
         pvalue[c] = v
 
@@ -246,7 +278,7 @@ def max_statistic_sequential(analysis_setup, data, n_permutations=5):
 
 
 def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
-                  n_permutations=3):
+                  opts=None):
     """Perform minimum statistics for one candidate source.
 
     Test if a transfer entropy value is significantly bigger than the minimum
@@ -261,22 +293,33 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
             list of indices of remaning candidates
         te_min_candidate : float
             transfer entropy value to be tested
-        n_permutations : int [optional]
-            number of permutations for testing (default=500)
+        opts : dict [optional]
+            parameters for statistical testing, can contain
+            'n_perm_min_stat' - number of permutations (default=500)
+            'alpha_min_stat' - critical alpha level (default=0.05)
 
     Returns:
-        boolean indicating statistical significance of the test's p-value
-        pvalue
+        boolean indicating statistical significance
+        the test's p-value
     """
+    try:
+        n_perm = opts['n_perm_min_stat']
+    except KeyError:
+        n_perm = 3  # 200
+    try:
+        alpha = opts['alpha_min_stat']
+    except KeyError:
+        alpha = 0.05
     test_set = cp.copy(candidate_set)
 
     if not test_set:  # TODO this is an interim thing -> decide what to do
         return True
 
     stats_table = _create_surrogate_table(analysis_setup, data, test_set,
-                                          n_permutations)
+                                          n_perm)
     min_distribution = _find_table_min(stats_table)
-    [significance, pvalue] = _find_pvalue(te_min_candidate, min_distribution)
+    [significance, pvalue] = _find_pvalue(te_min_candidate, min_distribution,
+                                          alpha)
     # return np.random.rand() > 0.5
     return significance, pvalue
 
@@ -333,10 +376,11 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set,
                                                 [candidate])
                 surr_candidate_realisations = _permute_realisations(real,
                                                                     repl_idx)
-            stats_table[idx_c, perm] = analysis_setup._cmi_estimator.estimate(
+            stats_table[idx_c, perm] = analysis_setup._cmi_calculator.estimate(
                         surr_candidate_realisations,
                         current_value_realisations,
-                        analysis_setup._conditional_realisations)  # TODO remove current candidate from this
+                        analysis_setup._conditional_realisations,
+                        analysis_setup.options)  # TODO remove current candidate from this
             if VERBOSE:
                 print('\b\b\b{num:03d}'.format(num=perm + 1), end='')
                 sys.stdout.flush()
@@ -451,3 +495,30 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
         pvalue = min(p_bigger, p_smaller)
     significance = pvalue < alpha
     return significance, pvalue
+
+
+if __name__ == '__main__':
+    r1 = {
+        'conditional_sources': [(0, 1), (0, 2), (0, 3), (2, 1), (2, 0)],
+        'conditional_full': [(0, 1), (0, 2), (0, 3), (2, 1), (2, 0)],
+        'omnibus_sign': True,
+        'cond_sources_pval': np.array([0.001, 0.0014, 0.01, 0.045, 0.047])
+        }
+    r2 = {
+        'conditional_sources': [(2, 0), (2, 1), (2, 2), (3, 1), (3, 2)],
+        'conditional_full': [(2, 0), (2, 1), (2, 2), (3, 1), (3, 2)],
+        'omnibus_sign': True,
+        'cond_sources_pval': np.array([0.00001, 0.00014, 0.01, 0.035, 0.02])
+        }
+    r3 = {
+        'conditional_sources': [],
+        'conditional_full': [(3, 0), (3, 1)],
+        'omnibus_sign': False,
+        'cond_sources_pval': None
+        }
+    res = {
+        1: r1,
+        2: r2,
+        3: r3
+    }
+    res_pruned = network_fdr(res)

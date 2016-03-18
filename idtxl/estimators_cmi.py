@@ -1,14 +1,21 @@
 import jpype as jp
 import pyinfo
+import utils as utils
 
 
-def jidt_kraskov(self, var1, var2, conditional, knn=4):
+def jidt_kraskov(self, var1, var2, conditional, opts=None):
     """Calculate conditional mutual infor with JIDT's Kraskov implementation.
 
     Calculate the conditional mutual information between three variables. Call
     JIDT via jpype and use the Kraskov 2 estimator. If no conditional is given
     (is None), the function returns the mutual information between var1 and
-    var2.
+    var2. References:
+
+        Kraskov, A., Stögbauer, H., & Grassberger, P. (2004). Estimating mutual
+        information. Physical review E, 69(6), 066138.
+
+        Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
+        studying the dynamics of complex systems. Front. Robot. AI, 1(11).
 
     This function is ment to be imported into the set_estimator module and used
     as a method in the Estimator_cmi class.
@@ -20,11 +27,52 @@ def jidt_kraskov(self, var1, var2, conditional, knn=4):
         var2: numpy array with realisations of the second random variable
         conditional: numpy array with realisations of the random variable for
             conditioning
-        knn: int, number of nearest neighbours for the Kraskov estimator
+        opts : dict [optional]
+            sets estimation parameters:
+            'kraskov_k' - no. nearest neighbours for KNN search (default=4)
+            'normalise' - z-standardise data (default=False)
+            'theiler_t' - no. next temporal neighbours ignored in KNN and
+            range searches (default='ACT', the autocorr. time of the target)
+            'noise_level' - random noise added to the data (default=1e-8)
+            'num_threads' - no. CPU threads used for estimation
+            (default='USE_ALL', this uses all available cores on the machine!)
 
     Returns:
         conditional mutual information
+
+    Note:
+        Some technical details: JIDT normalises over realisations, IDTxl
+        normalises over raw data once, outside the CMI calculator to save
+        computation time. The Theiler window ignores trial boundaries. The
+        CMI estimator does add noise to the data as a default. To make analysis
+        runs replicable set noise_level to 0.
     """
+    if opts is None:
+        opts = {}
+    try:
+        kraskov_k = str(opts['kraskov_k'])
+    except KeyError:
+        kraskov_k = str(4)
+    try:
+        if opts['normalise']:
+            normalise = 'true'
+        else:
+            normalise = 'false'
+    except KeyError:
+        normalise = 'false'
+    try:
+        theiler_t = str(opts['theiler_t'])
+    except KeyError:
+        theiler_t = str(utils.autocorrelation(var1))  # TODO this is no good bc we don't know if var1 is the target
+    try:
+        noise_level = str(opts['noise_level'])
+    except KeyError:
+        noise_level = str(1e-8)
+    try:
+        num_threads = str(opts['num_threads'])
+    except KeyError:
+        num_threads = 'USE_ALL'
+
 
     jarLocation = 'infodynamics.jar'
     if not jp.isJVMStarted():
@@ -40,26 +88,21 @@ def jidt_kraskov(self, var1, var2, conditional, knn=4):
         calcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
                      ConditionalMutualInfoCalculatorMultiVariateKraskov1)
 
-    # TODO add the following properties as kwargs to the function
+
     calc = calcClass()
-    calc.setProperty('NORMALISE', 'true')  # this is slightly different to what is done in TRENTOOL -> maybe do this 'outside'
-    calc.setProperty('k', str(knn))
-    calc.setProperty('DYN_CORR_EXCL', str(0))  # Theiler window, this ignores trial boundaries! (TRENTOOL does too)
-    calc.setProperty('NOISE_LEVEL_TO_ADD', str(1e-8))  # JIDT default -> set to 0 by default, to make calculations replicable
-    calc.setProperty('NUM_THREADS', 'USE_ALL')  # or an int
+    calc.setProperty('NORMALISE', normalise)
+    calc.setProperty('k', kraskov_k)
+    calc.setProperty('DYN_CORR_EXCL', theiler_t)
+    calc.setProperty('NOISE_LEVEL_TO_ADD', noise_level)
+    calc.setProperty('NUM_THREADS', num_threads)
 
     if conditional is not None:
         calc.initialise(var1.shape[1], var2.shape[1],  # needs dims of vars
                         conditional.shape[1])
-        # calc.setObservations(JArray(JDouble, 2)(var1),
-        #                     JArray(JDouble, 2)(var2),
-        #                     JArray(JDouble, 2)(conditional))
         calc.setObservations(var1, var2, conditional)
         return calc.computeAverageLocalOfObservations()
     else:
         calc.initialise(var1.shape[1], var2.shape[1])
-        # calc.setObservations(jp.JArray(jp.JDouble, 2)(var1),
-        #                      jp.JArray(jp.JDouble, 2)(var2))
         calc.setObservations(var1, var2)
         return calc.computeAverageLocalOfObservations()
 

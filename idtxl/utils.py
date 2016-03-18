@@ -69,10 +69,13 @@ def autocorrelation(x):
     #       estimate-autocorrelation-using-python
     # after Wikipedie:
     # https://en.wikipedia.org/wiki/Autocorrelation#Estimation
-    n = len(x)
-    variance = x.var()
-    x = x - x.mean()
-    r = np.correlate(x, x, mode = 'full')[-n:]
-    # assert n.allclose(r, N.array([(x[:n-k]*x[-(n-k):]).sum() for k in range(n)]))
-    result = r / (variance * (n.arange(n, 0, -1)))
-    return result
+#==============================================================================
+#
+#     n = len(x)
+#     variance = x.var()
+#     x = x - x.mean()
+#     r = np.correlate(x, x, mode = 'full')[-n:]
+#     # assert n.allclose(r, N.array([(x[:n-k]*x[-(n-k):]).sum() for k in range(n)]))
+#     result = r / (variance * (n.arange(n, 0, -1)))
+#==============================================================================
+    return 3

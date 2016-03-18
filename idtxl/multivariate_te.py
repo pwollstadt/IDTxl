@@ -27,9 +27,6 @@ from set_estimator import Estimator_cmi
 
 VERBOSE = True
 
-# TODO create surrogates from embeddings/realisations and surrogates from data/
-# replications
-
 
 class Multivariate_te(Network_analysis):
     """Set up a network analysis using multivariate transfer entropy.
@@ -43,14 +40,15 @@ class Multivariate_te(Network_analysis):
             maximum temporal search depth
         min_lag : int
             minimum temporal search depth
-        cmi_calculator_name : string
-            name of the TE calculator to be used
-        target : int
-            the target processes' index in the data
-        source_set : list
-            process indices used as potential sources (default:
-            all possible processes, i.e., all processes other than the target
-            process)
+        options : dict [optional]
+            parameters for estimator use and statistics
+            'n_perm_*' - number of permutations, where * can be 'max_stats',
+            'min_stats', and 'omnibus' (default=500)
+            'alpha_*' - critical alpha level for statistical significance,
+            where * can be 'max_stats',  'min_stats', and 'omnibus'
+            (default=0.05)
+            'cmi_calc_name' - estimator to be used for CMI calculation
+            (For estimator options see the respective documentation.)
 
     Attributes:
         conditional_full : list of tuples
@@ -62,8 +60,8 @@ class Multivariate_te(Network_analysis):
         current_value : tuple
             index of the current value in TE estimation, (idx process,
             idx sample)
-        estimator_name : string
-            estimator used for TE estimation
+        calculator_name : string
+            calculator used for TE estimation
         max_lag : int
             maximum temporal search depth
         min_lag : int
@@ -81,16 +79,22 @@ class Multivariate_te(Network_analysis):
             index of target process
 
     """
-    def __init__(self, max_lag, min_lag, cmi_calculator_name):
+    # TODO right now 'options' holds all optional params (stats AND estimator).
+    # We could split this up by adding the stats options to the analyse_*
+    # methods?
+    def __init__(self, max_lag, min_lag, options):
         self.max_lag = max_lag
         self.min_lag = min_lag
-        self.estimator_name = cmi_calculator_name
-        self._cmi_estimator = Estimator_cmi(cmi_calculator_name)  # TODO should be 'calculator'
-        # TODO add kwargs for the estimator
         self.sign_omnibus = None
         self.sign_individual_sources = None
         self.pvalue_omnibus = None
         self.pvalues_sign_sources = None
+        self.options = options
+        try:
+            self.calculator_name = options['cmi_calc_name']
+        except KeyError:
+            raise KeyError('Calculator name was not specified!')
+        self._cmi_calculator = Estimator_cmi(self.calculator_name)  # TODO should be 'calculator'
         super().__init__()
 
     def analyse_network(self, data, targets='all', sources='all'):
@@ -105,10 +109,10 @@ class Multivariate_te(Network_analysis):
             dat.generate_mute_data()
             max_lag = 5
             min_lag = 4
-            cmi_estimator = 'jidt_kraskov'
+            cmi_calculator = 'jidt_kraskov'
             targets = [0, 1, 2]
             sources = 'all'
-            network_analysis = Multivariate_te(max_lag, min_lag, cmi_estimator)
+            network_analysis = Multivariate_te(max_lag, min_lag, cmi_calculator)
             network_analysis.analyse_network(dat, targets, sources)
             sources = [[1, 2, 3], ['all'], [1]]  # set sources for each target
             network_analysis.analyse_network(dat, targets, sources)
@@ -266,7 +270,7 @@ class Multivariate_te(Network_analysis):
         """Test candidates from the target's past."""
         candidates = self._define_candidates(processes=[self.target],
                                              samples=np.arange(self.max_lag))
-        sources_found = self._find_conditional(candidates, data)
+        sources_found = self._find_conditional(candidates, data, self.options)
         if not sources_found:
             print(('No informative sources in the target''s past - ' +
                    'adding point at t-1 in the target'))
@@ -281,7 +285,7 @@ class Multivariate_te(Network_analysis):
                                          processes=self.source_set,
                                          samples=np.arange(self.max_lag -
                                                            self.min_lag + 1))
-        _ = self._find_conditional(candidates, data)
+        _ = self._find_conditional(candidates, data, self.options)
 
     def _test_final_conditional(self, data):  # TODO test this!
         """Perform statistical test on the final conditional set."""
@@ -289,11 +293,12 @@ class Multivariate_te(Network_analysis):
             print('---------------------------- no sources found')
         else:
             print(self.conditional_full)
-            [s, p] = stats.omnibus_test(self, data)
+            [s, p] = stats.omnibus_test(self, data, self.options)
             self.sign_omnibus = s
             self.pvalue_omnibus = p
             if self.sign_omnibus:
-                [s, p] = stats.max_statistic_sequential(self, data)
+                [s, p] = stats.max_statistic_sequential(self, data,
+                                                        self.options)
                 # Remove non-significant sources from the candidate set.
                 for i in range(s.shape[0] - 1, -1, -1):
                     cand = self.conditional_sources[i]
@@ -321,7 +326,7 @@ class Multivariate_te(Network_analysis):
             candidate_set.append(idx)
         return candidate_set
 
-    def _find_conditional(self, candidate_set, data):
+    def _find_conditional(self, candidate_set, data, options):
         """Find informative conditioning set from a set of candidate samples.
 
         Loop over each candidate in the candidate set and test if it has
@@ -331,22 +336,19 @@ class Multivariate_te(Network_analysis):
         conditional set.
 
         Args:
-            data: instance of Data class
-            cmi_estimator: instance of Estimator_cmi class
-            candidate_set: list of tuples, where each tuple is an index with
-                entries (process index, sample index)
-            conditional_set: if available, list with indices of samples
-                already in the conditional set (default is an empty numpy
-                array), new sources are added to the array
-            conditional_realisations: if available, realisations of samples
-                already in the conditional set (default is an empty numpy
-                array), realisations of new sources are added to the array
+            candidate_set : list of tuples
+                candidate set to be tested, where each entry is a tuple
+                (process index, sample index)
+            data : Data instance
+                raw data
+            options : dict [optional]
+                parameters for estimation and statistical testing
 
         Returns:
-            conditional_set: list of indices with informative sources from
-                the candidate set
-            conditional_realisations: numpy array with realisations of the
-                conditional set
+            list of tuples
+                indices of the conditional set created from the candidate set
+            conditional_realisations: numpy array
+                realisations of the conditional set
         """
         success = False
         while candidate_set:
@@ -358,14 +360,15 @@ class Multivariate_te(Network_analysis):
                 candidate_realisations = data.get_realisations(
                                                             self.current_value,
                                                             [candidate])[0]
-                temp_te[i] = self._cmi_estimator.estimate(
+                temp_te[i] = self._cmi_calculator.estimate(
                                         candidate_realisations,
                                         self._current_value_realisations,
-                                        self._conditional_realisations)
+                                        self._conditional_realisations,
+                                        options)
             te_max_candidate = max(temp_te)
             max_candidate = candidate_set.pop(np.argmax(temp_te))
             significant = stats.max_statistic(self, data, candidate_set,
-                                              te_max_candidate)
+                                              te_max_candidate, options)
             if significant:
                 success = True
                 self._append_conditional_idx([max_candidate])
@@ -386,12 +389,11 @@ class Multivariate_te(Network_analysis):
         final set.
 
         Args:
-            data: instance of Data class
-            conditional_set: set of informative sources about the target
+            data : Data instance
+                raw data
+            options : dict [optional]
+                parameters for estimation and statistical testing
 
-        Returns:
-            conditional_set_pruned: list of indices of samples in the
-            conditional set after removal of spurious samples
         """
         significant = True
         while self.conditional_sources:
@@ -401,16 +403,18 @@ class Multivariate_te(Network_analysis):
                 [temp_cond, temp_cand] = self._remove_realisation(
                                                     self.conditional_sources,
                                                     candidate)
-                temp_te[i] = self._cmi_estimator.estimate(
+                temp_te[i] = self._cmi_calculator.estimate(
                                             temp_cand,
                                             self._current_value_realisations,
-                                            temp_cond)
+                                            temp_cond,
+                                            self.options)
 
             te_min_candidate = min(temp_te)
             test_set = cp.copy(self.conditional_sources)  # TODO check this
             test_set.pop(test_set.index(candidate))
             significant = stats.min_statistic(self, data, test_set,
-                                              te_min_candidate)
+                                              te_min_candidate,
+                                              self.options)
             if not significant:
                 self._remove_candidate(candidate)
             else:
@@ -474,11 +478,13 @@ if __name__ == '__main__':
     dat.generate_mute_data(100, 5)
     max_lag = 5
     min_lag = 4
-    cmi_estimator = 'jidt_kraskov'
+    analysis_opts = {
+        'cmi_calc_name': 'jidt_kraskov'
+        }
     target = 0
     sources = [1, 2, 3]
 
-    network_analysis = Multivariate_te(max_lag, min_lag, cmi_estimator)
+    network_analysis = Multivariate_te(max_lag, min_lag, analysis_opts)
     # res = network_analysis.analyse_single_target(dat, target, sources)
 
     d = np.arange(2000).reshape((2, 1000))
