@@ -12,6 +12,76 @@ import utils
 VERBOSE = True
 
 
+def network_fdr(results, alpha=0.05):
+    """Perform FDR-correction on results of network inference.
+
+    Perform correction of the false discovery rate (FDR) for all significant
+    links obtained from network inference. Reference:
+
+        Genovese, C.R., Lazar, N.A., & Nichols, T. (2002). Thresholding of
+        statistical maps in functional neuroimaging using the false discovery
+        rate. Neuroimage, 15(4), 870-878.
+
+    Args:
+        results : dict
+            network inference results where each dict entry represents results
+            for one target node
+        alpha : float [optional]
+            critical alpha value for statistical significance
+
+    Returns:
+        dict
+            input results structure pruned of non-significant links.
+    """
+    # Get p-values from results.
+    pval = np.arange(0)
+    target_idx = np.arange(0).astype(int)
+    cands = []
+    for target in results.keys():
+        if not results[target]['omnibus_sign']:
+            continue
+        n_sign = results[target]['cond_sources_pval'].size
+        pval = np.append(pval, results[target]['cond_sources_pval'])
+        target_idx = np.append(target_idx,
+                               np.ones(n_sign) * target).astype(int)
+        cands = cands + results[target]['conditional_sources']
+
+    if pval.size == 0:
+        print('No links in final results. Return ...')
+        return
+
+    sort_idx = np.argsort(pval)
+    pval.sort()
+
+    # Calculate threshold (exact or by approximating the harmonic sum).
+    n = pval.size
+    if n < 1000:
+        thresh = ((np.arange(1, n + 1) / n) * alpha /
+                  sum(1 / np.arange(1, n + 1)))
+    else:
+        thresh = ((np.arange(1, n + 1) / n) * alpha /
+                  (np.log(n) + np.e))  # aprx. harmonic sum with Euler's number
+
+    # Compare data to threshold and prepare output:
+    sign = pval <= thresh
+    first_false = np.where(sign == False)[0][0]
+    sign[first_false:] = False  # to avoid false positives due to equal pvals
+    sign = sign[sort_idx]
+    for s in range(sign.shape[0]):
+        if sign[s]:
+            continue
+        else:
+            # Remove non-significant candidate and its p-value from results.
+            t = target_idx[s]
+            cand = cands[s]
+            cand_ind = results[t]['conditional_sources'].index(cand)
+            results[t]['conditional_sources'].pop(cand_ind)
+            np.delete(results[t]['cond_sources_pval'], cand_ind)
+            results[t]['conditional_full'].pop(
+                                    results[t]['conditional_full'].index(cand))
+    return results
+
+
 def omnibus_test(analysis_setup, data, n_permutations=3):
     """Perform an omnibus test on identified conditional variables.
 
@@ -22,9 +92,12 @@ def omnibus_test(analysis_setup, data, n_permutations=3):
     distribution.
 
     Args:
-        analysis_setup: instance of Multivariate_te class
-        data: instance of Data class
-        n_permutations: number of permutations for testing (default=500)
+        analysis_setup : Multivariate_te instance
+            information on the current analysis
+        data : Data instance
+            raw data
+        n_permutations : int [optional]
+            number of permutations for testing (default=500)
 
     Returns:
         boolean indicating statistical significance
@@ -77,11 +150,16 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
     values obtained from surrogates of all remanining candidates.
 
     Args:
-        analysis_setup: instance of Multivariate_te class
-        data: instance of Data class
-        candidate_set: list of indices of remaning candidates
-        te_max_candidate: transfer entropy value to be tested
-        n_permutations: number of permutations for testing (default=500)
+        analysis_setup : Multivariate_te instance
+            information on the current analysis
+        data : Data instance
+            raw data
+        candidate_set : list of tuples
+            list of indices of remaning candidates
+        te_max_candidate : float
+            transfer entropy value to be tested
+        n_permutations : int [optional]
+            number of permutations for testing (default=500)
 
     Returns:
         boolean indicating statistical significance
@@ -113,19 +191,24 @@ def max_statistic_sequential(analysis_setup, data, n_permutations=5):
     considered non-significant as well.
 
     Args:
-        analysis_setup: instance of Multivariate_te class
-        data: instance of Data class
-        n_permutations: number of permutations for testing (default=500)
+        analysis_setup : Multivariate_te instance
+            information on the current analysis
+        data : Data instance
+            raw data
+        n_permutations : int [optional]
+            number of permutations for testing (default=500)
 
     Returns:
-        boolean indicating statistical significance
-        the test's p-value
+        bool
+            statistical significance
+        numpy array
+            the test's p-values for each source
     """
-    conditional_te = np.empty(len(analysis_setup.conditional_full))
+    conditional_te = np.empty(len(analysis_setup.conditional_sources))
     i = 0
-    for conditional in analysis_setup.conditional_full:  # TODO only test source candidates
+    for conditional in analysis_setup.conditional_sources:
         [temp_cond, temp_cand] = analysis_setup._remove_realisation(
-                                            analysis_setup.conditional_full,
+                                            analysis_setup.conditional_sources,
                                             conditional)
         conditional_te[i] = analysis_setup._cmi_estimator.estimate(
                                     temp_cand,
@@ -139,13 +222,13 @@ def max_statistic_sequential(analysis_setup, data, n_permutations=5):
     # TODO not sure about this, because the surrogate table also contains the
     # candidate we're testing
     stats_table = _create_surrogate_table(analysis_setup, data,
-                                          analysis_setup.conditional_full,
+                                          analysis_setup.conditional_sources,
                                           n_permutations)
     max_distribution = _sort_table_max(stats_table)
 
-    significance = np.zeros(len(analysis_setup.conditional_full)).astype(bool)
-    pvalue = np.zeros(len(analysis_setup.conditional_full))
-    for c in range(len(analysis_setup.conditional_full)):
+    significance = np.zeros(conditional_te.shape[0]).astype(bool)
+    pvalue = np.zeros(conditional_te.shape[0])
+    for c in range(conditional_te.shape[0]):
         [s, v] = _find_pvalue(conditional_te_sorted[c],
                               max_distribution[c, ])
         significance[c] = s
@@ -170,11 +253,16 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
     values obtained from surrogates of all remanining candidates.
 
     Args:
-        analysis_setup: instance of Multivariate_te class
-        data: instance of Data class
-        candidate_set: list of indices of remaning candidates
-        te_min_candidate: transfer entropy value to be tested
-        n_permutations: number of permutations for testing (default=500)
+        analysis_setup : Multivariate_te instance
+            information on the current analysis
+        data : Data instance
+            raw data
+        candidate_set : list of tuples
+            list of indices of remaning candidates
+        te_min_candidate : float
+            transfer entropy value to be tested
+        n_permutations : int [optional]
+            number of permutations for testing (default=500)
 
     Returns:
         boolean indicating statistical significance of the test's p-value
@@ -202,14 +290,19 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set,
     the analysis setup.
 
     Args:
-        analysis_setup: instance of Multivariate_te
-        data: instance of Data
-        idx_test_set: list od indices indicating samples to be used as sources
-        n_permutations: number of permutations per source in test set
+        analysis_setup : Multivariate_te instance
+            information on the current analysis
+        data : Data instance
+            raw data
+        idx_test_set : list of tuples
+            list od indices indicating samples to be used as sources
+        n_permutations : int [optional]
+            number of permutations for testing (default=500)
 
     Returns:
-        numpy array of te values with dimensions (length test set, number of
-        surrogates)
+        numpy array
+            surrogate TE values, dimensions: (length test set, number of
+            surrogates)
     """
     stats_table = np.zeros((len(idx_test_set), n_permutations))
     current_value_realisations = analysis_setup._current_value_realisations
@@ -334,14 +427,20 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
     """Find p-value of a test statistic under some distribution.
 
     Args:
-        statistic: value to be tested against distribution
-        distribution: 1-dimensional numpy array
-        alpha: critical alpha level
-        tail: 'one' or 'two' for one-/two-tailed testing
+        statistic: numeric
+            value to be tested against distribution
+        distribution: numpy array
+            1-dimensional distribution of values, test distribution
+        alpha: float
+            critical alpha level for statistical significance
+        tail: str
+            'one' or 'two' for one-/two-tailed testing
 
     Returns:
-        boolean indicating statistical significance
-        the test's p-value
+        boolean
+            statistical significance
+        float
+            the test's p-value
     """
     assert(distribution.ndim == 1)
     if tail == 'one':

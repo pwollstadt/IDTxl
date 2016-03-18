@@ -11,76 +11,81 @@ https://docs.python.org/3.4/library/timeit.html
 """
 import cProfile
 import numpy as np
-from data import Data
-from multivariate_te import Multivariate_te
-
-data = Data(normalise=False)
-data.generate_mute_data()
-#data.set_data(np.arange(30).reshape(3,10), 'ps')
-#n_permutations = 100
-
-idx = [(1, 0), (1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (1, 0), (1, 2), (1, 3),
-       (1, 4), (2, 3), (2, 4), (1, 2), (1, 3), (1, 4), (2, 3), (2, 4)]
-cv = (0, 5)
-
-def old(data, idx, cv):
-    return data._get_data(idx, cv)
 
 
-def new(data, idx_list, current_value, shuffle=False):
-    n_realisations_time = data.n_samples - current_value[1]
-    n_realisations_replications = data.n_replications
-    realisations = np.empty((n_realisations_time *
-                             n_realisations_replications,
-                             len(idx_list)))
+r1 = {
+    'conditional_sources': [(0, 1), (0, 2), (0, 3), (2, 1), (2, 0)],
+    'conditional_full': [(0, 1), (0, 2), (0, 3), (2, 1), (2, 0)],
+    'omnibus_sign': True,
+    'cond_sources_pval': np.array([0.001, 0.0014, 0.01, 0.045, 0.047])
+    }
+r2 = {
+    'conditional_sources': [(2, 0), (2, 1), (2, 2), (3, 1), (3, 2)],
+    'conditional_full': [(2, 0), (2, 1), (2, 2), (3, 1), (3, 2)],
+    'omnibus_sign': True,
+    'cond_sources_pval': np.array([0.00001, 0.00014, 0.01, 0.035, 0.02])
+    }
+r3 = {
+    'conditional_sources': [],
+    'conditional_full': [(3, 0), (3, 1)],
+    'omnibus_sign': False,
+    'cond_sources_pval': None
+    }
+res = {
+    1: r1,
+    2: r2,
+    3: r3
+}
 
-    if shuffle:
-        replications_order = np.random.permutation(data.n_replications)
+
+def network_fdr(results, alpha=0.05):
+    # Get p-values from results.
+    pval = np.arange(0)
+    target_idx = np.arange(0).astype(int)
+    cands = []
+    for target in results.keys():
+        if not results[target]['omnibus_sign']:
+            continue
+        n_sign = results[target]['cond_sources_pval'].size
+        pval = np.append(pval, results[target]['cond_sources_pval'])
+        target_idx = np.append(target_idx,
+                               np.ones(n_sign) * target).astype(int)
+        cands = cands + results[target]['conditional_sources']
+    sort_idx = np.argsort(pval)
+    pval.sort()
+
+    # Calculate threshold (exact or by approximating the harmonic sum).
+    n = pval.size
+    if n < 1000:
+        thresh = ((np.arange(1, n + 1) / n) * alpha /
+                  sum(1 / np.arange(1, n + 1)))
     else:
-        replications_order = np.arange(data.n_replications)
+        thresh = ((np.arange(1, n + 1) / n) * alpha /
+                  (np.log(n) + np.e))  # aprx. harmonic sum with Euler's number
 
-    i = 0
-    for idx in idx_list:  # TODO test this for single trials!
-        r = 0
-        last_sample = current_value[1] - idx[1]
-        if last_sample == 0:
-            last_sample = None
-        for replication in replications_order:
-            realisations[r:r+n_realisations_time, i] = data.data[idx[0],idx[1]:-last_sample, replication]
-            if np.isnan(realisations[r, i]):
-                print('boom')
-            r += n_realisations_time
-        i += 1
+    # Compare data to threshold and prepare output:
+    sign = pval <= thresh
+    first_false = np.where(sign == False)[0][0]
+    sign[first_false:] = False  # to avoid false positives due to equal pvals
+    sign = sign[sort_idx]
+    for s in range(sign.shape[0]):
+        if sign[s]:
+            continue
+        else:
+            # Remove non-significant candidate and its p-value from results.
+            t = target_idx[s]
+            cand = cands[s]
+            cand_ind = results[t]['conditional_sources'].index(cand)
+            results[t]['conditional_sources'].pop(cand_ind)
+            np.delete(results[t]['cond_sources_pval'], cand_ind)
+            results[t]['conditional_full'].pop(
+                                    results[t]['conditional_full'].index(cand))
+    return results
 
-    return realisations
+res_pruned = network_fdr(res)
 
-def new2(data, idx_list, current_value, shuffle=False):
-    n_realisations_time = data.n_samples - current_value[1]
-    n_realisations_replications = data.n_replications
-    realisations = np.empty((n_realisations_time *
-                             n_realisations_replications,
-                             len(idx_list)))
-
-    if shuffle:
-        replications_order = np.random.permutation(data.n_replications)
-    else:
-        replications_order = np.arange(data.n_replications)
-
-    i = 0
-    for idx in idx_list:  # TODO test this for single trials!
-        r = 0
-        last_sample = current_value[1] - idx[1]
-        realisations[:, i] = data.data[idx[0],idx[1]:-last_sample,
-                                       replications_order].reshape(realisations.shape[0])
-        i += 1
-
-    return realisations
-
-cProfile.run('a=old(data, idx, cv)')
-cProfile.run('b=new(data, idx, cv)')
-cProfile.run('b=new2(data, idx, cv)')
-a=old(data, idx, cv)[0]
-b=new(data, idx, cv)
-c=new2(data, idx, cv)
-assert((a == b).all()), 'Results diverged!'
-assert((a == c).all()), 'Results diverged!'
+#cProfile.run('a=old(data, idx, cv)')
+#cProfile.run('b=new(data, idx, cv)')
+#a=old(data, idx, cv)[0]
+#b=new(data, idx, cv)
+#assert((a == b).all()), 'Results diverged!'

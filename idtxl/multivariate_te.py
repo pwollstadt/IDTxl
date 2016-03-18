@@ -54,14 +54,11 @@ class Multivariate_te(Network_analysis):
 
     Attributes:
         conditional_full : list of tuples
-            samples in the full conditional set, (idx process, lag wrt current
-            value)
+            samples in the full conditional set, (idx process, idx sample)
         conditional_sources : list of tuples
-            source samples in the conditional set, (idx process, lag wrt
-            current value)
+            source samples in the conditional set, (idx process, idx sample)
         conditional_target : list of tuples
-            target samples in the conditional set, (idx process, lag wrt
-            current value)
+            target samples in the conditional set, (idx process, idx sample)
         current_value : tuple
             index of the current value in TE estimation, (idx process,
             idx sample)
@@ -78,9 +75,6 @@ class Multivariate_te(Network_analysis):
             individual sources to the target
         sign_ominbus : bool
             statistical significance of the over-all TE
-        sign_individual : numpy array
-            array of booleans, indicates statistical
-            significance of TE from individual sources to the target
         source_set : list
             list with indices of source processes
         target : list
@@ -96,8 +90,71 @@ class Multivariate_te(Network_analysis):
         self.sign_omnibus = None
         self.sign_individual_sources = None
         self.pvalue_omnibus = None
-        self.pvalues_individual_sources = None
+        self.pvalues_sign_sources = None
         super().__init__()
+
+    def analyse_network(self, data, targets='all', sources='all'):
+        """Find multivariate transfer entropy between all nodes in the network.
+
+        Estimate multivariate transfer entropy between provided sources and
+        each target. Custom source sets can be provided for each target, as
+        lists of lists of nodes.
+
+        Example:
+            dat = Data()
+            dat.generate_mute_data()
+            max_lag = 5
+            min_lag = 4
+            cmi_estimator = 'jidt_kraskov'
+            targets = [0, 1, 2]
+            sources = 'all'
+            network_analysis = Multivariate_te(max_lag, min_lag, cmi_estimator)
+            network_analysis.analyse_network(dat, targets, sources)
+            sources = [[1, 2, 3], ['all'], [1]]  # set sources for each target
+            network_analysis.analyse_network(dat, targets, sources)
+
+        Note:
+            For more details on the estimation of multivariate transfer entropy
+            see documentation of class method 'analyse_single_target'.
+
+        Args:
+            data : Data instance
+                raw data for analysis
+            targets : list of int
+                index of target processes
+            sources : list of int | list of list | 'all'
+                indices of source processes for each target;
+                if 'all', all sources are tested for each target;
+                if list of int, sources specified in the list are tested for
+                each target;
+                if list of list, sources specified in each inner list are
+                tested for the corresponding target
+        """
+        if type(targets) is not list:
+            raise TypeError('target should be a list of integers.')
+        if sources == 'all':
+            sources = ['all' for t in targets]
+        if (type(sources) is list) and (type(sources[0]) is int):
+            sources = [sources for t in targets]
+        if (type(sources) is list) and (type(sources[0]) is list):
+            pass
+        else:
+            ValueError('Sources was not specified correctly: {0}.'.format(
+                                                                    sources))
+        assert(len(sources) == len(targets)), ('List of targets and list of '
+                                               'sources have to have the same '
+                                               'same length')
+
+        # Perform TE estimation for each target individually. FDR-correct
+        # overall results.
+        results = {}
+        for t in range(len(targets)):
+            r = self.analyse_single_target(data, targets[t], sources[t])
+            r['target'] = targets[t]
+            r['sources'] = sources[t]
+            results[targets[t]] = r
+        results['fdr'] = stats.network_fdr(results)
+        return results
 
     def analyse_single_target(self, data, target, sources='all'):
         """Find multivariate transfer entropy between sources and a target.
@@ -128,16 +185,17 @@ class Multivariate_te(Network_analysis):
             sources : list of int or 'all'
                 indices of source processes, if 'all', all sources are tested
 
-        Note:
-            The methods finds the sets conditional_full, conditional_target,
-            conditional_sources. Internally these lists contain tuples (idx
-            process, idx sample), before the function returns these lists are
-            converted to the actual outpus, which is lists of tuples (idx
-            process, lag wrt current value).
+        Returns:
+            dict
+                results consisting of
+                conditional sets (full, from sources, from target),
+                results for omnibus test (joint influence of source cands.),
+                pvalues for each significant source candidate
         """
         # Check input and clean up object if it was used before.
         self._initialise(data, sources, target)
 
+        # Main algorithm.
         print('\n---------------------------- (1) include target candidates')
         self._include_target_candidates(data)
 
@@ -151,12 +209,21 @@ class Multivariate_te(Network_analysis):
         print('\n---------------------------- (4) final statistics')
         self._test_final_conditional(data)
 
+        # Clean up and return results.
         if VERBOSE:
             print('final source samples: {0}'.format(self.conditional_sources))
             print('final target samples: {0}'.format(self.conditional_target))
         self._clean_up()
-        self._indices_to_lags()
-        return
+        [cond_full, cond_sources, cond_target] = self._indices_to_lags()
+
+        results = {
+            'conditional_full': cond_full,
+            'conditional_sources': cond_sources,
+            'conditional_target': cond_target,
+            'omnibus_sign': self.sign_omnibus,
+            'omnibus_pval': self.pvalue_omnibus,
+            'cond_sources_pval': self.pvalues_sign_sources}
+        return results
 
     def _initialise(self, data, sources, target):
         """Check input and set everything to initial values."""
@@ -188,7 +255,12 @@ class Multivariate_te(Network_analysis):
         elif type(sources) is not list:
             raise TypeError('Source set has to be a list.')
         else:
-            self.source_set = sources
+            if self.target in sources:
+                raise RuntimeError('The target {0} should not be in the list '
+                                   'of sources {1}.'.format(self.target,
+                                                            sources))
+            else:
+                self.source_set = sources
 
     def _include_target_candidates(self, data):
         """Test candidates from the target's past."""
@@ -211,7 +283,7 @@ class Multivariate_te(Network_analysis):
                                                            self.min_lag + 1))
         _ = self._find_conditional(candidates, data)
 
-    def _test_final_conditional(self, data):
+    def _test_final_conditional(self, data):  # TODO test this!
         """Perform statistical test on the final conditional set."""
         if not self.conditional_sources:
             print('---------------------------- no sources found')
@@ -222,8 +294,15 @@ class Multivariate_te(Network_analysis):
             self.pvalue_omnibus = p
             if self.sign_omnibus:
                 [s, p] = stats.max_statistic_sequential(self, data)
-                self.sign_individual_sources = s
-                self.pvalues_individual_sources = p
+                # Remove non-significant sources from the candidate set.
+                for i in range(s.shape[0] - 1, -1, -1):
+                    cand = self.conditional_sources[i]
+                    self._remove_candidate(cand)
+                    p = np.delete(p, i)
+                self.pvalues_sign_sources = p
+            else:
+                self.conditional_sources = []
+                self.conditional_full = self.conditional_target
 
     def _define_candidates(self, processes, samples):
         """Build a list of candidates' indices.
@@ -379,19 +458,20 @@ class Multivariate_te(Network_analysis):
 
     def _indices_to_lags(self):
         """Change sample indices to lags for each candidate set."""
-        for i in range(len(self.conditional_full)):
-            cond = self.conditional_full[i]
-            self.conditional_full[i] = (cond[0], self.max_lag - cond[1])
-        for i in range(len(self.conditional_sources)):
-            cond = self.conditional_sources[i]
-            self.conditional_sources[i] = (cond[0], self.max_lag - cond[1])
-        for i in range(len(self.conditional_target)):
-            cond = self.conditional_target[i]
-            self.conditional_target[i] = (cond[0], self.max_lag - cond[1])
+        conditional_full = []
+        conditional_sources = []
+        conditional_target = []
+        for cond in self.conditional_full:
+            conditional_full.append((cond[0], self.max_lag - cond[1]))
+        for cond in self.conditional_sources:
+            conditional_sources.append((cond[0], self.max_lag - cond[1]))
+        for cond in self.conditional_target:
+            conditional_target.append((cond[0], self.max_lag - cond[1]))
+        return conditional_full, conditional_sources, conditional_target
 
 if __name__ == '__main__':
     dat = Data()
-    dat.generate_mute_data()
+    dat.generate_mute_data(100, 5)
     max_lag = 5
     min_lag = 4
     cmi_estimator = 'jidt_kraskov'
@@ -399,8 +479,13 @@ if __name__ == '__main__':
     sources = [1, 2, 3]
 
     network_analysis = Multivariate_te(max_lag, min_lag, cmi_estimator)
-    network_analysis.analyse_single_target(dat, target, sources)
+    # res = network_analysis.analyse_single_target(dat, target, sources)
 
     d = np.arange(2000).reshape((2, 1000))
     dat2 = Data(d, dim_order='ps')
-    network_analysis.analyse_single_target(dat2, target)
+    # res2 = network_analysis.analyse_single_target(dat2, target)
+
+    targets = [0, 2, 3]
+    # res3 = network_analysis.analyse_network(dat, targets, sources='all')
+    sources = [[1, 2, 3], 'all', [1]]  # set sources for each target
+    res4 = network_analysis.analyse_network(dat, targets, sources=sources)
