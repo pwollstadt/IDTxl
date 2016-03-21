@@ -4,9 +4,9 @@ import numpy
 from time import time
 
 def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, thelier, nchunks, pointdim, signallength, gpuid):
- 
+
     triallength = int(signallength / nchunks)
-    #print 'Values:', pointdim, triallength, signallength, kth, thelier
+#    print 'Values:', pointdim, triallength, signallength, kth, thelier
 
     '''for platform in cl.get_platforms():
         for device in platform.get_devices():
@@ -39,7 +39,7 @@ def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, thelier, n
 
     if (totalmem*0.90) < usedmem:
         print(("WARNING:", usedmem, "Mb used out of", totalmem, "Mb. The GPU could run out of memory."))
-    
+
 
     # Create OpenCL buffers
     d_bf_query = cl.Buffer(context, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=h_query)
@@ -54,7 +54,7 @@ def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, thelier, n
     kernelKNNshared.set_scalar_arg_dtypes([None, None, None, None, numpy.int32, numpy.int32, numpy.int32, numpy.int32, numpy.int32, None, None])
 
     #Size of workitems and NDRange
-    if signallength/nchunks < my_gpu_devices[gpuid].max_work_group_size:    
+    if signallength/nchunks < my_gpu_devices[gpuid].max_work_group_size:
         workitems_x = 8
     elif my_gpu_devices[gpuid].max_work_group_size < 256:
         workitems_x = my_gpu_devices[gpuid].max_work_group_size
@@ -145,7 +145,7 @@ def clFindRSAll(h_bf_npointsrange, h_pointset, h_query, h_vecradius, thelier, nc
     kernelBFRSAllshared.set_scalar_arg_dtypes([None, None, None, None, numpy.int32, numpy.int32, numpy.int32, numpy.int32, None])
 
     #Size of workitems and NDRange
-    if signallength/nchunks < my_gpu_devices[gpuid].max_work_group_size:    
+    if signallength/nchunks < my_gpu_devices[gpuid].max_work_group_size:
         workitems_x = 8
     elif my_gpu_devices[gpuid].max_work_group_size < 256:
         workitems_x = my_gpu_devices[gpuid].max_work_group_size
