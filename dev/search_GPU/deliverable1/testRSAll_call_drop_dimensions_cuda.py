@@ -21,22 +21,13 @@ if __name__ == '__main__':
     thelier = int(0)
     nchunkspergpu = int(1)
     kth = int(7)
-    reps = 10
+    reps = 2
     error_signature = []
-    # change the pointcount below to provoke an error where the number of
+    # change the pointcount below to  possibly provoke an error where the number of
     # neighbours in a higher dimensional space is bigger than in a corresponding
     # lower dimensional one - while it should be lower, because of the lower 
     # dimnesional constraints that apply
-    # on my Carrizo iGPU the error appears first at 1625 points in the space
-    # on my Bonaire dGPU the error appears first at 1633 points in the space
-    #
-    # What we know so far:
-    # 1. the error is deterministic, i.e. if it occurs in one dataset of that size
-    #   it will occur in all of them
-    # 2. the error is (slightly?) hardware dependend since the two opencl capable
-    #   GPUs in my device choke at slightly different point counts (perhaps because
-    #   of sligthly different buffer sizes ??) 
-    num_points = 1632
+    num_points = 3500000
    
     
     for i in range(0, reps):
@@ -64,7 +55,7 @@ if __name__ == '__main__':
         
      
         start = time.time()
-        correct = clFindKnn(indexes, distances, pointset, queryset, kth, 
+        correct = cudaFindKnnSetGPU(indexes, distances, pointset, queryset, kth, 
                             thelier, nchunkspergpu, pointsdim,
                             signallengthpergpu, gpuid)
         end = time.time()
@@ -86,7 +77,7 @@ if __name__ == '__main__':
         ###########################
         # test range search
         start = time.time()
-        correct = clFindRSAll(npointsrange, pointset, queryset, vecradius, thelier,
+        correct = cudaFindRSAllSetGPU(npointsrange, pointset, queryset, vecradius, thelier,
                               nchunkspergpu, pointsdim, signallengthpergpu, gpuid)
         end = time.time()
         
@@ -94,7 +85,7 @@ if __name__ == '__main__':
             print ("GPU OpenCL execution failed")
         else:
             pass
-#            print(("Execution time of OpenCL: %f" %(end - start))) 
+            print(("Execution time of OpenCL range search: %f" %(end - start))) 
 #            print("Array of points inside radius")
 #            print(npointsrange)
     
@@ -102,7 +93,7 @@ if __name__ == '__main__':
         # test range search for lower dimension
     
         poinset_low_dim = pointset[0:pointsdim-dim_to_drop,:]
-        correct = clFindRSAll(npointsrange_low_dim, poinset_low_dim, 
+        correct = cudaFindRSAllSetGPU(npointsrange_low_dim, poinset_low_dim, 
                               poinset_low_dim, vecradius, thelier, nchunkspergpu,
                               pointsdim, signallengthpergpu, gpuid)
                                              

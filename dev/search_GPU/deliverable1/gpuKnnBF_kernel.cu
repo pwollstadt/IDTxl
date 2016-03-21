@@ -175,7 +175,7 @@ if(tid<signallength){
 			int condition2=indexi+exclude;
 			if((t<condition1)||(t>condition2)){
 				float temp_dist = maxMetricPoints(g_uquery+indexu, g_vpointset+indexv,pointdim, signallength);
-				if(temp_dist <= radius){
+				if(temp_dist < radius){
 					s_npointsrange[threadIdx.x]++;
 				}
 			}

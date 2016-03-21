@@ -55,10 +55,10 @@ int cudaFindKnn(int* h_bf_indexes, float* h_bf_distances, float* h_pointset, flo
 		fprintf(stderr,"%s",cudaGetErrorString(error));
 		return 0;
 	}
-	//Add +1 to indexes
-	for(unsigned int i=0;i<kth*signallength;i++){
-		h_bf_indexes[i]+=1;
-	}
+//	//Add +1 to indexes this is only necessary for Matlab! 
+//	for(unsigned int i=0;i<kth*signallength;i++){
+//		h_bf_indexes[i]+=1;
+//	}
 
 	//Free resources
 	checkCudaErrors(cudaFree(d_bf_query));
@@ -130,10 +130,10 @@ int cudaFindKnnSetGPU(int* h_bf_indexes, float* h_bf_distances, float* h_pointse
 		fprintf(stderr,"%s",cudaGetErrorString(error));
 		return 0;
 	}
-	//Add +1 to indexes
-	for(unsigned int i=0;i<kth*signallength;i++){
-		h_bf_indexes[i]+=1;
-	}
+//	//Add +1 to indexes
+//	for(unsigned int i=0;i<kth*signallength;i++){
+//		h_bf_indexes[i]+=1;
+//	}
 
 	//Free resources
 	checkCudaErrors(cudaFree(d_bf_query));
