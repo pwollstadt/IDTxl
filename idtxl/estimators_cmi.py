@@ -100,11 +100,10 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
         calc.initialise(var1.shape[1], var2.shape[1],  # needs dims of vars
                         conditional.shape[1])
         calc.setObservations(var1, var2, conditional)
-        return calc.computeAverageLocalOfObservations()
     else:
         calc.initialise(var1.shape[1], var2.shape[1])
         calc.setObservations(var1, var2)
-        return calc.computeAverageLocalOfObservations()
+    return calc.computeAverageLocalOfObservations()
 
 
 def pyinfo_kraskov(self, var1, var2, conditional, knn):

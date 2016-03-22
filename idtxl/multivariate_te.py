@@ -115,16 +115,20 @@ class Multivariate_te(Network_analysis):
 
         Example:
             dat = Data()
-            dat.generate_mute_data()
+            dat.generate_mute_data(100, 5)
             max_lag = 5
             min_lag = 4
-            cmi_calculator = 'jidt_kraskov'
-            targets = [0, 1, 2]
-            sources = 'all'
-            network_analysis = Multivariate_te(max_lag, min_lag, cmi_calculator)
-            network_analysis.analyse_network(dat, targets, sources)
-            sources = [[1, 2, 3], ['all'], [1]]  # set sources for each target
-            network_analysis.analyse_network(dat, targets, sources)
+            analysis_opts = {
+                'cmi_calc_name': 'jidt_kraskov',
+                'n_perm_max_stat': 200,
+                'n_perm_min_stat': 200,
+                'n_perm_omnibus': 500,
+                'n_perm_max_seq': 500,
+                }
+            target = 0
+            sources = [1, 2, 3]
+            network_analysis = Multivariate_te(max_lag, analysis_opts, min_lag)
+            res = network_analysis.analyse_single_target(dat, target, sources)
 
         Note:
             For more details on the estimation of multivariate transfer entropy
@@ -279,8 +283,8 @@ class Multivariate_te(Network_analysis):
     def _include_target_candidates(self, data):
         """Test candidates from the target's past."""
         procs = [self.target]
-        samples=np.arange(self.current_value[1] - self.max_lag_target,
-                          self.current_value[1])
+        samples = np.arange(self.current_value[1] - self.max_lag_target,
+                            self.current_value[1])
         candidates = self._define_candidates(procs, samples)
 
         sources_found = self._find_conditional(candidates, data, self.options)
@@ -288,8 +292,8 @@ class Multivariate_te(Network_analysis):
             print(('No informative sources in the target''s past - ' +
                    'adding point at t-1 in the target'))
             idx = (self.current_value[0], self.current_value[1] - 1)
-            realisations = data.get_realisations(self.current_value, [idx])
-            self._append_conditional_idx(idx)
+            realisations = data.get_realisations(self.current_value, [idx])[0]
+            self._append_conditional_idx([idx])
             self._append_conditional_realisations(realisations)
 
     def _include_source_candidates(self, data):  # TODO something's slow here
@@ -366,10 +370,10 @@ class Multivariate_te(Network_analysis):
         """
         success = False
         while candidate_set:
-            if VERBOSE:
-                print('find conditionals in set {0}'.format(candidate_set))
             temp_te = np.empty(len(candidate_set))
             i = 0
+
+            # Find the candidate with maximum TE.
             for candidate in candidate_set:
                 candidate_realisations = data.get_realisations(
                                                             self.current_value,
@@ -379,10 +383,16 @@ class Multivariate_te(Network_analysis):
                                         self._current_value_realisations,
                                         self._conditional_realisations,
                                         options)
+
+            # Test max TE for significance with maximum statistics.
             te_max_candidate = max(temp_te)
             max_candidate = candidate_set.pop(np.argmax(temp_te))
+            if VERBOSE:
+                print('testing {0} from candidate set {0}'.format(
+                                                                max_candidate,
+                                                                candidate_set))
             significant = stats.max_statistic(self, data, candidate_set,
-                                              te_max_candidate, options)
+                                              te_max_candidate, options)[0]
             if significant:
                 success = True
                 self._append_conditional_idx([max_candidate])
@@ -428,7 +438,7 @@ class Multivariate_te(Network_analysis):
             test_set.pop(test_set.index(candidate))
             significant = stats.min_statistic(self, data, test_set,
                                               te_min_candidate,
-                                              self.options)
+                                              self.options)[0]
             if not significant:
                 self._remove_candidate(candidate)
             else:
@@ -497,14 +507,14 @@ if __name__ == '__main__':
         'cmi_calc_name': 'jidt_kraskov',
         'n_perm_max_stat': 20,
         'n_perm_min_stat': 20,
-        'n_perm_omnibus': 50,
-        'n_perm_max_seq': 50,
+        'n_perm_omnibus': 500,
+        'n_perm_max_seq': 500,
         }
     target = 0
     sources = [1, 2, 3]
 
     network_analysis = Multivariate_te(max_lag, analysis_opts, min_lag)
-    # res = network_analysis.analyse_single_target(dat, target, sources)
+    res = network_analysis.analyse_single_target(dat, target, sources)
 
     d = np.arange(2000).reshape((2, 1000))
     dat2 = Data(d, dim_order='ps')
@@ -514,7 +524,6 @@ if __name__ == '__main__':
     # res3 = network_analysis.analyse_network(dat, targets, sources='all')
     sources = [[1, 2, 3], 'all', [1]]  # set sources for each target
     # res4 = network_analysis.analyse_network(dat, targets, sources=sources)
-
 
     d = np.load('/home/patricia/repos/IDTxl/testing/data/'
                 'lorenz_2_exampledata.npy')  # 2 Lorenz systems 1->2, u = 45 ms

@@ -102,8 +102,10 @@ def omnibus_test(analysis_setup, data, opts):
             'alpha_omnibus' - critical alpha level (default=0.05)
 
     Returns:
-        boolean indicating statistical significance
-        the test's p-value
+        bool
+            statistical significance
+        float
+            the test's p-value
     """
     try:
         n_permutations = opts['n_perm_omnibus']
@@ -176,8 +178,10 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
             'alpha_max_stat' - critical alpha level (default=0.05)
 
     Returns:
-        boolean indicating statistical significance
-        the test's p-value
+        bool
+            statistical significance
+        float
+            the test's p-value
     """
     try:
         n_perm = opts['n_perm_max_stat']
@@ -190,7 +194,7 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
     test_set = cp.copy(candidate_set)
 
     if not test_set:  # TODO this is an interim thing -> decide what to do
-        return True
+        return True, (1.0 / n_perm)
 
     stats_table = _create_surrogate_table(analysis_setup, data, test_set,
                                           n_perm)
@@ -299,8 +303,10 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
             'alpha_min_stat' - critical alpha level (default=0.05)
 
     Returns:
-        boolean indicating statistical significance
-        the test's p-value
+        bool
+            statistical significance
+        float
+            the test's p-value
     """
     try:
         n_perm = opts['n_perm_min_stat']
@@ -481,7 +487,7 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
             'one' or 'two' for one-/two-tailed testing
 
     Returns:
-        boolean
+        bool
             statistical significance
         float
             the test's p-value
@@ -493,7 +499,13 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
         p_bigger = sum(distribution > statistic) / distribution.shape[0]
         p_smaller = sum(distribution < statistic) / distribution.shape[0]
         pvalue = min(p_bigger, p_smaller)
+
+    # If the statistic is larger than all values in the test distribution, set
+    # the p-value to the smallest possible value 1/n_perm.
+    if pvalue == 0:
+        pvalue = 1.0 / distribution.shape[0]
     significance = pvalue < alpha
+
     return significance, pvalue
 
 

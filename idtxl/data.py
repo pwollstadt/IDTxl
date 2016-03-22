@@ -119,8 +119,10 @@ class Data():
         """Reorder data dimensioins to processes x samples x replications."""
 
         assert(len(dim_order) == data.ndim), ('Data array dimension ({0}) and '
-        'length of dim_order ({1}) are not equal.'.format(data.ndim,
-                                                          len(dim_order)))
+                                              'length of dim_order ({1}) are '
+                                              'not equal.'.
+                                              format(data.ndim,
+                                                     len(dim_order)))
 
         # add singletons for missing dimensions
         missing_dims = 'psr'
@@ -148,7 +150,8 @@ class Data():
 
         Return realisations for indices in list. Optionally, realisations can
         be shuffled to create surrogate data for statistical testing. For
-        shuffling, data blocks are permuted over replications:
+        shuffling, data blocks are permuted over replications while their
+        temporal order stays intact within replications:
 
         orig:
             rep.:   1 1 1 1 2 2 2 2 3 3 3 3 4 4 4 4 5 5 5 5 6 6 6 6 ...
@@ -159,8 +162,10 @@ class Data():
             sample: 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 ...
 
         Args:
-            idx_list: list of tuples, representing data indices
-            shuffle: boolean flag, permute blocks of replications over trials
+            idx_list: list of tuples
+                variable indices
+            shuffle: bool
+                if true permute blocks of replications over trials
 
         Returns:
             numpy array
@@ -190,16 +195,17 @@ class Data():
                                                         replication]
                 r += n_real_time
 
-            if np.isnan(realisations[:, i]).any():
-                    print('boom')
+            assert(not np.isnan(realisations[:, i]).any()), ('There are nans '
+                                                             'in the retrieved'
+                                                             ' realisations.')
             i += 1
 
+        # For each realisation keep the index of the replication it came from.
         replications_index = np.repeat(replications_order, n_real_time)
-        assert(replications_index.shape[0] == realisations.shape[0]), ('There '
-            'seems to be a problem with the replications index.')
+        assert(replications_index.shape[0] == realisations.shape[0]), (
+               'There seems to be a problem with the replications index.')
 
         return realisations, replications_index
-
 
     def get_realisations(self, current_value, idx):
         """Return all realisations of a random variable in the data.
