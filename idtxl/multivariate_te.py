@@ -234,6 +234,7 @@ class Multivariate_te(Network_analysis):
         [cond_full, cond_sources, cond_target] = self._indices_to_lags()
 
         results = {
+            'current_value': self.current_value,
             'conditional_full': cond_full,
             'conditional_sources': cond_sources,
             'conditional_target': cond_target,
@@ -465,6 +466,7 @@ class Multivariate_te(Network_analysis):
                                     'of single realisation.')
         index_single = idx_full.index(idx_single)
         indices_full = np.zeros(len(idx_full)).astype(int)
+        # Get the full realisations set from the class.
         i = 0
         for idx in idx_full:
             indices_full[i] = self.conditional_full.index(idx)

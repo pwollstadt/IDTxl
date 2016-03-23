@@ -227,9 +227,9 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
             'alpha_max_seq' - critical alpha level (default=0.05)
 
     Returns:
-        bool
-            statistical significance
-        numpy array
+        numpy array, bool
+            statistical significance of each source
+        numpy array, float
             the test's p-values for each source
     """
     try:
