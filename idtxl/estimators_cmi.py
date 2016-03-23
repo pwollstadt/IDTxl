@@ -73,7 +73,6 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
     except KeyError:
         num_threads = 'USE_ALL'
 
-
     jarLocation = 'infodynamics.jar'
     if not jp.isJVMStarted():
         jp.startJVM(jp.getDefaultJVMPath(), '-ea', ('-Djava.class.path=' +
@@ -87,7 +86,6 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
         assert(conditional.size != 0), 'Conditional Array is empty.'
         calcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
                      ConditionalMutualInfoCalculatorMultiVariateKraskov1)
-
 
     calc = calcClass()
     calc.setProperty('NORMALISE', normalise)
