@@ -1,4 +1,5 @@
 import jpype as jp
+import numpy as np
 import pyinfo
 import utils as utils
 import neighbour_search_opencl as nsocl
@@ -10,7 +11,7 @@ def opencl_kraskov(self, var1, var2, conditional, opts=None):
         type 1 estimator.
 
     Calculate the conditional mutual information between three variables.
-    Uses the Kraskov type1 estimator. 
+    Uses the Kraskov type1 estimator.
     References:
 
         Kraskov, A., Stögbauer, H., & Grassberger, P. (2004). Estimating mutual
@@ -54,7 +55,7 @@ def opencl_kraskov(self, var1, var2, conditional, opts=None):
     try:
         noise_level = int(opts['noise_level'])
     except KeyError:
-        noise_level = (1e-8).float32
+        noise_level = np.float32(1e-8)
     try:
         gpuid = int(opts['gpuid'])
     except KeyError:
@@ -75,33 +76,50 @@ def opencl_kraskov(self, var1, var2, conditional, opts=None):
     # 3. pointset variable 1 and conditional
     pointset_var1_conditional = np.hstack((var1, conditional))
     pointset_var1_conditional = pointset_var1_conditional.astype('float32')
-    # 4. pointset variable 2 and conidtional
+    # 4. pointset variable 2 and conditional
     pointset_var2_conditional = np.hstack((var2, conditional))
     pointset_var2_conditional = pointset_var2_conditional.astype('float32')
 
 
     signallengthpergpu = pointset_full_space.shape[0]
-    print("working with signallength: %i" %signallengthpergpu)
+    n_dim = pointset_full_space.shape[1]
+#    print("working with signallength: %i" %signallengthpergpu)
     chunksize =signallengthpergpu / nchunkspergpu # TODO check for integer result
 
-    indexes, distances = sgocl.knn_search(pointset_full_space, pointset_full_space, kth, theiler, nchunkspergpu, gpuid)
-##    print("indexes:")
-##    print(indexes)
-##    print("distances")
-##    print(distances)
-##    print("shape of distance matrix: ")
-##    print(distances.shape)
+    indexes, distances = nsocl.knn_search(pointset_full_space, n_dim,
+                                          kraskov_k, theiler_t, nchunkspergpu,
+                                          gpuid)
+#    print("indexes:")
+#    print(indexes)
+#    print("distances")
+#    print(distances)
+#    print("shape of distance matrix: ")
+#    print(distances.shape)
 #    # define the search radii as the distances to the kth (=last) neighbours
-#    radii = distances[distances.shape[0]-1,:]
-##    print(radii)
-#    # get neighbour counts in ranges
-#    # range_search(pointset, queryset, distances, theiler_t, n_chunks=1, gpuid=0)
-#    count_conditional = range_search(pointset_conditional, pointset_conditional, radii, theiler, nchunkspergpu, 0)
-##    print(count_conditional)
-#    count_var1_conditional = range_search(pointset_var1_conditional, pointset_var1_conditional, radii, theiler, nchunkspergpu, 0)
-##    print(count_var1_conditional)
-#    count_var2_conditional = range_search(pointset_var2_conditional, pointset_var2_conditional, radii, theiler, nchunkspergpu, 0)
-##
+    radii = distances[distances.shape[0]-1,:]
+#    print(radii)
+
+    # get neighbour counts in ranges
+    count_conditional = nsocl.range_search(pointset_conditional, n_dim, radii,
+                                           theiler_t, nchunkspergpu, gpuid)
+    print(np.mean(count_conditional))
+
+    # get neighbour counts in ranges
+    count_var1_conditional = nsocl.range_search(pointset_var1_conditional,
+                                                n_dim, radii, theiler_t,
+                                                nchunkspergpu, gpuid)
+    print(np.mean(count_var1_conditional))
+
+    # get neighbour counts in ranges
+    count_var2_conditional = nsocl.range_search(pointset_var2_conditional,
+                                                n_dim, radii, theiler_t,
+                                                nchunkspergpu, gpuid)
+    print(np.mean(count_var2_conditional))
+
+    cmi = digamma(kraskov_k) + np.mean(digamma(count_conditional + 1) -
+    digamma(count_var1_conditional + 1) - digamma(count_var2_conditional + 1))
+    print(cmi)
+    return cmi
 
 
 def jidt_kraskov(self, var1, var2, conditional, opts=None):
@@ -173,6 +191,10 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
         num_threads = str(opts['num_threads'])
     except KeyError:
         num_threads = 'USE_ALL'
+    try:
+        debug = opts['debug']
+    except KeyError:
+        debug = False
 
     jarLocation = 'infodynamics.jar'
     if not jp.isJVMStarted():
@@ -194,6 +216,9 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
     calc.setProperty('DYN_CORR_EXCL', theiler_t)
     calc.setProperty('NOISE_LEVEL_TO_ADD', noise_level)
     calc.setProperty('NUM_THREADS', num_threads)
+
+    calc.setDebug(debug)
+    print("debug is: {0}".format(calc.debug))
 
     if conditional is not None:
         calc.initialise(var1.shape[1], var2.shape[1],  # needs dims of vars

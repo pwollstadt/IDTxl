@@ -1,5 +1,6 @@
 import types
 import random
+import math as math
 import numpy as np
 import estimators_te
 import estimators_cmi
@@ -72,23 +73,25 @@ if __name__ == "__main__":
     mi_estimator = Estimator_mi("jidt_kraskov")
     cmi_estimator = Estimator_cmi("jidt_kraskov")
 
-    n_obs = 1000
+    n_obs = 10000
     covariance = 0.4
+    dim = 5
     source = [random.normalvariate(0, 1) for r in range(n_obs)]
     target = [0] + [sum(pair) for pair in zip(
                     [covariance * y for y in source[0:n_obs-1]],
                     [(1-covariance) * y for y in [
                         random.normalvariate(0, 1) for r in range(n_obs-1)]])]
-    var1 = [[random.normalvariate(0, 1) for x in range(5)] for
+    var1 = [[random.normalvariate(0, 1) for x in range(dim)] for
             x in range(n_obs)]
-    var2 = [[random.normalvariate(0, 1) for x in range(5)] for
+    var2 = [[random.normalvariate(0, 1) for x in range(dim)] for
             x in range(n_obs)]
-    conditional = [[random.normalvariate(0, 1) for x in range(5)] for
+    conditional = [[random.normalvariate(0, 1) for x in range(dim)] for
                    x in range(n_obs)]
+
     knn = 4
     history_length = 1
     options = {
-        'kraskov_k': 4
+        'kraskov_k': 4,
         }
 
     te = te_estimator.estimate(source, target, knn, history_length)
@@ -98,7 +101,50 @@ if __name__ == "__main__":
     mi = mi_estimator.estimate(var1, var2, knn)
     print('Estimator is ' + mi_estimator.get_estimator())
     print('MI result: %.4f nats.' % mi)
+
     cmi = cmi_estimator.estimate(np.array(var1), np.array(var2),
                                  np.array(conditional), options)
     print('Estimator is ' + cmi_estimator.get_estimator())
     print('CMI result: %.4f nats.' % cmi)
+
+    # CMI testcases with correlated variables
+    # Generate some random normalised data.
+
+    # set options for maximal comparability between JIDT and opencl
+    options = {
+        'kraskov_k': 4, 'noise_level': 0, 'debug': True, 'theiler_t': 0
+        }
+
+    numObservations = 10000
+    covariance = 0.4
+
+    # Source array of random normals:
+    var1 = np.random.randn(numObservations, 1)
+    # Destination array of random normals with partial correlation to previous
+    # value of sourceArray
+    var2 = [sum(pair) for pair in zip([covariance*y for y in var1],
+            [(1-covariance)*y for y in
+            [random.normalvariate(0, 1) for r in range(numObservations)]])]
+    var2 = np.array(var2)
+    # Uncorrelated conditionals:
+    conditional = np.random.randn(numObservations, 1)
+
+    # casting data to single and back for comparison with single precision
+    # computations on the GPU
+    cmi_jidt = cmi_estimator.estimate(np.array(var1).astype('float32').astype('float64'),
+                                 np.array(var2).astype('float32').astype('float64'),
+                                 np.array(conditional).astype('float32').astype('float64'),
+                                 options)
+    print('Estimator is ' + cmi_estimator.get_estimator())
+#    print('CMI result: %.4f nats.' % cmi)
+    print("CMI result %.4f nats; expected to be close to %.4f nats for these correlated Gaussians" % \
+          (cmi_jidt, math.log(1/(1-math.pow(covariance, 2)))))
+
+    cmi_estimator = Estimator_cmi("opencl_kraskov")
+    cmi_ocl = cmi_estimator.estimate(np.array(var1), np.array(var2),
+                                 np.array(conditional), options)
+    print('Estimator is ' + cmi_estimator.get_estimator())
+    print('CMI result: %.4f nats.' % cmi_ocl)
+
+    cmi_ocl = 5
+    assert cmi_jidt == cmi_ocl , "JIDT and opencl estmator results mismatch"

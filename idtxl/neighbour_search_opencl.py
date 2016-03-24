@@ -45,8 +45,9 @@ def range_search(pointset, n_dim, radius, theiler_t, n_chunks=1, gpuid=0):
 
     pointcount = np.zeros((n_points), dtype=np.int32)
 
-    success = clFindRSAll(pointcount, pointset, pointset, radius, theiler_t,
-                           n_chunks, pointdim, n_points, gpuid)
+    success = clFindRSAll(pointcount, pointset.astype('float32'),
+                          pointset.astype('float32'), radius, theiler_t,
+                          n_chunks, pointdim, n_points, gpuid)
     if success:
         return pointcount
     else:

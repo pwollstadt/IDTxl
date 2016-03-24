@@ -6,6 +6,7 @@
 # Logs and databases #
 ######################
 *.log
+*.swp
 .directory
 .spyderproject
 *.bac*
