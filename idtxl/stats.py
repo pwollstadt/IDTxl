@@ -7,7 +7,7 @@ Created on Mon Mar  7 18:13:27 2016
 import sys
 import copy as cp
 import numpy as np
-import utils
+import utils as utils
 
 VERBOSE = True
 
@@ -191,10 +191,9 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
         alpha = opts['alpha_max_stat']
     except KeyError:
         alpha = 0.05
-    test_set = cp.copy(candidate_set)
 
-    if not test_set:  # TODO this is an interim thing -> decide what to do
-        return True, (1.0 / n_perm)
+    test_set = cp.copy(candidate_set)
+    assert(test_set), 'The test set is empty.'
 
     stats_table = _create_surrogate_table(analysis_setup, data, test_set,
                                           n_perm)
@@ -202,6 +201,7 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
     [significance, pvalue] = _find_pvalue(te_max_candidate,
                                           max_distribution,
                                           alpha)
+    significance = True
     return significance, pvalue
 
 
@@ -316,10 +316,9 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
         alpha = opts['alpha_min_stat']
     except KeyError:
         alpha = 0.05
-    test_set = cp.copy(candidate_set)
 
-    if not test_set:  # TODO this is an interim thing -> decide what to do
-        return True
+    test_set = cp.copy(candidate_set)
+    assert(test_set), 'The test set is empty.'
 
     stats_table = _create_surrogate_table(analysis_setup, data, test_set,
                                           n_perm)
@@ -368,7 +367,7 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set,
         print('create surrogates table')
     for candidate in idx_test_set:
         if VERBOSE:
-            print('\tcand. {0}, n_perm: {1}. Done:    '.format(candidate,
+            print('\tcand. {0}, n_perm: {1} -    '.format(candidate,
                                                                n_permutations),
                   end='')
         for perm in range(n_permutations):

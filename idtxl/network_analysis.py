@@ -202,7 +202,7 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
                                 (self._conditional_realisations, realisations))
 
     def _remove_candidate(self, idx):
-        """Remove a candidate and its realisations from the object."""
+        """Remove a single candidate and its realisations from the object."""
 
         self._conditional_realisations = utils.remove_column(
                                          self._conditional_realisations,

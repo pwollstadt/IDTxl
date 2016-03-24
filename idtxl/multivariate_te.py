@@ -16,11 +16,10 @@ Note:
 
 @author: patricia
 """
+import copy as cp
 import numpy as np
 import itertools as it
-import copy as cp
 import stats as stats
-import utils as utils
 from data import Data
 from network_analysis import Network_analysis
 from set_estimator import Estimator_cmi
@@ -253,8 +252,9 @@ class Multivariate_te(Network_analysis):
                                              current_value=self.current_value,
                                              idx=[self.current_value])
         self._current_value_realisations = cv_realisation
-        self._replication_index = repl_idx  # remember which realisations come
-                                            # from which replication
+        # Remember which realisations come from which replication. This may be
+        # needed for surrogate creation at a later point.
+        self._replication_index = repl_idx
 
         if self.conditional_full is not None:
             self.conditional_full = []
@@ -288,7 +288,7 @@ class Multivariate_te(Network_analysis):
                             self.current_value[1])
         candidates = self._define_candidates(procs, samples)
 
-        sources_found = self._find_conditional(candidates, data, self.options)
+        sources_found = self._find_conditional(candidates, data)
         if not sources_found:
             print(('No informative sources in the target''s past - ' +
                    'adding point at t-1 in the target'))
@@ -303,7 +303,7 @@ class Multivariate_te(Network_analysis):
         samples = np.arange(self.current_value[1] - self.max_lag_sources,
                             self.current_value[1] - self.min_lag_sources + 1)
         candidates = self._define_candidates(procs, samples)
-        _ = self._find_conditional(candidates, data, self.options)
+        _ = self._find_conditional(candidates, data)
 
     def _test_final_conditional(self, data):  # TODO test this!
         """Perform statistical test on the final conditional set."""
@@ -345,7 +345,7 @@ class Multivariate_te(Network_analysis):
             candidate_set.append(idx)
         return candidate_set
 
-    def _find_conditional(self, candidate_set, data, options):
+    def _find_conditional(self, candidate_set, data):
         """Find informative conditioning set from a set of candidate samples.
 
         Loop over each candidate in the candidate set and test if it has
@@ -383,19 +383,21 @@ class Multivariate_te(Network_analysis):
                                         candidate_realisations,
                                         self._current_value_realisations,
                                         self._conditional_realisations,
-                                        options)
+                                        self.options)
 
             # Test max TE for significance with maximum statistics.
             te_max_candidate = max(temp_te)
-            max_candidate = candidate_set.pop(np.argmax(temp_te))
+            max_candidate = candidate_set[np.argmax(temp_te)]
             if VERBOSE:
-                print('testing {0} from candidate set {0}'.format(
+                print('testing {0} from candidate set {1}'.format(
                                                                 max_candidate,
                                                                 candidate_set))
             significant = stats.max_statistic(self, data, candidate_set,
-                                              te_max_candidate, options)[0]
+                                              te_max_candidate,
+                                              self.options)[0]
             if significant:
                 success = True
+                candidate_set.pop(np.argmax(temp_te))
                 self._append_conditional_idx([max_candidate])
                 self._append_conditional_realisations(
                             data.get_realisations(self.current_value,
@@ -424,9 +426,11 @@ class Multivariate_te(Network_analysis):
         while self.conditional_sources:
             temp_te = np.empty(len(self.conditional_sources))
             i = 0
-            for candidate in self.conditional_sources: # TODO I only loop over source candidates, ok?
-                [temp_cond, temp_cand] = self._remove_realisation(
-                                                    self.conditional_sources,
+            for candidate in self.conditional_sources:
+                # Separate the candidate realisations and all other
+                # realisations to test the candidate's individual contribution.
+                [temp_cond, temp_cand] = self._separate_realisation(
+                                                    self.conditional_full,
                                                     candidate)
                 temp_te[i] = self._cmi_calculator.estimate(
                                             temp_cand,
@@ -434,50 +438,64 @@ class Multivariate_te(Network_analysis):
                                             temp_cond,
                                             self.options)
 
+            # Test min TE for significance with minimum statistics.
             te_min_candidate = min(temp_te)
-            test_set = cp.copy(self.conditional_sources)  # TODO check this
-            test_set.pop(test_set.index(candidate))
-            significant = stats.min_statistic(self, data, test_set,
+            min_candidate = self.conditional_sources[np.argmin(temp_te)]
+            if VERBOSE:
+                print('testing {0} from candidate set {1}'.format(
+                                                    min_candidate,
+                                                    self.conditional_sources))
+            significant = stats.min_statistic(self, data,
+                                              self.conditional_sources,
                                               te_min_candidate,
                                               self.options)[0]
+
             if not significant:
-                self._remove_candidate(candidate)
+                self._remove_candidate(min_candidate)
             else:
                 break
             i += 1
 
-    def _remove_realisation(self, idx_full, idx_single):
-        """Remove single indexes' realisations from a set of realisations.
+    def _separate_realisation(self, idx_full, idx_single):
+        """Separate a single indexes' realisations from a set of realisations.
 
-        Remove the realisations of a single index from a set of realisations.
-        Return both the single realisation and realisations for the remaining
-        set. This allows us to reuse the collected realisations when pruning
-        the conditional set after candidates have been included.
+        Return the realisations of a single index and the realisations of the
+        remaining set of indexes. The function takes realisations from the
+        array in self._conditional_realisations. This allows to reuse the
+        collected realisations when pruning the conditional set after
+        candidates have been included.
 
         Args:
-            idx_full: list of indices indicating the full set
-            idx_single: index to be removed
+            idx_full : list of tuples
+                indices indicating the full set
+            idx_single : tuple
+                index to be removed
 
         Returns:
-            realisation_single: numpy array with realisations for single index
-            realisations_remaining: numpy array with remaining realisations
+            numpy array
+                realisations of the set without the single index
+            numpy array
+                realisations of the variable at the single index
         """
-        assert(len(idx_full) > 1), ('No remaining realisations after removal '
-                                    'of single realisation.')
-        index_single = idx_full.index(idx_single)
-        indices_full = np.zeros(len(idx_full)).astype(int)
-        # Get the full realisations set from the class.
+        # Get realisations for all indices from the class attribute
+        # ._conditional_realisations. Find the respective columns.
+        idx_remaining = cp.copy(idx_full)
+        idx_remaining.pop(idx_remaining.index(idx_single))
+        array_col_single = self.conditional_full.index(idx_single)
+        array_col_full = np.zeros(len(idx_full)).astype(int)
         i = 0
-        for idx in idx_full:
-            indices_full[i] = self.conditional_full.index(idx)
+        for idx in idx_remaining:  # find the columns with realisations
+            array_col_full[i] = self.conditional_full.index(idx)
             i += 1
-        realisations_full = self._conditional_realisations[:, indices_full]
-        realisations_single = np.expand_dims(
-                                            realisations_full[:, index_single],
-                                            axis=1)
-        realisations_remaining = utils.remove_column(realisations_full,
-                                                     index_single)
-        return realisations_remaining, realisations_single
+
+        real_single = np.expand_dims(
+                        self._conditional_realisations[:, array_col_single],
+                        axis=1)
+        if len(idx_full) == 1:
+            real_remaining = None  # so the JIDT estimator doesnt break
+        else:
+            real_remaining = self._conditional_realisations[:, array_col_full]
+        return real_remaining, real_single
 
     def _clean_up(self):
         """Remove temporary data at the end of the analysis."""
