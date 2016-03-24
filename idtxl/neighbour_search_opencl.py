@@ -7,7 +7,9 @@ def knn_search(pointset, n_dim, knn_k, theiler_t, n_chunks=1, gpuid=0):
     # check for a data layout in memory as expected by the low level functions
     # ndim * [n_points * n_chunks]
     if n_dim !=  pointset.shape[0]:
+        assert n_dim == pointset.shape[1], "given dimension does not match data"
         pointset = pointset.transpose().copy()
+
         print('>>>search GPU: fixed shape of input data')
     if pointset.flags['C_CONTIGUOUS'] != True:
         pointset = np.ascontiguousarray(pointset)
@@ -34,6 +36,7 @@ def range_search(pointset, n_dim, radius, theiler_t, n_chunks=1, gpuid=0):
     # check for a data layout in memory as expected by the low level functions
     # ndim * [n_points * n_chunks]
     if n_dim !=  pointset.shape[0]:
+        assert n_dim == pointset.shape[1], "given dimension does not match data axis"
         pointset = pointset.transpose().copy()
         print('>>>search GPU: fixed shape input data')
     if pointset.flags['C_CONTIGUOUS'] != True:
@@ -55,7 +58,8 @@ def range_search(pointset, n_dim, radius, theiler_t, n_chunks=1, gpuid=0):
         return 1
 
 
-def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, thelier, nchunks, pointdim, signallength, gpuid):
+def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, thelier,
+              nchunks, pointdim, signallength, gpuid):
 
     triallength = int(signallength / nchunks)
 #    print 'Values:', pointdim, triallength, signallength, kth, thelier
@@ -148,7 +152,8 @@ def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, thelier, n
  * Range search being radius a vector of length number points in queryset/pointset
 '''
 
-def clFindRSAll(h_bf_npointsrange, h_pointset, h_query, h_vecradius, thelier, nchunks, pointdim, signallength, gpuid):
+def clFindRSAll(h_bf_npointsrange, h_pointset, h_query, h_vecradius, thelier,
+                nchunks, pointdim, signallength, gpuid):
 
     triallength = int(signallength / nchunks)
     #print 'Values:', pointdim, triallength, signallength, kth, thelier

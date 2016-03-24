@@ -140,11 +140,28 @@ if __name__ == "__main__":
     print("CMI result %.4f nats; expected to be close to %.4f nats for these correlated Gaussians" % \
           (cmi_jidt, math.log(1/(1-math.pow(covariance, 2)))))
 
+#    # casting data to single and back for comparison with single precision
+#    # computations on the GPU
+#    mi_jidt = mi_estimator.estimate(np.array(var1).astype('float32').astype('float64'),
+#                                 np.array(var2).astype('float32').astype('float64'),
+#                                 options)
+#    print('Estimator is ' + mi_estimator.get_estimator())
+#    print("MI result %.4f nats; expected to be close to %.4f nats for these correlated Gaussians" % \
+#          mi_jidt, math.log(1/(1-math.pow(covariance, 2))))
+
+
     cmi_estimator = Estimator_cmi("opencl_kraskov")
     cmi_ocl = cmi_estimator.estimate(np.array(var1), np.array(var2),
                                  np.array(conditional), options)
     print('Estimator is ' + cmi_estimator.get_estimator())
     print('CMI result: %.4f nats.' % cmi_ocl)
 
-    cmi_ocl = 5
-    assert cmi_jidt == cmi_ocl , "JIDT and opencl estmator results mismatch"
+    assert int(cmi_jidt*10000) == int(cmi_ocl*10000) , "JIDT and opencl estmator results mismatch"
+
+
+    mi_estimator = Estimator_mi("opencl_kraskov")
+    mi_ocl = mi_estimator.estimate(np.array(var1), np.array(var2), options)
+    print('Estimator is ' + mi_estimator.get_estimator())
+    print('MI result: %.4f nats.' % mi_ocl)
+
+#    assert int(mi_jidt*10000) == int(mi_ocl*10000) , "JIDT and opencl estmator results mismatch"

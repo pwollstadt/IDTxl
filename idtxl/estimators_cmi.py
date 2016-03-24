@@ -70,23 +70,28 @@ def opencl_kraskov(self, var1, var2, conditional, opts=None):
     # 1. full space
     pointset_full_space = np.hstack((var1, var2, conditional))
     pointset_full_space = pointset_full_space.astype('float32')
+    n_dim_full = pointset_full_space.shape[1]
     # 2. conditional variable only
     pointset_conditional = np.array(conditional)
     pointset_conditional = pointset_conditional.astype('float32')
+    n_dim_conditional = pointset_conditional.shape[1]
+    print("n_dim_conditional is: {0}".format(n_dim_conditional))
     # 3. pointset variable 1 and conditional
     pointset_var1_conditional = np.hstack((var1, conditional))
     pointset_var1_conditional = pointset_var1_conditional.astype('float32')
+    n_dim_var1_conditional = pointset_var1_conditional.shape[1]
     # 4. pointset variable 2 and conditional
     pointset_var2_conditional = np.hstack((var2, conditional))
     pointset_var2_conditional = pointset_var2_conditional.astype('float32')
+    n_dim_var2_conditional = pointset_var2_conditional.shape[1]
 
 
     signallengthpergpu = pointset_full_space.shape[0]
-    n_dim = pointset_full_space.shape[1]
+
 #    print("working with signallength: %i" %signallengthpergpu)
     chunksize =signallengthpergpu / nchunkspergpu # TODO check for integer result
 
-    indexes, distances = nsocl.knn_search(pointset_full_space, n_dim,
+    indexes, distances = nsocl.knn_search(pointset_full_space, n_dim_full,
                                           kraskov_k, theiler_t, nchunkspergpu,
                                           gpuid)
 #    print("indexes:")
@@ -100,25 +105,22 @@ def opencl_kraskov(self, var1, var2, conditional, opts=None):
 #    print(radii)
 
     # get neighbour counts in ranges
-    count_conditional = nsocl.range_search(pointset_conditional, n_dim, radii,
+    count_conditional = nsocl.range_search(pointset_conditional,
+                                           n_dim_conditional, radii,
                                            theiler_t, nchunkspergpu, gpuid)
-    print(np.mean(count_conditional))
 
     # get neighbour counts in ranges
     count_var1_conditional = nsocl.range_search(pointset_var1_conditional,
-                                                n_dim, radii, theiler_t,
+                                                n_dim_var1_conditional, radii, theiler_t,
                                                 nchunkspergpu, gpuid)
-    print(np.mean(count_var1_conditional))
 
     # get neighbour counts in ranges
     count_var2_conditional = nsocl.range_search(pointset_var2_conditional,
-                                                n_dim, radii, theiler_t,
+                                                n_dim_var2_conditional, radii, theiler_t,
                                                 nchunkspergpu, gpuid)
-    print(np.mean(count_var2_conditional))
 
     cmi = digamma(kraskov_k) + np.mean(digamma(count_conditional + 1) -
     digamma(count_var1_conditional + 1) - digamma(count_var2_conditional + 1))
-    print(cmi)
     return cmi
 
 
