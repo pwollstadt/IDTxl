@@ -165,6 +165,8 @@ class Multivariate_te(Network_analysis):
         # overall results.
         results = {}
         for t in range(len(targets)):
+            if VERBOSE:
+                print('analysing target {0} of {1}'.format(t, targets))
             r = self.analyse_single_target(data, targets[t], sources[t])
             r['target'] = targets[t]
             r['sources'] = sources[t]
@@ -214,14 +216,10 @@ class Multivariate_te(Network_analysis):
         # Main algorithm.
         print('\n---------------------------- (1) include target candidates')
         self._include_target_candidates(data)
-
         print('\n---------------------------- (2) include source candidates')
         self._include_source_candidates(data)
-
-        print('\n---------------------------- (3) pruning step for {0} '
-              'candidates'.format(len(self.conditional_sources)))
+        print('\n---------------------------- (3) prune source candidate')
         self._prune_candidates(data)
-
         print('\n---------------------------- (4) final statistics')
         self._test_final_conditional(data)
 
@@ -240,6 +238,7 @@ class Multivariate_te(Network_analysis):
             'omnibus_sign': self.sign_omnibus,
             'omnibus_pval': self.pvalue_omnibus,
             'cond_sources_pval': self.pvalues_sign_sources}
+            # TODO add TE values, network comparison needs those
         return results
 
     def _initialise(self, data, sources, target):
@@ -256,12 +255,12 @@ class Multivariate_te(Network_analysis):
         # needed for surrogate creation at a later point.
         self._replication_index = repl_idx
 
-        if self.conditional_full is not None:
+        if self.conditional_full:
             self.conditional_full = []
             self._conditional_realisations = None
-        if self.conditional_sources is not None:
+        if self.conditional_sources:
             self.conditional_sources = []
-        if self.conditional_target is not None:
+        if self.conditional_target:
             self.conditional_target = []
 
     def _check_source_set(self, sources, n_processes):
@@ -288,7 +287,9 @@ class Multivariate_te(Network_analysis):
                             self.current_value[1])
         candidates = self._define_candidates(procs, samples)
 
-        sources_found = self._find_conditional(candidates, data)
+        sources_found = self._include_candidates(candidates, data)
+        # If no candidates were found in the target's past, add at least one
+        # sample so we are still calculating a proper TE.
         if not sources_found:
             print(('No informative sources in the target''s past - ' +
                    'adding point at t-1 in the target'))
@@ -303,32 +304,35 @@ class Multivariate_te(Network_analysis):
         samples = np.arange(self.current_value[1] - self.max_lag_sources,
                             self.current_value[1] - self.min_lag_sources + 1)
         candidates = self._define_candidates(procs, samples)
-        _ = self._find_conditional(candidates, data)
+        _ = self._include_candidates(candidates, data)
 
     def _test_final_conditional(self, data):  # TODO test this!
         """Perform statistical test on the final conditional set."""
         if not self.conditional_sources:
             print('---------------------------- no sources found')
+            return
         else:
             print(self.conditional_full)
             [s, p] = stats.omnibus_test(self, data, self.options)
             self.sign_omnibus = s
             self.pvalue_omnibus = p
+            # Test individual links if the omnibus test is significant.
             if self.sign_omnibus:
                 [s, p] = stats.max_statistic_sequential(self, data,
                                                         self.options)
-                # Remove non-significant sources from the candidate set.
+                # Remove non-significant sources from the candidate set. Loop
+                # backwards over the candidates to remove them iteratively.
                 for i in range(s.shape[0] - 1, -1, -1):
-                    cand = self.conditional_sources[i]
-                    self._remove_candidate(cand)
-                    p = np.delete(p, i)
+                    if not s[i]:
+                        self._remove_candidate(self.conditional_sources[i])
+                        p = np.delete(p, i)
                 self.pvalues_sign_sources = p
             else:
                 self.conditional_sources = []
                 self.conditional_full = self.conditional_target
 
     def _define_candidates(self, processes, samples):
-        """Build a list of candidates' indices.
+        """Build a list of candidate indices.
 
             Args:
                 processes : list of int
@@ -345,13 +349,14 @@ class Multivariate_te(Network_analysis):
             candidate_set.append(idx)
         return candidate_set
 
-    def _find_conditional(self, candidate_set, data):
-        """Find informative conditioning set from a set of candidate samples.
+    def _include_candidates(self, candidate_set, data):
+        """Inlcude informative candidates into the conditioning set.
 
         Loop over each candidate in the candidate set and test if it has
         significant mutual information with the current value, conditional
-        on all samples that were informative in previous rounds. If this
-        conditional mutual information is significant, add it to the
+        on all samples that were informative in previous rounds and are already
+        in the conditioning set. If this conditional mutual information is
+        significant using maximum statistics, add the current candidate to the
         conditional set.
 
         Args:
@@ -395,6 +400,10 @@ class Multivariate_te(Network_analysis):
             significant = stats.max_statistic(self, data, candidate_set,
                                               te_max_candidate,
                                               self.options)[0]
+
+            # If the max is significant keep it and test the next candidate. If
+            # it is not significant break. There will be no further significant
+            # sources b/c they all have lesser TE.
             if significant:
                 success = True
                 candidate_set.pop(np.argmax(temp_te))
@@ -426,6 +435,8 @@ class Multivariate_te(Network_analysis):
         while self.conditional_sources:
             temp_te = np.empty(len(self.conditional_sources))
             i = 0
+
+            # Find the candidate with the minimum TE into the target.
             for candidate in self.conditional_sources:
                 # Separate the candidate realisations and all other
                 # realisations to test the candidate's individual contribution.
@@ -450,6 +461,9 @@ class Multivariate_te(Network_analysis):
                                               te_min_candidate,
                                               self.options)[0]
 
+            # Remove the minimum it is not significant and test the next min.
+            # candidate. If the minimum is significant, break, all other
+            # sources will be significant as well (b/c they have higher TE).
             if not significant:
                 self._remove_candidate(min_candidate)
             else:
@@ -492,7 +506,7 @@ class Multivariate_te(Network_analysis):
                         self._conditional_realisations[:, array_col_single],
                         axis=1)
         if len(idx_full) == 1:
-            real_remaining = None  # so the JIDT estimator doesnt break
+            real_remaining = None  # so the JIDT estimator doesn't break
         else:
             real_remaining = self._conditional_realisations[:, array_col_full]
         return real_remaining, real_single
@@ -534,7 +548,7 @@ if __name__ == '__main__':
     sources = [1, 2, 3]
 
     network_analysis = Multivariate_te(max_lag, analysis_opts, min_lag)
-    res = network_analysis.analyse_single_target(dat, target, sources)
+    # res = network_analysis.analyse_single_target(dat, target, sources)
 
     d = np.arange(2000).reshape((2, 1000))
     dat2 = Data(d, dim_order='ps')
@@ -548,7 +562,8 @@ if __name__ == '__main__':
     d = np.load('/home/patricia/repos/IDTxl/testing/data/'
                 'lorenz_2_exampledata.npy')  # 2 Lorenz systems 1->2, u = 45 ms
     dat = Data()
-    dat.set_data(d, 'psr')
+    dat.set_data(d[:, :, 1:10], 'psr')
     lorenz_analysis = Multivariate_te(max_lag_sources=50, min_lag_sources=42,
                                       max_lag_target=5, options=analysis_opts)
     res4 = lorenz_analysis.analyse_single_target(dat, 1)
+    res5 = lorenz_analysis.analyse_network(dat)

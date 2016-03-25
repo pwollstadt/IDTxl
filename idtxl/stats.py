@@ -195,11 +195,10 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
     test_set = cp.copy(candidate_set)
     assert(test_set), 'The test set is empty.'
 
-    stats_table = _create_surrogate_table(analysis_setup, data, test_set,
-                                          n_perm)
-    max_distribution = _find_table_max(stats_table)
-    [significance, pvalue] = _find_pvalue(te_max_candidate,
-                                          max_distribution,
+    surr_table = _create_surrogate_table(analysis_setup, data, test_set,
+                                         n_perm)
+    max_distribution = _find_table_max(surr_table)
+    [significance, pvalue] = _find_pvalue(te_max_candidate, max_distribution,
                                           alpha)
     significance = True
     return significance, pvalue
@@ -257,10 +256,10 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
 
     # TODO not sure about this, because the surrogate table also contains the
     # candidate we're testing
-    stats_table = _create_surrogate_table(analysis_setup, data,
-                                          analysis_setup.conditional_sources,
-                                          n_permutations)
-    max_distribution = _sort_table_max(stats_table)
+    surr_table = _create_surrogate_table(analysis_setup, data,
+                                         analysis_setup.conditional_sources,
+                                         n_permutations)
+    max_distribution = _sort_table_max(surr_table)
 
     significance = np.zeros(conditional_te.shape[0]).astype(bool)
     pvalue = np.zeros(conditional_te.shape[0])
@@ -320,17 +319,16 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
     test_set = cp.copy(candidate_set)
     assert(test_set), 'The test set is empty.'
 
-    stats_table = _create_surrogate_table(analysis_setup, data, test_set,
-                                          n_perm)
-    min_distribution = _find_table_min(stats_table)
+    surr_table = _create_surrogate_table(analysis_setup, data, test_set,
+                                         n_perm)
+    min_distribution = _find_table_min(surr_table)
     [significance, pvalue] = _find_pvalue(te_min_candidate, min_distribution,
                                           alpha)
     # return np.random.rand() > 0.5
     return significance, pvalue
 
 
-def _create_surrogate_table(analysis_setup, data, idx_test_set,
-                            n_permutations):
+def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
     """Create a table of surrogate transfer entropy values.
 
     Calculate transfer entropy between surrogates for each source in the test
@@ -344,7 +342,7 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set,
             raw data
         idx_test_set : list of tuples
             list od indices indicating samples to be used as sources
-        n_permutations : int [optional]
+        n_perm : int [optional]
             number of permutations for testing (default=500)
 
     Returns:
@@ -352,25 +350,29 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set,
             surrogate TE values, dimensions: (length test set, number of
             surrogates)
     """
-    stats_table = np.zeros((len(idx_test_set), n_permutations))
-    current_value_realisations = analysis_setup._current_value_realisations
-    idx_c = 0
-
     # Check if n_replications is high enough to allow for the requested number
-    # of permutations.
-    if np.math.factorial(data.n_replications) > n_permutations:
+    # of permutations. If not permute samples over time
+    if np.math.factorial(data.n_replications) > n_perm:
         permute_over_replications = True
     else:
         permute_over_replications = False
+        try:
+            perm_range = analysis_setup.options['perm_range']
+        except KeyError:
+            perm_range = 'max'
 
+    # Create surrogate table.
+    surr_table = np.zeros((len(idx_test_set), n_perm))
+    current_value_realisations = analysis_setup._current_value_realisations
+    idx_c = 0
     if VERBOSE:
         print('create surrogates table')
     for candidate in idx_test_set:
         if VERBOSE:
-            print('\tcand. {0}, n_perm: {1} -    '.format(candidate,
-                                                               n_permutations),
+            print('\tcand. {0}, n_perm: {1} -    '.format(candidate, n_perm),
                   end='')
-        for perm in range(n_permutations):
+        for perm in range(n_perm):
+            # Check the permutation type for the current candidate.
             if permute_over_replications:
                 surr_candidate_realisations = data.permute_data(
                                                 analysis_setup.current_value,
@@ -380,12 +382,15 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set,
                                                 analysis_setup.current_value,
                                                 [candidate])
                 surr_candidate_realisations = _permute_realisations(real,
-                                                                    repl_idx)
-            stats_table[idx_c, perm] = analysis_setup._cmi_calculator.estimate(
+                                                                    repl_idx,
+                                                                    perm_range)
+            surr_table[idx_c, perm] = analysis_setup._cmi_calculator.estimate(
                         surr_candidate_realisations,
                         current_value_realisations,
                         analysis_setup._conditional_realisations,
-                        analysis_setup.options)  # TODO remove current candidate from this
+                        analysis_setup.options)
+                        # TODO When doing minstats: remove current candidate
+                        # from the conditioning set?
             if VERBOSE:
                 print('\b\b\b{num:03d}'.format(num=perm + 1), end='')
                 sys.stdout.flush()
@@ -393,7 +398,7 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set,
             print(' ')
         idx_c += 1
 
-    return stats_table
+    return surr_table
 
 
 def _find_table_max(table):
