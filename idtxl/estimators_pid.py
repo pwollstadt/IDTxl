@@ -273,8 +273,8 @@ def _calculate_mi(mi_calc, var_1, var_2):
         double: mutual information between input variables
     """
     mi_calc.initialise()
-    mi_calc.addObservations(jp.JArray(jp.JInt, target.ndim)(var_1.tolist()),
-                            jp.JArray(jp.JInt, target.ndim)(var_2.tolist()))
+    mi_calc.addObservations(jp.JArray(jp.JInt, var_1.ndim)(var_1.tolist()),
+                            jp.JArray(jp.JInt, var_2.ndim)(var_2.tolist()))
     mi = mi_calc.computeAverageLocalOfObservations()
     return mi
 
@@ -376,7 +376,7 @@ if __name__ == '__main__':
     cfg = {
         'alphabetsize': 2,
         'jarpath': 'infodynamics.jar',
-        'iterations': 0000
+        'iterations': 1000
     }
     print('Testing PID estimator on binary XOR, iterations: {0}, {1}'.format(
                                                         n, cfg['iterations']))
