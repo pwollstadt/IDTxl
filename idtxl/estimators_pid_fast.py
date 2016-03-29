@@ -330,52 +330,52 @@ def _get_last_value(x):
         return np.NaN
 
 
-def _join_variables(a, b, alph_a, alph_b):
-    """Join two sequences of random variables (RV) into a new RV.
-
-    Works like the method 'computeCombinedValues' implemented in JIDT
-    (https://github.com/jlizier/jidt/blob/master/java/source/
-    infodynamics/utils/MatrixUtils.java).
-
-    Args:
-        a, b (np array): sequence of integer numbers of arbitrary base
-            (representing observations from two RVs)
-        alph_a, alph_b (int): alphabet size of a and b
-
-    Returns:
-        np array, int: joined RV
-        int: alphabet size of new RV
-    """
-    if a.shape[0] != b.shape[0]:
-        raise Error
-
-    if alph_b < alph_a:
-        a, b = b, a
-        alph_a, alph_b = alph_b, alph_a
-
-    joined = np.zeros(a.shape[0])
-
-    for i in range(joined.shape[0]):
-        mult = 1
-        joined[i] += mult * b[i]
-        mult *= alph_a
-        joined[i] += mult * a[i]
-
-    alph_new = max(a) * alph_a + alph_b
-    '''
-    for (int r = 0; r < rows; r++) {
-        // For each row in vec1
-        int combinedRowValue = 0;
-        int multiplier = 1;
-        for (int c = columns - 1; c >= 0; c--) {
-            // Add in the contribution from each column
-            combinedRowValue += separateValues[r][c] * multiplier;
-            multiplier *= base;
-        }
-        combinedValues[r] = combinedRowValue;
-    } '''
-
-    return joined.astype(int), alph_new
+#def _join_variables(a, b, alph_a, alph_b):
+#    """Join two sequences of random variables (RV) into a new RV.
+#
+#    Works like the method 'computeCombinedValues' implemented in JIDT
+#    (https://github.com/jlizier/jidt/blob/master/java/source/
+#    infodynamics/utils/MatrixUtils.java).
+#
+#    Args:
+#        a, b (np array): sequence of integer numbers of arbitrary base
+#            (representing observations from two RVs)
+#        alph_a, alph_b (int): alphabet size of a and b
+#
+#    Returns:
+#        np array, int: joined RV
+#        int: alphabet size of new RV
+#    """
+#    if a.shape[0] != b.shape[0]:
+#        raise Error
+#
+#    if alph_b < alph_a:
+#        a, b = b, a
+#        alph_a, alph_b = alph_b, alph_a
+#
+#    joined = np.zeros(a.shape[0])
+#
+#    for i in range(joined.shape[0]):
+#        mult = 1
+#        joined[i] += mult * b[i]
+#        mult *= alph_a
+#        joined[i] += mult * a[i]
+#
+#    alph_new = max(a) * alph_a + alph_b
+#    '''
+#    for (int r = 0; r < rows; r++) {
+#        // For each row in vec1
+#        int combinedRowValue = 0;
+#        int multiplier = 1;
+#        for (int c = columns - 1; c >= 0; c--) {
+#            // Add in the contribution from each column
+#            combinedRowValue += separateValues[r][c] * multiplier;
+#            multiplier *= base;
+#        }
+#        combinedValues[r] = combinedRowValue;
+#    } '''
+#
+#    return joined.astype(int), alph_new
 
 if __name__ == '__main__':
 
