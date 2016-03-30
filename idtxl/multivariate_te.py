@@ -146,8 +146,8 @@ class Multivariate_te(Network_analysis):
                 if list of list, sources specified in each inner list are
                 tested for the corresponding target
         """
-        if type(targets) is not list:
-            raise TypeError('target should be a list of integers.')
+        if targets == 'all':
+            targets = [t for t in range(data.n_processes)]
         if sources == 'all':
             sources = ['all' for t in targets]
         if (type(sources) is list) and (type(sources[0]) is int):
@@ -200,8 +200,9 @@ class Multivariate_te(Network_analysis):
                 raw data for analysis
             target : int
                 index of target process
-            sources : list of int or 'all'
-                indices of source processes, if 'all', all sources are tested
+            sources : list of int, int, or 'all'
+                single index or list of indices of source processes, if 'all',
+                all possible sources for the given target are tested
 
         Returns:
             dict
@@ -245,8 +246,15 @@ class Multivariate_te(Network_analysis):
         """Check input and set everything to initial values."""
         self.target = target
         self._check_source_set(sources, data.n_processes)
-        self._current_value = (target,
-                               max(self.max_lag_sources, self.max_lag_target))
+        assert(self.min_lag_sources <= self.max_lag_sources), (
+            'min_lag_sources ({0}) must be smaller or equal to max_lag_sources'
+            ' ({1}).'.format(self.min_lag_sources, self.max_lag_sources))
+
+        max_lag = max(self.max_lag_sources, self.max_lag_target)
+        assert(data.n_samples >= max_lag + 1), (
+            'Not enough samples in data ({0}) to allow for the chosen maximum '
+            'lag ({1})'.format(data.n_samples, max_lag))
+        self._current_value = (target, max_lag)
         [cv_realisation, repl_idx] = data.get_realisations(
                                              current_value=self.current_value,
                                              idx=[self.current_value])
@@ -266,19 +274,19 @@ class Multivariate_te(Network_analysis):
     def _check_source_set(self, sources, n_processes):
         """Set default if no source set was provided by the user."""
         if sources == 'all':
-            self.source_set = [x for x in range(n_processes)]
-            self.source_set.pop(self.target)
+            sources = [x for x in range(n_processes)]
+            sources.pop(self.target)
+        elif type(sources) is int:
+            sources = [sources]
+
+        if self.target in sources:
+            raise RuntimeError('The target {0} should not be in the list '
+                               'of sources {1}.'.format(self.target,
+                                                        sources))
+        else:
+            self.source_set = sources
             if VERBOSE:
                 print('Testing sources {0}'.format(self.source_set))
-        elif type(sources) is not list:
-            raise TypeError('Source set has to be a list.')
-        else:
-            if self.target in sources:
-                raise RuntimeError('The target {0} should not be in the list '
-                                   'of sources {1}.'.format(self.target,
-                                                            sources))
-            else:
-                self.source_set = sources
 
     def _include_target_candidates(self, data):
         """Test candidates from the target's past."""
@@ -440,7 +448,7 @@ class Multivariate_te(Network_analysis):
             for candidate in self.conditional_sources:
                 # Separate the candidate realisations and all other
                 # realisations to test the candidate's individual contribution.
-                [temp_cond, temp_cand] = self._separate_realisation(
+                [temp_cond, temp_cand] = self._separate_realisations(
                                                     self.conditional_full,
                                                     candidate)
                 temp_te[i] = self._cmi_calculator.estimate(
@@ -470,7 +478,7 @@ class Multivariate_te(Network_analysis):
                 break
             i += 1
 
-    def _separate_realisation(self, idx_full, idx_single):
+    def _separate_realisations(self, idx_full, idx_single):
         """Separate a single indexes' realisations from a set of realisations.
 
         Return the realisations of a single index and the realisations of the
@@ -562,8 +570,8 @@ if __name__ == '__main__':
     d = np.load('/home/patricia/repos/IDTxl/testing/data/'
                 'lorenz_2_exampledata.npy')  # 2 Lorenz systems 1->2, u = 45 ms
     dat = Data()
-    dat.set_data(d[:, :, 1:10], 'psr')
-    lorenz_analysis = Multivariate_te(max_lag_sources=50, min_lag_sources=42,
+    dat.set_data(d[:, :, 0:10], 'psr')
+    lorenz_analysis = Multivariate_te(max_lag_sources=50, min_lag_sources=40,
                                       max_lag_target=5, options=analysis_opts)
-    res4 = lorenz_analysis.analyse_single_target(dat, 1)
+    # res4 = lorenz_analysis.analyse_single_target(dat, 1)
     res5 = lorenz_analysis.analyse_network(dat)
