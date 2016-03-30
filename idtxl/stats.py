@@ -9,7 +9,7 @@ import copy as cp
 import numpy as np
 import utils as utils
 
-VERBOSE = True
+VERBOSE = False
 
 
 def network_fdr(results, alpha=0.05):
@@ -242,7 +242,7 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
     conditional_te = np.empty(len(analysis_setup.conditional_sources))
     i = 0
     for conditional in analysis_setup.conditional_sources:
-        [temp_cond, temp_cand] = analysis_setup._remove_realisation(
+        [temp_cond, temp_cand] = analysis_setup._separate_realisations(
                                             analysis_setup.conditional_sources,
                                             conditional)
         conditional_te[i] = analysis_setup._cmi_calculator.estimate(
@@ -430,45 +430,57 @@ def _sort_table_min(table):
 def _permute_realisations(realisations, replication_idx, perm_range='max'):
     """Permute realisations in time within each replication.
 
-    Permute realisations in time within each replication. This is the fall-back
-    option if the number of replications is too small to allow a sufficient
-    number of permutations for the generation of surrogate data.
+    Permute realisations in time but within each replication. This is the
+    fall-back option if the number of replications is too small to allow a
+    sufficient number of permutations for the generation of surrogate data. If
+    no permutation range is given, samples are randomly permuted over the
+    whole replication, i.e., over all time indices in the replication. If a
+    permutation range is given, samples are shuffled within blocks of length
+    permutation range.
 
     Args:
         realisations : numpy array
             shape[0] realisations of shape[1] variables
         replication_idx : numpy array
-            the index of the replication each realisation came from
+            index of replication a realisation came from
         perm_range : int or 'max'
-            range in which realisations can be permutet, if 'max' realisations
-            are permuted within the whole replication, otherwise blocks of
-            length perm_range are permuted one at a time
+            range over which realisations are permuted, if 'max' realisations
+            are permuted over the whole replication, otherwise realisations are
+            permuted over blocks of length perm_range
 
     Returns:
         numpy array
             realisations permuted over time
     """
     if type(perm_range) is not str:
-        assert(perm_range > 2), ('Permutation range has to be larger than 2',
-                                 'otherwise there is nothing to permute.')
+        assert (perm_range > 1), ('Permutation range has to be larger than 1',
+                                  'otherwise there is nothing to permute.')
+    assert (replication_idx.shape[0] == realisations.shape[0]), (
+            'Array "replication" index must have as many entries as the first '
+            'dimension of array "realisations".')
     realisations_perm = cp.copy(realisations)
-
-    # Build a permuation mask that can be applied to all realisation from one
-    # replication at a time.
     n_per_repl = sum(replication_idx == 0)
-    if perm_range == 'max':
+    assert (n_per_repl >= perm_range), ('Not enough realisations per '
+                                        'replication ({0}) to allow for the '
+                                        'requested "perm_range" of {1}.'
+                                        .format(n_per_repl, perm_range))
+
+    # Create a permutation of the data that respects the requested permutation
+    # range and can be applied to the realisations from each replication in
+    # turn.
+    if perm_range == 'max':  # permute all realisations in one replication
         perm = np.random.permutation(n_per_repl)
-    else:
+    else:  # build a permutation that permutes only within the perm_range
         perm = np.empty(n_per_repl, dtype=int)
         remainder = n_per_repl % perm_range
         i = 0
-        for p in range(0, n_per_repl // perm_range):
+        for p in range(n_per_repl // perm_range):
             perm[i:i + perm_range] = np.random.permutation(perm_range) + i
             i += perm_range
         if remainder > 0:
             perm[-remainder:] = np.random.permutation(remainder) + i
 
-    # Apply permutation to data.
+    # Apply the permutation to data from each replication, individually.
     for replication in range(max(replication_idx) + 1):
         mask = replication_idx == replication
         d = realisations_perm[mask, :]
@@ -499,10 +511,14 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
     assert(distribution.ndim == 1)
     if tail == 'one':
         pvalue = sum(distribution > statistic) / distribution.shape[0]
-    else:
+    elif tail == 'two':
         p_bigger = sum(distribution > statistic) / distribution.shape[0]
         p_smaller = sum(distribution < statistic) / distribution.shape[0]
         pvalue = min(p_bigger, p_smaller)
+        alpha = alpha / 2
+    else:
+        ValueError(('Unkown value for "tail" (should be "one" or "two"): {0}'.
+                    format(tail)))
 
     # If the statistic is larger than all values in the test distribution, set
     # the p-value to the smallest possible value 1/n_perm.
