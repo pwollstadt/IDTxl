@@ -55,7 +55,7 @@ def opencl_kraskov(self, var1, var2, conditional, opts=None):
     try:
         noise_level = int(opts['noise_level'])
     except KeyError:
-        noise_level = np.float32(1e-8)
+        noise_level = np.float32(1e-8)  # TODO shouldn't that be double at this point
     try:
         gpuid = int(opts['gpuid'])
     except KeyError:
@@ -65,6 +65,10 @@ def opencl_kraskov(self, var1, var2, conditional, opts=None):
         nchunkspergpu = int(opts['nchunkspergpu'])
     except KeyError:
         nchunkspergpu = int(1)
+
+    var1 += np.random.normal(scale=noise_level, size=var1.shape)
+    var2 += np.random.normal(scale=noise_level, size=var2.shape)
+    conditional += np.random.normal(scale=noise_level, size=conditional.shape)
 
     # build pointsets - Note we assume that pointsets are given in IDTxl conv.
     # 1. full space
@@ -85,11 +89,10 @@ def opencl_kraskov(self, var1, var2, conditional, opts=None):
     pointset_var2_conditional = pointset_var2_conditional.astype('float32')
     n_dim_var2_conditional = pointset_var2_conditional.shape[1]
 
-
     signallengthpergpu = pointset_full_space.shape[0]
 
 #    print("working with signallength: %i" %signallengthpergpu)
-    chunksize =signallengthpergpu / nchunkspergpu # TODO check for integer result
+    chunksize = signallengthpergpu / nchunkspergpu # TODO check for integer result
 
     indexes, distances = nsocl.knn_search(pointset_full_space, n_dim_full,
                                           kraskov_k, theiler_t, nchunkspergpu,
@@ -101,7 +104,7 @@ def opencl_kraskov(self, var1, var2, conditional, opts=None):
 #    print("shape of distance matrix: ")
 #    print(distances.shape)
 #    # define the search radii as the distances to the kth (=last) neighbours
-    radii = distances[distances.shape[0]-1,:]
+    radii = distances[distances.shape[0]-1, :]
 #    print(radii)
 
     # get neighbour counts in ranges
@@ -111,16 +114,19 @@ def opencl_kraskov(self, var1, var2, conditional, opts=None):
 
     # get neighbour counts in ranges
     count_var1_conditional = nsocl.range_search(pointset_var1_conditional,
-                                                n_dim_var1_conditional, radii, theiler_t,
+                                                n_dim_var1_conditional,
+                                                radii, theiler_t,
                                                 nchunkspergpu, gpuid)
 
     # get neighbour counts in ranges
     count_var2_conditional = nsocl.range_search(pointset_var2_conditional,
-                                                n_dim_var2_conditional, radii, theiler_t,
+                                                n_dim_var2_conditional,
+                                                radii, theiler_t,
                                                 nchunkspergpu, gpuid)
 
-    cmi = digamma(kraskov_k) + np.mean(digamma(count_conditional + 1) -
-    digamma(count_var1_conditional + 1) - digamma(count_var2_conditional + 1))
+    cmi = (digamma(kraskov_k) + np.mean(digamma(count_conditional + 1) -
+           digamma(count_var1_conditional + 1) -
+           digamma(count_var2_conditional + 1)))
     return cmi
 
 
@@ -218,9 +224,7 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
     calc.setProperty('DYN_CORR_EXCL', theiler_t)
     calc.setProperty('NOISE_LEVEL_TO_ADD', noise_level)
     calc.setProperty('NUM_THREADS', num_threads)
-
     calc.setDebug(debug)
-    print("debug is: {0}".format(calc.debug))
 
     if conditional is not None:
         calc.initialise(var1.shape[1], var2.shape[1],  # needs dims of vars
