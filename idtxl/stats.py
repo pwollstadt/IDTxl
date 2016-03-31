@@ -452,14 +452,21 @@ def _permute_realisations(realisations, replication_idx, perm_range='max'):
         numpy array
             realisations permuted over time
     """
+    realisations_perm = cp.copy(realisations)
+    n_per_repl = sum(replication_idx == 0)
     if type(perm_range) is not str:
         assert (perm_range > 1), ('Permutation range has to be larger than 1',
                                   'otherwise there is nothing to permute.')
+    else:
+        if perm_range == 'max':
+            perm_range = n_per_repl
+        else:
+            raise ValueError('Unkown value for "perm_range": {0}'.format(
+                perm_range))
     assert (replication_idx.shape[0] == realisations.shape[0]), (
             'Array "replication" index must have as many entries as the first '
             'dimension of array "realisations".')
-    realisations_perm = cp.copy(realisations)
-    n_per_repl = sum(replication_idx == 0)
+
     assert (n_per_repl >= perm_range), ('Not enough realisations per '
                                         'replication ({0}) to allow for the '
                                         'requested "perm_range" of {1}.'
@@ -468,7 +475,7 @@ def _permute_realisations(realisations, replication_idx, perm_range='max'):
     # Create a permutation of the data that respects the requested permutation
     # range and can be applied to the realisations from each replication in
     # turn.
-    if perm_range == 'max':  # permute all realisations in one replication
+    if perm_range == n_per_repl:  # permute all realisations in one replication
         perm = np.random.permutation(n_per_repl)
     else:  # build a permutation that permutes only within the perm_range
         perm = np.empty(n_per_repl, dtype=int)
