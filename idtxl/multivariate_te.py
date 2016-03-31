@@ -229,13 +229,13 @@ class Multivariate_te(Network_analysis):
             print('final source samples: {0}'.format(self.conditional_sources))
             print('final target samples: {0}'.format(self.conditional_target))
         self._clean_up()
-        [cond_full, cond_sources, cond_target] = self._indices_to_lags()
+        [cond_full, cond_sources, cond_target] = self._idx_to_lag()
 
         results = {
             'current_value': self.current_value,
-            'conditional_full': cond_full,
-            'conditional_sources': cond_sources,
-            'conditional_target': cond_target,
+            'conditional_full': self._idx_to_lag(self.conditional_full),
+            'conditional_sources': self._idx_to_lag(self.conditional_sources),
+            'conditional_target': self._idx_to_lag(self.conditional_target),
             'omnibus_sign': self.sign_omnibus,
             'omnibus_pval': self.pvalue_omnibus,
             'cond_sources_pval': self.pvalues_sign_sources}
@@ -403,8 +403,8 @@ class Multivariate_te(Network_analysis):
             max_candidate = candidate_set[np.argmax(temp_te)]
             if VERBOSE:
                 print('testing {0} from candidate set {1}'.format(
-                                                                max_candidate,
-                                                                candidate_set))
+                                        self._idx_to_lag([max_candidate])[0],
+                                        self._idx_to_lag(candidate_set)))
             significant = stats.max_statistic(self, data, candidate_set,
                                               te_max_candidate,
                                               self.options)[0]
@@ -462,8 +462,8 @@ class Multivariate_te(Network_analysis):
             min_candidate = self.conditional_sources[np.argmin(temp_te)]
             if VERBOSE:
                 print('testing {0} from candidate set {1}'.format(
-                                                    min_candidate,
-                                                    self.conditional_sources))
+                                self._idx_to_lag([min_candidate])[0],
+                                self._idx_to_lag(self.conditional_sources)))
             significant = stats.min_statistic(self, data,
                                               self.conditional_sources,
                                               te_min_candidate,
@@ -526,18 +526,12 @@ class Multivariate_te(Network_analysis):
         self._conditional_target_realisations = None
         self._current_value_realisations = None
 
-    def _indices_to_lags(self):
-        """Change sample indices to lags for each candidate set."""
-        conditional_full = []
-        conditional_sources = []
-        conditional_target = []
-        for c in self.conditional_full:
-            conditional_full.append((c[0], self.current_value[1] - c[1]))
-        for c in self.conditional_sources:
-            conditional_sources.append((c[0], self.current_value[1] - c[1]))
-        for c in self.conditional_target:
-            conditional_target.append((c[0], self.current_value[1] - c[1]))
-        return conditional_full, conditional_sources, conditional_target
+    def _idx_to_lag(self, idx_list):
+        """Change sample indices to lags for each index in the list."""
+        lag_list = cp.copy(idx_list)
+        for c in idx_list:
+            lag_list[lag_list.index(c)] = (c[0], self.current_value[1] - c[1])
+        return lag_list
 
 if __name__ == '__main__':
 
@@ -547,10 +541,10 @@ if __name__ == '__main__':
     min_lag = 4
     analysis_opts = {
         'cmi_calc_name': 'jidt_kraskov',
-        'n_perm_max_stat': 20,
-        'n_perm_min_stat': 20,
-        'n_perm_omnibus': 500,
-        'n_perm_max_seq': 500,
+        'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_omnibus': 21,
+        'n_perm_max_seq': 21,
         }
     target = 0
     sources = [1, 2, 3]
@@ -570,8 +564,8 @@ if __name__ == '__main__':
     d = np.load('/home/patricia/repos/IDTxl/testing/data/'
                 'lorenz_2_exampledata.npy')  # 2 Lorenz systems 1->2, u = 45 ms
     dat = Data()
-    dat.set_data(d[:, :, 0:10], 'psr')
+    dat.set_data(d[:, :, 0:50], 'psr')
     lorenz_analysis = Multivariate_te(max_lag_sources=50, min_lag_sources=40,
                                       max_lag_target=5, options=analysis_opts)
-    # res4 = lorenz_analysis.analyse_single_target(dat, 1)
-    res5 = lorenz_analysis.analyse_network(dat)
+    res4 = lorenz_analysis.analyse_single_target(dat, target=1)
+    # res5 = lorenz_analysis.analyse_network(dat)
