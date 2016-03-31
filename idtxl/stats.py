@@ -229,6 +229,8 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
             statistical significance of each source
         numpy array, float
             the test's p-values for each source
+        numpy array, float
+            TE values for individual sources
     """
     try:
         n_permutations = opts['n_perm_max_seq']
@@ -238,20 +240,20 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
         alpha = opts['alpha_max_seq']
     except KeyError:
         alpha = 0.05
-    conditional_te = np.empty(len(analysis_setup.conditional_sources))
+    individual_te = np.empty(len(analysis_setup.conditional_sources))
     i = 0
     for conditional in analysis_setup.conditional_sources:
         [temp_cond, temp_cand] = analysis_setup._separate_realisations(
                                             analysis_setup.conditional_sources,
                                             conditional)
-        conditional_te[i] = analysis_setup._cmi_calculator.estimate(
+        individual_te[i] = analysis_setup._cmi_calculator.estimate(
                                     temp_cand,
                                     analysis_setup._current_value_realisations,
                                     temp_cond)
         i += 1
-    conditional_order = np.argsort(conditional_te)
-    conditional_te_sorted = conditional_te
-    conditional_te_sorted.sort()
+    conditional_order = np.argsort(individual_te)
+    individual_te_sorted = individual_te
+    individual_te_sorted.sort()
 
     # TODO not sure about this, because the surrogate table also contains the
     # candidate we're testing
@@ -260,10 +262,10 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
                                          n_permutations)
     max_distribution = _sort_table_max(surr_table)
 
-    significance = np.zeros(conditional_te.shape[0]).astype(bool)
-    pvalue = np.zeros(conditional_te.shape[0])
-    for c in range(conditional_te.shape[0]):
-        [s, v] = _find_pvalue(conditional_te_sorted[c],
+    significance = np.zeros(individual_te.shape[0]).astype(bool)
+    pvalue = np.zeros(individual_te.shape[0])
+    for c in range(individual_te.shape[0]):
+        [s, v] = _find_pvalue(individual_te_sorted[c],
                               max_distribution[c, ], alpha)
         significance[c] = s
         pvalue[c] = v
@@ -271,12 +273,10 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
         if not s:
             break
 
-    # get back original order
+    # Get back original order and return results.
     significance = significance[conditional_order]
     pvalue = pvalue[conditional_order]
-
-    # return True
-    return significance, pvalue
+    return significance, pvalue, individual_te
 
 
 def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,

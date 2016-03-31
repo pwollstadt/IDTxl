@@ -70,9 +70,10 @@ class Multivariate_te(Network_analysis):
             minimum temporal search depth for candidates in the sources' past
         pvalue_omnibus : float
             p-value of the omnibus test
-        pvalue_individual_sources : numpy array
-            array of p-values for TE from
-            individual sources to the target
+        pvalues_sign_sources : numpy array
+            array of p-values for TE from individual sources to the target
+        te_sign_sources : numpy array
+            raw TE values from individual sources to the target
         sign_ominbus : bool
             statistical significance of the over-all TE
         source_set : list
@@ -97,6 +98,7 @@ class Multivariate_te(Network_analysis):
         self.sign_individual_sources = None
         self.pvalue_omnibus = None
         self.pvalues_sign_sources = None
+        self.te_sign_sources = None
         self.options = options
         try:
             self.calculator_name = options['cmi_calc_name']
@@ -229,8 +231,6 @@ class Multivariate_te(Network_analysis):
             print('final source samples: {0}'.format(self.conditional_sources))
             print('final target samples: {0}'.format(self.conditional_target))
         self._clean_up()
-        [cond_full, cond_sources, cond_target] = self._idx_to_lag()
-
         results = {
             'current_value': self.current_value,
             'conditional_full': self._idx_to_lag(self.conditional_full),
@@ -238,8 +238,8 @@ class Multivariate_te(Network_analysis):
             'conditional_target': self._idx_to_lag(self.conditional_target),
             'omnibus_sign': self.sign_omnibus,
             'omnibus_pval': self.pvalue_omnibus,
-            'cond_sources_pval': self.pvalues_sign_sources}
-            # TODO add TE values, network comparison needs those
+            'cond_sources_pval': self.pvalues_sign_sources,
+            'cond_sources_te': self.te_sign_sources}
         return results
 
     def _initialise(self, data, sources, target):
@@ -326,15 +326,17 @@ class Multivariate_te(Network_analysis):
             self.pvalue_omnibus = p
             # Test individual links if the omnibus test is significant.
             if self.sign_omnibus:
-                [s, p] = stats.max_statistic_sequential(self, data,
-                                                        self.options)
+                [s, p, te] = stats.max_statistic_sequential(self, data,
+                                                            self.options)
                 # Remove non-significant sources from the candidate set. Loop
                 # backwards over the candidates to remove them iteratively.
                 for i in range(s.shape[0] - 1, -1, -1):
                     if not s[i]:
                         self._remove_candidate(self.conditional_sources[i])
                         p = np.delete(p, i)
+                        te = np.delete(te, i)
                 self.pvalues_sign_sources = p
+                self.te_sign_sources = te
             else:
                 self.conditional_sources = []
                 self.conditional_full = self.conditional_target
@@ -550,7 +552,7 @@ if __name__ == '__main__':
     sources = [1, 2, 3]
 
     network_analysis = Multivariate_te(max_lag, analysis_opts, min_lag)
-    # res = network_analysis.analyse_single_target(dat, target, sources)
+    res = network_analysis.analyse_single_target(dat, target, sources)
 
     d = np.arange(2000).reshape((2, 1000))
     dat2 = Data(d, dim_order='ps')
