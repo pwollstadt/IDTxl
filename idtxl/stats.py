@@ -33,12 +33,13 @@ def network_fdr(results, alpha=0.05):
         dict
             input results structure pruned of non-significant links.
     """
-    # Get p-values from results.
+    # Get candidates and their test results from the results dictionary, i.e.,
+    # collect results over targets.
     pval = np.arange(0)
     target_idx = np.arange(0).astype(int)
     cands = []
     for target in results.keys():
-        if not results[target]['omnibus_sign']:
+        if not results[target]['omnibus_sign']:  # skip if not significant
             continue
         n_sign = results[target]['cond_sources_pval'].size
         pval = np.append(pval, results[target]['cond_sources_pval'])
@@ -50,6 +51,7 @@ def network_fdr(results, alpha=0.05):
         print('No links in final results. Return ...')
         return
 
+    # Sort all p-values in ascending order.
     sort_idx = np.argsort(pval)
     pval.sort()
 
@@ -62,21 +64,23 @@ def network_fdr(results, alpha=0.05):
         thresh = ((np.arange(1, n + 1) / n) * alpha /
                   (np.log(n) + np.e))  # aprx. harmonic sum with Euler's number
 
-    # Compare data to threshold and prepare output:
+    # Compare data to threshold.
     sign = pval <= thresh
-    first_false = np.where(sign == False)[0][0]
+    first_false = np.where(np.invert(sign))[0][0]
     sign[first_false:] = False  # to avoid false positives due to equal pvals
+
+    # Go over list of all candidates and remove them from the results dict.
     sign = sign[sort_idx]
     for s in range(sign.shape[0]):
         if sign[s]:
             continue
-        else:
-            # Remove non-significant candidate and its p-value from results.
+        else:  # remove non-significant candidate and it's p-value from results
             t = target_idx[s]
             cand = cands[s]
             cand_ind = results[t]['conditional_sources'].index(cand)
             results[t]['conditional_sources'].pop(cand_ind)
-            np.delete(results[t]['cond_sources_pval'], cand_ind)
+            results[t]['cond_sources_pval'] = np.delete(
+                                    results[t]['cond_sources_pval'], cand_ind)
             results[t]['conditional_full'].pop(
                                     results[t]['conditional_full'].index(cand))
     return results
@@ -120,8 +124,8 @@ def omnibus_test(analysis_setup, data, opts):
                                     len(analysis_setup.conditional_sources)))
 
     # Create temporary variables b/c realisations for sources and targets are
-    # created on the fly, which is costly (this does not apply to the current
-    # value realisations).
+    # created on the fly, which is costly, so we want to re-use them after
+    # creation. (This does not apply to the current value realisations).
     cond_source_realisations = analysis_setup._conditional_sources_realisations
     cond_target_realisations = analysis_setup._conditional_target_realisations
     te_orig = analysis_setup._cmi_calculator.estimate(
@@ -130,7 +134,6 @@ def omnibus_test(analysis_setup, data, opts):
                                     cond_target_realisations,
                                     analysis_setup.options)
 
-    surr_distribution = np.zeros(n_permutations)
     # Check if n_replications is high enough to allow for the requested number
     # of permutations.
     if np.math.factorial(data.n_replications) > n_permutations:
@@ -138,17 +141,19 @@ def omnibus_test(analysis_setup, data, opts):
     else:
         permute_over_replications = False
 
+    # Create the surrogate distribution by permuting the conditional sources.
+    surr_distribution = np.zeros(n_permutations)
     for perm in range(n_permutations):
         if permute_over_replications:
-            surr_conditional_realisations = data.permute_data(
+            surr_cond_real = data.permute_data(
                                         analysis_setup.current_value,
                                         analysis_setup.conditional_sources)[0]
         else:
-            surr_conditional_realisations = (_permute_realisations(
+            surr_cond_real = _permute_realisations(
                                             cond_source_realisations,
-                                            analysis_setup._replication_index))
+                                            analysis_setup._replication_index)
         surr_distribution[perm] = analysis_setup._cmi_calculator.estimate(
-                                    surr_conditional_realisations,
+                                    surr_cond_real,
                                     analysis_setup._current_value_realisations,
                                     cond_target_realisations,
                                     analysis_setup.options)
@@ -240,6 +245,9 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
         alpha = opts['alpha_max_seq']
     except KeyError:
         alpha = 0.05
+
+    # Calculate TE for each candidate in the conditional source set and sort
+    # TE values.
     individual_te = np.empty(len(analysis_setup.conditional_sources))
     i = 0
     for conditional in analysis_setup.conditional_sources:
@@ -255,13 +263,13 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
     individual_te_sorted = individual_te
     individual_te_sorted.sort()
 
-    # TODO not sure about this, because the surrogate table also contains the
-    # candidate we're testing
+    # Create a surrogate table and sort it.
     surr_table = _create_surrogate_table(analysis_setup, data,
                                          analysis_setup.conditional_sources,
                                          n_permutations)
     max_distribution = _sort_table_max(surr_table)
 
+    # Compare each TE value with the distribution of the same rank.
     significance = np.zeros(individual_te.shape[0]).astype(bool)
     pvalue = np.zeros(individual_te.shape[0])
     for c in range(individual_te.shape[0]):
@@ -269,8 +277,7 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
                               max_distribution[c, ], alpha)
         significance[c] = s
         pvalue[c] = v
-
-        if not s:
+        if not s:  # break as soon as a candidate is no longer significant
             break
 
     # Get back original order and return results.
@@ -323,7 +330,6 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
     min_distribution = _find_table_min(surr_table)
     [significance, pvalue] = _find_pvalue(te_min_candidate, min_distribution,
                                           alpha)
-    # return np.random.rand() > 0.5
     return significance, pvalue
 
 
@@ -361,11 +367,11 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
             perm_range = 'max'
 
     # Create surrogate table.
+    if VERBOSE:
+        print('create surrogates table')
     surr_table = np.zeros((len(idx_test_set), n_perm))
     current_value_realisations = analysis_setup._current_value_realisations
     idx_c = 0
-    if VERBOSE:
-        print('create surrogates table')
     for candidate in idx_test_set:
         if VERBOSE:
             print('\tcand. {0}, n_perm: {1} -    '.format(candidate, n_perm),
@@ -513,19 +519,16 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
             the test's p-value
     """
     assert(distribution.ndim == 1)
-    # TODO this should go in the final version:
-#==============================================================================
-#     assert(1.0 / distribution.shape[0] >= alpha), ('The numper of permutations '
-#                                                   'is to small ({0}) to test '
-#                                                   'the requested alpha level '
-#                                                   '({1}).'.format(
-#                                                       distribution.shape[0],
-#                                                       alpha))
-#==============================================================================
-    if (1.0 / distribution.shape[0] >= alpha):
-        print('The numper of permutations is to small ({0}) to test the '
-              'requested alpha level ({1}).'.format(distribution.shape[0],
-                                                    alpha))
+    assert(1.0 / distribution.shape[0] < alpha), ('The numper of permutations '
+                                                  'is to small ({0}) to test '
+                                                  'the requested alpha level '
+                                                  '({1}).'.format(
+                                                       distribution.shape[0],
+                                                       alpha))
+#    if (1.0 / distribution.shape[0] >= alpha):
+#        print('The numper of permutations is to small ({0}) to test the '
+#              'requested alpha level ({1}).'.format(distribution.shape[0],
+#                                                    alpha))
     if tail == 'one':
         pvalue = sum(distribution > statistic) / distribution.shape[0]
     elif tail == 'two':
@@ -534,8 +537,8 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
         pvalue = min(p_bigger, p_smaller)
         alpha = alpha / 2
     else:
-        ValueError(('Unkown value for "tail" (should be "one" or "two"): {0}'.
-                    format(tail)))
+        raise ValueError(('Unkown value for "tail" (should be "one" or "two"):'
+                          ' {0}'.format(tail)))
 
     # If the statistic is larger than all values in the test distribution, set
     # the p-value to the smallest possible value 1/n_perm.
@@ -544,30 +547,3 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
     significance = pvalue < alpha
 
     return significance, pvalue
-
-
-if __name__ == '__main__':
-    r1 = {
-        'conditional_sources': [(0, 1), (0, 2), (0, 3), (2, 1), (2, 0)],
-        'conditional_full': [(0, 1), (0, 2), (0, 3), (2, 1), (2, 0)],
-        'omnibus_sign': True,
-        'cond_sources_pval': np.array([0.001, 0.0014, 0.01, 0.045, 0.047])
-        }
-    r2 = {
-        'conditional_sources': [(2, 0), (2, 1), (2, 2), (3, 1), (3, 2)],
-        'conditional_full': [(2, 0), (2, 1), (2, 2), (3, 1), (3, 2)],
-        'omnibus_sign': True,
-        'cond_sources_pval': np.array([0.00001, 0.00014, 0.01, 0.035, 0.02])
-        }
-    r3 = {
-        'conditional_sources': [],
-        'conditional_full': [(3, 0), (3, 1)],
-        'omnibus_sign': False,
-        'cond_sources_pval': None
-        }
-    res = {
-        1: r1,
-        2: r2,
-        3: r3
-    }
-    res_pruned = network_fdr(res)
