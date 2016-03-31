@@ -20,20 +20,25 @@ def test_permute_realisations():
     perm = stats._permute_realisations(realisations=real,
                                        replication_idx=real_idx,
                                        perm_range=rng)
-
+    # Assert the permutation worked.
+    assert (not (perm == real).all()), 'Permutation did not work.'
+    assert (np.unique(perm) == np.unique(real)).all(), ('Entries in original '
+                                                        'and permuted '
+                                                        'realisations are not '
+                                                        'the same.')
     # Assert that samples have been swapped within the permutation range for
     # the first replication.
     samples = np.arange(rng)
     i = 0
     for p in range(n_per_repl // rng):
-        assert (np.unique(perm[i:i + rng, 0]) == samples).all(), ('Something '
-            'went wrong when permuting realisations')
+        assert (np.unique(perm[i:i + rng, 0]) == samples).all(), ('The '
+            'permutation range was not respected.')
         samples += rng
         i += rng
     rem = n_per_repl % rng
     if rem > 0:
-        assert (np.unique(perm[i:i + rem, 0]) == samples[0:rem]).all(), ('Something'
-            ' went wrong when permuting realisations')
+        assert (np.unique(perm[i:i + rem, 0]) == samples[0:rem]).all(), ('The '
+            'remainder did not contain the same realisations.')
 
 
 def test_find_pvalue():
