@@ -552,22 +552,4 @@ if __name__ == '__main__':
     sources = [1, 2, 3]
 
     network_analysis = Multivariate_te(max_lag, analysis_opts, min_lag)
-    res = network_analysis.analyse_single_target(dat, target, sources)
-
-    d = np.arange(2000).reshape((2, 1000))
-    dat2 = Data(d, dim_order='ps')
-    # res2 = network_analysis.analyse_single_target(dat2, target)
-
-    targets = [0, 2, 3]
-    # res3 = network_analysis.analyse_network(dat, targets, sources='all')
-    sources = [[1, 2, 3], 'all', [1]]  # set sources for each target
-    # res4 = network_analysis.analyse_network(dat, targets, sources=sources)
-
-    d = np.load('/home/patricia/repos/IDTxl/testing/data/'
-                'lorenz_2_exampledata.npy')  # 2 Lorenz systems 1->2, u = 45 ms
-    dat = Data()
-    dat.set_data(d[:, :, 0:50], 'psr')
-    lorenz_analysis = Multivariate_te(max_lag_sources=50, min_lag_sources=40,
-                                      max_lag_target=5, options=analysis_opts)
-    res4 = lorenz_analysis.analyse_single_target(dat, target=1)
-    # res5 = lorenz_analysis.analyse_network(dat)
+    # res = network_analysis.analyse_single_target(dat, target, sources)

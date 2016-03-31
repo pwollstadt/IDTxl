@@ -4,9 +4,37 @@ Created on Fri Mar 25 12:22:14 2016
 
 @author: patricia
 """
+import pytest
 import numpy as np
 from multivariate_te import Multivariate_te
 from data import Data
+
+
+def test_multivariate_te_lorenz_2():
+    """Test multivariate TE estimation on bivariately couled Lorenz systems.
+
+    Run the multivariate TE algorithm on two Lorenz systems with a coupling
+    from first to second system with delay u = 45 samples. Both directions are
+    analyzed, the algorithm should not find a coupling from system two to one.
+
+    Note:
+        This test takes several hours and may take one to two days on some
+        machines.
+    """
+    d = np.load('/home/patricia/repos/IDTxl/testing/data/'
+                'lorenz_2_exampledata.npy')
+    dat = Data()
+    dat.set_data(d, 'psr')
+    analysis_opts = {
+        'cmi_calc_name': 'jidt_kraskov',
+        'n_perm_max_stat': 200,
+        'n_perm_min_stat': 200,
+        'n_perm_omnibus': 500,
+        'n_perm_max_seq': 500,
+        }
+    lorenz_analysis = Multivariate_te(max_lag_sources=50, min_lag_sources=40,
+                                      max_lag_target=5, options=analysis_opts)
+    res = lorenz_analysis.analyse_network(dat)
 
 
 def test_multivariate_te():
@@ -35,10 +63,8 @@ def test_multivariate_te():
     min_lag_sources = 7
     nw_2 = Multivariate_te(max_lag_sources, analysis_opts, min_lag_sources,
                            max_lag_target)
-    try:
+    with pytest.raises(AssertionError):
         nw_2.analyse_single_target(dat, target, sources)
-    except AssertionError:
-        print('Test correctly failed due to wrong user input.')
 
 
 def test_multivariate_te_initialise():
@@ -130,5 +156,5 @@ def test_indices_to_lags():
 
 if __name__ == '__main__':
     test_multivariate_te_initialise()
-    # test_multivariate_te()
+    test_multivariate_te()
     test_check_source_set()
