@@ -1,12 +1,11 @@
-import warnings
 import numpy as np
 import idtxl_exceptions as ex
 try:
     import pyopencl as cl
 except ImportError:  # TODO this doesn't get printed?!
     ex.opencl_missing('PyOpenCl is not available on this system. To use '
-                  'OpenCL-powered CMI estimation install it from '
-                  'https://pypi.python.org/pypi/pyopencl')
+                      'OpenCL-powered CMI estimation install it from '
+                      'https://pypi.python.org/pypi/pyopencl')
 
 
 def knn_search(pointset, n_dim, knn_k, theiler_t, n_chunks=1, gpuid=0):

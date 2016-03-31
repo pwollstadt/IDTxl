@@ -92,14 +92,17 @@ if __name__ == "__main__":
     history_length = 1
     options = {
         'kraskov_k': 4,
+        'history_target': 3
         }
 
-    te = te_estimator.estimate(source, target, knn, history_length)
-    print('Estimator is {0}'.format(te_estimator.get_estimator()))
-    print('TE result: %.4f nats.' % te)
+    te = te_estimator.estimate(np.array(source), np.array(target), options)
+    expected_te = math.log(1 / (1 - math.pow(covariance, 2)))
+    print('TE estimator is {0}'.format(te_estimator.get_estimator()))
+    print('TE result: {0:.4f} nats; expected to be close to {1:.4f} nats '
+          'for correlated Gaussians.'.format(te, expected_te))
 
-    mi = mi_estimator.estimate(var1, var2, knn)
-    print('Estimator is ' + mi_estimator.get_estimator())
+    mi = mi_estimator.estimate(np.array(var1), np.array(var2), options)
+    print('MI estimator is ' + mi_estimator.get_estimator())
     print('MI result: %.4f nats.' % mi)
 
     cmi = cmi_estimator.estimate(np.array(var1), np.array(var2),
@@ -111,9 +114,9 @@ if __name__ == "__main__":
     # Generate some random normalised data.
 
     # set options for maximal comparability between JIDT and opencl
-    options = {
-        'kraskov_k': 4, 'noise_level': 0, 'debug': True, 'theiler_t': 0
-        }
+    #options = {
+    #    'kraskov_k': 4, 'noise_level': 0, 'debug': True, 'theiler_t': 0
+    #    }
 
     numObservations = 10000
     covariance = 0.4
