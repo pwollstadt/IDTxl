@@ -200,7 +200,6 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
     max_distribution = _find_table_max(surr_table)
     [significance, pvalue] = _find_pvalue(te_max_candidate, max_distribution,
                                           alpha)
-    significance = True
     return significance, pvalue
 
 
@@ -389,8 +388,6 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
                         current_value_realisations,
                         analysis_setup._conditional_realisations,
                         analysis_setup.options)
-                        # TODO When doing minstats: remove current candidate
-                        # from the conditioning set?
             if VERBOSE:
                 print('\b\b\b{num:03d}'.format(num=perm + 1), end='')
                 sys.stdout.flush()
@@ -516,6 +513,19 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
             the test's p-value
     """
     assert(distribution.ndim == 1)
+    # TODO this should go in the final version:
+#==============================================================================
+#     assert(1.0 / distribution.shape[0] >= alpha), ('The numper of permutations '
+#                                                   'is to small ({0}) to test '
+#                                                   'the requested alpha level '
+#                                                   '({1}).'.format(
+#                                                       distribution.shape[0],
+#                                                       alpha))
+#==============================================================================
+    if (1.0 / distribution.shape[0] >= alpha):
+        print('The numper of permutations is to small ({0}) to test the '
+              'requested alpha level ({1}).'.format(distribution.shape[0],
+                                                    alpha))
     if tail == 'one':
         pvalue = sum(distribution > statistic) / distribution.shape[0]
     elif tail == 'two':
