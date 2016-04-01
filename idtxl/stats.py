@@ -9,7 +9,7 @@ import copy as cp
 import numpy as np
 import utils as utils
 
-VERBOSE = False
+VERBOSE = True
 
 
 def network_fdr(results, alpha=0.05):
@@ -119,7 +119,7 @@ def omnibus_test(analysis_setup, data, opts):
         alpha = opts['alpha_omnibus']
     except KeyError:
         alpha = 0.05
-    print('no. target sourcesces: {0}, no. sources: {1}'.format(
+    print('no. target sources: {0}, no. sources: {1}'.format(
                                     len(analysis_setup.conditional_target),
                                     len(analysis_setup.conditional_sources)))
 
@@ -197,7 +197,7 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
     except KeyError:
         alpha = 0.05
 
-    test_set = cp.copy(candidate_set)
+    test_set = cp.copy(candidate_set)  # TODO I think we don't need this anymore
     assert(test_set), 'The test set is empty.'
 
     surr_table = _create_surrogate_table(analysis_setup, data, test_set,
