@@ -94,7 +94,7 @@ class Multivariate_te(Network_analysis):
             self.max_lag_target = max_lag_target
         self.max_lag_sources = max_lag_sources
         self.min_lag_sources = min_lag_sources
-        self.sign_omnibus = None
+        self.te_omnibus = None
         self.sign_individual_sources = None
         self.pvalue_omnibus = None
         self.pvalues_sign_sources = None
@@ -236,7 +236,7 @@ class Multivariate_te(Network_analysis):
             'conditional_full': self._idx_to_lag(self.conditional_full),
             'conditional_sources': self._idx_to_lag(self.conditional_sources),
             'conditional_target': self._idx_to_lag(self.conditional_target),
-            'omnibus_sign': self.sign_omnibus,
+            'omnibus_te': self.te_omnibus,
             'omnibus_pval': self.pvalue_omnibus,
             'cond_sources_pval': self.pvalues_sign_sources,
             'cond_sources_te': self.te_sign_sources}
@@ -263,13 +263,18 @@ class Multivariate_te(Network_analysis):
         # needed for surrogate creation at a later point.
         self._replication_index = repl_idx
 
+        # Reset all attributes to inital values if the instance has been used
+        # before.
         if self.conditional_full:
             self.conditional_full = []
             self._conditional_realisations = None
-        if self.conditional_sources:
             self.conditional_sources = []
-        if self.conditional_target:
             self.conditional_target = []
+            self.te_omnibus = None
+            self.sign_individual_sources = None
+            self.pvalue_omnibus = None
+            self.pvalues_sign_sources = None
+            self.te_sign_sources = None
 
     def _check_source_set(self, sources, n_processes):
         """Set default if no source set was provided by the user."""
@@ -294,8 +299,8 @@ class Multivariate_te(Network_analysis):
         samples = np.arange(self.current_value[1] - self.max_lag_target,
                             self.current_value[1])
         candidates = self._define_candidates(procs, samples)
-
         sources_found = self._include_candidates(candidates, data)
+
         # If no candidates were found in the target's past, add at least one
         # sample so we are still calculating a proper TE.
         if not sources_found:
@@ -321,11 +326,11 @@ class Multivariate_te(Network_analysis):
             return
         else:
             print(self.conditional_full)
-            [s, p] = stats.omnibus_test(self, data, self.options)
-            self.sign_omnibus = s
+            [significant, p, te] = stats.omnibus_test(self, data, self.options)
+            self.te_omnibus = te
             self.pvalue_omnibus = p
             # Test individual links if the omnibus test is significant.
-            if self.sign_omnibus:
+            if significant:
                 [s, p, te] = stats.max_statistic_sequential(self, data,
                                                             self.options)
                 # Remove non-significant sources from the candidate set. Loop

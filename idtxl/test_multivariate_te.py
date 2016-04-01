@@ -4,10 +4,148 @@ Created on Fri Mar 25 12:22:14 2016
 
 @author: patricia
 """
+import random as rn
 import pytest
 import numpy as np
 from multivariate_te import Multivariate_te
 from data import Data
+
+
+def test_multivariate_te_corr_gaussian():
+    """Test multivariate TE estimation on correlated Gaussians.
+
+    Run the multivariate TE algorithm on two sets of random Gaussian data with
+    a given covariance. The second data set is shifted by one sample creating
+    a source-target delay of one sample. This example is modeled after the
+    JIDT demo 4 for transfer entropy. The resulting TE can be compared to the
+    analytical result (but expect some error in the estimate).
+
+    Note:
+        This test runs considerably faster than other system tests
+    """
+    n = 1000
+    cov = 0.4
+    source_1 = [rn.normalvariate(0, 1) for r in range(n)]  # correlated src
+    # source_2 = [rn.normalvariate(0, 1) for r in range(n)]  # uncorrelated src
+    target = [sum(pair) for pair in zip(
+        [cov * y for y in source_1],
+        [(1 - cov) * y for y in [rn.normalvariate(0, 1) for r in range(n)]])]
+    # Cast everything to numpy so the idtxl estimator understands it.
+    source_1 = np.expand_dims(np.array(source_1), axis=1)
+    # source_2 = np.expand_dims(np.array(source_2), axis=1)
+    target = np.expand_dims(np.array(target), axis=1)
+
+    dat = Data()
+    dat.set_data(np.vstack((source_1[1:].T, target[:-1].T)), 'ps')
+    analysis_opts = {
+        'cmi_calc_name': 'jidt_kraskov',
+        'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_omnibus': 100,
+        'n_perm_max_seq': 100,
+        }
+    random_analysis = Multivariate_te(max_lag_sources=5, options=analysis_opts)
+    res_1 = random_analysis.analyse_single_target(dat, 1)
+    # Assert that there are significant conditionals from the source for target
+    # 1. For 500 repetitions I got mean errors of 0.02097686 and 0.01454073 for
+    # examples 1 and 2 respectively. The maximum errors were 0.093841 and
+    # 0.05833172 repectively. This inspired the following error boundaries.
+    expected_res = np.log(1 / (1 - np.power(cov, 2)))
+    diff = np.abs(max(res_1['cond_sources_te']) - expected_res)
+    assert (diff < 0.1), ('Multivariate TE calculation for correlated '
+                          'Gaussians failed (error larger 0.1).')
+
+
+def test_multivariate_te_lagged_copies():
+    """Test multivariate TE estimation on a lagged copy of random data.
+
+    Run the multivariate TE algorithm on two sets of random data, where the
+    second set is a lagged copy of the first. This test should find no
+    significant conditionals at all (neither in the target's nor in the
+    source's past).
+
+    Note:
+        This test takes several hours and may take one to two days on some
+        machines.
+    """
+    lag = 3
+    d_0 = np.random.rand(1, 1000, 20)
+    d_1 = np.hstack((np.random.rand(1, lag, 20), d_0[:, lag:, :]))
+
+    dat = Data()
+    dat.set_data(np.vstack((d_0, d_1)), 'psr')
+    analysis_opts = {
+        'cmi_calc_name': 'jidt_kraskov',
+        'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_omnibus': 500,
+        'n_perm_max_seq': 500,
+        }
+    random_analysis = Multivariate_te(max_lag_sources=5, options=analysis_opts)
+    # Assert that there are no significant conditionals in either direction
+    # other than the mandatory single sample in the target's past (which
+    # ensures that we calculate a proper TE at any time in the algorithm).
+    for target in range(2):
+        res = random_analysis.analyse_single_target(dat, target)
+        assert (len(res['conditional_full']) == 1), ('Conditional contains '
+                                                     'more/less than 1 '
+                                                     'variables.')
+        assert (not res['conditional_sources']), ('Conditional sources is not '
+                                                  'empty.')
+        assert (len(res['conditional_target']) == 1), ('Conditional target '
+                                                       'contains more/less '
+                                                       'than 1 variable.')
+        assert (res['cond_sources_pval'] is None), ('Conditional p-value is '
+                                                    'not None.')
+        assert (res['omnibus_pval'] is None), ('Omnibus p-value is not None.')
+        assert (res['omnibus_sign'] is None), ('Omnibus significance is not '
+                                               'None.')
+        assert (res['conditional_sources_te'] is None), ('Conditional TE '
+                                                         'values is not None.')
+
+
+def test_multivariate_te_random():
+    """Test multivariate TE estimation on two random data sets.
+
+    Run the multivariate TE algorithm on two sets of random data with no
+    coupling. This test should find no significant conditionals at all (neither
+    in the target's nor in the source's past).
+
+    Note:
+        This test takes several hours and may take one to two days on some
+        machines.
+    """
+    d = np.random.rand(2, 1000, 20)
+    dat = Data()
+    dat.set_data(d, 'psr')
+    analysis_opts = {
+        'cmi_calc_name': 'jidt_kraskov',
+        'n_perm_max_stat': 200,
+        'n_perm_min_stat': 200,
+        'n_perm_omnibus': 500,
+        'n_perm_max_seq': 500,
+        }
+    random_analysis = Multivariate_te(max_lag_sources=5, options=analysis_opts)
+    # Assert that there are no significant conditionals in either direction
+    # other than the mandatory single sample in the target's past (which
+    # ensures that we calculate a proper TE at any time in the algorithm).
+    for target in range(2):
+        res = random_analysis.analyse_single_target(dat, target)
+        assert (len(res['conditional_full']) == 1), ('Conditional contains '
+                                                     'more/less than 1 '
+                                                     'variables.')
+        assert (not res['conditional_sources']), ('Conditional sources is not '
+                                                  'empty.')
+        assert (len(res['conditional_target']) == 1), ('Conditional target '
+                                                       'contains more/less '
+                                                       'than 1 variable.')
+        assert (res['cond_sources_pval'] is None), ('Conditional p-value is '
+                                                    'not None.')
+        assert (res['omnibus_pval'] is None), ('Omnibus p-value is not None.')
+        assert (res['omnibus_sign'] is None), ('Omnibus significance is not '
+                                               'None.')
+        assert (res['conditional_sources_te'] is None), ('Conditional TE '
+                                                         'values is not None.')
 
 
 def test_multivariate_te_lorenz_2():
@@ -24,17 +162,19 @@ def test_multivariate_te_lorenz_2():
     d = np.load('/home/patricia/repos/IDTxl/testing/data/'
                 'lorenz_2_exampledata.npy')
     dat = Data()
-    dat.set_data(d, 'psr')
+    dat.set_data(d[:, :, :50], 'psr')
     analysis_opts = {
         'cmi_calc_name': 'jidt_kraskov',
-        'n_perm_max_stat': 200,
-        'n_perm_min_stat': 200,
+        'n_perm_max_stat': 21,  # 200
+        'n_perm_min_stat': 21,  # 200
         'n_perm_omnibus': 500,
         'n_perm_max_seq': 500,
         }
     lorenz_analysis = Multivariate_te(max_lag_sources=50, min_lag_sources=40,
-                                      max_lag_target=5, options=analysis_opts)
-    res = lorenz_analysis.analyse_network(dat)
+                                      max_lag_target=20, options=analysis_opts)
+    # res = lorenz_analysis.analyse_network(dat)
+    res_0 = lorenz_analysis.analyse_single_target(dat, 0)
+    res_1 = lorenz_analysis.analyse_single_target(dat, 1)
 
 
 def test_multivariate_te():
@@ -155,6 +295,9 @@ def test_indices_to_lags():
 
 
 if __name__ == '__main__':
-    test_multivariate_te_initialise()
-    test_multivariate_te()
-    test_check_source_set()
+    # test_multivariate_te_lorenz_2()
+    # test_multivariate_te_random()
+    test_multivariate_te_corr_gaussian()
+    # test_multivariate_te_initialise()
+    # test_multivariate_te()
+    # test_check_source_set()
