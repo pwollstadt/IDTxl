@@ -26,8 +26,14 @@ def standardise(a, dimension=0, df=1):
 def sort_descending(a):
     """Sort array in descending order."""
     # http://stackoverflow.com/questions/26984414/
-    # efficiently-sorting-a-numpy-array-in-descending-order
+    #       efficiently-sorting-a-numpy-array-in-descending-order
     return np.sort(a)[::-1]
+
+
+def argsort_descending(a):
+    # http://stackoverflow.com/questions/16486252/
+    #       is-it-possible-to-use-argsort-in-descending-order
+    return np.array(a).argsort()[::-1]
 
 
 def remove_row(a, i):
