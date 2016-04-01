@@ -142,6 +142,8 @@ def omnibus_test(analysis_setup, data, opts):
         permute_over_replications = False
 
     # Create the surrogate distribution by permuting the conditional sources.
+    if VERBOSE:
+        print('omnibus test, n_perm: {0} -    '.format(n_permutations), end='')
     surr_distribution = np.zeros(n_permutations)
     for perm in range(n_permutations):
         if permute_over_replications:
@@ -157,8 +159,13 @@ def omnibus_test(analysis_setup, data, opts):
                                     analysis_setup._current_value_realisations,
                                     cond_target_realisations,
                                     analysis_setup.options)
+        if VERBOSE:
+                print('\b\b\b{num:03d}'.format(num=perm + 1), end='')
+                sys.stdout.flush()
+    if VERBOSE:
+        print(' ')
     [significance, pvalue] = _find_pvalue(te_orig, surr_distribution, alpha)
-    return significance, pvalue
+    return significance, pvalue, te_orig
 
 
 def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
@@ -259,9 +266,9 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
                                     analysis_setup._current_value_realisations,
                                     temp_cond)
         i += 1
-    conditional_order = np.argsort(individual_te)
-    individual_te_sorted = individual_te
-    individual_te_sorted.sort()
+
+    conditional_order = utils.argsort_descending(individual_te)
+    individual_te_sorted = utils.sort_descending(individual_te)
 
     # Create a surrogate table and sort it.
     surr_table = _create_surrogate_table(analysis_setup, data,
@@ -269,15 +276,19 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
                                          n_permutations)
     max_distribution = _sort_table_max(surr_table)
 
-    # Compare each TE value with the distribution of the same rank.
+    # Compare each TE value with the distribution of the same rank, starting
+    # with the highest TE.
     significance = np.zeros(individual_te.shape[0]).astype(bool)
-    pvalue = np.zeros(individual_te.shape[0])
+    pvalue = np.ones(individual_te.shape[0])
     for c in range(individual_te.shape[0]):
-        [s, v] = _find_pvalue(individual_te_sorted[c],
+        [s, p] = _find_pvalue(individual_te_sorted[c],
                               max_distribution[c, ], alpha)
         significance[c] = s
-        pvalue[c] = v
+        pvalue[c] = p
         if not s:  # break as soon as a candidate is no longer significant
+            if VERBOSE:
+                print('Stopping sequential max stats at candidate with rank '
+                      '{0}.'.format(c))
             break
 
     # Get back original order and return results.
@@ -414,14 +425,14 @@ def _find_table_min(table):
     return np.min(table, axis=0)
 
 
-def _sort_table_max(table):
+def _sort_table_min(table):
     """Sort each column in a table in ascending order."""
     for permutation in range(table.shape[1]):
         table[:, permutation].sort()
     return table
 
 
-def _sort_table_min(table):
+def _sort_table_max(table):
     """Sort each column in a table in descending order."""
     table_sorted = np.empty(table.shape)
     for permutation in range(0, table.shape[1]):

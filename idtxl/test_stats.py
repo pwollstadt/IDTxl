@@ -7,6 +7,8 @@ Created on Fri Mar 25 13:46:09 2016
 import pytest
 import numpy as np
 import stats
+from multivariate_te import Multivariate_te
+from data import Data
 
 
 def test_omnibus_test():
@@ -22,7 +24,23 @@ def test_min_statistic():
 
 
 def test_max_statistic_sequential():
-    print('Write test for max_statistic_sequential.')
+    dat = Data()
+    dat.generate_mute_data(104, 10)
+    opts = {
+        'cmi_calc_name': 'jidt_kraskov',
+        'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_omnibus': 21,
+        'n_perm_max_seq': 21,
+        }
+    setup = Multivariate_te(5, opts)
+    setup.current_value = (0, 4)
+    setup.conditional_sources = [(1, 1), (1, 2)]
+    setup.conditional_full = [(0, 1), (1, 1), (1, 2)]
+    setup._conditional_realisations = np.random.rand(1000, 3)
+    setup._current_value_realisations = np.random.rand(1000, 1)
+    [sign, p, te] = stats.max_statistic_sequential(analysis_setup=setup,
+                                                   data=dat, opts=opts)
 
 
 def test_network_fdr():
@@ -163,12 +181,35 @@ def test_find_table_min():
     assert (res == np.array([0, 2, 1])).all(), ('Function did not return '
                                                 'minimum for each column.')
 
+
+def test_sort_table_max():
+    tab = np.array([[0, 2, 1], [3, 4, 5], [10, 8, 1]])
+    res = stats._sort_table_max(tab)
+    assert (res[0, :] == np.array([10,  8,  5])).all(), ('Function did not '
+                                                         'return maximum for '
+                                                         'first row.')
+    assert (res[2, :] == np.array([0, 2, 1])).all(), ('Function did not return'
+                                                      ' minimum for last row.')
+
+
+def test_sort_table_min():
+    tab = np.array([[0, 2, 1], [3, 4, 5], [10, 8, 1]])
+    res = stats._sort_table_min(tab)
+    assert (res[0, :] == np.array([0, 2, 1])).all(), ('Function did not return'
+                                                      ' minimum for first '
+                                                      'row.')
+    assert (res[2, :] == np.array([10,  8,  5])).all(), ('Function did not '
+                                                         'return maximum for '
+                                                         'last row.')
+
 if __name__ == '__main__':
     test_network_fdr()
     test_permute_realisations()
     test_find_pvalue()
     test_find_table_max()
     test_find_table_min()
+    test_sort_table_max()
+    test_sort_table_min()
     test_omnibus_test()
     test_max_statistic()
     test_min_statistic()
