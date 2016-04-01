@@ -10,3 +10,7 @@
 .directory
 .spyderproject
 *.bac*
+
+# Profiling          #
+######################
+*.stats
