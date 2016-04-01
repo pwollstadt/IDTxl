@@ -12,32 +12,55 @@ https://docs.python.org/3.4/library/timeit.html
 import cProfile
 import pstats
 import numpy as np
-from data import Data
-from multivariate_te import Multivariate_te
+import random as rn
+from set_estimator import Estimator_cmi
 
-dat = Data()
-dat.generate_mute_data(100, 5)
-max_lag = 5
-min_lag = 4
-analysis_opts = {
-    'cmi_calc_name': 'jidt_kraskov',
-    'n_perm_max_stat': 20,
-    'n_perm_min_stat': 20,
-    'n_perm_omnibus': 500,
-    'n_perm_max_seq': 500,
-    }
-target = 0
-sources = [1, 2, 3]
+n = 10000
+cov = 0.4
+source_1 = [rn.normalvariate(0, 1) for r in range(n)]  # correlated src
+target = [sum(pair) for pair in zip(
+    [cov * y for y in source_1],
+    [(1 - cov) * y for y in [rn.normalvariate(0, 1) for r in range(n)]])]
+source_1 = np.expand_dims(np.array(source_1), axis=1)
+target = np.expand_dims(np.array(target), axis=1)
+opts = {'kraskov_k': 4, 'normalise': True}
+expected_res = np.log(1 / (1 - np.power(cov, 2)))
 
-netw = Multivariate_te(max_lag, analysis_opts, min_lag)
 
-filename = 'profile_stats.stats'
-cProfile.run('res = netw.analyse_single_target(dat, target, sources)',
-             filename)
-stats = pstats.Stats('profile_stats.stats')
-stats.strip_dirs()  # clean up filenames for the report
-stats.sort_stats('cumulative')
-stats.print_stats()
+def test_old(n=100):
+    calculator_name_1 = 'jidt_kraskov'
+    est_1 = Estimator_cmi(calculator_name_1)
+    for i in range(n):
+        res_1 = est_1.estimate(var1=source_1[1:], var2=target[1:],
+                               conditional=target[:-1], opts=opts)
+    print('Old result {0:.4f} nats; expected:{1:.4f}'.format(res_1,
+                                                             expected_res))
+
+
+def test_new(n=100):
+    calculator_name_2 = 'jidt_kraskov_fast'
+    est_2 = Estimator_cmi(calculator_name_2)
+    for i in range(n):
+        res_2 = est_2.estimate(var1=source_1[1:], var2=target[1:],
+                               conditional=target[:-1], opts=opts)
+    print('New result {0:.4f} nats; expected:{1:.4f}'.format(res_2,
+                                                             expected_res))
+
+filename = 'profile_stats_old.stats'
+cProfile.run('test_old()', filename)
+filename = 'profile_stats_new.stats'
+cProfile.run('test_new()', filename)
+stats_old = pstats.Stats('profile_stats_old.stats')
+stats_new = pstats.Stats('profile_stats_new.stats')
+stats_old.strip_dirs()  # clean up filenames for the report
+stats_old.sort_stats('cumulative')
+stats_old.print_stats()
+stats_new.strip_dirs()  # clean up filenames for the report
+stats_new.sort_stats('cumulative')
+stats_new.print_stats()
+print('Total time old: {0:.5f} s\nTotal time new: {1:.5f} s'.format(
+                                    stats_old.total_tt, stats_new.total_tt))
+
 
 #cProfile.run('a=old(data, idx, cv)')
 #cProfile.run('b=new(data, idx, cv)')
