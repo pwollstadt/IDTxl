@@ -7,9 +7,9 @@ Created on Mon Mar  7 18:13:27 2016
 import sys
 import copy as cp
 import numpy as np
-import utils as utils
+import utils
 
-VERBOSE = True
+VERBOSE = False
 
 
 def network_fdr(results, alpha=0.05):
@@ -66,8 +66,9 @@ def network_fdr(results, alpha=0.05):
 
     # Compare data to threshold.
     sign = pval <= thresh
-    first_false = np.where(np.invert(sign))[0][0]
-    sign[first_false:] = False  # to avoid false positives due to equal pvals
+    if np.invert(sign).any():
+        first_false = np.where(np.invert(sign))[0][0]
+        sign[first_false:] = False  # avoids false positives due to equal pvals
 
     # Go over list of all candidates and remove them from the results dict.
     sign = sign[sort_idx]
@@ -81,6 +82,8 @@ def network_fdr(results, alpha=0.05):
             results[t]['conditional_sources'].pop(cand_ind)
             results[t]['cond_sources_pval'] = np.delete(
                                     results[t]['cond_sources_pval'], cand_ind)
+            results[t]['cond_sources_te'] = np.delete(
+                                    results[t]['cond_sources_te'], cand_ind)
             results[t]['conditional_full'].pop(
                                     results[t]['conditional_full'].index(cand))
     return results
@@ -380,7 +383,7 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
     # Create surrogate table.
     if VERBOSE:
         print('create surrogates table')
-    surr_table = np.zeros((len(idx_test_set), n_perm))
+    surr_table = np.zeros((len(idx_test_set), n_perm))  # surrogate TE values
     current_value_realisations = analysis_setup._current_value_realisations
     idx_c = 0
     for candidate in idx_test_set:
