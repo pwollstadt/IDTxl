@@ -57,6 +57,10 @@ but WITHOUT ANY WARRANTY.
 Version 1.0 by Patricia Wollstadt, Raul Vicente, Michael Wibral
 Frankfurt, Germany, 2016
 
+TODO: as we're casting everything to lists anyway, we should (a) make a copy of
+target as a list, and a copy of s2 as a list, and only convert the (changing)
+s1 each time in the loop before we feed it to the functions.
+
 """
 import sys
 import jpype as jp
@@ -74,8 +78,8 @@ def pid(s1, s2, target, cfg):
 
     Args:
         s1 (numpy array): 1D array containing realizations of a discrete
-            random variable (this is the source variable the algorithm calculates
-            the actual UI for)
+            random variable (this is the source variable the algorithm
+            calculates the actual UI for)
         s2 (numpy array): 1D array containing realizations of a discrete
             random variable (the other source variable)
         target (numpy array): 1D array containing realizations of a discrete
@@ -150,24 +154,26 @@ def pid(s1, s2, target, cfg):
     n = target.shape[0]
     reps = iterations + 1
     ind = np.arange(n)
-    cmi_q_target_s1_cond_s2_all = _nan(reps)  # collect estimates in each iteration
-    cmi_q_target_s1_cond_s2_delta = _nan(reps)  # collect delta of estimates
-    jointmi_q_s1s2_target_all = _nan(reps)  # collect joint MI of the two sources with the target
+#    cmi_q_target_s1_cond_s2_all = _nan(reps)  # collect estimates in each iteration
+#    cmi_q_target_s1_cond_s2_delta = _nan(reps)  # collect delta of estimates
+    cmi_q_target_s1_cond_s2_all = -np.inf * np.ones(reps).astype('float128')  # collect estimates in each iteration
+    cmi_q_target_s1_cond_s2_delta = -np.inf * np.ones(reps).astype('float128')  # collect delta of estimates
+
+#    jointmi_q_s1s2_target_all = _nan(reps)  # collect joint MI of the two sources with the target
     cmi_q_target_s1_cond_s2_all[0] = cmi_target_s1_cond_s2  # initial I(s1;target|Y)
     unsuccessful = 0
+    equal_swaps = 0
 
 #    print('Starting [                   ]', end='')
 #    print('\b' * 21, end='')
     sys.stdout.flush()
+    # create copies of target and s2 as lists
+    target_as_list = target.tolist()
+    s1_as_list = s1.tolist()
+    s2_as_list = s2.tolist()
+
     for i in range(1, reps):
-#        steps = reps/20
-#        if i%steps == 0:
-#            print('\b.', end='')
-#            sys.stdout.flush()
-
-        #print('iteration ' + str(i + 1) + ' of ' + str(reps - 1)
-
-        s1_new  = s1
+        s1_new_as_list = s1_as_list
         ind_new = ind
 
         # swapping: pick sample at random, find all other samples that
@@ -177,33 +183,41 @@ def pid(s1, s2, target, cfg):
         swap_candidates = np.where(target == target[swap_1])[0]
         swap_2 = np.random.choice(swap_candidates)
 
-        # swap value in s1 and index to keep track
-        s1_new[swap_1], s1_new[swap_2] = s1_new[swap_2], s1_new[swap_1]
-        ind_new[swap_1], ind_new[swap_2] = (ind_new[swap_2],
+        # calculate CMI under new swapped distribution if this makes sense
+        # else do nothing
+        if (s1[swap_1] != s1[swap_2] and s2[swap_1] != s2[swap_2]):
+            # swap value in s1 and index to keep track
+            s1_new_as_list[swap_1], s1_new_as_list[swap_2] = s1_new_as_list[swap_2], s1_new_as_list[swap_1]
+            ind_new[swap_1], ind_new[swap_2] = (ind_new[swap_2],
                                             ind_new[swap_1])
 
-        # calculate CMI under new swapped distribution
-        cmi_new = _calculate_cmi(cmi_calc, target, s1_new, s2)
+            cmi_new = _calculate_cmi_from_lists(cmi_calc, target_as_list,
+                                            s1_new_as_list, s2_as_list)
+        else:
+            cmi_new =  cmi_q_target_s1_cond_s2_all[i - 1] # keep the old cmi_new value, as we have computed it before
 
 
-        if cmi_new < cmi_q_target_s1_cond_s2_all[i - 1]:
-            s1 = s1_new
+        if (np.less(cmi_new, cmi_q_target_s1_cond_s2_all[i - 1])):
+            s1_as_list = s1_new_as_list
             ind = ind_new
             cmi_q_target_s1_cond_s2_all[i] = cmi_new
             cmi_q_target_s1_cond_s2_delta[i] = cmi_q_target_s1_cond_s2_all[i - 1] - cmi_new
-            # debug/plotting only
-#            jointmi_q_s1s2_target_all[i] = _calculate_jointmi(jointmi_calc, s1, s2, target)
         else:
             cmi_q_target_s1_cond_s2_all[i] = cmi_q_target_s1_cond_s2_all[i - 1]
             unsuccessful += 1
 
     print('Unsuccessful swaps: {0}'.format(unsuccessful))
+    print("equal swaps: {0}".format(equal_swaps))
+#    print('Final indices: {0}'.format(ind[0:100]))
 
+     # convert the final s1 back to an array
+    s1_final =np.asarray(s1_new_as_list, dtype=np.int)
     # estimate unq/syn/shd information
 #    jointmi_q_s1s2_target = _get_last_value(jointmi_q_s1s2_target_all)
-    jointmi_q_s1s2_target = _calculate_jointmi(jointmi_calc, s1, s2, target)
+    jointmi_q_s1s2_target = _calculate_jointmi(jointmi_calc, s1_final, s2, target)
+    print("Final joint mutual information wrt Q: {0}".format(jointmi_q_s1s2_target))
     unq_s1 = _get_last_value(cmi_q_target_s1_cond_s2_all)  # Bertschinger, 2014, p. 2163
-    unq_s2 = _calculate_cmi(cmi_calc, target, s2, s1)  # Bertschinger, 2014, p. 2166
+    unq_s2 = _calculate_cmi(cmi_calc, target, s2, s1_final)  # Bertschinger, 2014, p. 2166
     syn_s1s2 = jointmi_s1s2_target - jointmi_q_s1s2_target  # Bertschinger, 2014, p. 2163
     shd_s1s2 = mi_target_s1 + mi_target_s2 - jointmi_q_s1s2_target  # Bertschinger, 2014, p. 2167
 
@@ -218,30 +232,31 @@ def pid(s1, s2, target, cfg):
         'orig_mi_target_s1': mi_target_s1,
         'orig_mi_target_s2': mi_target_s2
     }
+    print(estimate)
     # useful outputs for plotting/debugging
     optimization = {
         'q': ind_new,
         'unsuc_swaps': unsuccessful,
         'cmi_q_target_s1_cond_s2_all': cmi_q_target_s1_cond_s2_all,
         'cmi_q_target_s1_cond_s2_delta': cmi_q_target_s1_cond_s2_delta,
-        'jointmi_q_s1s2_target_all': jointmi_q_s1s2_target_all,
+#        'jointmi_q_s1s2_target_all': jointmi_q_s1s2_target_all,
         'cfg': cfg
     }
     return estimate, optimization
 
 
-def _nan(shape):
-    """Return 1D numpy array of nans.
-
-    Args:
-        shape (int): length of array
-
-    Returns:
-        numpy array: array filled with nans
-    """
-    a = np.empty(shape)
-    a.fill(np.nan)
-    return a
+#def _nan(shape):
+#    """Return 1D numpy array of nans.
+#
+#    Args:
+#        shape (int): length of array
+#
+#    Returns:
+#        numpy array: array filled with nans
+#    """
+#    a = np.empty(shape)
+#    a.fill(np.nan)
+#    return a
 
 
 def _calculate_cmi(cmi_calc, var_1, var_2, cond):
@@ -262,6 +277,29 @@ def _calculate_cmi(cmi_calc, var_1, var_2, cond):
     var_1_java = jp.JArray(jp.JInt, var_1.ndim)(var_1.tolist())
     var_2_java = jp.JArray(jp.JInt, var_2.ndim)(var_2.tolist())
     cond_java = jp.JArray(jp.JInt, cond.ndim)(cond.tolist())
+    cmi_calc.initialise()
+    cmi_calc.addObservations(var_1_java, var_2_java, cond_java)
+    cmi = cmi_calc.computeAverageLocalOfObservations()
+    return cmi
+
+def _calculate_cmi_from_lists(cmi_calc, var_1, var_2, cond):
+    """Calculate conditional MI from three variables usind JIDT.
+
+    Args:
+        cmi_calc (JIDT calculator object): JIDT calculator for conditio-
+            nal mutual information
+        var_1, var_2 (python lists of integers): realizations of two discrete
+            random variables
+        cond (python list of integers): realizations of a discrete random
+            variable for conditioning
+
+    Returns:
+        double: conditional mutual information between var_1 and var_2
+            conditional on cond
+    """
+    var_1_java = jp.JArray(jp.JInt, 1)(var_1)
+    var_2_java = jp.JArray(jp.JInt, 1)(var_2)
+    cond_java = jp.JArray(jp.JInt, 1)(cond)
     cmi_calc.initialise()
     cmi_calc.addObservations(var_1_java, var_2_java, cond_java)
     cmi = cmi_calc.computeAverageLocalOfObservations()
@@ -379,49 +417,6 @@ def _get_last_value(x):
 
 if __name__ == '__main__':
 
-#    n = 10000
-#    alph = 2
-#    s1 = np.random.randint(0, alph, n)
-#    s2 = np.random.randint(0, alph, n)
-#    target = np.logical_xor(s1, s2).astype(int)
-#    cfg = {
-#        'alphabetsize': 2,
-#        'jarpath': 'infodynamics.jar',
-#        'iterations': 50000
-#    }
-#    print('Testing PID estimator on binary XOR, iterations: {0}, {1}'.format(
-#                                                        n, cfg['iterations']))
-#    tic = tm.clock()
-#    [est, opt] = pid(s1, s2, target, cfg)
-#    toc = tm.clock()
-#    print('Elapsed time: {0} seconds'.format(toc - tic))
-#
-#    # plot results
-#    text_x_pos = opt['cfg']['iterations'] * 0.05
-#    plt.figure
-#    plt.subplot(2, 2, 1)
-#    plt.plot(est['orig_mi_target_s1'] + est['orig_mi_target_s2'] - opt['jointmi_q_s1s2_target_all'])
-#    plt.ylim([-1, 0.1])
-#    plt.title('shared info')
-#    plt.ylabel('SI_Q(target:s1;s2)')
-#    plt.subplot(2, 2, 2)
-#    plt.plot(est['orig_jointmi_s1s2_target'] - opt['jointmi_q_s1s2_target_all'])
-#    plt.plot([0, opt['cfg']['iterations']],[1, 1], 'r')
-#    plt.text(text_x_pos, 0.9, 'XOR', color='red')
-#    plt.ylim([0, 1.1])
-#    plt.title('synergistic info')
-#    plt.ylabel('CI_Q(target:s1;s2)')
-#    plt.subplot(2, 2, 3)
-#    plt.plot(opt['cmi_q_target_s1_cond_s2_all'])
-#    plt.title('unique info s1')
-#    plt.ylabel('UI_Q(s1:target|s2)')
-#    plt.xlabel('iteration')
-#    plt.subplot(2, 2, 4)
-#    plt.plot(opt['cmi_q_target_s1_cond_s2_delta'], 'r')
-#    plt.title('delta unique info s1')
-#    plt.ylabel('delta UI_Q(s1:target|s2)')
-#    plt.xlabel('iteration')
-
     # logical AND
     n = 10000
     alph = 2
@@ -433,7 +428,7 @@ if __name__ == '__main__':
         'jarpath': 'infodynamics.jar',
         'iterations': 10000000
     }
-    print('Testing PID estimator on binary AND, pointsset size{0}, iterations: {1}'.format(
+    print('Testing PID estimator on binary AND, pointsset size: {0}, iterations: {1}'.format(
                                                         n, cfg['iterations']))
     tic = tm.clock()
     [est, opt] = pid(s1, s2, target, cfg)
@@ -443,35 +438,31 @@ if __name__ == '__main__':
     print("unq_s1: {0}".format(est['unq_s1']))
     print("unq_s2: {0}".format(est['unq_s2']))
     print("shd_s1s2: {0}".format(est['shd_s1s2']))
-#    print("remaining joint mutual information for Q is: {0}".format( _get_last_value(opt['jointmi_q_s1s2_target_all'])))
-#    print("Shared information is computed from MI_P and joint MI_Q is: {0}".format(est['orig_mi_target_s1'] +
-#                        est['orig_mi_target_s2'] - 'jointmi_q_s1s2_target_all'])))
-#
-#    print("Shared information is computed from Unq and joint MI_Q is: {0}".format( _get_last_value(opt['jointmi_q_s1s2_target_all']) - est['unq_s1'] - est['unq_s2']))
+    print("last delta was: {0}".format( _get_last_value(opt['cmi_q_target_s1_cond_s2_delta'])))
 
-#    # plot results
-#    text_x_pos = opt['cfg']['iterations'] * 0.05
-#    plt.figure
-#    plt.subplot(2, 2, 1)
+    # plot results
+    text_x_pos = opt['cfg']['iterations'] * 0.05
+    plt.figure
+    plt.subplot(2, 2, 1)
 #    plt.plot(est['orig_mi_target_s1'] + est['orig_mi_target_s2'] - opt['jointmi_q_s1s2_target_all'])
-#    plt.ylim([-1, 0.6])
-#    plt.title('shared info')
-#    plt.ylabel('SI_Q(target:s1;s2)')
-#    plt.subplot(2, 2, 2)
+    plt.ylim([-1, 0.6])
+    plt.title('shared info')
+    plt.ylabel('SI_Q(target:s1;s2)')
+    plt.subplot(2, 2, 2)
 #    plt.plot(est['orig_jointmi_s1s2_target'] - opt['jointmi_q_s1s2_target_all'])
-#    plt.plot([0, opt['cfg']['iterations']],[1, 1], 'r')
-#    plt.text(text_x_pos, 0.9, 'AND', color='red')
-#    plt.ylim([0, 1.1])
-#    plt.title('synergistic info')
-#    plt.ylabel('CI_Q(target:s1;s2)')
-#    plt.subplot(2, 2, 3)
-#    plt.plot(opt['cmi_q_target_s1_cond_s2_all'])
-#    plt.title('unique info s1')
-#    plt.ylabel('UI_Q(s1:target|s2)')
-#    plt.xlabel('iteration')
-#    plt.subplot(2, 2, 4)
-#    plt.plot(opt['cmi_q_target_s1_cond_s2_delta'], 'r')
-#    plt.title('delta unique info s1')
-#    plt.ylabel('delta UI_Q(s1:target|s2)')
-#    plt.xlabel('iteration')
+    plt.plot([0, opt['cfg']['iterations']],[1, 1], 'r')
+    plt.text(text_x_pos, 0.9, 'AND', color='red')
+    plt.ylim([0, 1.1])
+    plt.title('synergistic info')
+    plt.ylabel('CI_Q(target:s1;s2)')
+    plt.subplot(2, 2, 3)
+    plt.plot(opt['cmi_q_target_s1_cond_s2_all'])
+    plt.title('unique info s1')
+    plt.ylabel('UI_Q(s1:target|s2)')
+    plt.xlabel('iteration')
+    plt.subplot(2, 2, 4)
+    plt.plot(opt['cmi_q_target_s1_cond_s2_delta'], 'r')
+    plt.title('delta unique info s1')
+    plt.ylabel('delta UI_Q(s1:target|s2)')
+    plt.xlabel('iteration')
 
