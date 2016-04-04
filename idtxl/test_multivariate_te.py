@@ -100,6 +100,15 @@ def test_check_source_set():
 
 
 def test_include_source_candidates():
+    target = 1
+    tau_target = 3
+    max_lag_target = 10
+    current_val = (target, 10)
+    procs = [target]
+    samples = np.arange(current_val[1] - 1, current_val[1] - max_lag_target,
+                        -tau_target)
+    nw = Multivariate_te(5, 1, 5)
+    candidates = nw._define_candidates(procs, samples)
     pass
 
 
