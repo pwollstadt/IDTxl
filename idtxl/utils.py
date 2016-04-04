@@ -1,4 +1,11 @@
+import pprint
 import numpy as np
+
+
+def print_dict(d, indent=4):
+    """Use Python's pretty printer to print dictionaries to the console."""
+    pp = pprint.PrettyPrinter(indent=indent)
+    pp.pprint(d)
 
 
 def standardise(a, dimension=0, df=1):
