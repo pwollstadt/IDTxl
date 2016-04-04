@@ -12,8 +12,8 @@ def opencl_kraskov(self, var1, var2, conditional, opts=None):
     Calculate the conditional mutual information between three variables using
     an opencl-based Kraskov type 1 estimator. References:
 
-        Kraskov, A., Stögbauer, H., & Grassberger, P. (2004). Estimating mutual
-        information. Physical review E, 69(6), 066138.
+        Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating
+        mutual information. Physical review E, 69(6), 066138.
 
     This function is ment to be imported into the set_estimator module and used
     as a method in the Estimator_cmi class.
@@ -139,8 +139,8 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
     (is None), the function returns the mutual information between var1 and
     var2. References:
 
-        Kraskov, A., Stögbauer, H., & Grassberger, P. (2004). Estimating mutual
-        information. Physical Review E, 69(6), 066138.
+        Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating
+        mutual information. Physical Review E, 69(6), 066138.
 
         Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
         studying the dynamics of complex systems. Front. Robot. AI, 1(11).

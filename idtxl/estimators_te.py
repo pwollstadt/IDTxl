@@ -21,8 +21,8 @@ def jidt_kraskov(self, source, target, opts):
         Schreiber, T. (2000). Measuring information transfer. Physical Review
         Letters, 85(2), 461.
 
-        Kraskov, A., Stögbauer, H., & Grassberger, P. (2004). Estimating mutual
-        information. Physical Review E, 69(6), 066138.
+        Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating
+        mutual information. Physical Review E, 69(6), 066138.
 
         Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
         studying the dynamics of complex systems. Front. Robot. AI, 1(11).
