@@ -169,8 +169,10 @@ def pid(s1, s2, target, cfg):
     sys.stdout.flush()
     # create copies of target and s2 as lists
     target_as_list = target.tolist()
+    target_jA = jp.JArray(jp.JInt, 1)(target_as_list)
     s1_as_list = s1.tolist()
     s2_as_list = s2.tolist()
+    s2_jA = jp.JArray(jp.JInt, 1)(s2_as_list)
 
     for i in range(1, reps):
         s1_new_as_list = s1_as_list
@@ -191,8 +193,8 @@ def pid(s1, s2, target, cfg):
             ind_new[swap_1], ind_new[swap_2] = (ind_new[swap_2],
                                             ind_new[swap_1])
 
-            cmi_new = _calculate_cmi_from_lists(cmi_calc, target_as_list,
-                                            s1_new_as_list, s2_as_list)
+            cmi_new = _calculate_cmi_from_lists_and_jA(cmi_calc, target_jA,
+                                            s1_new_as_list, s2_jA)
         else:
             cmi_new =  cmi_q_target_s1_cond_s2_all[i - 1] # keep the old cmi_new value, as we have computed it before
 
@@ -282,7 +284,7 @@ def _calculate_cmi(cmi_calc, var_1, var_2, cond):
     cmi = cmi_calc.computeAverageLocalOfObservations()
     return cmi
 
-def _calculate_cmi_from_lists(cmi_calc, var_1, var_2, cond):
+def _calculate_cmi_from_lists_and_jA(cmi_calc, var_1_java, var_2, cond_java):
     """Calculate conditional MI from three variables usind JIDT.
 
     Args:
@@ -297,9 +299,9 @@ def _calculate_cmi_from_lists(cmi_calc, var_1, var_2, cond):
         double: conditional mutual information between var_1 and var_2
             conditional on cond
     """
-    var_1_java = jp.JArray(jp.JInt, 1)(var_1)
+#    var_1_java = jp.JArray(jp.JInt, 1)(var_1)
     var_2_java = jp.JArray(jp.JInt, 1)(var_2)
-    cond_java = jp.JArray(jp.JInt, 1)(cond)
+#    cond_java = jp.JArray(jp.JInt, 1)(cond)
     cmi_calc.initialise()
     cmi_calc.addObservations(var_1_java, var_2_java, cond_java)
     cmi = cmi_calc.computeAverageLocalOfObservations()
@@ -360,65 +362,17 @@ def _get_last_value(x):
         int/double: entry in x with highest index, which is not nan (if
             no such value exists, nan is returned)
     """
-    ind = np.where(~np.isnan(x))[0]
+    ind = np.where(x>-np.inf)[0]
     try:
         return x[ind[-1]]
     except IndexError:
         print('Couldn not find a value that is not NaN.')
         return np.NaN
 
-
-#def _join_variables(a, b, alph_a, alph_b):
-#    """Join two sequences of random variables (RV) into a new RV.
-#
-#    Works like the method 'computeCombinedValues' implemented in JIDT
-#    (https://github.com/jlizier/jidt/blob/master/java/source/
-#    infodynamics/utils/MatrixUtils.java).
-#
-#    Args:
-#        a, b (np array): sequence of integer numbers of arbitrary base
-#            (representing observations from two RVs)
-#        alph_a, alph_b (int): alphabet size of a and b
-#
-#    Returns:
-#        np array, int: joined RV
-#        int: alphabet size of new RV
-#    """
-#    if a.shape[0] != b.shape[0]:
-#        raise Error
-#
-#    if alph_b < alph_a:
-#        a, b = b, a
-#        alph_a, alph_b = alph_b, alph_a
-#
-#    joined = np.zeros(a.shape[0])
-#
-#    for i in range(joined.shape[0]):
-#        mult = 1
-#        joined[i] += mult * b[i]
-#        mult *= alph_a
-#        joined[i] += mult * a[i]
-#
-#    alph_new = max(a) * alph_a + alph_b
-#    '''
-#    for (int r = 0; r < rows; r++) {
-#        // For each row in vec1
-#        int combinedRowValue = 0;
-#        int multiplier = 1;
-#        for (int c = columns - 1; c >= 0; c--) {
-#            // Add in the contribution from each column
-#            combinedRowValue += separateValues[r][c] * multiplier;
-#            multiplier *= base;
-#        }
-#        combinedValues[r] = combinedRowValue;
-#    } '''
-#
-#    return joined.astype(int), alph_new
-
 if __name__ == '__main__':
 
     # logical AND
-    n = 10000
+    n = 40000
     alph = 2
     s1 = np.random.randint(0, alph, n)
     s2 = np.random.randint(0, alph, n)
@@ -426,7 +380,7 @@ if __name__ == '__main__':
     cfg = {
         'alphabetsize': 2,
         'jarpath': 'infodynamics.jar',
-        'iterations': 10000000
+        'iterations': 300000
     }
     print('Testing PID estimator on binary AND, pointsset size: {0}, iterations: {1}'.format(
                                                         n, cfg['iterations']))
@@ -440,29 +394,31 @@ if __name__ == '__main__':
     print("shd_s1s2: {0}".format(est['shd_s1s2']))
     print("last delta was: {0}".format( _get_last_value(opt['cmi_q_target_s1_cond_s2_delta'])))
 
-    # plot results
-    text_x_pos = opt['cfg']['iterations'] * 0.05
-    plt.figure
-    plt.subplot(2, 2, 1)
-#    plt.plot(est['orig_mi_target_s1'] + est['orig_mi_target_s2'] - opt['jointmi_q_s1s2_target_all'])
-    plt.ylim([-1, 0.6])
-    plt.title('shared info')
-    plt.ylabel('SI_Q(target:s1;s2)')
-    plt.subplot(2, 2, 2)
-#    plt.plot(est['orig_jointmi_s1s2_target'] - opt['jointmi_q_s1s2_target_all'])
-    plt.plot([0, opt['cfg']['iterations']],[1, 1], 'r')
-    plt.text(text_x_pos, 0.9, 'AND', color='red')
-    plt.ylim([0, 1.1])
-    plt.title('synergistic info')
-    plt.ylabel('CI_Q(target:s1;s2)')
-    plt.subplot(2, 2, 3)
-    plt.plot(opt['cmi_q_target_s1_cond_s2_all'])
-    plt.title('unique info s1')
-    plt.ylabel('UI_Q(s1:target|s2)')
-    plt.xlabel('iteration')
-    plt.subplot(2, 2, 4)
-    plt.plot(opt['cmi_q_target_s1_cond_s2_delta'], 'r')
-    plt.title('delta unique info s1')
-    plt.ylabel('delta UI_Q(s1:target|s2)')
-    plt.xlabel('iteration')
+#    # plot results
+#    text_x_pos = opt['cfg']['iterations'] * 0.05
+#    plt.figure
+##    plt.subplot(2, 2, 1)
+###    plt.plot(est['orig_mi_target_s1'] + est['orig_mi_target_s2'] - opt['jointmi_q_s1s2_target_all'])
+##    plt.ylim([-1, 0.6])
+##    plt.title('shared info')
+##    plt.ylabel('SI_Q(target:s1;s2)')
+##    plt.subplot(2, 2, 2)
+###    plt.plot(est['orig_jointmi_s1s2_target'] - opt['jointmi_q_s1s2_target_all'])
+##    plt.plot([0, opt['cfg']['iterations']],[1, 1], 'r')
+##    plt.text(text_x_pos, 0.9, 'AND', color='red')
+##    plt.ylim([0, 1.1])
+##    plt.title('synergistic info')
+##    plt.ylabel('CI_Q(target:s1;s2)')
+#    plt.subplot(2, 2, 3)
+#    plt.plot(opt['cmi_q_target_s1_cond_s2_all'])
+#    plt.title('unique info s1')
+#    plt.ylim([0.1, 0.2])
+#    plt.ylabel('UI_Q(s1:target|s2)')
+#    plt.xlabel('iteration')
+#    plt.subplot(2, 2, 4)
+#    plt.plot(opt['cmi_q_target_s1_cond_s2_delta'], 'r')
+#    plt.title('delta unique info s1')
+#    plt.ylim([0, 1e-3])
+#    plt.ylabel('delta UI_Q(s1:target|s2)')
+#    plt.xlabel('iteration')
 
