@@ -57,10 +57,6 @@ but WITHOUT ANY WARRANTY.
 Version 1.0 by Patricia Wollstadt, Raul Vicente, Michael Wibral
 Frankfurt, Germany, 2016
 
-TODO: as we're casting everything to lists anyway, we should (a) make a copy of
-target as a list, and a copy of s2 as a list, and only convert the (changing)
-s1 each time in the loop before we feed it to the functions.
-
 """
 import sys
 import jpype as jp
@@ -78,8 +74,8 @@ def pid(s1_o, s2_o, target_o, cfg):
 
     Args:
         s1 (numpy array): 1D array containing realizations of a discrete
-            random variable (this is the source variable the algorithm
-            calculates the actual UI for)
+            random variable (this is the source variable the algorithm calculates
+            the actual UI for)
         s2 (numpy array): 1D array containing realizations of a discrete
             random variable (the other source variable)
         target (numpy array): 1D array containing realizations of a discrete
@@ -104,11 +100,11 @@ def pid(s1_o, s2_o, target_o, cfg):
             variables names joined directly form a new joint variable
             mi_var1var2_var3 --> I(var3:(var1,var2))
     """
-
     # make deep copies of input arrays to avoid side effects
     s1 = s1_o.copy()
     s2 = s2_o.copy()
     target = target_o.copy()
+
 
     if s1.ndim != 1 or s2.ndim != 1 or target.ndim != 1:
         raise ValueError('Inputs s1, s2, target have to be vectors'
@@ -123,7 +119,17 @@ def pid(s1_o, s2_o, target_o, cfg):
         print('"jarpath" is missing from the cfg dictionary.')
         raise
     try:
-        alphabet = cfg['alphabetsize']
+        alph_s1 = cfg['alph_s1']
+    except KeyError:
+        print('"alphabetsize" is missing from the cfg dictionary.')
+        raise
+    try:
+        alph_s2 = cfg['alph_s2']
+    except KeyError:
+        print('"alphabetsize" is missing from the cfg dictionary.')
+        raise
+    try:
+        alph_t = cfg['alph_t']
     except KeyError:
         print('"alphabetsize" is missing from the cfg dictionary.')
         raise
@@ -133,9 +139,12 @@ def pid(s1_o, s2_o, target_o, cfg):
         print('"iterations" is missing from the cfg dictionary.')
         raise
 
+    # TEMP REMOVE WHEN DONE
+#    alphabet = alph_s1
+
     if not jp.isJVMStarted():
         jp.startJVM(jp.getDefaultJVMPath(),
-                    '-ea', '-Djava.class.path=' + jarpath)
+                    '-ea', '-Djava.class.path=' + jarpath, "-Xmx3000M")
     # what if it's there already - do we have to attach to it?
 
     Cmi_calc_class = (jp.JPackage('infodynamics.measures.discrete')
@@ -143,46 +152,52 @@ def pid(s1_o, s2_o, target_o, cfg):
     Mi_calc_class = (jp.JPackage('infodynamics.measures.discrete')
                      .MutualInformationCalculatorDiscrete)
 
-    cmi_calc = Cmi_calc_class(alphabet,alphabet,alphabet)
-    mi_calc  = Mi_calc_class(alphabet)
-    jointmi_calc  = Mi_calc_class(alphabet ** 2)
+#   cmi_calc = Cmi_calc_class(alphabet,alphabet,alphabet)
+    cmi_calc_target_s1_cond_s2 = Cmi_calc_class(alph_t,alph_s1,alph_s2)
 
-    cmi_target_s1_cond_s2 = _calculate_cmi(cmi_calc, target, s1, s2)
+    # MAX THE CORRECT WAY TO GO?
+    alph_max_s1_t = max(alph_s1, alph_t)
+    alph_max_s2_t = max(alph_s2, alph_t)
+    alph_max = max(alph_s1*alph_s2, alph_t)
+
+#   mi_calc  = Mi_calc_class(alphabet)
+    mi_calc_s1 = Mi_calc_class(alph_max_s1_t)
+    mi_calc_s2 = Mi_calc_class(alph_max_s2_t)
+
+#   jointmi_calc  = Mi_calc_class(alphabet ** 2)
+    jointmi_calc  = Mi_calc_class(alph_max)
+
+    cmi_target_s1_cond_s2 = _calculate_cmi(cmi_calc_target_s1_cond_s2, target, s1, s2)
     jointmi_s1s2_target = _calculate_jointmi(jointmi_calc, s1, s2, target)
-    print("Original joint mutual information: {0}".format(jointmi_s1s2_target))
-    mi_target_s1 = _calculate_mi(mi_calc, s1, target)
-    print("Original mutual information I(target:s1): {0}".format(mi_target_s1))
-    mi_target_s2 = _calculate_mi(mi_calc, s2, target)
-    print("Original mutual information I(target:s2): {0}".format(mi_target_s2))
+#   print("Original joint mutual information: {0}".format(jointmi_s1s2_target))
+    mi_target_s1 = _calculate_mi(mi_calc_s1, s1, target)
+#   print("Original mutual information I(target:s1): {0}".format(mi_target_s1))
+    mi_target_s2 = _calculate_mi(mi_calc_s2, s2, target)
+#   print("Original mutual information I(target:s2): {0}".format(mi_target_s2))
     print("Original redundancy - synergy: {0}".format(mi_target_s1 +
                                                 mi_target_s2 - jointmi_s1s2_target))
 
     n = target.shape[0]
     reps = iterations + 1
     ind = np.arange(n)
-    # collect estimates in each iteration
-    cmi_q_target_s1_cond_s2_all = -np.inf * np.ones(reps).astype('float128')
-    # collect delta of estimates
-    cmi_q_target_s1_cond_s2_delta = -np.inf * np.ones(reps).astype('float128')
-
-#    jointmi_q_s1s2_target_all = _nan(reps)  # collect joint MI of the two sources with the target
+    cmi_q_target_s1_cond_s2_all = -np.inf * np.ones(reps).astype('float128')   # collect estimates in each iteration
+    cmi_q_target_s1_cond_s2_delta = -np.inf * np.ones(reps).astype('float128')  # collect delta of estimates
+    jointmi_q_s1s2_target_all = -np.inf * np.ones(reps).astype('float128')  # collect joint MI of the two sources with the target
     cmi_q_target_s1_cond_s2_all[0] = cmi_target_s1_cond_s2  # initial I(s1;target|Y)
     unsuccessful = 0
-    successful = 0
-    equal_swaps = 0
 
 #    print('Starting [                   ]', end='')
 #    print('\b' * 21, end='')
     sys.stdout.flush()
-    # create copies of target and s2 as lists
-    target_as_list = target.tolist()
-    target_jA = jp.JArray(jp.JInt, 1)(target_as_list)
-    s1_as_list = s1.tolist()
-    s2_as_list = s2.tolist()
-    s2_jA = jp.JArray(jp.JInt, 1)(s2_as_list)
-
     for i in range(1, reps):
-        s1_new_as_list = s1_as_list
+#        steps = reps/20
+#        if i%steps == 0:
+#            print('\b.', end='')
+#            sys.stdout.flush()
+
+        #print('iteration ' + str(i + 1) + ' of ' + str(reps - 1)
+
+        s1_new  = s1
         ind_new = ind
 
         # swapping: pick sample at random, find all other samples that
@@ -192,42 +207,36 @@ def pid(s1_o, s2_o, target_o, cfg):
         swap_candidates = np.where(target == target[swap_1])[0]
         swap_2 = np.random.choice(swap_candidates)
 
-        # calculate CMI under new swapped distribution if this makes sense
-        # else do nothing
-        if (s1[swap_1] != s1[swap_2] and s2[swap_1] != s2[swap_2]):
-            # swap value in s1 and index to keep track
-            s1_new_as_list[swap_1], s1_new_as_list[swap_2] = s1_new_as_list[swap_2], s1_new_as_list[swap_1]
-            ind_new[swap_1], ind_new[swap_2] = (ind_new[swap_2],
+        # swap value in s1 and index to keep track
+        s1_new[swap_1], s1_new[swap_2] = s1_new[swap_2], s1_new[swap_1]
+        ind_new[swap_1], ind_new[swap_2] = (ind_new[swap_2],
                                             ind_new[swap_1])
 
-            cmi_new = _calculate_cmi_from_lists_and_jA(cmi_calc, target_jA,
-                                            s1_new_as_list, s2_jA)
-        else:
-            cmi_new =  cmi_q_target_s1_cond_s2_all[i - 1] # keep the old cmi_new value, as we have computed it before
+        # calculate CMI under new swapped distribution
+        cmi_new = _calculate_cmi(cmi_calc_target_s1_cond_s2, target, s1_new, s2)
 
 
-        if (np.less(cmi_new, cmi_q_target_s1_cond_s2_all[i - 1])):
-            s1_as_list = s1_new_as_list
+        if (np.less_equal(cmi_new, cmi_q_target_s1_cond_s2_all[i - 1])):
+            s1 = s1_new
             ind = ind_new
             cmi_q_target_s1_cond_s2_all[i] = cmi_new
             cmi_q_target_s1_cond_s2_delta[i] = cmi_q_target_s1_cond_s2_all[i - 1] - cmi_new
-            successful += 1
+            # debug/plotting only
+#            jointmi_q_s1s2_target_all[i] = _calculate_jointmi(jointmi_calc, s1, s2, target)
         else:
             cmi_q_target_s1_cond_s2_all[i] = cmi_q_target_s1_cond_s2_all[i - 1]
             unsuccessful += 1
 
-    print('Successful swaps: {0}'.format(successful))
-    print("equal swaps: {0}".format(equal_swaps))
-#    print('Final indices: {0}'.format(ind[0:100]))
+    print('Unsuccessful swaps: {0}'.format(unsuccessful))
 
-     # convert the final s1 back to an array
-    s1_final =np.asarray(s1_new_as_list, dtype=np.int)
     # estimate unq/syn/shd information
 #    jointmi_q_s1s2_target = _get_last_value(jointmi_q_s1s2_target_all)
-    jointmi_q_s1s2_target = _calculate_jointmi(jointmi_calc, s1_final, s2, target)
-    print("Final joint mutual information wrt Q: {0}".format(jointmi_q_s1s2_target))
+    jointmi_q_s1s2_target = _calculate_jointmi(jointmi_calc, s1, s2, target)
     unq_s1 = _get_last_value(cmi_q_target_s1_cond_s2_all)  # Bertschinger, 2014, p. 2163
-    unq_s2 = _calculate_cmi(cmi_calc, target, s2, s1_final)  # Bertschinger, 2014, p. 2166
+# NEED TO REINITIALISE
+    cmi_calc_target_s2_cond_s1 = Cmi_calc_class(alph_t,alph_s2,alph_s1)
+
+    unq_s2 = _calculate_cmi(cmi_calc_target_s2_cond_s1, target, s2, s1)  # Bertschinger, 2014, p. 2166
     syn_s1s2 = jointmi_s1s2_target - jointmi_q_s1s2_target  # Bertschinger, 2014, p. 2163
     shd_s1s2 = mi_target_s1 + mi_target_s2 - jointmi_q_s1s2_target  # Bertschinger, 2014, p. 2167
 
@@ -242,31 +251,30 @@ def pid(s1_o, s2_o, target_o, cfg):
         'orig_mi_target_s1': mi_target_s1,
         'orig_mi_target_s2': mi_target_s2
     }
-#    print(estimate)
     # useful outputs for plotting/debugging
     optimization = {
         'q': ind_new,
         'unsuc_swaps': unsuccessful,
         'cmi_q_target_s1_cond_s2_all': cmi_q_target_s1_cond_s2_all,
         'cmi_q_target_s1_cond_s2_delta': cmi_q_target_s1_cond_s2_delta,
-#        'jointmi_q_s1s2_target_all': jointmi_q_s1s2_target_all,
+        'jointmi_q_s1s2_target_all': jointmi_q_s1s2_target_all,
         'cfg': cfg
     }
     return estimate, optimization
 
 
-#def _nan(shape):
-#    """Return 1D numpy array of nans.
-#
-#    Args:
-#        shape (int): length of array
-#
-#    Returns:
-#        numpy array: array filled with nans
-#    """
-#    a = np.empty(shape)
-#    a.fill(np.nan)
-#    return a
+def _nan(shape):
+    """Return 1D numpy array of nans.
+
+    Args:
+        shape (int): length of array
+
+    Returns:
+        numpy array: array filled with nans
+    """
+    a = np.empty(shape)
+    a.fill(np.nan)
+    return a
 
 
 def _calculate_cmi(cmi_calc, var_1, var_2, cond):
@@ -290,30 +298,6 @@ def _calculate_cmi(cmi_calc, var_1, var_2, cond):
     cmi_calc.initialise()
     cmi_calc.addObservations(var_1_java, var_2_java, cond_java)
     cmi = cmi_calc.computeAverageLocalOfObservations()
-    return cmi
-
-def _calculate_cmi_from_lists_and_jA(cmi_calc, var_1_java, var_2, cond_java):
-    """Calculate conditional MI from three variables usind JIDT.
-
-    Args:
-        cmi_calc (JIDT calculator object): JIDT calculator for conditio-
-            nal mutual information
-        var_1, var_2 (python lists of integers): realizations of two discrete
-            random variables
-        cond (python list of integers): realizations of a discrete random
-            variable for conditioning
-
-    Returns:
-        double: conditional mutual information between var_1 and var_2
-            conditional on cond
-    """
-#    var_1_java = jp.JArray(jp.JInt, 1)(var_1)
-    var_2_java = jp.JArray(jp.JInt, 1)(var_2)
-#    cond_java = jp.JArray(jp.JInt, 1)(cond)
-    cmi_calc.initialise()
-    cmi_calc.addObservations(var_1_java, var_2_java, cond_java)
-    cmi = cmi_calc.computeAverageLocalOfObservations()
-    print(type(cmi))
     return cmi
 
 
@@ -371,28 +355,30 @@ def _get_last_value(x):
         int/double: entry in x with highest index, which is not nan (if
             no such value exists, nan is returned)
     """
-    ind = np.where(x>-np.inf)[0]
+    ind = np.where(~np.isnan(x))[0]
     try:
         return x[ind[-1]]
     except IndexError:
-        print('Could not find a value that is not -inf.')
+        print('Couldn not find a value that is not -inf.')
         return np.NaN
 
 if __name__ == '__main__':
 
     # logical AND
-    n = 40000
+    n = 1000
     alph = 2
     s1 = np.random.randint(0, alph, n)
     s2 = np.random.randint(0, alph, n)
     target = np.logical_and(s1, s2).astype(int)
     cfg = {
-        'alphabetsize': 2,
+        'alph_s1': 2,
+        'alph_s2': 2,
+        'alph_t': 2,
         'jarpath': 'infodynamics.jar',
-        'iterations': 100
+        'iterations': 10000000
     }
-    print('Testing PID estimator on binary AND, pointsset size: {0},'
-          ' iterations: {1}'.format(n, cfg['iterations']))
+    print('Testing PID estimator on binary AND, pointsset size{0}, iterations: {1}'.format(
+                                                        n, cfg['iterations']))
     tic = tm.clock()
     [est, opt] = pid(s1, s2, target, cfg)
     toc = tm.clock()
@@ -401,33 +387,3 @@ if __name__ == '__main__':
     print("unq_s1: {0}".format(est['unq_s1']))
     print("unq_s2: {0}".format(est['unq_s2']))
     print("shd_s1s2: {0}".format(est['shd_s1s2']))
-    print("last delta was: {0}".format( _get_last_value(opt['cmi_q_target_s1_cond_s2_delta'])))
-
-#    # plot results
-#    text_x_pos = opt['cfg']['iterations'] * 0.05
-#    plt.figure
-##    plt.subplot(2, 2, 1)
-###    plt.plot(est['orig_mi_target_s1'] + est['orig_mi_target_s2'] - opt['jointmi_q_s1s2_target_all'])
-##    plt.ylim([-1, 0.6])
-##    plt.title('shared info')
-##    plt.ylabel('SI_Q(target:s1;s2)')
-##    plt.subplot(2, 2, 2)
-###    plt.plot(est['orig_jointmi_s1s2_target'] - opt['jointmi_q_s1s2_target_all'])
-##    plt.plot([0, opt['cfg']['iterations']],[1, 1], 'r')
-##    plt.text(text_x_pos, 0.9, 'AND', color='red')
-##    plt.ylim([0, 1.1])
-##    plt.title('synergistic info')
-##    plt.ylabel('CI_Q(target:s1;s2)')
-#    plt.subplot(2, 2, 3)
-#    plt.plot(opt['cmi_q_target_s1_cond_s2_all'])
-#    plt.title('unique info s1')
-#    plt.ylim([0.1, 0.2])
-#    plt.ylabel('UI_Q(s1:target|s2)')
-#    plt.xlabel('iteration')
-#    plt.subplot(2, 2, 4)
-#    plt.plot(opt['cmi_q_target_s1_cond_s2_delta'], 'r')
-#    plt.title('delta unique info s1')
-#    plt.ylim([0, 1e-3])
-#    plt.ylabel('delta UI_Q(s1:target|s2)')
-#    plt.xlabel('iteration')
-
