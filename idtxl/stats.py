@@ -9,7 +9,7 @@ import copy as cp
 import numpy as np
 import utils
 
-VERBOSE = False
+VERBOSE = True
 
 
 def network_fdr(results, alpha=0.05):
@@ -197,6 +197,8 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
             statistical significance
         float
             the test's p-value
+        numpy array
+            surrogate table
     """
     try:
         n_perm = opts['n_perm_max_stat']
@@ -206,16 +208,14 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
         alpha = opts['alpha_max_stat']
     except KeyError:
         alpha = 0.05
+    assert(candidate_set), 'The candidate set is empty.'
 
-    test_set = cp.copy(candidate_set)  # TODO I think we don't need this anymore
-    assert(test_set), 'The test set is empty.'
-
-    surr_table = _create_surrogate_table(analysis_setup, data, test_set,
+    surr_table = _create_surrogate_table(analysis_setup, data, candidate_set,
                                          n_perm)
     max_distribution = _find_table_max(surr_table)
     [significance, pvalue] = _find_pvalue(te_max_candidate, max_distribution,
                                           alpha)
-    return significance, pvalue
+    return significance, pvalue, surr_table
 
 
 def max_statistic_sequential(analysis_setup, data, opts=None):
@@ -228,6 +228,10 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
     the distribution of 2nd biggest surrogate TE values; ...
     Stop comparison if a TE value is non significant, all smaller values are
     considered non-significant as well.
+
+    This function will re-use the surrogate table created in the last min-stats
+    round if that table is in the analysis_setup. This saves the complete
+    calculation of surrogates for this statistic.
 
     Args:
         analysis_setup : Multivariate_te instance
@@ -250,7 +254,10 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
     try:
         n_permutations = opts['n_perm_max_seq']
     except KeyError:
-        n_permutations = 3  # 200
+        try:  # use the same n_perm as for min_stats if surr table is reused
+            n_permutations = analysis_setup.min_stats_surr_table.shape[1]
+        except analysis_setup.min_stats_surr_table:
+            n_permutations = 3  # 200
     try:
         alpha = opts['alpha_max_seq']
     except KeyError:
@@ -273,10 +280,18 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
     conditional_order = utils.argsort_descending(individual_te)
     individual_te_sorted = utils.sort_descending(individual_te)
 
-    # Create a surrogate table and sort it.
-    surr_table = _create_surrogate_table(analysis_setup, data,
-                                         analysis_setup.conditional_sources,
-                                         n_permutations)
+    # Re-use or create surrogate table and sort it.
+    if analysis_setup.min_stats_surr_table is not None:
+        surr_table = analysis_setup.min_stats_surr_table  # saves some time
+        assert len(analysis_setup.conditional_sources) == surr_table.shape[0]
+        assert (n_permutations <= surr_table.shape[1]), ('No. permutations in '
+            'min-table ({0}) not sufficient, requested: {1}.'.format(
+                surr_table.shape[1], n_permutations))
+    else:
+        surr_table = _create_surrogate_table(
+                                        analysis_setup, data,
+                                        analysis_setup.conditional_sources,
+                                        n_permutations)
     max_distribution = _sort_table_max(surr_table)
 
     # Compare each TE value with the distribution of the same rank, starting
@@ -326,6 +341,8 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
             statistical significance
         float
             the test's p-value
+        numpy array
+            surrogate table
     """
     try:
         n_perm = opts['n_perm_min_stat']
@@ -335,16 +352,14 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
         alpha = opts['alpha_min_stat']
     except KeyError:
         alpha = 0.05
+    assert(candidate_set), 'The candidate set is empty.'
 
-    test_set = cp.copy(candidate_set)
-    assert(test_set), 'The test set is empty.'
-
-    surr_table = _create_surrogate_table(analysis_setup, data, test_set,
+    surr_table = _create_surrogate_table(analysis_setup, data, candidate_set,
                                          n_perm)
     min_distribution = _find_table_min(surr_table)
     [significance, pvalue] = _find_pvalue(te_min_candidate, min_distribution,
                                           alpha)
-    return significance, pvalue
+    return significance, pvalue, surr_table
 
 
 def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
@@ -382,14 +397,14 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
 
     # Create surrogate table.
     if VERBOSE:
-        print('create surrogates table')
+        print('\n create surrogates table')
     surr_table = np.zeros((len(idx_test_set), n_perm))  # surrogate TE values
     current_value_realisations = analysis_setup._current_value_realisations
     idx_c = 0
     for candidate in idx_test_set:
         if VERBOSE:
-            print('\tcand. {0}, n_perm: {1} -    '.format(candidate, n_perm),
-                  end='')
+            print('\tcand. {0}, n_perm: {1} -    '.format(
+                analysis_setup._idx_to_lag([candidate])[0], n_perm), end='')
         for perm in range(n_perm):
             # Check the permutation type for the current candidate.
             if permute_over_replications:
