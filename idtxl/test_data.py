@@ -22,6 +22,32 @@ def test_set_data():
     assert (data.data[1, :].T == target.T).all(), ('Class data does not match '
                                                    'input (target).')
 
+    d = Data()
+    dat = np.arange(10000).reshape((2, 1000, 5))  # random data with correct
+    d = Data(dat, dim_order='psr')               # order od dimensions
+    assert (d.data.shape[0] == 2), ('Class data does not match input, number '
+                                    'of processes wrong.')
+    assert (d.data.shape[0] == 10000), ('Class data does not match input, '
+                                        'number of samples wrong.')
+    assert (d.data.shape[0] == 5), ('Class data does not match input, number '
+                                    'of replications wrong.')
+    dat = np.arange(3000).reshape((3, 1000))  # random data with incorrect
+    d = Data(dat, dim_order='ps')            # order of dimensions
+    assert (d.data.shape[0] == 3), ('Class data does not match input, number '
+                                    'of processes wrong.')
+    assert (d.data.shape[0] == 1000), ('Class data does not match input, '
+                                       'number of samples wrong.')
+    assert (d.data.shape[0] == 1), ('Class data does not match input, number '
+                                    'of replications wrong.')
+    dat = np.arange(5000)
+    d.set_data(dat, 's')
+    assert (d.data.shape[0] == 1), ('Class data does not match input, number '
+                                    'of processes wrong.')
+    assert (d.data.shape[0] == 5000), ('Class data does not match input, '
+                                       'number of samples wrong.')
+    assert (d.data.shape[0] == 1), ('Class data does not match input, number '
+                                    'of replications wrong.')
+
 
 def test_data_normalisation():
     """Test if data are normalised correctly when stored in a Data instance."""

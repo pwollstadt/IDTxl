@@ -278,19 +278,21 @@ class Data():
 
         Generate example data and overwrite the instance's current data. The
         network is used as an example the paper on the MuTE toolbox (Montalto,
-        PLOS ONE, 2014, eq. 14). The network has the following (non-linear)
-        couplings:
+        PLOS ONE, 2014, eq. 14). The network consists of five autoregressive
+        (AR) processes with model orders 2 and les and the following
+        (non-linear) couplings:
 
-        1 -> 2
-        1 -> 3
-        1 -> 4 (non-linear)
-        4 -> 5
-        5 -> 4
+        0 -> 1, u = 2
+        0 -> 2, u = 3
+        0 -> 3, u = 2 (non-linear)
+        3 -> 4, u = 1
+        4 -> 3, u = 1
 
         Args:
-            n_samples: number of samples simulated for each process and
-                replication
-            n_replications: number of replications
+            n_samples : int
+                number of samples simulated for each process and replication
+            n_replications : int
+                number of replications
         """
 
         n_processes = 5
@@ -318,19 +320,3 @@ class Data():
                               term_2 * x[4, n - 1, r] +
                               np.random.normal())
         self.set_data(x[:, 3:, :], 'psr')
-
-
-if __name__ == '__main__':
-    d_mute = Data()              # initialise empty data object
-    d_mute.generate_mute_data()  # simulate data from MuTE paper
-
-    dat = np.arange(10000).reshape((2, 1000, 5))  # random data with correct
-    d1 = Data(dat, dim_order='psr')               # order od dimensions
-
-    dat = np.arange(3000).reshape((3, 1000))  # random data with incorrect
-    d2 = Data(dat, dim_order='ps')            # order of dimensions
-    dat_new = np.arange(5000)
-    d2.set_data(dat_new, 's')
-
-    # d3 = Data(np.arange(1), 'p')
-    # d3.data = dat  # this crashes, because it's not allowed
