@@ -19,8 +19,7 @@ Note:
 import copy as cp
 import numpy as np
 import itertools as it
-import stats as stats
-from data import Data
+import stats
 from network_analysis import Network_analysis
 from set_estimator import Estimator_cmi
 
@@ -102,7 +101,7 @@ class Multivariate_te(Network_analysis):
         self.sign_sign_sources = None
         self.pvalue_omnibus = None
         self.pvalues_sign_sources = None
-
+        self.min_stats_surr_table = None
         self.options = options
         try:
             self.calculator_name = options['cmi_calc_name']
@@ -232,8 +231,10 @@ class Multivariate_te(Network_analysis):
 
         # Clean up and return results.
         if VERBOSE:
-            print('final source samples: {0}'.format(self.conditional_sources))
-            print('final target samples: {0}'.format(self.conditional_target))
+            print('final source samples: {0}'.format(
+                    self._idx_to_lag(self.conditional_sources)))
+            print('final target samples: {0}'.format(
+                    self._idx_to_lag(self.conditional_target)))
         self._clean_up()
         results = {
             'current_value': self.current_value,
@@ -249,12 +250,15 @@ class Multivariate_te(Network_analysis):
 
     def _initialise(self, data, sources, target):
         """Check input and set everything to initial values."""
+
+        # Check the provided target and sources.
         self.target = target
         self._check_source_set(sources, data.n_processes)
+
+        # Check provided search depths for source and target
         assert(self.min_lag_sources <= self.max_lag_sources), (
             'min_lag_sources ({0}) must be smaller or equal to max_lag_sources'
             ' ({1}).'.format(self.min_lag_sources, self.max_lag_sources))
-
         max_lag = max(self.max_lag_sources, self.max_lag_target)
         assert(data.n_samples >= max_lag + 1), (
             'Not enough samples in data ({0}) to allow for the chosen maximum '
@@ -264,9 +268,14 @@ class Multivariate_te(Network_analysis):
                                              current_value=self.current_value,
                                              idx=[self.current_value])
         self._current_value_realisations = cv_realisation
+
         # Remember which realisations come from which replication. This may be
         # needed for surrogate creation at a later point.
         self._replication_index = repl_idx
+
+        # Check the permutation type and no. permutations requested by the
+        # user. This tests if there is sufficient data to do all tests.
+        # surrogates.check_permutations(self, data)
 
         # Reset all attributes to inital values if the instance has been used
         # before.
@@ -280,6 +289,7 @@ class Multivariate_te(Network_analysis):
             self.pvalue_omnibus = None
             self.pvalues_sign_sources = None
             self.te_sign_sources = None
+            self.min_stats_surr_table = None
 
     def _check_source_set(self, sources, n_processes):
         """Set default if no source set was provided by the user."""
@@ -300,9 +310,9 @@ class Multivariate_te(Network_analysis):
 
     def _include_target_candidates(self, data):
         """Test candidates from the target's past."""
-        procs = [self.target] # TODO think about this again
+        procs = [self.target]
         samples = np.arange(self.current_value[1] - 1,
-                            self.current_value[1] - self.max_lag_target,
+                            self.current_value[1] - self.max_lag_target - 1,
                             -self.tau_target)
         candidates = self._define_candidates(procs, samples)
         sources_found = self._include_candidates(candidates, data)
@@ -320,14 +330,83 @@ class Multivariate_te(Network_analysis):
     def _include_source_candidates(self, data):
         """Test candidates in the source's past."""
         procs = self.source_set
-        #samples = np.arange(self.current_value[1] - self.max_lag_sources,
-        #                    self.current_value[1] - self.min_lag_sources + 1,
-        #                    self.tau_sources)  # TODO this is not yet working as supposed
         samples = np.arange(self.current_value[1] - self.min_lag_sources,
                             self.current_value[1] - self.max_lag_sources,
                             -self.tau_sources)
         candidates = self._define_candidates(procs, samples)
+        # TODO include non-selected target candidates as further candidates, they may get selected due to synergies
         self._include_candidates(candidates, data)
+
+    def _include_candidates(self, candidate_set, data):
+        """Inlcude informative candidates into the conditioning set.
+
+        Loop over each candidate in the candidate set and test if it has
+        significant mutual information with the current value, conditional
+        on all samples that were informative in previous rounds and are already
+        in the conditioning set. If this conditional mutual information is
+        significant using maximum statistics, add the current candidate to the
+        conditional set.
+
+        Args:
+            candidate_set : list of tuples
+                candidate set to be tested, where each entry is a tuple
+                (process index, sample index)
+            data : Data instance
+                raw data
+            options : dict [optional]
+                parameters for estimation and statistical testing
+
+        Returns:
+            list of tuples
+                indices of the conditional set created from the candidate set
+            conditional_realisations : numpy array
+                realisations of the conditional set
+        """
+        success = False
+        while candidate_set:
+            # Find the candidate with maximum TE.
+            temp_te = np.empty(len(candidate_set))
+            i = 0
+            for candidate in candidate_set:
+                candidate_realisations = data.get_realisations(
+                                                            self.current_value,
+                                                            [candidate])[0]
+                temp_te[i] = self._cmi_calculator.estimate(
+                                        candidate_realisations,
+                                        self._current_value_realisations,
+                                        self._conditional_realisations,
+                                        self.options)
+                i += 1
+
+            # Test max TE for significance with maximum statistics.
+            te_max_candidate = max(temp_te)
+            max_candidate = candidate_set[np.argmax(temp_te)]
+            if VERBOSE:
+                print('testing {0} from candidate set {1}'.format(
+                                    self._idx_to_lag([max_candidate])[0],
+                                    self._idx_to_lag(candidate_set)), end='')
+            significant = stats.max_statistic(self, data, candidate_set,
+                                              te_max_candidate,
+                                              self.options)[0]
+
+            # If the max is significant keep it and test the next candidate. If
+            # it is not significant break. There will be no further significant
+            # sources b/c they all have lesser TE.
+            if significant:
+                if VERBOSE:
+                    print(' -- significant')
+                success = True
+                candidate_set.pop(np.argmax(temp_te))
+                self._append_conditional_idx([max_candidate])
+                self._append_conditional_realisations(
+                            data.get_realisations(self.current_value,
+                                                  [max_candidate])[0])
+            else:
+                if VERBOSE:
+                    print(' -- not significant')
+                break
+
+        return success
 
     def _prune_candidates(self, data):
         """Remove uninformative candidates from the final conditional set.
@@ -344,12 +423,10 @@ class Multivariate_te(Network_analysis):
                 parameters for estimation and statistical testing
 
         """
-        significant = True
-        while self.conditional_sources:
+        while self.conditional_sources:  # FOR LATER we don't need to test the last included in the first round
+            # Find the candidate with the minimum TE into the target.
             temp_te = np.empty(len(self.conditional_sources))
             i = 0
-
-            # Find the candidate with the minimum TE into the target.
             for candidate in self.conditional_sources:
                 # Separate the candidate realisations and all other
                 # realisations to test the candidate's individual contribution.
@@ -361,6 +438,7 @@ class Multivariate_te(Network_analysis):
                                             self._current_value_realisations,
                                             temp_cond,
                                             self.options)
+                i += 1
 
             # Test min TE for significance with minimum statistics.
             te_min_candidate = min(temp_te)
@@ -368,18 +446,25 @@ class Multivariate_te(Network_analysis):
             if VERBOSE:
                 print('testing {0} from candidate set {1}'.format(
                                 self._idx_to_lag([min_candidate])[0],
-                                self._idx_to_lag(self.conditional_sources)))
-            significant = stats.min_statistic(self, data,
+                                self._idx_to_lag(self.conditional_sources)),
+                                end='')
+            [significant, p, surr_table] = stats.min_statistic(
+                                              self, data,
                                               self.conditional_sources,
                                               te_min_candidate,
-                                              self.options)[0]
+                                              self.options)
 
             # Remove the minimum it is not significant and test the next min.
             # candidate. If the minimum is significant, break, all other
             # sources will be significant as well (b/c they have higher TE).
             if not significant:
+                if VERBOSE:
+                    print(' -- not significant')
                 self._remove_candidate(min_candidate)
             else:
+                if VERBOSE:
+                    print(' -- significant')
+                self.min_stats_surr_table = surr_table
                 break
             i += 1
 
@@ -389,7 +474,7 @@ class Multivariate_te(Network_analysis):
             print('---------------------------- no sources found')
             return
         else:
-            print(self.conditional_full)
+            print(self._idx_to_lag(self.conditional_full))
             [s, p, te] = stats.omnibus_test(self, data, self.options)
             self.te_omnibus = te
             self.sign_omnibus = s
@@ -428,74 +513,6 @@ class Multivariate_te(Network_analysis):
         for idx in it.product(processes, samples):
             candidate_set.append(idx)
         return candidate_set
-
-    def _include_candidates(self, candidate_set, data):
-        """Inlcude informative candidates into the conditioning set.
-
-        Loop over each candidate in the candidate set and test if it has
-        significant mutual information with the current value, conditional
-        on all samples that were informative in previous rounds and are already
-        in the conditioning set. If this conditional mutual information is
-        significant using maximum statistics, add the current candidate to the
-        conditional set.
-
-        Args:
-            candidate_set : list of tuples
-                candidate set to be tested, where each entry is a tuple
-                (process index, sample index)
-            data : Data instance
-                raw data
-            options : dict [optional]
-                parameters for estimation and statistical testing
-
-        Returns:
-            list of tuples
-                indices of the conditional set created from the candidate set
-            conditional_realisations : numpy array
-                realisations of the conditional set
-        """
-        success = False
-        while candidate_set:
-            temp_te = np.empty(len(candidate_set))
-            i = 0
-
-            # Find the candidate with maximum TE.
-            for candidate in candidate_set:
-                candidate_realisations = data.get_realisations(
-                                                            self.current_value,
-                                                            [candidate])[0]
-                temp_te[i] = self._cmi_calculator.estimate(
-                                        candidate_realisations,
-                                        self._current_value_realisations,
-                                        self._conditional_realisations,
-                                        self.options)
-                i += 1
-
-            # Test max TE for significance with maximum statistics.
-            te_max_candidate = max(temp_te)
-            max_candidate = candidate_set[np.argmax(temp_te)]
-            if VERBOSE:
-                print('testing {0} from candidate set {1}'.format(
-                                        self._idx_to_lag([max_candidate])[0],
-                                        self._idx_to_lag(candidate_set)))
-            significant = stats.max_statistic(self, data, candidate_set,
-                                              te_max_candidate,
-                                              self.options)[0]
-
-            # If the max is significant keep it and test the next candidate. If
-            # it is not significant break. There will be no further significant
-            # sources b/c they all have lesser TE.
-            if significant:
-                success = True
-                candidate_set.pop(np.argmax(temp_te))
-                self._append_conditional_idx([max_candidate])
-                self._append_conditional_realisations(
-                            data.get_realisations(self.current_value,
-                                                  [max_candidate])[0])
-            else:
-                break
-
-        return success
 
     def _separate_realisations(self, idx_full, idx_single):
         """Separate a single indexes' realisations from a set of realisations.
@@ -544,6 +561,7 @@ class Multivariate_te(Network_analysis):
         self._conditional_sources_realisations = None
         self._conditional_target_realisations = None
         self._current_value_realisations = None
+        self.min_stats_surr_table = None
 
     def _idx_to_lag(self, idx_list):
         """Change sample indices to lags for each index in the list."""
@@ -551,23 +569,3 @@ class Multivariate_te(Network_analysis):
         for c in idx_list:
             lag_list[idx_list.index(c)] = (c[0], self.current_value[1] - c[1])
         return lag_list
-
-if __name__ == '__main__':
-
-    dat = Data()
-    dat.generate_mute_data(100, 5)
-    max_lag = 9
-    min_lag = 4
-    analysis_opts = {
-        'cmi_calc_name': 'jidt_kraskov',
-        'n_perm_max_stat': 21,
-        'n_perm_min_stat': 21,
-        'n_perm_omnibus': 21,
-        'n_perm_max_seq': 21,
-        }
-    target = 0
-    sources = [1, 2, 3]
-
-    network_analysis = Multivariate_te(max_lag, min_lag, max_lag, 2, 2,
-                                       options=analysis_opts)
-    res = network_analysis.analyse_single_target(dat, target, sources)

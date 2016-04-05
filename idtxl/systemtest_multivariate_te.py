@@ -42,8 +42,8 @@ def test_multivariate_te_corr_gaussian():
         'cmi_calc_name': 'jidt_kraskov',
         'n_perm_max_stat': 21,
         'n_perm_min_stat': 21,
-        'n_perm_omnibus': 100,
-        'n_perm_max_seq': 100,
+        'n_perm_omnibus': 21,
+        'n_perm_max_seq': 21,
         }
     random_analysis = Multivariate_te(max_lag_sources=5, min_lag_sources=1,
                                       max_lag_target=5, options=analysis_opts)
@@ -175,20 +175,53 @@ def test_multivariate_te_lorenz_2():
         'cmi_calc_name': 'jidt_kraskov',
         'n_perm_max_stat': 21,  # 200
         'n_perm_min_stat': 21,  # 200
-        'n_perm_omnibus': 500,
-        'n_perm_max_seq': 500,
+        'n_perm_omnibus': 21,
+        'n_perm_max_seq': 21,  # this should be equal to the min stats b/c we
+                               # reuse the surrogate table from the min stats
         }
     lorenz_analysis = Multivariate_te(max_lag_sources=50, min_lag_sources=40,
-                                      max_lag_target=20, tau_target=3,
+                                      max_lag_target=30, tau_target=3,
                                       options=analysis_opts)
     # res = lorenz_analysis.analyse_network(dat)
-    res_0 = lorenz_analysis.analyse_single_target(dat, 0)
-    res_1 = lorenz_analysis.analyse_single_target(dat, 1)
+    res_0 = lorenz_analysis.analyse_single_target(dat, 0)  # no coupling
+    res_1 = lorenz_analysis.analyse_single_target(dat, 1)  # coupling
     print(res_0)
     print(res_1)
 
 
+def test_multivariate_te_mute():
+    """Test multivariate TE estimation on the MUTE example network.
+
+    Test data comes from a network that is used as an example in the paper on
+    the MuTE toolbox (Montalto, PLOS ONE, 2014, eq. 14). The network has the
+    following (non-linear) couplings:
+
+    0 -> 1, u = 2
+    0 -> 2, u = 3
+    0 -> 3, u = 2 (non-linear)
+    3 -> 4, u = 1
+    4 -> 3, u = 1
+
+    The maximum order of any single AR process is never higher than 2.
+    """
+    dat = Data()
+    dat.generate_mute_data(n_samples=1000, n_replications=10)
+    analysis_opts = {
+        'cmi_calc_name': 'jidt_kraskov',
+        'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_omnibus': 21,
+        'n_perm_max_seq': 21,  # this should be equal to the min stats b/c we
+                               # reuse the surrogate table from the min stats
+        }
+
+    network_analysis = Multivariate_te(max_lag_sources=3, min_lag_sources=1,
+                                       max_lag_target=3, options=analysis_opts)
+    res = network_analysis.analyse_network(dat)
+
+
 if __name__ == '__main__':
-    test_multivariate_te_lorenz_2()
+    # test_multivariate_te_mute()
+    # test_multivariate_te_lorenz_2()
     # test_multivariate_te_random()
-    # ttest_multivariate_te_corr_gaussian()
+    test_multivariate_te_corr_gaussian()
