@@ -165,9 +165,12 @@ def omnibus_test(analysis_setup, data, opts):
         if VERBOSE:
                 print('\b\b\b{num:03d}'.format(num=perm + 1), end='')
                 sys.stdout.flush()
-    if VERBOSE:
-        print(' ')
     [significance, pvalue] = _find_pvalue(te_orig, surr_distribution, alpha)
+    if VERBOSE:
+        if significance:
+            print(' -- significant')
+        else:
+            print(' -- not significant')
     return significance, pvalue, te_orig
 
 
