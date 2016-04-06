@@ -6,6 +6,7 @@ Created on Tue Apr  5 16:40:40 2016
 """
 import copy as cp
 import numpy as np
+import idtxl_exceptions as ex
 
 
 def create_surrogates(realisations, replication_idx, n_perm, options=None):
@@ -30,11 +31,17 @@ def create_surrogates(realisations, replication_idx, n_perm, options=None):
                                                         n_repl, n_perm))
 
     if perm_type is None:
-        # Check if n_repl is high enough to allow for the requested
-        # number of permutations. If not permute samples over time
+        # Check if n_repl is high enough to allow for the requested number of
+        # permutations. If not permute samples over time and warn the user
+        # (if no. replications is low an explicit strategy for permuting
+        # over time should be used, e.g. swapping blocks or circular shift).
         if np.math.factorial(n_repl) > n_perm:
             permute_replications = True
         else:
+            ex.n_replications_low('The number of replications is too low to '
+                                  'create the necessary number of permutaions,'
+                                  ' consider specifying an alternative '
+                                  'permutation scheme.')
             permute_replications = False
     elif (perm_type == 'permute_replications' and
           np.math.factorial(n_repl) <= n_perm):
@@ -46,7 +53,7 @@ def create_surrogates(realisations, replication_idx, n_perm, options=None):
         raise ValueError('Number of samples per replications ({0}) is not high'
                          ' enough to create the sufficient number of '
                          'permutations for surrogate testing.')
-    # TODO further checks go here as elifs
+    # Add further checks as elifs here if required.
 
     if permute_replications:
         return permute_over_replications(realisations, replication_idx)
@@ -54,8 +61,30 @@ def create_surrogates(realisations, replication_idx, n_perm, options=None):
         return permute_over_time(realisations, replication_idx, options)
 
 
-def permute_over_replications():
-    return surrogates
+def permute_over_replications(realisations, replication_idx):
+    """Permute replications while keeping temporal structure intact.
+
+    Permute whole replications while keeping the temporal order of samples
+    within single replications intact.
+
+    Args:
+        realisations : numpy array
+            shape[0] realisations of shape[1] variables
+        replication_idx : numpy array
+            index of replication a realisation came from
+
+    Returns:
+        numpy array
+            permuted realisations
+    """
+
+    samples_per_repl = sum(replication_idx == replication_idx[0])
+    replications_perm = np.random.permutation(max(replication_idx))
+    replication_idx_perm = np.repeat(replications_perm, samples_per_repl)
+    realisations_perm = cp.copy(realisations)
+    realisations_perm = realisations[replication_idx_perm, :]
+    return realisations_perm
+
 
 def permute_over_time(realisations, replication_idx, perm_type, *kwargs):
     """Permute realisations in time within each replication.
@@ -98,7 +127,7 @@ def permute_over_time(realisations, replication_idx, perm_type, *kwargs):
     # Get the permutaion 'mask' for one replication (the same mask is then
     # applied to each replication).
     if perm_type == 'random':
-        perm = np.random.permutation(n_per_repl)
+        perm = np.random.permutation(samples_per_repl)
 
     elif perm_type == 'blocks':
         try:

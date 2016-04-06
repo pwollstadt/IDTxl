@@ -22,3 +22,8 @@ class IdtxlParamError(Exception):
 def opencl_missing(message):
     warnings.simplefilter('always', ImportWarning)
     warnings.warn(message, ImportWarning, stacklevel=2)
+
+
+def n_replications_low(message):
+    warnings.simplefilter('always', RuntimeWarning)
+    warnings.warn(message, RuntimeWarning, stacklevel=2)
