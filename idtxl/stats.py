@@ -12,11 +12,13 @@ import utils
 VERBOSE = True
 
 
-def network_fdr(results, alpha=0.05):
+def network_fdr(results, alpha=0.05, correct_by_target=True):
     """Perform FDR-correction on results of network inference.
 
-    Perform correction of the false discovery rate (FDR) for all significant
-    links obtained from network inference. Reference:
+    Perform correction of the false discovery rate (FDR) after network
+    analysis. FDR correction can either be applied at the target level
+    (by correcting omnibus p-values) or at the single-link level (by correcting
+    p-values of individual links). Reference:
 
         Genovese, C.R., Lazar, N.A., & Nichols, T. (2002). Thresholding of
         statistical maps in functional neuroimaging using the false discovery
@@ -28,28 +30,39 @@ def network_fdr(results, alpha=0.05):
             for one target node
         alpha : float [optional]
             critical alpha value for statistical significance
+        correct_by_target : bool
+            if true p-values are corrected on the target level and on the
+            single-link level otherwise
 
     Returns:
         dict
             input results structure pruned of non-significant links.
     """
+    res = cp.copy(results)
     # Get candidates and their test results from the results dictionary, i.e.,
     # collect results over targets.
     pval = np.arange(0)
     target_idx = np.arange(0).astype(int)
     cands = []
-    for target in results.keys():
-        if not results[target]['omnibus_sign']:  # skip if not significant
-            continue
-        n_sign = results[target]['cond_sources_pval'].size
-        pval = np.append(pval, results[target]['cond_sources_pval'])
-        target_idx = np.append(target_idx,
-                               np.ones(n_sign) * target).astype(int)
-        cands = cands + results[target]['conditional_sources']
+    if correct_by_target:
+        for target in res.keys():
+            if not res[target]['omnibus_sign']:  # skip if not significant
+                continue
+            pval = np.append(pval, res[target]['omnibus_pval'])
+            target_idx = np.append(target)
+    else:
+        for target in res.keys():
+            if not res[target]['omnibus_sign']:  # skip if not significant
+                continue
+            n_sign = res[target]['cond_sources_pval'].size
+            pval = np.append(pval, res[target]['cond_sources_pval'])
+            target_idx = np.append(target_idx,
+                                   np.ones(n_sign) * target).astype(int)
+            cands = cands + res[target]['conditional_sources']
 
-    if pval.size == 0:
-        print('No links in final results. Return ...')
-        return
+        if pval.size == 0:
+            print('No links in final results. Return ...')
+            return
 
     # Sort all p-values in ascending order.
     sort_idx = np.argsort(pval)
@@ -76,17 +89,26 @@ def network_fdr(results, alpha=0.05):
         if sign[s]:
             continue
         else:  # remove non-significant candidate and it's p-value from results
-            t = target_idx[s]
-            cand = cands[s]
-            cand_ind = results[t]['conditional_sources'].index(cand)
-            results[t]['conditional_sources'].pop(cand_ind)
-            results[t]['cond_sources_pval'] = np.delete(
-                                    results[t]['cond_sources_pval'], cand_ind)
-            results[t]['cond_sources_te'] = np.delete(
-                                    results[t]['cond_sources_te'], cand_ind)
-            results[t]['conditional_full'].pop(
-                                    results[t]['conditional_full'].index(cand))
-    return results
+            if correct_by_target:
+                t = target_idx[s]
+                res[t]['conditional_full'] = res[t]['conditional_target']
+                res[t]['cond_sources_te'] = None
+                res[t]['cond_sources_pval'] = None
+                res[t]['conditional_sources'] = []
+                res[t]['omnibus_pval'] = 1
+                res[t]['omnibus_sign'] = False
+            else:
+                t = target_idx[s]
+                cand = cands[s]
+                cand_ind = res[t]['conditional_sources'].index(cand)
+                res[t]['conditional_sources'].pop(cand_ind)
+                res[t]['cond_sources_pval'] = np.delete(
+                                    res[t]['cond_sources_pval'], cand_ind)
+                res[t]['cond_sources_te'] = np.delete(
+                                    res[t]['cond_sources_te'], cand_ind)
+                res[t]['conditional_full'].pop(
+                                    res[t]['conditional_full'].index(cand))
+    return res
 
 
 def omnibus_test(analysis_setup, data, opts):
