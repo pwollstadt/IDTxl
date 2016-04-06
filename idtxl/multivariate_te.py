@@ -47,6 +47,10 @@ class Multivariate_te(Network_analysis):
             (default=0.05)
             'cmi_calc_name' - estimator to be used for CMI calculation
             (For estimator options see the respective documentation.)
+            'add_conditionals' - force the estimator to add these conditionals
+            when estimating TE; can either be a list of variables, where each
+            variable is described as (idx process, lag wrt to current value) or
+            can be a string: 'faes' for Faes-Method
 
     Attributes:
         conditional_full : list of tuples
@@ -290,6 +294,15 @@ class Multivariate_te(Network_analysis):
             self.pvalues_sign_sources = None
             self.te_sign_sources = None
             self.min_stats_surr_table = None
+
+        # Check if the user provided a list of candidates that must go into
+        # the conditioning set. These will be added and used for TE estimation,
+        # but never tested for significance.
+        try:
+            cond = self.options['add_conditionals']
+            self._force_conditionals(cond, data)
+        except KeyError:
+            pass
 
     def _check_source_set(self, sources, n_processes):
         """Set default if no source set was provided by the user."""
@@ -569,3 +582,16 @@ class Multivariate_te(Network_analysis):
         for c in idx_list:
             lag_list[idx_list.index(c)] = (c[0], self.current_value[1] - c[1])
         return lag_list
+
+    def _force_conditionals(self, cond, data):
+        """Enforce a given conditional."""
+        if type(cond) is str:
+            if cond == 'faes':
+                cond = self._define_candidates(self.source_set,
+                                               [self.current_value[1]])
+
+        print('Adding the following variables to the conditioning set: {0}.'.
+              format(self._idx_to_lag(cond)))
+        self._append_conditional_idx(cond)
+        self._append_conditional_realisations(
+                        data.get_realisations(self.current_value, cond)[0])
