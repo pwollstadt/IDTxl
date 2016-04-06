@@ -170,7 +170,7 @@ def test_multivariate_te_lorenz_2():
     d = np.load('/home/patricia/repos/IDTxl/testing/data/'
                 'lorenz_2_exampledata.npy')
     dat = Data()
-    dat.set_data(d[:, :, :20], 'psr')
+    dat.set_data(d, 'psr')
     analysis_opts = {
         'cmi_calc_name': 'jidt_kraskov',
         'n_perm_max_stat': 21,  # 200
@@ -179,13 +179,23 @@ def test_multivariate_te_lorenz_2():
         'n_perm_max_seq': 21,  # this should be equal to the min stats b/c we
                                # reuse the surrogate table from the min stats
         }
-    lorenz_analysis = Multivariate_te(max_lag_sources=50, min_lag_sources=40,
-                                      max_lag_target=30, tau_target=3,
+    lorenz_analysis = Multivariate_te(max_lag_sources=47, min_lag_sources=42,
+                                      max_lag_target=20, tau_target=2,
+                                      options=analysis_opts)
+    # FOR DEBUGGING: add the whole history for k = 20, tau = 2 to the
+    # estimation, this makes things faster, b/c these don't have to be
+    # tested again.
+    analysis_opts['add_conditionals'] = [(1, 44), (1, 42), (1, 40), (1, 38),
+                                         (1, 36), (1, 34), (1, 32), (1, 30),
+                                         (1, 28)]
+    lorenz_analysis = Multivariate_te(max_lag_sources=60, min_lag_sources=31,
+                                      tau_sources=2,
+                                      max_lag_target=0, tau_target=1,
                                       options=analysis_opts)
     # res = lorenz_analysis.analyse_network(dat)
-    res_0 = lorenz_analysis.analyse_single_target(dat, 0)  # no coupling
+    # res_0 = lorenz_analysis.analyse_single_target(dat, 0)  # no coupling
+    # print(res_0)
     res_1 = lorenz_analysis.analyse_single_target(dat, 1)  # coupling
-    print(res_0)
     print(res_1)
 
 
@@ -217,11 +227,11 @@ def test_multivariate_te_mute():
 
     network_analysis = Multivariate_te(max_lag_sources=3, min_lag_sources=1,
                                        max_lag_target=3, options=analysis_opts)
-    res = network_analysis.analyse_network(dat)
+    res = network_analysis.analyse_network(dat, targets=[1, 2])
 
 
 if __name__ == '__main__':
-    # test_multivariate_te_mute()
+    test_multivariate_te_mute()
     # test_multivariate_te_lorenz_2()
     # test_multivariate_te_random()
-    test_multivariate_te_corr_gaussian()
+    # test_multivariate_te_corr_gaussian()
