@@ -89,8 +89,7 @@ class Multivariate_te(Network_analysis):
     # We could split this up by adding the stats options to the analyse_*
     # methods?
     def __init__(self, max_lag_sources, min_lag_sources, max_lag_target,
-                 tau_sources=1, tau_target=1, options=None):
-
+                 options, tau_sources=1, tau_target=1):
         if max_lag_target is None:
             self.max_lag_target = max_lag_sources
         else:
