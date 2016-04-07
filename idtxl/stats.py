@@ -49,7 +49,7 @@ def network_fdr(results, alpha=0.05, correct_by_target=True):
             if not res[target]['omnibus_sign']:  # skip if not significant
                 continue
             pval = np.append(pval, res[target]['omnibus_pval'])
-            target_idx = np.append(target)
+            target_idx = np.append(target_idx, target)
     else:
         for target in res.keys():
             if not res[target]['omnibus_sign']:  # skip if not significant
@@ -139,7 +139,7 @@ def omnibus_test(analysis_setup, data, opts):
     try:
         n_permutations = opts['n_perm_omnibus']
     except KeyError:
-        n_permutations = 3  # 200
+        n_permutations = 21  # 200
     try:
         alpha = opts['alpha_omnibus']
     except KeyError:
@@ -228,7 +228,7 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
     try:
         n_perm = opts['n_perm_max_stat']
     except KeyError:
-        n_perm = 3  # 200
+        n_perm = 21  # 200
     try:
         alpha = opts['alpha_max_stat']
     except KeyError:
