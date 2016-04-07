@@ -134,7 +134,9 @@ class Data():
 
         # reorder array dims if necessary
         if dim_order[0] != 'p':
-            data = data.swapaxes(0, dim_order.index('p'))
+            ind_p = dim_order.index('p')
+            data = data.swapaxes(0, ind_p)
+            dim_order = utils.swap_chars(dim_order, 0, ind_p)
         if dim_order[1] != 's':
             data = data.swapaxes(1, dim_order.index('s'))
         return data
