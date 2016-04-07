@@ -53,11 +53,11 @@ class Multivariate_te(Network_analysis):
             can be a string: 'faes' for Faes-Method
 
     Attributes:
-        conditional_full : list of tuples
+        selected_vars_full : list of tuples
             samples in the full conditional set, (idx process, idx sample)
-        conditional_sources : list of tuples
+        selected_vars_sources : list of tuples
             source samples in the conditional set, (idx process, idx sample)
-        conditional_target : list of tuples
+        selected_vars_target : list of tuples
             target samples in the conditional set, (idx process, idx sample)
         current_value : tuple
             index of the current value in TE estimation, (idx process,
@@ -236,15 +236,17 @@ class Multivariate_te(Network_analysis):
         # Clean up and return results.
         if VERBOSE:
             print('final source samples: {0}'.format(
-                    self._idx_to_lag(self.conditional_sources)))
+                    self._idx_to_lag(self.selected_vars_sources)))
             print('final target samples: {0}'.format(
-                    self._idx_to_lag(self.conditional_target)))
+                    self._idx_to_lag(self.selected_vars_target)))
         self._clean_up()
         results = {
             'current_value': self.current_value,
-            'conditional_full': self._idx_to_lag(self.conditional_full),
-            'conditional_sources': self._idx_to_lag(self.conditional_sources),
-            'conditional_target': self._idx_to_lag(self.conditional_target),
+            'selected_vars_full': self._idx_to_lag(self.selected_vars_full),
+            'selected_vars_sources': self._idx_to_lag(
+                                                self.selected_vars_sources),
+            'selected_vars_target': self._idx_to_lag(
+                                                self.selected_vars_target),
             'omnibus_te': self.te_omnibus,
             'omnibus_pval': self.pvalue_omnibus,
             'omnibus_sign': self.sign_omnibus,
@@ -283,11 +285,11 @@ class Multivariate_te(Network_analysis):
 
         # Reset all attributes to inital values if the instance has been used
         # before.
-        if self.conditional_full:
-            self.conditional_full = []
-            self._conditional_realisations = None
-            self.conditional_sources = []
-            self.conditional_target = []
+        if self.selected_vars_full:
+            self.selected_vars_full = []
+            self._selected_vars_realisations = None
+            self.selected_vars_sources = []
+            self.selected_vars_target = []
             self.te_omnibus = None
             self.sign_sign_sources = None
             self.pvalue_omnibus = None
@@ -337,8 +339,8 @@ class Multivariate_te(Network_analysis):
                    'adding point at t-1 in the target'))
             idx = (self.current_value[0], self.current_value[1] - 1)
             realisations = data.get_realisations(self.current_value, [idx])[0]
-            self._append_conditional_idx([idx])
-            self._append_conditional_realisations(realisations)
+            self._append_selected_vars_idx([idx])
+            self._append_selected_vars_realisations(realisations)
 
     def _include_source_candidates(self, data):
         """Test candidates in the source's past."""
@@ -372,7 +374,7 @@ class Multivariate_te(Network_analysis):
         Returns:
             list of tuples
                 indices of the conditional set created from the candidate set
-            conditional_realisations : numpy array
+            selected_vars_realisations : numpy array
                 realisations of the conditional set
         """
         success = False
@@ -387,7 +389,7 @@ class Multivariate_te(Network_analysis):
                 temp_te[i] = self._cmi_calculator.estimate(
                                         candidate_realisations,
                                         self._current_value_realisations,
-                                        self._conditional_realisations,
+                                        self._selected_vars_realisations,
                                         self.options)
                 i += 1
 
@@ -410,8 +412,8 @@ class Multivariate_te(Network_analysis):
                     print(' -- significant')
                 success = True
                 candidate_set.pop(np.argmax(temp_te))
-                self._append_conditional_idx([max_candidate])
-                self._append_conditional_realisations(
+                self._append_selected_vars_idx([max_candidate])
+                self._append_selected_vars_realisations(
                             data.get_realisations(self.current_value,
                                                   [max_candidate])[0])
             else:
@@ -436,15 +438,16 @@ class Multivariate_te(Network_analysis):
                 parameters for estimation and statistical testing
 
         """
-        while self.conditional_sources:  # FOR LATER we don't need to test the last included in the first round
+        # FOR LATER we don't need to test the last included in the first round
+        while self.selected_vars_sources:
             # Find the candidate with the minimum TE into the target.
-            temp_te = np.empty(len(self.conditional_sources))
+            temp_te = np.empty(len(self.selected_vars_sources))
             i = 0
-            for candidate in self.conditional_sources:
+            for candidate in self.selected_vars_sources:
                 # Separate the candidate realisations and all other
                 # realisations to test the candidate's individual contribution.
                 [temp_cond, temp_cand] = self._separate_realisations(
-                                                    self.conditional_full,
+                                                    self.selected_vars_full,
                                                     candidate)
                 temp_te[i] = self._cmi_calculator.estimate(
                                             temp_cand,
@@ -455,15 +458,15 @@ class Multivariate_te(Network_analysis):
 
             # Test min TE for significance with minimum statistics.
             te_min_candidate = min(temp_te)
-            min_candidate = self.conditional_sources[np.argmin(temp_te)]
+            min_candidate = self.selected_vars_sources[np.argmin(temp_te)]
             if VERBOSE:
                 print('testing {0} from candidate set {1}'.format(
                                 self._idx_to_lag([min_candidate])[0],
-                                self._idx_to_lag(self.conditional_sources)),
-                                end='')
+                                self._idx_to_lag(self.selected_vars_sources)),
+                      end='')
             [significant, p, surr_table] = stats.min_statistic(
                                               self, data,
-                                              self.conditional_sources,
+                                              self.selected_vars_sources,
                                               te_min_candidate,
                                               self.options)
 
@@ -483,11 +486,11 @@ class Multivariate_te(Network_analysis):
 
     def _test_final_conditional(self, data):  # TODO test this!
         """Perform statistical test on the final conditional set."""
-        if not self.conditional_sources:
+        if not self.selected_vars_sources:
             print('---------------------------- no sources found')
             return
         else:
-            print(self._idx_to_lag(self.conditional_full))
+            print(self._idx_to_lag(self.selected_vars_full))
             [s, p, te] = stats.omnibus_test(self, data, self.options)
             self.te_omnibus = te
             self.sign_omnibus = s
@@ -500,14 +503,14 @@ class Multivariate_te(Network_analysis):
                 # backwards over the candidates to remove them iteratively.
                 for i in range(s.shape[0] - 1, -1, -1):
                     if not s[i]:
-                        self._remove_candidate(self.conditional_sources[i])
+                        self._remove_candidate(self.selected_vars_sources[i])
                         p = np.delete(p, i)
                         te = np.delete(te, i)
                 self.pvalues_sign_sources = p
                 self.te_sign_sources = te
             else:
-                self.conditional_sources = []
-                self.conditional_full = self.conditional_target
+                self.selected_vars_sources = []
+                self.selected_vars_full = self.selected_vars_target
 
     def _define_candidates(self, processes, samples):
         """Build a list of candidate indices.
@@ -532,7 +535,7 @@ class Multivariate_te(Network_analysis):
 
         Return the realisations of a single index and the realisations of the
         remaining set of indexes. The function takes realisations from the
-        array in self._conditional_realisations. This allows to reuse the
+        array in self._selected_vars_realisations. This allows to reuse the
         collected realisations when pruning the conditional set after
         candidates have been included.
 
@@ -549,30 +552,31 @@ class Multivariate_te(Network_analysis):
                 realisations of the variable at the single index
         """
         # Get realisations for all indices from the class attribute
-        # ._conditional_realisations. Find the respective columns.
+        # ._selected_vars_realisations. Find the respective columns.
         idx_remaining = cp.copy(idx_full)
         idx_remaining.pop(idx_remaining.index(idx_single))
-        array_col_single = self.conditional_full.index(idx_single)
+        array_col_single = self.selected_vars_full.index(idx_single)
         array_col_full = np.zeros(len(idx_full)).astype(int)
         i = 0
         for idx in idx_remaining:  # find the columns with realisations
-            array_col_full[i] = self.conditional_full.index(idx)
+            array_col_full[i] = self.selected_vars_full.index(idx)
             i += 1
 
         real_single = np.expand_dims(
-                        self._conditional_realisations[:, array_col_single],
+                        self._selected_vars_realisations[:, array_col_single],
                         axis=1)
         if len(idx_full) == 1:
             real_remaining = None  # so the JIDT estimator doesn't break
         else:
-            real_remaining = self._conditional_realisations[:, array_col_full]
+            real_remaining = self._selected_vars_realisations[:,
+                                                              array_col_full]
         return real_remaining, real_single
 
     def _clean_up(self):
         """Remove temporary data at the end of the analysis."""
         self._current_value_realisations = None
-        self._conditional_sources_realisations = None
-        self._conditional_target_realisations = None
+        self._selected_vars_sources_realisations = None
+        self._selected_vars_target_realisations = None
         self._current_value_realisations = None
         self.min_stats_surr_table = None
 
@@ -592,6 +596,6 @@ class Multivariate_te(Network_analysis):
 
         print('Adding the following variables to the conditioning set: {0}.'.
               format(self._idx_to_lag(cond)))
-        self._append_conditional_idx(cond)
-        self._append_conditional_realisations(
+        self._append_selected_vars_idx(cond)
+        self._append_selected_vars_realisations(
                         data.get_realisations(self.current_value, cond)[0])

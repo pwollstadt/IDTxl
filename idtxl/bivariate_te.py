@@ -51,11 +51,11 @@ class Bivariate_te(Network_analysis):
             can be a string: 'faes' for Faes-Method
 
     Attributes:
-        conditional_full : list of tuples
+        selected_vars_full : list of tuples
             samples in the full conditional set, (idx process, idx sample)
-        conditional_sources : list of tuples
+        selected_vars_sources : list of tuples
             source samples in the conditional set, (idx process, idx sample)
-        conditional_target : list of tuples
+        selected_vars_target : list of tuples
             target samples in the conditional set, (idx process, idx sample)
         current_value : tuple
             index of the current value in TE estimation, (idx process,
@@ -235,15 +235,17 @@ class Bivariate_te(Network_analysis):
         # Clean up and return results.
         if VERBOSE:
             print('final source samples: {0}'.format(
-                    self._idx_to_lag(self.conditional_sources)))
+                    self._idx_to_lag(self.selected_vars_sources)))
             print('final target samples: {0}'.format(
-                    self._idx_to_lag(self.conditional_target)))
+                    self._idx_to_lag(self.selected_vars_target)))
         self._clean_up()
         results = {
             'current_value': self.current_value,
-            'conditional_full': self._idx_to_lag(self.conditional_full),
-            'conditional_sources': self._idx_to_lag(self.conditional_sources),
-            'conditional_target': self._idx_to_lag(self.conditional_target),
+            'selected_vars_full': self._idx_to_lag(self.selected_vars_full),
+            'selected_vars_sources': self._idx_to_lag(
+                                                self.selected_vars_sources),
+            'selected_vars_target': self._idx_to_lag(
+                                                self.selected_vars_target),
             'omnibus_te': self.te_omnibus,
             'omnibus_pval': self.pvalue_omnibus,
             'omnibus_sign': self.sign_omnibus,
@@ -282,11 +284,11 @@ class Bivariate_te(Network_analysis):
 
         # Reset all attributes to inital values if the instance has been used
         # before.
-        if self.conditional_full:
-            self.conditional_full = []
-            self._conditional_realisations = None
-            self.conditional_sources = []
-            self.conditional_target = []
+        if self.selected_vars_full:
+            self.selected_vars_full = []
+            self._selected_vars_realisations = None
+            self.selected_vars_sources = []
+            self.selected_vars_target = []
             self.te_omnibus = None
             self.sign_sign_sources = None
             self.pvalue_omnibus = None
@@ -336,8 +338,8 @@ class Bivariate_te(Network_analysis):
                    'adding point at t-1 in the target'))
             idx = (self.current_value[0], self.current_value[1] - 1)
             realisations = data.get_realisations(self.current_value, [idx])[0]
-            self._append_conditional_idx([idx])
-            self._append_conditional_realisations(realisations)
+            self._append_selected_vars_idx([idx])
+            self._append_selected_vars_realisations(realisations)
 
     def _include_source_candidates(self, data):
         """Test candidates in the source's past."""
@@ -371,18 +373,18 @@ class Bivariate_te(Network_analysis):
         Returns:
             list of tuples
                 indices of the conditional set created from the candidate set
-            conditional_realisations : numpy array
+            selected_vars_realisations : numpy array
                 realisations of the conditional set
         """
-        self._append_conditional_idx(candidate_set)
-        self._append_conditional_realisations(
+        self._append_selected_vars_idx(candidate_set)
+        self._append_selected_vars_realisations(
                 data.get_realisations(self.current_value, candidate_set)[0])
         [s, p, te] = stats.max_statistic_sequential(self, data, self.options)
         # Remove non-significant sources from the candidate set. Loop
         # backwards over the candidates to remove them iteratively.
         for i in range(s.shape[0] - 1, -1, -1):
             if not s[i]:
-                self._remove_candidate(self.conditional_sources[i])
+                self._remove_candidate(self.selected_vars_sources[i])
                 p = np.delete(p, i)
                 te = np.delete(te, i)
         self.pvalues_sign_sources = p
@@ -409,8 +411,8 @@ class Bivariate_te(Network_analysis):
     def _clean_up(self):
         """Remove temporary data (realisations) at the end of the analysis."""
         self._current_value_realisations = None
-        self._conditional_sources_realisations = None
-        self._conditional_target_realisations = None
+        self._selected_vars_sources_realisations = None
+        self._selected_vars_target_realisations = None
         self._current_value_realisations = None
         self.min_stats_surr_table = None
 
@@ -430,6 +432,6 @@ class Bivariate_te(Network_analysis):
 
         print('Adding the following variables to the conditioning set: {0}.'.
               format(self._idx_to_lag(cond)))
-        self._append_conditional_idx(cond)
-        self._append_conditional_realisations(
+        self._append_selected_vars_idx(cond)
+        self._append_selected_vars_realisations(
                         data.get_realisations(self.current_value, cond)[0])

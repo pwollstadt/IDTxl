@@ -58,7 +58,7 @@ def network_fdr(results, alpha=0.05, correct_by_target=True):
             pval = np.append(pval, res[target]['cond_sources_pval'])
             target_idx = np.append(target_idx,
                                    np.ones(n_sign) * target).astype(int)
-            cands = cands + res[target]['conditional_sources']
+            cands = cands + res[target]['selected_vars_sources']
 
         if pval.size == 0:
             print('No links in final results. Return ...')
@@ -91,23 +91,23 @@ def network_fdr(results, alpha=0.05, correct_by_target=True):
         else:  # remove non-significant candidate and it's p-value from results
             if correct_by_target:
                 t = target_idx[s]
-                res[t]['conditional_full'] = res[t]['conditional_target']
+                res[t]['selected_vars_full'] = res[t]['selected_vars_target']
                 res[t]['cond_sources_te'] = None
                 res[t]['cond_sources_pval'] = None
-                res[t]['conditional_sources'] = []
+                res[t]['selected_vars_sources'] = []
                 res[t]['omnibus_pval'] = 1
                 res[t]['omnibus_sign'] = False
             else:
                 t = target_idx[s]
                 cand = cands[s]
-                cand_ind = res[t]['conditional_sources'].index(cand)
-                res[t]['conditional_sources'].pop(cand_ind)
+                cand_ind = res[t]['selected_vars_sources'].index(cand)
+                res[t]['selected_vars_sources'].pop(cand_ind)
                 res[t]['cond_sources_pval'] = np.delete(
                                     res[t]['cond_sources_pval'], cand_ind)
                 res[t]['cond_sources_te'] = np.delete(
                                     res[t]['cond_sources_te'], cand_ind)
-                res[t]['conditional_full'].pop(
-                                    res[t]['conditional_full'].index(cand))
+                res[t]['selected_vars_full'].pop(
+                                    res[t]['selected_vars_full'].index(cand))
     return res
 
 
@@ -145,14 +145,14 @@ def omnibus_test(analysis_setup, data, opts):
     except KeyError:
         alpha = 0.05
     print('no. target sources: {0}, no. sources: {1}'.format(
-                                    len(analysis_setup.conditional_target),
-                                    len(analysis_setup.conditional_sources)))
+                                    len(analysis_setup.selected_vars_target),
+                                    len(analysis_setup.selected_vars_sources)))
 
     # Create temporary variables b/c realisations for sources and targets are
     # created on the fly, which is costly, so we want to re-use them after
     # creation. (This does not apply to the current value realisations).
-    cond_source_realisations = analysis_setup._conditional_sources_realisations
-    cond_target_realisations = analysis_setup._conditional_target_realisations
+    cond_source_realisations = analysis_setup._selected_vars_sources_realisations
+    cond_target_realisations = analysis_setup._selected_vars_target_realisations
     te_orig = analysis_setup._cmi_calculator.estimate(
                                     cond_source_realisations,
                                     analysis_setup._current_value_realisations,
@@ -174,7 +174,7 @@ def omnibus_test(analysis_setup, data, opts):
         if permute_over_replications:
             surr_cond_real = data.permute_data(
                                         analysis_setup.current_value,
-                                        analysis_setup.conditional_sources)[0]
+                                        analysis_setup.selected_vars_sources)[0]
         else:
             surr_cond_real = _permute_realisations(
                                             cond_source_realisations,
@@ -290,11 +290,11 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
 
     # Calculate TE for each candidate in the conditional source set and sort
     # TE values.
-    individual_te = np.empty(len(analysis_setup.conditional_sources))
+    individual_te = np.empty(len(analysis_setup.selected_vars_sources))
     i = 0
-    for conditional in analysis_setup.conditional_sources:
+    for conditional in analysis_setup.selected_vars_sources:
         [temp_cond, temp_cand] = analysis_setup._separate_realisations(
-                                            analysis_setup.conditional_sources,
+                                            analysis_setup.selected_vars_sources,
                                             conditional)
         individual_te[i] = analysis_setup._cmi_calculator.estimate(
                                     temp_cand,
@@ -302,20 +302,20 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
                                     temp_cond)
         i += 1
 
-    conditional_order = utils.argsort_descending(individual_te)
+    selected_vars_order = utils.argsort_descending(individual_te)
     individual_te_sorted = utils.sort_descending(individual_te)
 
     # Re-use or create surrogate table and sort it.
     if analysis_setup.min_stats_surr_table is not None:
         surr_table = analysis_setup.min_stats_surr_table  # saves some time
-        assert len(analysis_setup.conditional_sources) == surr_table.shape[0]
+        assert len(analysis_setup.selected_vars_sources) == surr_table.shape[0]
         assert (n_permutations <= surr_table.shape[1]), ('No. permutations in '
             'min-table ({0}) not sufficient, requested: {1}.'.format(
                 surr_table.shape[1], n_permutations))
     else:
         surr_table = _create_surrogate_table(
                                         analysis_setup, data,
-                                        analysis_setup.conditional_sources,
+                                        analysis_setup.selected_vars_sources,
                                         n_permutations)
     max_distribution = _sort_table_max(surr_table)
 
@@ -335,8 +335,8 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
             break
 
     # Get back original order and return results.
-    significance = significance[conditional_order]
-    pvalue = pvalue[conditional_order]
+    significance = significance[selected_vars_order]
+    pvalue = pvalue[selected_vars_order]
     return significance, pvalue, individual_te
 
 
@@ -446,7 +446,7 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
             surr_table[idx_c, perm] = analysis_setup._cmi_calculator.estimate(
                         surr_candidate_realisations,
                         current_value_realisations,
-                        analysis_setup._conditional_realisations,
+                        analysis_setup._selected_vars_realisations,
                         analysis_setup.options)
             if VERBOSE:
                 print('\b\b\b{num:03d}'.format(num=perm + 1), end='')
