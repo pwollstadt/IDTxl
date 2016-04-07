@@ -15,8 +15,8 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
 
     (1) analysis parameters
     (2) 'analysis pattern', i.e., indices of random variables used for
-    network inference (e.g. current value and conditional in transfer entropy
-    estimation)
+        network inference (e.g. current value and conditional in transfer
+        entropy estimation)
     (3) temporary data for analysis, i.e., realisations of the variables
 
     The class provide routines to check user input and set defaults. The
