@@ -26,7 +26,7 @@ def test_circular_shift():
     n = 50
     max_shift = 10
     surr = surrogates._circular_shift(n, max_shift)
-    assert (surr == np.hstack(np.arange(max_shift), )).all()
+    assert ((n - surr[0]) <= max_shift), 'Actual shift exceeded max_shift.'
 
 
 def test_swap_local():
@@ -34,7 +34,6 @@ def test_swap_local():
 
 
 if __name__ == '__main__':
-
     test_swap_blocks()
     test_circular_shift()
     test_swap_local()

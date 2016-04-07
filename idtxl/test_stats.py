@@ -33,7 +33,8 @@ def test_max_statistic_sequential():
         'n_perm_omnibus': 21,
         'n_perm_max_seq': 21,
         }
-    setup = Multivariate_te(5, opts)
+    setup = Multivariate_te(max_lag_sources=5, min_lag_sources=1,
+                            max_lag_target=5, options=opts)
     setup.current_value = (0, 4)
     setup.conditional_sources = [(1, 1), (1, 2)]
     setup.conditional_full = [(0, 1), (1, 1), (1, 2)]
@@ -49,18 +50,21 @@ def test_network_fdr():
         'conditional_sources': [(1, 1), (1, 2), (1, 3), (2, 1), (2, 0)],
         'conditional_full': [(0, 1), (0, 2), (0, 3), (1, 1), (1, 2), (1, 3),
                              (2, 1), (2, 0)],
+        'omnibus_pval': 0.0001,
         'omnibus_sign': True,
         'cond_sources_pval': np.array([0.001, 0.0014, 0.01, 0.045, 0.047])
         }
     target_1 = {
         'conditional_sources': [(1, 2), (2, 1), (2, 2)],
         'conditional_full': [(1, 0), (1, 1), (1, 2), (2, 1), (2, 2)],
+        'omnibus_pval': 0.031,
         'omnibus_sign': True,
         'cond_sources_pval': np.array([0.00001, 0.00014, 0.01])
         }
     target_2 = {
         'conditional_sources': [],
         'conditional_full': [(2, 0), (2, 1)],
+        'omnibus_pval': 0.41,
         'omnibus_sign': False,
         'cond_sources_pval': None
         }

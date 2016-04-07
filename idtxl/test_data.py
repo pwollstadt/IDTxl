@@ -6,7 +6,7 @@ Created on Mon Apr  4 16:36:41 2016
 """
 import numpy as np
 from data import Data
-from . import utils
+import utils
 
 
 def test_set_data():
@@ -27,25 +27,25 @@ def test_set_data():
     d = Data(dat, dim_order='psr')               # order od dimensions
     assert (d.data.shape[0] == 2), ('Class data does not match input, number '
                                     'of processes wrong.')
-    assert (d.data.shape[0] == 10000), ('Class data does not match input, '
-                                        'number of samples wrong.')
-    assert (d.data.shape[0] == 5), ('Class data does not match input, number '
+    assert (d.data.shape[1] == 1000), ('Class data does not match input, '
+                                       'number of samples wrong.')
+    assert (d.data.shape[2] == 5), ('Class data does not match input, number '
                                     'of replications wrong.')
     dat = np.arange(3000).reshape((3, 1000))  # random data with incorrect
     d = Data(dat, dim_order='ps')            # order of dimensions
     assert (d.data.shape[0] == 3), ('Class data does not match input, number '
                                     'of processes wrong.')
-    assert (d.data.shape[0] == 1000), ('Class data does not match input, '
+    assert (d.data.shape[1] == 1000), ('Class data does not match input, '
                                        'number of samples wrong.')
-    assert (d.data.shape[0] == 1), ('Class data does not match input, number '
+    assert (d.data.shape[2] == 1), ('Class data does not match input, number '
                                     'of replications wrong.')
     dat = np.arange(5000)
     d.set_data(dat, 's')
     assert (d.data.shape[0] == 1), ('Class data does not match input, number '
                                     'of processes wrong.')
-    assert (d.data.shape[0] == 5000), ('Class data does not match input, '
+    assert (d.data.shape[1] == 5000), ('Class data does not match input, '
                                        'number of samples wrong.')
-    assert (d.data.shape[0] == 1), ('Class data does not match input, number '
+    assert (d.data.shape[2] == 1), ('Class data does not match input, number '
                                     'of replications wrong.')
 
 
@@ -65,3 +65,8 @@ def test_data_normalisation():
                                                       'source did not work.')
     assert (target_std == data.data[1, :, 0]).all(), ('Standardising the '
                                                       'target did not work.')
+
+
+if __name__ == '__main__':
+    test_data_normalisation()
+    test_set_data()
