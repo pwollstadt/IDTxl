@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+
+
+
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    
+    <title>utils &mdash; IDTxl 0.1 documentation</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    
+
+<link rel="stylesheet" href="../_static/css/basicstrap-base.css" type="text/css" />
+<link rel="stylesheet" id="current-theme" href="../_static/css/bootstrap3/bootswatch-spacelab.css" type="text/css" />
+<link rel="stylesheet" id="current-adjust-theme" href="../_static/css/adjust_theme/bootswatch-spacelab.css" type="text/css" />
+
+<link rel="stylesheet" href="../_static/css/font-awesome.min.css">
+
+<style type="text/css">
+  body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+  }
+</style>
+
+<link rel="stylesheet" href="../_static/css/basicstrap.css" type="text/css" />
+<link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+<script type="text/javascript">
+  var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:    '../',
+            VERSION:     '0.1',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE:  true
+  };
+</script>
+    <script type="text/javascript" src="../_static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/bootstrap3.min.js"></script>
+<script type="text/javascript" src="../_static/js/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="../_static/js/basicstrap.js"></script>
+<script type="text/javascript">
+</script>
+    <link rel="top" title="IDTxl 0.1 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div id="navbar-top" class="navbar navbar-fixed-top navbar-default" role="navigation" aria-label="top navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../index.html">IDTxl 0.1 documentation</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+
+            
+              <li><a href="../py-modindex.html" title="Python Module Index" >modules </a></li>
+              <li><a href="../genindex.html" title="General Index" accesskey="I">index </a></li>
+              <li><a href="index.html" accesskey="U">Module code</a></li>
+            
+
+            <li class="visible-xs">
+                <form class="search form-search form-inline navbar-form navbar-right sp-searchbox" action="../search.html" method="get">
+                  <div class="input-append input-group">
+                    <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+                    <span class="input-group-btn">
+                    <input type="submit" class="btn" value="Go" />
+                    </span>
+                  </div>
+                  <input type="hidden" name="check_keywords" value="yes" />
+                  <input type="hidden" name="area" value="default" />
+                </form>
+            </li>
+
+            
+
+          </ul>
+
+        </div>
+      </div>
+    </div>
+    
+
+    <!-- container -->
+    <div class="container">
+
+      <!-- row -->
+      <div class="row">
+        
+        
+
+        <div class="col-md-9" id="content-wrapper">
+          <div class="document" role="main">
+            <div class="documentwrapper">
+              <div class="bodywrapper">
+                <div class="body">
+                  
+  <h1>Source code for utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pprint</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="swap_chars"><a class="viewcode-back" href="../idtxl_helper.html#utils.swap_chars">[docs]</a><span class="k">def</span> <span class="nf">swap_chars</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">i_1</span><span class="p">,</span> <span class="n">i_2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Swap to characters in a string.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; print(swap_chars(&#39;hellothere&#39;, 2, 6))</span>
+<span class="sd">        &#39;hehlotlere&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">i_1</span> <span class="o">&gt;</span> <span class="n">i_2</span><span class="p">:</span>
+        <span class="n">i_1</span><span class="p">,</span> <span class="n">i_2</span> <span class="o">=</span> <span class="n">i_2</span><span class="p">,</span> <span class="n">i_1</span>
+    <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">i_1</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="n">i_2</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="n">i_1</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">i_2</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="n">i_1</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="n">i_2</span><span class="o">+</span><span class="mi">1</span><span class="p">:]])</span></div>
+
+
+<div class="viewcode-block" id="print_dict"><a class="viewcode-back" href="../idtxl_helper.html#utils.print_dict">[docs]</a><span class="k">def</span> <span class="nf">print_dict</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Use Python&#39;s pretty printer to print dictionaries to the console.&quot;&quot;&quot;</span>
+    <span class="n">pp</span> <span class="o">=</span> <span class="n">pprint</span><span class="o">.</span><span class="n">PrettyPrinter</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="n">indent</span><span class="p">)</span>
+    <span class="n">pp</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">d</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="standardise"><a class="viewcode-back" href="../idtxl_helper.html#utils.standardise">[docs]</a><span class="k">def</span> <span class="nf">standardise</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">dimension</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Z-standardise a numpy array along a given dimension.</span>
+
+<span class="sd">    Standardise array along the axis defined in dimension using the denominator</span>
+<span class="sd">    (N - df) for the calculation of the standard deviation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        a : numpy array</span>
+<span class="sd">            data to be standardised</span>
+<span class="sd">        dimension : int [optional]</span>
+<span class="sd">            dimension along which array should be standardised</span>
+<span class="sd">        df : int</span>
+<span class="sd">            degrees of freedom for the denominator of the standard derivation</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        numpy array</span>
+<span class="sd">            standardised data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">a</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">dimension</span><span class="p">))</span> <span class="o">/</span> <span class="n">a</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">dimension</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="n">df</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">a</span></div>
+
+
+<div class="viewcode-block" id="sort_descending"><a class="viewcode-back" href="../idtxl_helper.html#utils.sort_descending">[docs]</a><span class="k">def</span> <span class="nf">sort_descending</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sort array in descending order.&quot;&quot;&quot;</span>
+    <span class="c1"># http://stackoverflow.com/questions/26984414/</span>
+    <span class="c1">#       efficiently-sorting-a-numpy-array-in-descending-order</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">a</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+<span class="k">def</span> <span class="nf">argsort_descending</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+    <span class="c1"># http://stackoverflow.com/questions/16486252/</span>
+    <span class="c1">#       is-it-possible-to-use-argsort-in-descending-order</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="remove_row"><a class="viewcode-back" href="../idtxl_helper.html#utils.remove_row">[docs]</a><span class="k">def</span> <span class="nf">remove_row</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Remove a row from a numpy array.</span>
+
+<span class="sd">    This is faster than logical indexing (&#39;25 times faster&#39;), because it does</span>
+<span class="sd">    not make copies, see</span>
+<span class="sd">    http://scipy.github.io/old-wiki/pages/PerformanceTips</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        a: 2-dimensional numpy array</span>
+<span class="sd">        i: row index to be removed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:,</span> <span class="p">:]</span>
+    <span class="n">b</span><span class="p">[:</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="k">return</span> <span class="n">b</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span></div>
+
+
+<div class="viewcode-block" id="remove_column"><a class="viewcode-back" href="../idtxl_helper.html#utils.remove_column">[docs]</a><span class="k">def</span> <span class="nf">remove_column</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Remove a column from a numpy array.</span>
+
+<span class="sd">    This is faster than logical indexing (&#39;25 times faster&#39;), because it does</span>
+<span class="sd">    not make copies, see</span>
+<span class="sd">    http://scipy.github.io/old-wiki/pages/PerformanceTips</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        a: 2-dimensional numpy array</span>
+<span class="sd">        i: column index to be removed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">b</span><span class="p">[:,</span> <span class="n">j</span><span class="p">:]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:,</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">b</span><span class="p">[:,</span> <span class="p">:</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:,</span> <span class="p">:</span><span class="n">j</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">b</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span></div>
+
+<span class="k">def</span> <span class="nf">autocorrelation</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="c1"># TODO check this, function taken from here:</span>
+    <span class="c1"># http://stackoverflow.com/questions/14297012/</span>
+    <span class="c1">#       estimate-autocorrelation-using-python</span>
+    <span class="c1"># after Wikipedie:</span>
+    <span class="c1"># https://en.wikipedia.org/wiki/Autocorrelation#Estimation</span>
+<span class="c1">#==============================================================================</span>
+<span class="c1">#</span>
+<span class="c1">#     n = len(x)</span>
+<span class="c1">#     variance = x.var()</span>
+<span class="c1">#     x = x - x.mean()</span>
+<span class="c1">#     r = np.correlate(x, x, mode = &#39;full&#39;)[-n:]</span>
+<span class="c1">#     # assert n.allclose(r, N.array([(x[:n-k]*x[-(n-k):]).sum() for k in range(n)]))</span>
+<span class="c1">#     result = r / (variance * (n.arange(n, 0, -1)))</span>
+<span class="c1">#==============================================================================</span>
+    <span class="k">return</span> <span class="mi">3</span>
+</pre></div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+         
+<div class="col-md-3 hidden-xs" id="sidebar-wrapper">
+  <div class="sidebar hidden-xs" role="navigation" aria-label="main navigation">
+<div id="searchbox" role="search">
+  <h3>Quick search</h3>
+  <form class="search form-inline" action="../search.html" method="get">
+      <div class="input-append input-group">
+        <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+        <span class="input-group-btn">
+        <input type="submit" class="btn" value="Go" />
+        </span>
+      </div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+  </div>
+</div> 
+        
+      </div><!-- /row -->
+
+      <!-- row -->
+      <div class="row footer-relbar">
+<div id="navbar-related" class=" related navbar navbar-default" role="navigation" aria-label="related navigation">
+  <div class="navbar-inner">
+    <ul class="nav navbar-nav ">
+        <li><a href="../index.html">IDTxl 0.1 documentation</a></li>
+    </ul>
+<ul class="nav navbar-nav pull-right hidden-xs hidden-sm">
+      
+        <li><a href="../py-modindex.html" title="Python Module Index" >modules</a></li>
+        <li><a href="../genindex.html" title="General Index" >index</a></li>
+        <li><a href="index.html" >Module code</a></li>
+        <li><a href="#">top</a></li> 
+      
+    </ul>
+  </div>
+</div>
+      </div><!-- /row -->
+
+      <!-- footer -->
+      <footer role="contentinfo">
+          &copy; Copyright 2016, Patricia Wollstadt, Joseph T. Lizier, Michael Wibral.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.3.6.
+      </footer>
+      <!-- /footer -->
+
+    </div>
+    <!-- /container -->
+
+  </body>
+</html>

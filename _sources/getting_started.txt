@@ -9,8 +9,8 @@ The green arrows designate "more info" links leading to advanced sections about
 the described task.
 
 
-Getting IDTxl
---------------
+Installing IDTxl
+----------------
 
 Install IDTxl from `GitHub <https://github.com/pwollstadt/IDTxl>`_ with ::
 

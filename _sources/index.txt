@@ -26,9 +26,11 @@ Table of contents
 Module contents
 --------------------
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
-   idtxl.rst
+   idtxl_network_inference.rst
+   idtxl_estimators.rst
+   idtxl_helper.rst
 
 Indices and tables
 ==================

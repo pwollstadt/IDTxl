@@ -1,5 +1,5 @@
-idtxl package
-=============
+Algorithms for network inference
+================================
 
 idtxl.network_analysis.Network_analysis class
 ---------------------------------------------
@@ -18,7 +18,3 @@ idtxl.bivariate_te.Bivariate_te class
 .. autoclass:: bivariate_te.Bivariate_te
     :members:
 
-idtxl.utils module
-----------------------------
-.. automodule:: utils
-    :members:
