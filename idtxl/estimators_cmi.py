@@ -12,14 +12,15 @@ def opencl_kraskov(self, var1, var2, conditional, opts=None):
     Calculate the conditional mutual information between three variables using
     an opencl-based Kraskov type 1 estimator. References:
 
-        Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating
-        mutual information. Physical review E, 69(6), 066138.
+    Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating mutual
+    information. Physical review E, 69(6), 066138.
 
     This function is ment to be imported into the set_estimator module and used
     as a method in the Estimator_cmi class.
 
     Args:
         self : instance of Estimator_cmi
+            function is supposed to be used as part of the Estimator_cmi class
         var1 : numpy array
             realisations of the first random variable, where dimensions are
             realisations x variable dimension
@@ -29,10 +30,11 @@ def opencl_kraskov(self, var1, var2, conditional, opts=None):
             realisations of the random variable for conditioning
         opts : dict [optional]
             sets estimation parameters:
-            'kraskov_k' - no. nearest neighbours for KNN search (default=4)
-            'theiler_t' - no. next temporal neighbours ignored in KNN and
-            range searches (default='ACT', the autocorr. time of the target)
-            'noise_level' - random noise added to the data (default=1e-8)
+
+            - 'kraskov_k' - no. nearest neighbours for KNN search (default=4)
+            - 'theiler_t' - no. next temporal neighbours ignored in KNN and
+              range searches (default='ACT', the autocorr. time of the target)
+            - 'noise_level' - random noise added to the data (default=1e-8)
 
     Returns:
         float
@@ -139,17 +141,18 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
     (is None), the function returns the mutual information between var1 and
     var2. References:
 
-        Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating
-        mutual information. Physical Review E, 69(6), 066138.
+    Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating mutual
+    information. Physical review E, 69(6), 066138.
 
-        Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-        studying the dynamics of complex systems. Front. Robot. AI, 1(11).
+    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
+    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
 
     This function is ment to be imported into the set_estimator module and used
     as a method in the Estimator_cmi class.
 
     Args:
         self : instance of Estimator_cmi
+            function is supposed to be used as part of the Estimator_cmi class
         var1 : numpy array
             realisations of the first random variable, where dimensions are
             realisations x variable dimension
@@ -159,12 +162,13 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
             realisations of the random variable for conditioning
         opts : dict [optional]
             sets estimation parameters:
-            'kraskov_k' - no. nearest neighbours for KNN search (default=4)
-            'normalise' - z-standardise data (default=False)
-            'theiler_t' - no. next temporal neighbours ignored in KNN and
-            range searches (default='ACT', the autocorr. time of the target)
-            'noise_level' - random noise added to the data (default=1e-8)
-            'num_threads' - no. CPU threads used for estimation
+
+            - 'kraskov_k' - no. nearest neighbours for KNN search (default=4)
+            - 'normalise' - z-standardise data (default=False)
+            - 'theiler_t' - no. next temporal neighbours ignored in KNN and
+              range searches (default='ACT', the autocorr. time of the target)
+            - 'noise_level' - random noise added to the data (default=1e-8)
+            - 'num_threads' - no. CPU threads used for estimation
             (default='USE_ALL', this uses all available cores on the machine!)
 
     Returns:

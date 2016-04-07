@@ -13,11 +13,11 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
     Hold variables that are relevant for multivariate network inference.
     The class holds
 
-        (1) analysis parameters
-        (2) 'analysis pattern', i.e., indices of random variables used for
-            network inference (e.g. current value and conditional in transfer
-            entropy estimation)
-        (3) temporary data for analysis, i.e., realisations of the variables
+    (1) analysis parameters
+    (2) 'analysis pattern', i.e., indices of random variables used for
+    network inference (e.g. current value and conditional in transfer entropy
+    estimation)
+    (3) temporary data for analysis, i.e., realisations of the variables
 
     The class provide routines to check user input and set defaults. The
     'analysis pattern' is represented by tuples or list of tuples (process
@@ -144,8 +144,8 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
         for idx in self.selected_vars_target:
             indices[i] = self.selected_vars_full.index(idx)
             i += 1
-        self._selected_vars_target_realisations = (self.
-                                        _selected_vars_realisations[:, indices])
+        self._selected_vars_target_realisations = (
+                                self._selected_vars_realisations[:, indices])
         return self.__selected_vars_target_realisations
 
     @_selected_vars_target_realisations.setter
@@ -166,8 +166,8 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
         for idx in self.selected_vars_sources:
             indices[i] = self.selected_vars_full.index(idx)
             i += 1
-        self._selected_vars_sources_realisations = (self.
-                                     _selected_vars_realisations[:, indices])
+        self._selected_vars_sources_realisations = (
+                                self._selected_vars_realisations[:, indices])
         return self.__selected_vars_sources_realisations
 
     @_selected_vars_sources_realisations.setter
@@ -199,7 +199,7 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
             self._selected_vars_realisations = realisations
         else:
             self._selected_vars_realisations = np.hstack(
-                                (self._selected_vars_realisations, realisations))
+                            (self._selected_vars_realisations, realisations))
 
     def _remove_candidate(self, idx):
         """Remove a single candidate and its realisations from the object."""
@@ -209,9 +209,11 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
                                          self.selected_vars_full.index(idx))
         self.selected_vars_full.pop(self.selected_vars_full.index(idx))
         if idx[0] == self.target:
-            self.selected_vars_target.pop(self.selected_vars_target.index(idx))
+            self.selected_vars_target.pop(
+                                        self.selected_vars_target.index(idx))
         else:
-            self.selected_vars_sources.pop(self.selected_vars_sources.index(idx))
+            self.selected_vars_sources.pop(
+                                        self.selected_vars_sources.index(idx))
 
 
 if __name__ == '__main__':

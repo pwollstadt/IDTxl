@@ -39,18 +39,19 @@ class Multivariate_te(Network_analysis):
         min_lag : int
             minimum temporal search depth
         options : dict [optional]
-            parameters for estimator use and statistics
-            'n_perm_*' - number of permutations, where * can be 'max_stat',
-            'min_stat', 'omnibus', and 'max_seq' (default=500)
-            'alpha_*' - critical alpha level for statistical significance,
-            where * can be 'max_stats',  'min_stats', and 'omnibus'
-            (default=0.05)
-            'cmi_calc_name' - estimator to be used for CMI calculation
-            (For estimator options see the respective documentation.)
-            'add_conditionals' - force the estimator to add these conditionals
-            when estimating TE; can either be a list of variables, where each
-            variable is described as (idx process, lag wrt to current value) or
-            can be a string: 'faes' for Faes-Method
+            parameters for estimator use and statistics:
+
+            - 'n_perm_*' - number of permutations, where * can be 'max_stat',
+            - 'min_stat', 'omnibus', and 'max_seq' (default=500)
+            - 'alpha_*' - critical alpha level for statistical significance,
+              where * can be 'max_stats',  'min_stats', and 'omnibus'
+              (default=0.05)
+            - 'cmi_calc_name' - estimator to be used for CMI calculation
+              (For estimator options see the respective documentation.)
+            - 'add_conditionals' - force the estimator to add these
+              conditionals when estimating TE; can either be a list of
+              variables, where each variable is described as (idx process, lag
+              wrt to current value) or can be a string: 'faes' for Faes-Method
 
     Attributes:
         selected_vars_full : list of tuples
@@ -75,6 +76,8 @@ class Multivariate_te(Network_analysis):
             p-value of the omnibus test
         pvalues_sign_sources : numpy array
             array of p-values for TE from individual sources to the target
+        te_omnibus : float
+            joint TE from all sources to the target
         te_sign_sources : numpy array
             raw TE values from individual sources to the target
         sign_ominbus : bool
@@ -121,21 +124,24 @@ class Multivariate_te(Network_analysis):
         lists of lists of nodes.
 
         Example:
-            dat = Data()
-            dat.generate_mute_data(100, 5)
-            max_lag = 5
-            min_lag = 4
-            analysis_opts = {
-                'cmi_calc_name': 'jidt_kraskov',
-                'n_perm_max_stat': 200,
-                'n_perm_min_stat': 200,
-                'n_perm_omnibus': 500,
-                'n_perm_max_seq': 500,
-                }
-            target = 0
-            sources = [1, 2, 3]
-            network_analysis = Multivariate_te(max_lag, analysis_opts, min_lag)
-            res = network_analysis.analyse_single_target(dat, target, sources)
+
+            >>> dat = Data()
+            >>> dat.generate_mute_data(100, 5)
+            >>> max_lag = 5
+            >>> min_lag = 4
+            >>> analysis_opts = {
+            >>>     'cmi_calc_name': 'jidt_kraskov',
+            >>>     'n_perm_max_stat': 200,
+            >>>     'n_perm_min_stat': 200,
+            >>>     'n_perm_omnibus': 500,
+            >>>     'n_perm_max_seq': 500,
+            >>>     }
+            >>> target = 0
+            >>> sources = [1, 2, 3]
+            >>> network_analysis = Multivariate_te(max_lag, analysis_opts,
+            >>>                                    min_lag)
+            >>> res = network_analysis.analyse_single_target(dat, target,
+            >>>                                              sources)
 
         Note:
             For more details on the estimation of multivariate transfer entropy
@@ -214,10 +220,9 @@ class Multivariate_te(Network_analysis):
 
         Returns:
             dict
-                results consisting of
-                conditional sets (full, from sources, from target),
-                results for omnibus test (joint influence of source cands.),
-                pvalues for each significant source candidate
+                results consisting of conditional sets (full, from sources,
+                from target), results for omnibus test (joint influence of
+                source cands.), pvalues for each significant source candidate
         """
         # Check input and clean up object if it was used before.
         self._initialise(data, sources, target)

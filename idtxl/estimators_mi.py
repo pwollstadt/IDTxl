@@ -9,18 +9,17 @@ def opencl_kraskov(self, var1, var2, opts=None):
 
     Calculate the mutual information between two variables using an
     opencl-based Kraskov type 1 estimator. Multiple CMIs can be estimated in
-    parallel, where each instance is called a 'chunk'.
+    parallel, where each instance is called a 'chunk'. References:
 
-    References:
-
-        Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating
-        mutual information. Physical review E, 69(6), 066138.
+    Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating mutual
+    information. Physical review E, 69(6), 066138.
 
     This function is ment to be imported into the set_estimator module and used
     as a method in the Estimator_cmi class.
 
     Args:
         self : instance of Estimator_cmi
+            function is supposed to be used as part of the Estimator_cmi class
         var1 : numpy array
             realisations of the first random variable, where dimensions are
             realisations x variable dimension
@@ -110,17 +109,18 @@ def jidt_kraskov(self, var1, var2, opts=None):
     Calculate the mutual information between two variables. Call JIDT via jpype
     and use the Kraskov 1 estimator. References:
 
-        Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating
-        mutual information. Physical review E, 69(6), 066138.
+    Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating mutual
+    information. Physical review E, 69(6), 066138.
 
-        Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-        studying the dynamics of complex systems. Front. Robot. AI, 1(11).
+    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
+    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
 
     This function is ment to be imported into the set_estimator module and used
     as a method in the Estimator_cmi class.
 
     Args:
         self : instance of Estimator_cmi
+            function is supposed to be used as part of the Estimator_cmi class
         var1 : numpy array
             realisations of the first random variable, where dimensions are
             realisations x variable dimension
@@ -128,8 +128,9 @@ def jidt_kraskov(self, var1, var2, opts=None):
             realisations of the second random variable
         opts : dict [optional]
             sets estimation parameters:
-            'kraskov_k' - no. nearest neighbours for KNN search (default=4)
-            'normalise' - z-standardise data (default=False)
+
+            - 'kraskov_k' - no. nearest neighbours for KNN search (default=4)
+            - 'normalise' - z-standardise data (default=False)
 
     Returns:
         float

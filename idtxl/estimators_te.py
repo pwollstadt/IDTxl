@@ -18,39 +18,41 @@ def jidt_kraskov(self, source, target, opts):
 
     References:
 
-        Schreiber, T. (2000). Measuring information transfer. Physical Review
-        Letters, 85(2), 461.
+    Schreiber, T. (2000). Measuring information transfer. Physical Review
+    Letters, 85(2), 461.
 
-        Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating
-        mutual information. Physical Review E, 69(6), 066138.
+    Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating mutual
+    information. Physical review E, 69(6), 066138.
 
-        Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-        studying the dynamics of complex systems. Front. Robot. AI, 1(11).
+    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
+    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
 
     This function is ment to be imported into the set_estimator module and used
     as a method in the Estimator_cmi class.
 
     Args:
-        self (Estimator_cmi): instance of Estimator_cmi
+        self : instance of Estimator_cmi
+            function is supposed to be used as part of the Estimator_cmi class
         source : numpy array
             realisations of the source variable
         target : numpy array
             realisations of the target variable
         opts : dict [optional]
             sets estimation parameters:
-            'kraskov_k' - no. nearest neighbours for KNN search (default=4)
-            'normalise' - z-standardise data (default=False)
-            'theiler_t' - no. next temporal neighbours ignored in KNN and
-            range searches (default='ACT', the autocorr. time of the target)
-            'noise_level' - random noise added to the data (default=1e-8)
-            'history_source' - number of samples in the source's past to
-            consider
-            'history_target' - number of samples in the target's past to
-            consider (default=same as the source history)
-            'tau_source' - source's embedding delay (default=1)
-            'tau_target' - target's embedding delay (default=1)
-            'source_target_delay' - information transfer delay between source
-            and target (default=1)
+
+            - 'kraskov_k' - no. nearest neighbours for KNN search (default=4)
+            - 'normalise' - z-standardise data (default=False)
+            - 'theiler_t' - no. next temporal neighbours ignored in KNN and
+              range searches (default='ACT', the autocorr. time of the target)
+            - 'noise_level' - random noise added to the data (default=1e-8)
+            - 'history_source' - number of samples in the source's past to
+              consider
+            - 'history_target' - number of samples in the target's past to
+              consider (default=same as the source history)
+            - 'tau_source' - source's embedding delay (default=1)
+            - 'tau_target' - target's embedding delay (default=1)
+            - 'source_target_delay' - information transfer delay between source
+              and target (default=1)
 
     Returns:
         float

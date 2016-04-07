@@ -231,7 +231,7 @@ def test_multivariate_te_mute():
 
 
 if __name__ == '__main__':
-    test_multivariate_te_mute()
+    # test_multivariate_te_mute()
     # test_multivariate_te_lorenz_2()
     # test_multivariate_te_random()
-    # test_multivariate_te_corr_gaussian()
+    test_multivariate_te_corr_gaussian()

@@ -10,6 +10,41 @@ import idtxl_exceptions as ex
 
 
 def create_surrogates(realisations, replication_idx, n_perm, options=None):
+    """Create appropriate surrogate data from realisations.
+
+    Create surrogates by either permuting replications or samples in time,
+    depending on the data structure. The function checks if the data contain
+    enough replications to generate an appropriate amount of surrogate data
+    given the requested number of permutations (e.g., to create 500 meaningful
+    permutaions, we need at least 6 replications, because we can obtain
+    6! = 720 permutations over replications). If data are not sufficient,
+    surrogates are created by permuting data over time if the number of
+    replications is not sufficient or permutation over time was explicitely
+    requested in the options.
+
+    Args:
+        realisations : numpy array
+            data to be permuted, where dimensions are
+            realisation idx x variable
+        replication_idx : numpy array
+            each realisation's replication index, has the same dimension as
+            realisation.shape[0]
+        n_perm : int
+            desired number of permutations the test for which surrogates are
+            used
+        options : dict [optional]
+            options for surrogate creation, can contain:
+
+            - 'perm_type' - 'permute_replications' for permutation of
+            replications or 'permute_samples' for permutation of samples
+            - 'shuffle_samples' - if permutation type is 'permute_samples'
+            this defines the method used for permuting data over time, can be
+            'random' (swaps samples at random), 'blocks' (swaps blocks of
+            samples), 'local' (swaps samples within a given range), or
+            'circular' (circular shift with given maximum)
+            - depending on the shuffling method, further options may be
+            defined, see help for function 'permute_over_time()' in this module
+    """
 
     if options is None:
         options = {}
@@ -30,6 +65,8 @@ def create_surrogates(realisations, replication_idx, n_perm, options=None):
                            'permutations ({2}).'.format(samples_per_repl,
                                                         n_repl, n_perm))
 
+    # If no permutation type was requested, try to generate surrogates by
+    # permutation over replications.
     if perm_type is None:
         # Check if n_repl is high enough to allow for the requested number of
         # permutations. If not permute samples over time and warn the user
@@ -58,7 +95,12 @@ def create_surrogates(realisations, replication_idx, n_perm, options=None):
     if permute_replications:
         return permute_over_replications(realisations, replication_idx)
     else:
-        return permute_over_time(realisations, replication_idx, options)
+        try:
+            shuffle_samples = options['shuffle_samples']
+        except KeyError:
+            shuffle_samples = None
+        return permute_over_time(realisations, replication_idx,
+                                 shuffle_samples, options)
 
 
 def permute_over_replications(realisations, replication_idx):
@@ -107,11 +149,12 @@ def permute_over_time(realisations, replication_idx, perm_type, *kwargs):
             number of samples)
         *kwargs
             Arbitrary keyword arguments depending on the perm_type:
-            if perm_type = 'blocks': 'block_size' in samples, 'swap_range' in
+
+            - if perm_type = 'blocks': 'block_size' in samples, 'swap_range' in
             blocks (default=max)
-            if perm_type = 'local': 'perm_range' in samples, range over which
+            - if perm_type = 'local': 'perm_range' in samples, range over which
             realisations are permuted (default=max)
-            if perm_type = 'circular': 'max_shift' in samples, the maximum
+            - if perm_type = 'circular': 'max_shift' in samples, the maximum
             number of samples for shifting (default=max)
 
     Returns:

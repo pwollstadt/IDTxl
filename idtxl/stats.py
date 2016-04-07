@@ -20,9 +20,9 @@ def network_fdr(results, alpha=0.05, correct_by_target=True):
     (by correcting omnibus p-values) or at the single-link level (by correcting
     p-values of individual links). Reference:
 
-        Genovese, C.R., Lazar, N.A., & Nichols, T. (2002). Thresholding of
-        statistical maps in functional neuroimaging using the false discovery
-        rate. Neuroimage, 15(4), 870-878.
+    Genovese, C.R., Lazar, N.A., & Nichols, T. (2002). Thresholding of
+    statistical maps in functional neuroimaging using the false discovery
+    rate. Neuroimage, 15(4), 870-878.
 
     Args:
         results : dict
@@ -213,9 +213,10 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
         te_max_candidate : float
             transfer entropy value to be tested
         opts : dict [optional]
-            parameters for statistical testing, can contain
-            'n_perm_max_stat' - number of permutations (default=500)
-            'alpha_max_stat' - critical alpha level (default=0.05)
+            parameters for statistical testing, can contain:
+
+            - 'n_perm_max_stat' - number of permutations (default=500)
+            - 'alpha_max_stat' - critical alpha level (default=0.05)
 
     Returns:
         bool
@@ -264,9 +265,10 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
         data : Data instance
             raw data
         opts : dict [optional]
-            parameters for statistical testing, can contain
-            'n_perm_max_seq' - number of permutations (default=500)
-            'alpha_max_seq' - critical alpha level (default=0.05)
+            parameters for statistical testing, can contain:
+
+            - 'n_perm_max_seq' - number of permutations (default=500)
+            - 'alpha_max_seq' - critical alpha level (default=0.05)
 
     Returns:
         numpy array, bool
@@ -357,9 +359,10 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
         te_min_candidate : float
             transfer entropy value to be tested
         opts : dict [optional]
-            parameters for statistical testing, can contain
-            'n_perm_min_stat' - number of permutations (default=500)
-            'alpha_min_stat' - critical alpha level (default=0.05)
+            parameters for statistical testing, can contain:
+
+            - 'n_perm_min_stat' - number of permutations (default=500)
+            - 'alpha_min_stat' - critical alpha level (default=0.05)
 
     Returns:
         bool
