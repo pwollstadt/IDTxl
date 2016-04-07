@@ -191,10 +191,16 @@ class Data():
             if last_sample == 0:                     # than looping over time!
                 last_sample = None
             for replication in replications_order:
-                realisations[r:r + n_real_time, i] = self.data[
+                try:
+                    realisations[r:r + n_real_time, i] = self.data[
                                                         idx[0],
                                                         idx[1]: last_sample,
                                                         replication]
+                except IndexError:
+                    raise IndexError('You tried to access variable {0} in a '
+                                     'data set with {1} processes and {2} '
+                                     'samples.'.format(idx, self.n_processes,
+                                                       self.n_samples))
                 r += n_real_time
 
             assert(not np.isnan(realisations[:, i]).any()), ('There are nans '

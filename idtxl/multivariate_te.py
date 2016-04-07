@@ -592,8 +592,10 @@ class Multivariate_te(Network_analysis):
         return lag_list
 
     def _force_conditionals(self, cond, data):
-        """Enforce a given conditional."""
-        if type(cond) is str:
+        """Enforce a given conditioning set."""
+        if type(cond) is tuple:  # easily add single variable
+            cond = [cond]
+        elif type(cond) is str:
             if cond == 'faes':
                 cond = self._define_candidates(self.source_set,
                                                [self.current_value[1]])

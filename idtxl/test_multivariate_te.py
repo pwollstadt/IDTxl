@@ -5,6 +5,7 @@ Created on Fri Mar 25 12:22:14 2016
 @author: patricia
 """
 import pytest
+import itertools as it
 import numpy as np
 from multivariate_te import Multivariate_te
 from data import Data
@@ -69,6 +70,28 @@ def test_multivariate_te_initialise():
     assert ((nw_0._current_value_realisations ==
              np.arange(n_points - n_repl, n_points).reshape(n_repl, 1)).all())
 
+    # Check if the Faes method is working
+    analysis_opts['add_conditionals'] = 'faes'
+    nw_1 = Multivariate_te(max_lag_sources, min_lag_sources, max_lag_target,
+                           analysis_opts)
+    dat.generate_mute_data()
+    sources = [1, 2, 3]
+    target = [0]
+    nw_1._initialise(dat, sources, target)
+    assert (nw_1._selected_vars_sources ==
+            [i for i in it.product(sources, [nw_1.current_value[1]])]), (
+                'Did not add correct additional conditioning vars.')
+
+    # Adding a variable that is not in the data set.
+    analysis_opts['add_conditionals'] = (8, 0)
+    nw_1 = Multivariate_te(max_lag_sources, min_lag_sources, max_lag_target,
+                           analysis_opts)
+    dat.generate_mute_data()
+    sources = [1, 2, 3]
+    target = [0]
+    with pytest.raises(IndexError):
+        nw_1._initialise(dat, sources, target)
+
 
 def test_check_source_set():
     """Test the method _check_source_set.
@@ -87,16 +110,15 @@ def test_check_source_set():
                            analysis_opts)
     sources = [1, 2, 3]
     nw_0._check_source_set(sources, dat.n_processes)
+
+    # Assert that initialisation fails if the target is also in the source list
     sources = [0, 1, 2, 3]
     nw_0 = Multivariate_te(max_lag_sources, min_lag_sources, max_lag_target,
                            analysis_opts)
     nw_0.target = 0
-    failed_on_target_in_source = False
-    try:
+    with pytest.raises(RuntimeError):
         nw_0._check_source_set(sources, dat.n_processes)
-    except RuntimeError:
-        failed_on_target_in_source = True
-    assert (failed_on_target_in_source)
+
     sources = 1
     nw_0 = Multivariate_te(max_lag_sources, min_lag_sources, max_lag_target,
                            analysis_opts)
