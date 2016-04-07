@@ -2,6 +2,18 @@ import pprint
 import numpy as np
 
 
+def swap_chars(s, i_1, i_2):
+    """Swap to characters in a string.
+
+    Example:
+        >>> print(swap_chars('hellothere', 2, 6))
+        'hehlotlere'
+    """
+    if i_1 > i_2:
+        i_1, i_2 = i_2, i_1
+    return ''.join([s[0:i_1], s[i_2], s[i_1+1:i_2], s[i_1], s[i_2+1:]])
+
+
 def print_dict(d, indent=4):
     """Use Python's pretty printer to print dictionaries to the console."""
     pp = pprint.PrettyPrinter(indent=indent)
