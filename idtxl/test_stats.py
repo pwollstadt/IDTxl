@@ -73,19 +73,19 @@ def test_network_fdr():
         1: target_1,
         2: target_2
     }
-    res_pruned = stats.network_fdr(res)
-    assert (not res_pruned[2]['conditional_sources']), ('Target ')
 
-    for k in res_pruned.keys():
-        if res_pruned[k]['cond_sources_pval'] is None:
-            assert (not res_pruned[k]['conditional_sources'])
-        else:
-            assert (len(res_pruned[k]['conditional_sources']) ==
-                    len(res_pruned[k]['cond_sources_pval'])), ('Source list '
-                                                               'and list of p-'
-                                                               'values should '
-                                                               'have the '
-                                                               'same length.')
+    for correct_by_target in [True, False]:
+        res_pruned = stats.network_fdr(res, 0.05, correct_by_target)
+        assert (not res_pruned[2]['conditional_sources']), ('Target ')
+
+        for k in res_pruned.keys():
+            if res_pruned[k]['cond_sources_pval'] is None:
+                assert (not res_pruned[k]['conditional_sources'])
+            else:
+                assert (len(res_pruned[k]['conditional_sources']) ==
+                        len(res_pruned[k]['cond_sources_pval'])), (
+                                'Source list and list of p-values should have '
+                                'the same length.')
 
 
 def test_permute_realisations():
