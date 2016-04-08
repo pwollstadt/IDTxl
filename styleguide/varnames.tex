@@ -160,14 +160,15 @@
  \multicolumn{3}{l}{\textbf{Algorithm}} \\ \hline
  & idx\_\textlangle variable \textrangle(\_\textlangle set\textrangle) & index of a single sample or set of indices\\
  & candidate(\_set) & potential sample or set of samples for (non-)uniform embedding \\
+ & selected\_vars\_* & candidate variables currently included in the conditioning set, * may be either 'full', 'sources', or 'target' to indicate all variables and sub-sets of variables coming from source or target processes respectively \\
  & max\_lag & maximum lag for samples entering the candidate set \\
  & min\_lag & minimum lag for samples entering the candidate set \\
  & embedding\_dimension & dimension of the embedding, i.e., n.o. samples taken from a varibales past to reconstruct a variable's current state \\
  & embedding\_delay & delay of the embedding, i.e., the step size in n.o. samples between two past samples to reconstruct a variable's current state \\
  & theiler\_k & n.o. samples to be excluded in neighbour searches, Theiler correction \\
  & kraskov\_k & n.o. nearest neighbours for the Kraskov estimator \\
- & lag_max & max. past sample used as a candidate \\
- & lag_min & min. past sample used as a candidate \\
+ & lag\_max & max. past sample used as a candidate \\
+ & lag\_min & min. past sample used as a candidate \\
  & source\_target\_delay & input delay in samples, i.e., something that is passed  to an estimator \\
  & interaction\_delay & output of the estimation (e.g. reconstructed delay in TE estimation) \\
  & surrogate\_\textlangle variable\textrangle & surrogate data set for a variable \\
