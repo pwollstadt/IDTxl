@@ -1,7 +1,8 @@
+from pkg_resources import resource_filename
 import jpype as jp
 import numpy as np
-import neighbour_search_opencl as nsocl
 from scipy.special import digamma
+from . import neighbour_search_opencl as nsocl
 
 
 def opencl_kraskov(self, var1, var2, opts=None):
@@ -158,7 +159,7 @@ def jidt_kraskov(self, var1, var2, opts=None):
     except KeyError:
         normalise = 'false'
 
-    jarLocation = 'infodynamics.jar'
+    jarLocation = resource_filename(__name__, 'infodynamics.jar')
     if not jp.isJVMStarted():
         jp.startJVM(jp.getDefaultJVMPath(), '-ea', ('-Djava.class.path=' +
                     jarLocation))

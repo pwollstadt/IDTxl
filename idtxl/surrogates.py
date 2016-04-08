@@ -6,7 +6,7 @@ Created on Tue Apr  5 16:40:40 2016
 """
 import copy as cp
 import numpy as np
-import idtxl_exceptions as ex
+from . import idtxl_exceptions as ex
 
 
 def create_surrogates(realisations, replication_idx, n_perm, options=None):

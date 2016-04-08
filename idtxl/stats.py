@@ -7,7 +7,7 @@ Created on Mon Mar  7 18:13:27 2016
 import sys
 import copy as cp
 import numpy as np
-import utils
+from . import idtxl_utils as utils
 
 VERBOSE = True
 
@@ -375,7 +375,7 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
     try:
         n_perm = opts['n_perm_min_stat']
     except KeyError:
-        n_perm = 3  # 200
+        n_perm = 21  # 200
     try:
         alpha = opts['alpha_min_stat']
     except KeyError:
@@ -576,14 +576,14 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
             the test's p-value
     """
     assert(distribution.ndim == 1)
-    assert(1.0 / distribution.shape[0] < alpha), ('The numper of permutations '
+    assert(1.0 / distribution.shape[0] < alpha), ('The number of permutations '
                                                   'is to small ({0}) to test '
                                                   'the requested alpha level '
                                                   '({1}).'.format(
                                                        distribution.shape[0],
                                                        alpha))
 #    if (1.0 / distribution.shape[0] >= alpha):
-#        print('The numper of permutations is to small ({0}) to test the '
+#        print('The number of permutations is to small ({0}) to test the '
 #              'requested alpha level ({1}).'.format(distribution.shape[0],
 #                                                    alpha))
     if tail == 'one':

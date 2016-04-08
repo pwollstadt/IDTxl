@@ -2,9 +2,9 @@ import types
 import random
 import math as math
 import numpy as np
-import estimators_te
-import estimators_cmi
-import estimators_mi
+from . import estimators_te
+from . import estimators_cmi
+from . import estimators_mi
 
 
 class Estimator(object):

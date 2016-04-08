@@ -1,3 +1,7 @@
+# pip install -e  #
+###################
+*.egg-info
+
 # Compiled source #
 ###################
 *.pyc

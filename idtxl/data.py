@@ -5,7 +5,7 @@ Created on Mon Mar  7 18:13:27 2016
 @author: patricia
 """
 import numpy as np
-import utils as utils
+from . import idtxl_utils as utils
 
 
 class Data():

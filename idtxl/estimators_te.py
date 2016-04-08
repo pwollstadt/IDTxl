@@ -1,5 +1,5 @@
+from pkg_resources import resource_filename
 import jpype as jp
-import pyinfo
 
 
 def jidt_kraskov(self, source, target, opts):
@@ -107,7 +107,7 @@ def jidt_kraskov(self, source, target, opts):
     except KeyError:
         delay = 1
 
-    jarLocation = 'infodynamics.jar'
+    jarLocation = resource_filename(__name__, 'infodynamics.jar')
     if not jp.isJVMStarted():
         jp.startJVM(jp.getDefaultJVMPath(), '-ea', ('-Djava.class.path=' +
                                                     jarLocation))
@@ -124,9 +124,3 @@ def jidt_kraskov(self, source, target, opts):
                     delay)
     calc.setObservations(source, target)
     return calc.computeAverageLocalOfObservations()
-
-
-def pyinfo_kraskov(self, source, target, knn, history_length):
-    """Calculate transfer entropy with pyinfo's Kraskov implementation."""
-
-    return pyinfo.te_kraskov(source, target)

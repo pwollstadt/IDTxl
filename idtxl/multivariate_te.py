@@ -19,9 +19,9 @@ Note:
 import copy as cp
 import numpy as np
 import itertools as it
-import stats
-from network_analysis import Network_analysis
-from set_estimator import Estimator_cmi
+from . import stats
+from .network_analysis import Network_analysis
+from .set_estimator import Estimator_cmi
 
 VERBOSE = True
 

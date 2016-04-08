@@ -7,10 +7,10 @@ Created on Tue Mar 22 17:32:46 2016
 import sys
 import copy as cp
 import numpy as np
-from set_estimator import Estimator_cmi
-from data import Data
-import stats
-import utils
+from . import set_estimator.Estimator_cmi
+from . import data.Data
+from . import stats
+from . import utils
 
 VERBOSE = True
 

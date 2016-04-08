@@ -7,13 +7,13 @@ with open('README.txt') as file:
     long_description = file.read()
 
 setup(
-    name = 'trentoolxl',
-    packages = ['trentoolxl'],
-    version = '1.0',
-    description = 'Multivariate transfer entropy estimator',
+    name = 'idtxl',
+    packages = ['idtxl'],
+    version = '0.1',
+    description = 'Information Dynamics Toolkit XL',
     author = 'Patricia Wollstadt',
     author_email = 'p.wollstadt@gmail.com',
-    url = 'www.trentool.de',
+    url = 'https://github.com/pwollstadt/IDTxl',
     long_description = long_description,
     classifiers = [
 	"Programming Language :: Python",

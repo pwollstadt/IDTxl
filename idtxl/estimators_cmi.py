@@ -1,9 +1,9 @@
+from pkg_resources import resource_filename
 import jpype as jp
 import numpy as np
-import pyinfo
-import utils as utils
-import neighbour_search_opencl as nsocl
 from scipy.special import digamma
+from . import idtxl_utils as utils
+from . import neighbour_search_opencl as nsocl
 
 
 def opencl_kraskov(self, var1, var2, conditional, opts=None):
@@ -212,7 +212,7 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
     except KeyError:
         debug = False
 
-    jarLocation = 'infodynamics.jar'
+    jarLocation = resource_filename(__name__, 'infodynamics.jar')
     if not jp.isJVMStarted():
         jp.startJVM(jp.getDefaultJVMPath(), '-ea', ('-Djava.class.path=' +
                     jarLocation))
@@ -235,10 +235,3 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
     calc.initialise(var1.shape[1], var2.shape[1], cond_dim)
     calc.setObservations(var1, var2, conditional)
     return calc.computeAverageLocalOfObservations()
-
-
-def pyinfo_kraskov(self, var1, var2, conditional, knn):
-    """Return the conditional mutual information calculated by the pyinfo module
-    using the Kraskov estimator."""
-
-    return pyinfo.cmi_kraskov(var1, var2, conditional)

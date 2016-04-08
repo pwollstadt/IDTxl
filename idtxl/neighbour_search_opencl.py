@@ -1,5 +1,5 @@
 import numpy as np
-import idtxl_exceptions as ex
+from . import idtxl_exceptions as ex
 try:
     import pyopencl as cl
 except ImportError:  # TODO this doesn't get printed?!
