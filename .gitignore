@@ -15,6 +15,7 @@
 .spyderproject
 .spyderworkspace
 *.bac*
+*.in~
 
 # Profiling          #
 ######################

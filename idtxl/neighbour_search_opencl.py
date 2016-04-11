@@ -1,3 +1,4 @@
+from pkg_resources import resource_filename
 import numpy as np
 from . import idtxl_exceptions as ex
 try:
@@ -111,7 +112,8 @@ def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, thelier,
     d_bf_indexes = cl.Buffer(context, cl.mem_flags.READ_WRITE, h_bf_indexes.nbytes)
 
     # Kernel Launch
-    kernelsource = open("gpuKnnBF_kernel.cl").read()
+    kernelLocation = resource_filename(__name__, 'gpuKnnBF_kernel.cl')
+    kernelsource = open(kernelLocation).read()
     program = cl.Program(context, kernelsource).build()
     kernelKNNshared = program.kernelKNNshared
     kernelKNNshared.set_scalar_arg_dtypes([None, None, None, None, np.int32, np.int32, np.int32, np.int32, np.int32, None, None])
@@ -203,7 +205,8 @@ def clFindRSAll(h_bf_npointsrange, h_pointset, h_query, h_vecradius, thelier,
     d_bf_npointsrange = cl.Buffer(context, cl.mem_flags.READ_WRITE, h_bf_npointsrange.nbytes)
 
     # Kernel Launch
-    kernelsource = open("gpuKnnBF_kernel.cl").read()
+    kernelLocation = resource_filename(__name__, 'gpuKnnBF_kernel.cl')
+    kernelsource = open(kernelLocation).read()
     program = cl.Program(context, kernelsource).build()
     kernelBFRSAllshared = program.kernelBFRSAllshared
     kernelBFRSAllshared.set_scalar_arg_dtypes([None, None, None, None, np.int32, np.int32, np.int32, np.int32, None])

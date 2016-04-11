@@ -96,7 +96,6 @@ def opencl_kraskov(self, var1, var2, conditional, opts=None):
 
 #    print("working with signallength: %i" %signallengthpergpu)
     chunksize = signallengthpergpu / nchunkspergpu # TODO check for integer result
-
     indexes, distances = nsocl.knn_search(pointset_full_space, n_dim_full,
                                           kraskov_k, theiler_t, nchunkspergpu,
                                           gpuid)
@@ -127,10 +126,24 @@ def opencl_kraskov(self, var1, var2, conditional, opts=None):
                                                 radii, theiler_t,
                                                 nchunkspergpu, gpuid)
 
-    cmi = (digamma(kraskov_k) + np.mean(digamma(count_conditional + 1) -
-           digamma(count_var1_conditional + 1) -
-           digamma(count_var2_conditional + 1)))
-    return cmi
+    # return the results, one cmi per chunk of data
+    cmi_array = -np.inf * np.ones(nchunkspergpu).astype('float64')
+    for chunknum in range(0, nchunkspergpu):
+        cmi = (digamma(kraskov_k) +
+               np.mean(digamma(count_conditional[chunknum * chunksize  : (chunknum +1) * chunksize] + 1) -
+               digamma(count_var1_conditional[chunknum * chunksize : (chunknum + 1) * chunksize] + 1) -
+               digamma(count_var2_conditional[chunknum * chunksize : (chunknum + 1) * chunksize] + 1)))
+        cmi_array[chunknum] = cmi
+
+    print('cmi array reads: {0}'.format(cmi_array))
+    return cmi_array
+
+    # return the results, one cmi per chunk of data
+#    cmi = (digamma(kraskov_k) +
+#               np.mean(digamma(count_conditional + 1) -
+#               digamma(count_var1_conditional + 1) -
+#               digamma(count_var2_conditional + 1)))
+#    return cmi
 
 
 def jidt_kraskov(self, var1, var2, conditional, opts=None):
