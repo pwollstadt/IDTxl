@@ -120,7 +120,7 @@ def test_cmi_estimator_ocl():
     assert (np.abs(res_2[0]) < 0.07), ('CMI calculation for uncorrelated '
                                     'Gaussians failed (error larger 0.07).')
     # TODO: error bounds here may need tightening
-    assert (np.abs(res_2[0]-res2_[1]) < 0.1), ('CMI calculations for first and'
+    assert (np.abs(res_2[0]-res_2[1]) < 0.1), ('CMI calculations for first and'
                                                ' second chunk deviate by more'
                                                'than 0.01')
 
