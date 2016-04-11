@@ -61,12 +61,8 @@ Frankfurt, Germany, 2016
 import sys
 import jpype as jp
 import numpy as np
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    import time as tm
 
-
-def pid(s1, s2, target, cfg):
+def pid(s1_o, s2_o, target_o, cfg):
     """Estimate partial information decomposition of discrete variables.
 
     The estimator finds shared information, unique information and
@@ -86,11 +82,11 @@ def pid(s1, s2, target, cfg):
             'iterations' (no. iterations of the estimator)
 
     Returns:
-        dict: estimated decomposition, contains: MI/CMI values computed
+        est (dict): estimated decomposition, contains: MI/CMI values computed
             from non-permuted distributions; PID estimates (shared,
             synergistic, unique information); I(target;s1,s2) under permuted
             distribution Q
-        dict: additional information about iterative optimization,
+        opt (dict): additional information about iterative optimization,
             contains: final permutation Q; cfg dictionary; array with
             I(target:s1|s2) for each iteration; array with delta I(target:s1|s2) for
             each iteration; I(target:s1,s2) for each iteration
@@ -100,6 +96,19 @@ def pid(s1, s2, target, cfg):
             variables names joined directly form a new joint variable
             mi_var1var2_var3 --> I(var3:(var1,var2))
     """
+    # make deep copies of input arrays to avoid side effects
+    s1 = s1_o.copy()
+    s2 = s2_o.copy()
+    target = target_o.copy()
+
+    # transform variables as far as possible outside the loops below
+    # (note: only these variables should change when executing the loop)
+    target_jA = jp.JArray(jp.JInt, target.ndim)(target.tolist())
+    s2_jA = jp.JArray(jp.JInt, s2.ndim)(s2.tolist())
+    s1_list = s1.tolist()
+    s1_dim = s1.ndim
+
+
     if s1.ndim != 1 or s2.ndim != 1 or target.ndim != 1:
         raise ValueError('Inputs s1, s2, target have to be vectors'
                          '(1D-arrays).')
@@ -113,7 +122,17 @@ def pid(s1, s2, target, cfg):
         print('"jarpath" is missing from the cfg dictionary.')
         raise
     try:
-        alphabet = cfg['alphabetsize']
+        alph_s1 = cfg['alph_s1']
+    except KeyError:
+        print('"alphabetsize" is missing from the cfg dictionary.')
+        raise
+    try:
+        alph_s2 = cfg['alph_s2']
+    except KeyError:
+        print('"alphabetsize" is missing from the cfg dictionary.')
+        raise
+    try:
+        alph_t = cfg['alph_t']
     except KeyError:
         print('"alphabetsize" is missing from the cfg dictionary.')
         raise
@@ -123,36 +142,58 @@ def pid(s1, s2, target, cfg):
         print('"iterations" is missing from the cfg dictionary.')
         raise
 
+    # TEMP REMOVE WHEN DONE
+#    alphabet = alph_s1
+
     if not jp.isJVMStarted():
         jp.startJVM(jp.getDefaultJVMPath(),
-                    '-ea', '-Djava.class.path=' + jarpath)
+                    '-ea', '-Djava.class.path=' + jarpath, "-Xmx3000M")
+    # what if it's there already - do we have to attach to it?
 
     Cmi_calc_class = (jp.JPackage('infodynamics.measures.discrete')
                       .ConditionalMutualInformationCalculatorDiscrete)
     Mi_calc_class = (jp.JPackage('infodynamics.measures.discrete')
                      .MutualInformationCalculatorDiscrete)
 
-    cmi_calc = Cmi_calc_class(alphabet,alphabet,alphabet)
-    mi_calc  = Mi_calc_class(alphabet)
-    jointmi_calc  = Mi_calc_class(alphabet ** 2)
+#   cmi_calc = Cmi_calc_class(alphabet,alphabet,alphabet)
+    cmi_calc_target_s1_cond_s2 = Cmi_calc_class(alph_t,alph_s1,alph_s2)
 
-    cmi_target_s1_cond_s2 = _calculate_cmi(cmi_calc, target, s1, s2)
-    mi_s1s2_target = _calculate_jointmi(jointmi_calc, s1, s2, target)
-    mi_target_s1 = _calculate_mi(mi_calc, s1, target)
-    mi_target_s2 = _calculate_mi(mi_calc, s2, target)
+    # MAX THE CORRECT WAY TO GO?
+    alph_max_s1_t = max(alph_s1, alph_t)
+    alph_max_s2_t = max(alph_s2, alph_t)
+    alph_max = max(alph_s1*alph_s2, alph_t)
+
+#   mi_calc  = Mi_calc_class(alphabet)
+    mi_calc_s1 = Mi_calc_class(alph_max_s1_t)
+    mi_calc_s2 = Mi_calc_class(alph_max_s2_t)
+
+#   jointmi_calc  = Mi_calc_class(alphabet ** 2)
+    jointmi_calc  = Mi_calc_class(alph_max)
+
+    cmi_target_s1_cond_s2 = _calculate_cmi(cmi_calc_target_s1_cond_s2, target, s1, s2)
+    jointmi_s1s2_target = _calculate_jointmi(jointmi_calc, s1, s2, target)
+#   print("Original joint mutual information: {0}".format(jointmi_s1s2_target))
+    mi_target_s1 = _calculate_mi(mi_calc_s1, s1, target)
+#   print("Original mutual information I(target:s1): {0}".format(mi_target_s1))
+    mi_target_s2 = _calculate_mi(mi_calc_s2, s2, target)
+#   print("Original mutual information I(target:s2): {0}".format(mi_target_s2))
+    print("Original redundancy - synergy: {0}".format(mi_target_s1 +
+                                                mi_target_s2 - jointmi_s1s2_target))
 
     n = target.shape[0]
     reps = iterations + 1
     ind = np.arange(n)
-    cmi_q_target_s1_cond_s2_all = _nan(reps)  # collect estimates in each iteration
-    cmi_q_target_s1_cond_s2_delta = _nan(reps)  # collect delta of estimates
-    mi_q_s1s2_target_all = _nan(reps)  # collect joint MI of the two sources with the target
+    # collect estimates in each iteration
+    cmi_q_target_s1_cond_s2_all = -np.inf * np.ones(reps).astype('float128')
+    cmi_q_target_s1_cond_s2_delta = -np.inf * np.ones(reps).astype('float128')  # collect delta of estimates
     cmi_q_target_s1_cond_s2_all[0] = cmi_target_s1_cond_s2  # initial I(s1;target|Y)
     unsuccessful = 0
 
 #    print('Starting [                   ]', end='')
 #    print('\b' * 21, end='')
     sys.stdout.flush()
+
+
     for i in range(1, reps):
 #        steps = reps/20
 #        if i%steps == 0:
@@ -161,7 +202,8 @@ def pid(s1, s2, target, cfg):
 
         #print('iteration ' + str(i + 1) + ' of ' + str(reps - 1)
 
-        s1_new  = s1
+        s1_new_list  = s1_list
+
         ind_new = ind
 
         # swapping: pick sample at random, find all other samples that
@@ -172,41 +214,44 @@ def pid(s1, s2, target, cfg):
         swap_2 = np.random.choice(swap_candidates)
 
         # swap value in s1 and index to keep track
-        s1_new[swap_1], s1_new[swap_2] = s1_new[swap_2], s1_new[swap_1]
+        s1_new_list[swap_1], s1_new_list[swap_2] = s1_new_list[swap_2], s1_new_list[swap_1]
         ind_new[swap_1], ind_new[swap_2] = (ind_new[swap_2],
                                             ind_new[swap_1])
 
         # calculate CMI under new swapped distribution
-        cmi_new = _calculate_cmi(cmi_calc, target, s1_new, s2)
+        cmi_new = _calculate_cmi_from_jA_list(cmi_calc_target_s1_cond_s2, target_jA, s1_new_list, s1_dim, s2_jA)
 
-        if cmi_new < cmi_q_target_s1_cond_s2_all[i - 1]:
-            s1 = s1_new
+
+        if (np.less_equal(cmi_new, cmi_q_target_s1_cond_s2_all[i - 1])):
+            s1_list = s1_new_list
             ind = ind_new
             cmi_q_target_s1_cond_s2_all[i] = cmi_new
             cmi_q_target_s1_cond_s2_delta[i] = cmi_q_target_s1_cond_s2_all[i - 1] - cmi_new
-            mi_q_s1s2_target_all[i] = _calculate_jointmi(jointmi_calc, s1, s2, target)
         else:
             cmi_q_target_s1_cond_s2_all[i] = cmi_q_target_s1_cond_s2_all[i - 1]
             unsuccessful += 1
 
-    print('\b]  Done!\n', end='')
     print('Unsuccessful swaps: {0}'.format(unsuccessful))
-
+    # convert the final s1 back to an array
+    s1_final =np.asarray(s1_new_list, dtype=np.int)
     # estimate unq/syn/shd information
-    mi_q_s1s2_target = _get_last_value(mi_q_s1s2_target_all)
+    jointmi_q_s1s2_target = _calculate_jointmi(jointmi_calc, s1_final, s2, target)
     unq_s1 = _get_last_value(cmi_q_target_s1_cond_s2_all)  # Bertschinger, 2014, p. 2163
-    unq_s2 = _calculate_cmi(cmi_calc, target, s2, s1)  # Bertschinger, 2014, p. 2166
-    syn_s1s2 = mi_s1s2_target - mi_q_s1s2_target  # Bertschinger, 2014, p. 2163
-    shd_s1s2 = mi_target_s1 + mi_target_s2 - mi_q_s1s2_target  # Bertschinger, 2014, p. 2167
+
+    # NEED TO REINITIALISE the calculator
+    cmi_calc_target_s2_cond_s1 = Cmi_calc_class(alph_t,alph_s2,alph_s1)
+    unq_s2 = _calculate_cmi(cmi_calc_target_s2_cond_s1, target, s2, s1_final)  # Bertschinger, 2014, p. 2166
+    syn_s1s2 = jointmi_s1s2_target - jointmi_q_s1s2_target  # Bertschinger, 2014, p. 2163
+    shd_s1s2 = mi_target_s1 + mi_target_s2 - jointmi_q_s1s2_target  # Bertschinger, 2014, p. 2167
 
     estimate = {
         'unq_s1': unq_s1,
         'unq_s2': unq_s2,
         'shd_s1s2': shd_s1s2,
         'syn_s1s2': syn_s1s2,
-        'mi_q_s1s2_target': mi_q_s1s2_target,
+        'jointmi_q_s1s2_target': jointmi_q_s1s2_target,
         'orig_cmi_target_s1_cond_s2': cmi_target_s1_cond_s2,  # orignial values (empirical P)
-        'orig_mi_s1s2_target': mi_s1s2_target,
+        'orig_jointmi_s1s2_target': jointmi_s1s2_target,
         'orig_mi_target_s1': mi_target_s1,
         'orig_mi_target_s2': mi_target_s2
     }
@@ -216,7 +261,7 @@ def pid(s1, s2, target, cfg):
         'unsuc_swaps': unsuccessful,
         'cmi_q_target_s1_cond_s2_all': cmi_q_target_s1_cond_s2_all,
         'cmi_q_target_s1_cond_s2_delta': cmi_q_target_s1_cond_s2_delta,
-        'mi_q_s1s2_target_all': mi_q_s1s2_target_all,
+        'jointmi_q_s1s2_target_all': jointmi_q_s1s2_target_all,
         'cfg': cfg
     }
     return estimate, optimization
@@ -259,6 +304,29 @@ def _calculate_cmi(cmi_calc, var_1, var_2, cond):
     cmi = cmi_calc.computeAverageLocalOfObservations()
     return cmi
 
+def _calculate_cmi_from_jA_list(cmi_calc, var_1_java, var_2_list, var_2_ndim, cond_java):
+    """Calculate conditional MI from three variables usind JIDT.
+
+    Args:
+        cmi_calc (JIDT calculator object): JIDT calculator for conditio-
+            nal mutual information
+        var_1, var_2 (1D numpy array): realizations of two discrete
+            random variables
+        cond (1D numpy array): realizations of a discrete random
+            variable for conditioning
+
+    Returns:
+        double: conditional mutual information between var_1 and var_2
+            conditional on cond
+    """
+#    var_1_java = jp.JArray(jp.JInt, var_1.ndim)(var_1.tolist())
+    var_2_java = jp.JArray(jp.JInt, var_2_ndim)(var_2_list)
+#    cond_java = jp.JArray(jp.JInt, cond.ndim)(cond.tolist())
+    cmi_calc.initialise()
+    cmi_calc.addObservations(var_1_java, var_2_java, cond_java)
+    cmi = cmi_calc.computeAverageLocalOfObservations()
+    return cmi
+
 
 def _calculate_mi(mi_calc, var_1, var_2):
     """Calculate MI from two variables usind JIDT.
@@ -291,12 +359,15 @@ def _calculate_jointmi(jointmi_calc, s1, s2, target):
     Returns:
         double: mutual information between all three input variables
     """
-    # mUtils = jp.JPackage('infodynamics.utils').MatrixUtils
-    # xy = mUtils.computeCombinedValues(np.column_stack((x, y)), 2)
-    [s12, alph_joined] = _join_variables(s1, s2, 2, 2)
+    mUtils = jp.JPackage('infodynamics.utils').MatrixUtils
+    # speed critical line ?
+    s12 = mUtils.computeCombinedValues(jp.JArray(jp.JInt, 2)(np.column_stack((s1, s2)).tolist()), 2)
+#    [s12, alph_joined] = _join_variables(s1, s2, 2, 2)
     jointmi_calc.initialise()
-    jointmi_calc.addObservations(jp.JArray(jp.JInt, s12.T.ndim)(s12.T.tolist()),
-                                 jp.JArray(jp.JInt, target.ndim)(target.tolist()))
+#    jointmi_calc.addObservations(jp.JArray(jp.JInt, s12.T.ndim)(s12.T.tolist()),
+#                                 jp.JArray(jp.JInt, target.ndim)(target.tolist()))
+    jointmi_calc.addObservations(s12,jp.JArray(jp.JInt, target.ndim)(target.tolist()))
+
     jointmi = jointmi_calc.computeAverageLocalOfObservations()
     return jointmi
 
@@ -311,104 +382,9 @@ def _get_last_value(x):
         int/double: entry in x with highest index, which is not nan (if
             no such value exists, nan is returned)
     """
-    ind = np.where(~np.isnan(x))[0]
+    ind = np.where(x > -np.inf)[0]
     try:
         return x[ind[-1]]
     except IndexError:
-        print('Couldn not find a value that is not NaN.')
+        print('Couldn not find a value that is not -inf.')
         return np.NaN
-
-
-def _join_variables(a, b, alph_a, alph_b):
-    """Join two sequences of random variables (RV) into a new RV.
-
-    Works like the method 'computeCombinedValues' implemented in JIDT
-    (https://github.com/jlizier/jidt/blob/master/java/source/
-    infodynamics/utils/MatrixUtils.java).
-
-    Args:
-        a, b (np array): sequence of integer numbers of arbitrary base
-            (representing observations from two RVs)
-        alph_a, alph_b (int): alphabet size of a and b
-
-    Returns:
-        np array, int: joined RV
-        int: alphabet size of new RV
-    """
-    if a.shape[0] != b.shape[0]:
-        raise Error
-
-    if alph_b < alph_a:
-        a, b = b, a
-        alph_a, alph_b = alph_b, alph_a
-
-    joined = np.zeros(a.shape[0])
-
-    for i in range(joined.shape[0]):
-        mult = 1
-        joined[i] += mult * b[i]
-        mult *= alph_a
-        joined[i] += mult * a[i]
-
-    alph_new = max(a) * alph_a + alph_b
-    '''
-    for (int r = 0; r < rows; r++) {
-        // For each row in vec1
-        int combinedRowValue = 0;
-        int multiplier = 1;
-        for (int c = columns - 1; c >= 0; c--) {
-            // Add in the contribution from each column
-            combinedRowValue += separateValues[r][c] * multiplier;
-            multiplier *= base;
-        }
-        combinedValues[r] = combinedRowValue;
-    } '''
-
-    return joined.astype(int), alph_new
-
-if __name__ == '__main__':
-
-    n = 10000
-    alph = 2
-    s1 = np.random.randint(0, alph, n)
-    s2 = np.random.randint(0, alph, n)
-    target = np.logical_xor(s1, s2).astype(int)
-    cfg = {
-        'alphabetsize': 2,
-        'jarpath': 'infodynamics.jar',
-        'iterations': 1000
-    }
-    print('Testing PID estimator on binary XOR, iterations: {0}, {1}'.format(
-                                                        n, cfg['iterations']))
-    tic = tm.clock()
-    [est, opt] = pid(s1, s2, target, cfg)
-    toc = tm.clock()
-    print('Elapsed time: {0} seconds'.format(toc - tic))
-
-    # plot results
-    text_x_pos = opt['cfg']['iterations'] * 0.05
-    plt.figure
-    plt.subplot(2, 2, 1)
-    plt.plot(est['orig_mi_target_s1'] + est['orig_mi_target_s2'] - opt['mi_q_s1s2_target_all'])
-    plt.ylim([-1, 0.1])
-    plt.title('shared info')
-    plt.ylabel('SI_Q(target:s1;s2)')
-    plt.subplot(2, 2, 2)
-    plt.plot(est['orig_mi_s1s2_target'] - opt['mi_q_s1s2_target_all'])
-    plt.plot([0, opt['cfg']['iterations']],[1, 1], 'r')
-    plt.text(text_x_pos, 0.9, 'XOR', color='red')
-    plt.ylim([0, 1.1])
-    plt.title('synergistic info')
-    plt.ylabel('CI_Q(target:s1;s2)')
-    plt.subplot(2, 2, 3)
-    plt.plot(opt['cmi_q_target_s1_cond_s2_all'])
-    plt.title('unique info s1')
-    plt.ylabel('UI_Q(s1:target|s2)')
-    plt.xlabel('iteration')
-    plt.subplot(2, 2, 4)
-    plt.plot(opt['cmi_q_target_s1_cond_s2_delta'], 'r')
-    plt.title('delta unique info s1')
-    plt.ylabel('delta UI_Q(s1:target|s2)')
-    plt.xlabel('iteration')
-
-
