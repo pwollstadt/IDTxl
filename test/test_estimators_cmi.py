@@ -1,5 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
+"""Test CMI estimators.
+
+This module provides unit tests for CMI estimators.
+
 Created on Thu Mar 31 11:29:06 2016
 
 @author: patricia
@@ -63,6 +65,7 @@ def test_cmi_estimator_jidt_kraskov():
     assert (np.abs(res_2) < 0.07), ('CMI calculation for uncorrelated '
                                     'Gaussians failed (error larger 0.07).')
 
+
 def test_cmi_estimator_ocl():
     """Test CMI estimation on two sets of Gaussian random data.
 
@@ -115,10 +118,10 @@ def test_cmi_estimator_ocl():
     # examples 1 and 2 respectively. The maximum errors were 0.093841 and
     # 0.05833172 repectively. This inspired the following error boundaries.
     assert (np.abs(res_1[0] - expected_res) < 0.1), ('CMI calculation for '
-                                                  'correlated Gaussians failed'
-                                                  '(error larger 0.1).')
+                                                     'correlated Gaussians '
+                                                     'failed(error > 0.1).')
     assert (np.abs(res_2[0]) < 0.07), ('CMI calculation for uncorrelated '
-                                    'Gaussians failed (error larger 0.07).')
+                                       'Gaussians failed (error > 0.07).')
     # TODO: error bounds here may need tightening
     assert (np.abs(res_2[0]-res_2[1]) < 0.1), ('CMI calculations for first and'
                                                ' second chunk deviate by more'

@@ -1,9 +1,16 @@
+"""Provide CMI estimators for the Estimator_cmi class.
+
+This module exports methods for CMI estimation in the Estimator_cmi class.
+
+"""
 from pkg_resources import resource_filename
 import jpype as jp
 import numpy as np
 from scipy.special import digamma
 from . import idtxl_utils as utils
 from . import neighbour_search_opencl as nsocl
+
+VERBOSE = False
 
 
 def opencl_kraskov(self, var1, var2, conditional, opts=None):
@@ -73,7 +80,8 @@ def opencl_kraskov(self, var1, var2, conditional, opts=None):
     var2 += np.random.normal(size=var2.shape) * noise_level
     conditional += np.random.normal(size=conditional.shape) * noise_level
 
-    # build pointsets - Note we assume that pointsets are given in IDTxl conv.
+    # Build pointsets (note that we assume that pointsets are given in IDTxl
+    # convention.
     # 1. full space
     pointset_full_space = np.hstack((var1, var2, conditional))
     pointset_full_space = pointset_full_space.astype('float32')
@@ -82,7 +90,8 @@ def opencl_kraskov(self, var1, var2, conditional, opts=None):
     pointset_conditional = np.array(conditional)
     pointset_conditional = pointset_conditional.astype('float32')
     n_dim_conditional = pointset_conditional.shape[1]
-    print("n_dim_conditional is: {0}".format(n_dim_conditional))
+    if VERBOSE:
+        print("n_dim_conditional is: {0}".format(n_dim_conditional))
     # 3. pointset variable 1 and conditional
     pointset_var1_conditional = np.hstack((var1, conditional))
     pointset_var1_conditional = pointset_var1_conditional.astype('float32')
@@ -94,56 +103,48 @@ def opencl_kraskov(self, var1, var2, conditional, opts=None):
 
     signallengthpergpu = pointset_full_space.shape[0]
 
-#    print("working with signallength: %i" %signallengthpergpu)
-    chunksize = signallengthpergpu / nchunkspergpu # TODO check for integer result
+    if VERBOSE:
+        print('working with signallength: {0}'.format(signallengthpergpu))
+    chunksize = signallengthpergpu / nchunkspergpu
+    assert(type(chunksize) is int), 'Chunks size has to be an integer.'
     indexes, distances = nsocl.knn_search(pointset_full_space, n_dim_full,
                                           kraskov_k, theiler_t, nchunkspergpu,
                                           gpuid)
-#    print("indexes:")
-#    print(indexes)
-#    print("distances")
-#    print(distances)
-#    print("shape of distance matrix: ")
-#    print(distances.shape)
-#    # define the search radii as the distances to the kth (=last) neighbours
+    if VERBOSE:
+        print('indexes: {0}\n\ndistances: {1}\n\nshape of distance matrix: '
+              '{2}'.format(indexes, distances, distances.shape))
+
+    # Define the search radii as the distances to the kth (=last) neighbours
     radii = distances[distances.shape[0]-1, :]
-#    print(radii)
+    if VERBOSE:
+        print('Radii: {0}'.format(radii))
 
-    # get neighbour counts in ranges
-    count_conditional = nsocl.range_search(pointset_conditional,
-                                           n_dim_conditional, radii,
-                                           theiler_t, nchunkspergpu, gpuid)
+    # Get neighbour counts in ranges.
+    count_cond = nsocl.range_search(pointset_conditional, n_dim_conditional,
+                                    radii, theiler_t, nchunkspergpu, gpuid)
+    count_var1_cond = nsocl.range_search(pointset_var1_conditional,
+                                         n_dim_var1_conditional, radii,
+                                         theiler_t, nchunkspergpu, gpuid)
+    count_var2_cond = nsocl.range_search(pointset_var2_conditional,
+                                         n_dim_var2_conditional, radii,
+                                         theiler_t, nchunkspergpu, gpuid)
 
-    # get neighbour counts in ranges
-    count_var1_conditional = nsocl.range_search(pointset_var1_conditional,
-                                                n_dim_var1_conditional,
-                                                radii, theiler_t,
-                                                nchunkspergpu, gpuid)
-
-    # get neighbour counts in ranges
-    count_var2_conditional = nsocl.range_search(pointset_var2_conditional,
-                                                n_dim_var2_conditional,
-                                                radii, theiler_t,
-                                                nchunkspergpu, gpuid)
-
-    # return the results, one cmi per chunk of data
+    # Return the results, one cmi per chunk of data.
     cmi_array = -np.inf * np.ones(nchunkspergpu).astype('float64')
     for chunknum in range(0, nchunkspergpu):
         cmi = (digamma(kraskov_k) +
-               np.mean(digamma(count_conditional[chunknum * chunksize  : (chunknum +1) * chunksize] + 1) -
-               digamma(count_var1_conditional[chunknum * chunksize : (chunknum + 1) * chunksize] + 1) -
-               digamma(count_var2_conditional[chunknum * chunksize : (chunknum + 1) * chunksize] + 1)))
+               np.mean(digamma(count_cond[chunknum * chunksize:
+                                          (chunknum + 1) * chunksize] + 1) -
+                       digamma(count_var1_cond[chunknum * chunksize:
+                                               (chunknum + 1) * chunksize] +
+                               1) -
+                       digamma(count_var2_cond[chunknum * chunksize:
+                                               (chunknum + 1) * chunksize] + 1)
+                       ))
         cmi_array[chunknum] = cmi
 
     print('cmi array reads: {0}'.format(cmi_array))
     return cmi_array
-
-    # return the results, one cmi per chunk of data
-#    cmi = (digamma(kraskov_k) +
-#               np.mean(digamma(count_conditional + 1) -
-#               digamma(count_var1_conditional + 1) -
-#               digamma(count_var2_conditional + 1)))
-#    return cmi
 
 
 def jidt_kraskov(self, var1, var2, conditional, opts=None):
@@ -211,7 +212,8 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
     try:
         theiler_t = str(opts['theiler_t'])
     except KeyError:
-        theiler_t = str(utils.autocorrelation(var1))  # TODO this is no good bc we don't know if var1 is the target
+        # TODO this is no good bc we don't know if var1 is the target:
+        theiler_t = str(utils.autocorrelation(var1))
     try:
         noise_level = str(opts['noise_level'])
     except KeyError:
