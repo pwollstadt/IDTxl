@@ -101,12 +101,6 @@ def pid(s1_o, s2_o, target_o, cfg):
     s2 = s2_o.copy()
     target = target_o.copy()
 
-    # transform variables as far as possible outside the loops below
-    # (note: only these variables should change when executing the loop)
-    target_jA = jp.JArray(jp.JInt, target.ndim)(target.tolist())
-    s2_jA = jp.JArray(jp.JInt, s2.ndim)(s2.tolist())
-    s1_list = s1.tolist()
-    s1_dim = s1.ndim
 
 
     if s1.ndim != 1 or s2.ndim != 1 or target.ndim != 1:
@@ -142,19 +136,24 @@ def pid(s1_o, s2_o, target_o, cfg):
         print('"iterations" is missing from the cfg dictionary.')
         raise
 
-    # TEMP REMOVE WHEN DONE
-#    alphabet = alph_s1
-
     if not jp.isJVMStarted():
         jp.startJVM(jp.getDefaultJVMPath(),
                     '-ea', '-Djava.class.path=' + jarpath, "-Xmx3000M")
     # what if it's there already - do we have to attach to it?
 
+    # transform variables as far as possible outside the loops below
+    # (note: only these variables should change when executing the loop)
+    target_jA = jp.JArray(jp.JInt, target.ndim)(target.tolist())
+    s2_jA = jp.JArray(jp.JInt, s2.ndim)(s2.tolist())
+    s1_list = s1.tolist()
+    s1_dim = s1.ndim
+
+
     Cmi_calc_class = (jp.JPackage('infodynamics.measures.discrete')
                       .ConditionalMutualInformationCalculatorDiscrete)
     Mi_calc_class = (jp.JPackage('infodynamics.measures.discrete')
                      .MutualInformationCalculatorDiscrete)
-
+#
 #   cmi_calc = Cmi_calc_class(alphabet,alphabet,alphabet)
     cmi_calc_target_s1_cond_s2 = Cmi_calc_class(alph_t,alph_s1,alph_s2)
 
@@ -170,6 +169,7 @@ def pid(s1_o, s2_o, target_o, cfg):
 #   jointmi_calc  = Mi_calc_class(alphabet ** 2)
     jointmi_calc  = Mi_calc_class(alph_max)
 
+    print("initialized all estimators")
     cmi_target_s1_cond_s2 = _calculate_cmi(cmi_calc_target_s1_cond_s2, target, s1, s2)
     jointmi_s1s2_target = _calculate_jointmi(jointmi_calc, s1, s2, target)
 #   print("Original joint mutual information: {0}".format(jointmi_s1s2_target))
@@ -261,7 +261,6 @@ def pid(s1_o, s2_o, target_o, cfg):
         'unsuc_swaps': unsuccessful,
         'cmi_q_target_s1_cond_s2_all': cmi_q_target_s1_cond_s2_all,
         'cmi_q_target_s1_cond_s2_delta': cmi_q_target_s1_cond_s2_delta,
-        'jointmi_q_s1s2_target_all': jointmi_q_s1s2_target_all,
         'cfg': cfg
     }
     return estimate, optimization
@@ -388,3 +387,31 @@ def _get_last_value(x):
     except IndexError:
         print('Couldn not find a value that is not -inf.')
         return np.NaN
+
+#def test_logical_xor():
+#
+#    # logical XOR
+#    n = 1000
+#    alph = 2
+#    s1 = np.random.randint(0, alph, n)
+#    s2 = np.random.randint(0, alph, n)
+#    target = np.logical_xor(s1, s2).astype(int)
+#    cfg = {
+#        'alph_s1': 2,
+#        'alph_s2': 2,
+#        'alph_t': 2,
+#        'jarpath': 'infodynamics.jar',
+#        'iterations': 1000
+#    }
+#    print('Testing PID estimator on binary AND, pointsset size{0}, iterations: {1}'.format(
+#                                                        n, cfg['iterations']))
+#    [est, opt] = pid(s1, s2, target, cfg)
+#    print("----Results: ----")
+#    print("unq_s1: {0}".format(est['unq_s1']))
+#    print("unq_s2: {0}".format(est['unq_s2']))
+#    print("shd_s1s2: {0}".format(est['shd_s1s2']))
+#    print("syn_s1s2: {0}".format(est['syn_s1s2']))
+#    assert 0.9 < est['syn_s1s2'] <=1.1, 'incorrect synergy: {0}, expected was {1}'.format(est['syn_s1s2'], 0.98)
+#
+#if __name__ == '__main__':
+#    test_logical_xor()

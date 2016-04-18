@@ -25,10 +25,7 @@ def test_logical_xor():
     }
     print('Testing PID estimator on binary AND, pointsset size{0}, iterations: {1}'.format(
                                                         n, cfg['iterations']))
-    tic = tm.clock()
     [est, opt] = pid(s1, s2, target, cfg)
-    toc = tm.clock()
-    print('Elapsed time: {0} seconds'.format(toc - tic))
     print("----Results: ----")
     print("unq_s1: {0}".format(est['unq_s1']))
     print("unq_s2: {0}".format(est['unq_s2']))
