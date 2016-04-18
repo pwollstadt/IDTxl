@@ -12,12 +12,12 @@ provides the functions:
 ft_trial_2_numpyarray(filename, FTstructname)
     inputs:
     filename a full (matlab) filename on disk
-    FTstructname = name of the MATLAB stucture that is in Fieldtrip format 
+    FTstructname = name of the MATLAB stucture that is in Fieldtrip format
     (autodetect will hopefully be possible later ...)
-    
+
     outputs:
     NPData = a numpy 3D array with channel by time by trial
-    
+
 Created on Wed Mar 19 12:34:36 2014
 
 @author: Michael Wibral
@@ -25,6 +25,7 @@ Created on Wed Mar 19 12:34:36 2014
 
 import h5py
 import numpy as np
+from idtxl.data import Data
 
 def _ft_trial_2_numpyarray(filename, FTstructname):
     """
@@ -32,7 +33,7 @@ def _ft_trial_2_numpyarray(filename, FTstructname):
     reads a matlab hdf5 file ("-v7.3' or higher, .mat) with a SINGLE FieldTrip
     data structure inside and returns a numpy array with dimensions
     are channel x time x trials
-    
+
     Created on Wed Mar 19 12:34:36 2014
 
     @author: Michael Wibral
@@ -174,6 +175,8 @@ def ft2idtxlconverter(filename, FTstructname):
     label = _ft_label_2_list(filename, FTstructname)
     NPfsample = _ft_fsample_2_float(filename, FTstructname)
     NPtime = _ft_time_2_numpyarray(filename, FTstructname)
+
+    # convert data into IDTxl's Data class
 
     TXLdata = {"np_timeseries" : NPData , "label" : label, "time" : NPtime, "fsample" : NPfsample}
     # I wonder whther I should turn this into a list of dicts or even objects - 1 per channel ?

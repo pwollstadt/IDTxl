@@ -12,7 +12,7 @@ class Data():
     """Store data for information dynamics estimation.
 
     Data takes a 1- to 3-dimensional array representing realisations of random
-    variables in dimensions processes, samples (over time), and replications.
+    variables in dimensions: processes, samples (over time), and replications.
     If necessary, data reshapes provided realisations to fit the format
     expected by IDTxl, which is a 3-dimensional array with axes representing
     (process index, sample index, replication index). Indicate the actual order
