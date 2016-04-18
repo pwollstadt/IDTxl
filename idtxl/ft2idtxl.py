@@ -25,6 +25,7 @@ Created on Wed Mar 19 12:34:36 2014
 
 import h5py
 import numpy as np
+#import scipy.io as sio
 from idtxl.data import Data
 
 def _ft_trial_2_numpyarray(filename, FTstructname):
@@ -44,7 +45,6 @@ def _ft_trial_2_numpyarray(filename, FTstructname):
     FTfile = h5py.File(filename)
 
     # 2.check if its an hdf5 file
-
 
     # 3. Identify the name of the FieldTrip structure inside
     # this will be the only name without '#' and without '/'
@@ -177,8 +177,13 @@ def ft2idtxlconverter(filename, FTstructname):
     NPtime = _ft_time_2_numpyarray(filename, FTstructname)
 
     # convert data into IDTxl's Data class
+    d = Data()
+    # fieldtrip had "channel x timesamples data, we collected the replications
+    # in the tirhd diemsnion --> dimension are:
+    # p(rocesses) x s(amples) x r(eplications) = 'psr'
+    d.setdata(NPData, 'psr')
 
-    TXLdata = {"np_timeseries" : NPData , "label" : label, "time" : NPtime, "fsample" : NPfsample}
+    TXLdata = {"dataset" : d , "label" : label, "time" : NPtime, "fsample" : NPfsample}
     # I wonder whther I should turn this into a list of dicts or even objects - 1 per channel ?
     return TXLdata
 
