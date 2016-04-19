@@ -44,7 +44,7 @@ def _ft_trial_2_numpyarray(filename, FTstructname):
     # 1. create a python object that represents the hdf5 file on disk
     FTfile = h5py.File(filename)
 
-us    # 2.check if its an hdf5 file
+    # 2.check if its an hdf5 file
 
     # 3. Identify the name of the FieldTrip structure inside
     # this will be the only name without '#' and without '/'
@@ -70,6 +70,8 @@ us    # 2.check if its an hdf5 file
             # this finally pulls out the numeric data for the trial by a
             # (region) reference
             trialdatatmp = FTfile[trialref[0]]
+            trialdata_shape = trialdatatmp.shape
+            print(" Found data with first dimension: {0}, and second: {1} ".format(trialdata_shape[0], trialdata_shape[1] ))
             # convert to numpy
             nptrialdatatmp = np.array(trialdatatmp)
             # the shape of the numpy array for a single trial
@@ -169,21 +171,34 @@ def _ft_fsample_2_float(filename, FTstructname):
 # Note: Maybe all these functions should be combined into one convft2txl function that creates
 # a dictionary with the keys:  'trial', 'label', 'time', 'fsample'
 
-def ft2idtxlconverter(filename, FTstructname):
-    print('Creating Python dictionary from FT data structure: ' + FTstructname)
-    NPData = _ft_trial_2_numpyarray(filename, FTstructname)
-    label = _ft_label_2_list(filename, FTstructname)
-    NPfsample = _ft_fsample_2_float(filename, FTstructname)
-    NPtime = _ft_time_2_numpyarray(filename, FTstructname)
+def ft2idtxlconverter(filename, FTstructname, fileversion):
+    # TODO: This will need better error handling !
+    if fileversion == "v7.3":
+#        try:
+        print('Creating Python dictionary from FT data structure: ' + FTstructname)
+        NPData = _ft_trial_2_numpyarray(filename, FTstructname)
+        label = _ft_label_2_list(filename, FTstructname)
+        NPfsample = _ft_fsample_2_float(filename, FTstructname)
+        NPtime = _ft_time_2_numpyarray(filename, FTstructname)
+        # convert data into IDTxl's Data class
+        d = Data()
+        # fieldtrip had "channel x timesamples" data,
+        # but numpy sees the data as stored internally in the hdf5 file as:
+        # "timesamples x channel"
+        # we collected the replications
+        # in the tirhd diemsnion --> dimension are:
+        # s(amples) x p(rocesses) x r(eplications) = 'spr'
+        d.set_data(NPData, 'spr')
+        TXLdata = {"dataset" : d , "label" : label,
+                   "time" : NPtime, "fsample" : NPfsample}
 
-    # convert data into IDTxl's Data class
-    d = Data()
-    # fieldtrip had "channel x timesamples data, we collected the replications
-    # in the tirhd diemsnion --> dimension are:
-    # p(rocesses) x s(amples) x r(eplications) = 'psr'
-    d.setdata(NPData, 'psr')
-
-    TXLdata = {"dataset" : d , "label" : label, "time" : NPtime, "fsample" : NPfsample}
-    # I wonder whther I should turn this into a list of dicts or even objects - 1 per channel ?
+#        except(OSError, RuntimeError):
+#            print('incorrect file version, the given file was not a MATLAB'
+#                  ' m-file version 7.3')
+#            return
+    else:
+        print('At present only m-files in format 7.3 are aupported,'
+              'please consider reopening and resaving your m-file in that'
+              'version')
     return TXLdata
 
