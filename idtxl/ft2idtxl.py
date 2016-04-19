@@ -44,7 +44,7 @@ def _ft_trial_2_numpyarray(filename, FTstructname):
     # 1. create a python object that represents the hdf5 file on disk
     FTfile = h5py.File(filename)
 
-    # 2.check if its an hdf5 file
+us    # 2.check if its an hdf5 file
 
     # 3. Identify the name of the FieldTrip structure inside
     # this will be the only name without '#' and without '/'
