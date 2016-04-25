@@ -2,3 +2,4 @@ include COPYING.txt
 include idtxl/infodynamics.jar
 include idtxl/gpuKnnBF_kernel.cl
 include idtxl/gpuKnnBF_kernel.cu
+include test/data/ABA04_Up_10-140Hz_v7_3.mat
