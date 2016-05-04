@@ -16,7 +16,6 @@ def pid(s1, s2, t, cfg):
                          '(1D-arrays).')
     if len(t) != len(s1) or len(t) != len(s2):
         raise ValueError('Number of samples s1, s2 and t must be equal')
-
     try:
         alph_s1 = cfg['alph_s1']
     except TypeError:
@@ -92,7 +91,6 @@ def pid(s1, s2, t, cfg):
                                  num_samples).astype('float128')
     joint_t_s1_s2_prob = np.divide(joint_t_s1_s2_count,
                                    num_samples).astype('float128')
-
 
     # -- VIRTUALISED SWAPS -- #
 
