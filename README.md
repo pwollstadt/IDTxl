@@ -13,6 +13,8 @@ IDTxl provides estimators for the following information theoretic measures:
 
 IDTxl uses GPU-accelerated estimators as well as parallel processing and is designed for the application on high-performance-computing clusters.
 
+To **get started** have a look at the [wiki](https://github.com/pwollstadt/IDTxl/wiki) and the [documentation](http://pwollstadt.github.io/IDTxl/).
+
 ## Contributors
 
 - [Patricia Wollstadt](http://patriciawollstadt.de/), Brain Imaging Center, MEG Unit, Goethe-University, Frankfurt, Germany
