@@ -82,6 +82,9 @@ def pid(s1, s2, t, cfg):
 				np.min(
 				joint_t_s1_s2_count[np.nonzero(joint_t_s1_s2_count)])))
 
+    med_joint_nonzero_count = np.median(joint_t_s1_s2_count[np.nonzero(joint_t_s1_s2_count)])
+
+
     # Fixed probabilities
     t_prob = np.divide(t_count, num_samples).astype('float128')
     s1_prob = np.divide(s1_count, num_samples).astype('float128')
@@ -92,9 +95,11 @@ def pid(s1, s2, t, cfg):
     # Variable probabilities
     joint_s1_s2_prob = np.divide(joint_s1_s2_count, num_samples).astype('float128')
     joint_t_s1_s2_prob = np.divide(joint_t_s1_s2_count, num_samples).astype('float128')
-    min_prob = np.min(
-				np.min(
-				np.min(joint_t_s1_s2_prob[np.nonzero(joint_t_s1_s2_prob)])))
+#    min_prob = np.min(
+#				np.min(
+#				np.min(joint_t_s1_s2_prob[np.nonzero(joint_t_s1_s2_prob)])))
+    med_prob = np.median(joint_t_s1_s2_prob[np.nonzero(joint_t_s1_s2_prob)])
+
 
 
     # -- VIRTUALISED SWAPS -- #
@@ -108,10 +113,12 @@ def pid(s1, s2, t, cfg):
     # WARNING: num_reps greater than 63 results in integer overflow
     # But we can get some extra reps by not starting with a swap of size 1/n
     # but soemthing larger, by adding as many steps here as we are powers of 2
-    # larger in the minimal probability than 1/n
-    # and by starting with swaps in the size of the initial minimal prob
+    # larger in the median probability than 1/n
+    # and by starting with swaps in the size of the median probability
+    # this will keep 50% of the bins of the joint pdf from being swapped
+    # but they will joint swapping later, or after being swapped into
     print()
-    num_reps = num_reps + np.int32(np.floor(np.log(min_joint_nonzero_count)/np.log(2)))
+    num_reps = num_reps + np.int32(np.floor(np.log(med_joint_nonzero_count)/np.log(2)))
     print("num_reps:")
     print(num_reps)
     reps = np.array(np.power(2,range(0,num_reps)))
@@ -125,7 +132,7 @@ def pid(s1, s2, t, cfg):
 #            np.divide(np.float128(1),np.float128(num_samples)),
 #            np.divide(np.float128(1),np.float128(rep)))
         prob_inc = np.multiply(
-            np.float128(min_prob),
+            np.float128(med_prob),
             np.divide(np.float128(1),np.float128(rep)))
         # Want to store number of succesive unsuccessful swaps
         unsuccessful_swaps_row = 0
@@ -147,6 +154,8 @@ def pid(s1, s2, t, cfg):
                 s2_prim += 1
 
             # Ensure we can decrement without introducing neg probs
+            # this is very important as we start swaps in the size of the
+            # median probability
             if (joint_t_s1_s2_prob[t_cand, s1_cand, s2_cand] >= prob_inc
                 and joint_t_s1_s2_prob[t_cand, s1_prim, s2_prim] >= prob_inc
                 and joint_s1_s2_prob[s1_cand, s2_cand] >= prob_inc
@@ -189,7 +198,7 @@ def pid(s1, s2, t, cfg):
             if (unsuccessful_swaps_row >= max_unsuc_swaps_row):
                 break
 
-    print(cond_mut_info, '\t', prob_inc, '\t', unsuccessful_swaps_row)
+    # print(cond_mut_info, '\t', prob_inc, '\t', unsuccessful_swaps_row)
 
     # -- PID Evaluation -- #
 
@@ -197,6 +206,7 @@ def pid(s1, s2, t, cfg):
     mi_target_s1 = _mi_prob(t_prob, s1_prob, joint_t_s1_prob)
     mi_target_s2 = _mi_prob(t_prob, s2_prob, joint_t_s2_prob)
     jointmi_s1s2_target = _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t)
+    print('jointmi_s1s2_target: {0}'.format(jointmi_s1s2_target))
 
     # PID terms
     unq_s1 = cond_mut_info
