@@ -77,12 +77,12 @@ def pid(s1, s2, t, cfg):
         joint_t_s2_count[t[obs], s2[obs]] += 1
         joint_s1_s2_count[s1[obs],s2[obs]] +=1
         joint_t_s1_s2_count[t[obs], s1[obs], s2[obs]] += 1
-    min_joint_nonzero_count = np.min(
-				np.min(
-				np.min(
-				joint_t_s1_s2_count[np.nonzero(joint_t_s1_s2_count)])))
+#    min_joint_nonzero_count = np.min(
+#				np.min(
+#				np.min(
+#				joint_t_s1_s2_count[np.nonzero(joint_t_s1_s2_count)])))
 
-    med_joint_nonzero_count = np.median(joint_t_s1_s2_count[np.nonzero(joint_t_s1_s2_count)])
+    max_joint_nonzero_count = np.max(joint_t_s1_s2_count[np.nonzero(joint_t_s1_s2_count)])
 
 
     # Fixed probabilities
@@ -98,7 +98,7 @@ def pid(s1, s2, t, cfg):
 #    min_prob = np.min(
 #				np.min(
 #				np.min(joint_t_s1_s2_prob[np.nonzero(joint_t_s1_s2_prob)])))
-    med_prob = np.median(joint_t_s1_s2_prob[np.nonzero(joint_t_s1_s2_prob)])
+    max_prob = np.max(joint_t_s1_s2_prob[np.nonzero(joint_t_s1_s2_prob)])
 
 
 
@@ -113,12 +113,12 @@ def pid(s1, s2, t, cfg):
     # WARNING: num_reps greater than 63 results in integer overflow
     # But we can get some extra reps by not starting with a swap of size 1/n
     # but soemthing larger, by adding as many steps here as we are powers of 2
-    # larger in the median probability than 1/n
-    # and by starting with swaps in the size of the median probability
-    # this will keep 50% of the bins of the joint pdf from being swapped
+    # larger in the max probability than 1/n
+    # and by starting with swaps in the size of the max probability
+    # this will keep almost all of the bins of the joint pdf from being swapped
     # but they will joint swapping later, or after being swapped into
     print()
-    num_reps = num_reps + np.int32(np.floor(np.log(med_joint_nonzero_count)/np.log(2)))
+    num_reps = num_reps + np.int32(np.floor(np.log(max_joint_nonzero_count)/np.log(2)))
     print("num_reps:")
     print(num_reps)
     reps = np.array(np.power(2,range(0,num_reps)))
@@ -132,14 +132,15 @@ def pid(s1, s2, t, cfg):
 #            np.divide(np.float128(1),np.float128(num_samples)),
 #            np.divide(np.float128(1),np.float128(rep)))
         prob_inc = np.multiply(
-            np.float128(med_prob),
+            np.float128(max_prob),
             np.divide(np.float128(1),np.float128(rep)))
         # Want to store number of succesive unsuccessful swaps
         unsuccessful_swaps_row = 0
 
         # SWAP LOOP
         for attempt_swap in range(0, max_iters):
-
+            # START of a possible try_swap function
+            # (that can then be used recursively)
             # Pick a random candidate from the targets
             t_cand = np.random.randint(0, alph_t)
             s1_cand = np.random.randint(0, alph_s1)
@@ -179,6 +180,7 @@ def pid(s1, s2, t, cfg):
                 if ( cond_mut_info < cur_cond_mut_info ):
                     cur_cond_mut_info = cond_mut_info
                     unsuccessful_swaps_row = 0
+                    # TODO: if this swap direction was succesful - repeat it !
                 # Else undo the changes, record unsuccessful swap
                 else:
                     joint_t_s1_s2_prob[t_cand, s1_cand, s2_cand] += prob_inc
@@ -194,6 +196,7 @@ def pid(s1, s2, t, cfg):
                     unsuccessful_swaps_row += 1
             else:
                 unsuccessful_swaps_row += 1
+            # END of a possible try_swap function
 
             if (unsuccessful_swaps_row >= max_unsuc_swaps_row):
                 break
