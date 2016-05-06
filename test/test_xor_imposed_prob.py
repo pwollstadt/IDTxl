@@ -1,6 +1,6 @@
 import numpy as np
 import time as tm
-import estimators_fast_pid as epid
+import idtxl.estimators_fast_pid as epid
 
 alph_x = 2
 alph_y = 2
