@@ -139,8 +139,6 @@ def pid(s1, s2, t, cfg):
 
         # SWAP LOOP
         for attempt_swap in range(0, max_iters):
-            # START of a possible try_swap function
-            # (that can then be used recursively)
             # Pick a random candidate from the targets
             t_cand = np.random.randint(0, alph_t)
             s1_cand = np.random.randint(0, alph_s1)
@@ -153,6 +151,11 @@ def pid(s1, s2, t, cfg):
             s2_prim = np.random.randint(0, alph_s2-1)
             if (s2_prim >= s2_cand):
                 s2_prim += 1
+
+            # START of a possible try_swap function
+            # based on a fixed set of candidates
+            # that can then be used recursively until the swap direction
+            # becomes unsuccesful
 
             # Ensure we can decrement without introducing neg probs
             # this is very important as we start swaps in the size of the
