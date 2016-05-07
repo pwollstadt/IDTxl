@@ -40,8 +40,8 @@ def pid(s1, s2, t, cfg):
     except KeyError:
         print('"num_reps" is missing from the cfg dictionary.')
         raise
-    if (num_reps > 63):
-        raise ValueError('Number of reps muct be 63 or less to prevent integer overflow')
+    if (num_reps > 62):
+        raise ValueError('Number of reps muct be 62 or less to prevent integer overflow')
     try:
         max_iters = cfg['max_iters']
     except KeyError:
@@ -95,10 +95,15 @@ def pid(s1, s2, t, cfg):
     # Variable probabilities
     joint_s1_s2_prob = np.divide(joint_s1_s2_count, num_samples).astype('float128')
     joint_t_s1_s2_prob = np.divide(joint_t_s1_s2_count, num_samples).astype('float128')
-#    min_prob = np.min(
-#				np.min(
-#				np.min(joint_t_s1_s2_prob[np.nonzero(joint_t_s1_s2_prob)])))
     max_prob = np.max(joint_t_s1_s2_prob[np.nonzero(joint_t_s1_s2_prob)])
+
+    # make copies of the variable probabilities for independent second
+    # optimization and comparison of KLDs for convergence check:
+    # KLDs should initially rise and then fall when close to the minimum
+    joint_s1_s2_prob_alt = joint_s1_s2_prob.copy()
+    joint_t_s1_s2_prob_alt = joint_t_s1_s2_prob.copy()
+
+
 
 
 
@@ -111,32 +116,29 @@ def pid(s1, s2, t, cfg):
 
     # Declare reps array of repeated doubling to half the prob_inc
     # WARNING: num_reps greater than 63 results in integer overflow
-    # But we can get some extra reps by not starting with a swap of size 1/n
+    # TODO: in principle we could divide the increment until we run out of fp
+    # precision, e.g.
+    # we can get some extra reps by not starting with a swap of size 1/n
     # but soemthing larger, by adding as many steps here as we are powers of 2
     # larger in the max probability than 1/n
     # and by starting with swaps in the size of the max probability
     # this will keep almost all of the bins of the joint pdf from being swapped
     # but they will joint swapping later, or after being swapped into
-    print()
-    num_reps = num_reps + np.int32(np.floor(np.log(max_joint_nonzero_count)/np.log(2)))
+    # unfortunatley this does not run with the current code as it uses large
+    # powers of integers
+    # another idea would be to decrement by something slightly smaller than 2
+#    num_reps = num_reps + np.int32(np.floor(np.log(max_joint_nonzero_count)/np.log(2)))
     print("num_reps:")
     print(num_reps)
     reps = np.array(np.power(2,range(0,num_reps)))
 
     # Replication loop
     for rep in reps:
-
-        # The prob_inc = 1/2 *  minmum probabilty / repeated doubling)
-        # THIS MAY NEED SOME TIDYING
-#        prob_inc = np.multiply(
-#            np.divide(np.float128(1),np.float128(num_samples)),
-#            np.divide(np.float128(1),np.float128(rep)))
         prob_inc = np.multiply(
             np.float128(max_prob),
             np.divide(np.float128(1),np.float128(rep)))
         # Want to store number of succesive unsuccessful swaps
         unsuccessful_swaps_row = 0
-
         # SWAP LOOP
         for attempt_swap in range(0, max_iters):
             # Pick a random candidate from the targets
@@ -152,14 +154,24 @@ def pid(s1, s2, t, cfg):
             if (s2_prim >= s2_cand):
                 s2_prim += 1
 
+#            unsuccessful_swaps_row = _try_swap(cur_cond_mut_info,
+#                                               joint_t_s1_s2_prob,
+#                                               joint_s1_s2_prob,
+#                                               joint_t_s2_prob, s2_prob,
+#                                               t_cand, s1_prim, s2_prim,
+#                                               s1_cand, s2_cand,
+#                                               prob_inc,
+#                                               unsuccessful_swaps_row)
+#            print("unsuccessful_swaps_row: {0}".format(unsuccessful_swaps_row))
+
             # START of a possible try_swap function
             # based on a fixed set of candidates
             # that can then be used recursively until the swap direction
-            # becomes unsuccesful
+            # becomes unsuccessful
 
             # Ensure we can decrement without introducing neg probs
             # this is very important as we start swaps in the size of the
-            # median probability
+            # maximum probability
             if (joint_t_s1_s2_prob[t_cand, s1_cand, s2_cand] >= prob_inc
                 and joint_t_s1_s2_prob[t_cand, s1_prim, s2_prim] >= prob_inc
                 and joint_s1_s2_prob[s1_cand, s2_cand] >= prob_inc
@@ -183,7 +195,7 @@ def pid(s1, s2, t, cfg):
                 if ( cond_mut_info < cur_cond_mut_info ):
                     cur_cond_mut_info = cond_mut_info
                     unsuccessful_swaps_row = 0
-                    # TODO: if this swap direction was succesful - repeat it !
+                    # TODO: if this swap direction was successful - repeat it !
                 # Else undo the changes, record unsuccessful swap
                 else:
                     joint_t_s1_s2_prob[t_cand, s1_cand, s2_cand] += prob_inc
@@ -221,6 +233,7 @@ def pid(s1, s2, t, cfg):
     syn_s1_s2 = jointmi_s1s2_target - unq_s1 - unq_s2 - shd_s1_s2
 
     estimate = {
+        'joint_mi_s1s2_t': jointmi_s1s2_target,
         'unq_s1': unq_s1,
         'unq_s2': unq_s2,
         'shd_s1_s2': shd_s1_s2,
@@ -367,4 +380,54 @@ def _join_variables(a, b, alph_a, alph_b):
     } '''
 
     return joined.astype(int), alph_new
+
+# TODO fix this - no idea why it does not yield the correct results
+#def _try_swap(cur_cond_mut_info, joint_t_s1_s2_prob, joint_s1_s2_prob,
+#              joint_t_s2_prob, s2_prob,
+#              t_cand, s1_prim, s2_prim, s1_cand, s2_cand,
+#              prob_inc, unsuccessful_swaps_row):
+##            unsuccessful_swaps_row_local = unsuccessful_swaps_row
+##            print("unsuccessful_swaps_row_local: {0}".format(unsuccessful_swaps_row_local))
+#            if (joint_t_s1_s2_prob[t_cand, s1_cand, s2_cand] >= prob_inc
+#            and joint_t_s1_s2_prob[t_cand, s1_prim, s2_prim] >= prob_inc
+#            and joint_s1_s2_prob[s1_cand, s2_cand] >= prob_inc
+#            and joint_s1_s2_prob[s1_prim, s2_prim] >= prob_inc):
+#
+#                joint_t_s1_s2_prob[t_cand, s1_cand, s2_cand] -= prob_inc
+#                joint_t_s1_s2_prob[t_cand, s1_prim, s2_prim] -= prob_inc
+#                joint_t_s1_s2_prob[t_cand, s1_cand, s2_prim] += prob_inc
+#                joint_t_s1_s2_prob[t_cand, s1_prim, s2_cand] += prob_inc
+#
+#                joint_s1_s2_prob[s1_cand, s2_cand] -= prob_inc
+#                joint_s1_s2_prob[s1_prim, s2_prim] -= prob_inc
+#                joint_s1_s2_prob[s1_cand, s2_prim] += prob_inc
+#                joint_s1_s2_prob[s1_prim, s2_cand] += prob_inc
+#
+#                # Calculate the cmi after this virtual swap
+#                cond_mut_info = _cmi_prob(
+#                    s2_prob, joint_t_s2_prob, joint_s1_s2_prob, joint_t_s1_s2_prob)
+#
+#                # If improved keep it, reset the unsuccessful swap counter
+#                if ( cond_mut_info < cur_cond_mut_info ):
+#                    cur_cond_mut_info = cond_mut_info
+#                    unsuccessful_swaps_row = 0
+#                    # TODO: if this swap direction was successful - repeat it !
+#                # Else undo the changes, record unsuccessful swap
+#                else:
+#                    joint_t_s1_s2_prob[t_cand, s1_cand, s2_cand] += prob_inc
+#                    joint_t_s1_s2_prob[t_cand, s1_prim, s2_prim] += prob_inc
+#                    joint_t_s1_s2_prob[t_cand, s1_cand, s2_prim] -= prob_inc
+#                    joint_t_s1_s2_prob[t_cand, s1_prim, s2_cand] -= prob_inc
+#
+#                    joint_s1_s2_prob[s1_cand, s2_cand] += prob_inc
+#                    joint_s1_s2_prob[s1_prim, s2_prim] += prob_inc
+#                    joint_s1_s2_prob[s1_cand, s2_prim] -= prob_inc
+#                    joint_s1_s2_prob[s1_prim, s2_cand] -= prob_inc
+#
+#                    unsuccessful_swaps_row += 1
+#            else:
+#                unsuccessful_swaps_row += 1
+#            return unsuccessful_swaps_row # need to return this to make it visible outside
+#        # END of a possible try_swap function
+
 
