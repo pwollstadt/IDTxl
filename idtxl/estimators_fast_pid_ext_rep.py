@@ -75,7 +75,7 @@ def pid(s1, s2, t, cfg):
         s2_count[s2[obs]] += 1
         joint_t_s1_count[t[obs], s1[obs]] += 1
         joint_t_s2_count[t[obs], s2[obs]] += 1
-        joint_s1_s2_count[s1[obs],s2[obs]] +=1
+        joint_s1_s2_count[s1[obs], s2[obs]] +=1
         joint_t_s1_s2_count[t[obs], s1[obs], s2[obs]] += 1
 #    min_joint_nonzero_count = np.min(
 #				np.min(
@@ -113,6 +113,16 @@ def pid(s1, s2, t, cfg):
     cond_mut_info = _cmi_prob(
         s2_prob, joint_t_s2_prob, joint_s1_s2_prob, joint_t_s1_s2_prob)
     cur_cond_mut_info = cond_mut_info
+    # sanity check: the curr cmi must be smaller than the joint, else something
+    # is fishy
+    #
+    jointmi_s1s2_target = _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t)
+
+    if cond_mut_info > jointmi_s1s2_target:
+        raise ValueError('joint MI smalle than cMI')
+    else:
+        print('Passed sanity check on jMI and cMI')
+
 
     # Declare reps array of repeated doubling to half the prob_inc
     # WARNING: num_reps greater than 63 results in integer overflow
