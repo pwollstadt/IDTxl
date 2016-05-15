@@ -2,8 +2,14 @@ import sys
 import numpy as np
 
 def pid(s1, s2, t, cfg):
-    """
-    Docsting
+    """Provide a fast implementation of the PDI estimator for discrete data.
+
+This module exports a fast implementation of the partial information
+decomposition (PID) estimator for discrete data. The estimator does not require
+JAVA or GPU modules to run.
+
+Improved version with larger initial swaps and checking for convergence of both
+the unique information from sources 1 and 2.
     """
 
     if s1.ndim != 1 or s2.ndim != 1 or t.ndim != 1:
@@ -40,8 +46,8 @@ def pid(s1, s2, t, cfg):
     except KeyError:
         print('"num_reps" is missing from the cfg dictionary.')
         raise
-    if (num_reps > 62):
-        raise ValueError('Number of reps muct be 62 or less to prevent integer overflow')
+    if (num_reps > 63):
+        raise ValueError('Number of reps must be 63 or less to prevent integer overflow')
     try:
         max_iters = cfg['max_iters']
     except KeyError:
@@ -97,11 +103,11 @@ def pid(s1, s2, t, cfg):
     joint_t_s1_s2_prob = np.divide(joint_t_s1_s2_count, num_samples).astype('float128')
     max_prob = np.max(joint_t_s1_s2_prob[np.nonzero(joint_t_s1_s2_prob)])
 
-    # make copies of the variable probabilities for independent second
-    # optimization and comparison of KLDs for convergence check:
-    # KLDs should initially rise and then fall when close to the minimum
-    joint_s1_s2_prob_alt = joint_s1_s2_prob.copy()
-    joint_t_s1_s2_prob_alt = joint_t_s1_s2_prob.copy()
+#    # make copies of the variable probabilities for independent second
+#    # optimization and comparison of KLDs for convergence check:
+#    # KLDs should initially rise and then fall when close to the minimum
+#    joint_s1_s2_prob_alt = joint_s1_s2_prob.copy()
+#    joint_t_s1_s2_prob_alt = joint_t_s1_s2_prob.copy()
 
 
 
@@ -109,17 +115,22 @@ def pid(s1, s2, t, cfg):
 
     # -- VIRTUALISED SWAPS -- #
 
-    # Calculate the initial cmi and store it
-    cond_mut_info = _cmi_prob(
+    # Calculate the initial cmi's and store them
+    cond_mut_info1 = _cmi_prob(
         s2_prob, joint_t_s2_prob, joint_s1_s2_prob, joint_t_s1_s2_prob)
-    cur_cond_mut_info = cond_mut_info
+    cur_cond_mut_info1 = cond_mut_info1
+
+    cond_mut_info2 = _cmi_prob(
+        s1_prob, joint_t_s1_prob, joint_s1_s2_prob, joint_t_s1_s2_prob)
+    cur_cond_mut_info2 = cond_mut_info2
+
     # sanity check: the curr cmi must be smaller than the joint, else something
     # is fishy
     #
     jointmi_s1s2_target = _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t)
 
-    if cond_mut_info > jointmi_s1s2_target:
-        raise ValueError('joint MI smalle than cMI')
+    if cond_mut_info1 > jointmi_s1s2_target:
+        raise ValueError('joint MI smaller than cMI')
     else:
         print('Passed sanity check on jMI and cMI')
 
@@ -198,12 +209,17 @@ def pid(s1, s2, t, cfg):
                 joint_s1_s2_prob[s1_prim, s2_cand] += prob_inc
 
                 # Calculate the cmi after this virtual swap
-                cond_mut_info = _cmi_prob(
+                cond_mut_info1 = _cmi_prob(
+                    s2_prob, joint_t_s2_prob, joint_s1_s2_prob, joint_t_s1_s2_prob)
+                cond_mut_info2 = _cmi_prob(
                     s2_prob, joint_t_s2_prob, joint_s1_s2_prob, joint_t_s1_s2_prob)
 
-                # If improved keep it, reset the unsuccessful swap counter
-                if ( cond_mut_info < cur_cond_mut_info ):
-                    cur_cond_mut_info = cond_mut_info
+                # If at least one of the cmis is improved keep it,
+                # reset the unsuccessful swap counter
+                if ( cond_mut_info1 < cur_cond_mut_info1 or
+                     cond_mut_info2 < cur_cond_mut_info2):
+                    cur_cond_mut_info1 = cond_mut_info1
+                    cur_cond_mut_info2 = cond_mut_info2
                     unsuccessful_swaps_row = 0
                     # TODO: if this swap direction was successful - repeat it !
                 # Else undo the changes, record unsuccessful swap
@@ -237,7 +253,7 @@ def pid(s1, s2, t, cfg):
     print('jointmi_s1s2_target: {0}'.format(jointmi_s1s2_target))
 
     # PID terms
-    unq_s1 = cond_mut_info
+    unq_s1 = cond_mut_info1
     shd_s1_s2 = mi_target_s1 - unq_s1
     unq_s2 = mi_target_s2 - shd_s1_s2
     syn_s1_s2 = jointmi_s1s2_target - unq_s1 - unq_s2 - shd_s1_s2

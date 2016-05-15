@@ -2,7 +2,7 @@
 """
 import time as tm
 import numpy as np
-import idtxl.estimators_fast_pid as epid
+import idtxl.estimators_fast_pid_ext_rep as epid
 
 n = 1000
 ALPH_X = 2
@@ -16,9 +16,9 @@ CFG = {
     'alph_s1': ALPH_X,
     'alph_s2': ALPH_Y,
     'alph_t': ALPH_Z,
-    'max_unsuc_swaps_row_parm': 3,
+    'max_unsuc_swaps_row_parm': 90000,
     'num_reps': 63,
-    'max_iters': 10000
+    'max_iters': 100000
 }
 
 def test_pid_and():
