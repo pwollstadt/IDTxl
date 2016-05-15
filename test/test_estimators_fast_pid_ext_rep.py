@@ -5,15 +5,20 @@ import numpy as np
 import numpy.matlib as nm
 import idtxl.estimators_fast_pid_ext_rep as epid
 
-n = 1000
+
 ALPH_X = 2
 ALPH_Y = 2
 ALPH_Z = 2
 
-X = np.asarray([0, 0, 1, 1]) # np.random.randint(0, ALPH_X, n)
+X = np.asarray([0, 0, 1, 1])
 #X = np.squeeze(nm.repmat(X, 1, 100000))
-Y = np.asarray([0, 1, 0, 1]) # np.random.randint(0, ALPH_Y, n)
+Y = np.asarray([0, 1, 0, 1])
 #Y = np.squeeze(nm.repmat(Y, 1, 100000))
+
+## alternative way of generating the distributions stochastically
+#n = 10000000
+#X = np.random.randint(0, ALPH_X, n)
+#Y = np.random.randint(0, ALPH_Y, n)
 
 
 CFG = {

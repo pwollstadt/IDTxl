@@ -130,7 +130,8 @@ the unique information from sources 1 and 2.
     jointmi_s1s2_target = _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t)
 
     if cond_mut_info1 > jointmi_s1s2_target:
-        raise ValueError('joint MI smaller than cMI')
+        raise ValueError('joint MI {0} smaller than cMI {1}'
+                         ''.format(jointmi_s1s2_target, cond_mut_info1))
     else:
         print('Passed sanity check on jMI and cMI')
 
