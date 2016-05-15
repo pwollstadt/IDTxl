@@ -2,6 +2,7 @@
 """
 import time as tm
 import numpy as np
+import numpy.matlib as nm
 import idtxl.estimators_fast_pid_ext_rep as epid
 
 n = 1000
@@ -9,16 +10,19 @@ ALPH_X = 2
 ALPH_Y = 2
 ALPH_Z = 2
 
-X = np.random.randint(0, ALPH_X, n)
-Y = np.random.randint(0, ALPH_Y, n)
+X = np.asarray([0, 0, 1, 1]) # np.random.randint(0, ALPH_X, n)
+#X = np.squeeze(nm.repmat(X, 1, 100000))
+Y = np.asarray([0, 1, 0, 1]) # np.random.randint(0, ALPH_Y, n)
+#Y = np.squeeze(nm.repmat(Y, 1, 100000))
+
 
 CFG = {
     'alph_s1': ALPH_X,
     'alph_s2': ALPH_Y,
     'alph_t': ALPH_Z,
-    'max_unsuc_swaps_row_parm': 90000,
+    'max_unsuc_swaps_row_parm': 60,
     'num_reps': 63,
-    'max_iters': 100000
+    'max_iters': 1000
 }
 
 def test_pid_and():
