@@ -1,6 +1,8 @@
 import sys
 import numpy as np
 
+import jpype as jp
+
 def pid(s1, s2, t, cfg):
     """Provide a fast implementation of the PDI estimator for discrete data.
 
@@ -53,7 +55,7 @@ the unique information from sources 1 and 2.
     except KeyError:
         print('"max_iters" is missing from the cfg dictionary.')
         raise
-
+    
     # -- DEFINE PARAMETERS -- #
 
     num_samples = len(t)
@@ -110,9 +112,33 @@ the unique information from sources 1 and 2.
 #    joint_t_s1_s2_prob_alt = joint_t_s1_s2_prob.copy()
 
 
+    # JIDT IS BACK
 
+    jarpath = '/home/conor/projects/idtxl/git/IDTxl/idtxl/infodynamics.jar'
+    
+    if not jp.isJVMStarted():
+        jp.startJVM(jp.getDefaultJVMPath(),
+                    '-ea', '-Djava.class.path=' + jarpath)
 
+    Cmi_calc_class = (jp.JPackage('infodynamics.measures.discrete')
+                      .ConditionalMutualInformationCalculatorDiscrete)
+    Mi_calc_class = (jp.JPackage('infodynamics.measures.discrete')
+                     .MutualInformationCalculatorDiscrete)
 
+    cmi_calc_t_s1_cond_s2 = Cmi_calc_class(alph_t,alph_s1,alph_s2)
+    cmi_calc_t_s2_cond_s1 = Cmi_calc_class(alph_t,alph_s2,alph_s1)
+    cmi_t_s1_cond_s2 = _calculate_cmi(cmi_calc_t_s1_cond_s2, t, s1, s2)
+    cmi_t_s2_cond_s1 = _calculate_cmi(cmi_calc_t_s2_cond_s1, t, s2, s1)
+
+    alph_max = max(alph_s1*alph_s2, alph_t)
+    jointmi_calc  = Mi_calc_class(alph_max)
+    jointmi_s1s2_t = _calculate_jointmi(jointmi_calc, s1, s2, t)
+    
+    print('JIDT CMI (s1):\t', cmi_t_s2_cond_s1)    
+    print('JIDT CMI (s2):\t', cmi_t_s1_cond_s2)
+    print('JIDT JMI:\t', jointmi_s1s2_t)
+
+    
     # -- VIRTUALISED SWAPS -- #
 
     # Calculate the initial cmi's and store them
@@ -127,11 +153,11 @@ the unique information from sources 1 and 2.
     # sanity check: the curr cmi must be smaller than the joint, else something
     # is fishy
     #
-    jointmi_s1s2_target = _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t)
+    jointmi_s1s2_t = _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t)
 
-    if cond_mut_info1 > jointmi_s1s2_target:
+    if cond_mut_info1 > jointmi_s1s2_t:
         raise ValueError('joint MI {0} smaller than cMI {1}'
-                         ''.format(jointmi_s1s2_target, cond_mut_info1))
+                         ''.format(jointmi_s1s2_t, cond_mut_info1))
     else:
         print('Passed sanity check on jMI and cMI')
 
@@ -283,7 +309,8 @@ def _cmi_prob(s2cond_prob, joint_t_s2cond_prob,
         for sym_s2cond in range(0, alph_s2cond):
             for sym_t in range(0, alph_t):
 
-                if ( s2cond_prob[sym_s2cond] * joint_t_s2cond_prob[sym_t, sym_s2cond]
+                if ( s2cond_prob[sym_s2cond]
+                     * joint_t_s2cond_prob[sym_t, sym_s2cond]
                      * joint_s1_s2cond_prob[sym_s1, sym_s2cond]
                      * joint_t_s1_s2cond_prob[sym_t, sym_s1, sym_s2cond] > 0 ):
 
@@ -407,6 +434,59 @@ def _join_variables(a, b, alph_a, alph_b):
     } '''
 
     return joined.astype(int), alph_new
+
+
+
+
+def _calculate_cmi(cmi_calc, var_1, var_2, cond):
+    """Calculate conditional MI from three variables usind JIDT.
+
+    Args:
+        cmi_calc (JIDT calculator object): JIDT calculator for conditio-
+            nal mutual information
+        var_1, var_2 (1D numpy array): realizations of two discrete
+            random variables
+        cond (1D numpy array): realizations of a discrete random
+            variable for conditioning
+
+    Returns:
+        double: conditional mutual information between var_1 and var_2
+            conditional on cond
+    """
+    var_1_java = jp.JArray(jp.JInt, var_1.ndim)(var_1.tolist())
+    var_2_java = jp.JArray(jp.JInt, var_2.ndim)(var_2.tolist())
+    cond_java = jp.JArray(jp.JInt, cond.ndim)(cond.tolist())
+    cmi_calc.initialise()
+    cmi_calc.addObservations(var_1_java, var_2_java, cond_java)
+    cmi = cmi_calc.computeAverageLocalOfObservations()
+    return cmi
+
+def _calculate_jointmi(jointmi_calc, s1, s2, target):
+    """Calculate MI from three variables usind JIDT.
+
+    Args:
+        jointmi_calc (JIDT calculator object): JIDT calculator for
+            mutual information
+        var_1, var_2, var_3 (1D numpy array): realizations of some
+            discrete random variables
+
+    Returns:
+        double: mutual information between all three input variables
+    """
+    mUtils = jp.JPackage('infodynamics.utils').MatrixUtils
+    # speed critical line ?
+    s12 = mUtils.computeCombinedValues(jp.JArray(jp.JInt, 2)(np.column_stack((s1, s2)).tolist()), 2)
+#    [s12, alph_joined] = _join_variables(s1, s2, 2, 2)
+    jointmi_calc.initialise()
+#    jointmi_calc.addObservations(jp.JArray(jp.JInt, s12.T.ndim)(s12.T.tolist()),
+#                                 jp.JArray(jp.JInt, target.ndim)(target.tolist()))
+    jointmi_calc.addObservations(s12,jp.JArray(jp.JInt, target.ndim)(target.tolist()))
+
+    jointmi = jointmi_calc.computeAverageLocalOfObservations()
+    return jointmi
+
+
+
 
 # TODO fix this - no idea why it does not yield the correct results
 #def _try_swap(cur_cond_mut_info, joint_t_s1_s2_prob, joint_s1_s2_prob,
