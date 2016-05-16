@@ -127,16 +127,16 @@ the unique information from sources 1 and 2.
 
     cmi_calc_t_s1_cond_s2 = Cmi_calc_class(alph_t,alph_s1,alph_s2)
     cmi_calc_t_s2_cond_s1 = Cmi_calc_class(alph_t,alph_s2,alph_s1)
-    cmi_t_s1_cond_s2 = _calculate_cmi(cmi_calc_t_s1_cond_s2, t, s1, s2)
-    cmi_t_s2_cond_s1 = _calculate_cmi(cmi_calc_t_s2_cond_s1, t, s2, s1)
+    cmi_t_s1_cond_s2_jidt = _calculate_cmi(cmi_calc_t_s1_cond_s2, t, s1, s2)
+    cmi_t_s2_cond_s1_jidt = _calculate_cmi(cmi_calc_t_s2_cond_s1, t, s2, s1)
 
     alph_max = max(alph_s1*alph_s2, alph_t)
     jointmi_calc  = Mi_calc_class(alph_max)
-    jointmi_s1s2_t = _calculate_jointmi(jointmi_calc, s1, s2, t)
+    jointmi_s1s2_t_jidt = _calculate_jointmi(jointmi_calc, s1, s2, t)
     
-    print('JIDT CMI (s1):\t', cmi_t_s2_cond_s1)    
-    print('JIDT CMI (s2):\t', cmi_t_s1_cond_s2)
-    print('JIDT JMI:\t', jointmi_s1s2_t)
+    print('JIDT CMI (s1): ', cmi_t_s2_cond_s1_jidt)    
+    print('JIDT CMI (s2): ', cmi_t_s1_cond_s2_jidt)
+    print('JIDT JMI:      ', jointmi_s1s2_t_jidt)
 
     
     # -- VIRTUALISED SWAPS -- #
@@ -147,7 +147,9 @@ the unique information from sources 1 and 2.
     cur_cond_mut_info1 = cond_mut_info1
 
     cond_mut_info2 = _cmi_prob(
-        s1_prob, joint_t_s1_prob, joint_s1_s2_prob, joint_t_s1_s2_prob)
+        s1_prob, joint_t_s1_prob,
+        np.transpose(joint_s1_s2_prob), # transpose s1 and s2
+        np.ndarray.transpose(joint_t_s1_s2_prob,[0,2,1])) # ditto
     cur_cond_mut_info2 = cond_mut_info2
 
     # sanity check: the curr cmi must be smaller than the joint, else something
@@ -155,6 +157,10 @@ the unique information from sources 1 and 2.
     #
     jointmi_s1s2_t = _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t)
 
+    print('CMI (s1): ', cond_mut_info2)    
+    print('CMI (s2): ', cond_mut_info1)
+    print('JMI:      ', jointmi_s1s2_t)
+    
     if cond_mut_info1 > jointmi_s1s2_t:
         raise ValueError('joint MI {0} smaller than cMI {1}'
                          ''.format(jointmi_s1s2_t, cond_mut_info1))
