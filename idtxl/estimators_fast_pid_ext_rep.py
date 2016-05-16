@@ -155,7 +155,7 @@ the unique information from sources 1 and 2.
     # sanity check: the curr cmi must be smaller than the joint, else something
     # is fishy
     #
-    jointmi_s1s2_t = _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t)
+    jointmi_s1s2_t = _joint_mi(jointmi_calc, alph_max, s1, s2, t, alph_s1, alph_s2, alph_t)
 
     print('CMI (s1): ', cond_mut_info2)    
     print('CMI (s2): ', cond_mut_info1)
@@ -367,13 +367,18 @@ def _mi_prob(s1_prob, s2_prob, joint_s1_s2_prob):
     return total
 
 
-def _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t):
+def _joint_mi(jointmi_calc, alph_max, s1, s2, t, alph_s1, alph_s2, alph_t):
     """
     Joint MI calculator in the samples domain
     """
 
-    [s12, alph_s12] = _join_variables(s1, s2, alph_s1, alph_s2)
+    #[s12, alph_s12] = _join_variables(s1, s2, alph_s1, alph_s2)
 
+    mUtils = jp.JPackage('infodynamics.utils').MatrixUtils
+    # speed critical line ?
+    s12 = mUtils.computeCombinedValues(jp.JArray(jp.JInt, 2)(np.column_stack((s1, s2)).tolist()), 2)
+    alph_s12 = alph_max
+    
     t_count = np.zeros(alph_t, dtype=np.int)
     s12_count = np.zeros(alph_s12, dtype=np.int)
     joint_t_s12_count = np.zeros((alph_t, alph_s12), dtype=np.int)
