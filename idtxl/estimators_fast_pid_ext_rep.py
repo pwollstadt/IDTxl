@@ -116,10 +116,11 @@ the unique information from sources 1 and 2.
         s2_prob, joint_t_s2_prob, joint_s1_s2_prob, joint_t_s1_s2_prob)
     cur_cond_mut_info1 = cond_mut_info1
 
+    joint_s2_s1_prob = np.transpose(joint_s1_s2_prob)
+    joint_t_s2_s1_prob = np.ndarray.transpose(joint_t_s1_s2_prob,[0,2,1])
+
     cond_mut_info2 = _cmi_prob(
-        s1_prob, joint_t_s1_prob,
-        np.transpose(joint_s1_s2_prob), # transpose s1 and s2
-        np.ndarray.transpose(joint_t_s1_s2_prob,[0,2,1])) # ditto
+        s1_prob, joint_t_s1_prob, joint_s2_s1_prob,joint_t_s2_s1_prob)
     cur_cond_mut_info2 = cond_mut_info2
 
     # sanity check: the curr cmi must be smaller than the joint, else something
