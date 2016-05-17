@@ -10,10 +10,6 @@ import json
 import scipy.io as sio
 import numpy as np
 import time as tm
-#from idtxl.estimators_fast_pid_ext_rep import pid
-
-import sys
-sys.path.insert(0, '/home/conor/projects/idtxl/git/IDTxl')
 from idtxl.estimators_fast_pid_ext_rep import pid
 
 
@@ -89,10 +85,9 @@ if __name__ == '__main__' :
     args = parser.parse_args()
     day = args.day
 
-#    datapath = ('/home/wibral/unison/projects/'
-#                'TransferEntropy/Application_Projects/'
-#                'Culture_PID/')    
-    datapath = ('/home/conor/projects/idtxl/git/IDTxl/test/data/')
+    datapath = ('/home/wibral/unison/projects/'
+                'TransferEntropy/Application_Projects/'
+                'Culture_PID/')
     first_channels = ['53']
     second_channels = ['17']
 
