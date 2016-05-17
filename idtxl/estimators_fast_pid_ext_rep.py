@@ -155,7 +155,7 @@ the unique information from sources 1 and 2.
     # sanity check: the curr cmi must be smaller than the joint, else something
     # is fishy
     #
-    jointmi_s1s2_t = _joint_mi(jointmi_calc, alph_max, s1, s2, t, alph_s1, alph_s2, alph_t)
+    jointmi_s1s2_t = _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t)
 
     print('CMI (s1): ', cond_mut_info2)    
     print('CMI (s2): ', cond_mut_info1)
@@ -315,6 +315,9 @@ def _cmi_prob(s2cond_prob, joint_t_s2cond_prob,
         for sym_s2cond in range(0, alph_s2cond):
             for sym_t in range(0, alph_t):
 
+                # print(sym_s1, '\t', sym_s2cond, '\t', sym_t, '\t', joint_t_s2cond_prob[sym_t, sym_s2cond], '\t', joint_s1_s2cond_prob[sym_s1, sym_s2cond], '\t', joint_t_s1_s2cond_prob[sym_t,sym_s1, sym_s2cond], '\t', s2cond_prob[sym_s2cond])
+
+                
                 if ( s2cond_prob[sym_s2cond]
                      * joint_t_s2cond_prob[sym_t, sym_s2cond]
                      * joint_s1_s2cond_prob[sym_s1, sym_s2cond]
@@ -348,6 +351,8 @@ def _mi_prob(s1_prob, s2_prob, joint_s1_s2_prob):
     for sym_s1 in range(0, alph_s1):
         for sym_s2 in range(0, alph_s2):
 
+#            print(sym_s1, '\t', sym_s2, '\t', s1_prob[sym_s1], '\t', s2_prob[sym_s2], '\t', joint_s1_s2_prob[sym_s1, sym_s2])
+            
             if ( s1_prob[sym_s1] * s2_prob[sym_s2]
                  * joint_s1_s2_prob[sym_s1, sym_s2] > 0 ):
 
@@ -356,7 +361,7 @@ def _mi_prob(s1_prob, s2_prob, joint_s1_s2_prob):
                     - np.log(s1_prob[sym_s1])
                     - np.log(s2_prob[sym_s2])
                     ) / np.log(2)
-
+                
                 weighted_contrib = (
                     joint_s1_s2_prob[sym_s1, sym_s2]
                     * local_contrib)
@@ -367,17 +372,17 @@ def _mi_prob(s1_prob, s2_prob, joint_s1_s2_prob):
     return total
 
 
-def _joint_mi(jointmi_calc, alph_max, s1, s2, t, alph_s1, alph_s2, alph_t):
+def _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t):
     """
     Joint MI calculator in the samples domain
     """
 
-    #[s12, alph_s12] = _join_variables(s1, s2, alph_s1, alph_s2)
+    [s12, alph_s12] = _join_variables(s1, s2, alph_s1, alph_s2)
 
-    mUtils = jp.JPackage('infodynamics.utils').MatrixUtils
-    # speed critical line ?
-    s12 = mUtils.computeCombinedValues(jp.JArray(jp.JInt, 2)(np.column_stack((s1, s2)).tolist()), 2)
-    alph_s12 = alph_max
+#    mUtils = jp.JPackage('infodynamics.utils').MatrixUtils
+#    # speed critical line ?
+#    s12 = mUtils.computeCombinedValues(jp.JArray(jp.JInt, 2)(np.column_stack((s1, s2)).tolist()), 2)
+#    alph_s12 = alph_max
     
     t_count = np.zeros(alph_t, dtype=np.int)
     s12_count = np.zeros(alph_s12, dtype=np.int)
@@ -399,54 +404,64 @@ def _joint_mi(jointmi_calc, alph_max, s1, s2, t, alph_s1, alph_s2, alph_t):
     return jmi
 
 
+#def _join_variables(a, b, alph_a, alph_b):
+#    """Join two sequences of random variables (RV) into a new RV.
+#
+#    Works like the method 'computeCombinedValues' implemented in JIDT
+#    (https://github.com/jlizier/jidt/blob/master/java/source/
+#    infodynamics/utils/MatrixUtils.java).
+#
+#    Args:
+#        a, b (np array): sequence of integer numbers of arbitrary base
+#            (representing observations from two RVs)
+#        alph_a, alph_b (int): alphabet size of a and b
+#
+#    Returns:
+#        np array, int: joined RV
+#        int: alphabet size of new RV
+#    """
+#    if a.shape[0] != b.shape[0]:
+#        raise Error
+#
+#    if alph_b < alph_a:
+#        a, b = b, a
+#        alph_a, alph_b = alph_b, alph_a
+#
+#    joined = np.zeros(a.shape[0])
+#
+#    for i in range(joined.shape[0]):
+#        mult = 1
+#        joined[i] += mult * b[i]
+#        mult *= alph_a
+#        joined[i] += mult * a[i]
+#
+#    alph_new = max(a) * alph_a + alph_b
+#    '''
+#    for (int r = 0; r < rows; r++) {
+#        // For each row in vec1
+#        int combinedRowValue = 0;
+#        int multiplier = 1;
+#        for (int c = columns - 1; c >= 0; c--) {
+#            // Add in the contribution from each column
+#            combinedRowValue += separateValues[r][c] * multiplier;
+#            multiplier *= base;
+#        }
+#        combinedValues[r] = combinedRowValue;
+#    } '''
+#
+#    return joined.astype(int), alph_new
+
 def _join_variables(a, b, alph_a, alph_b):
-    """Join two sequences of random variables (RV) into a new RV.
 
-    Works like the method 'computeCombinedValues' implemented in JIDT
-    (https://github.com/jlizier/jidt/blob/master/java/source/
-    infodynamics/utils/MatrixUtils.java).
-
-    Args:
-        a, b (np array): sequence of integer numbers of arbitrary base
-            (representing observations from two RVs)
-        alph_a, alph_b (int): alphabet size of a and b
-
-    Returns:
-        np array, int: joined RV
-        int: alphabet size of new RV
-    """
-    if a.shape[0] != b.shape[0]:
-        raise Error
-
+    alph_new = alph_a * alph_b
+    
     if alph_b < alph_a:
         a, b = b, a
         alph_a, alph_b = alph_b, alph_a
-
-    joined = np.zeros(a.shape[0])
-
-    for i in range(joined.shape[0]):
-        mult = 1
-        joined[i] += mult * b[i]
-        mult *= alph_a
-        joined[i] += mult * a[i]
-
-    alph_new = max(a) * alph_a + alph_b
-    '''
-    for (int r = 0; r < rows; r++) {
-        // For each row in vec1
-        int combinedRowValue = 0;
-        int multiplier = 1;
-        for (int c = columns - 1; c >= 0; c--) {
-            // Add in the contribution from each column
-            combinedRowValue += separateValues[r][c] * multiplier;
-            multiplier *= base;
-        }
-        combinedValues[r] = combinedRowValue;
-    } '''
-
-    return joined.astype(int), alph_new
-
-
+    
+    ab = alph_b * a + b
+    
+    return ab, alph_new
 
 
 def _calculate_cmi(cmi_calc, var_1, var_2, cond):
