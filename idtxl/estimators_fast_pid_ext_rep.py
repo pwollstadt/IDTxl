@@ -1,8 +1,6 @@
 import sys
 import numpy as np
 
-import jpype as jp
-
 def pid(s1, s2, t, cfg):
     """Provide a fast implementation of the PDI estimator for discrete data.
 
@@ -110,34 +108,6 @@ the unique information from sources 1 and 2.
 #    # KLDs should initially rise and then fall when close to the minimum
 #    joint_s1_s2_prob_alt = joint_s1_s2_prob.copy()
 #    joint_t_s1_s2_prob_alt = joint_t_s1_s2_prob.copy()
-
-
-    # JIDT IS BACK
-
-    jarpath = '/home/conor/projects/idtxl/git/IDTxl/idtxl/infodynamics.jar'
-    
-    if not jp.isJVMStarted():
-        jp.startJVM(jp.getDefaultJVMPath(),
-                    '-ea', '-Djava.class.path=' + jarpath)
-
-    Cmi_calc_class = (jp.JPackage('infodynamics.measures.discrete')
-                      .ConditionalMutualInformationCalculatorDiscrete)
-    Mi_calc_class = (jp.JPackage('infodynamics.measures.discrete')
-                     .MutualInformationCalculatorDiscrete)
-
-    cmi_calc_t_s1_cond_s2 = Cmi_calc_class(alph_t,alph_s1,alph_s2)
-    cmi_calc_t_s2_cond_s1 = Cmi_calc_class(alph_t,alph_s2,alph_s1)
-    cmi_t_s1_cond_s2_jidt = _calculate_cmi(cmi_calc_t_s1_cond_s2, t, s1, s2)
-    cmi_t_s2_cond_s1_jidt = _calculate_cmi(cmi_calc_t_s2_cond_s1, t, s2, s1)
-
-    alph_max = max(alph_s1*alph_s2, alph_t)
-    jointmi_calc  = Mi_calc_class(alph_max)
-    jointmi_s1s2_t_jidt = _calculate_jointmi(jointmi_calc, s1, s2, t)
-    
-    print('JIDT CMI (s1): ', cmi_t_s2_cond_s1_jidt)    
-    print('JIDT CMI (s2): ', cmi_t_s1_cond_s2_jidt)
-    print('JIDT JMI:      ', jointmi_s1s2_t_jidt)
-
     
     # -- VIRTUALISED SWAPS -- #
 
@@ -156,10 +126,6 @@ the unique information from sources 1 and 2.
     # is fishy
     #
     jointmi_s1s2_t = _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t)
-
-    print('CMI (s1): ', cond_mut_info2)    
-    print('CMI (s2): ', cond_mut_info1)
-    print('JMI:      ', jointmi_s1s2_t)
     
     if cond_mut_info1 > jointmi_s1s2_t:
         raise ValueError('joint MI {0} smaller than cMI {1}'
@@ -302,8 +268,6 @@ the unique information from sources 1 and 2.
     return estimate
 
 
-
-
 def _cmi_prob(s2cond_prob, joint_t_s2cond_prob,
              joint_s1_s2cond_prob, joint_t_s1_s2cond_prob):
 
@@ -316,7 +280,6 @@ def _cmi_prob(s2cond_prob, joint_t_s2cond_prob,
             for sym_t in range(0, alph_t):
 
                 # print(sym_s1, '\t', sym_s2cond, '\t', sym_t, '\t', joint_t_s2cond_prob[sym_t, sym_s2cond], '\t', joint_s1_s2cond_prob[sym_s1, sym_s2cond], '\t', joint_t_s1_s2cond_prob[sym_t,sym_s1, sym_s2cond], '\t', s2cond_prob[sym_s2cond])
-
                 
                 if ( s2cond_prob[sym_s2cond]
                      * joint_t_s2cond_prob[sym_t, sym_s2cond]
@@ -378,11 +341,6 @@ def _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t):
     """
 
     [s12, alph_s12] = _join_variables(s1, s2, alph_s1, alph_s2)
-
-#    mUtils = jp.JPackage('infodynamics.utils').MatrixUtils
-#    # speed critical line ?
-#    s12 = mUtils.computeCombinedValues(jp.JArray(jp.JInt, 2)(np.column_stack((s1, s2)).tolist()), 2)
-#    alph_s12 = alph_max
     
     t_count = np.zeros(alph_t, dtype=np.int)
     s12_count = np.zeros(alph_s12, dtype=np.int)
@@ -404,53 +362,6 @@ def _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t):
     return jmi
 
 
-#def _join_variables(a, b, alph_a, alph_b):
-#    """Join two sequences of random variables (RV) into a new RV.
-#
-#    Works like the method 'computeCombinedValues' implemented in JIDT
-#    (https://github.com/jlizier/jidt/blob/master/java/source/
-#    infodynamics/utils/MatrixUtils.java).
-#
-#    Args:
-#        a, b (np array): sequence of integer numbers of arbitrary base
-#            (representing observations from two RVs)
-#        alph_a, alph_b (int): alphabet size of a and b
-#
-#    Returns:
-#        np array, int: joined RV
-#        int: alphabet size of new RV
-#    """
-#    if a.shape[0] != b.shape[0]:
-#        raise Error
-#
-#    if alph_b < alph_a:
-#        a, b = b, a
-#        alph_a, alph_b = alph_b, alph_a
-#
-#    joined = np.zeros(a.shape[0])
-#
-#    for i in range(joined.shape[0]):
-#        mult = 1
-#        joined[i] += mult * b[i]
-#        mult *= alph_a
-#        joined[i] += mult * a[i]
-#
-#    alph_new = max(a) * alph_a + alph_b
-#    '''
-#    for (int r = 0; r < rows; r++) {
-#        // For each row in vec1
-#        int combinedRowValue = 0;
-#        int multiplier = 1;
-#        for (int c = columns - 1; c >= 0; c--) {
-#            // Add in the contribution from each column
-#            combinedRowValue += separateValues[r][c] * multiplier;
-#            multiplier *= base;
-#        }
-#        combinedValues[r] = combinedRowValue;
-#    } '''
-#
-#    return joined.astype(int), alph_new
-
 def _join_variables(a, b, alph_a, alph_b):
 
     alph_new = alph_a * alph_b
@@ -462,56 +373,6 @@ def _join_variables(a, b, alph_a, alph_b):
     ab = alph_b * a + b
     
     return ab, alph_new
-
-
-def _calculate_cmi(cmi_calc, var_1, var_2, cond):
-    """Calculate conditional MI from three variables usind JIDT.
-
-    Args:
-        cmi_calc (JIDT calculator object): JIDT calculator for conditio-
-            nal mutual information
-        var_1, var_2 (1D numpy array): realizations of two discrete
-            random variables
-        cond (1D numpy array): realizations of a discrete random
-            variable for conditioning
-
-    Returns:
-        double: conditional mutual information between var_1 and var_2
-            conditional on cond
-    """
-    var_1_java = jp.JArray(jp.JInt, var_1.ndim)(var_1.tolist())
-    var_2_java = jp.JArray(jp.JInt, var_2.ndim)(var_2.tolist())
-    cond_java = jp.JArray(jp.JInt, cond.ndim)(cond.tolist())
-    cmi_calc.initialise()
-    cmi_calc.addObservations(var_1_java, var_2_java, cond_java)
-    cmi = cmi_calc.computeAverageLocalOfObservations()
-    return cmi
-
-def _calculate_jointmi(jointmi_calc, s1, s2, target):
-    """Calculate MI from three variables usind JIDT.
-
-    Args:
-        jointmi_calc (JIDT calculator object): JIDT calculator for
-            mutual information
-        var_1, var_2, var_3 (1D numpy array): realizations of some
-            discrete random variables
-
-    Returns:
-        double: mutual information between all three input variables
-    """
-    mUtils = jp.JPackage('infodynamics.utils').MatrixUtils
-    # speed critical line ?
-    s12 = mUtils.computeCombinedValues(jp.JArray(jp.JInt, 2)(np.column_stack((s1, s2)).tolist()), 2)
-#    [s12, alph_joined] = _join_variables(s1, s2, 2, 2)
-    jointmi_calc.initialise()
-#    jointmi_calc.addObservations(jp.JArray(jp.JInt, s12.T.ndim)(s12.T.tolist()),
-#                                 jp.JArray(jp.JInt, target.ndim)(target.tolist()))
-    jointmi_calc.addObservations(s12,jp.JArray(jp.JInt, target.ndim)(target.tolist()))
-
-    jointmi = jointmi_calc.computeAverageLocalOfObservations()
-    return jointmi
-
-
 
 
 # TODO fix this - no idea why it does not yield the correct results
