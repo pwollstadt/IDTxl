@@ -53,7 +53,7 @@ the unique information from sources 1 and 2.
     except KeyError:
         print('"max_iters" is missing from the cfg dictionary.')
         raise
-
+    
     # -- DEFINE PARAMETERS -- #
 
     num_samples = len(t)
@@ -108,11 +108,7 @@ the unique information from sources 1 and 2.
 #    # KLDs should initially rise and then fall when close to the minimum
 #    joint_s1_s2_prob_alt = joint_s1_s2_prob.copy()
 #    joint_t_s1_s2_prob_alt = joint_t_s1_s2_prob.copy()
-
-
-
-
-
+    
     # -- VIRTUALISED SWAPS -- #
 
     # Calculate the initial cmi's and store them
@@ -120,18 +116,21 @@ the unique information from sources 1 and 2.
         s2_prob, joint_t_s2_prob, joint_s1_s2_prob, joint_t_s1_s2_prob)
     cur_cond_mut_info1 = cond_mut_info1
 
+    joint_s2_s1_prob = np.transpose(joint_s1_s2_prob)
+    joint_t_s2_s1_prob = np.ndarray.transpose(joint_t_s1_s2_prob,[0,2,1])
+
     cond_mut_info2 = _cmi_prob(
-        s1_prob, joint_t_s1_prob, joint_s1_s2_prob, joint_t_s1_s2_prob)
+        s1_prob, joint_t_s1_prob, joint_s2_s1_prob,joint_t_s2_s1_prob)
     cur_cond_mut_info2 = cond_mut_info2
 
     # sanity check: the curr cmi must be smaller than the joint, else something
     # is fishy
     #
-    jointmi_s1s2_target = _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t)
-
-    if cond_mut_info1 > jointmi_s1s2_target:
+    jointmi_s1s2_t = _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t)
+    
+    if cond_mut_info1 > jointmi_s1s2_t:
         raise ValueError('joint MI {0} smaller than cMI {1}'
-                         ''.format(jointmi_s1s2_target, cond_mut_info1))
+                         ''.format(jointmi_s1s2_t, cond_mut_info1))
     else:
         print('Passed sanity check on jMI and cMI')
 
@@ -270,8 +269,6 @@ the unique information from sources 1 and 2.
     return estimate
 
 
-
-
 def _cmi_prob(s2cond_prob, joint_t_s2cond_prob,
              joint_s1_s2cond_prob, joint_t_s1_s2cond_prob):
 
@@ -283,7 +280,10 @@ def _cmi_prob(s2cond_prob, joint_t_s2cond_prob,
         for sym_s2cond in range(0, alph_s2cond):
             for sym_t in range(0, alph_t):
 
-                if ( s2cond_prob[sym_s2cond] * joint_t_s2cond_prob[sym_t, sym_s2cond]
+                # print(sym_s1, '\t', sym_s2cond, '\t', sym_t, '\t', joint_t_s2cond_prob[sym_t, sym_s2cond], '\t', joint_s1_s2cond_prob[sym_s1, sym_s2cond], '\t', joint_t_s1_s2cond_prob[sym_t,sym_s1, sym_s2cond], '\t', s2cond_prob[sym_s2cond])
+                
+                if ( s2cond_prob[sym_s2cond]
+                     * joint_t_s2cond_prob[sym_t, sym_s2cond]
                      * joint_s1_s2cond_prob[sym_s1, sym_s2cond]
                      * joint_t_s1_s2cond_prob[sym_t, sym_s1, sym_s2cond] > 0 ):
 
@@ -315,6 +315,8 @@ def _mi_prob(s1_prob, s2_prob, joint_s1_s2_prob):
     for sym_s1 in range(0, alph_s1):
         for sym_s2 in range(0, alph_s2):
 
+#            print(sym_s1, '\t', sym_s2, '\t', s1_prob[sym_s1], '\t', s2_prob[sym_s2], '\t', joint_s1_s2_prob[sym_s1, sym_s2])
+            
             if ( s1_prob[sym_s1] * s2_prob[sym_s2]
                  * joint_s1_s2_prob[sym_s1, sym_s2] > 0 ):
 
@@ -323,7 +325,7 @@ def _mi_prob(s1_prob, s2_prob, joint_s1_s2_prob):
                     - np.log(s1_prob[sym_s1])
                     - np.log(s2_prob[sym_s2])
                     ) / np.log(2)
-
+                
                 weighted_contrib = (
                     joint_s1_s2_prob[sym_s1, sym_s2]
                     * local_contrib)
@@ -340,7 +342,7 @@ def _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t):
     """
 
     [s12, alph_s12] = _join_variables(s1, s2, alph_s1, alph_s2)
-
+    
     t_count = np.zeros(alph_t, dtype=np.int)
     s12_count = np.zeros(alph_s12, dtype=np.int)
     joint_t_s12_count = np.zeros((alph_t, alph_s12), dtype=np.int)
@@ -362,51 +364,17 @@ def _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t):
 
 
 def _join_variables(a, b, alph_a, alph_b):
-    """Join two sequences of random variables (RV) into a new RV.
 
-    Works like the method 'computeCombinedValues' implemented in JIDT
-    (https://github.com/jlizier/jidt/blob/master/java/source/
-    infodynamics/utils/MatrixUtils.java).
-
-    Args:
-        a, b (np array): sequence of integer numbers of arbitrary base
-            (representing observations from two RVs)
-        alph_a, alph_b (int): alphabet size of a and b
-
-    Returns:
-        np array, int: joined RV
-        int: alphabet size of new RV
-    """
-    if a.shape[0] != b.shape[0]:
-        raise Error
-
+    alph_new = alph_a * alph_b
+    
     if alph_b < alph_a:
         a, b = b, a
         alph_a, alph_b = alph_b, alph_a
+    
+    ab = alph_b * a + b
+    
+    return ab, alph_new
 
-    joined = np.zeros(a.shape[0])
-
-    for i in range(joined.shape[0]):
-        mult = 1
-        joined[i] += mult * b[i]
-        mult *= alph_a
-        joined[i] += mult * a[i]
-
-    alph_new = max(a) * alph_a + alph_b
-    '''
-    for (int r = 0; r < rows; r++) {
-        // For each row in vec1
-        int combinedRowValue = 0;
-        int multiplier = 1;
-        for (int c = columns - 1; c >= 0; c--) {
-            // Add in the contribution from each column
-            combinedRowValue += separateValues[r][c] * multiplier;
-            multiplier *= base;
-        }
-        combinedValues[r] = combinedRowValue;
-    } '''
-
-    return joined.astype(int), alph_new
 
 # TODO fix this - no idea why it does not yield the correct results
 #def _try_swap(cur_cond_mut_info, joint_t_s1_s2_prob, joint_s1_s2_prob,
