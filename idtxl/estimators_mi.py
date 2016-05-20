@@ -99,9 +99,17 @@ def opencl_kraskov(self, var1, var2, opts=None):
                                     nchunkspergpu, gpuid)
     count_var2 = nsocl.range_search(var2, n_dim_var2, radii, theiler_t,
                                     nchunkspergpu, gpuid)
-    mi = (digamma(kraskov_k) + digamma(chunksize) -
-          np.mean(digamma(count_var1 + 1) + digamma(count_var2 + 1)))
-    return mi
+
+    # Return the results, one cmi per chunk of data.
+    mi_array = -np.inf * np.ones(nchunkspergpu).astype('float64')
+    for chunknum in range(0, nchunkspergpu):
+        mi = (digamma(kraskov_k) + digamma(chunksize) -
+              np.mean(digamma(count_var1[chunknum * chunksize:(chunknum + 1) *
+                                         chunksize] + 1) +
+              digamma(count_var2[chunknum * chunksize:(chunknum + 1) *
+                                 chunksize] + 1)))
+        mi_array[chunknum] = mi
+    return mi_array
 
 
 def jidt_kraskov(self, var1, var2, opts=None):
