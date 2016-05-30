@@ -91,7 +91,9 @@ def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, thelier,
     # Set up OpenCL
     # context = cl.create_some_context()
     platform = cl.get_platforms()
-    my_gpu_devices = platform[0].get_devices(device_type=cl.device_type.GPU)
+    platf_idx = find_nonempty(platform)
+    print('platform index chosen is: {0}'.format(platf_idx))
+    my_gpu_devices = platform[platf_idx].get_devices(device_type=cl.device_type.GPU)
     context = cl.Context(devices=my_gpu_devices)
     queue = cl.CommandQueue(context, my_gpu_devices[gpuid])
     print(("Selected Device: ", my_gpu_devices[gpuid].name))
@@ -186,7 +188,8 @@ def clFindRSAll(h_bf_npointsrange, h_pointset, h_query, h_vecradius, thelier,
     # Set up OpenCL
     #context = cl.create_some_context()
     platform = cl.get_platforms()
-    my_gpu_devices = platform[0].get_devices(device_type=cl.device_type.GPU)
+    platf_idx = find_nonempty(platform)
+    my_gpu_devices = platform[platf_idx].get_devices(device_type=cl.device_type.GPU)
     context = cl.Context(devices=my_gpu_devices)
     queue = cl.CommandQueue(context, my_gpu_devices[gpuid])
     print(("Selected Device: ", my_gpu_devices[gpuid].name))
@@ -244,3 +247,14 @@ def clFindRSAll(h_bf_npointsrange, h_pointset, h_query, h_vecradius, thelier,
 
     return 1
 
+def find_nonempty(a_list):
+    for idx in range(0,len(a_list)):
+        if a_list[idx].get_devices(device_type= cl.device_type.GPU) != []:
+            break
+        else:
+            print('found empty platform')
+
+    if a_list[idx] == []:
+        print('all platforms empty')
+    else:
+        return idx
