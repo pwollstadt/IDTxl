@@ -41,7 +41,7 @@
     <script type="text/javascript" src="../../_static/js/jquery.min.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/bootstrap3.min.js"></script>
 <script type="text/javascript" src="../../_static/js/jquery.cookie.min.js"></script>
 <script type="text/javascript" src="../../_static/js/basicstrap.js"></script>
@@ -108,7 +108,7 @@
                 <div class="body">
                   
   <h1>Source code for idtxl.estimators_mi</h1><div class="highlight"><pre>
-<span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">resource_filename</span>
+<span></span><span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">resource_filename</span>
 <span class="kn">import</span> <span class="nn">jpype</span> <span class="kn">as</span> <span class="nn">jp</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">digamma</span>
@@ -159,59 +159,59 @@
     <span class="k">if</span> <span class="n">opts</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">opts</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">kraskov_k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;kraskov_k&#39;</span><span class="p">])</span>
+        <span class="n">kraskov_k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">])</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
         <span class="n">kraskov_k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">theiler_t</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;theiler_t&#39;</span><span class="p">])</span> <span class="c"># TODO neccessary?</span>
+        <span class="n">theiler_t</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s1">&#39;theiler_t&#39;</span><span class="p">])</span> <span class="c1"># TODO neccessary?</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
         <span class="n">theiler_t</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">noise_level</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;noise_level&#39;</span><span class="p">])</span>
+        <span class="n">noise_level</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s1">&#39;noise_level&#39;</span><span class="p">])</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
         <span class="n">noise_level</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="mf">1e-8</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">gpuid</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;gpuid&#39;</span><span class="p">])</span>
+        <span class="n">gpuid</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s1">&#39;gpuid&#39;</span><span class="p">])</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
         <span class="n">gpuid</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">nchunkspergpu</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;nchunkspergpu&#39;</span><span class="p">])</span>
+        <span class="n">nchunkspergpu</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s1">&#39;nchunkspergpu&#39;</span><span class="p">])</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
         <span class="n">nchunkspergpu</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
     <span class="n">var1</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="n">noise_level</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="n">var2</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="n">noise_level</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">var2</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
-    <span class="c"># build pointsets - Note we assume that pointsets are given in IDTxl conv.</span>
-    <span class="c"># also cast to single precision as required by opencl neighbour search</span>
-    <span class="c"># 1. full space</span>
+    <span class="c1"># build pointsets - Note we assume that pointsets are given in IDTxl conv.</span>
+    <span class="c1"># also cast to single precision as required by opencl neighbour search</span>
+    <span class="c1"># 1. full space</span>
     <span class="n">pointset_full_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">))</span>
-    <span class="n">pointset_full_space</span> <span class="o">=</span> <span class="n">pointset_full_space</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float32&#39;</span><span class="p">)</span>
+    <span class="n">pointset_full_space</span> <span class="o">=</span> <span class="n">pointset_full_space</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
     <span class="n">n_dim_full</span> <span class="o">=</span> <span class="n">pointset_full_space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">var1</span> <span class="o">=</span> <span class="n">var1</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float32&#39;</span><span class="p">)</span>
+    <span class="n">var1</span> <span class="o">=</span> <span class="n">var1</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
     <span class="n">n_dim_var1</span> <span class="o">=</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">var2</span> <span class="o">=</span> <span class="n">var2</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float32&#39;</span><span class="p">)</span>
+    <span class="n">var2</span> <span class="o">=</span> <span class="n">var2</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
     <span class="n">n_dim_var2</span> <span class="o">=</span> <span class="n">var2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
     <span class="n">signallengthpergpu</span> <span class="o">=</span> <span class="n">pointset_full_space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="c">#    print(&quot;working with signallength: %i&quot; %signallengthpergpu)</span>
-    <span class="n">chunksize</span> <span class="o">=</span> <span class="n">signallengthpergpu</span> <span class="o">/</span> <span class="n">nchunkspergpu</span> <span class="c"># TODO check for integer result</span>
+<span class="c1">#    print(&quot;working with signallength: %i&quot; %signallengthpergpu)</span>
+    <span class="n">chunksize</span> <span class="o">=</span> <span class="n">signallengthpergpu</span> <span class="o">/</span> <span class="n">nchunkspergpu</span> <span class="c1"># TODO check for integer result</span>
 
-    <span class="c"># KNN search in highest dimensional space.</span>
+    <span class="c1"># KNN search in highest dimensional space.</span>
     <span class="n">indexes</span><span class="p">,</span> <span class="n">distances</span> <span class="o">=</span> <span class="n">nsocl</span><span class="o">.</span><span class="n">knn_search</span><span class="p">(</span><span class="n">pointset_full_space</span><span class="p">,</span> <span class="n">n_dim_full</span><span class="p">,</span>
                                           <span class="n">kraskov_k</span><span class="p">,</span> <span class="n">theiler_t</span><span class="p">,</span> <span class="n">nchunkspergpu</span><span class="p">,</span>
                                           <span class="n">gpuid</span><span class="p">)</span>
     <span class="n">radii</span> <span class="o">=</span> <span class="n">distances</span><span class="p">[</span><span class="n">distances</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
 
-    <span class="c"># Get neighbour counts in the ranges defined by the k-th nearest</span>
-    <span class="c"># neighbour in the KNN search.</span>
+    <span class="c1"># Get neighbour counts in the ranges defined by the k-th nearest</span>
+    <span class="c1"># neighbour in the KNN search.</span>
     <span class="n">count_var1</span> <span class="o">=</span> <span class="n">nsocl</span><span class="o">.</span><span class="n">range_search</span><span class="p">(</span><span class="n">var1</span><span class="p">,</span> <span class="n">n_dim_var1</span><span class="p">,</span> <span class="n">radii</span><span class="p">,</span> <span class="n">theiler_t</span><span class="p">,</span>
                                     <span class="n">nchunkspergpu</span><span class="p">,</span> <span class="n">gpuid</span><span class="p">)</span>
     <span class="n">count_var2</span> <span class="o">=</span> <span class="n">nsocl</span><span class="o">.</span><span class="n">range_search</span><span class="p">(</span><span class="n">var2</span><span class="p">,</span> <span class="n">n_dim_var2</span><span class="p">,</span> <span class="n">radii</span><span class="p">,</span> <span class="n">theiler_t</span><span class="p">,</span>
                                     <span class="n">nchunkspergpu</span><span class="p">,</span> <span class="n">gpuid</span><span class="p">)</span>
 
-    <span class="c"># Return the results, one cmi per chunk of data.</span>
-    <span class="n">mi_array</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nchunkspergpu</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float64&#39;</span><span class="p">)</span>
+    <span class="c1"># Return the results, one cmi per chunk of data.</span>
+    <span class="n">mi_array</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nchunkspergpu</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">chunknum</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nchunkspergpu</span><span class="p">):</span>
         <span class="n">mi</span> <span class="o">=</span> <span class="p">(</span><span class="n">digamma</span><span class="p">(</span><span class="n">kraskov_k</span><span class="p">)</span> <span class="o">+</span> <span class="n">digamma</span><span class="p">(</span><span class="n">chunksize</span><span class="p">)</span> <span class="o">-</span>
               <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">digamma</span><span class="p">(</span><span class="n">count_var1</span><span class="p">[</span><span class="n">chunknum</span> <span class="o">*</span> <span class="n">chunksize</span><span class="p">:(</span><span class="n">chunknum</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span>
@@ -266,26 +266,26 @@
     <span class="k">if</span> <span class="n">opts</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">opts</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">kraskov_k</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;kraskov_k&#39;</span><span class="p">])</span>
+        <span class="n">kraskov_k</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">])</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
         <span class="n">kraskov_k</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">opts</span><span class="p">[</span><span class="s">&#39;normalise&#39;</span><span class="p">]:</span>
-            <span class="n">normalise</span> <span class="o">=</span> <span class="s">&#39;true&#39;</span>
+        <span class="k">if</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;normalise&#39;</span><span class="p">]:</span>
+            <span class="n">normalise</span> <span class="o">=</span> <span class="s1">&#39;true&#39;</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">normalise</span> <span class="o">=</span> <span class="s">&#39;false&#39;</span>
+            <span class="n">normalise</span> <span class="o">=</span> <span class="s1">&#39;false&#39;</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="n">normalise</span> <span class="o">=</span> <span class="s">&#39;false&#39;</span>
+        <span class="n">normalise</span> <span class="o">=</span> <span class="s1">&#39;false&#39;</span>
 
-    <span class="n">jarLocation</span> <span class="o">=</span> <span class="n">resource_filename</span><span class="p">(</span><span class="n">__name__</span><span class="p">,</span> <span class="s">&#39;infodynamics.jar&#39;</span><span class="p">)</span>
+    <span class="n">jarLocation</span> <span class="o">=</span> <span class="n">resource_filename</span><span class="p">(</span><span class="n">__name__</span><span class="p">,</span> <span class="s1">&#39;infodynamics.jar&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">jp</span><span class="o">.</span><span class="n">isJVMStarted</span><span class="p">():</span>
-        <span class="n">jp</span><span class="o">.</span><span class="n">startJVM</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">getDefaultJVMPath</span><span class="p">(),</span> <span class="s">&#39;-ea&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s">&#39;-Djava.class.path=&#39;</span> <span class="o">+</span>
+        <span class="n">jp</span><span class="o">.</span><span class="n">startJVM</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">getDefaultJVMPath</span><span class="p">(),</span> <span class="s1">&#39;-ea&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;-Djava.class.path=&#39;</span> <span class="o">+</span>
                     <span class="n">jarLocation</span><span class="p">))</span>
-    <span class="n">calcClass</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s">&#39;infodynamics.measures.continuous.kraskov&#39;</span><span class="p">)</span><span class="o">.</span>
+    <span class="n">calcClass</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.continuous.kraskov&#39;</span><span class="p">)</span><span class="o">.</span>
                  <span class="n">MutualInfoCalculatorMultiVariateKraskov1</span><span class="p">)</span>
     <span class="n">calc</span> <span class="o">=</span> <span class="n">calcClass</span><span class="p">()</span>
-    <span class="n">calc</span><span class="o">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s">&#39;NORMALISE&#39;</span><span class="p">,</span> <span class="n">normalise</span><span class="p">)</span>
-    <span class="n">calc</span><span class="o">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s">&#39;k&#39;</span><span class="p">,</span> <span class="n">kraskov_k</span><span class="p">)</span>
+    <span class="n">calc</span><span class="o">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s1">&#39;NORMALISE&#39;</span><span class="p">,</span> <span class="n">normalise</span><span class="p">)</span>
+    <span class="n">calc</span><span class="o">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">kraskov_k</span><span class="p">)</span>
     <span class="n">calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">(</span><span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">var2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
     <span class="n">calc</span><span class="o">.</span><span class="n">setObservations</span><span class="p">(</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span></div>
@@ -342,7 +342,7 @@
       <!-- footer -->
       <footer role="contentinfo">
           &copy; Copyright 2016, Patricia Wollstadt, Joseph T. Lizier, Michael Wibral.
-        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.3.1.
       </footer>
       <!-- /footer -->
 

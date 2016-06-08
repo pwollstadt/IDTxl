@@ -1,32 +1,24 @@
-# -*- coding: utf-8 -*-
-"""
-ft2txl
-Module with functions to import FieldTrip matfiles (version>7.3, hdf5)
-to TRENTOOL XL (aka TXL).
+"""Provide functions to import FieldTrip mat-files (version>7.3) to IDTxl.
 
-Functions in this module read the (neurophysiological) data from a Fieldtrip file
-with the basic fields necessary for the MATLAB version TRENTOOL and create a numpy
-array usable as input to TXL.
+Functions in this module read the (neurophysiological) data from a FieldTrip 
+file with the basic fields necessary for its analysis with the MATLAB toolbox 
+TRENTOOL (fields ). Creates a numpy array usable as input to IDTxl.
 
-provides the functions:
-ft_trial_2_numpyarray(filename, FTstructname)
-    inputs:
-    filename a full (matlab) filename on disk
-    FTstructname = name of the MATLAB stucture that is in Fieldtrip format
-    (autodetect will hopefully be possible later ...)
+Methods:
+    ft_trial_2_numpyarray(filename, FTstructname)  
 
-    outputs:
-    NPData = a numpy 3D array with channel by time by trial
+Note:
+    Written for Python 3.4+
 
 Created on Wed Mar 19 12:34:36 2014
 
 @author: Michael Wibral
 """
-
 import h5py
 import numpy as np
 #import scipy.io as sio
 from idtxl.data import Data
+
 
 def _ft_trial_2_numpyarray(filename, FTstructname):
     """
@@ -167,11 +159,36 @@ def _ft_fsample_2_float(filename, FTstructname):
     return NPfsample
 
 
-
 # Note: Maybe all these functions should be combined into one convft2txl function that creates
 # a dictionary with the keys:  'trial', 'label', 'time', 'fsample'
 
 def ft2idtxlconverter(filename, FTstructname, fileversion):
+    """Converts a FieldTrip-style MATLAB-file into an IDTxl Data object.
+
+    Import a MATLAB structure with fields  "trial" (data), "label" (channel
+    labels), "time" (time stamps for data samples), and "fsample" (sampling
+    rate). This structure is the standard file format in the MATLAB toolbox 
+    FieldTrip and commonly use to represent neurophysiological data (see also
+    http://www.fieldtriptoolbox.org/). The functions reads a mat-file from 
+    disc and returns a dictionary containing the information in the mat-file. 
+    Data is represented as an IDTxl Data object.
+    
+    Args:
+        filename : string
+            full (matlab) filename on disk            
+        FTstructname : string
+            variable name of the MATLAB structure that is in FieldTrip format
+            (autodetect will hopefully be possible later ...)
+        fileversion : string
+            version of the file, e.g. "v7.3" for MATLAB's 7.3 format
+
+    Returns:
+        dict
+            "dataset": instance of IDTxl Data object; "label": list of channel
+            labels; "time": numpy array of time stamps; "fsample": sampling 
+            rate
+    """
+    
     # TODO: This will need better error handling !
     if fileversion == "v7.3":
 #        try:
