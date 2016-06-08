@@ -41,11 +41,7 @@
     <script type="text/javascript" src="_static/js/jquery.min.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-<<<<<<< HEAD
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-=======
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
->>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
     <script type="text/javascript" src="_static/js/bootstrap3.min.js"></script>
 <script type="text/javascript" src="_static/js/jquery.cookie.min.js"></script>
 <script type="text/javascript" src="_static/js/basicstrap.js"></script>
@@ -74,15 +70,9 @@
                 <ul class="dropdown-menu localtoc sp-localtoc" role="menu" aria-labelledby="localToc">
                 <ul>
 <li><a class="reference internal" href="#">Information theoretic estimators</a><ul>
-<<<<<<< HEAD
 <li><a class="reference internal" href="#module-idtxl.estimators_cmi">idtxl.estimators_cmi module</a></li>
 <li><a class="reference internal" href="#module-idtxl.estimators_mi">idtxl.estimators_mi module</a></li>
 <li><a class="reference internal" href="#module-idtxl.estimators_te">idtxl.estimators_te module</a></li>
-=======
-<li><a class="reference internal" href="#module-estimators_cmi">idtxl.estimators_cmi module</a></li>
-<li><a class="reference internal" href="#module-estimators_mi">idtxl.estimators_mi module</a></li>
-<li><a class="reference internal" href="#module-estimators_te">idtxl.estimators_te module</a></li>
->>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
 </ul>
 </li>
 </ul>
@@ -136,7 +126,6 @@
                   
   <div class="section" id="information-theoretic-estimators">
 <h1>Information theoretic estimators<a class="headerlink" href="#information-theoretic-estimators" title="Permalink to this headline">¶</a></h1>
-<<<<<<< HEAD
 <div class="section" id="module-idtxl.estimators_cmi">
 <span id="idtxl-estimators-cmi-module"></span><h2>idtxl.estimators_cmi module<a class="headerlink" href="#module-idtxl.estimators_cmi" title="Permalink to this headline">¶</a></h2>
 <p>Provide CMI estimators for the Estimator_cmi class.</p>
@@ -144,13 +133,6 @@
 <dl class="function">
 <dt id="idtxl.estimators_cmi.jidt_kraskov">
 <tt class="descclassname">idtxl.estimators_cmi.</tt><tt class="descname">jidt_kraskov</tt><big>(</big><em>self</em>, <em>var1</em>, <em>var2</em>, <em>conditional</em>, <em>opts=None</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_cmi.html#jidt_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_cmi.jidt_kraskov" title="Permalink to this definition">¶</a></dt>
-=======
-<div class="section" id="module-estimators_cmi">
-<span id="idtxl-estimators-cmi-module"></span><h2>idtxl.estimators_cmi module<a class="headerlink" href="#module-estimators_cmi" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="estimators_cmi.jidt_kraskov">
-<code class="descclassname">estimators_cmi.</code><code class="descname">jidt_kraskov</code><span class="sig-paren">(</span><em>self</em>, <em>var1</em>, <em>var2</em>, <em>conditional</em>, <em>opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/estimators_cmi.html#jidt_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#estimators_cmi.jidt_kraskov" title="Permalink to this definition">¶</a></dt>
->>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
 <dd><p>Calculate conditional mutual infor with JIDT&#8217;s Kraskov implementation.</p>
 <p>Calculate the conditional mutual information between three variables. Call
 JIDT via jpype and use the Kraskov 1 estimator. If no conditional is given
@@ -204,13 +186,8 @@ runs replicable set noise_level to 0.</dd>
 </dd></dl>
 
 <dl class="function">
-<<<<<<< HEAD
 <dt id="idtxl.estimators_cmi.opencl_kraskov">
 <tt class="descclassname">idtxl.estimators_cmi.</tt><tt class="descname">opencl_kraskov</tt><big>(</big><em>self</em>, <em>var1</em>, <em>var2</em>, <em>conditional=None</em>, <em>opts=None</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_cmi.html#opencl_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_cmi.opencl_kraskov" title="Permalink to this definition">¶</a></dt>
-=======
-<dt id="estimators_cmi.opencl_kraskov">
-<code class="descclassname">estimators_cmi.</code><code class="descname">opencl_kraskov</code><span class="sig-paren">(</span><em>self</em>, <em>var1</em>, <em>var2</em>, <em>conditional</em>, <em>opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/estimators_cmi.html#opencl_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#estimators_cmi.opencl_kraskov" title="Permalink to this definition">¶</a></dt>
->>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
 <dd><p>Calculate conditional mutual infor using opencl Kraskov implementation.</p>
 <p>Calculate the conditional mutual information between three variables using
 an opencl-based Kraskov type 1 estimator. References:</p>
@@ -254,28 +231,12 @@ noise_level to 0.</dd>
 </dl>
 </dd></dl>
 
-<<<<<<< HEAD
 </div>
 <div class="section" id="module-idtxl.estimators_mi">
 <span id="idtxl-estimators-mi-module"></span><h2>idtxl.estimators_mi module<a class="headerlink" href="#module-idtxl.estimators_mi" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="idtxl.estimators_mi.jidt_kraskov">
 <tt class="descclassname">idtxl.estimators_mi.</tt><tt class="descname">jidt_kraskov</tt><big>(</big><em>self</em>, <em>var1</em>, <em>var2</em>, <em>opts=None</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_mi.html#jidt_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_mi.jidt_kraskov" title="Permalink to this definition">¶</a></dt>
-=======
-<dl class="function">
-<dt id="estimators_cmi.pyinfo_kraskov">
-<code class="descclassname">estimators_cmi.</code><code class="descname">pyinfo_kraskov</code><span class="sig-paren">(</span><em>self</em>, <em>var1</em>, <em>var2</em>, <em>conditional</em>, <em>knn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/estimators_cmi.html#pyinfo_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#estimators_cmi.pyinfo_kraskov" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the conditional mutual information calculated by the pyinfo module
-using the Kraskov estimator.</p>
-</dd></dl>
-
-</div>
-<div class="section" id="module-estimators_mi">
-<span id="idtxl-estimators-mi-module"></span><h2>idtxl.estimators_mi module<a class="headerlink" href="#module-estimators_mi" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="estimators_mi.jidt_kraskov">
-<code class="descclassname">estimators_mi.</code><code class="descname">jidt_kraskov</code><span class="sig-paren">(</span><em>self</em>, <em>var1</em>, <em>var2</em>, <em>opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/estimators_mi.html#jidt_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#estimators_mi.jidt_kraskov" title="Permalink to this definition">¶</a></dt>
->>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
 <dd><p>Calculate mutual information with JIDT&#8217;s Kraskov implementation.</p>
 <p>Calculate the mutual information between two variables. Call JIDT via jpype
 and use the Kraskov 1 estimator. References:</p>
@@ -320,13 +281,8 @@ runs replicable set noise_level to 0.</dd>
 </dd></dl>
 
 <dl class="function">
-<<<<<<< HEAD
 <dt id="idtxl.estimators_mi.opencl_kraskov">
 <tt class="descclassname">idtxl.estimators_mi.</tt><tt class="descname">opencl_kraskov</tt><big>(</big><em>self</em>, <em>var1</em>, <em>var2</em>, <em>opts=None</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_mi.html#opencl_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_mi.opencl_kraskov" title="Permalink to this definition">¶</a></dt>
-=======
-<dt id="estimators_mi.opencl_kraskov">
-<code class="descclassname">estimators_mi.</code><code class="descname">opencl_kraskov</code><span class="sig-paren">(</span><em>self</em>, <em>var1</em>, <em>var2</em>, <em>opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/estimators_mi.html#opencl_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#estimators_mi.opencl_kraskov" title="Permalink to this definition">¶</a></dt>
->>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
 <dd><p>Calculate mutual information using an opencl Kraskov implementation.</p>
 <p>Calculate the mutual information between two variables using an
 opencl-based Kraskov type 1 estimator. Multiple CMIs can be estimated in
@@ -371,19 +327,11 @@ noise_level to 0.</dd>
 </dd></dl>
 
 </div>
-<<<<<<< HEAD
 <div class="section" id="module-idtxl.estimators_te">
 <span id="idtxl-estimators-te-module"></span><h2>idtxl.estimators_te module<a class="headerlink" href="#module-idtxl.estimators_te" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="idtxl.estimators_te.jidt_kraskov">
 <tt class="descclassname">idtxl.estimators_te.</tt><tt class="descname">jidt_kraskov</tt><big>(</big><em>self</em>, <em>source</em>, <em>target</em>, <em>opts</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_te.html#jidt_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_te.jidt_kraskov" title="Permalink to this definition">¶</a></dt>
-=======
-<div class="section" id="module-estimators_te">
-<span id="idtxl-estimators-te-module"></span><h2>idtxl.estimators_te module<a class="headerlink" href="#module-estimators_te" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="estimators_te.jidt_kraskov">
-<code class="descclassname">estimators_te.</code><code class="descname">jidt_kraskov</code><span class="sig-paren">(</span><em>self</em>, <em>source</em>, <em>target</em>, <em>opts</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/estimators_te.html#jidt_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#estimators_te.jidt_kraskov" title="Permalink to this definition">¶</a></dt>
->>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
 <dd><p>Calculate transfer entropy with JIDT&#8217;s Kraskov implementation.</p>
 <p>Calculate transfer entropy between a source and a target variable using
 JIDT&#8217;s implementation of the Kraskov type 1 estimator. Transfer entropy is
@@ -447,15 +395,6 @@ runs replicable set noise_level to 0.</dd>
 </dl>
 </dd></dl>
 
-<<<<<<< HEAD
-=======
-<dl class="function">
-<dt id="estimators_te.pyinfo_kraskov">
-<code class="descclassname">estimators_te.</code><code class="descname">pyinfo_kraskov</code><span class="sig-paren">(</span><em>self</em>, <em>source</em>, <em>target</em>, <em>knn</em>, <em>history_length</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/estimators_te.html#pyinfo_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#estimators_te.pyinfo_kraskov" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate transfer entropy with pyinfo&#8217;s Kraskov implementation.</p>
-</dd></dl>
-
->>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
 </div>
 </div>
 
@@ -471,15 +410,9 @@ runs replicable set noise_level to 0.</dd>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Information theoretic estimators</a><ul>
-<<<<<<< HEAD
 <li><a class="reference internal" href="#module-idtxl.estimators_cmi">idtxl.estimators_cmi module</a></li>
 <li><a class="reference internal" href="#module-idtxl.estimators_mi">idtxl.estimators_mi module</a></li>
 <li><a class="reference internal" href="#module-idtxl.estimators_te">idtxl.estimators_te module</a></li>
-=======
-<li><a class="reference internal" href="#module-estimators_cmi">idtxl.estimators_cmi module</a></li>
-<li><a class="reference internal" href="#module-estimators_mi">idtxl.estimators_mi module</a></li>
-<li><a class="reference internal" href="#module-estimators_te">idtxl.estimators_te module</a></li>
->>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
 </ul>
 </li>
 </ul>
@@ -490,21 +423,11 @@ runs replicable set noise_level to 0.</dd>
   <h4>Next topic</h4>
   <p class="topless"><a href="idtxl_helper.html"
                         title="next chapter">Helper functions</a></p>
-<<<<<<< HEAD
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/idtxl_estimators.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
-=======
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/idtxl_estimators.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
->>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
 <div id="searchbox" role="search">
   <h3>Quick search</h3>
   <form class="search form-inline" action="search.html" method="get">
@@ -549,11 +472,7 @@ runs replicable set noise_level to 0.</dd>
       <!-- footer -->
       <footer role="contentinfo">
           &copy; Copyright 2016, Patricia Wollstadt, Joseph T. Lizier, Michael Wibral.
-<<<<<<< HEAD
         Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.
-=======
-        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.3.6.
->>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
       </footer>
       <!-- /footer -->
 

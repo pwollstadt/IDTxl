@@ -3,28 +3,16 @@ Information theoretic estimators
 
 idtxl.estimators_cmi module
 ---------------------------
-<<<<<<< HEAD
 .. automodule:: idtxl.estimators_cmi
-=======
-.. automodule:: estimators_cmi
->>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
     :members:
 
 idtxl.estimators_mi module
 ---------------------------
-<<<<<<< HEAD
 .. automodule:: idtxl.estimators_mi
-=======
-.. automodule:: estimators_mi
->>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
     :members:
 
 idtxl.estimators_te module
 ---------------------------
-<<<<<<< HEAD
 .. automodule:: idtxl.estimators_te
-=======
-.. automodule:: estimators_te
->>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
     :members:
 

@@ -7,17 +7,17 @@
   <head>
     <meta charset="utf-8" />
     
-    <title>estimators_te &mdash; IDTxl 0.1 documentation</title>
+    <title>idtxl.estimators_te &mdash; IDTxl 0.1 documentation</title>
     <meta name="description" content="">
     <meta name="author" content="">
 
     
 
-<link rel="stylesheet" href="../_static/css/basicstrap-base.css" type="text/css" />
-<link rel="stylesheet" id="current-theme" href="../_static/css/bootstrap3/bootswatch-spacelab.css" type="text/css" />
-<link rel="stylesheet" id="current-adjust-theme" href="../_static/css/adjust_theme/bootswatch-spacelab.css" type="text/css" />
+<link rel="stylesheet" href="../../_static/css/basicstrap-base.css" type="text/css" />
+<link rel="stylesheet" id="current-theme" href="../../_static/css/bootstrap3/bootswatch-spacelab.css" type="text/css" />
+<link rel="stylesheet" id="current-adjust-theme" href="../../_static/css/adjust_theme/bootswatch-spacelab.css" type="text/css" />
 
-<link rel="stylesheet" href="../_static/css/font-awesome.min.css">
+<link rel="stylesheet" href="../../_static/css/font-awesome.min.css">
 
 <style type="text/css">
   body {
@@ -26,29 +26,29 @@
   }
 </style>
 
-<link rel="stylesheet" href="../_static/css/basicstrap.css" type="text/css" />
-<link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+<link rel="stylesheet" href="../../_static/css/basicstrap.css" type="text/css" />
+<link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     
 <script type="text/javascript">
   var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:    '../',
+            URL_ROOT:    '../../',
             VERSION:     '0.1',
             COLLAPSE_INDEX: false,
             FILE_SUFFIX: '.html',
             HAS_SOURCE:  true
   };
 </script>
-    <script type="text/javascript" src="../_static/js/jquery.min.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <script type="text/javascript" src="../_static/js/bootstrap3.min.js"></script>
-<script type="text/javascript" src="../_static/js/jquery.cookie.min.js"></script>
-<script type="text/javascript" src="../_static/js/basicstrap.js"></script>
+    <script type="text/javascript" src="../../_static/js/bootstrap3.min.js"></script>
+<script type="text/javascript" src="../../_static/js/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="../../_static/js/basicstrap.js"></script>
 <script type="text/javascript">
 </script>
-    <link rel="top" title="IDTxl 0.1 documentation" href="../index.html" />
-    <link rel="up" title="Module code" href="index.html" /> 
+    <link rel="top" title="IDTxl 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
   </head>
   <body role="document">
     <div id="navbar-top" class="navbar navbar-fixed-top navbar-default" role="navigation" aria-label="top navigation">
@@ -60,19 +60,19 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="../index.html">IDTxl 0.1 documentation</a>
+          <a class="navbar-brand" href="../../index.html">IDTxl 0.1 documentation</a>
         </div>
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav navbar-right">
 
             
-              <li><a href="../py-modindex.html" title="Python Module Index" >modules </a></li>
-              <li><a href="../genindex.html" title="General Index" accesskey="I">index </a></li>
-              <li><a href="index.html" accesskey="U">Module code</a></li>
+              <li><a href="../../py-modindex.html" title="Python Module Index" >modules </a></li>
+              <li><a href="../../genindex.html" title="General Index" accesskey="I">index </a></li>
+              <li><a href="../index.html" accesskey="U">Module code</a></li>
             
 
             <li class="visible-xs">
-                <form class="search form-search form-inline navbar-form navbar-right sp-searchbox" action="../search.html" method="get">
+                <form class="search form-search form-inline navbar-form navbar-right sp-searchbox" action="../../search.html" method="get">
                   <div class="input-append input-group">
                     <input type="text" class="search-query form-control" name="q" placeholder="Search...">
                     <span class="input-group-btn">
@@ -107,12 +107,12 @@
               <div class="bodywrapper">
                 <div class="body">
                   
-  <h1>Source code for estimators_te</h1><div class="highlight"><pre>
+  <h1>Source code for idtxl.estimators_te</h1><div class="highlight"><pre>
 <span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">resource_filename</span>
 <span class="kn">import</span> <span class="nn">jpype</span> <span class="kn">as</span> <span class="nn">jp</span>
 
 
-<div class="viewcode-block" id="jidt_kraskov"><a class="viewcode-back" href="../idtxl_estimators.html#estimators_te.jidt_kraskov">[docs]</a><span class="k">def</span> <span class="nf">jidt_kraskov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">opts</span><span class="p">):</span>
+<div class="viewcode-block" id="jidt_kraskov"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_te.jidt_kraskov">[docs]</a><span class="k">def</span> <span class="nf">jidt_kraskov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">opts</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculate transfer entropy with JIDT&#39;s Kraskov implementation.</span>
 
 <span class="sd">    Calculate transfer entropy between a source and a target variable using</span>
@@ -246,7 +246,7 @@
   <div class="sidebar hidden-xs" role="navigation" aria-label="main navigation">
 <div id="searchbox" role="search">
   <h3>Quick search</h3>
-  <form class="search form-inline" action="../search.html" method="get">
+  <form class="search form-inline" action="../../search.html" method="get">
       <div class="input-append input-group">
         <input type="text" class="search-query form-control" name="q" placeholder="Search...">
         <span class="input-group-btn">
@@ -270,13 +270,13 @@
 <div id="navbar-related" class=" related navbar navbar-default" role="navigation" aria-label="related navigation">
   <div class="navbar-inner">
     <ul class="nav navbar-nav ">
-        <li><a href="../index.html">IDTxl 0.1 documentation</a></li>
+        <li><a href="../../index.html">IDTxl 0.1 documentation</a></li>
     </ul>
 <ul class="nav navbar-nav pull-right hidden-xs hidden-sm">
       
-        <li><a href="../py-modindex.html" title="Python Module Index" >modules</a></li>
-        <li><a href="../genindex.html" title="General Index" >index</a></li>
-        <li><a href="index.html" >Module code</a></li>
+        <li><a href="../../py-modindex.html" title="Python Module Index" >modules</a></li>
+        <li><a href="../../genindex.html" title="General Index" >index</a></li>
+        <li><a href="../index.html" >Module code</a></li>
         <li><a href="#">top</a></li> 
       
     </ul>
