@@ -1,15 +1,8 @@
-# -*- coding: utf-8 -*-
 """
 Created on Thu Mar 10 14:24:31 2016
 
-Greedy algorithm for multivariate network inference using transfer entropy.
-For details see Lizier ??? and Faes ???.
-
-If executed as standalone, the script applies the algorithm to example data
-presented in Montalto, PLOS ONE, 2014, (eq. 14).
-
-Eample:
-    python multivariate_te.py
+Iterative greedy algorithm for multivariate network inference using transfer 
+entropy. For details see Lizier 2012 and Faes 2011.
 
 Note:
     Written for Python 3.4+
