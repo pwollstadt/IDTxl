@@ -3,13 +3,18 @@ Helper functions
 
 idtxl.utils module
 ---------------------------
-.. automodule:: utils
+.. automodule:: idtxl.idtxl_utils
+    :members:
+    
+idtxl.ft2idtxl module
+---------------------------
+.. automodule:: idtxl.ft2idtxl
     :members:
 
 idtxl.surrogates module
 ---------------------------
-.. automodule:: surrogates
+.. automodule:: idtxl.surrogates
 
 idtxl.stats module
 ---------------------------
-.. automodule:: stats
+.. automodule:: idtxl.stats
