@@ -41,7 +41,11 @@
     <script type="text/javascript" src="../_static/js/jquery.min.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
+<<<<<<< HEAD
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+=======
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+>>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
     <script type="text/javascript" src="../_static/js/bootstrap3.min.js"></script>
 <script type="text/javascript" src="../_static/js/jquery.cookie.min.js"></script>
 <script type="text/javascript" src="../_static/js/basicstrap.js"></script>
@@ -108,8 +112,13 @@
                 <div class="body">
                   
   <h1>Source code for estimators_te</h1><div class="highlight"><pre>
+<<<<<<< HEAD
 <span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">resource_filename</span>
 <span class="kn">import</span> <span class="nn">jpype</span> <span class="kn">as</span> <span class="nn">jp</span>
+=======
+<span></span><span class="kn">import</span> <span class="nn">jpype</span> <span class="kn">as</span> <span class="nn">jp</span>
+<span class="kn">import</span> <span class="nn">pyinfo</span>
+>>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
 
 
 <div class="viewcode-block" id="jidt_kraskov"><a class="viewcode-back" href="../idtxl_estimators.html#estimators_te.jidt_kraskov">[docs]</a><span class="k">def</span> <span class="nf">jidt_kraskov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">opts</span><span class="p">):</span>
@@ -178,6 +187,7 @@
     <span class="k">if</span> <span class="n">opts</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">opts</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">try</span><span class="p">:</span>
+<<<<<<< HEAD
         <span class="n">kraskov_k</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s">&#39;kraskov_k&#39;</span><span class="p">])</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
         <span class="n">kraskov_k</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
@@ -229,11 +239,73 @@
     <span class="n">calc</span><span class="o">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s">&#39;PROP_KRASKOV_ALG_NUM&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
     <span class="n">calc</span><span class="o">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s">&#39;NOISE_LEVEL_TO_ADD&#39;</span><span class="p">,</span> <span class="n">noise_level</span><span class="p">)</span>
     <span class="n">calc</span><span class="o">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s">&#39;DYN_CORR_EXCL&#39;</span><span class="p">,</span> <span class="n">theiler_t</span><span class="p">)</span>
+=======
+        <span class="n">kraskov_k</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">kraskov_k</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;normalise&#39;</span><span class="p">]:</span>
+            <span class="n">normalise</span> <span class="o">=</span> <span class="s1">&#39;true&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">normalise</span> <span class="o">=</span> <span class="s1">&#39;false&#39;</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">normalise</span> <span class="o">=</span> <span class="s1">&#39;false&#39;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">theiler_t</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s1">&#39;theiler_t&#39;</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">theiler_t</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">noise_level</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s1">&#39;noise_level&#39;</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">noise_level</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="mf">1e-8</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">history_target</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;history_target&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;No history was provided for TE estimation.&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">history_source</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;history_source&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">history_source</span> <span class="o">=</span> <span class="n">history_target</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">tau_target</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;tau_target&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">tau_target</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">tau_source</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;tau_source&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">tau_source</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">delay</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;source_target_delay&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">delay</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">jarLocation</span> <span class="o">=</span> <span class="s1">&#39;infodynamics.jar&#39;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">jp</span><span class="o">.</span><span class="n">isJVMStarted</span><span class="p">():</span>
+        <span class="n">jp</span><span class="o">.</span><span class="n">startJVM</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">getDefaultJVMPath</span><span class="p">(),</span> <span class="s1">&#39;-ea&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;-Djava.class.path=&#39;</span> <span class="o">+</span>
+                                                    <span class="n">jarLocation</span><span class="p">))</span>
+    <span class="n">calcClass</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.continuous.kraskov&#39;</span><span class="p">)</span><span class="o">.</span>
+                 <span class="n">TransferEntropyCalculatorKraskov</span><span class="p">)</span>
+    <span class="n">calc</span> <span class="o">=</span> <span class="n">calcClass</span><span class="p">()</span>
+    <span class="n">calc</span><span class="o">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s1">&#39;NORMALISE&#39;</span><span class="p">,</span> <span class="n">normalise</span><span class="p">)</span>
+    <span class="n">calc</span><span class="o">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">kraskov_k</span><span class="p">)</span>
+    <span class="n">calc</span><span class="o">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s1">&#39;PROP_KRASKOV_ALG_NUM&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">calc</span><span class="o">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s1">&#39;NOISE_LEVEL_TO_ADD&#39;</span><span class="p">,</span> <span class="n">noise_level</span><span class="p">)</span>
+    <span class="n">calc</span><span class="o">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s1">&#39;DYN_CORR_EXCL&#39;</span><span class="p">,</span> <span class="n">theiler_t</span><span class="p">)</span>
+>>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
     <span class="n">calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">(</span><span class="n">history_target</span><span class="p">,</span> <span class="n">tau_target</span><span class="p">,</span>
                     <span class="n">history_source</span><span class="p">,</span> <span class="n">tau_source</span><span class="p">,</span>
                     <span class="n">delay</span><span class="p">)</span>
     <span class="n">calc</span><span class="o">.</span><span class="n">setObservations</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span></div>
+<<<<<<< HEAD
+=======
+
+
+<div class="viewcode-block" id="pyinfo_kraskov"><a class="viewcode-back" href="../idtxl_estimators.html#estimators_te.pyinfo_kraskov">[docs]</a><span class="k">def</span> <span class="nf">pyinfo_kraskov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">knn</span><span class="p">,</span> <span class="n">history_length</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate transfer entropy with pyinfo&#39;s Kraskov implementation.&quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">pyinfo</span><span class="o">.</span><span class="n">te_kraskov</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span></div>
+>>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
 </pre></div>
 
                 </div>
@@ -287,7 +359,11 @@
       <!-- footer -->
       <footer role="contentinfo">
           &copy; Copyright 2016, Patricia Wollstadt, Joseph T. Lizier, Michael Wibral.
+<<<<<<< HEAD
         Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.
+=======
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.3.6.
+>>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
       </footer>
       <!-- /footer -->
 

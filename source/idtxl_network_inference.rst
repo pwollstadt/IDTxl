@@ -9,6 +9,7 @@ idtxl.network_analysis.Network_analysis class
 
 idtxl.multivariate_te.Multivariate_te class
 -------------------------------------------
+
 .. autoclass:: idtxl.multivariate_te.Multivariate_te
     :members:
     :undoc-members:

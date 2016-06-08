@@ -1,21 +1,35 @@
 Algorithms for network inference
 ================================
 
+<<<<<<< HEAD
 
 idtxl.network_analysis.Network_analysis class
 ---------------------------------------------
 .. autoclass:: idtxl.network_analysis.Network_analysis
+=======
+idtxl.network_analysis.Network_analysis class
+---------------------------------------------
+.. autoclass:: network_analysis.Network_analysis
+>>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
     :members:
 
 idtxl.multivariate_te.Multivariate_te class
 -------------------------------------------
+<<<<<<< HEAD
 .. autoclass:: idtxl.multivariate_te.Multivariate_te
+=======
+.. autoclass:: multivariate_te.Multivariate_te
+>>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
     :members:
     :undoc-members:
     :show-inheritance:
 
 idtxl.bivariate_te.Bivariate_te class
 -------------------------------------
+<<<<<<< HEAD
 .. autoclass:: idtxl.bivariate_te.Bivariate_te
+=======
+.. autoclass:: bivariate_te.Bivariate_te
+>>>>>>> 055b0768af0c5606ec96002935578d2ddd9edc86
     :members:
 
