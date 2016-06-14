@@ -58,7 +58,7 @@ def test_cmi_estimator_jidt_kraskov():
           'for these uncorrelated Gaussians.'.format(res_2))
     # For 500 repetitions I got mean errors of 0.02097686 and 0.01454073 for
     # examples 1 and 2 respectively. The maximum errors were 0.093841 and
-    # 0.05833172 respectively. This inspired the following error boundaries.
+    # 0.05833172 repectively. This inspired the following error boundaries.
     assert (np.abs(res_1 - expected_res) < 0.1), ('CMI calculation for '
                                                   'correlated Gaussians failed'
                                                   '(error larger 0.1).')
@@ -116,7 +116,7 @@ def test_cmi_estimator_ocl():
 
     # For 500 repetitions I got mean errors of 0.02097686 and 0.01454073 for
     # examples 1 and 2 respectively. The maximum errors were 0.093841 and
-    # 0.05833172 respectively. This inspired the following error boundaries.
+    # 0.05833172 repectively. This inspired the following error boundaries.
     assert (np.abs(res_1[0] - expected_res) < 0.1), ('CMI calculation for '
                                                      'correlated Gaussians '
                                                      'failed(error > 0.1).')
@@ -133,9 +133,9 @@ def test_cmi_estimator_ocl():
                                    'data.')
 
 def test_cmi_no_c_estimator_ocl():
-    """Tests CMI estimation without a conditional variable
+    """Tests CMI estimation without a condional variable
 
-    The estimator should fall back to MI estimation and provide the correct result
+    The estimator should fall back to MI estiamtion and provide the correct result
     """
     n = 4000
     cov = 0.4
