@@ -67,45 +67,22 @@ def jidt_kraskov(self, source, target, opts):
     """
     if opts is None:
         opts = {}
-    try:
-        kraskov_k = str(opts['kraskov_k'])
-    except KeyError:
-        kraskov_k = str(4)
-    try:
-        if opts['normalise']:
-            normalise = 'true'
-        else:
-            normalise = 'false'
-    except KeyError:
-        normalise = 'false'
-    try:
-        theiler_t = str(opts['theiler_t'])
-    except KeyError:
-        theiler_t = str(0)
-    try:
-        noise_level = str(opts['noise_level'])
-    except KeyError:
-        noise_level = str(1e-8)
+    elif type(opts) is not dict:
+        raise TypeError('Opts should be a dictionary.')
+
+    # Get defaults for estimator options
+    kraskov_k = str(opts.get('kraskov_k', default=4))
+    normalise = str(opts.get('normalise', default='false'))
+    theiler_t = int(opts.get('theiler_t', default=0)) # TODO necessary?
+    noise_level = np.float32(opts.get('noise_level', default=1e-8))
+    tau_target = opts.get('tau_target', default=1)
+    tau_source = opts.get('tau_source', default=1)
+    delay = opts.get('source_target_delay', default=1)
     try:
         history_target = opts['history_target']
     except KeyError:
         raise RuntimeError('No history was provided for TE estimation.')
-    try:
-        history_source = opts['history_source']
-    except KeyError:
-        history_source = history_target
-    try:
-        tau_target = opts['tau_target']
-    except KeyError:
-        tau_target = 1
-    try:
-        tau_source = opts['tau_source']
-    except KeyError:
-        tau_source = 1
-    try:
-        delay = opts['source_target_delay']
-    except KeyError:
-        delay = 1
+    history_source = opts.get('history_source', default=history_target)    
 
     jarLocation = resource_filename(__name__, 'infodynamics.jar')
     if not jp.isJVMStarted():

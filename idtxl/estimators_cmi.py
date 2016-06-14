@@ -53,27 +53,15 @@ def opencl_kraskov(self, var1, var2, conditional=None, opts=None):
     """
     if opts is None:
         opts = {}
-    try:
-        kraskov_k = int(opts['kraskov_k'])
-    except KeyError:
-        kraskov_k = int(4)
-    try:
-        theiler_t = int(opts['theiler_t'])
-    except KeyError:
-        theiler_t = int(0)
-    try:
-        noise_level = int(opts['noise_level'])
-    except KeyError:
-        noise_level = 1e-8
-    try:
-        gpuid = int(opts['gpuid'])
-    except KeyError:
-        gpuid = int(0)
+    elif type(opts) is not dict:
+        raise TypeError('Opts should be a dictionary.')
 
-    try:
-        nchunkspergpu = int(opts['nchunkspergpu'])
-    except KeyError:
-        nchunkspergpu = int(1)
+    # Get defaults for estimator options
+    kraskov_k = int(opts.get('kraskov_k', default=4))
+    theiler_t = int(opts.get('theiler_t', default=0)) # TODO necessary?
+    noise_level = np.float32(opts.get('noise_level', default=1e-8))
+    gpuid = int(opts.get('gpuid', default=0))
+    nchunkspergpu = int(opts.get('nchunkspergpu', default=1))
 
 # If no conditional is passed, compute and return the mi:
 # this code is a copy of the one in estimatos_mi look there for comments
@@ -231,35 +219,17 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
     """
     if opts is None:
         opts = {}
-    try:
-        kraskov_k = str(opts['kraskov_k'])
-    except KeyError:
-        kraskov_k = str(4)
-    try:
-        if opts['normalise']:
-            normalise = 'true'
-        else:
-            normalise = 'false'
-    except KeyError:
-        normalise = 'false'
-    try:
-        theiler_t = str(opts['theiler_t'])
-    except KeyError:
-        # TODO this is no good bc we don't know if var1 is the target:
-        theiler_t = str(utils.autocorrelation(var1))
-    try:
-        noise_level = str(opts['noise_level'])
-    except KeyError:
-        noise_level = str(1e-8)
-    try:
-        num_threads = str(opts['num_threads'])
-    except KeyError:
-        num_threads = 'USE_ALL'
-    try:
-        debug = opts['debug']
-    except KeyError:
-        debug = False
+    elif type(opts) is not dict:
+        raise TypeError('Opts should be a dictionary.')
 
+    # Get defaults for estimator options
+    kraskov_k = str(opts.get('kraskov_k', default=4))
+    normalise = str(opts.get('normalise', default='false'))
+    theiler_t = int(opts.get('theiler_t', default=0)) # TODO necessary?
+    noise_level = np.float32(opts.get('noise_level', default=1e-8))
+    num_threads = str(opts.get('num_threads', default='USE_ALL'))
+    debug = str(opts.get('debug', default= 'false'))
+    
     jarLocation = resource_filename(__name__, 'infodynamics.jar')
     if not jp.isJVMStarted():
         jp.startJVM(jp.getDefaultJVMPath(), '-ea', ('-Djava.class.path=' +
