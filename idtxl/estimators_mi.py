@@ -5,6 +5,16 @@ from scipy.special import digamma
 from . import neighbour_search_opencl as nsocl
 
 
+def is_parallel(estimator_name):
+    """Check if estimator can estimate CMI for multiple chunks in parallel."""
+    parallel_estimators = {'opencl_kraskov': True,
+                           'jidt_kraskov': False}
+    try:
+        return parallel_estimators[estimator_name]
+    except KeyError:
+        raise KeyError('Unknown estimator name.')
+
+
 def opencl_kraskov(self, var1, var2, opts=None):
     """Calculate mutual information using an opencl Kraskov implementation.
 
@@ -56,7 +66,7 @@ def opencl_kraskov(self, var1, var2, opts=None):
     theiler_t = int(opts.get('theiler_t', 0)) # TODO necessary?
     noise_level = np.float32(opts.get('noise_level', 1e-8))
     gpuid = int(opts.get('gpuid', 0))
-    nchunkspergpu = int(opts.get('nchunkspergpu', 1))    
+    nchunkspergpu = int(opts.get('nchunkspergpu', 1))
 
     var1 += np.random.normal(scale=noise_level, size=var1.shape)
     var2 += np.random.normal(scale=noise_level, size=var2.shape)
@@ -132,7 +142,7 @@ def jidt_kraskov(self, var1, var2, opts=None):
             - 'theiler_t' - no. next temporal neighbours ignored in KNN and
               range searches (default='ACT', the autocorr. time of the target)
             - 'noise_level' - random noise added to the data (default=1e-8)
-            - 'local_values' - return local TE instead of average TE 
+            - 'local_values' - return local TE instead of average TE
               (default=False)
             - 'num_threads' - no. CPU threads used for estimation
             (default='USE_ALL', this uses all available cores on the machine!)
@@ -160,7 +170,7 @@ def jidt_kraskov(self, var1, var2, opts=None):
     noise_level = str(opts.get('noise_level', 1e-8))
     local_values = opts.get('local_values', False)
     num_threads = str(opts.get('num_threads', 'USE_ALL'))
-    
+
     jarLocation = resource_filename(__name__, 'infodynamics.jar')
     if not jp.isJVMStarted():
         jp.startJVM(jp.getDefaultJVMPath(), '-ea', ('-Djava.class.path=' +

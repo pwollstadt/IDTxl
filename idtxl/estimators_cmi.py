@@ -11,8 +11,20 @@ from . import idtxl_utils as utils
 from . import neighbour_search_opencl as nsocl
 VERBOSE = False
 
+def is_parallel(estimator_name):
+    """Check if estimator can estimate CMI for multiple chunks in parallel."""
+    # To add a new parallel estimator, add estimator name to the following
+    # dictionary and set the value to True.
+    parallel_estimators = {'opencl_kraskov': True,
+                           'jidt_kraskov': False}
+    try:
+        return parallel_estimators[estimator_name]
+    except KeyError:
+        print('Unknown estimator name, assuming estimator to be serial.')
+        return False
 
-def opencl_kraskov(self, var1, var2, conditional=None, opts=None):
+
+def opencl_kraskov(self, var1, var2, conditional=None, n_chunks=1, opts=None):
     """Calculate conditional mutual infor using opencl Kraskov implementation.
 
     Calculate the conditional mutual information between three variables using
@@ -34,6 +46,8 @@ def opencl_kraskov(self, var1, var2, conditional=None, opts=None):
             realisations of the second random variable
         conditional : numpy array
             realisations of the random variable for conditioning
+        n_chunks : int [optional]
+            number of data sets or chunks (default=1)
         opts : dict [optional]
             sets estimation parameters:
 
@@ -41,6 +55,7 @@ def opencl_kraskov(self, var1, var2, conditional=None, opts=None):
             - 'theiler_t' - no. next temporal neighbours ignored in KNN and
               range searches (default='ACT', the autocorr. time of the target)
             - 'noise_level' - random noise added to the data (default=1e-8)
+            - 'gpuid' - device ID (default=0)
 
     Returns:
         float
@@ -61,7 +76,8 @@ def opencl_kraskov(self, var1, var2, conditional=None, opts=None):
     theiler_t = int(opts.get('theiler_t', 0)) # TODO necessary?
     noise_level = np.float32(opts.get('noise_level', 1e-8))
     gpuid = int(opts.get('gpuid', 0))
-    nchunkspergpu = int(opts.get('nchunkspergpu', 1))
+    nchunkspergpu = n_chunks  # TODO is there a case where it makes sense to have
+                              # this two distinct parameters?
 
 # If no conditional is passed, compute and return the mi:
 # this code is a copy of the one in estimatos_mi look there for comments
@@ -229,7 +245,7 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
     noise_level = str(opts.get('noise_level', 1e-8))
     num_threads = str(opts.get('num_threads', 'USE_ALL'))
     # debug = opts.get('debug', 'false')
-    
+
     jarLocation = resource_filename(__name__, 'infodynamics.jar')
     if not jp.isJVMStarted():
         jp.startJVM(jp.getDefaultJVMPath(), '-ea', ('-Djava.class.path=' +

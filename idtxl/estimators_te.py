@@ -2,6 +2,16 @@ from pkg_resources import resource_filename
 import jpype as jp
 
 
+def is_parallel(estimator_name):
+    """Check if estimator can estimate CMI for multiple chunks in parallel."""
+    parallel_estimators = {'opencl_kraskov': True,
+                           'jidt_kraskov': False}
+    try:
+        return parallel_estimators[estimator_name]
+    except KeyError:
+        raise KeyError('Unknown estimator name.')
+
+
 def jidt_kraskov(self, source, target, opts):
     """Calculate transfer entropy with JIDT's Kraskov implementation.
 
@@ -45,7 +55,7 @@ def jidt_kraskov(self, source, target, opts):
             - 'theiler_t' - no. next temporal neighbours ignored in KNN and
               range searches (default='ACT', the autocorr. time of the target)
             - 'noise_level' - random noise added to the data (default=1e-8)
-            - 'local_values' - return local TE instead of average TE 
+            - 'local_values' - return local TE instead of average TE
               (default=False)
             - 'history_source' - number of samples in the source's past to
               consider
@@ -88,7 +98,7 @@ def jidt_kraskov(self, source, target, opts):
         history_target = opts['history_target']
     except KeyError:
         raise RuntimeError('No history was provided for TE estimation.')
-    history_source = opts.get('history_source', history_target)    
+    history_source = opts.get('history_source', history_target)
 
     jarLocation = resource_filename(__name__, 'infodynamics.jar')
     if not jp.isJVMStarted():
@@ -109,4 +119,4 @@ def jidt_kraskov(self, source, target, opts):
     if local_values:
         return calc.computeLocalOfPreviousObservations()
     else:
-        return calc.computeAverageLocalOfObservations()    
+        return calc.computeAverageLocalOfObservations()

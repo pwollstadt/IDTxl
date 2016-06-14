@@ -65,6 +65,11 @@ class Data():
     def data(self):
         return self._data
 
+    @property
+    def n_realisations(self):        
+        """Number of realisations over samples and replications."""
+        return self.n_samples * self.n_replications
+
     @data.setter
     def data(self, d):
         if hasattr(self, 'data'):
@@ -105,18 +110,17 @@ class Data():
             self.data = data_ordered
 
     def _normalise_data(self, d):
-        """Z-standardise data sperately for each process."""
-        n_realisations = self.n_samples * self.n_replications
+        """Z-standardise data separately for each process."""
         d_standardised = np.empty(d.shape)
         for process in range(self.n_processes):
-            s = utils.standardise(d[process, :, :].reshape(1, n_realisations),
+            s = utils.standardise(d[process, :, :].reshape(1, self.n_realisations),
                                   dimension=1)
             d_standardised[process, :, :] = s.reshape(self.n_samples,
                                                       self.n_replications)
         return d_standardised
 
     def _reorder_data(self, data, dim_order):
-        """Reorder data dimensioins to processes x samples x replications."""
+        """Reorder data dimensions to processes x samples x replications."""
 
         assert(len(dim_order) == data.ndim), ('Data array dimension ({0}) and '
                                               'length of dim_order ({1}) are '

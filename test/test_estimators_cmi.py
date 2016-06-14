@@ -97,13 +97,13 @@ def test_cmi_estimator_ocl():
     # data is a set of random variables) - the result will be of the order of
     # what we expect, but not exactly equal to it; in fact, there will be a
     # large variance around it.
-    opts = {'kraskov_k': 4, 'normalise': True, 'nchunkspergpu': 2}
+    opts = {'kraskov_k': 4, 'normalise': True}
     calculator_name = 'opencl_kraskov'
     est = Estimator_cmi(calculator_name)
     res_1 = est.estimate(var1=source_1[1:], var2=target[1:],
-                         conditional=target[:-1], opts=opts)
+                         conditional=target[:-1], n_chunks=2, opts=opts)
     res_2 = est.estimate(var1=source_2[1:], var2=target[1:],
-                         conditional=target[:-1], opts=opts)
+                         conditional=target[:-1], n_chunks=2, opts=opts)
     expected_res = math.log(1 / (1 - math.pow(cov, 2)))
     print('Example 1: TE result for second chunk {0:.4f} nats;'
           ' expected to be close to {1:.4f} nats for these correlated'
@@ -150,11 +150,11 @@ def test_cmi_no_c_estimator_ocl():
     # data is a set of random variables) - the result will be of the order of
     # what we expect, but not exactly equal to it; in fact, there will be a
     # large variance around it.
-    opts = {'kraskov_k': 4, 'normalise': True, 'nchunkspergpu': 2}
+    opts = {'kraskov_k': 4, 'normalise': True}
     calculator_name = 'opencl_kraskov'
     est = Estimator_cmi(calculator_name)
     res_1 = est.estimate(var1=source_1[1:], var2=target[1:],
-                         conditional=None, opts=opts)
+                         conditional=None, n_chunks=2, opts=opts)
     expected_res = math.log(1 / (1 - math.pow(cov, 2)))
     print('Example 1: TE result for second chunk is {0:.4f} nats;'
           ' expected to be close to {1:.4f} nats for these correlated'

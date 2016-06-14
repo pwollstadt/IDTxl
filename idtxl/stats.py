@@ -154,10 +154,10 @@ def omnibus_test(analysis_setup, data, opts):
     cond_source_realisations = analysis_setup._selected_vars_sources_realisations
     cond_target_realisations = analysis_setup._selected_vars_target_realisations
     te_orig = analysis_setup._cmi_calculator.estimate(
-                                    cond_source_realisations,
-                                    analysis_setup._current_value_realisations,
-                                    cond_target_realisations,
-                                    analysis_setup.options)
+                                var1=cond_source_realisations,
+                                var2=analysis_setup._current_value_realisations,
+                                conditional=cond_target_realisations,
+                                opts=analysis_setup.options)
 
     # Check if n_replications is high enough to allow for the requested number
     # of permutations.
@@ -179,7 +179,7 @@ def omnibus_test(analysis_setup, data, opts):
             surr_cond_real = _permute_realisations(
                                             cond_source_realisations,
                                             analysis_setup._replication_index)
-        surr_distribution[perm] = analysis_setup._cmi_calculator.estimate(
+        surr_distribution[perm] = analysis_setup._cmi_calculator. (
                                     surr_cond_real,
                                     analysis_setup._current_value_realisations,
                                     cond_target_realisations,
@@ -292,17 +292,30 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
 
     # Calculate TE for each candidate in the conditional source set and sort
     # TE values.
-    individual_te = np.empty(len(analysis_setup.selected_vars_sources))
-    i = 0
+    candidate_realisations = np.empty(
+                                (data.n_realisations * 
+                                 len(analysis_setup.selected_vars_sources), 1))
+    conditional_realisations = np.empty(
+                                (data.n_realisations * 
+                                 len(analysis_setup.selected_vars_sources), 1))
+    i_1 = 0
+    i_2 = data.n_realisations
     for conditional in analysis_setup.selected_vars_sources:
         [temp_cond, temp_cand] = analysis_setup._separate_realisations(
                                             analysis_setup.selected_vars_sources,
                                             conditional)
-        individual_te[i] = analysis_setup._cmi_calculator.estimate(
-                                    temp_cand,
-                                    analysis_setup._current_value_realisations,
-                                    temp_cond)
-        i += 1
+        conditional_realisations[i_1:i_2,0] = temp_cond
+        candidate_realisations[i_1:i_2,0] = temp_cand
+        i_1 = i_2
+        i_2 += data.n_realisations
+
+    individual_te = analysis_setup._cmi_calculator.estimate_mult(
+                            n_chunks=len(analysis_setup.selected_vars_sources),
+                            options=opts,
+                            re_use = ['var2'],
+                            var1=candidate_realisations,
+                            var2=analysis_setup._current_value_realisations,
+                            conditional=conditional_realisations)
 
     selected_vars_order = utils.argsort_descending(individual_te)
     individual_te_sorted = utils.sort_descending(individual_te)
@@ -468,37 +481,38 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
 
     # Create surrogate table.
     if VERBOSE:
-        print('\n create surrogates table')
+        print('\n create surrogates table with {0} permutations'.format(n_perm))
     surr_table = np.zeros((len(idx_test_set), n_perm))  # surrogate TE values
     current_value_realisations = analysis_setup._current_value_realisations
     idx_c = 0
     for candidate in idx_test_set:
         if VERBOSE:
-            print('\tcand. {0}, n_perm: {1} -    '.format(
-                analysis_setup._idx_to_lag([candidate])[0], n_perm), end='')
+            print('\tcand. {0}'.format(
+                                    analysis_setup._idx_to_lag([candidate])[0]))
+        i_1 = 0
+        i_2 = data.n_realisations   
         for perm in range(n_perm):
             # Check the permutation type for the current candidate.
             if permute_over_replications:
-                surr_candidate_realisations = data.permute_data(
-                                                analysis_setup.current_value,
-                                                [candidate])[0]
+                sur_temp = data.permute_data(analysis_setup.current_value,
+                                             [candidate])[0]
             else:
                 [real, repl_idx] = data.get_realisations(
                                                 analysis_setup.current_value,
                                                 [candidate])
-                surr_candidate_realisations = _permute_realisations(real,
-                                                                    repl_idx,
-                                                                    perm_range)
-            surr_table[idx_c, perm] = analysis_setup._cmi_calculator.estimate(
-                        surr_candidate_realisations,
-                        current_value_realisations,
-                        analysis_setup._selected_vars_realisations,
-                        analysis_setup.options)
-            if VERBOSE:
-                print('\b\b\b{num:03d}'.format(num=perm + 1), end='')
-                sys.stdout.flush()
-        if VERBOSE:
-            print(' ')
+                sur_temp = _permute_realisations(real, repl_idx, perm_range)
+
+            surr_candidate_realisations[i_1:i_2,0] = sur_temp
+            i_1 = i_2
+            i_2 += data.n_realisations
+        
+        surr_table[idx_c, :] = analysis_setup._cmi_calculator.estimate_mult(
+                    n_chunks=len(n_perm),
+                    options=analysis_setup.options,
+                    re_use = ['var2', 'conditional'],
+                    var1=surr_candidate_realisations,
+                    var2=current_value_realisations,
+                    conditional=analysis_setup._selected_vars_realisations)        
         idx_c += 1
 
     return surr_table

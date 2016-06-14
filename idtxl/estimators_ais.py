@@ -4,22 +4,32 @@ import numpy as np
 import random as rn
 
 
+def is_parallel(estimator_name):
+    """Check if estimator can estimate AIS for multiple chunks in parallel."""
+    parallel_estimators = {'opencl_kraskov': True,
+                           'jidt_kraskov': False}
+    try:
+        return parallel_estimators[estimator_name]
+    except KeyError:
+        raise KeyError('Unknown estimator name.')
+
+
 def jidt_kraskov(self, process, opts):
     """Calculate active information storage with JIDT's Kraskov implementation.
 
-    Calculate active information storage (AIS) for some process using JIDT's 
-    implementation of the Kraskov type 1 estimator. AIS is defined as the 
+    Calculate active information storage (AIS) for some process using JIDT's
+    implementation of the Kraskov type 1 estimator. AIS is defined as the
     mutual information between the processes' past state and current value.
 
-    The past state needs to be defined in the opts dictionary, where a past 
-    state is defined as a uniform embedding with parameters history and tau. 
-    The history describes the number of samples taken from a processes' past, 
-    tau describes the embedding delay, i.e., the spacing between every two 
+    The past state needs to be defined in the opts dictionary, where a past
+    state is defined as a uniform embedding with parameters history and tau.
+    The history describes the number of samples taken from a processes' past,
+    tau describes the embedding delay, i.e., the spacing between every two
     samples from the processes' past.
 
     References:
 
-    Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012). Local 
+    Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012). Local
     measures of information storage in complex distributed computation.
     Information Sciences, 208, 39-54.
 
@@ -29,14 +39,14 @@ def jidt_kraskov(self, process, opts):
     Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
     studying the dynamics of complex systems. Front. Robot. AI, 1(11).
 
-    This function is meant to be imported into the set_estimator module and 
+    This function is meant to be imported into the set_estimator module and
     used as a method in the Estimator_cmi class.
 
     Args:
         self : instance of Estimator_cmi
             function is supposed to be used as part of the Estimator_cmi class
         process : numpy array
-            realisations of the process        
+            realisations of the process
         opts : dict [optional]
             sets estimation parameters:
 
@@ -49,7 +59,7 @@ def jidt_kraskov(self, process, opts):
               (default=False)
             - 'history' - number of samples in the processes' past to consider
             - 'tau' - the processes' embedding delay (default=1)
-            
+
     Returns:
         float
             active information storage in the process

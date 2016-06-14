@@ -377,18 +377,23 @@ class Multivariate_te(Network_analysis):
         success = False
         while candidate_set:
             # Find the candidate with maximum TE.
-            temp_te = np.empty(len(candidate_set))
-            i = 0
+            candidate_realisations = np.empty((data.n_realisations * 
+                                               len(candidate_set), 1))
+            i_1 = 0
+            i_2 = data.n_realisations
             for candidate in candidate_set:
-                candidate_realisations = data.get_realisations(
+                candidate_realisations[i_1:i_2,0] = data.get_realisations(
                                                             self.current_value,
                                                             [candidate])[0]
-                temp_te[i] = self._cmi_calculator.estimate(
-                                        candidate_realisations,
-                                        self._current_value_realisations,
-                                        self._selected_vars_realisations,
-                                        self.options)
-                i += 1
+                i_1 = i_2
+                i_2 += data.n_realisations
+            temp_te = self._cmi_calculator.estimate_mult(
+                                n_chunks=len(candidate_set),
+                                options=self.options,
+                                re_use = ['var2', 'conditional'],
+                                var1=candidate_realisations,
+                                var2=self._current_value_realisations,
+                                conditional=self._selected_vars_realisations)
 
             # Test max TE for significance with maximum statistics.
             te_max_candidate = max(temp_te)
@@ -439,6 +444,14 @@ class Multivariate_te(Network_analysis):
         while self.selected_vars_sources:
             # Find the candidate with the minimum TE into the target.
             temp_te = np.empty(len(self.selected_vars_sources))
+            candidate_realisations = np.empty(
+                                    (data.n_realisations * 
+                                     len(self.selected_vars_sources), 1))
+            conditional_realisations = np.empty(
+                                    (data.n_realisations * 
+                                     len(self.selected_vars_sources), 1))
+            i_1 = 0
+            i_2 = data.n_realisations
             i = 0
             for candidate in self.selected_vars_sources:
                 # Separate the candidate realisations and all other
@@ -446,12 +459,18 @@ class Multivariate_te(Network_analysis):
                 [temp_cond, temp_cand] = self._separate_realisations(
                                                     self.selected_vars_full,
                                                     candidate)
-                temp_te[i] = self._cmi_calculator.estimate(
-                                            temp_cand,
-                                            self._current_value_realisations,
-                                            temp_cond,
-                                            self.options)
-                i += 1
+                conditional_realisations[i_1:i_2,0] = temp_cond
+                candidate_realisations[i_1:i_2,0] = temp_cand
+                i_1 = i_2
+                i_2 += data.n_realisations
+                
+            temp_te = self._cmi_calculator.estimate_mult(
+                                n_chunks=len(self.selected_vars_sources),
+                                options=self.options,
+                                re_use = ['var2'],
+                                var1=candidate_realisations,
+                                var2=self._current_value_realisations,
+                                conditional=conditional_realisations)
 
             # Test min TE for significance with minimum statistics.
             te_min_candidate = min(temp_te)
