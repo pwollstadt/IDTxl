@@ -45,6 +45,8 @@ def jidt_kraskov(self, source, target, opts):
             - 'theiler_t' - no. next temporal neighbours ignored in KNN and
               range searches (default='ACT', the autocorr. time of the target)
             - 'noise_level' - random noise added to the data (default=1e-8)
+            - 'local_values' - return local TE instead of average TE 
+              (default=False)
             - 'history_source' - number of samples in the source's past to
               consider
             - 'history_target' - number of samples in the target's past to
@@ -57,6 +59,9 @@ def jidt_kraskov(self, source, target, opts):
     Returns:
         float
             transfer entropy from source to target
+        OR
+        numpy array of floats
+            local transfer entropy if local_values is set
 
     Note:
         Some technical details: JIDT normalises over realisations, IDTxl
@@ -75,6 +80,7 @@ def jidt_kraskov(self, source, target, opts):
     normalise = str(opts.get('normalise', default='false'))
     theiler_t = int(opts.get('theiler_t', default=0)) # TODO necessary?
     noise_level = np.float32(opts.get('noise_level', default=1e-8))
+    local_values = opts.get('local_values', default=False)
     tau_target = opts.get('tau_target', default=1)
     tau_source = opts.get('tau_source', default=1)
     delay = opts.get('source_target_delay', default=1)
@@ -100,4 +106,7 @@ def jidt_kraskov(self, source, target, opts):
                     history_source, tau_source,
                     delay)
     calc.setObservations(source, target)
-    return calc.computeAverageLocalOfObservations()
+    if local_values:
+        return calc.computeLocalOfPreviousObservations()
+    else:
+        return calc.computeAverageLocalOfObservations()    

@@ -129,6 +129,13 @@ def jidt_kraskov(self, var1, var2, opts=None):
 
             - 'kraskov_k' - no. nearest neighbours for KNN search (default=4)
             - 'normalise' - z-standardise data (default=False)
+            - 'theiler_t' - no. next temporal neighbours ignored in KNN and
+              range searches (default='ACT', the autocorr. time of the target)
+            - 'noise_level' - random noise added to the data (default=1e-8)
+            - 'local_values' - return local TE instead of average TE 
+              (default=False)
+            - 'num_threads' - no. CPU threads used for estimation
+            (default='USE_ALL', this uses all available cores on the machine!)
 
     Returns:
         float
@@ -149,6 +156,10 @@ def jidt_kraskov(self, var1, var2, opts=None):
     # Get defaults for estimator options
     kraskov_k = str(opts.get('kraskov_k', default=4))
     normalise = str(opts.get('normalise', default='false'))
+    theiler_t = int(opts.get('theiler_t', default=0)) # TODO necessary?
+    noise_level = np.float32(opts.get('noise_level', default=1e-8))
+    local_values = opts.get('local_values', default=False)
+    num_threads = str(opts.get('num_threads', default='USE_ALL'))
     
     jarLocation = resource_filename(__name__, 'infodynamics.jar')
     if not jp.isJVMStarted():
@@ -159,6 +170,12 @@ def jidt_kraskov(self, var1, var2, opts=None):
     calc = calcClass()
     calc.setProperty('NORMALISE', normalise)
     calc.setProperty('k', kraskov_k)
+    calc.setProperty('NOISE_LEVEL_TO_ADD', noise_level)
+    calc.setProperty('DYN_CORR_EXCL', theiler_t)
+    calc.setProperty('NUM_THREADS', num_threads)
     calc.initialise(var1.shape[1], var2.shape[1])
     calc.setObservations(var1, var2)
-    return calc.computeAverageLocalOfObservations()
+    if local_values:
+        return calc.computeLocalOfPreviousObservations()
+    else:
+        return calc.computeAverageLocalOfObservations()
