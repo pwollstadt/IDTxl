@@ -173,7 +173,7 @@ class Multivariate_te(Network_analysis):
         results = {}
         for t in range(len(targets)):
             if VERBOSE:
-                print('####### analysing target {0} of {1}'.format(t, targets))
+                print('####### analysing target with index {0} from list {1}'.format(t, targets))
             r = self.analyse_single_target(data, targets[t], sources[t])
             r['target'] = targets[t]
             r['sources'] = sources[t]
