@@ -68,12 +68,12 @@ def jidt_kraskov(self, process, opts):
         raise TypeError('Opts should be a dictionary.')
 
     # Get defaults for estimator options
-    kraskov_k = str(opts.get('kraskov_k', default=4))
-    normalise = str(opts.get('normalise', default='false'))
-    theiler_t = int(opts.get('theiler_t', default=0)) # TODO necessary?
-    noise_level = np.float32(opts.get('noise_level', default=1e-8))
-    local_values = opts.get('local_values', default=False)
-    tau = opts.get('tau', default=1)
+    kraskov_k = str(opts.get('kraskov_k', 4))
+    normalise = str(opts.get('normalise', 'false'))
+    theiler_t = str(opts.get('theiler_t', 0)) # TODO necessary?
+    noise_level = str(opts.get('noise_level', 1e-8))
+    local_values = opts.get('local_values', False)
+    tau = opts.get('tau', 1)
     try:
         history = opts['history']
     except KeyError:

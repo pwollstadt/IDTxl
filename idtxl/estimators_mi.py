@@ -52,11 +52,11 @@ def opencl_kraskov(self, var1, var2, opts=None):
         raise TypeError('Opts should be a dictionary.')
 
     # Get defaults for estimator options
-    kraskov_k = int(opts.get('kraskov_k', default=4))
-    theiler_t = int(opts.get('theiler_t', default=0)) # TODO necessary?
-    noise_level = np.float32(opts.get('noise_level', default=1e-8))
-    gpuid = int(opts.get('gpuid', default=0))
-    nchunkspergpu = int(opts.get('nchunkspergpu', default=1))    
+    kraskov_k = int(opts.get('kraskov_k', 4))
+    theiler_t = int(opts.get('theiler_t', 0)) # TODO necessary?
+    noise_level = np.float32(opts.get('noise_level', 1e-8))
+    gpuid = int(opts.get('gpuid', 0))
+    nchunkspergpu = int(opts.get('nchunkspergpu', 1))    
 
     var1 += np.random.normal(scale=noise_level, size=var1.shape)
     var2 += np.random.normal(scale=noise_level, size=var2.shape)
@@ -154,12 +154,12 @@ def jidt_kraskov(self, var1, var2, opts=None):
         raise TypeError('Opts should be a dictionary.')
 
     # Get defaults for estimator options
-    kraskov_k = str(opts.get('kraskov_k', default=4))
-    normalise = str(opts.get('normalise', default='false'))
-    theiler_t = int(opts.get('theiler_t', default=0)) # TODO necessary?
-    noise_level = np.float32(opts.get('noise_level', default=1e-8))
-    local_values = opts.get('local_values', default=False)
-    num_threads = str(opts.get('num_threads', default='USE_ALL'))
+    kraskov_k = str(opts.get('kraskov_k', 4))
+    normalise = str(opts.get('normalise', 'false'))
+    theiler_t = str(opts.get('theiler_t', 0)) # TODO necessary?
+    noise_level = str(opts.get('noise_level', 1e-8))
+    local_values = opts.get('local_values', False)
+    num_threads = str(opts.get('num_threads', 'USE_ALL'))
     
     jarLocation = resource_filename(__name__, 'infodynamics.jar')
     if not jp.isJVMStarted():

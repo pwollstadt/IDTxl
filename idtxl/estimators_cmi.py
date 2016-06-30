@@ -57,11 +57,11 @@ def opencl_kraskov(self, var1, var2, conditional=None, opts=None):
         raise TypeError('Opts should be a dictionary.')
 
     # Get defaults for estimator options
-    kraskov_k = int(opts.get('kraskov_k', default=4))
-    theiler_t = int(opts.get('theiler_t', default=0)) # TODO necessary?
-    noise_level = np.float32(opts.get('noise_level', default=1e-8))
-    gpuid = int(opts.get('gpuid', default=0))
-    nchunkspergpu = int(opts.get('nchunkspergpu', default=1))
+    kraskov_k = int(opts.get('kraskov_k', 4))
+    theiler_t = int(opts.get('theiler_t', 0)) # TODO necessary?
+    noise_level = np.float32(opts.get('noise_level', 1e-8))
+    gpuid = int(opts.get('gpuid', 0))
+    nchunkspergpu = int(opts.get('nchunkspergpu', 1))
 
 # If no conditional is passed, compute and return the mi:
 # this code is a copy of the one in estimatos_mi look there for comments
@@ -223,12 +223,12 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
         raise TypeError('Opts should be a dictionary.')
 
     # Get defaults for estimator options
-    kraskov_k = str(opts.get('kraskov_k', default=4))
-    normalise = str(opts.get('normalise', default='false'))
-    theiler_t = int(opts.get('theiler_t', default=0)) # TODO necessary?
-    noise_level = np.float32(opts.get('noise_level', default=1e-8))
-    num_threads = str(opts.get('num_threads', default='USE_ALL'))
-    debug = str(opts.get('debug', default= 'false'))
+    kraskov_k = str(opts.get('kraskov_k', str(4)))
+    normalise = str(opts.get('normalise', 'false'))
+    theiler_t = str(opts.get('theiler_t', 0)) # TODO necessary?
+    noise_level = str(opts.get('noise_level', 1e-8))
+    num_threads = str(opts.get('num_threads', 'USE_ALL'))
+    # debug = opts.get('debug', 'false')
     
     jarLocation = resource_filename(__name__, 'infodynamics.jar')
     if not jp.isJVMStarted():
@@ -243,7 +243,7 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
     calc.setProperty('DYN_CORR_EXCL', theiler_t)
     calc.setProperty('NOISE_LEVEL_TO_ADD', noise_level)
     calc.setProperty('NUM_THREADS', num_threads)
-    calc.setDebug(debug)
+    # calc.setDebug(debug)
 
     if conditional is None:
         cond_dim = 0
