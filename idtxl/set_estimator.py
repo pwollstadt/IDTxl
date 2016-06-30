@@ -105,7 +105,7 @@ class Estimator(object):
 =======
                 if data[k] is not None:
                     data[k] = np.tile(data[k], (n_chunks, 1))
-            return self.estimate(n_chunks=1, opts=options, **data)  # TODO check order of arguments, change that also in the called function
+            return self.estimate(n_chunks=n_chunks, opts=options, **data)  # TODO check order of arguments, change that also in the called function
 
         else:  # cut data into chunks and estimate iteratively
             chunk_size = data[list(data.keys())[0]].shape[0] / n_chunks
