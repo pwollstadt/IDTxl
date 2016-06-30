@@ -377,16 +377,16 @@ class Multivariate_te(Network_analysis):
         success = False
         while candidate_set:
             # Find the candidate with maximum TE.
-            candidate_realisations = np.empty((data.n_realisations * 
+            candidate_realisations = np.empty((data.n_realisations(self.current_value) *
                                                len(candidate_set), 1))
             i_1 = 0
-            i_2 = data.n_realisations
+            i_2 = data.n_realisations(self.current_value)
             for candidate in candidate_set:
-                candidate_realisations[i_1:i_2,0] = data.get_realisations(
+                candidate_realisations[i_1:i_2, 0] = data.get_realisations(
                                                             self.current_value,
-                                                            [candidate])[0]
+                                                            [candidate])[0].reshape(data.n_realisations(self.current_value),)
                 i_1 = i_2
-                i_2 += data.n_realisations
+                i_2 += data.n_realisations(self.current_value)
             temp_te = self._cmi_calculator.estimate_mult(
                                 n_chunks=len(candidate_set),
                                 options=self.options,
@@ -445,25 +445,29 @@ class Multivariate_te(Network_analysis):
             # Find the candidate with the minimum TE into the target.
             temp_te = np.empty(len(self.selected_vars_sources))
             candidate_realisations = np.empty(
-                                    (data.n_realisations * 
+                                    (data.n_realisations(self.current_value) *
                                      len(self.selected_vars_sources), 1))
             conditional_realisations = np.empty(
-                                    (data.n_realisations * 
-                                     len(self.selected_vars_sources), 1))
+                                    (data.n_realisations(self.current_value) *
+                                     len(self.selected_vars_sources), len(self.selected_vars_full) - 1))
+
+            # calculate TE simultaneously for all candidates
             i_1 = 0
-            i_2 = data.n_realisations
-            i = 0
+            i_2 = data.n_realisations(self.current_value)
             for candidate in self.selected_vars_sources:
                 # Separate the candidate realisations and all other
                 # realisations to test the candidate's individual contribution.
                 [temp_cond, temp_cand] = self._separate_realisations(
                                                     self.selected_vars_full,
                                                     candidate)
-                conditional_realisations[i_1:i_2,0] = temp_cond
-                candidate_realisations[i_1:i_2,0] = temp_cand
+                if temp_cond.shape[1] == 1:
+                    conditional_realisations[i_1:i_2,0] = temp_cond.reshape(data.n_realisations(self.current_value), )
+                else:
+                    conditional_realisations[i_1:i_2,] = temp_cond
+                candidate_realisations[i_1:i_2,0] = temp_cand.reshape(data.n_realisations(self.current_value), )
                 i_1 = i_2
-                i_2 += data.n_realisations
-                
+                i_2 += data.n_realisations(self.current_value)
+
             temp_te = self._cmi_calculator.estimate_mult(
                                 n_chunks=len(self.selected_vars_sources),
                                 options=self.options,
@@ -498,7 +502,6 @@ class Multivariate_te(Network_analysis):
                     print(' -- significant')
                 self.min_stats_surr_table = surr_table
                 break
-            i += 1
 
     def _test_final_conditional(self, data):  # TODO test this!
         """Perform statistical test on the final conditional set."""
@@ -572,21 +575,21 @@ class Multivariate_te(Network_analysis):
         idx_remaining = cp.copy(idx_full)
         idx_remaining.pop(idx_remaining.index(idx_single))
         array_col_single = self.selected_vars_full.index(idx_single)
-        array_col_full = np.zeros(len(idx_full)).astype(int)
+        array_col_remain = np.zeros(len(idx_remaining)).astype(int)
         i = 0
-        for idx in idx_remaining:  # find the columns with realisations
-            array_col_full[i] = self.selected_vars_full.index(idx)
+        # Find the columns with realisations of the remaining variables
+        for idx in idx_remaining:
+            array_col_remain[i] = self.selected_vars_full.index(idx)
             i += 1
 
         real_single = np.expand_dims(
                         self._selected_vars_realisations[:, array_col_single],
                         axis=1)
         if len(idx_full) == 1:
-            real_remaining = None  # so the JIDT estimator doesn't break
+            real_remain = None  # so the JIDT estimator doesn't break
         else:
-            real_remaining = self._selected_vars_realisations[:,
-                                                              array_col_full]
-        return real_remaining, real_single
+            real_remain = self._selected_vars_realisations[:, array_col_remain]
+        return real_remain, real_single
 
     def _clean_up(self):
         """Remove temporary data at the end of the analysis."""

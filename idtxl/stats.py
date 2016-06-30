@@ -168,25 +168,31 @@ def omnibus_test(analysis_setup, data, opts):
 
     # Create the surrogate distribution by permuting the conditional sources.
     if VERBOSE:
-        print('omnibus test, n_perm: {0} -    '.format(n_permutations), end='')
-    surr_distribution = np.zeros(n_permutations)
+        print('omnibus test, n_perm: {0}'.format(n_permutations))
+    # Calculate TE in parallel for all permutations
+    surr_cond_real = np.empty((n_permutations * data.n_realisations(analysis_setup.current_value),
+                               len(analysis_setup.selected_vars_sources)))
+    i_1 = 0
+    i_2 = data.n_realisations(analysis_setup.current_value)
     for perm in range(n_permutations):
         if permute_over_replications:
-            surr_cond_real = data.permute_data(
+            surr_cond_real[i_1:i_2,] = data.permute_data(
                                         analysis_setup.current_value,
                                         analysis_setup.selected_vars_sources)[0]
         else:
-            surr_cond_real = _permute_realisations(
+            surr_cond_real[i_1:i_2,] = _permute_realisations(
                                             cond_source_realisations,
                                             analysis_setup._replication_index)
-        surr_distribution[perm] = analysis_setup._cmi_calculator. (
-                                    surr_cond_real,
-                                    analysis_setup._current_value_realisations,
-                                    cond_target_realisations,
-                                    analysis_setup.options)
-        if VERBOSE:
-                print('\b\b\b{num:03d}'.format(num=perm + 1), end='')
-                sys.stdout.flush()
+        i_1 = i_2
+        i_2 += data.n_realisations(analysis_setup.current_value)
+
+    surr_distribution = analysis_setup._cmi_calculator.estimate_mult(
+                                n_chunks=n_permutations,
+                                options=analysis_setup.options,
+                                re_use=['var2', 'conditional'],
+                                var1=surr_cond_real,
+                                var2=analysis_setup._current_value_realisations,
+                                conditional=cond_target_realisations)
     [significance, pvalue] = _find_pvalue(te_orig, surr_distribution, alpha)
     if VERBOSE:
         if significance:
@@ -194,7 +200,6 @@ def omnibus_test(analysis_setup, data, opts):
         else:
             print(' -- not significant')
     return significance, pvalue, te_orig
-
 
 def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
                   opts=None):
@@ -293,21 +298,24 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
     # Calculate TE for each candidate in the conditional source set and sort
     # TE values.
     candidate_realisations = np.empty(
-                                (data.n_realisations * 
-                                 len(analysis_setup.selected_vars_sources), 1))
+                        (data.n_realisations(analysis_setup.current_value) *
+                         len(analysis_setup.selected_vars_sources), 1))
     conditional_realisations = np.empty(
-                                (data.n_realisations * 
-                                 len(analysis_setup.selected_vars_sources), 1))
+                        (data.n_realisations(analysis_setup.current_value) *
+                         len(analysis_setup.selected_vars_sources), len(analysis_setup.selected_vars_full) - 1))
     i_1 = 0
-    i_2 = data.n_realisations
+    i_2 = data.n_realisations(analysis_setup.current_value)
     for conditional in analysis_setup.selected_vars_sources:
         [temp_cond, temp_cand] = analysis_setup._separate_realisations(
-                                            analysis_setup.selected_vars_sources,
+                                            analysis_setup.selected_vars_full,
                                             conditional)
-        conditional_realisations[i_1:i_2,0] = temp_cond
-        candidate_realisations[i_1:i_2,0] = temp_cand
+        if temp_cond.shape[1] == 1:
+                    conditional_realisations[i_1:i_2,0] = temp_cond.reshape(data.n_realisations(analysis_setup.current_value), )
+        else:
+            conditional_realisations[i_1:i_2, 0] = temp_cond
+        candidate_realisations[i_1:i_2, 0] = temp_cand.reshape(data.n_realisations(analysis_setup.current_value), )
         i_1 = i_2
-        i_2 += data.n_realisations
+        i_2 += data.n_realisations(analysis_setup.current_value)
 
     individual_te = analysis_setup._cmi_calculator.estimate_mult(
                             n_chunks=len(analysis_setup.selected_vars_sources),
@@ -486,11 +494,13 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
     current_value_realisations = analysis_setup._current_value_realisations
     idx_c = 0
     for candidate in idx_test_set:
+        surr_candidate_realisations = np.empty((data.n_realisations(analysis_setup.current_value) * n_perm,
+                                                1))
         if VERBOSE:
             print('\tcand. {0}'.format(
                                     analysis_setup._idx_to_lag([candidate])[0]))
         i_1 = 0
-        i_2 = data.n_realisations   
+        i_2 = data.n_realisations(analysis_setup.current_value)
         for perm in range(n_perm):
             # Check the permutation type for the current candidate.
             if permute_over_replications:
@@ -502,17 +512,17 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
                                                 [candidate])
                 sur_temp = _permute_realisations(real, repl_idx, perm_range)
 
-            surr_candidate_realisations[i_1:i_2,0] = sur_temp
+            surr_candidate_realisations[i_1:i_2,0] = sur_temp.reshape(data.n_realisations(analysis_setup.current_value))
             i_1 = i_2
-            i_2 += data.n_realisations
-        
+            i_2 += data.n_realisations(analysis_setup.current_value)
+
         surr_table[idx_c, :] = analysis_setup._cmi_calculator.estimate_mult(
-                    n_chunks=len(n_perm),
+                    n_chunks=n_perm,
                     options=analysis_setup.options,
                     re_use = ['var2', 'conditional'],
-                    var1=surr_candidate_realisations,
+                    var1=surr_candidate_realisations, # too long
                     var2=current_value_realisations,
-                    conditional=analysis_setup._selected_vars_realisations)        
+                    conditional=analysis_setup._selected_vars_realisations)
         idx_c += 1
 
     return surr_table

@@ -65,10 +65,18 @@ class Data():
     def data(self):
         return self._data
 
-    @property
-    def n_realisations(self):        
+    def n_realisations(self, current_value=(0, 0)):
         """Number of realisations over samples and replications."""
-        return self.n_samples * self.n_replications
+        return (self.n_realisations_time(current_value) *
+                self.n_realisations_repl())
+
+    def n_realisations_time(self, current_value=(0, 0)):
+        """Number of realisations over samples."""
+        return self.n_samples - current_value[1]
+
+    def n_realisations_repl(self):
+        """Number of realisations over replications."""
+        return self.n_replications
 
     @data.setter
     def data(self, d):
@@ -113,7 +121,7 @@ class Data():
         """Z-standardise data separately for each process."""
         d_standardised = np.empty(d.shape)
         for process in range(self.n_processes):
-            s = utils.standardise(d[process, :, :].reshape(1, self.n_realisations),
+            s = utils.standardise(d[process, :, :].reshape(1, self.n_realisations()),
                                   dimension=1)
             d_standardised[process, :, :] = s.reshape(self.n_samples,
                                                       self.n_replications)
@@ -179,8 +187,8 @@ class Data():
             numpy array
                 replication index for each realisation
         """
-        n_real_time = self.n_samples - current_value[1]
-        n_real_repl = self.n_replications
+        n_real_time = self.n_realisations_time(current_value)
+        n_real_repl = self.n_realisations_repl()
         realisations = np.empty((n_real_time * n_real_repl, len(idx_list)))
 
         if shuffle:

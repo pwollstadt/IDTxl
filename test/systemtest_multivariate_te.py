@@ -6,9 +6,8 @@ Created on Mon Apr  4 10:41:33 2016
 """
 import random as rn
 import numpy as np
-from multivariate_te import Multivariate_te
-from data import Data
-import utils
+from idtxl.multivariate_te import Multivariate_te
+from idtxl.data import Data
 
 
 def test_multivariate_te_corr_gaussian():
@@ -19,6 +18,11 @@ def test_multivariate_te_corr_gaussian():
     a source-target delay of one sample. This example is modeled after the
     JIDT demo 4 for transfer entropy. The resulting TE can be compared to the
     analytical result (but expect some error in the estimate).
+
+    The simulated delay is 1 sample, i.e., the algorithm should find
+    significant TE from sample (0, 1), a sample in process 0 with lag/delay 1.
+    The final target sample should always be (1, 1), the mandatory sample at
+    lat 1, because there is no memory in the process.
 
     Note:
         This test runs considerably faster than other system tests.
@@ -56,6 +60,10 @@ def test_multivariate_te_corr_gaussian():
     # 0.05833172 repectively. This inspired the following error boundaries.
     expected_res = np.log(1 / (1 - np.power(cov, 2)))
     diff = np.abs(max(res_1['cond_sources_te']) - expected_res)
+    print('Expected source sample: (0, 1)\nExpected target sample: (1, 1)')
+    print(('Estimated TE: {0:5.4f}, analytical result: {1:5.4f}, error:'
+           '{2:2.2f} % ').format(max(res_1['cond_sources_te']), expected_res,
+                                 diff / expected_res))
     assert (diff < 0.1), ('Multivariate TE calculation for correlated '
                           'Gaussians failed (error larger 0.1: {0}, expected: '
                           '{1}, actual: {2}).'.format(diff,
