@@ -1,6 +1,7 @@
 """Manage different estimators for information theoretic measures."""
 import types
 from . import estimators_te
+from . import estimators_ais
 from . import estimators_cmi
 from . import estimators_mi
 
@@ -45,6 +46,18 @@ class Estimator_te(Estimator):
             self.estimator_name = estimator_name
             self.add_method(estimator, estimator_name)
 
+class Estimator_ais(Estimator):
+    """Set the requested transfer entropy estimator."""
+
+    def __init__(self, estimator_name):
+        try:
+            estimator = getattr(estimators_ais, estimator_name)
+        except AttributeError:
+            raise AttributeError('The requested AIS estimator "{0}" was not '
+                                 'found.'.format(estimator_name))
+        else:
+            self.estimator_name = estimator_name
+            self.addMethodAs(estimator, "estimate")
 
 class Estimator_cmi(Estimator):
     """Set the requested conditional mutual information estimator."""

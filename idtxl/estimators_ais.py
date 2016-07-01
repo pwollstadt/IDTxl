@@ -1,5 +1,7 @@
 from pkg_resources import resource_filename
 import jpype as jp
+import numpy as np
+import random as rn
 
 
 def jidt_kraskov(self, process, opts):
@@ -97,4 +99,3 @@ def jidt_kraskov(self, process, opts):
         return calc.computeLocalOfPreviousObservations()
     else:
         return calc.computeAverageLocalOfObservations()
-

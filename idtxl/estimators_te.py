@@ -88,7 +88,7 @@ def jidt_kraskov(self, source, target, opts):
         history_target = opts['history_target']
     except KeyError:
         raise RuntimeError('No history was provided for TE estimation.')
-    history_source = opts.get('history_source', default=history_target)    
+    history_source = opts.get('history_source', history_target)    
 
     jarLocation = resource_filename(__name__, 'infodynamics.jar')
     if not jp.isJVMStarted():

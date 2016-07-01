@@ -390,6 +390,49 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
     return significance, pvalue, surr_table
 
 
+def mi_against_surrogates(analysis_setup, data):
+
+    n_perm = analysis_setup.options.get('n_perm', 20)
+    alpha = analysis_setup.options.get('alpha', 0.05)
+    tail = analysis_setup.options.get('tail', 'one')
+
+    statistic = analysis_setup._cmi_calculator.estimate(
+                    var1=analysis_setup._current_value_realisations,
+                    var2=analysis_setup._selected_vars_realisations,
+                    conditional=None,
+                    opts=analysis_setup.options)
+
+    permute_over_replications = _permute_over_replications(data, n_perm)
+    if not permute_over_replications:
+        try:
+            perm_range = analysis_setup.options['perm_range']
+        except KeyError:
+            perm_range = 'max'
+
+    surr_dist = np.empty(n_perm)
+    for perm in range(n_perm):
+        # Check the permutation type for the current candidate.
+        if permute_over_replications:
+            surr_realisations = data.permute_data(
+                                            analysis_setup.current_value,
+                                            [analysis_setup.current_value])[0]
+        else:
+            [real, repl_idx] = data.get_realisations(
+                                            analysis_setup.current_value,
+                                            [analysis_setup.current_value])
+            surr_realisations = _permute_realisations(real,
+                                                                repl_idx,
+                                                                perm_range)
+        surr_dist[perm] = analysis_setup._cmi_calculator.estimate(
+                    var1=surr_realisations,
+                    var2=analysis_setup._selected_vars_realisations,
+                    conditional=None,
+                    opts=analysis_setup.options)
+
+    [s, p] = _find_pvalue(statistic, surr_dist, alpha, tail)
+    return [statistic, s, p]
+
+
 def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
     """Create a table of surrogate transfer entropy values.
 
@@ -414,14 +457,14 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
     """
     # Check if n_replications is high enough to allow for the requested number
     # of permutations. If not permute samples over time
-    if np.math.factorial(data.n_replications) > n_perm:
-        permute_over_replications = True
-    else:
-        permute_over_replications = False
+
+    permute_over_replications = _permute_over_replications(data, n_perm)
+    if not permute_over_replications:
         try:
             perm_range = analysis_setup.options['perm_range']
         except KeyError:
             perm_range = 'max'
+
 
     # Create surrogate table.
     if VERBOSE:
@@ -604,3 +647,12 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
     significance = pvalue < alpha
 
     return significance, pvalue
+
+def _permute_over_replications(data, n_perm):
+    """Test if data is sufficient permute data over replications. """
+    if np.math.factorial(data.n_replications) > n_perm:
+        return True
+    else:
+        return False
+
+
