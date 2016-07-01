@@ -4,6 +4,7 @@ from . import idtxl_exceptions as ex
 try:
     import pyopencl as cl
 except ImportError:  # TODO this doesn't get printed?!
+    print('COULD NOT FIND OPENCL ON THIS SYSTEM!!!!!')  # TODO remove later
     ex.opencl_missing('PyOpenCl is not available on this system. To use '
                       'OpenCL-powered CMI estimation install it from '
                       'https://pypi.python.org/pypi/pyopencl')

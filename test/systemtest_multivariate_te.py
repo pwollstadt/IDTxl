@@ -10,7 +10,7 @@ from idtxl.multivariate_te import Multivariate_te
 from idtxl.data import Data
 
 
-def test_multivariate_te_corr_gaussian():
+def test_multivariate_te_corr_gaussian(estimator=None):
     """Test multivariate TE estimation on correlated Gaussians.
 
     Run the multivariate TE algorithm on two sets of random Gaussian data with
@@ -28,6 +28,9 @@ def test_multivariate_te_corr_gaussian():
         This test runs considerably faster than other system tests.
         This produces strange small values for non-coupled sources.  TODO
     """
+    if estimator is None:
+        estimator = 'jidt_kraskov'
+
     n = 1000
     cov = 0.4
     source_1 = [rn.normalvariate(0, 1) for r in range(n)]  # correlated src
@@ -43,7 +46,7 @@ def test_multivariate_te_corr_gaussian():
     dat = Data(normalise=True)
     dat.set_data(np.vstack((source_1[1:].T, target[:-1].T)), 'ps')
     analysis_opts = {
-        'cmi_calc_name': 'jidt_kraskov',
+        'cmi_calc_name': estimator,
         'n_perm_max_stat': 21,
         'n_perm_min_stat': 21,
         'n_perm_omnibus': 21,
@@ -243,3 +246,4 @@ if __name__ == '__main__':
     # test_multivariate_te_lorenz_2()
     # test_multivariate_te_random()
     test_multivariate_te_corr_gaussian()
+    test_multivariate_te_corr_gaussian('opencl_kraskov')
