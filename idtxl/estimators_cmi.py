@@ -95,7 +95,9 @@ def opencl_kraskov(self, var1, var2, conditional=None, n_chunks=1, opts=None):
         var2 = var2.astype('float32')
         n_dim_var2 = var2.shape[1]
         signallengthpergpu = pointset_full_space.shape[0]
-        chunksize = signallengthpergpu / nchunkspergpu # TODO check for integer result
+        assert signallengthpergpu % nchunkspergpu == 0, 'signal length {0} can not be divided by no. chunks {1}'.format(signallengthpergpu, nchunkspergpu)
+        chunksize = int(signallengthpergpu / nchunkspergpu) # TODO check for integer result
+        print('no. points: {0}, chunksize: {1}, nchunks: {2}'.format(signallengthpergpu, chunksize, nchunkspergpu))
         indexes, distances = nsocl.knn_search(pointset_full_space, n_dim_full,
                                               kraskov_k, theiler_t, nchunkspergpu,
                                               gpuid)
@@ -142,8 +144,8 @@ def opencl_kraskov(self, var1, var2, conditional=None, n_chunks=1, opts=None):
 
         if VERBOSE:
             print('working with signallength: {0}'.format(signallengthpergpu))
-        chunksize = signallengthpergpu / nchunkspergpu
-        assert(int(chunksize)  == chunksize), 'Chunksize is not an interger value.'
+        chunksize = int(signallengthpergpu / nchunkspergpu)
+        assert(signallengthpergpu % nchunkspergpu == 0), 'Chunksize is not an interger value.'
 #        assert(type(chunksize) is int), 'Chunksize has to be an integer.'
         indexes, distances = nsocl.knn_search(pointset_full_space, n_dim_full,
                                               kraskov_k, theiler_t, nchunkspergpu,
@@ -183,7 +185,6 @@ def opencl_kraskov(self, var1, var2, conditional=None, n_chunks=1, opts=None):
     if VERBOSE:
         print('cmi array reads: {0} (n_chunks = {1})'.format(cmi_array, nchunkspergpu))
     return cmi_array
-
 
 def jidt_kraskov(self, var1, var2, conditional, opts=None):
     """Calculate conditional mutual infor with JIDT's Kraskov implementation.

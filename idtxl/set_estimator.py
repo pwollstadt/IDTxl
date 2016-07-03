@@ -96,20 +96,11 @@ class Estimator(object):
 
         if self.is_parallel:
             for k in re_use:
-<<<<<<< HEAD
-                data[k] = np.tile(data[k], (n_chunks, 1))
-            return self.estimate(n_chunks=n_chunks, opts=options, **data)
-
-        else:  # cut data into chunks and estimate iteratively
-            chunk_size = data[data.keys()[0]].shape[0] / n_chunks
-=======
                 if data[k] is not None:
                     data[k] = np.tile(data[k], (n_chunks, 1))
-            return self.estimate(n_chunks=n_chunks, opts=options, **data)  # TODO check order of arguments, change that also in the called function
-
+            return self.estimate(n_chunks=n_chunks, opts=options, **data)
         else:  # cut data into chunks and estimate iteratively
-            chunk_size = data[list(data.keys())[0]].shape[0] / n_chunks
->>>>>>> bug-fixes for parallel GPU support, alpha stage
+            chunk_size = data['var1'].shape[0] / n_chunks
             idx_1 = 0
             idx_2 = chunk_size
             res = np.empty((n_chunks))
@@ -121,11 +112,7 @@ class Estimator(object):
                     chunk_data[k] = data[k][idx_1:idx_2, :]
                 for k in re_use:
                     chunk_data[k] = data[k]
-<<<<<<< HEAD
                 res[i] = self.estimate(opts=options, **chunk_data)
-=======
-                res[i] = self.estimate(opts=options, **chunk_data)  # TODO check order of arguments, change that also in the called function
->>>>>>> bug-fixes for parallel GPU support, alpha stage
                 idx_1 = idx_2
                 idx_2 += chunk_size
                 i += 1

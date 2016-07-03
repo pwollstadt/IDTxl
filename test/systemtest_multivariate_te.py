@@ -240,10 +240,33 @@ def test_multivariate_te_mute():
                                        max_lag_target=3, options=analysis_opts)
     res = network_analysis.analyse_network(dat, targets=[1, 2])
 
+def test_multivariate_te_multiple_runs():
+    """Test TE estimation using multiple runs on the GPU.
+    
+    Test if data is correctly split over multiple runs, if the problem size exceeds
+    the GPU global memory and thus requires multiple runs. Using a number of 
+    permutations of 7000 requires two runs on a GPU with global memory of about
+    6 GB.
+    """
+    dat = Data()
+    dat.generate_mute_data(n_samples=1000, n_replications=10)
+    analysis_opts = {
+        'cmi_calc_name': 'opencl_kraskov',
+        'n_perm_max_stat': 7000,
+        'n_perm_min_stat': 7000,
+        'n_perm_omnibus': 21,
+        'n_perm_max_seq': 21,  # this should be equal to the min stats b/c we
+                               # reuse the surrogate table from the min stats
+        }
+
+    network_analysis = Multivariate_te(max_lag_sources=3, min_lag_sources=1,
+                                       max_lag_target=3, options=analysis_opts)
+    res = network_analysis.analyse_network(dat, targets=[1, 2])
 
 if __name__ == '__main__':
     # test_multivariate_te_mute()
     # test_multivariate_te_lorenz_2()
     # test_multivariate_te_random()
+    test_multivariate_te_multiple_runs()
     test_multivariate_te_corr_gaussian()
     test_multivariate_te_corr_gaussian('opencl_kraskov')
