@@ -20,6 +20,7 @@ To **get started** have a look at the [wiki](https://github.com/pwollstadt/IDTxl
 - [Patricia Wollstadt](http://patriciawollstadt.de/), Brain Imaging Center, MEG Unit, Goethe-University, Frankfurt, Germany
 - [Michael Wibral](http://www.michael-wibral.de/), Brain Imaging Center, MEG Unit, Goethe-University, Frankfurt, Germany
 - [Joseph T. Lizier](http://lizier.me/joseph/), Complex Systems Research Group, The University of Sydney, Sydney, Australia
+- [Raul Vicente](http://neuro.cs.ut.ee/people/), Computational Neuroscience Lab, Institute of Computer Science, University of Tartu
 - Connor Finn, Complex Systems Research Group, The University of Sydney, Sydney, Australia
 - Mario Martínez Zarzuela, Department of Signal Theory and Communications and Telematics Engineering, University of Valladolid, Valladolid, Spain
 
