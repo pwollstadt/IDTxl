@@ -57,7 +57,7 @@ def test_single_source_storage_gaussian():
     res = network_analysis.analyse_network(dat, processes)
     print('AIS for random normal data without memory (using analysis class, expected is NaN): {0}'.format(res[1]['ais']))
 
-def test_single_source_storage():
+def test_single_source_storage_jidt():
     dat = Data()
     dat.generate_mute_data(100, 5)
     max_lag = 5
@@ -74,8 +74,27 @@ def test_single_source_storage():
     print('AIS for MUTE data proc 2 (using analysis class): {0}'.format(res[2]['ais']))
     print('AIS for MUTE data proc 3 (using analysis class): {0}'.format(res[3]['ais']))
 
+def test_single_source_storage_opencl():
+    dat = Data()
+    dat.generate_mute_data(100, 5)
+    max_lag = 5
+    analysis_opts = {
+        # 'cmi_calc_name': 'jidt_kraskov',
+        'cmi_calc_name': 'opencl_kraskov',
+        'n_perm': 22,
+        'alpha': 0.05,
+        'tail': 'one',
+        }
+    processes = [1, 2, 3]
+    network_analysis = Single_process_storage(max_lag, analysis_opts, tau=1)
+    res = network_analysis.analyse_network(dat, processes)
+    print('AIS for MUTE data proc 1 (using analysis class): {0}'.format(res[1]['ais']))
+    print('AIS for MUTE data proc 2 (using analysis class): {0}'.format(res[2]['ais']))
+    print('AIS for MUTE data proc 3 (using analysis class): {0}'.format(res[3]['ais']))
+
 
 if __name__ == '__main__':
-    test_single_source_storage()
+    test_single_source_storage_jidt()
+    test_single_source_storage_opencl()
     test_single_source_storage_gaussian()
     test_ais_gaussian()
