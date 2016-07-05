@@ -192,14 +192,18 @@ class Single_process_storage(Network_analysis):
         candidates = self._define_candidates(procs, samples)
         samples_found = self._include_candidates(candidates, data)
 
-
-        print('\n---------------------------- (2) prune source candidate')
+        # TODO include this step
+        # print('\n---------------------------- (2) prune source candidate')
         # If no candidates were found in the process' past, return 0.
-        if samples_found:
-            self._prune_candidates(data)
-            print('\n---------------------------- (3) final statistics')
-            if self._selected_vars_full:
-                self._test_final_conditional(data)
+        # if samples_found:
+        #    self._prune_candidates(data)
+        print('\n---------------------------- (3) final statistics')
+        if self._selected_vars_full:
+            self._test_final_conditional(data)
+        else:
+            self.ais = np.nan
+            self.sign = False
+            self.pvalue = 1
 
         # Clean up and return results.
         if VERBOSE:

@@ -36,12 +36,31 @@ def test_ais_gaussian():
         }
     ais_est = Estimator_ais('jidt_kraskov')
     ais = ais_est.estimate(source, analysis_opts)
-    print('AIS for random normal data without memory: {0}'.format(ais))
+    print('AIS for random normal data without memory (calling estimator directly, expected is something close to 0): {0}'.format(ais))
+
+def test_single_source_storage_gaussian():
+    n = 1000
+    cov = 0.4
+    proc_1 = [rn.normalvariate(0, 1) for r in range(n)]  # correlated src
+    proc_2 = [rn.normalvariate(0, 1) for r in range(n)]  # correlated src
+    # Cast everything to numpy so the idtxl estimator understands it.
+    dat = Data(np.array([proc_1, proc_2]), dim_order='ps')
+    max_lag = 5
+    analysis_opts = {
+        'cmi_calc_name': 'jidt_kraskov',
+        'n_perm': 22,
+        'alpha': 0.05,
+        'tail': 'one',
+        }
+    processes = [1]
+    network_analysis = Single_process_storage(max_lag, analysis_opts, tau=1)
+    res = network_analysis.analyse_network(dat, processes)
+    print('AIS for random normal data without memory (using analysis class, expected is NaN): {0}'.format(res[1]['ais']))
 
 def test_single_source_storage():
     dat = Data()
     dat.generate_mute_data(100, 5)
-    max_lag = 3
+    max_lag = 5
     analysis_opts = {
         'cmi_calc_name': 'jidt_kraskov',
         'n_perm': 22,
@@ -51,8 +70,12 @@ def test_single_source_storage():
     processes = [1, 2, 3]
     network_analysis = Single_process_storage(max_lag, analysis_opts, tau=1)
     res = network_analysis.analyse_network(dat, processes)
+    print('AIS for MUTE data proc 1 (using analysis class): {0}'.format(res[1]['ais']))
+    print('AIS for MUTE data proc 2 (using analysis class): {0}'.format(res[2]['ais']))
+    print('AIS for MUTE data proc 3 (using analysis class): {0}'.format(res[3]['ais']))
 
 
 if __name__ == '__main__':
-    # test_ais_gaussian()
     test_single_source_storage()
+    test_single_source_storage_gaussian()
+    test_ais_gaussian()
