@@ -309,11 +309,11 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
         [temp_cond, temp_cand] = analysis_setup._separate_realisations(
                                             analysis_setup.selected_vars_full,
                                             conditional)
-        if temp_cond.shape[1] == 1:
-                    conditional_realisations[i_1:i_2,0] = temp_cond.reshape(data.n_realisations(analysis_setup.current_value), )
+        if temp_cond is None:
+            conditional_realisations = None
         else:
-            conditional_realisations[i_1:i_2, 0] = temp_cond
-        candidate_realisations[i_1:i_2, 0] = temp_cand.reshape(data.n_realisations(analysis_setup.current_value), )
+            conditional_realisations[i_1:i_2, ] = temp_cond
+        candidate_realisations[i_1:i_2, ] = temp_cand
         i_1 = i_2
         i_2 += data.n_realisations(analysis_setup.current_value)
 
@@ -461,7 +461,7 @@ def mi_against_surrogates(analysis_setup, data):
                                             analysis_setup.current_value,
                                             [analysis_setup.current_value])
             surr_temp = _permute_realisations(real, repl_idx, perm_range)
-        surr_realisations[i_1:i_2, 0] = surr_temp.reshape(data.n_realisations(analysis_setup.current_value))
+        surr_realisations[i_1:i_2, ] = surr_temp
         i_1 = i_2
         i_2 += data.n_realisations(analysis_setup.current_value)
     
@@ -534,7 +534,7 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
                                                 [candidate])
                 sur_temp = _permute_realisations(real, repl_idx, perm_range)
 
-            surr_candidate_realisations[i_1:i_2,0] = sur_temp.reshape(data.n_realisations(analysis_setup.current_value))
+            surr_candidate_realisations[i_1:i_2, ] = sur_temp
             i_1 = i_2
             i_2 += data.n_realisations(analysis_setup.current_value)
 

@@ -382,9 +382,9 @@ class Multivariate_te(Network_analysis):
             i_1 = 0
             i_2 = data.n_realisations(self.current_value)
             for candidate in candidate_set:
-                candidate_realisations[i_1:i_2, 0] = data.get_realisations(
+                candidate_realisations[i_1:i_2, ] = data.get_realisations(
                                                             self.current_value,
-                                                            [candidate])[0].reshape(data.n_realisations(self.current_value),)
+                                                            [candidate])[0]
                 i_1 = i_2
                 i_2 += data.n_realisations(self.current_value)
             temp_te = self._cmi_calculator.estimate_mult(
@@ -464,8 +464,8 @@ class Multivariate_te(Network_analysis):
                 if temp_cond is None:
                     conditional_realisations = None
                 else:
-                    conditional_realisations[i_1:i_2, ] = temp_cond.reshape(data.n_realisations(self.current_value), cond_dim)
-                candidate_realisations[i_1:i_2,0] = temp_cand.reshape(data.n_realisations(self.current_value), )
+                    conditional_realisations[i_1:i_2, ] = temp_cond
+                candidate_realisations[i_1:i_2, ] = temp_cand
                 i_1 = i_2
                 i_2 += data.n_realisations(self.current_value)
 
