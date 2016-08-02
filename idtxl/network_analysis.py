@@ -288,8 +288,3 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
         self._append_selected_vars_realisations(
                         data.get_realisations(self.current_value, cond)[0])
 
-
-if __name__ == '__main__':
-    max_lag = 5
-    target = 0
-    n = Network_analysis()
