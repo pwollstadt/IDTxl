@@ -9,7 +9,8 @@ import numpy as np
 from scipy.special import digamma
 from . import idtxl_utils as utils
 from . import neighbour_search_opencl as nsocl
-VERBOSE = True
+
+VERBOSE = False
 
 def is_parallel(estimator_name):
     """Check if estimator can estimate CMI for multiple chunks in parallel."""
@@ -101,7 +102,8 @@ def opencl_kraskov(self, var1, var2, conditional=None, n_chunks=1, opts=None):
         signallengthpergpu = pointset_full_space.shape[0]
         assert signallengthpergpu % nchunkspergpu == 0, 'signal length {0} can not be divided by no. chunks {1}'.format(signallengthpergpu, nchunkspergpu)
         chunksize = int(signallengthpergpu / nchunkspergpu) # TODO check for integer result
-        print('no. points: {0}, chunksize: {1}, nchunks: {2}'.format(signallengthpergpu, chunksize, nchunkspergpu))
+        if VERBOSE:
+            print('no. points: {0}, chunksize: {1}, nchunks: {2}'.format(signallengthpergpu, chunksize, nchunkspergpu))
         indexes, distances = nsocl.knn_search(pointset_full_space, n_dim_full,
                                               kraskov_k, theiler_t, nchunkspergpu,
                                               gpuid)

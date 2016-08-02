@@ -412,7 +412,23 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
 
 
 def mi_against_surrogates(analysis_setup, data):
+    """Test estimaed mutual information for significance against surrogate data.
+    
+    Shuffle realisations of the current value (point to be predicted) and re-
+    calculate mutual information (MI) for shuffled data. The actual estimated MI
+    is then compared against this distribution of MI values from surrogate data.
 
+    Args:
+        analysis_setup
+        data
+    Returns:
+        float
+            estimated MI value
+        bool
+            statistical significance 
+        float
+            p_value for estimated MI value
+    """
     n_perm = analysis_setup.options.get('n_perm', 20)
     alpha = analysis_setup.options.get('alpha', 0.05)
     tail = analysis_setup.options.get('tail', 'one')
@@ -430,28 +446,34 @@ def mi_against_surrogates(analysis_setup, data):
         except KeyError:
             perm_range = 'max'
 
-    surr_dist = np.empty(n_perm)
+    # Create surrogate data by shuffling the realisations of the current value.
+    surr_realisations = np.empty((data.n_realisations(analysis_setup.current_value) *
+                                  n_perm, 1))
+    i_1 = 0
+    i_2 = data.n_realisations(analysis_setup.current_value)
     for perm in range(n_perm):
         # Check the permutation type for the current candidate.
         if permute_over_replications:
-            surr_realisations = data.permute_data(
-                                            analysis_setup.current_value,
-                                            [analysis_setup.current_value])[0]
+            surr_temp = data.permute_data(analysis_setup.current_value,
+                                          [analysis_setup.current_value])[0]
         else:
             [real, repl_idx] = data.get_realisations(
                                             analysis_setup.current_value,
                                             [analysis_setup.current_value])
-            surr_realisations = _permute_realisations(real,
-                                                                repl_idx,
-                                                                perm_range)
-        surr_dist[perm] = analysis_setup._cmi_calculator.estimate(
-                    var1=surr_realisations,
-                    var2=analysis_setup._selected_vars_realisations,
-                    conditional=None,
-                    opts=analysis_setup.options)
-
-    [s, p] = _find_pvalue(statistic, surr_dist, alpha, tail)
-    return [statistic, s, p]
+            surr_temp = _permute_realisations(real, repl_idx, perm_range)
+        surr_realisations[i_1:i_2, 0] = surr_temp.reshape(data.n_realisations(analysis_setup.current_value))
+        i_1 = i_2
+        i_2 += data.n_realisations(analysis_setup.current_value)
+    
+    surr_dist = analysis_setup._cmi_calculator.estimate_mult(
+                                            n_chunks=n_perm,
+                                            options=analysis_setup.options,
+                                            re_use=['var2'], 
+                                            var1=surr_realisations,
+                                            var2=analysis_setup._selected_vars_realisations,
+                                            conditional=None)
+    [significance, p_value] = _find_pvalue(statistic, surr_dist, alpha, tail)
+    return [statistic, significance, p_value]
 
 
 def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
@@ -467,7 +489,7 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
         data : Data instance
             raw data
         idx_test_set : list of tuples
-            list od indices indicating samples to be used as sources
+            list of indices indicating samples to be used as sources
         n_perm : int [optional]
             number of permutations for testing (default=500)
 

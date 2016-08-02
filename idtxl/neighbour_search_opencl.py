@@ -9,7 +9,7 @@ except ImportError:  # TODO this doesn't get printed?!
                       'OpenCL-powered CMI estimation install it from '
                       'https://pypi.python.org/pypi/pyopencl')
 
-VERBOSE = True
+VERBOSE = False
 
 def knn_search(pointset, n_dim, knn_k, theiler_t, n_chunks=1, gpuid=0):
     """Interface with OpenCL knn search from Python/IDTxl.
@@ -24,11 +24,12 @@ def knn_search(pointset, n_dim, knn_k, theiler_t, n_chunks=1, gpuid=0):
     if n_dim !=  pointset.shape[0]:
         assert n_dim == pointset.shape[1], "given dimension does not match data"
         pointset = pointset.transpose().copy()
-
-        print('>>>search GPU: fixed shape of input data')
+        if VERBOSE:
+            print('search GPU: fixed shape of input data')
     if pointset.flags['C_CONTIGUOUS'] != True:
         pointset = np.ascontiguousarray(pointset)
-        print('>>>search GPU: fixed memory layout of input data')
+        if VERBOSE:
+            print('search GPU: fixed memory layout of input data')
 
     # Allocate memory for GPU search output.
     indexes = np.zeros((knn_k, pointset.shape[1]), dtype=np.int32)
@@ -71,10 +72,12 @@ def range_search(pointset, n_dim, radius, theiler_t, n_chunks=1, gpuid=0):
     if n_dim !=  pointset.shape[0]:
         assert n_dim == pointset.shape[1], "given dimension does not match data axis"
         pointset = pointset.transpose().copy()
-        print('>>>search GPU: fixed shape input data')
+        if VERBOSE:
+            print('search GPU: fixed shape input data')
     if pointset.flags['C_CONTIGUOUS'] != True:
         pointset = np.ascontiguousarray(pointset)
-        print('>>>search GPU: fixed memory layout of input data')
+        if VERBOSE:
+            print('search GPU: fixed memory layout of input data')
     
     # Allocate memory for GPU search output
     pointcount = np.zeros((pointset.shape[1]), dtype=np.int32)
@@ -272,7 +275,8 @@ def find_nonempty(a_list):
         if a_list[idx].get_devices(device_type= cl.device_type.GPU) != []:
             break
         else:
-            print('found empty platform')
+            if VERBOSE:
+                print('found empty platform')
 
     if a_list[idx] == []:
         print('all platforms empty')
@@ -342,5 +346,6 @@ def _get_device(gpuid):
     my_gpu_devices = platform[platf_idx].get_devices(device_type=cl.device_type.GPU)
     context = cl.Context(devices=my_gpu_devices)
     queue = cl.CommandQueue(context, my_gpu_devices[gpuid])
-    print(("Selected Device: ", my_gpu_devices[gpuid].name))
+    if VERBOSE:
+        print(("Selected Device: ", my_gpu_devices[gpuid].name))
     return my_gpu_devices, context, queue

@@ -100,19 +100,24 @@ class Estimator(object):
                     data[k] = np.tile(data[k], (n_chunks, 1))
             return self.estimate(n_chunks=n_chunks, opts=options, **data)
         else:  # cut data into chunks and estimate iteratively
-            chunk_size = data['var1'].shape[0] / n_chunks
+            assert data['var1'].shape[0] % n_chunks == 0, 'Chunk-size is not integer-valued.'
+            chunk_size = int(data['var1'].shape[0] / n_chunks)
             idx_1 = 0
             idx_2 = chunk_size
             res = np.empty((n_chunks))
+            # Find arrays that have to be cut up by chunks because they are not re-used.
             slice_vars = list(set(data.keys()).difference(set(re_use)))
             i = 0
             for c in range(n_chunks):
                 chunk_data = {}
-                for k in slice_vars:  # NOTE: I AM NOT CREATING A DEEP COPY HERE!
-                    chunk_data[k] = data[k][idx_1:idx_2, :]
-                for k in re_use:
-                    chunk_data[k] = data[k]
-                res[i] = self.estimate(opts=options, **chunk_data)
+                for v in slice_vars:  # NOTE: I AM NOT CREATING A DEEP COPY HERE!
+                    if data[v] is not None:
+                        chunk_data[v] = data[v][idx_1:idx_2, :]
+                    else:
+                        chunk_data[v] = data[v]
+                for v in re_use:
+                    chunk_data[v] = data[v]
+                res[i] = self.estimate(opts=options, **chunk_data)  # TODO check order of arguments, change that also in the called function
                 idx_1 = idx_2
                 idx_2 += chunk_size
                 i += 1
@@ -153,9 +158,13 @@ class Estimator_ais(Estimator):
                                estimator_name)
 =======
             self.addMethodAs(estimator, "estimate")
+<<<<<<< HEAD
         self.addMethodAs(estimators_te.is_parallel, "is_parallel")
 >>>>>>> bug-fixes for parallel GPU support, alpha stage
 
+=======
+        self.addMethodAs(estimators_ais.is_parallel, "is_parallel")
+>>>>>>> Parallelize AIS estimation over GPU
 
 class Estimator_cmi(Estimator):
     """Set the requested conditional mutual information estimator."""

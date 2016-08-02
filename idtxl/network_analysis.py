@@ -5,6 +5,7 @@ Created on Mon Mar  7 18:13:27 2016
 @author: patricia
 """
 import numpy as np
+import copy as cp
 from . import idtxl_utils as utils
 
 class Network_analysis(): # TODO which 'algorithms' do we want to provide for this? biv TE, mult TE, mult granger, biv granger, ...?
@@ -214,6 +215,78 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
         else:
             self.selected_vars_sources.pop(
                                         self.selected_vars_sources.index(idx))
+
+    def _separate_realisations(self, idx_full, idx_single):
+        """Separate a single indexes' realisations from a set of realisations.
+
+        Return the realisations of a single index and the realisations of the
+        remaining set of indexes. The function takes realisations from the
+        array in self._selected_vars_realisations. This allows to reuse the
+        collected realisations when pruning the conditional set after
+        candidates have been included.
+
+        Args:
+            idx_full : list of tuples
+                indices indicating the full set
+            idx_single : tuple
+                index to be removed
+
+        Returns:
+            numpy array
+                realisations of the set without the single index
+            numpy array
+                realisations of the variable at the single index
+        """
+        # Get realisations for all indices from the class attribute
+        # ._selected_vars_realisations. Find the respective columns.
+        idx_remaining = cp.copy(idx_full)
+        idx_remaining.pop(idx_remaining.index(idx_single))
+        array_col_single = self.selected_vars_full.index(idx_single)
+        array_col_remain = np.zeros(len(idx_remaining)).astype(int)
+        i = 0
+        # Find the columns with realisations of the remaining variables
+        for idx in idx_remaining:
+            array_col_remain[i] = self.selected_vars_full.index(idx)
+            i += 1
+
+        real_single = np.expand_dims(
+                        self._selected_vars_realisations[:, array_col_single],
+                        axis=1)
+        if len(idx_full) == 1:
+            real_remain = None  # so the JIDT estimator doesn't break
+        else:
+            real_remain = self._selected_vars_realisations[:, array_col_remain]
+        return real_remain, real_single
+
+    def _clean_up(self):
+        """Remove temporary data at the end of the analysis."""
+        self._current_value_realisations = None
+        self._selected_vars_sources_realisations = None
+        self._selected_vars_target_realisations = None
+        self._current_value_realisations = None
+        self.min_stats_surr_table = None
+
+    def _idx_to_lag(self, idx_list):
+        """Change sample indices to lags for each index in the list."""
+        lag_list = cp.copy(idx_list)
+        for c in idx_list:
+            lag_list[idx_list.index(c)] = (c[0], self.current_value[1] - c[1])
+        return lag_list
+
+    def _force_conditionals(self, cond, data):
+        """Enforce a given conditioning set."""
+        if type(cond) is tuple:  # easily add single variable
+            cond = [cond]
+        elif type(cond) is str:
+            if cond == 'faes':
+                cond = self._define_candidates(self.source_set,
+                                               [self.current_value[1]])
+
+        print('Adding the following variables to the conditioning set: {0}.'.
+              format(self._idx_to_lag(cond)))
+        self._append_selected_vars_idx(cond)
+        self._append_selected_vars_realisations(
+                        data.get_realisations(self.current_value, cond)[0])
 
 
 if __name__ == '__main__':

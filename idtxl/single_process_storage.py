@@ -89,6 +89,7 @@ class Single_process_storage(Network_analysis):
             self.calculator_name = options['cmi_calc_name']
         except KeyError:
             raise KeyError('Calculator name was not specified!')
+        print('\n\nSetting calculator to: {0}'.format(self.calculator_name))
         self._cmi_calculator = Estimator_cmi(self.calculator_name)  # TODO should be 'calculator'
         super().__init__()
 
@@ -141,8 +142,8 @@ class Single_process_storage(Network_analysis):
         results = {}
         for t in range(len(processes)):
             if VERBOSE:
-                print('####### analysing process {0} of {1}'.format(t,
-                                                                    processes))
+                print('\n####### analysing process {0} of {1}'.format(processes[t],
+                                                                        processes))
             r = self.analyse_single_process(data, processes[t])
             r['process'] = processes[t]
             results[processes[t]] = r
@@ -185,18 +186,13 @@ class Single_process_storage(Network_analysis):
 
         # Main algorithm.
         print('\n---------------------------- (1) include candidates')
-        procs = [self.process]
-        samples = np.arange(self.current_value[1] - 1,
-                            self.current_value[1] - self.max_lag - 1,
-                            -self.tau)
-        candidates = self._define_candidates(procs, samples)
+        candidates = self._define_candidates()
         samples_found = self._include_candidates(candidates, data)
 
-        # TODO include this step
-        # print('\n---------------------------- (2) prune source candidate')
+        print('\n---------------------------- (2) prune source candidates')
         # If no candidates were found in the process' past, return 0.
-        # if samples_found:
-        #    self._prune_candidates(data)
+        if samples_found:
+            self._prune_candidates(data)
         print('\n---------------------------- (3) final statistics')
         if self._selected_vars_full:
             self._test_final_conditional(data)
@@ -246,6 +242,7 @@ class Single_process_storage(Network_analysis):
         # before.
         if self.selected_vars_full:
             self.selected_vars_full = []
+            self.selected_vars_sources = []
             self._selected_vars_realisations = None
             self.pvalue = None
             self.sign = False
@@ -289,24 +286,29 @@ class Single_process_storage(Network_analysis):
         success = False
         while candidate_set:
             # Find the candidate with maximum TE.
-            temp_te = np.empty(len(candidate_set))
-            i = 0
+            candidate_realisations = np.empty((data.n_realisations(self.current_value) *
+                                               len(candidate_set), 1))
+            i_1 = 0
+            i_2 = data.n_realisations(self.current_value)
             for candidate in candidate_set:
-                candidate_realisations = data.get_realisations(
+                candidate_realisations[i_1:i_2, 0] = data.get_realisations(
                                                             self.current_value,
-                                                            [candidate])[0]
-                temp_te[i] = self._cmi_calculator.estimate(
-                                        candidate_realisations,
-                                        self._current_value_realisations,
-                                        self._selected_vars_realisations,
-                                        self.options)
-                i += 1
+                                                            [candidate])[0].reshape(data.n_realisations(self.current_value),)
+                i_1 = i_2
+                i_2 += data.n_realisations(self.current_value)
+            temp_te = self._cmi_calculator.estimate_mult(
+                                        n_chunks=len(candidate_set),
+                                        options=self.options,
+                                        re_use=['var2', 'conditional'],
+                                        var1=candidate_realisations,
+                                        var2=self._current_value_realisations,
+                                        conditional=self._selected_vars_realisations)
 
             # Test max TE for significance with maximum statistics.
             te_max_candidate = max(temp_te)
             max_candidate = candidate_set[np.argmax(temp_te)]
             if VERBOSE:
-                print('testing {0} from candidate set {1}'.format(
+                print('testing candidate {0} from candidate set {1}'.format(
                                     self._idx_to_lag([max_candidate])[0],
                                     self._idx_to_lag(candidate_set)), end='')
             significant = stats.max_statistic(self, data, candidate_set,
@@ -350,26 +352,39 @@ class Single_process_storage(Network_analysis):
         # FOR LATER we don't need to test the last included in the first round
         while self.selected_vars_sources:
             # Find the candidate with the minimum TE into the target.
-            temp_te = np.empty(len(self.selected_vars_sources))
-            i = 0
+            cond_dim = len(self.selected_vars_sources) - 1
+            candidate_realisations = np.empty((data.n_realisations(self.current_value) *
+                                               len(self.selected_vars_sources), 1))
+            conditional_realisations = np.empty((data.n_realisations(self.current_value) *
+                                                 len(self.selected_vars_sources), cond_dim ))
+            i_1 = 0
+            i_2 = data.n_realisations(self.current_value)            
             for candidate in self.selected_vars_sources:
                 # Separate the candidate realisations and all other
                 # realisations to test the candidate's individual contribution.
                 [temp_cond, temp_cand] = self._separate_realisations(
-                                                    self.selected_vars_full,
+                                                    self.selected_vars_sources,
                                                     candidate)
-                temp_te[i] = self._cmi_calculator.estimate(
-                                            temp_cand,
-                                            self._current_value_realisations,
-                                            temp_cond,
-                                            self.options)
-                i += 1
+                if temp_cond is None:
+                    conditional_realisations = None
+                else:
+                    conditional_realisations[i_1:i_2, ] = temp_cond.reshape(data.n_realisations(self.current_value), cond_dim)
+                candidate_realisations[i_1:i_2, 0] = temp_cand.reshape(data.n_realisations(self.current_value),)
+                i_1 = i_2
+                i_2 += data.n_realisations(self.current_value)
+            temp_te = self._cmi_calculator.estimate_mult(
+                                            n_chunks=len(self.selected_vars_sources),
+                                            options=self.options,
+                                            re_use=['var2'],
+                                            var1=candidate_realisations,
+                                            var2=self._current_value_realisations,
+                                            conditional=conditional_realisations)
 
             # Test min TE for significance with minimum statistics.
             te_min_candidate = min(temp_te)
             min_candidate = self.selected_vars_sources[np.argmin(temp_te)]
             if VERBOSE:
-                print('testing {0} from candidate set {1}'.format(
+                print('testing candidate {0} from candidate set {1}'.format(
                                 self._idx_to_lag([min_candidate])[0],
                                 self._idx_to_lag(self.selected_vars_sources)),
                       end='')
@@ -391,7 +406,6 @@ class Single_process_storage(Network_analysis):
                     print(' -- significant')
                 self.min_stats_surr_table = surr_table
                 break
-            i += 1
 
     def _test_final_conditional(self, data):  # TODO test this!
         """Perform statistical test on AIS using the final conditional set."""
@@ -399,97 +413,33 @@ class Single_process_storage(Network_analysis):
         print(self._idx_to_lag(self.selected_vars_full))
         [ais, s, p] = stats.mi_against_surrogates(self, data)
 
+        # If a parallel estimator was used, an array of AIS estimates is returned.
+        # Make the output uniform for both estimator types.
+        if type(ais) is np.ndarray:
+            assert ais.shape[0] == 1, 'AIS estimation returned more than one value.'
+            ais = ais[0]
+
         self.ais = ais
         self.sign = s
         self.pvalue = p
 
-    def _define_candidates(self, processes, samples):
+    def _define_candidates(self):
         """Build a list of candidate indices.
-
-            Args:
-                processes : list of int
-                    process indices
-                samples: list of int
-                    sample indices
-
-            Returns:
-                a list of tuples, where each tuple holds the index of one
-                candidate and has the form (process index, sample index)
-        """
-        candidate_set = []
-        for idx in it.product(processes, samples):
-            candidate_set.append(idx)
-        return candidate_set
-
-    def _separate_realisations(self, idx_full, idx_single):
-        """Separate a single indexes' realisations from a set of realisations.
-
-        Return the realisations of a single index and the realisations of the
-        remaining set of indexes. The function takes realisations from the
-        array in self._selected_vars_realisations. This allows to reuse the
-        collected realisations when pruning the conditional set after
-        candidates have been included.
-
-        Args:
-            idx_full : list of tuples
-                indices indicating the full set
-            idx_single : tuple
-                index to be removed
+        
+        Note that for AIS estimation, the candidate set is defined as the past
+        of the process up to the max_lag defined by the user (samples spaced
+        by tau if requested). This function thus does not need to take 
+        arguments as the same function in multivariate TE estimation. 
 
         Returns:
-            numpy array
-                realisations of the set without the single index
-            numpy array
-                realisations of the variable at the single index
+            a list of tuples, where each tuple holds the index of one
+            candidate and has the form (process index, sample index)
         """
-        # Get realisations for all indices from the class attribute
-        # ._selected_vars_realisations. Find the respective columns.
-        idx_remaining = cp.copy(idx_full)
-        idx_remaining.pop(idx_remaining.index(idx_single))
-        array_col_single = self.selected_vars_full.index(idx_single)
-        array_col_full = np.zeros(len(idx_full)).astype(int)
-        i = 0
-        for idx in idx_remaining:  # find the columns with realisations
-            array_col_full[i] = self.selected_vars_full.index(idx)
-            i += 1
-
-        real_single = np.expand_dims(
-                        self._selected_vars_realisations[:, array_col_single],
-                        axis=1)
-        if len(idx_full) == 1:
-            real_remaining = None  # so the JIDT estimator doesn't break
-        else:
-            real_remaining = self._selected_vars_realisations[:,
-                                                              array_col_full]
-        return real_remaining, real_single
-
-    def _clean_up(self):
-        """Remove temporary data at the end of the analysis."""
-        self._current_value_realisations = None
-        self._selected_vars_sources_realisations = None
-        self._selected_vars_target_realisations = None
-        self._current_value_realisations = None
-        self.min_stats_surr_table = None
-
-    def _idx_to_lag(self, idx_list):
-        """Change sample indices to lags for each index in the list."""
-        lag_list = cp.copy(idx_list)
-        for c in idx_list:
-            lag_list[idx_list.index(c)] = (c[0], self.current_value[1] - c[1])
-        return lag_list
-
-    def _force_conditionals(self, cond, data):
-        """Enforce a given conditioning set."""
-        if type(cond) is tuple:  # easily add single variable
-            cond = [cond]
-        elif type(cond) is str:
-            if cond == 'faes':
-                cond = self._define_candidates(self.source_set,
-                                               [self.current_value[1]])
-
-        print('Adding the following variables to the conditioning set: {0}.'.
-              format(self._idx_to_lag(cond)))
-        self._append_selected_vars_idx(cond)
-        self._append_selected_vars_realisations(
-                        data.get_realisations(self.current_value, cond)[0])
-
+        process = [self.process]
+        samples = np.arange(self.current_value[1] - 1,
+                            self.current_value[1] - self.max_lag - 1,
+                            -self.tau)
+        candidate_set = []
+        for idx in it.product(process, samples):
+            candidate_set.append(idx)
+        return candidate_set
