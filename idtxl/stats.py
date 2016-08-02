@@ -433,12 +433,6 @@ def mi_against_surrogates(analysis_setup, data):
     alpha = analysis_setup.options.get('alpha', 0.05)
     tail = analysis_setup.options.get('tail', 'one')
 
-    statistic = analysis_setup._cmi_calculator.estimate(
-                    var1=analysis_setup._current_value_realisations,
-                    var2=analysis_setup._selected_vars_realisations,
-                    conditional=None,
-                    opts=analysis_setup.options)
-
     permute_over_replications = _permute_over_replications(data, n_perm)
     if not permute_over_replications:
         try:
@@ -446,12 +440,16 @@ def mi_against_surrogates(analysis_setup, data):
         except KeyError:
             perm_range = 'max'
 
-    # Create surrogate data by shuffling the realisations of the current value.
     surr_realisations = np.empty((data.n_realisations(analysis_setup.current_value) *
-                                  n_perm, 1))
+                                  (n_perm + 1), 1))
     i_1 = 0
     i_2 = data.n_realisations(analysis_setup.current_value)
+    # The first chunk holds the original data
+    surr_realisations[i_1:i_2, ] = analysis_setup._current_value_realisations
+    # Create surrogate data by shuffling the realisations of the current value.
     for perm in range(n_perm):
+        i_1 = i_2
+        i_2 += data.n_realisations(analysis_setup.current_value)
         # Check the permutation type for the current candidate.
         if permute_over_replications:
             surr_temp = data.permute_data(analysis_setup.current_value,
@@ -461,20 +459,20 @@ def mi_against_surrogates(analysis_setup, data):
                                             analysis_setup.current_value,
                                             [analysis_setup.current_value])
             surr_temp = _permute_realisations(real, repl_idx, perm_range)
+        # Add current shuffled realisation to the array of all realisations for
+        # parallel MI estimation.
         surr_realisations[i_1:i_2, ] = surr_temp
-        i_1 = i_2
-        i_2 += data.n_realisations(analysis_setup.current_value)
     
     surr_dist = analysis_setup._cmi_calculator.estimate_mult(
-                                            n_chunks=n_perm,
+                                            n_chunks=n_perm + 1,
                                             options=analysis_setup.options,
                                             re_use=['var2'], 
                                             var1=surr_realisations,
                                             var2=analysis_setup._selected_vars_realisations,
                                             conditional=None)
-    [significance, p_value] = _find_pvalue(statistic, surr_dist, alpha, tail)
-    return [statistic, significance, p_value]
-
+    [significance, p_value] = _find_pvalue(statistic=surr_dist[0], distribution=surr_dist[1:], 
+                                           alpha=alpha, tail=tail)
+    return [surr_dist[0], significance, p_value]
 
 def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
     """Create a table of surrogate transfer entropy values.
