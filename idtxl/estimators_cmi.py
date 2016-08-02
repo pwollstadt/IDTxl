@@ -77,8 +77,12 @@ def opencl_kraskov(self, var1, var2, conditional=None, n_chunks=1, opts=None):
     noise_level = np.float32(opts.get('noise_level', 1e-8))
     gpuid = int(opts.get('gpuid', 0))
     nchunkspergpu = n_chunks  # TODO is there a case where it makes sense to have
+<<<<<<< HEAD
                               # this two distinct parameters?
     assert type(nchunkspergpu) is int, 'No chunks per GPU must be an int.'
+=======
+                              # these two distinct parameters?
+>>>>>>> Fix usage of n_chunks in Kraskov-OpenCL estimator
 
 # If no conditional is passed, compute and return the mi:
 # this code is a copy of the one in estimatos_mi look there for comments
