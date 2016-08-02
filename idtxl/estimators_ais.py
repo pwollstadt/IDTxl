@@ -3,6 +3,14 @@ import jpype as jp
 import numpy as np
 import random as rn
 
+def is_parallel(self, estimator_name):
+    """Check if estimator can estimate AIS for multiple chunks in parallel."""
+    parallel_estimators = {'jidt_kraskov': False}
+
+    try:
+        return parallel_estimators[estimator_name]
+    except KeyError:
+        raise KeyError('Unknown estimator name.')
 
 def is_parallel(estimator_name):
     """Check if estimator can estimate AIS for multiple chunks in parallel."""
