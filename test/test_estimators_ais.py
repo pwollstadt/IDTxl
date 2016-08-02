@@ -109,16 +109,16 @@ def test_compare_jidt_open_cl_estimator():
     analysis_opts['cmi_calc_name'] = 'jidt_kraskov'
     network_analysis = Single_process_storage(max_lag, analysis_opts, tau=1)
     res_jidt = network_analysis.analyse_network(dat, processes)
-    np.testing.assert_approx_equal(res_opencl[2]['ais'], res_jidt[2]['ais'], significanct=7, 
+    np.testing.assert_approx_equal(res_opencl[2]['ais'], res_jidt[2]['ais'], significant=7, 
                                    err_msg='AIS results differ between OpenCl and JIDT estimator.')
-    np.testing.assert_approx_equal(res_opencl[3]['ais'], res_jidt[3]['ais'], significanct=7, 
+    np.testing.assert_approx_equal(res_opencl[3]['ais'], res_jidt[3]['ais'], significant=7, 
                                    err_msg='AIS results differ between OpenCl and JIDT estimator.')
     print('AIS for MUTE data proc 2 - opencl: {0} and jidt: {1}'.format(res_opencl[2]['ais'], res_jidt[2]['ais']))
     print('AIS for MUTE data proc 3 - opencl: {0} and jidt: {1}'.format(res_opencl[3]['ais'], res_jidt[3]['ais']))
 
 if __name__ == '__main__':
-    # test_single_source_storage_jidt()
-    # test_single_source_storage_opencl()
-    # test_single_source_storage_gaussian()
-    # test_ais_gaussian()
+    test_single_source_storage_jidt()
+    test_single_source_storage_opencl()
+    test_single_source_storage_gaussian()
+    test_ais_gaussian()
     test_compare_jidt_open_cl_estimator()
