@@ -79,17 +79,17 @@ class Estimator(object):
 
         Args:
             self : instance of Estimator_cmi
-            n_chunks : int
-                number of data chunks
-            options : dict
-                sets estimation parameters
-            re_use : list of keys
-                realisatins to be re-used
+            n_chunks : int [optional]
+                number of data chunks (default=1)
+            options : dict [optional]
+                sets estimation parameters (default=None)
+            re_use : list of keys [optional}
+                realisatins to be re-used (default=None)
             data: dict of numpy arrays
                 realisations of random random variables
 
         Returns:
-            numpy array of estimated values for each data set
+            numpy array of estimated values for each data set/chunk
         """
         if re_use is None:
             re_use = []
@@ -99,25 +99,30 @@ class Estimator(object):
                 if data[k] is not None:
                     data[k] = np.tile(data[k], (n_chunks, 1))
             return self.estimate(n_chunks=n_chunks, opts=options, **data)
-        else:  # cut data into chunks and estimate iteratively
-            assert data['var1'].shape[0] % n_chunks == 0, 'Chunk-size is not integer-valued.'
+
+        # If estimator is not parallel, loop over chunks and estimate iteratively
+        # for individual chunks.
+        else:
+            assert data['var1'].shape[0] % n_chunks == 0, ('Chunk-size is not '
+                                                           'integer-valued.')
             chunk_size = int(data['var1'].shape[0] / n_chunks)
             idx_1 = 0
             idx_2 = chunk_size
             res = np.empty((n_chunks))
-            # Find arrays that have to be cut up by chunks because they are not re-used.
+            # Find arrays that have to be cut up into chunks because they are
+            # not re-used.
             slice_vars = list(set(data.keys()).difference(set(re_use)))
             i = 0
             for c in range(n_chunks):
                 chunk_data = {}
-                for v in slice_vars:  # NOTE: I AM NOT CREATING A DEEP COPY HERE!
+                for v in slice_vars:  # NOTE: I am consciously not creating a deep copy here to save memory
                     if data[v] is not None:
                         chunk_data[v] = data[v][idx_1:idx_2, :]
                     else:
                         chunk_data[v] = data[v]
                 for v in re_use:
                     chunk_data[v] = data[v]
-                res[i] = self.estimate(opts=options, **chunk_data)  # TODO check order of arguments, change that also in the called function
+                res[i] = self.estimate(opts=options, **chunk_data)
                 idx_1 = idx_2
                 idx_2 += chunk_size
                 i += 1

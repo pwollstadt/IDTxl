@@ -136,14 +136,8 @@ def omnibus_test(analysis_setup, data, opts):
         float
             the test's p-value
     """
-    try:
-        n_permutations = opts['n_perm_omnibus']
-    except KeyError:
-        n_permutations = 21  # 200
-    try:
-        alpha = opts['alpha_omnibus']
-    except KeyError:
-        alpha = 0.05
+    n_permutations = opts.get('n_perm_omnibus', 21)
+    alpha = opts.get('alpha_omnibus', 0.05)
     print('no. target sources: {0}, no. sources: {1}'.format(
                                     len(analysis_setup.selected_vars_target),
                                     len(analysis_setup.selected_vars_sources)))
@@ -231,14 +225,8 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
         numpy array
             surrogate table
     """
-    try:
-        n_perm = opts['n_perm_max_stat']
-    except KeyError:
-        n_perm = 21  # 200
-    try:
-        alpha = opts['alpha_max_stat']
-    except KeyError:
-        alpha = 0.05
+    n_perm = opts.get('n_perm_max_stat', 21)
+    alpha = opts.get('alpha_max_stat', 0.05)
     assert(candidate_set), 'The candidate set is empty.'
 
     surr_table = _create_surrogate_table(analysis_setup, data, candidate_set,
@@ -290,10 +278,7 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
             n_permutations = analysis_setup.min_stats_surr_table.shape[1]
         except analysis_setup.min_stats_surr_table:
             n_permutations = 3  # 200
-    try:
-        alpha = opts['alpha_max_seq']
-    except KeyError:
-        alpha = 0.05
+    alpha = opts.get('alpha_max_seq', 0.05)
 
     # Calculate TE for each candidate in the conditional source set and sort
     # TE values.
@@ -364,7 +349,7 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
 
 
 def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
-                  opts=None):
+                  opts=None): # TODO opts is part of analysis setup, see mi_stats below
     """Perform minimum statistics for one candidate source.
 
     Test if a transfer entropy value is significantly bigger than the minimum
@@ -393,14 +378,8 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
         numpy array
             surrogate table
     """
-    try:
-        n_perm = opts['n_perm_min_stat']
-    except KeyError:
-        n_perm = 21  # 200
-    try:
-        alpha = opts['alpha_min_stat']
-    except KeyError:
-        alpha = 0.05
+    n_perm = opts.get('n_perm_min_stat', 21)
+    alpha = opts.get('alpha_min_stat', 0.05)
     assert(candidate_set), 'The candidate set is empty.'
 
     surr_table = _create_surrogate_table(analysis_setup, data, candidate_set,
@@ -419,8 +398,10 @@ def mi_against_surrogates(analysis_setup, data):
     is then compared against this distribution of MI values from surrogate data.
 
     Args:
-        analysis_setup
-        data
+        analysis_setup : Multivariate_te instance
+            information on the current analysis
+        data : Data instance
+            raw data
     Returns:
         float
             estimated MI value
@@ -429,16 +410,13 @@ def mi_against_surrogates(analysis_setup, data):
         float
             p_value for estimated MI value
     """
-    n_perm = analysis_setup.options.get('n_perm', 20)
-    alpha = analysis_setup.options.get('alpha', 0.05)
-    tail = analysis_setup.options.get('tail', 'one')
+    n_perm = analysis_setup.options.get('n_perm_mi', 20)
+    alpha = analysis_setup.options.get('alpha_mi', 0.05)
+    tail = analysis_setup.options.get('tail_mi', 'one')
 
     permute_over_replications = _permute_over_replications(data, n_perm)
     if not permute_over_replications:
-        try:
-            perm_range = analysis_setup.options['perm_range']
-        except KeyError:
-            perm_range = 'max'
+        perm_range = analysis_setup.options.get('perm_range', 'max')
 
     surr_realisations = np.empty((data.n_realisations(analysis_setup.current_value) *
                                   (n_perm + 1), 1))
@@ -501,11 +479,7 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
 
     permute_over_replications = _permute_over_replications(data, n_perm)
     if not permute_over_replications:
-        try:
-            perm_range = analysis_setup.options['perm_range']
-        except KeyError:
-            perm_range = 'max'
-
+        perm_range = analysis_setup.options.get('perm_range', 'max')
 
     # Create surrogate table.
     if VERBOSE:

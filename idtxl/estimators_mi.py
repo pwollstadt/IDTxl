@@ -21,11 +21,11 @@ def is_parallel(estimator_name):
         raise KeyError('Unknown estimator name.')
 
 
-def opencl_kraskov(self, var1, var2, opts=None):
+def opencl_kraskov(self, var1, var2, n_chunks=1, opts=None):
     """Calculate mutual information using an opencl Kraskov implementation.
 
     Calculate the mutual information between two variables using an
-    opencl-based Kraskov type 1 estimator. Multiple CMIs can be estimated in
+    opencl-based Kraskov type 1 estimator. Multiple MIs can be estimated in
     parallel, where each instance is called a 'chunk'. References:
 
     Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating mutual
@@ -42,8 +42,8 @@ def opencl_kraskov(self, var1, var2, opts=None):
             realisations x variable dimension
         var2 : numpy array
             realisations of the second random variable
-        conditional : numpy array
-            realisations of the random variable for conditioning
+        n_chunks : int [optional]
+            number of data sets or chunks (default=1)
         opts : dict [optional]
             sets estimation parameters:
             'kraskov_k' - no. nearest neighbours for KNN search (default=4)
@@ -51,7 +51,6 @@ def opencl_kraskov(self, var1, var2, opts=None):
             range searches (default='ACT', the autocorr. time of the target)
             'noise_level' - random noise added to the data (default=1e-8)
             'gpuid' - ID of the GPU device to be used (default=0)
-            'nchunkspergpu' - number of chunks passed in the data (default=1)
 
     Returns:
         float
@@ -72,7 +71,11 @@ def opencl_kraskov(self, var1, var2, opts=None):
     theiler_t = int(opts.get('theiler_t', 0)) # TODO necessary?
     noise_level = np.float32(opts.get('noise_level', 1e-8))
     gpuid = int(opts.get('gpuid', 0))
+<<<<<<< HEAD
     nchunkspergpu = int(opts.get('nchunkspergpu', 1))
+=======
+    nchunkspergpu = n_chunks
+>>>>>>> Update documentation and clean up
 
     var1 += np.random.normal(scale=noise_level, size=var1.shape)
     var2 += np.random.normal(scale=noise_level, size=var2.shape)

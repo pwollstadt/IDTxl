@@ -13,9 +13,9 @@ def test_single_source_storage_opencl():
     max_lag = 5
     analysis_opts = {
         'cmi_calc_name': 'opencl_kraskov',
-        'n_perm': 22,
-        'alpha': 0.05,
-        'tail': 'one',
+        'n_perm_mi': 22,
+        'alpha_mi': 0.05,
+        'tail_mi': 'one',
         }
     processes = [1, 2, 3]
     network_analysis = Single_process_storage(max_lag, analysis_opts, tau=1)
@@ -31,9 +31,9 @@ def test_single_source_storage_jidt():
     max_lag = 5
     analysis_opts = {
         'cmi_calc_name': 'jidt_kraskov',
-        'n_perm': 22,
-        'alpha': 0.05,
-        'tail': 'one',
+        'n_perm_mi': 22,
+        'alpha_mi': 0.05,
+        'tail_mi': 'one',
         }
     processes = [1, 2, 3]
     network_analysis = Single_process_storage(max_lag, analysis_opts, tau=1)

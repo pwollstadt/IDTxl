@@ -1,15 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Mar 10 14:24:31 2016
+"""Analysis of AIS in a network of processes.
 
-Greedy algorithm for multivariate network inference using transfer entropy.
-For details see Lizier ??? and Faes ???.
-
-If executed as standalone, the script applies the algorithm to example data
-presented in Montalto, PLOS ONE, 2014, (eq. 14).
-
-Eample:
-    python multivariate_te.py
+Analysis of active information storage (AIS) in individual processes of a
+network. The algorithm uses non-uniform embedding as described in Faes ???.
 
 Note:
     Written for Python 3.4+
@@ -31,8 +23,10 @@ class Single_process_storage(Network_analysis):
     """Set up analysis of storage in each process of the network.
 
     Set parameters necessary for active information storage (AIS) in every
-    process of a network. To perform network inference call analyse_network() on
-    an instance of the data class.
+    process of a network. To perform AIS estimation call analyse_network() on
+    the whole network or a set of nodes or call analyse_single_process() to 
+    estimate AIS for a single process. See docstrings of the two functions
+    for more information.
 
     Args:
         max_lag : int
@@ -43,34 +37,36 @@ class Single_process_storage(Network_analysis):
             parameters for estimator use and statistics:
 
             - 'n_perm_*' - number of permutations, where * can be 'max_stat',
-            - 'min_stat', 'omnibus', and 'max_seq' (default=500)
+              'mi', 'min_stat' (default=500)
             - 'alpha_*' - critical alpha level for statistical significance,
-              where * can be 'max_stats',  'min_stats', and 'omnibus'
-              (default=0.05)
-            - 'cmi_calc_name' - estimator to be used for CMI calculation
+              where * can be 'max_stat', 'min_stat' (default=0.05)
+            - 'cmi_calc_name' - estimator to be used for CMI calculation. Note
+              that this estimator is also used to estimate MI later on.
               (For estimator options see the respective documentation.)
             - 'add_conditionals' - force the estimator to add these
-              conditionals when estimating TE; can either be a list of
+              conditionals when estimating AIS; can be a list of
               variables, where each variable is described as (idx process, lag
-              wrt to current value) or can be a string: 'faes' for Faes-Method
+              wrt to current value)
 
     Attributes:
         selected_vars_full : list of tuples
-            samples in the full conditional set, (idx process, idx sample)
+            samples in the past state, (idx process, idx sample)
         current_value : tuple
-            index of the current value in TE estimation, (idx process,
+            index of the current value in AIS estimation, (idx process,
             idx sample)
         calculator_name : string
-            calculator used for TE estimation
+            calculator used for CMI/MI estimation
         max_lag : int
-            maximum temporal search depth for candidates in the target's past
+            maximum temporal search depth for candidates in the processes' past
             (default=same as max_lag_sources)
         tau : int
             spacing between samples analyzed for information contribution
-        ais_sign_processes : numpy array
-            raw AIS values from individual processes
-        pvalues_sign_processes : numpy array
-            p-values of significant AIS
+        ais : float
+            raw AIS value 
+        sign : bool
+            true if AIS is significant
+        pvalue: float
+            p-value of AIS
         process_set : list
             list with indices of analyzed processes
     """
@@ -94,9 +90,9 @@ class Single_process_storage(Network_analysis):
         super().__init__()
 
     def analyse_network(self, data, processes='all'):
-        """Estimate active information storage for all processes in the network.
+        """Estimate active information storage for multiple processes in the network.
 
-        Estimate active information storage for all or selected processes in the
+        Estimate active information storage for all or a subset of processes in the
         network.
 
         Example:
@@ -108,8 +104,6 @@ class Single_process_storage(Network_analysis):
             >>>     'cmi_calc_name': 'jidt_kraskov',
             >>>     'n_perm_max_stat': 200,
             >>>     'n_perm_min_stat': 200,
-            >>>     'n_perm_omnibus': 500,
-            >>>     'n_perm_max_seq': 500,
             >>>     }
             >>> processes = [1, 2, 3]
             >>> network_analysis = Single_process_storage(max_lag,
@@ -153,7 +147,7 @@ class Single_process_storage(Network_analysis):
     def analyse_single_process(self, data, process):
         """Estimate active information storage for a single process.
 
-        Estimate active information storage for one processes in the network.
+        Estimate active information storage for one process in the network.
         Uses non-uniform embedding found through information maximisation (see
         Faes, 2011, and Lizier, ???). This is
         done in three steps (see Lizier and Faes for details):
@@ -165,9 +159,9 @@ class Single_process_storage(Network_analysis):
         (3) prune the final conditional set by testing the CMI between each
             sample in the final set and the current value, conditional on all
             other samples in the final set
-        (4) statistics on the final set of sources (test for over-all transfer
-            between the final conditional set and the current value, and for
-            significant transfer of all individual samples in the set)
+        (4) calculate AIS using the final set of candidates as the past state
+            (calculate MI between samples in the past and the current value);
+            test for statistical significance using a permutation test
 
         Args:
             data : Data instance

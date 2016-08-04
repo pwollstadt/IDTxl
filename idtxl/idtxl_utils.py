@@ -6,8 +6,8 @@ def swap_chars(s, i_1, i_2):
     """Swap to characters in a string.
 
     Example:
-        >>> print(swap_chars('hellothere', 2, 6))
-        'hehlotlere'
+        >>> print(swap_chars('heLlotHere', 2, 6))
+        'heHlotLere'
     """
     if i_1 > i_2:
         i_1, i_2 = i_2, i_1
@@ -50,6 +50,7 @@ def sort_descending(a):
 
 
 def argsort_descending(a):
+    """Sort array in descending order and return sortind indices."""
     # http://stackoverflow.com/questions/16486252/
     #       is-it-possible-to-use-argsort-in-descending-order
     return np.array(a).argsort()[::-1]

@@ -66,12 +66,28 @@ class Data():
         return self._data
 
     def n_realisations(self, current_value=(0, 0)):
-        """Number of realisations over samples and replications."""
+        """Number of realisations over samples and replications.
+        
+        Args:
+            current_value : tuple [optional]
+                reference point for calculation of number of realisations
+                (e.g. when using an embedding of length k, we count realisations
+                from the k+1th sample because we loose the first k samples to
+                the embedding)
+        """
         return (self.n_realisations_time(current_value) *
                 self.n_realisations_repl())
 
     def n_realisations_time(self, current_value=(0, 0)):
-        """Number of realisations over samples."""
+        """Number of realisations over samples.
+        
+        Args:
+            current_value : tuple [optional]
+                reference point for calculation of number of realisations
+                (e.g. when using an embedding of length k, we count realisations
+                from the k+1th sample because we loose the first k samples to
+                the embedding)
+        """
         return self.n_samples - current_value[1]
 
     def n_realisations_repl(self):

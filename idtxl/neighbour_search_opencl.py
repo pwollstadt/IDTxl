@@ -34,16 +34,19 @@ def knn_search(pointset, n_dim, knn_k, theiler_t, n_chunks=1, gpuid=0):
     indexes = np.zeros((knn_k, pointset.shape[1]), dtype=np.int32)
     distances = np.zeros((knn_k, pointset.shape[1]), dtype=np.float32)
 
+    # Calculate the maximum number of chunks that fit into the GPU's global memory given the
+    # current chunk size. Calculate the number of necessary runs (calls to the GPU) given the
+    # max. number of chunks that fit onto the GPU and the actual number of chunks.
     max_chunks_per_run = _get_max_chunks_per_run(gpuid, n_chunks, pointset, distances, indexes)
-    max_chunks_per_run = min(max_chunks_per_run, n_chunks)
+    max_chunks_per_run = min(max_chunks_per_run, n_chunks)  # check if chunks fit into GPU in one run
     n_runs = np.ceil(n_chunks / max_chunks_per_run).astype(int)
+    
     chunksize = int(pointset.shape[1] / n_chunks)
-    pointdim = pointset.shape[0]
-    # print('no. runs: {0}'.format(n_runs))
     i_1 = 0
     i_2 = max_chunks_per_run * chunksize
+    pointdim = pointset.shape[0]
+    n_points = pointset[:, i_1:i_2].shape[1]
     for r in range(n_runs):
-        n_points = pointset[:, i_1:i_2].shape[1]
         # print('run: {0}, index 1: {1}, index 2: {2}'.format(r, i_1, i_2))
         # print('no. points: {0}, no. chunks: {1}, pointset shape: {2}'.format(n_points, n_chunks, pointset[:, i_1:i_2].shape))
         success = clFindKnn(indexes[:, i_1:i_2], distances[:, i_1:i_2],
@@ -81,15 +84,19 @@ def range_search(pointset, n_dim, radius, theiler_t, n_chunks=1, gpuid=0):
     # Allocate memory for GPU search output
     pointcount = np.zeros((pointset.shape[1]), dtype=np.int32)
 
+    # Calculate the maximum number of chunks that fit into the GPU's global memory given the
+    # current chunk size. Calculate the number of necessary runs (calls to the GPU) given the
+    # max. number of chunks that fit onto the GPU and the actual number of chunks.
     max_chunks_per_run = _get_max_chunks_per_run(gpuid, n_chunks, pointset, pointcount, radius)
-    max_chunks_per_run = min(max_chunks_per_run, n_chunks)
+    max_chunks_per_run = min(max_chunks_per_run, n_chunks)  # check if chunks fit into GPU in one run
     n_runs = np.ceil(n_chunks / max_chunks_per_run).astype(int)
+    
     chunksize = int(pointset.shape[1] / n_chunks)
-    pointdim = pointset.shape[0]
     i_1 = 0
     i_2 = max_chunks_per_run * chunksize
+    pointdim = pointset.shape[0]
+    n_points = pointset[:, i_1:i_2].shape[1]
     for r in range(n_runs):
-        n_points = pointset[:, i_1:i_2].shape[1]
         success = clFindRSAll(pointcount[i_1:i_2], pointset[:, i_1:i_2].astype('float32'),
                               pointset[:, i_1:i_2].astype('float32'), radius[i_1:i_2], theiler_t,
                               n_chunks, pointdim, n_points, gpuid)
