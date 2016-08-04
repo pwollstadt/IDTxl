@@ -1,7 +1,13 @@
 from pkg_resources import resource_filename
-import jpype as jp
 import numpy as np
 import random as rn
+from . import idtxl_exceptions as ex
+try:
+    import jpype as jp
+except ImportError:
+    ex.jpype_missing('Jpype is not available on this system. To use '
+                     'JAVA/JIDT-powered AIS estimation install it from '
+                     'https://pypi.python.org/pypi/JPype1')
 
 def is_parallel(self, estimator_name):
     """Check if estimator can estimate AIS for multiple chunks in parallel."""

@@ -61,6 +61,13 @@ Frankfurt, Germany, 2016
 import sys
 import jpype as jp
 import numpy as np
+from . import idtxl_exceptions as ex
+try:
+    import jpype as jp
+except ImportError:
+    ex.jpype_missing('Jpype is not available on this system. To use '
+                     'JAVA/JIDT-powered PID estimation install it from '
+                     'https://pypi.python.org/pypi/JPype1')
 
 def pid(s1_o, s2_o, target_o, cfg):
     """Estimate partial information decomposition of discrete variables.

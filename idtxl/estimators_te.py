@@ -1,5 +1,11 @@
 from pkg_resources import resource_filename
-import jpype as jp
+from . import idtxl_exceptions as ex
+try:
+    import jpype as jp
+except ImportError:
+    ex.jpype_missing('Jpype is not available on this system. To use '
+                     'JAVA/JIDT-powered TE estimation install it from '
+                     'https://pypi.python.org/pypi/JPype1')
 
 
 def is_parallel(estimator_name):

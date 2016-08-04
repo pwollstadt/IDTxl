@@ -1,8 +1,14 @@
 from pkg_resources import resource_filename
-import jpype as jp
 import numpy as np
 from scipy.special import digamma
 from . import neighbour_search_opencl as nsocl
+from . import idtxl_exceptions as ex
+try:
+    import jpype as jp
+except ImportError:
+    ex.jpype_missing('Jpype is not available on this system. To use '
+                     'JAVA/JIDT-powered MI estimation install it from '
+                     'https://pypi.python.org/pypi/JPype1')
 
 
 def is_parallel(estimator_name):
