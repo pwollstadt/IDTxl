@@ -314,12 +314,9 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
     individual_te_sorted = utils.sort_descending(individual_te)
 
     # Re-use or create surrogate table and sort it.
-    if analysis_setup.min_stats_surr_table is not None:
-        surr_table = analysis_setup.min_stats_surr_table  # saves some time
+    if analysis_setup.min_stats_surr_table is not None and n_permutations <= analysis_setup.min_stats_surr_table[1]:
+        surr_table = analysis_setup.min_stats_surr_table[:n_permutations,]  # saves some time
         assert len(analysis_setup.selected_vars_sources) == surr_table.shape[0]
-        assert (n_permutations <= surr_table.shape[1]), ('No. permutations in '
-            'min-table ({0}) not sufficient, requested: {1}.'.format(
-                surr_table.shape[1], n_permutations))
     else:
         surr_table = _create_surrogate_table(
                                         analysis_setup, data,
