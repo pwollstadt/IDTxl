@@ -441,6 +441,7 @@ class Multivariate_te(Network_analysis):
 
         """
         # FOR LATER we don't need to test the last included in the first round
+        print(self.selected_vars_sources)
         while self.selected_vars_sources:
             # Find the candidate with the minimum TE into the target.
             temp_te = np.empty(len(self.selected_vars_sources))
@@ -450,7 +451,7 @@ class Multivariate_te(Network_analysis):
                                      len(self.selected_vars_sources), 1))
             conditional_realisations = np.empty(
                                     (data.n_realisations(self.current_value) *
-                                     len(self.selected_vars_full), cond_dim))
+                                     len(self.selected_vars_sources), cond_dim))
 
             # calculate TE simultaneously for all candidates
             i_1 = 0
@@ -468,7 +469,8 @@ class Multivariate_te(Network_analysis):
                 candidate_realisations[i_1:i_2, ] = temp_cand
                 i_1 = i_2
                 i_2 += data.n_realisations(self.current_value)
-
+            
+            print('var1, candidate_realisations: {0}, var2, current_value: {1}, cond: {2}'.format( candidate_realisations.shape, self._current_value_realisations.shape, conditional_realisations.shape))
             temp_te = self._cmi_calculator.estimate_mult(
                                 n_chunks=len(self.selected_vars_sources),
                                 options=self.options,
