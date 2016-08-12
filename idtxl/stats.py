@@ -314,8 +314,9 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
     individual_te_sorted = utils.sort_descending(individual_te)
 
     # Re-use or create surrogate table and sort it.
-    if analysis_setup.min_stats_surr_table is not None and n_permutations <= analysis_setup.min_stats_surr_table[1]:
-        surr_table = analysis_setup.min_stats_surr_table[:n_permutations,]  # saves some time
+    if (analysis_setup.min_stats_surr_table is not None and
+        n_permutations <= analysis_setup.min_stats_surr_table.shape[1]):
+        surr_table = analysis_setup.min_stats_surr_table[:,:n_permutations]  # saves some time
         assert len(analysis_setup.selected_vars_sources) == surr_table.shape[0]
     else:
         surr_table = _create_surrogate_table(
@@ -389,7 +390,7 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
 
 def mi_against_surrogates(analysis_setup, data):
     """Test estimaed mutual information for significance against surrogate data.
-    
+
     Shuffle realisations of the current value (point to be predicted) and re-
     calculate mutual information (MI) for shuffled data. The actual estimated MI
     is then compared against this distribution of MI values from surrogate data.
@@ -403,7 +404,7 @@ def mi_against_surrogates(analysis_setup, data):
         float
             estimated MI value
         bool
-            statistical significance 
+            statistical significance
         float
             p_value for estimated MI value
     """
@@ -437,15 +438,15 @@ def mi_against_surrogates(analysis_setup, data):
         # Add current shuffled realisation to the array of all realisations for
         # parallel MI estimation.
         surr_realisations[i_1:i_2, ] = surr_temp
-    
+
     surr_dist = analysis_setup._cmi_calculator.estimate_mult(
                                             n_chunks=n_perm + 1,
                                             options=analysis_setup.options,
-                                            re_use=['var2'], 
+                                            re_use=['var2'],
                                             var1=surr_realisations,
                                             var2=analysis_setup._selected_vars_realisations,
                                             conditional=None)
-    [significance, p_value] = _find_pvalue(statistic=surr_dist[0], distribution=surr_dist[1:], 
+    [significance, p_value] = _find_pvalue(statistic=surr_dist[0], distribution=surr_dist[1:],
                                            alpha=alpha, tail=tail)
     return [surr_dist[0], significance, p_value]
 
