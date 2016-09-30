@@ -1,7 +1,7 @@
 """
 Created on Thu Mar 10 14:24:31 2016
 
-Iterative greedy algorithm for multivariate network inference using transfer 
+Iterative greedy algorithm for multivariate network inference using transfer
 entropy. For details see Lizier 2012 and Faes 2011.
 
 Note:
@@ -9,7 +9,6 @@ Note:
 
 @author: patricia
 """
-import copy as cp
 import numpy as np
 import itertools as it
 from . import stats
@@ -81,6 +80,7 @@ class Multivariate_te(Network_analysis):
             index of target process
 
     """
+
     # TODO right now 'options' holds all optional params (stats AND estimator).
     # We could split this up by adding the stats options to the analyse_*
     # methods?
@@ -266,7 +266,7 @@ class Multivariate_te(Network_analysis):
         assert(data.n_samples >= max_lag + 1), (
             'Not enough samples in data ({0}) to allow for the chosen maximum '
             'lag ({1})'.format(data.n_samples, max_lag))
-        self._current_value = (target, max_lag)
+        self._current_value = (self.target, max_lag)
         [cv_realisation, repl_idx] = data.get_realisations(
                                              current_value=self.current_value,
                                              idx=[self.current_value])
@@ -323,9 +323,10 @@ class Multivariate_te(Network_analysis):
     def _include_target_candidates(self, data):
         """Test candidates from the target's past."""
         procs = [self.target]
+        # Make samples
         samples = np.arange(self.current_value[1] - 1,
                             self.current_value[1] - self.max_lag_target - 1,
-                            -self.tau_target)
+                            -self.tau_target).tolist()
         candidates = self._define_candidates(procs, samples)
         sources_found = self._include_candidates(candidates, data)
 
@@ -344,7 +345,7 @@ class Multivariate_te(Network_analysis):
         procs = self.source_set
         samples = np.arange(self.current_value[1] - self.min_lag_sources,
                             self.current_value[1] - self.max_lag_sources,
-                            -self.tau_sources)
+                            -self.tau_sources).tolist()
         candidates = self._define_candidates(procs, samples)
         # TODO include non-selected target candidates as further candidates, they may get selected due to synergies
         self._include_candidates(candidates, data)
@@ -447,11 +448,11 @@ class Multivariate_te(Network_analysis):
             temp_te = np.empty(len(self.selected_vars_sources))
             cond_dim = len(self.selected_vars_full) - 1
             candidate_realisations = np.empty(
-                                    (data.n_realisations(self.current_value) *
-                                     len(self.selected_vars_sources), 1))
+                                (data.n_realisations(self.current_value) *
+                                 len(self.selected_vars_sources), 1))
             conditional_realisations = np.empty(
-                                    (data.n_realisations(self.current_value) *
-                                     len(self.selected_vars_sources), cond_dim))
+                (data.n_realisations(self.current_value) *
+                 len(self.selected_vars_sources), cond_dim))
 
             # calculate TE simultaneously for all candidates
             i_1 = 0
@@ -469,12 +470,16 @@ class Multivariate_te(Network_analysis):
                 candidate_realisations[i_1:i_2, ] = temp_cand
                 i_1 = i_2
                 i_2 += data.n_realisations(self.current_value)
-            
-            print('var1, candidate_realisations: {0}, var2, current_value: {1}, cond: {2}'.format( candidate_realisations.shape, self._current_value_realisations.shape, conditional_realisations.shape))
+
+            print(('var1, candidate_realisations: {0}, var2, current_value: '
+                   '{1}, cond: {2}').format(
+                            candidate_realisations.shape,
+                            self._current_value_realisations.shape,
+                            conditional_realisations.shape))
             temp_te = self._cmi_calculator.estimate_mult(
                                 n_chunks=len(self.selected_vars_sources),
                                 options=self.options,
-                                re_use = ['var2'],
+                                re_use=['var2'],
                                 var1=candidate_realisations,
                                 var2=self._current_value_realisations,
                                 conditional=conditional_realisations)
