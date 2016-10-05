@@ -159,7 +159,6 @@ class Data():
 
     def _reorder_data(self, data, dim_order):
         """Reorder data dimensions to processes x samples x replications."""
-
         # add singletons for missing dimensions
         missing_dims = 'psr'
         for dim in dim_order:
@@ -230,7 +229,7 @@ class Data():
 
         i = 0
         for idx in idx_list:
-            r = 0 # TODO in the next line, one realisation is missing, change the indexing!
+            r = 0  # TODO in the next line, one realisation is missing, change the indexing!
             last_sample = idx[1] - current_value[1]  # indexing is much faster
             if last_sample == 0:                     # than looping over time!
                 last_sample = None
@@ -421,7 +420,6 @@ class Data():
             perm_idx[mask] = perm
 
         return realisations_perm, perm_idx
-
 
     def generate_mute_data(self, n_samples=1000, n_replications=10):
         """Generate example data for a 5-process network.

@@ -100,8 +100,8 @@ class Estimator(object):
                     data[k] = np.tile(data[k], (n_chunks, 1))
             return self.estimate(n_chunks=n_chunks, opts=options, **data)
 
-        # If estimator is not parallel, loop over chunks and estimate iteratively
-        # for individual chunks.
+        # If estimator is not parallel, loop over chunks and estimate
+        # iteratively for individual chunks.
         else:
             assert data['var1'].shape[0] % n_chunks == 0, ('Chunk-size is not '
                                                            'integer-valued.')
@@ -146,6 +146,7 @@ class Estimator_te(Estimator):
                                estimator_name)
 
 
+
 class Estimator_ais(Estimator):
     """Set the requested transfer entropy estimator."""
 
@@ -160,6 +161,7 @@ class Estimator_ais(Estimator):
             self.add_estimator(estimator,
                                estimators_ais.is_parallel(estimator_name),
                                estimator_name)
+
 
 
 class Estimator_cmi(Estimator):

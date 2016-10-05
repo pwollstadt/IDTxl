@@ -1,4 +1,5 @@
-"""
+"""Estimate multivarate TE.
+
 Created on Thu Mar 10 14:24:31 2016
 
 Iterative greedy algorithm for multivariate network inference using transfer
@@ -106,7 +107,7 @@ class Multivariate_te(Network_analysis):
             self.calculator_name = options['cmi_calc_name']
         except KeyError:
             raise KeyError('Calculator name was not specified!')
-        self._cmi_calculator = Estimator_cmi(self.calculator_name)  # TODO should be 'calculator'
+        self._cmi_calculator = Estimator_cmi(self.calculator_name)
         super().__init__()
 
     def analyse_network(self, data, targets='all', sources='all'):
@@ -173,7 +174,8 @@ class Multivariate_te(Network_analysis):
         results = {}
         for t in range(len(targets)):
             if VERBOSE:
-                print('####### analysing target with index {0} from list {1}'.format(t, targets))
+                print('####### analysing target with index {0} from list {1}'
+                      .format(t, targets))
             r = self.analyse_single_target(data, targets[t], sources[t])
             r['target'] = targets[t]
             r['sources'] = sources[t]
@@ -253,7 +255,6 @@ class Multivariate_te(Network_analysis):
 
     def _initialise(self, data, sources, target):
         """Check input and set everything to initial values."""
-
         # Check the provided target and sources.
         self.target = target
         self._check_source_set(sources, data.n_processes)
@@ -269,7 +270,7 @@ class Multivariate_te(Network_analysis):
         self._current_value = (self.target, max_lag)
         [cv_realisation, repl_idx] = data.get_realisations(
                                              current_value=self.current_value,
-                                             idx=[self.current_value])
+                                             idx_list=[self.current_value])
         self._current_value_realisations = cv_realisation
 
         # Remember which realisations come from which replication. This may be
@@ -347,7 +348,8 @@ class Multivariate_te(Network_analysis):
                             self.current_value[1] - self.max_lag_sources,
                             -self.tau_sources).tolist()
         candidates = self._define_candidates(procs, samples)
-        # TODO include non-selected target candidates as further candidates, they may get selected due to synergies
+        # TODO include non-selected target candidates as further candidates,
+        # they may get selected due to synergies
         self._include_candidates(candidates, data)
 
     def _include_candidates(self, candidate_set, data):
@@ -378,8 +380,9 @@ class Multivariate_te(Network_analysis):
         success = False
         while candidate_set:
             # Find the candidate with maximum TE.
-            candidate_realisations = np.empty((data.n_realisations(self.current_value) *
-                                               len(candidate_set), 1))
+            candidate_realisations = np.empty(
+                                    (data.n_realisations(self.current_value) *
+                                     len(candidate_set), 1))
             i_1 = 0
             i_2 = data.n_realisations(self.current_value)
             for candidate in candidate_set:
@@ -391,7 +394,7 @@ class Multivariate_te(Network_analysis):
             temp_te = self._cmi_calculator.estimate_mult(
                                 n_chunks=len(candidate_set),
                                 options=self.options,
-                                re_use = ['var2', 'conditional'],
+                                re_use=['var2', 'conditional'],
                                 var1=candidate_realisations,
                                 var2=self._current_value_realisations,
                                 conditional=self._selected_vars_realisations)
@@ -542,15 +545,15 @@ class Multivariate_te(Network_analysis):
     def _define_candidates(self, processes, samples):
         """Build a list of candidate indices.
 
-            Args:
-                processes : list of int
-                    process indices
-                samples: list of int
-                    sample indices
+        Args:
+            processes : list of int
+                process indices
+            samples: list of int
+                sample indices
 
-            Returns:
-                a list of tuples, where each tuple holds the index of one
-                candidate and has the form (process index, sample index)
+        Returns:
+            a list of tuples, where each tuple holds the index of one
+            candidate and has the form (process index, sample index)
         """
         candidate_set = []
         for idx in it.product(processes, samples):

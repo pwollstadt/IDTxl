@@ -1,3 +1,9 @@
+"""Provide transfer entropy estimators for the Estimator_te class.
+
+This module exports methods for transfer entropy (TE) estimation in the
+Estimator_te class.
+
+"""
 from pkg_resources import resource_filename
 from . import idtxl_exceptions as ex
 try:
@@ -94,7 +100,7 @@ def jidt_kraskov(self, source, target, opts):
     # Get defaults for estimator options
     kraskov_k = str(opts.get('kraskov_k', 4))
     normalise = str(opts.get('normalise', 'false'))
-    theiler_t = str(opts.get('theiler_t', 0)) # TODO necessary?
+    theiler_t = str(opts.get('theiler_t', 0))  # TODO necessary?
     noise_level = str(opts.get('noise_level', 1e-8))
     local_values = opts.get('local_values', False)
     tau_target = opts.get('tau_target', 1)

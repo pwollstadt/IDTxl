@@ -59,7 +59,6 @@ Frankfurt, Germany, 2016
 
 """
 import sys
-import jpype as jp
 import numpy as np
 from . import idtxl_exceptions as ex
 try:
@@ -69,6 +68,7 @@ except ImportError:
                      'JAVA/JIDT-powered PID estimation install it from '
                      'https://pypi.python.org/pypi/JPype1')
 
+
 def pid(s1_o, s2_o, target_o, cfg):
     """Estimate partial information decomposition of discrete variables.
 
@@ -77,8 +77,8 @@ def pid(s1_o, s2_o, target_o, cfg):
 
     Args:
         s1 (numpy array): 1D array containing realizations of a discrete
-            random variable (this is the source variable the algorithm calculates
-            the actual UI for)
+            random variable (this is the source variable the algorithm
+            calculates the actual UI for)
         s2 (numpy array): 1D array containing realizations of a discrete
             random variable (the other source variable)
         target (numpy array): 1D array containing realizations of a discrete
@@ -95,11 +95,12 @@ def pid(s1_o, s2_o, target_o, cfg):
             distribution Q
         opt (dict): additional information about iterative optimization,
             contains: final permutation Q; cfg dictionary; array with
-            I(target:s1|s2) for each iteration; array with delta I(target:s1|s2) for
-            each iteration; I(target:s1,s2) for each iteration
+            I(target:s1|s2) for each iteration; array with delta
+            I(target:s1|s2) for each iteration; I(target:s1,s2) for each
+            iteration
 
-    Note:   variables names joined by "_" enter a mutual information computation
-            together i.e. mi_va1_var2 --> I(var1 : var2).
+    Note:   variables names joined by "_" enter a mutual information
+            computation together i.e. mi_va1_var2 --> I(var1 : var2).
             variables names joined directly form a new joint variable
             mi_var1var2_var3 --> I(var3:(var1,var2))
     """
@@ -107,8 +108,6 @@ def pid(s1_o, s2_o, target_o, cfg):
     s1 = s1_o.copy()
     s2 = s2_o.copy()
     target = target_o.copy()
-
-
 
     if s1.ndim != 1 or s2.ndim != 1 or target.ndim != 1:
         raise ValueError('Inputs s1, s2, target have to be vectors'
@@ -155,14 +154,13 @@ def pid(s1_o, s2_o, target_o, cfg):
     s1_list = s1.tolist()
     s1_dim = s1.ndim
 
-
     Cmi_calc_class = (jp.JPackage('infodynamics.measures.discrete')
                       .ConditionalMutualInformationCalculatorDiscrete)
     Mi_calc_class = (jp.JPackage('infodynamics.measures.discrete')
                      .MutualInformationCalculatorDiscrete)
 #
 #   cmi_calc = Cmi_calc_class(alphabet,alphabet,alphabet)
-    cmi_calc_target_s1_cond_s2 = Cmi_calc_class(alph_t,alph_s1,alph_s2)
+    cmi_calc_target_s1_cond_s2 = Cmi_calc_class(alph_t, alph_s1, alph_s2)
 
     # MAX THE CORRECT WAY TO GO?
     alph_max_s1_t = max(alph_s1, alph_t)
@@ -173,19 +171,20 @@ def pid(s1_o, s2_o, target_o, cfg):
     mi_calc_s1 = Mi_calc_class(alph_max_s1_t)
     mi_calc_s2 = Mi_calc_class(alph_max_s2_t)
 
-#   jointmi_calc  = Mi_calc_class(alphabet ** 2)
-    jointmi_calc  = Mi_calc_class(alph_max)
+#   jointmi_calc = Mi_calc_class(alphabet ** 2)
+    jointmi_calc = Mi_calc_class(alph_max)
 
     print("initialized all estimators")
-    cmi_target_s1_cond_s2 = _calculate_cmi(cmi_calc_target_s1_cond_s2, target, s1, s2)
+    cmi_target_s1_cond_s2 = _calculate_cmi(cmi_calc_target_s1_cond_s2,
+                                           target, s1, s2)
     jointmi_s1s2_target = _calculate_jointmi(jointmi_calc, s1, s2, target)
 #   print("Original joint mutual information: {0}".format(jointmi_s1s2_target))
     mi_target_s1 = _calculate_mi(mi_calc_s1, s1, target)
 #   print("Original mutual information I(target:s1): {0}".format(mi_target_s1))
     mi_target_s2 = _calculate_mi(mi_calc_s2, s2, target)
 #   print("Original mutual information I(target:s2): {0}".format(mi_target_s2))
-    print("Original redundancy - synergy: {0}".format(mi_target_s1 +
-                                                mi_target_s2 - jointmi_s1s2_target))
+    print("Original redundancy - synergy: {0}".format(
+                            mi_target_s1 + mi_target_s2 - jointmi_s1s2_target))
 
     n = target.shape[0]
     reps = iterations + 1
@@ -200,16 +199,15 @@ def pid(s1_o, s2_o, target_o, cfg):
 #    print('\b' * 21, end='')
     sys.stdout.flush()
 
-
     for i in range(1, reps):
 #        steps = reps/20
 #        if i%steps == 0:
 #            print('\b.', end='')
 #            sys.stdout.flush()
 
-        #print('iteration ' + str(i + 1) + ' of ' + str(reps - 1)
+        # print('iteration ' + str(i + 1) + ' of ' + str(reps - 1)
 
-        s1_new_list  = s1_list
+        s1_new_list = s1_list
 
         ind_new = ind
 
@@ -221,13 +219,17 @@ def pid(s1_o, s2_o, target_o, cfg):
         swap_2 = np.random.choice(swap_candidates)
 
         # swap value in s1 and index to keep track
-        s1_new_list[swap_1], s1_new_list[swap_2] = s1_new_list[swap_2], s1_new_list[swap_1]
+        s1_new_list[swap_1], s1_new_list[swap_2] = (s1_new_list[swap_2],
+                                                    s1_new_list[swap_1])
         ind_new[swap_1], ind_new[swap_2] = (ind_new[swap_2],
                                             ind_new[swap_1])
 
         # calculate CMI under new swapped distribution
-        cmi_new = _calculate_cmi_from_jA_list(cmi_calc_target_s1_cond_s2, target_jA, s1_new_list, s1_dim, s2_jA)
-
+        cmi_new = _calculate_cmi_from_jA_list(cmi_calc_target_s1_cond_s2,
+                                              target_jA,
+                                              s1_new_list,
+                                              s1_dim,
+                                              s2_jA)
 
         if (np.less_equal(cmi_new, cmi_q_target_s1_cond_s2_all[i - 1])):
             s1_list = s1_new_list
@@ -240,13 +242,14 @@ def pid(s1_o, s2_o, target_o, cfg):
 
     print('Unsuccessful swaps: {0}'.format(unsuccessful))
     # convert the final s1 back to an array
-    s1_final =np.asarray(s1_new_list, dtype=np.int)
+    s1_final = np.asarray(s1_new_list, dtype=np.int)
     # estimate unq/syn/shd information
-    jointmi_q_s1s2_target = _calculate_jointmi(jointmi_calc, s1_final, s2, target)
+    jointmi_q_s1s2_target = _calculate_jointmi(
+                                            jointmi_calc, s1_final, s2, target)
     unq_s1 = _get_last_value(cmi_q_target_s1_cond_s2_all)  # Bertschinger, 2014, p. 2163
 
     # NEED TO REINITIALISE the calculator
-    cmi_calc_target_s2_cond_s1 = Cmi_calc_class(alph_t,alph_s2,alph_s1)
+    cmi_calc_target_s2_cond_s1 = Cmi_calc_class(alph_t, alph_s2, alph_s1)
     unq_s2 = _calculate_cmi(cmi_calc_target_s2_cond_s1, target, s2, s1_final)  # Bertschinger, 2014, p. 2166
     syn_s1s2 = jointmi_s1s2_target - jointmi_q_s1s2_target  # Bertschinger, 2014, p. 2163
     shd_s1s2 = mi_target_s1 + mi_target_s2 - jointmi_q_s1s2_target  # Bertschinger, 2014, p. 2167
@@ -310,7 +313,8 @@ def _calculate_cmi(cmi_calc, var_1, var_2, cond):
     cmi = cmi_calc.computeAverageLocalOfObservations()
     return cmi
 
-def _calculate_cmi_from_jA_list(cmi_calc, var_1_java, var_2_list, var_2_ndim, cond_java):
+def _calculate_cmi_from_jA_list(cmi_calc, var_1_java, var_2_list, var_2_ndim,
+                                cond_java):
     """Calculate conditional MI from three variables usind JIDT.
 
     Args:

@@ -1,9 +1,10 @@
-"""Export and plot results as networkx objects.
-"""
+"""Export and plot results as networkx objects."""
+import itertools as it
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from .multivariate_te import Multivariate_te
 
 
 def generate_network_graph(res):
@@ -35,6 +36,7 @@ def generate_network_graph(res):
             print(edges)
             g.add_edges_from(edges)
     return g
+
 
 def generate_source_graph(res, sign_sources=True):
     """Generate graph object for a target process and single variables.
@@ -78,6 +80,7 @@ def generate_source_graph(res, sign_sources=True):
     g.number_of_edges()
     return g
 
+
 def plot_network(res):
     """Plot network of multivariate TE between processes.
 
@@ -101,7 +104,7 @@ def plot_network(res):
 
     g = generate_network_graph(res)
     print(g.node)
-    f, (ax1, ax2) = plt.subplots(1,2)
+    f, (ax1, ax2) = plt.subplots(1, 2)
     adj_matrix = nx.to_numpy_matrix(g)
     cmap = sns.light_palette('cadetblue', n_colors=2, as_cmap=True)
     sns.heatmap(adj_matrix, cmap=cmap, cbar=False, ax=ax1,
@@ -109,11 +112,11 @@ def plot_network(res):
                 yticklabels=g.nodes())
     ax1.xaxis.tick_top()
     plt.setp(ax1.yaxis.get_majorticklabels(), rotation=0)
-    nx.draw_circular(g, with_labels=True, node_size=300, alpha=1.0,
-                        ax=ax2, node_color='cadetblue', hold=True,
-                        font_weight='bold')
+    nx.draw_circular(g, with_labels=True, node_size=300, alpha=1.0, ax=ax2,
+                     node_color='cadetblue', hold=True, font_weight='bold')
     plt.show()
     return g
+
 
 def plot_selected_vars(res, sign_sources=True):
     """Plot network of a target process and single variables.
@@ -152,9 +155,9 @@ def plot_selected_vars(res, sign_sources=True):
         else:  # sources with proc. number > target
             pos[n] = np.array([max_lag - n[1], n[0]])
 
-        if n in res_single['selected_vars_sources']:
+        if n in res['selected_vars_sources']:
             color[ind] = 'cadetblue'
-        elif n in res_single['selected_vars_target']:
+        elif n in res['selected_vars_target']:
             color[ind] = 'tomato'
         elif n == target:
             color[ind] = 'red'
@@ -162,7 +165,7 @@ def plot_selected_vars(res, sign_sources=True):
 
     print(g.node)
     print(color)
-    f, (ax1, ax2) = plt.subplots(1,2)
+    f, (ax1, ax2) = plt.subplots(1, 2)
     adj_matrix = nx.to_numpy_matrix(g)
     adj_matrix = adj_matrix[:, g.nodes().index(target)]
     cmap = sns.light_palette('cadetblue', n_colors=2, as_cmap=True)
@@ -171,13 +174,13 @@ def plot_selected_vars(res, sign_sources=True):
                 yticklabels=g.nodes())
     ax1.xaxis.tick_top()
     plt.setp(ax1.yaxis.get_majorticklabels(), rotation=0)
-    nx.draw(g, pos=pos, with_labels=True, font_weight='bold',
-               node_size=900, alpha=0.7, node_shape='s',
-               ax=ax2, node_color=color, hold=True)
+    nx.draw(g, pos=pos, with_labels=True, font_weight='bold', node_size=900,
+            alpha=0.7, node_shape='s', ax=ax2, node_color=color, hold=True)
     plt.plot([-0.5, max_lag + 0.5], [0.5, 0.5],
              linestyle='--', linewidth=1, color='0.5')
     plt.show()
     return g
+
 
 def plot_mute_graph():
     """Plot MuTE example network.
@@ -197,7 +200,7 @@ def plot_mute_graph():
     # g.add_edges_from([(0, 1), (0, 2), (0, 3), (3, 4), (4, 3)])
     g.add_weighted_edges_from([(0, 1, 2), (0, 2, 3),
                                (0, 3, 2), (3, 4, 1), (4, 3, 1)],
-                               weight='delay')
+                              weight='delay')
     pos = {
         0: np.array([1, 1]),
         1: np.array([0, 2]),
@@ -206,8 +209,8 @@ def plot_mute_graph():
         4: np.array([3, 1]),
     }
     nx.draw(g, pos=pos, with_labels=True, node_size=900, alpha=1.0,
-               node_color='cadetblue', font_weight='bold',
-               edge_color=['k', 'k', 'r', 'k', 'k'], hold=True)
+            node_color='cadetblue', font_weight='bold',
+            edge_color=['k', 'k', 'r', 'k', 'k'], hold=True)
     nx.draw_networkx_edge_labels(g, pos=pos)
     plt.text(2, 0.1, 'non-linear interaction in red')
     plt.show()

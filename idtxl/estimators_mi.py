@@ -1,3 +1,9 @@
+"""Provide mutual information estimators for the Estimator_mi class.
+
+This module exports methods for mutual information (MI) estimation
+in the Estimator_mi class.
+
+"""
 from pkg_resources import resource_filename
 import numpy as np
 from scipy.special import digamma
@@ -68,14 +74,10 @@ def opencl_kraskov(self, var1, var2, n_chunks=1, opts=None):
 
     # Get defaults for estimator options
     kraskov_k = int(opts.get('kraskov_k', 4))
-    theiler_t = int(opts.get('theiler_t', 0)) # TODO necessary?
+    theiler_t = int(opts.get('theiler_t', 0))  # TODO necessary?
     noise_level = np.float32(opts.get('noise_level', 1e-8))
     gpuid = int(opts.get('gpuid', 0))
-<<<<<<< HEAD
-    nchunkspergpu = int(opts.get('nchunkspergpu', 1))
-=======
     nchunkspergpu = n_chunks
->>>>>>> Update documentation and clean up
 
     var1 += np.random.normal(scale=noise_level, size=var1.shape)
     var2 += np.random.normal(scale=noise_level, size=var2.shape)
@@ -93,7 +95,7 @@ def opencl_kraskov(self, var1, var2, n_chunks=1, opts=None):
 
     signallengthpergpu = pointset_full_space.shape[0]
 #    print("working with signallength: %i" %signallengthpergpu)
-    chunksize = signallengthpergpu / nchunkspergpu # TODO check for integer result
+    chunksize = signallengthpergpu / nchunkspergpu  # TODO check for integer result
 
     # KNN search in highest dimensional space.
     indexes, distances = nsocl.knn_search(pointset_full_space, n_dim_full,
@@ -175,7 +177,7 @@ def jidt_kraskov(self, var1, var2, opts=None):
     # Get defaults for estimator options
     kraskov_k = str(opts.get('kraskov_k', 4))
     normalise = str(opts.get('normalise', 'false'))
-    theiler_t = str(opts.get('theiler_t', 0)) # TODO necessary?
+    theiler_t = str(opts.get('theiler_t', 0))  # TODO necessary?
     noise_level = str(opts.get('noise_level', 1e-8))
     local_values = opts.get('local_values', False)
     num_threads = str(opts.get('num_threads', 'USE_ALL'))

@@ -23,6 +23,7 @@ def test_estimators_correlated_gauss_data():
 
     n_obs = 10000
     covariance = 0.4
+
     source = [random.normalvariate(0, 1) for r in range(n_obs)]
     target = [0] + [sum(pair) for pair in zip(
                     [covariance * y for y in source[0:n_obs-1]],
@@ -35,6 +36,7 @@ def test_estimators_correlated_gauss_data():
 
     te = te_estimator.estimate(np.array(source), np.array(target), options)
     expected_te = math.log(1 / (1 - math.pow(covariance, 2)))
+
     print('TE estimator is {0}'.format(te_estimator.estimator_name))
     print('TE result: {0:.4f} nats; expected to be close to {1:.4f} nats for '
           'correlated Gaussians.'.format(te, expected_te))

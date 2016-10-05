@@ -6,11 +6,8 @@ JAVA or GPU modules to run.
 """
 import numpy as np
 
-
 def pid(s1, s2, t, cfg):
-    """Fast implementation of the PID estimator.
-    """
-
+    """Fast implementation of the PID estimator."""
     if s1.ndim != 1 or s2.ndim != 1 or t.ndim != 1:
         raise ValueError('Inputs s1, s2, target have to be vectors'
                          '(1D-arrays).')
@@ -40,7 +37,8 @@ def pid(s1, s2, t, cfg):
     except KeyError:
         raise KeyError('"num_reps" is missing from the cfg dictionary.')
     if num_reps > 63:
-        raise ValueError('Number of reps must be 63 or less to prevent integer overflow')
+        raise ValueError('Number of reps must be 63 or less to prevent integer'
+                         ' overflow')
     try:
         max_iters = cfg['max_iters']
     except KeyError:
@@ -109,8 +107,8 @@ def pid(s1, s2, t, cfg):
         # The prob_inc = 1 / (number of samples * repeated doubling)
         # THIS MAY NEED SOME TIDYING
         prob_inc = np.multiply(
-            np.divide(np.float128(1),np.float128(num_samples)),
-            np.divide(np.float128(1),np.float128(rep)))
+            np.divide(np.float128(1), x2=np.float128(num_samples)),
+            np.divide(np.float128(1), np.float128(rep)))
 
         # Want to store number of unsuccessful swaps in a row
         unsuccessful_swaps_row = 0
@@ -148,11 +146,13 @@ def pid(s1, s2, t, cfg):
                 joint_s1_s2_prob[s1_prim, s2_cand] += prob_inc
 
                 # Calculate the cmi after this virtual swap
-                cond_mut_info = _cmi_prob(
-                    s2_prob, joint_t_s2_prob, joint_s1_s2_prob, joint_t_s1_s2_prob)
+                cond_mut_info = _cmi_prob(s2_prob,
+                                          joint_t_s2_prob,
+                                          joint_s1_s2_prob,
+                                          joint_t_s1_s2_prob)
 
                 # If improved keep it, reset the unsuccessful swap counter
-                if ( cond_mut_info < cur_cond_mut_info ):
+                if (cond_mut_info < cur_cond_mut_info):
                     cur_cond_mut_info = cond_mut_info
                     unsuccessful_swaps_row = 0
                 # Else undo the changes, record unsuccessful swap
@@ -198,6 +198,7 @@ def pid(s1, s2, t, cfg):
 
     return estimate
 
+
 def _cmi_prob(s2cond_prob, joint_t_s2cond_prob, joint_s1_s2cond_prob,
               joint_t_s1_s2cond_prob):
     """Calculate probabilities for CMI estimation."""
@@ -209,30 +210,29 @@ def _cmi_prob(s2cond_prob, joint_t_s2cond_prob, joint_s1_s2cond_prob,
         for sym_s2cond in range(0, alph_s2cond):
             for sym_t in range(0, alph_t):
 
-                if ( s2cond_prob[sym_s2cond] * joint_t_s2cond_prob[sym_t, sym_s2cond]
-                     * joint_s1_s2cond_prob[sym_s1, sym_s2cond]
-                     * joint_t_s1_s2cond_prob[sym_t, sym_s1, sym_s2cond] > 0 ):
+                if (s2cond_prob[sym_s2cond] *
+                        joint_t_s2cond_prob[sym_t, sym_s2cond] *
+                        joint_s1_s2cond_prob[sym_s1, sym_s2cond] *
+                        joint_t_s1_s2cond_prob[sym_t, sym_s1, sym_s2cond] > 0):
 
                     local_contrib = (
-                        np.log(joint_t_s1_s2cond_prob[sym_t, sym_s1, sym_s2cond])
-                        + np.log(s2cond_prob[sym_s2cond])
-                        - np.log(joint_t_s2cond_prob[sym_t,sym_s2cond])
-                        - np.log(joint_s1_s2cond_prob[sym_s1, sym_s2cond])
+                        np.log(joint_t_s1_s2cond_prob[sym_t, sym_s1,
+                                                      sym_s2cond]) +
+                        np.log(s2cond_prob[sym_s2cond]) -
+                        np.log(joint_t_s2cond_prob[sym_t, sym_s2cond]) -
+                        np.log(joint_s1_s2cond_prob[sym_s1, sym_s2cond])
                         ) / np.log(2)
 
                     weighted_contrib = (
-                        joint_t_s1_s2cond_prob[sym_t, sym_s1, sym_s2cond]
-                        * local_contrib)
+                        joint_t_s1_s2cond_prob[sym_t, sym_s1, sym_s2cond] *
+                        local_contrib)
                 else:
                     weighted_contrib = 0
                 total += weighted_contrib
     return total
 
-
 def _mi_prob(s1_prob, s2_prob, joint_s1_s2_prob):
-    """
-    MI calculator in the prob domain
-    """
+    """ MI calculator in the prob domain."""
     total = np.zeros(1).astype('float128')
 
     [alph_s1, alph_s2] = np.shape(joint_s1_s2_prob)
@@ -240,30 +240,25 @@ def _mi_prob(s1_prob, s2_prob, joint_s1_s2_prob):
     for sym_s1 in range(0, alph_s1):
         for sym_s2 in range(0, alph_s2):
 
-            if ( s1_prob[sym_s1] * s2_prob[sym_s2]
-                 * joint_s1_s2_prob[sym_s1, sym_s2] > 0 ):
+            if (s1_prob[sym_s1] * s2_prob[sym_s2] *
+                    joint_s1_s2_prob[sym_s1, sym_s2] > 0):
 
                 local_contrib = (
-                    np.log(joint_s1_s2_prob[sym_s1, sym_s2])
-                    - np.log(s1_prob[sym_s1])
-                    - np.log(s2_prob[sym_s2])
-                    ) / np.log(2)
+                    np.log(joint_s1_s2_prob[sym_s1, sym_s2]) -
+                    np.log(s1_prob[sym_s1]) -
+                    np.log(s2_prob[sym_s2])) / np.log(2)
 
                 weighted_contrib = (
-                    joint_s1_s2_prob[sym_s1, sym_s2]
-                    * local_contrib)
+                    joint_s1_s2_prob[sym_s1, sym_s2] *
+                    local_contrib)
             else:
                 weighted_contrib = 0
             total += weighted_contrib
 
     return total
 
-
 def _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t):
-    """
-    Joint MI calculator in the samples domain
-    """
-
+    """ Joint MI calculator in the samples domain."""
     [s12, alph_s12] = _join_variables(s1, s2, alph_s1, alph_s2)
 
     t_count = np.zeros(alph_t, dtype=np.int)
@@ -279,7 +274,8 @@ def _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t):
 
     t_prob = np.divide(t_count, num_samples).astype('float128')
     s12_prob = np.divide(s12_count, num_samples).astype('float128')
-    joint_t_s12_prob = np.divide(joint_t_s12_count, num_samples).astype('float128')
+    joint_t_s12_prob = np.divide(joint_t_s12_count,
+                                 num_samples).astype('float128')
 
     jmi = _mi_prob(t_prob, s12_prob, joint_t_s12_prob)
 
@@ -332,4 +328,3 @@ def _join_variables(a, b, alph_a, alph_b):
     } '''
 
     return joined.astype(int), alph_new
-

@@ -20,13 +20,18 @@ class IdtxlParamError(Exception):
 
 
 def opencl_missing(message):
+    """Report a missing opencl installation."""
     warnings.simplefilter('always', ImportWarning)
     warnings.warn(message, ImportWarning, stacklevel=2)
 
+
 def jpype_missing(message):
+    """Report a missing jpype installation."""
     warnings.simplefilter('always', ImportWarning)
-    warnings.warn(message, ImportWarning, stacklevel=2)    
+    warnings.warn(message, ImportWarning, stacklevel=2)
+
 
 def n_replications_low(message):
+    """Report if number of replications is too low for surrogate creation."""
     warnings.simplefilter('always', RuntimeWarning)
     warnings.warn(message, RuntimeWarning, stacklevel=2)

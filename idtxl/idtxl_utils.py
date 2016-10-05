@@ -1,3 +1,4 @@
+"""Provide IDTxl utility functions."""
 import pprint
 import numpy as np
 

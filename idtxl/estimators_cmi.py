@@ -1,12 +1,12 @@
 """Provide CMI estimators for the Estimator_cmi class.
 
-This module exports methods for CMI estimation in the Estimator_cmi class.
+This module exports methods for conditional mutual information (CMI) estimation
+in the Estimator_cmi class.
 
 """
 from pkg_resources import resource_filename
 import numpy as np
 from scipy.special import digamma
-from . import idtxl_utils as utils
 from . import neighbour_search_opencl as nsocl
 from . import idtxl_exceptions as ex
 try:
@@ -80,19 +80,16 @@ def opencl_kraskov(self, var1, var2, conditional=None, n_chunks=1, opts=None):
 
     # Get defaults for estimator options
     kraskov_k = int(opts.get('kraskov_k', 4))
-    theiler_t = int(opts.get('theiler_t', 0)) # TODO necessary?
+    theiler_t = int(opts.get('theiler_t', 0))  # TODO necessary?
     noise_level = np.float32(opts.get('noise_level', 1e-8))
     gpuid = int(opts.get('gpuid', 0))
-    nchunkspergpu = n_chunks  # TODO is there a case where it makes sense to have
-<<<<<<< HEAD
-                              # this two distinct parameters?
-    assert type(nchunkspergpu) is int, 'No chunks per GPU must be an int.'
-=======
-                              # these two distinct parameters?
->>>>>>> Fix usage of n_chunks in Kraskov-OpenCL estimator
 
-# If no conditional is passed, compute and return the mi:
-# this code is a copy of the one in estimatos_mi look there for comments
+    nchunkspergpu = n_chunks  # TODO is there a case where it makes sense to
+                              # have these two distinct parameters?
+    assert type(nchunkspergpu) is int, 'No chunks per GPU must be an int.'
+
+    # If no conditional is passed, compute and return the mi:
+    # this code is a copy of the one in estimatos_mi look there for comments
     if conditional is None:
         if VERBOSE:
             print('no conditional variable - falling back to MI estimation')
@@ -106,12 +103,18 @@ def opencl_kraskov(self, var1, var2, conditional=None, n_chunks=1, opts=None):
         var2 = var2.astype('float32')
         n_dim_var2 = var2.shape[1]
         signallengthpergpu = pointset_full_space.shape[0]
-        assert signallengthpergpu % nchunkspergpu == 0, 'signal length {0} can not be divided by no. chunks {1}'.format(signallengthpergpu, nchunkspergpu)
-        chunksize = int(signallengthpergpu / nchunkspergpu) # TODO check for integer result
+        assert signallengthpergpu % nchunkspergpu == 0, (
+                'signal length {0} can not be divided by no. chunks {1}'
+                .format(signallengthpergpu, nchunkspergpu))
+        chunksize = int(signallengthpergpu / nchunkspergpu)  # TODO check for integer result
         if VERBOSE:
-            print('no. points: {0}, chunksize: {1}, nchunks: {2}'.format(signallengthpergpu, chunksize, nchunkspergpu))
-        indexes, distances = nsocl.knn_search(pointset_full_space, n_dim_full,
-                                              kraskov_k, theiler_t, nchunkspergpu,
+            print('no. points: {0}, chunksize: {1}, nchunks: {2}'.format(
+                                signallengthpergpu, chunksize, nchunkspergpu))
+        indexes, distances = nsocl.knn_search(pointset_full_space,
+                                              n_dim_full,
+                                              kraskov_k,
+                                              theiler_t,
+                                              nchunkspergpu,
                                               gpuid)
         radii = distances[distances.shape[0] - 1, :]
         count_var1 = nsocl.range_search(var1, n_dim_var1, radii, theiler_t,
@@ -122,17 +125,17 @@ def opencl_kraskov(self, var1, var2, conditional=None, n_chunks=1, opts=None):
         for chunknum in range(0, nchunkspergpu):
             mi = (digamma(kraskov_k) + digamma(chunksize) -
                   np.mean(digamma(count_var1[chunknum * chunksize:
-                                              (chunknum + 1) * chunksize] + 1)
-                                              + digamma(count_var2[chunknum * chunksize:
-                                              (chunknum + 1) * chunksize] + 1)))
+                                             (chunknum + 1) * chunksize] + 1) +
+                          digamma(count_var2[chunknum * chunksize:
+                                             (chunknum + 1) * chunksize] + 1)))
             cmi_array[chunknum] = mi
     else:
         var1 += np.random.normal(size=var1.shape) * noise_level
         var2 += np.random.normal(size=var2.shape) * noise_level
         conditional += np.random.normal(size=conditional.shape) * noise_level
 
-        # Build pointsets (note that we assume that pointsets are given in IDTxl
-        # convention.
+        # Build pointsets (note that we assume that pointsets are given in
+        # IDTxl convention.
         # 1. full space
         pointset_full_space = np.hstack((var1, var2, conditional))
         pointset_full_space = pointset_full_space.astype('float32')
@@ -157,29 +160,42 @@ def opencl_kraskov(self, var1, var2, conditional=None, n_chunks=1, opts=None):
         if VERBOSE:
             print('working with signallength: {0}'.format(signallengthpergpu))
         chunksize = int(signallengthpergpu / nchunkspergpu)
-        assert(signallengthpergpu % nchunkspergpu == 0), 'Chunksize is not an interger value.'
+        assert(signallengthpergpu % nchunkspergpu == 0), ('Chunksize is not an'
+                                                          'interger value.')
 #        assert(type(chunksize) is int), 'Chunksize has to be an integer.'
-        indexes, distances = nsocl.knn_search(pointset_full_space, n_dim_full,
-                                              kraskov_k, theiler_t, nchunkspergpu,
+        indexes, distances = nsocl.knn_search(pointset_full_space,
+                                              n_dim_full,
+                                              kraskov_k,
+                                              theiler_t,
+                                              nchunkspergpu,
                                               gpuid)
         if VERBOSE:
-            print('indexes: {0}\n\ndistances: {1}\n\nshape of distance matrix: '
-                  '{2}'.format(indexes, distances, distances.shape))
+            print('indexes: {0}\n\ndistances: {1}\n\nshape of distance matrix:'
+                  ' {2}'.format(indexes, distances, distances.shape))
 
-        # Define the search radii as the distances to the kth (=last) neighbours
+        # Define search radii as the distances to the kth (=last) neighbours
         radii = distances[distances.shape[0]-1, :]
         if VERBOSE:
             print('Radii: {0}'.format(radii))
 
         # Get neighbour counts in ranges.
-        count_cond = nsocl.range_search(pointset_conditional, n_dim_conditional,
-                                        radii, theiler_t, nchunkspergpu, gpuid)
+        count_cond = nsocl.range_search(pointset_conditional,
+                                        n_dim_conditional,
+                                        radii, theiler_t,
+                                        nchunkspergpu,
+                                        gpuid)
         count_var1_cond = nsocl.range_search(pointset_var1_conditional,
-                                             n_dim_var1_conditional, radii,
-                                             theiler_t, nchunkspergpu, gpuid)
+                                             n_dim_var1_conditional,
+                                             radii,
+                                             theiler_t,
+                                             nchunkspergpu,
+                                             gpuid)
         count_var2_cond = nsocl.range_search(pointset_var2_conditional,
-                                             n_dim_var2_conditional, radii,
-                                             theiler_t, nchunkspergpu, gpuid)
+                                             n_dim_var2_conditional,
+                                             radii,
+                                             theiler_t,
+                                             nchunkspergpu,
+                                             gpuid)
 
         # Return the results, one cmi per chunk of data.
         cmi_array = -np.inf * np.ones(nchunkspergpu).astype('float64')
@@ -195,8 +211,10 @@ def opencl_kraskov(self, var1, var2, conditional=None, n_chunks=1, opts=None):
                            ))
             cmi_array[chunknum] = cmi
     if VERBOSE:
-        print('cmi array reads: {0} (n_chunks = {1})'.format(cmi_array, nchunkspergpu))
+        print('cmi array reads: {0} (n_chunks = {1})'.format(cmi_array,
+                                                             nchunkspergpu))
     return cmi_array
+
 
 def jidt_kraskov(self, var1, var2, conditional, opts=None):
     """Calculate conditional mutual infor with JIDT's Kraskov implementation.
@@ -255,7 +273,7 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
     # Get defaults for estimator options
     kraskov_k = str(opts.get('kraskov_k', str(4)))
     normalise = str(opts.get('normalise', 'false'))
-    theiler_t = str(opts.get('theiler_t', 0)) # TODO necessary?
+    theiler_t = str(opts.get('theiler_t', 0))  # TODO necessary?
     noise_level = str(opts.get('noise_level', 1e-8))
     num_threads = str(opts.get('num_threads', 'USE_ALL'))
     # debug = opts.get('debug', 'false')

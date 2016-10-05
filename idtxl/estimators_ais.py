@@ -1,6 +1,11 @@
+"""Provide AIS estimators for the Estimator_ais class.
+
+This module exports methods for active information storage (AIS) estimation in
+the Estimator_ais class.
+
+"""
+
 from pkg_resources import resource_filename
-import numpy as np
-import random as rn
 from . import idtxl_exceptions as ex
 try:
     import jpype as jp
@@ -9,19 +14,11 @@ except ImportError:
                      'JAVA/JIDT-powered AIS estimation install it from '
                      'https://pypi.python.org/pypi/JPype1')
 
-def is_parallel(self, estimator_name):
-    """Check if estimator can estimate AIS for multiple chunks in parallel."""
-    parallel_estimators = {'jidt_kraskov': False}
-
-    try:
-        return parallel_estimators[estimator_name]
-    except KeyError:
-        raise KeyError('Unknown estimator name.')
 
 def is_parallel(estimator_name):
     """Check if estimator can estimate AIS for multiple chunks in parallel."""
-    parallel_estimators = {'opencl_kraskov': True,
-                           'jidt_kraskov': False}
+    parallel_estimators = {'jidt_kraskov': False}
+
     try:
         return parallel_estimators[estimator_name]
     except KeyError:
@@ -96,7 +93,7 @@ def jidt_kraskov(self, process, opts):
     # Get defaults for estimator options
     kraskov_k = str(opts.get('kraskov_k', 4))
     normalise = str(opts.get('normalise', 'false'))
-    theiler_t = str(opts.get('theiler_t', 0)) # TODO necessary?
+    theiler_t = str(opts.get('theiler_t', 0))  # TODO necessary?
     noise_level = str(opts.get('noise_level', 1e-8))
     local_values = opts.get('local_values', False)
     tau = opts.get('tau', 1)
