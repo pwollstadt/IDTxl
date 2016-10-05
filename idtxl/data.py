@@ -1,11 +1,14 @@
-# -*- coding: utf-8 -*-
-"""
+"""Provide data structures for IDTxl analysis.
+
 Created on Mon Mar  7 18:13:27 2016
 
 @author: patricia
 """
+import copy as cp
 import numpy as np
 from . import idtxl_utils as utils
+
+VERBOSE = True
 
 
 class Data():
@@ -56,6 +59,7 @@ class Data():
             if true, all data gets z-standardised per process
 
     """
+
     def __init__(self, data=None, dim_order='psr', normalise=True):
         self.normalise = normalise
         if data is not None:
@@ -63,32 +67,36 @@ class Data():
 
     @property
     def data(self):
+        """Return data array."""
         return self._data
 
-    def n_realisations(self, current_value=(0, 0)):
+    def n_realisations(self, current_value=None):
         """Number of realisations over samples and replications.
-        
+
         Args:
             current_value : tuple [optional]
                 reference point for calculation of number of realisations
-                (e.g. when using an embedding of length k, we count realisations
-                from the k+1th sample because we loose the first k samples to
-                the embedding)
+                (e.g. when using an embedding of length k, we count
+                realisations from the k+1th sample because we loose the first k
+                samples to the embedding)
         """
         return (self.n_realisations_time(current_value) *
                 self.n_realisations_repl())
 
-    def n_realisations_time(self, current_value=(0, 0)):
+    def n_realisations_time(self, current_value=None):
         """Number of realisations over samples.
-        
+
         Args:
             current_value : tuple [optional]
                 reference point for calculation of number of realisations
-                (e.g. when using an embedding of length k, we count realisations
-                from the k+1th sample because we loose the first k samples to
-                the embedding)
+                (e.g. when using an embedding of length k, the current value is
+                at sample k + 1; we thus count realisations from the k + 1st
+                sample because we loose the first k samples to the embedding)
         """
-        return self.n_samples - current_value[1]
+        if current_value is None:
+            return self.n_samples
+        else:
+            return self.n_samples - current_value[1]
 
     def n_realisations_repl(self):
         """Number of realisations over replications."""
@@ -117,8 +125,13 @@ class Data():
                 order of dimensions, accepts any combination of the characters
                 'p', 's', and 'r' for processes, samples, and replications
         """
-        assert(len(dim_order) <= 3), ('dim_order can not have more than three '
-                                      'entries')
+        if len(dim_order) > 3:
+            raise RuntimeError('dim_order can not have more than three '
+                               'entries')
+        if len(dim_order) != data.ndim:
+            raise RuntimeError('Data array dimension ({0}) and length of '
+                               'dim_order ({1}) are not equal.'.format(
+                                           data.ndim, len(dim_order)))
         data_ordered = self._reorder_data(data, dim_order)
         self._set_data_size(data_ordered)
         print('Adding data with properties: {0} processes, {1} samples, {2} '
@@ -137,20 +150,15 @@ class Data():
         """Z-standardise data separately for each process."""
         d_standardised = np.empty(d.shape)
         for process in range(self.n_processes):
-            s = utils.standardise(d[process, :, :].reshape(1, self.n_realisations()),
-                                  dimension=1)
+            s = utils.standardise(
+                            d[process, :, :].reshape(1, self.n_realisations()),
+                            dimension=1)
             d_standardised[process, :, :] = s.reshape(self.n_samples,
                                                       self.n_replications)
         return d_standardised
 
     def _reorder_data(self, data, dim_order):
         """Reorder data dimensions to processes x samples x replications."""
-
-        assert(len(dim_order) == data.ndim), ('Data array dimension ({0}) and '
-                                              'length of dim_order ({1}) are '
-                                              'not equal.'.
-                                              format(data.ndim,
-                                                     len(dim_order)))
 
         # add singletons for missing dimensions
         missing_dims = 'psr'
@@ -184,12 +192,12 @@ class Data():
         temporal order stays intact within replications:
 
         orig:
-            rep.:   1 1 1 1 2 2 2 2 3 3 3 3 4 4 4 4 5 5 5 5 6 6 6 6 ...
-            sample: 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 ...
+            repl. index:   1 1 1 1 2 2 2 2 3 3 3 3 4 4 4 4 5 5 5 5 6 6 6 6 ...
+            sample index:  1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 ...
 
         shuffled:
-            rep.:   3 3 3 3 1 1 1 1 4 4 4 4 6 6 6 6 2 2 2 2 5 5 5 5 ...
-            sample: 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 ...
+            repl. index:   3 3 3 3 1 1 1 1 4 4 4 4 6 6 6 6 2 2 2 2 5 5 5 5 ...
+            sample index:  1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 ...
 
         Args:
             idx_list: list of tuples
@@ -199,10 +207,18 @@ class Data():
 
         Returns:
             numpy array
-                realisations with dimensions replications x number of indices
+                realisations with dimensions (no. samples * no.replications) x
+                number of indices
             numpy array
-                replication index for each realisation
+                replication index for each realisation with dimensions (no.
+                samples * no.replications) x number of indices
         """
+        if not all(np.array([x[1] for x in idx_list]) <= current_value[1]):
+            print('Index list: {0}\ncurrent value: {1}'.format(idx_list,
+                                                               current_value))
+            raise RuntimeError('All indices for which data is retrieved must '
+                               ' be smaller than the current value.')
+
         n_real_time = self.n_realisations_time(current_value)
         n_real_repl = self.n_realisations_repl()
         realisations = np.empty((n_real_time * n_real_repl, len(idx_list)))
@@ -214,7 +230,7 @@ class Data():
 
         i = 0
         for idx in idx_list:
-            r = 0
+            r = 0 # TODO in the next line, one realisation is missing, change the indexing!
             last_sample = idx[1] - current_value[1]  # indexing is much faster
             if last_sample == 0:                     # than looping over time!
                 last_sample = None
@@ -243,7 +259,7 @@ class Data():
 
         return realisations, replications_index
 
-    def get_realisations(self, current_value, idx):
+    def get_realisations(self, current_value, idx_list):
         """Return all realisations of a random variable in the data.
 
         Return realisations of random variables represented by a list of
@@ -255,7 +271,7 @@ class Data():
         Args:
             current_value : tuple
                 index of the current_value in the data
-            idx : list of tuples
+            idx_list : list of tuples
                 indices of variables
 
         Returns:
@@ -268,30 +284,31 @@ class Data():
             TypeError
                 If idx is not a list
         """
-        if type(idx) is not list:
+        if type(idx_list) is not list:
             raise TypeError('idx_realisations must be a list of tuples.')
-        return self._get_data(idx, current_value, shuffle=False)
+        return self._get_data(idx_list, current_value, shuffle=False)
 
-    def permute_data(self, current_value, idx):
+    def permute_replications(self, current_value, idx_list):
         """Return realisations with permuted replications (time stays intact).
 
-        Return realisations for a list of indices, where realisations are
-        shuffled over replications to create surrogate data. An index is
-        expected to have the form (process index, sample index). Realisations
-        are shuffled block-wise by permuting the order of replications:
+        Create surrogate data by permuting realisations over replications while
+        keeping the temporal structure (order of samples) intact. Return
+        realisations for all indices in the list, where an index is expected to
+        have the form (process index, sample index). Realisations are permuted
+        block-wise by permuting the order of replications:
 
-        orig:
-            rep.:   1 1 1 1 2 2 2 2 3 3 3 3 4 4 4 4 5 5 5 5 6 6 6 6 ...
-            sample: 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 ...
+        original data:
+            rep.:   1 1 1 1  2 2 2 2  3 3 3 3  4 4 4 4  5 5 5 5  6 6 6 6 ...
+            sample: 1 2 3 4  1 2 3 4  1 2 3 4  1 2 3 4  1 2 3 4  1 2 3 4 ...
 
-        shuffled:
-            rep.:   3 3 3 3 1 1 1 1 4 4 4 4 6 6 6 6 2 2 2 2 5 5 5 5 ...
-            sample: 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 ...
+        permuted data:
+            rep.:   3 3 3 3  1 1 1 1  4 4 4 4  6 6 6 6  2 2 2 2  5 5 5 5 ...
+            sample: 1 2 3 4  1 2 3 4  1 2 3 4  1 2 3 4  1 2 3 4  1 2 3 4 ...
 
         Args:
             current_value : tuple
                 index of the current_value in the data
-            idx : list of tuples
+            idx_list : list of tuples
                 indices of variables
 
         Returns:
@@ -301,13 +318,110 @@ class Data():
             numpy array
                 replication index for each realisation
 
-
         Raises:
             TypeError if idx_realisations is not a list
         """
-        if type(idx) is not list:
+        if type(idx_list) is not list:
             raise TypeError('idx needs to be a list of tuples.')
-        return self._get_data(idx, current_value, shuffle=True)
+        return self._get_data(idx_list, current_value, shuffle=True)
+
+    def permute_samples(self, current_value, idx_list, perm_range='max'):
+        """Return realisations with permuted samples (repl. stays intact).
+
+        Create surrogate data by permuting realisations over samples (time)
+        while keeping the order of replications intact. Return realisations for
+        all indices in the list, where an index is expected to have the form
+        (process index, sample index). Realisations are permuted sample-wise or
+        within a permutation range (perm_range). If no permutation range is
+        given, samples are randomly permuted over the whole replication, i.e.,
+        over all time indices in the replication:
+
+        original data:
+            rep.:   1 1 1 1  2 2 2 2  3 3 3 3  4 4 4 4  5 5 5 5  6 6 6 6 ...
+            sample: 1 2 3 4  1 2 3 4  1 2 3 4  1 2 3 4  1 2 3 4  1 2 3 4 ...
+
+        permuted data (perm_range='max'):
+            rep.:   1 1 1 1  2 2 2 2  3 3 3 3  4 4 4 4  5 5 5 5  6 6 6 6 ...
+            sample: 4 1 3 2  1 3 4 2  4 3 2 1  1 2 4 3  2 4 3 1  1 3 4 2 ...
+
+        permuted data (perm_range=2):
+            rep.:   1 1 1 1  2 2 2 2  3 3 3 3  4 4 4 4  5 5 5 5  6 6 6 6 ...
+            sample: 2 1 3 4  1 2 4 3  2 1 4 3  1 2 3 4  2 1 4 3  1 2 4 3 ...
+
+        Args:
+            current_value : tuple
+                index of the current_value in the data
+            idx_list : list of tuples
+                indices of variables
+            perm_range : int or 'max' [optional]
+                range over which realisations are permuted, if 'max'
+                realisations are permuted over the whole replication, otherwise
+                realisations are permuted over blocks of length perm_range
+
+        Returns:
+            numpy array
+                permuted realisations with dimensions replications x number of
+                indices
+            numpy array
+                sample index for each realisation
+
+        Raises:
+            TypeError if idx_realisations is not a list
+
+        Note:
+            This permutation scheme is the fall-back option if the number of
+            replications is too small to allow a sufficient number of
+            permutations for the generation of surrogate data.
+        """
+        [realisations, replication_idx] = self.get_realisations(current_value,
+                                                                idx_list)
+
+        realisations_perm = cp.copy(realisations)
+        n_per_repl = sum(replication_idx == 0)
+        if type(perm_range) is not str:
+            assert (perm_range > 1), ('Permutation range has to be larger '
+                                      'than 1 otherwise there is nothing to '
+                                      'permute.')
+        else:
+            if perm_range == 'max':
+                perm_range = n_per_repl
+            else:
+                raise ValueError('Unkown value for "perm_range": {0}'.format(
+                    perm_range))
+        assert (replication_idx.shape[0] == realisations.shape[0]), (
+                'Array "replication" index must have as many entries as the '
+                'first dimension of array "realisations".')
+
+        assert (n_per_repl >= perm_range), ('Not enough realisations per '
+                                            'replication ({0}) to allow for '
+                                            'the requested "perm_range" ({1}).'
+                                            .format(n_per_repl, perm_range))
+
+        # Create a permutation of the data that respects the requested permutation
+        # range and can be applied to the realisations from each replication in
+        # turn.
+        if perm_range == n_per_repl:  # permute all realisations in one replication
+            perm = np.random.permutation(n_per_repl)
+        else:  # build a permutation that permutes only within the perm_range
+            perm = np.empty(n_per_repl, dtype=int)
+            remainder = n_per_repl % perm_range
+            i = 0
+            for p in range(n_per_repl // perm_range):
+                perm[i:i + perm_range] = np.random.permutation(perm_range) + i
+                i += perm_range
+            if remainder > 0:
+                perm[-remainder:] = np.random.permutation(remainder) + i
+
+        # Apply the permutation to data from each replication, individually.
+        perm_idx = np.empty(realisations_perm.shape[0])
+        for replication in range(self.n_replications):
+            mask = replication_idx == replication
+            d = realisations_perm[mask, :]
+            realisations_perm[mask, :] = d[perm, :]
+            perm_idx[mask] = perm
+
+        return realisations_perm, perm_idx
+
 
     def generate_mute_data(self, n_samples=1000, n_replications=10):
         """Generate example data for a 5-process network.
@@ -330,7 +444,6 @@ class Data():
             n_replications : int
                 number of replications
         """
-
         n_processes = 5
         n_samples = n_samples
         n_replications = n_replications

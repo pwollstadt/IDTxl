@@ -8,13 +8,11 @@ Note:
 
 @author: patricia
 """
-import copy as cp
 import numpy as np
 import itertools as it
 from . import stats
 from .network_analysis import Network_analysis
 from .set_estimator import Estimator_cmi
-from .set_estimator import Estimator_ais
 
 VERBOSE = True
 
@@ -24,7 +22,7 @@ class Single_process_storage(Network_analysis):
 
     Set parameters necessary for active information storage (AIS) in every
     process of a network. To perform AIS estimation call analyse_network() on
-    the whole network or a set of nodes or call analyse_single_process() to 
+    the whole network or a set of nodes or call analyse_single_process() to
     estimate AIS for a single process. See docstrings of the two functions
     for more information.
 
@@ -37,9 +35,9 @@ class Single_process_storage(Network_analysis):
             parameters for estimator use and statistics:
 
             - 'n_perm_*' - number of permutations, where * can be 'max_stat',
-              'mi', 'min_stat' (default=500)
+              'min_stat', 'mi' (default=500)
             - 'alpha_*' - critical alpha level for statistical significance,
-              where * can be 'max_stat', 'min_stat' (default=0.05)
+              where * can be 'max_stat', 'min_stat', 'mi' (default=0.05)
             - 'cmi_calc_name' - estimator to be used for CMI calculation. Note
               that this estimator is also used to estimate MI later on.
               (For estimator options see the respective documentation.)
@@ -62,7 +60,7 @@ class Single_process_storage(Network_analysis):
         tau : int
             spacing between samples analyzed for information contribution
         ais : float
-            raw AIS value 
+            raw AIS value
         sign : bool
             true if AIS is significant
         pvalue: float
@@ -70,6 +68,7 @@ class Single_process_storage(Network_analysis):
         process_set : list
             list with indices of analyzed processes
     """
+
     # TODO right now 'options' holds all optional params (stats AND estimator).
     # We could split this up by adding the stats options to the analyse_*
     # methods?
@@ -86,14 +85,14 @@ class Single_process_storage(Network_analysis):
         except KeyError:
             raise KeyError('Calculator name was not specified!')
         print('\n\nSetting calculator to: {0}'.format(self.calculator_name))
-        self._cmi_calculator = Estimator_cmi(self.calculator_name)  # TODO should be 'calculator'
+        self._cmi_calculator = Estimator_cmi(self.calculator_name)
         super().__init__()
 
     def analyse_network(self, data, processes='all'):
-        """Estimate active information storage for multiple processes in the network.
+        """Estimate active information storage for multiple network processes.
 
-        Estimate active information storage for all or a subset of processes in the
-        network.
+        Estimate active information storage for all or a subset of processes in
+        the network.
 
         Example:
 
@@ -136,8 +135,8 @@ class Single_process_storage(Network_analysis):
         results = {}
         for t in range(len(processes)):
             if VERBOSE:
-                print('\n####### analysing process {0} of {1}'.format(processes[t],
-                                                                        processes))
+                print('\n####### analysing process {0} of {1}'.format(
+                                                processes[t], processes))
             r = self.analyse_single_process(data, processes[t])
             r['process'] = processes[t]
             results[processes[t]] = r
@@ -152,10 +151,10 @@ class Single_process_storage(Network_analysis):
         Faes, 2011, and Lizier, ???). This is
         done in three steps (see Lizier and Faes for details):
 
-        (1) find all relevant samples in the processes' own past, by iteratively
-            adding candidate samples that have significant conditional mutual
-            information (CMI) with the current value (conditional on all samples
-            that were added previously)
+        (1) find all relevant samples in the processes' own past, by
+            iteratively adding candidate samples that have significant
+            conditional mutual information (CMI) with the current value
+            (conditional on all samples that were added previously)
         (3) prune the final conditional set by testing the CMI between each
             sample in the final set and the current value, conditional on all
             other samples in the final set
@@ -210,8 +209,6 @@ class Single_process_storage(Network_analysis):
 
     def _initialise(self, data, process):
         """Check input and set everything to initial values."""
-
-        # Check the provided process.
         self.process = process
 
         # Check provided search depths for source and target
@@ -221,7 +218,7 @@ class Single_process_storage(Network_analysis):
         self._current_value = (process, self.max_lag)
         [cv_realisation, repl_idx] = data.get_realisations(
                                              current_value=self.current_value,
-                                             idx=[self.current_value])
+                                             idx_list=[self.current_value])
         self._current_value_realisations = cv_realisation
 
         # Remember which realisations come from which replication. This may be
@@ -280,23 +277,25 @@ class Single_process_storage(Network_analysis):
         success = False
         while candidate_set:
             # Find the candidate with maximum TE.
-            candidate_realisations = np.empty((data.n_realisations(self.current_value) *
-                                               len(candidate_set), 1))
+            candidate_realisations = np.empty(
+                                    (data.n_realisations(self.current_value) *
+                                     len(candidate_set), 1))
             i_1 = 0
             i_2 = data.n_realisations(self.current_value)
             for candidate in candidate_set:
                 candidate_realisations[i_1:i_2, 0] = data.get_realisations(
-                                                            self.current_value,
-                                                            [candidate])[0].reshape(data.n_realisations(self.current_value),)
+                                self.current_value,
+                                [candidate])[0].reshape(
+                                    data.n_realisations(self.current_value),)
                 i_1 = i_2
                 i_2 += data.n_realisations(self.current_value)
             temp_te = self._cmi_calculator.estimate_mult(
-                                        n_chunks=len(candidate_set),
-                                        options=self.options,
-                                        re_use=['var2', 'conditional'],
-                                        var1=candidate_realisations,
-                                        var2=self._current_value_realisations,
-                                        conditional=self._selected_vars_realisations)
+                                n_chunks=len(candidate_set),
+                                options=self.options,
+                                re_use=['var2', 'conditional'],
+                                var1=candidate_realisations,
+                                var2=self._current_value_realisations,
+                                conditional=self._selected_vars_realisations)
 
             # Test max TE for significance with maximum statistics.
             te_max_candidate = max(temp_te)
@@ -347,12 +346,14 @@ class Single_process_storage(Network_analysis):
         while self.selected_vars_sources:
             # Find the candidate with the minimum TE into the target.
             cond_dim = len(self.selected_vars_sources) - 1
-            candidate_realisations = np.empty((data.n_realisations(self.current_value) *
-                                               len(self.selected_vars_sources), 1))
-            conditional_realisations = np.empty((data.n_realisations(self.current_value) *
-                                                 len(self.selected_vars_sources), cond_dim ))
+            candidate_realisations = np.empty(
+                                (data.n_realisations(self.current_value) *
+                                 len(self.selected_vars_sources), 1))
+            conditional_realisations = np.empty(
+                                (data.n_realisations(self.current_value) *
+                                 len(self.selected_vars_sources), cond_dim))
             i_1 = 0
-            i_2 = data.n_realisations(self.current_value)            
+            i_2 = data.n_realisations(self.current_value)
             for candidate in self.selected_vars_sources:
                 # Separate the candidate realisations and all other
                 # realisations to test the candidate's individual contribution.
@@ -367,12 +368,12 @@ class Single_process_storage(Network_analysis):
                 i_1 = i_2
                 i_2 += data.n_realisations(self.current_value)
             temp_te = self._cmi_calculator.estimate_mult(
-                                            n_chunks=len(self.selected_vars_sources),
-                                            options=self.options,
-                                            re_use=['var2'],
-                                            var1=candidate_realisations,
-                                            var2=self._current_value_realisations,
-                                            conditional=conditional_realisations)
+                                    n_chunks=len(self.selected_vars_sources),
+                                    options=self.options,
+                                    re_use=['var2'],
+                                    var1=candidate_realisations,
+                                    var2=self._current_value_realisations,
+                                    conditional=conditional_realisations)
 
             # Test min TE for significance with minimum statistics.
             te_min_candidate = min(temp_te)
@@ -403,14 +404,13 @@ class Single_process_storage(Network_analysis):
 
     def _test_final_conditional(self, data):  # TODO test this!
         """Perform statistical test on AIS using the final conditional set."""
-
         print(self._idx_to_lag(self.selected_vars_full))
         [ais, s, p] = stats.mi_against_surrogates(self, data)
 
-        # If a parallel estimator was used, an array of AIS estimates is returned.
-        # Make the output uniform for both estimator types.
+        # If a parallel estimator was used, an array of AIS estimates is
+        # returned. Make the output uniform for both estimator types.
         if type(ais) is np.ndarray:
-            assert ais.shape[0] == 1, 'AIS estimation returned more than one value.'
+            assert ais.shape[0] == 1, 'AIS result is not a scalar.'
             ais = ais[0]
 
         self.ais = ais
@@ -419,11 +419,11 @@ class Single_process_storage(Network_analysis):
 
     def _define_candidates(self):
         """Build a list of candidate indices.
-        
+
         Note that for AIS estimation, the candidate set is defined as the past
         of the process up to the max_lag defined by the user (samples spaced
-        by tau if requested). This function thus does not need to take 
-        arguments as the same function in multivariate TE estimation. 
+        by tau if requested). This function thus does not need to take
+        arguments as the same function in multivariate TE estimation.
 
         Returns:
             a list of tuples, where each tuple holds the index of one

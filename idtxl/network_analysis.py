@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
+"""Parent class for all network analyses.
+
 Created on Mon Mar  7 18:13:27 2016
 
 @author: patricia
@@ -7,6 +7,7 @@ Created on Mon Mar  7 18:13:27 2016
 import numpy as np
 import copy as cp
 from . import idtxl_utils as utils
+
 
 class Network_analysis(): # TODO which 'algorithms' do we want to provide for this? biv TE, mult TE, mult granger, biv granger, ...?
     """Provide an analysis setup for multivariate network inference.
@@ -35,13 +36,14 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
         current_value : tuple
             index of the current value
         selected_vars_full : list of tuples
-            full set of random variables to be conditioned on
-        selected_vars_sources : list of tuples
-            set of conditionals coming from souce processes
+            indices of the full set of random variables to be conditioned on
         selected_vars_target : list of tuples
-            set of conditionals coming from the target process
+            indices of the set of conditionals coming from the target process
+        selected_vars_sources : list of tuples
+            indices of the set of conditionals coming from source processes
     """
-    def __init__(self): # TODO a lot of these needs to go into the child class
+
+    def __init__(self):  # TODO a lot of these needs to go into the child class
         self.target = None
         self.current_value = None  # TODO rename this to current_target_variable??
         self.selected_vars_full = []
@@ -49,11 +51,11 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
         self.selected_vars_target = []
         self._current_value_realisations = None
         self._selected_vars_realisations = None
-        self._replication_index = None
+        self._selected_vars_repl_idx = None
 
     @property
     def current_value(self):
-        """Index of the current_value."""
+        """Get index of the current_value."""
         return self._current_value
 
     @current_value.setter
@@ -65,7 +67,7 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
 
     @property
     def _current_value_realisations(self):
-        """Realisations of the current_value."""
+        """Get realisations of the current_value."""
         if self.__current_value_realisations is None:
             print('Attribute has not been set yet.')
         if type(self.__current_value_realisations) is tuple:
@@ -124,7 +126,7 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
 
     @property
     def _selected_vars_realisations(self):
-        """Realisations of the full conditional set."""
+        """Get realisations of the full conditional set."""
         return self.__selected_vars_realisations
 
     @_selected_vars_realisations.setter
@@ -133,7 +135,7 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
 
     @property
     def _selected_vars_target_realisations(self):
-        """Realisations of the target samples in the conditional.
+        """Get realisations of the target samples in the conditional.
 
         Note:
             Each time this property is called, realisations are actually
@@ -155,7 +157,7 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
 
     @property
     def _selected_vars_sources_realisations(self):
-        """Realisations of the source samples in the conditional.
+        """Get realisations of the source samples in the conditional.
 
         Note:
             Each time this property is called, realisations are actually
@@ -189,6 +191,20 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
             else:
                 self.selected_vars_sources.append(i)
 
+    @property
+    def _selected_vars_repl_idx(self):
+        """Get list of indices of replications of the selected vars.
+
+        Note:
+            This is helpful to generate permutations over replications when
+            doing statistical testing of the full set of selected variables.
+        """
+        return self.__selected_vars_repl_idx
+
+    @_selected_vars_repl_idx.setter
+    def _selected_vars_repl_idx(self, idx_list):
+        self.__selected_vars_repl_idx = idx_list
+
     def _append_selected_vars_realisations(self, realisations):
         """Append realisations of conditionals to existing realisations.
 
@@ -204,7 +220,6 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
 
     def _remove_candidate(self, idx):
         """Remove a single candidate and its realisations from the object."""
-
         self._selected_vars_realisations = utils.remove_column(
                                          self._selected_vars_realisations,
                                          self.selected_vars_full.index(idx))
@@ -287,4 +302,3 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
         self._append_selected_vars_idx(cond)
         self._append_selected_vars_realisations(
                         data.get_realisations(self.current_value, cond)[0])
-
