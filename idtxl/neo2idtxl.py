@@ -68,25 +68,25 @@ def _load_file_using_neo(neofilename, filepath):
 
 
 def _neo_get_analogsignals(neoblock):
-    """ Extract the analogsignals from the neo block format
+    """Extract the analogsignals from the neo block format.
 
-        The analogsignals in the neoblock need to have the same length in all
-        replications and processes.
+    The analogsignals in the neoblock need to have the same length in all
+    replications and processes.
 
-        Args:
-            neoblock: block format of neo package
+    Args:
+        neoblock: block format of neo package
 
-        Returns:
-            fsample: numpy.array
-                sampling frequency of the analogsignals
-            time_vector:
-                vector containing the time indices for each sample in relation
-                to the t_start and t_stop of the neoblock
-            label: list
-                list of channel labels
-            dat: numpy.array
-                Three dimensional data array containing the analogsignals for
-                each replication and processes
+    Returns:
+        fsample: numpy.array
+            sampling frequency of the analogsignals
+        time_vector:
+            vector containing the time indices for each sample in relation
+            to the t_start and t_stop of the neoblock
+        label: list
+            list of channel labels
+        dat: numpy.array
+            Three dimensional data array containing the analogsignals for
+            each replication and processes
     """
     # get sampling frequency
     fsample = neoblock.segments[0].analogsignals[0].sampling_rate.base
@@ -129,25 +129,25 @@ def _neo_get_analogsignals(neoblock):
 
 
 def _neo_get_spiketrains(neoblock):
-    """ Extract the spiketrains from the neo block format
+    """Extract the spiketrains from the neo block format.
 
-        The spiketrains in the neoblock need to have the same length in all
-        replications and processes.
+    The spiketrains in the neoblock need to have the same length in all
+    replications and processes.
 
-        Args:
-            neoblock: block format of neo package
+    Args:
+        neoblock: block format of neo package
 
-        Returns:
-            fsample: numpy.array
-                sampling frequency of the spiketrains
-            time_vector:
-                vector containing the time indices for each sample in relation
-                to the t_start and t_stop of the neoblock
-            label: list
-                list of channel labels
-            dat: numpy.array
-                Three dimensional data array containing the spiketrains for
-                each replication and processes
+    Returns:
+        fsample: numpy.array
+            sampling frequency of the spiketrains
+        time_vector:
+            vector containing the time indices for each sample in relation
+            to the t_start and t_stop of the neoblock
+        label: list
+            list of channel labels
+        dat: numpy.array
+            Three dimensional data array containing the spiketrains for
+            each replication and processes
     """
     # get sampling frequency
     fsample = neoblock.segments[0].spiketrians[0].sampling_rate.base
