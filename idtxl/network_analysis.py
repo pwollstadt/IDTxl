@@ -162,7 +162,6 @@ class Network_analysis():
             self._selected_vars_realisations = np.hstack(
                             (self._selected_vars_realisations, realisations))
 
-
     def _idx_to_lag(self, idx_list, current_value_sample=None):
         """Change sample indices to lags for each sample in the list."""
         if current_value_sample is None:

@@ -517,6 +517,7 @@ def check_n_perm(n_perm, alpha):
                            'permutations must be greater than (1/alpha).'.
                                format(n_perm, alpha))
 
+
 def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
     """Create a table of surrogate transfer entropy values.
 
@@ -632,8 +633,8 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
             critical alpha level for statistical significance (default=0.05)
         tail : str [optional]
             'one' for one-tailed testing H1 > H0, 'one_smaller' for one-
-	    tailed testing H1 < H0, or 'two' for two-tailed testing
-	    (default='one')
+            tailed testing H1 < H0, or 'two' for two-tailed testing
+            (default='one')
 
     Returns:
         bool
@@ -708,7 +709,6 @@ def _generate_surrogates(data, current_value, idx_list, n_perm,
             'permute_in_time' to True to create surrogates by shuffling data
             over time. See Data.permute_samples() for options for surrogate
             creation.
-
 
     Returns:
         numpy array
