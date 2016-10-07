@@ -264,7 +264,8 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
         opts : dict [optional]
             parameters for statistical testing, can contain:
 
-            - 'n_perm_max_seq' - number of permutations (default=500)
+            - 'n_perm_max_seq' - number of permutations
+              (default='n_perm_min_stat'|500)
             - 'alpha_max_seq' - critical alpha level (default=0.05)
 
     Returns:
@@ -279,9 +280,9 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
         n_permutations = opts['n_perm_max_seq']
     except KeyError:
         try:  # use the same n_perm as for min_stats if surr table is reused
-            n_permutations = analysis_setup.min_stats_surr_table.shape[1]
-        except analysis_setup.min_stats_surr_table:
-            n_permutations = 3  # 200
+            n_permutations = analysis_setup._min_stats_surr_table.shape[1]
+        except TypeError:  # is surr table is None, use default
+            n_permutations = 500
     alpha = opts.get('alpha_max_seq', 0.05)
 
     # Calculate TE for each candidate in the conditional source set and sort
@@ -319,9 +320,9 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
     individual_te_sorted = utils.sort_descending(individual_te)
 
     # Re-use or create surrogate table and sort it, this saves some time
-    if (analysis_setup.min_stats_surr_table is not None and
-            n_permutations <= analysis_setup.min_stats_surr_table.shape[1]):
-        surr_table = analysis_setup.min_stats_surr_table[:, :n_permutations]
+    if (analysis_setup._min_stats_surr_table is not None and
+            n_permutations <= analysis_setup._min_stats_surr_table.shape[1]):
+        surr_table = analysis_setup._min_stats_surr_table[:, :n_permutations]
         assert len(analysis_setup.selected_vars_sources) == surr_table.shape[0]
     else:
         surr_table = _create_surrogate_table(
