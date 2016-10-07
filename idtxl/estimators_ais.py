@@ -58,9 +58,10 @@ def jidt_kraskov(self, process, opts):
             function is supposed to be used as part of the Estimator_cmi class
         process : numpy array
             realisations of the process
-        opts : dict [optional]
+        opts : dict
             sets estimation parameters:
 
+            - 'history' - number of samples in the processes' past to consider
             - 'kraskov_k' - no. nearest neighbours for KNN search (default=4)
             - 'normalise' - z-standardise data (default=False)
             - 'theiler_t' - no. next temporal neighbours ignored in KNN and
@@ -68,7 +69,6 @@ def jidt_kraskov(self, process, opts):
             - 'noise_level' - random noise added to the data (default=1e-8)
             - 'local_values' - return local AIS instead of average AIS
               (default=False)
-            - 'history' - number of samples in the processes' past to consider
             - 'tau' - the processes' embedding delay (default=1)
 
     Returns:
@@ -85,27 +85,30 @@ def jidt_kraskov(self, process, opts):
         AIS estimator does add noise to the data as a default. To make analysis
         runs replicable set noise_level to 0.
     """
-    if opts is None:
-        opts = {}
-    elif type(opts) is not dict:
+    if type(opts) is not dict:
         raise TypeError('Opts should be a dictionary.')
 
-    # Get defaults for estimator options
+    # Get history for AIS estimation.
+    try:
+        history = opts['history']
+    except KeyError:
+        raise RuntimeError('No history was provided for AIS estimation.')
+
+    # Get defaults for estimator options.
     kraskov_k = str(opts.get('kraskov_k', 4))
     normalise = str(opts.get('normalise', 'false'))
     theiler_t = str(opts.get('theiler_t', 0))  # TODO necessary?
     noise_level = str(opts.get('noise_level', 1e-8))
     local_values = opts.get('local_values', False)
     tau = opts.get('tau', 1)
-    try:
-        history = opts['history']
-    except KeyError:
-        raise RuntimeError('No history was provided for AIS estimation.')
 
+    # Start JAVA virtual machine
     jarLocation = resource_filename(__name__, 'infodynamics.jar')
     if not jp.isJVMStarted():
         jp.startJVM(jp.getDefaultJVMPath(), '-ea', ('-Djava.class.path=' +
                                                     jarLocation))
+
+    # Estimate AIS.
     calcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
                  ActiveInfoStorageCalculatorKraskov)
     calc = calcClass()

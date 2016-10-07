@@ -29,9 +29,10 @@ class Single_process_storage(Network_analysis):
     Args:
         max_lag : int
             maximum temporal search depth
-        tau : int
+        tau : int [optional]
             spacing between samples analyzed for information contribution
-        options : dict [optional]
+            (default=1)
+        options : dict
             parameters for estimator use and statistics:
 
             - 'n_perm_*' - number of permutations, where * can be 'max_stat',
@@ -78,8 +79,8 @@ class Single_process_storage(Network_analysis):
         self.pvalue = None
         self.sign = False
         self.ais = None
-        self.min_stats_surr_table = None
         self.options = options
+        self._min_stats_surr_table = None
         try:
             self.calculator_name = options['cmi_calc_name']
         except KeyError:
@@ -118,11 +119,12 @@ class Single_process_storage(Network_analysis):
             data : Data instance
                 raw data for analysis
             process : list of int | 'all'
-                index of processes
+                index of processes (default='all');
                 if 'all', AIS is estimated for all processes;
                 if list of int, AIS is estimated for processes specified in the
                 list.
         """
+        # Check provided processes for analysis.
         if processes == 'all':
             processes = [t for t in range(data.n_processes)]
         if (type(processes) is list) and (type(processes[0]) is int):
@@ -198,7 +200,7 @@ class Single_process_storage(Network_analysis):
         if VERBOSE:
             print('final conditional samples: {0}'.format(
                     self._idx_to_lag(self.selected_vars_full)))
-        self._clean_up()
+        self._clean_up()  # remove realisations and min_stats surrogate table
         results = {
             'current_value': self.current_value,
             'selected_vars': self._idx_to_lag(self.selected_vars_full),
@@ -238,7 +240,7 @@ class Single_process_storage(Network_analysis):
             self.pvalue = None
             self.sign = False
             self.ais = None
-            self.min_stats_surr_table = None
+            self._min_stats_surr_table = None
 
         # Check if the user provided a list of candidates that must go into
         # the conditioning set. These will be added and used for TE estimation,
@@ -399,13 +401,13 @@ class Single_process_storage(Network_analysis):
             else:
                 if VERBOSE:
                     print(' -- significant')
-                self.min_stats_surr_table = surr_table
+                self._min_stats_surr_table = surr_table
                 break
 
     def _test_final_conditional(self, data):  # TODO test this!
         """Perform statistical test on AIS using the final conditional set."""
         print(self._idx_to_lag(self.selected_vars_full))
-        [ais, s, p] = stats.mi_against_surrogates(self, data)
+        [ais, s, p] = stats.mi_against_surrogates(self, data, self.options)
 
         # If a parallel estimator was used, an array of AIS estimates is
         # returned. Make the output uniform for both estimator types.

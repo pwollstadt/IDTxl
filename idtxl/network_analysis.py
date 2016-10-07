@@ -8,8 +8,11 @@ import numpy as np
 import copy as cp
 from . import idtxl_utils as utils
 
+# TODO which 'algorithms' do we want to provide for this? biv TE, mult TE,
+# mult granger, biv granger, ...?
 
-class Network_analysis(): # TODO which 'algorithms' do we want to provide for this? biv TE, mult TE, mult granger, biv granger, ...?
+
+class Network_analysis():
     """Provide an analysis setup for multivariate network inference.
 
     Hold variables that are relevant for multivariate network inference.
@@ -21,18 +24,14 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
     estimation)
     (3) temporary data for analysis, i.e., realisations of the variables
 
-    The class provide routines to check user input and set defaults. The
+    The class provides routines to check user input and set defaults. The
     'analysis pattern' is represented by tuples or list of tuples (process
     index, sample index), where a tuple indicates where to find realisations in
     the data.
 
-    Args:
-        max_lag : int
-            maximum search depth when looking for conditionals
-        target : int
-            index of the target process in the data
-
     Attributes:
+        target : int
+            target process of analysis
         current_value : tuple
             index of the current value
         selected_vars_full : list of tuples
@@ -274,12 +273,12 @@ class Network_analysis(): # TODO which 'algorithms' do we want to provide for th
         return real_remain, real_single
 
     def _clean_up(self):
-        """Remove temporary data at the end of the analysis."""
+        """Remove temporary data (realisations) at the end of the analysis."""
         self._current_value_realisations = None
         self._selected_vars_sources_realisations = None
         self._selected_vars_target_realisations = None
         self._current_value_realisations = None
-        self.min_stats_surr_table = None
+        self._min_stats_surr_table = None
 
     def _idx_to_lag(self, idx_list):
         """Change sample indices to lags for each index in the list."""

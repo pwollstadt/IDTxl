@@ -14,10 +14,10 @@ def test_data_properties():
 
     n = 10
     d = Data(np.arange(n), 's', normalise=False)
-    real_time = d.n_realisations_time()
+    real_time = d.n_realisations_samples()
     assert (real_time == n), 'Realisations in time are not returned correctly.'
     cv = (0, 8)
-    real_time = d.n_realisations_time(current_value=cv)
+    real_time = d.n_realisations_samples(current_value=cv)
     assert (real_time == (n - cv[1])), ('Realisations in time are not '
                                         'returned correctly when current value'
                                         ' is set.')

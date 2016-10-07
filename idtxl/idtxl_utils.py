@@ -34,7 +34,7 @@ def standardise(a, dimension=0, df=1):
             data to be standardised
         dimension : int [optional]
             dimension along which array should be standardised
-        df : int
+        df : int [optional]
             degrees of freedom for the denominator of the standard derivation
 
     Returns:
@@ -67,8 +67,10 @@ def remove_row(a, i):
     http://scipy.github.io/old-wiki/pages/PerformanceTips
 
     Args:
-        a: 2-dimensional numpy array
-        i: row index to be removed
+        a : numpy array
+            2-dimensional numpy array
+        i : int
+            row index to be removed
     """
     b = np.empty((a.shape[0] - 1, a.shape[1]))
     b[i:, :] = a[i + 1:, :]
@@ -84,8 +86,10 @@ def remove_column(a, j):
     http://scipy.github.io/old-wiki/pages/PerformanceTips
 
     Args:
-        a: 2-dimensional numpy array
-        i: column index to be removed
+        a : numpy array
+            2-dimensional numpy array
+        i : int
+            column index to be removed
     """
     b = np.empty((a.shape[0], a.shape[1] - 1))
     b[:, j:] = a[:, j+1:]

@@ -91,20 +91,23 @@ class Estimator(object):
         Returns:
             numpy array of estimated values for each data set/chunk
         """
+        assert n_chunks > 0, 'n_chunks must be positive.'
         if re_use is None:
             re_use = []
 
+        # If the estimator supports parallel estimation, pass the variables
+        # and number of chunks on to the estimator.
         if self.is_parallel:
-            for k in re_use:
+            for k in re_use:  # multiply data for re-use
                 if data[k] is not None:
                     data[k] = np.tile(data[k], (n_chunks, 1))
             return self.estimate(n_chunks=n_chunks, opts=options, **data)
 
-        # If estimator is not parallel, loop over chunks and estimate
-        # iteratively for individual chunks.
+        # If estimator does not support parallel estimation, loop over chunks
+        # and estimate iteratively for individual chunks.
         else:
-            assert data['var1'].shape[0] % n_chunks == 0, ('Chunk-size is not '
-                                                           'integer-valued.')
+            assert data['var1'].shape[0] % n_chunks == 0, (
+                    'No. chunks does not match data length.')
             chunk_size = int(data['var1'].shape[0] / n_chunks)
             idx_1 = 0
             idx_2 = chunk_size
@@ -146,7 +149,6 @@ class Estimator_te(Estimator):
                                estimator_name)
 
 
-
 class Estimator_ais(Estimator):
     """Set the requested transfer entropy estimator."""
 
@@ -161,7 +163,6 @@ class Estimator_ais(Estimator):
             self.add_estimator(estimator,
                                estimators_ais.is_parallel(estimator_name),
                                estimator_name)
-
 
 
 class Estimator_cmi(Estimator):

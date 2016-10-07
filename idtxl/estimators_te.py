@@ -92,30 +92,32 @@ def jidt_kraskov(self, source, target, opts):
         CMI estimator does add noise to the data as a default. To make analysis
         runs replicable set noise_level to 0.
     """
-    if opts is None:
-        opts = {}
-    elif type(opts) is not dict:
+    if type(opts) is not dict:
         raise TypeError('Opts should be a dictionary.')
 
-    # Get defaults for estimator options
-    kraskov_k = str(opts.get('kraskov_k', 4))
-    normalise = str(opts.get('normalise', 'false'))
-    theiler_t = str(opts.get('theiler_t', 0))  # TODO necessary?
-    noise_level = str(opts.get('noise_level', 1e-8))
-    local_values = opts.get('local_values', False)
-    tau_target = opts.get('tau_target', 1)
-    tau_source = opts.get('tau_source', 1)
-    delay = opts.get('source_target_delay', 1)
+    # Get histories.
     try:
         history_target = opts['history_target']
     except KeyError:
         raise RuntimeError('No history was provided for TE estimation.')
     history_source = opts.get('history_source', history_target)
+    tau_target = opts.get('tau_target', 1)
+    tau_source = opts.get('tau_source', 1)
+    delay = opts.get('source_target_delay', 1)
 
+    # Get defaults for estimator options.
+    kraskov_k = str(opts.get('kraskov_k', 4))
+    normalise = str(opts.get('normalise', 'false'))
+    theiler_t = str(opts.get('theiler_t', 0))  # TODO necessary?
+    noise_level = str(opts.get('noise_level', 1e-8))
+    local_values = opts.get('local_values', False)
+
+    # Start JAVA virtual machine.
     jarLocation = resource_filename(__name__, 'infodynamics.jar')
     if not jp.isJVMStarted():
         jp.startJVM(jp.getDefaultJVMPath(), '-ea', ('-Djava.class.path=' +
                                                     jarLocation))
+    # Estimate TE.
     calcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
                  TransferEntropyCalculatorKraskov)
     calc = calcClass()

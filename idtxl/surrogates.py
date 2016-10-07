@@ -126,6 +126,7 @@ def permute_over_replications(realisations, replication_idx):
     return realisations_perm
 
 
+# TODO the following with all subfunctions should got into the Data class
 def permute_over_time(realisations, replication_idx, perm_type, *kwargs):
     """Permute realisations in time within each replication.
 

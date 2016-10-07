@@ -27,18 +27,25 @@ class Multivariate_te(Network_analysis):
     data class.
 
     Args:
-        max_lag : int
-            maximum temporal search depth
-        min_lag : int
-            minimum temporal search depth
-        options : dict [optional]
+        max_lag_target : int
+            maximum temporal search depth for candidates in the target's past
+            (default=same as max_lag_sources)
+        max_lag_sources : int
+            maximum temporal search depth for candidates in the sources' past
+        min_lag_sources : int
+            minimum temporal search depth for candidates in the sources' past
+        tau_sources : int [optinal]
+            spacing between candidates in the sources' past (default=1)
+        tau_target : int [optinal]
+            spacing between candidates in the target's past (default=1)
+        options : dict
             parameters for estimator use and statistics:
 
             - 'n_perm_*' - number of permutations, where * can be 'max_stat',
-            - 'min_stat', 'omnibus', and 'max_seq' (default=500)
+              'min_stat', 'omnibus', and 'max_seq' (default=500)
             - 'alpha_*' - critical alpha level for statistical significance,
-              where * can be 'max_stats',  'min_stats', and 'omnibus'
-              (default=0.05)
+              where * can be 'max_stats',  'min_stats', 'omnibus', and
+              'max_seq' (default=0.05)
             - 'cmi_calc_name' - estimator to be used for CMI calculation
               (For estimator options see the respective documentation.)
             - 'add_conditionals' - force the estimator to add these
@@ -65,6 +72,10 @@ class Multivariate_te(Network_analysis):
             maximum temporal search depth for candidates in the sources' past
         min_lag_sources : int
             minimum temporal search depth for candidates in the sources' past
+        tau_sources : int
+            spacing between candidates in the sources' past
+        tau_target : int
+            spacing between candidates in the target's past
         pvalue_omnibus : float
             p-value of the omnibus test
         pvalues_sign_sources : numpy array
@@ -79,7 +90,8 @@ class Multivariate_te(Network_analysis):
             list with indices of source processes
         target : list
             index of target process
-
+        options : dict
+            dictionary with the analysis options
     """
 
     # TODO right now 'options' holds all optional params (stats AND estimator).
@@ -101,8 +113,8 @@ class Multivariate_te(Network_analysis):
         self.sign_sign_sources = None
         self.pvalue_omnibus = None
         self.pvalues_sign_sources = None
-        self.min_stats_surr_table = None
         self.options = options
+        self._min_stats_surr_table = None
         try:
             self.calculator_name = options['cmi_calc_name']
         except KeyError:
@@ -144,16 +156,17 @@ class Multivariate_te(Network_analysis):
         Args:
             data : Data instance
                 raw data for analysis
-            targets : list of int
-                index of target processes
-            sources : list of int | list of list | 'all'
-                indices of source processes for each target;
+            targets : list of int | 'all' [optinal]
+                index of target processes (default='all')
+            sources : list of int | list of list | 'all' [optional]
+                indices of source processes for each target (default='all');
                 if 'all', all sources are tested for each target;
                 if list of int, sources specified in the list are tested for
                 each target;
                 if list of list, sources specified in each inner list are
                 tested for the corresponding target
         """
+        # Check which targets and sources are requested for analysis.
         if targets == 'all':
             targets = [t for t in range(data.n_processes)]
         if sources == 'all':
@@ -209,9 +222,10 @@ class Multivariate_te(Network_analysis):
                 raw data for analysis
             target : int
                 index of target process
-            sources : list of int, int, or 'all'
+            sources : list of int, int, or 'all' [optinal]
                 single index or list of indices of source processes, if 'all',
                 all possible sources for the given target are tested
+                (default='all')
 
         Returns:
             dict
@@ -238,7 +252,7 @@ class Multivariate_te(Network_analysis):
                     self._idx_to_lag(self.selected_vars_sources)))
             print('final target samples: {0}'.format(
                     self._idx_to_lag(self.selected_vars_target)))
-        self._clean_up()
+        self._clean_up()  # remove realisations and min_stats surrogate table
         results = {
             'current_value': self.current_value,
             'selected_vars_full': self._idx_to_lag(self.selected_vars_full),
@@ -281,8 +295,8 @@ class Multivariate_te(Network_analysis):
         # user. This tests if there is sufficient data to do all tests.
         # surrogates.check_permutations(self, data)
 
-        # Reset all attributes to inital values if the instance has been used
-        # before.
+        # Reset all attributes to inital values if the instance of
+        # Multivariate_te has been used before.
         if self.selected_vars_full:
             self.selected_vars_full = []
             self._selected_vars_realisations = None
@@ -293,7 +307,7 @@ class Multivariate_te(Network_analysis):
             self.pvalue_omnibus = None
             self.pvalues_sign_sources = None
             self.te_sign_sources = None
-            self.min_stats_surr_table = None
+            self._min_stats_surr_table = None
 
         # Check if the user provided a list of candidates that must go into
         # the conditioning set. These will be added and used for TE estimation,
@@ -511,7 +525,7 @@ class Multivariate_te(Network_analysis):
             else:
                 if VERBOSE:
                     print(' -- significant')
-                self.min_stats_surr_table = surr_table
+                self._min_stats_surr_table = surr_table
                 break
 
     def _test_final_conditional(self, data):  # TODO test this!

@@ -18,6 +18,7 @@ except ImportError:
 
 VERBOSE = False
 
+
 def is_parallel(estimator_name):
     """Check if estimator can estimate CMI for multiple chunks in parallel."""
     # To add a new parallel estimator, add estimator name to the following
@@ -51,8 +52,9 @@ def opencl_kraskov(self, var1, var2, conditional=None, n_chunks=1, opts=None):
             realisations x variable dimension
         var2: numpy array
             realisations of the second random variable
-        conditional : numpy array
-            realisations of the random variable for conditioning
+        conditional : numpy array [optional]
+            realisations of the random variable for conditioning, if no
+            conditional is provided, return MI between var1 and var2
         n_chunks : int [optional]
             number of data sets or chunks (default=1)
         opts : dict [optional]
@@ -216,7 +218,7 @@ def opencl_kraskov(self, var1, var2, conditional=None, n_chunks=1, opts=None):
     return cmi_array
 
 
-def jidt_kraskov(self, var1, var2, conditional, opts=None):
+def jidt_kraskov(self, var1, var2, conditional=None, opts=None):
     """Calculate conditional mutual infor with JIDT's Kraskov implementation.
 
     Calculate the conditional mutual information between three variables. Call
@@ -241,8 +243,9 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
             realisations x variable dimension
         var2 : numpy array
             realisations of the second random variable
-        conditional : numpy array
-            realisations of the random variable for conditioning
+        conditional : numpy array [optional]
+            realisations of the random variable for conditioning, if no
+            conditional is provided, return MI between var1 and var2
         opts : dict [optional]
             sets estimation parameters:
 
@@ -252,7 +255,8 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
               range searches (default='ACT', the autocorr. time of the target)
             - 'noise_level' - random noise added to the data (default=1e-8)
             - 'num_threads' - no. CPU threads used for estimation
-            (default='USE_ALL', this uses all available cores on the machine!)
+              (default='USE_ALL', this uses all available cores on the
+              machine!)
 
     Returns:
         float
@@ -278,6 +282,7 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
     num_threads = str(opts.get('num_threads', 'USE_ALL'))
     # debug = opts.get('debug', 'false')
 
+    # Start JAVA virtual machine.
     jarLocation = resource_filename(__name__, 'infodynamics.jar')
     if not jp.isJVMStarted():
         jp.startJVM(jp.getDefaultJVMPath(), '-ea', ('-Djava.class.path=' +

@@ -32,4 +32,4 @@ def test_save_te_results():
 
 
 if __name__ == '__main__':
-    test_save_te_results()
+    # test_save_te_results()

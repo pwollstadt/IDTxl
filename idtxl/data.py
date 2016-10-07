@@ -39,12 +39,15 @@ class Data():
 
     Args:
         data : numpy array [optional]
-            2/3-dimensional array with raw data
+            1/2/3-dimensional array with raw data
         dim_order : string [optional]
-                order of dimensions, accepts any combination of the characters
-                'p', 's', and 'r' for processes, samples, and replications
-        normalise : bool
-            if True, data gets normalised
+            order of dimensions, accepts any combination of the characters
+            'p', 's', and 'r' for processes, samples, and replications; must
+            have the same length as the data dimensionality, e.g., 'ps' for a
+            two-dimensional array of data from several processes over time
+            (default='psr')
+        normalise : bool [optional]
+            if True, data gets normalised per process (default=True)
 
     Attributes:
         data : numpy array
@@ -78,12 +81,13 @@ class Data():
                 reference point for calculation of number of realisations
                 (e.g. when using an embedding of length k, we count
                 realisations from the k+1th sample because we loose the first k
-                samples to the embedding)
+                samples to the embedding); if no current_value is provided, the
+                number of all samples is used
         """
-        return (self.n_realisations_time(current_value) *
+        return (self.n_realisations_samples(current_value) *
                 self.n_realisations_repl())
 
-    def n_realisations_time(self, current_value=None):
+    def n_realisations_samples(self, current_value=None):
         """Number of realisations over samples.
 
         Args:
@@ -123,7 +127,8 @@ class Data():
                 1- to 3-dimensional array of realisations
             dim_order : string
                 order of dimensions, accepts any combination of the characters
-                'p', 's', and 'r' for processes, samples, and replications
+                'p', 's', and 'r' for processes, samples, and replications;
+                must have the same length as number of dimensions in data
         """
         if len(dim_order) > 3:
             raise RuntimeError('dim_order can not have more than three '
@@ -132,6 +137,9 @@ class Data():
             raise RuntimeError('Data array dimension ({0}) and length of '
                                'dim_order ({1}) are not equal.'.format(
                                            data.ndim, len(dim_order)))
+
+        # Bring data into the order processes x samples x replications and set
+        # set data.
         data_ordered = self._reorder_data(data, dim_order)
         self._set_data_size(data_ordered)
         print('Adding data with properties: {0} processes, {1} samples, {2} '
@@ -201,6 +209,9 @@ class Data():
         Args:
             idx_list: list of tuples
                 variable indices
+            current_value : tuple
+                index of the current value in current analysis, has to have the
+                form (idx process, idx sample)
             shuffle: bool
                 if true permute blocks of replications over trials
 
@@ -212,24 +223,30 @@ class Data():
                 replication index for each realisation with dimensions (no.
                 samples * no.replications) x number of indices
         """
+        # Check if requested indices are smaller than the current_value.
         if not all(np.array([x[1] for x in idx_list]) <= current_value[1]):
             print('Index list: {0}\ncurrent value: {1}'.format(idx_list,
                                                                current_value))
             raise RuntimeError('All indices for which data is retrieved must '
                                ' be smaller than the current value.')
 
-        n_real_time = self.n_realisations_time(current_value)
+        # Allocate memory.
+        n_real_time = self.n_realisations_samples(current_value)
         n_real_repl = self.n_realisations_repl()
         realisations = np.empty((n_real_time * n_real_repl, len(idx_list)))
 
+        # Shuffle the replication order if requested. This creates surrogate
+        # data by permuting replications while keeping the order of samples
+        # intact.
         if shuffle:
             replications_order = np.random.permutation(self.n_replications)
         else:
             replications_order = np.arange(self.n_replications)
 
+        # Retrieve data.
         i = 0
         for idx in idx_list:
-            r = 0  # TODO in the next line, one realisation is missing, change the indexing!
+            r = 0
             last_sample = idx[1] - current_value[1]  # indexing is much faster
             if last_sample == 0:                     # than looping over time!
                 last_sample = None

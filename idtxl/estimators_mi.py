@@ -52,11 +52,12 @@ def opencl_kraskov(self, var1, var2, n_chunks=1, opts=None):
             number of data sets or chunks (default=1)
         opts : dict [optional]
             sets estimation parameters:
-            'kraskov_k' - no. nearest neighbours for KNN search (default=4)
-            'theiler_t' - no. next temporal neighbours ignored in KNN and
-            range searches (default='ACT', the autocorr. time of the target)
-            'noise_level' - random noise added to the data (default=1e-8)
-            'gpuid' - ID of the GPU device to be used (default=0)
+
+            - 'kraskov_k' - no. nearest neighbours for KNN search (default=4)
+            - 'theiler_t' - no. next temporal neighbours ignored in KNN and
+              range searches (default='ACT', the autocorr. time of the target)
+            - 'noise_level' - random noise added to the data (default=1e-8)
+            - 'gpuid' - ID of the GPU device to be used (default=0)
 
     Returns:
         float
@@ -79,6 +80,7 @@ def opencl_kraskov(self, var1, var2, n_chunks=1, opts=None):
     gpuid = int(opts.get('gpuid', 0))
     nchunkspergpu = n_chunks
 
+    # Add random noise.
     var1 += np.random.normal(scale=noise_level, size=var1.shape)
     var2 += np.random.normal(scale=noise_level, size=var2.shape)
 
@@ -156,7 +158,8 @@ def jidt_kraskov(self, var1, var2, opts=None):
             - 'local_values' - return local TE instead of average TE
               (default=False)
             - 'num_threads' - no. CPU threads used for estimation
-            (default='USE_ALL', this uses all available cores on the machine!)
+              (default='USE_ALL', this uses all available cores on the
+              machine!)
 
     Returns:
         float

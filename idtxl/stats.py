@@ -17,7 +17,8 @@ def network_fdr(results, alpha=0.05, correct_by_target=True):
     Perform correction of the false discovery rate (FDR) after network
     analysis. FDR correction can either be applied at the target level
     (by correcting omnibus p-values) or at the single-link level (by correcting
-    p-values of individual links). Reference:
+    p-values of individual links between single samples and the target).
+    Reference for FDR correction:
 
     Genovese, C.R., Lazar, N.A., & Nichols, T. (2002). Thresholding of
     statistical maps in functional neuroimaging using the false discovery
@@ -28,28 +29,30 @@ def network_fdr(results, alpha=0.05, correct_by_target=True):
             network inference results where each dict entry represents results
             for one target node
         alpha : float [optional]
-            critical alpha value for statistical significance
+            critical alpha value for statistical significance (default=0.05)
         correct_by_target : bool
             if true p-values are corrected on the target level and on the
-            single-link level otherwise
+            single-link level otherwise (default=True)
 
     Returns:
         dict
             input results structure pruned of non-significant links.
     """
+    # Make a copy that can be changed and returned after testing.
     res = cp.copy(results)
+
     # Get candidates and their test results from the results dictionary, i.e.,
     # collect results over targets.
     pval = np.arange(0)
     target_idx = np.arange(0).astype(int)
     cands = []
-    if correct_by_target:
+    if correct_by_target:  # correct p-value of whole target (all candidates)
         for target in res.keys():
             if not res[target]['omnibus_sign']:  # skip if not significant
                 continue
             pval = np.append(pval, res[target]['omnibus_pval'])
             target_idx = np.append(target_idx, target)
-    else:
+    else:   # correct p-value of single candidates
         for target in res.keys():
             if not res[target]['omnibus_sign']:  # skip if not significant
                 continue
@@ -59,9 +62,9 @@ def network_fdr(results, alpha=0.05, correct_by_target=True):
                                    np.ones(n_sign) * target).astype(int)
             cands = cands + res[target]['selected_vars_sources']
 
-        if pval.size == 0:
-            print('No links in final results. Return ...')
-            return
+    if pval.size == 0:
+        print('No links in final results. Return ...')
+        return
 
     # Sort all p-values in ascending order.
     sort_idx = np.argsort(pval)
@@ -110,7 +113,7 @@ def network_fdr(results, alpha=0.05, correct_by_target=True):
     return res
 
 
-def omnibus_test(analysis_setup, data, opts):
+def omnibus_test(analysis_setup, data, opts=None):
     """Perform an omnibus test on identified conditional variables.
 
     Test the joint information transfer from all identified sources to the
@@ -126,8 +129,11 @@ def omnibus_test(analysis_setup, data, opts):
             raw data
         opts : dict [optional]
             parameters for statistical testing, can contain
-            'n_perm_omnibus' - number of permutations (default=500)
-            'alpha_omnibus' - critical alpha level (default=0.05)
+
+            - 'n_perm_omnibus' - number of permutations (default=500)
+            - 'alpha_omnibus' - critical alpha level (default=0.05)
+            - 'perm_range' - permutation range if permutation over samples is
+              used to create surrogates (default='max')
 
     Returns:
         bool
@@ -135,6 +141,8 @@ def omnibus_test(analysis_setup, data, opts):
         float
             the test's p-value
     """
+    if opts is None:
+        opts = {}
     n_permutations = opts.get('n_perm_omnibus', 21)
     alpha = opts.get('alpha_omnibus', 0.05)
     perm_range = opts.get('perm_range_omnibus', 'max')
@@ -229,6 +237,8 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
         numpy array
             surrogate table
     """
+    if opts is None:
+        opts = {}
     n_perm = opts.get('n_perm_max_stat', 21)
     alpha = opts.get('alpha_max_stat', 0.05)
     assert(candidate_set), 'The candidate set is empty.'
@@ -276,6 +286,8 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
         numpy array, float
             TE values for individual sources
     """
+    if opts is None:
+        opts = {}
     try:
         n_permutations = opts['n_perm_max_seq']
     except KeyError:
@@ -384,6 +396,8 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
         numpy array
             surrogate table
     """
+    if opts is None:
+        opts = {}
     n_perm = opts.get('n_perm_min_stat', 21)
     alpha = opts.get('alpha_min_stat', 0.05)
     assert(candidate_set), 'The candidate set is empty.'
@@ -396,7 +410,7 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
     return significance, pvalue, surr_table
 
 
-def mi_against_surrogates(analysis_setup, data):
+def mi_against_surrogates(analysis_setup, data, opts=None):
     """Test estimaed mutual information for significance against surrogate data.
 
     Shuffle realisations of the current value (point to be predicted) and re-
@@ -409,6 +423,16 @@ def mi_against_surrogates(analysis_setup, data):
             information on the current analysis
         data : Data instance
             raw data
+        opts : dict [optional]
+            parameters for statistical testing, can contain:
+
+            - 'n_perm_mi' - number of permutations (default=500)
+            - 'alpha_mi' - critical alpha level (default=0.05)
+            - 'tail_mi' - tail for testing, can be 'one' or 'two'
+              (default='one')
+            - 'perm_range' - permutation range if permutation over samples is
+              used to create surrogates (default='max')
+
     Returns:
         float
             estimated MI value
@@ -417,7 +441,9 @@ def mi_against_surrogates(analysis_setup, data):
         float
             p_value for estimated MI value
     """
-    n_perm = analysis_setup.options.get('n_perm_mi', 20)
+    if opts is None:
+        opts = {}
+    n_perm = analysis_setup.options.get('n_perm_mi', 500)
     alpha = analysis_setup.options.get('alpha_mi', 0.05)
     tail = analysis_setup.options.get('tail_mi', 'one')
     perm_range = analysis_setup.options.get('perm_range', 'max')
@@ -489,8 +515,8 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
             raw data
         idx_test_set : list of tuples
             list of indices indicating samples to be used as sources
-        n_perm : int [optional]
-            number of permutations for testing (default=500)
+        n_perm : int
+            number of permutations for testing
 
     Returns:
         numpy array
@@ -582,14 +608,14 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
     """Find p-value of a test statistic under some distribution.
 
     Args:
-        statistic: numeric
+        statistic : numeric
             value to be tested against distribution
-        distribution: numpy array
+        distribution : numpy array
             1-dimensional distribution of values, test distribution
-        alpha: float
-            critical alpha level for statistical significance
-        tail: str
-            'one' or 'two' for one-/two-tailed testing
+        alpha : float [optional]
+            critical alpha level for statistical significance (default=0.05)
+        tail : str [optional]
+            'one' or 'two' for one-/two-tailed testing (default='one')
 
     Returns:
         bool
@@ -653,19 +679,38 @@ def _generate_surrogates(data, current_value, idx_list, n_perm,
 
     Args:
         data : Data instance
-        TODO complete docstring
+            raw data for analysis
+        current_value : tuple
+            index of the current value in current analysis, has to have the
+            form (idx process, idx sample)
+        idx_list : list of tuples
+            list of variables, for which surrogates have to be created
+        n_perm : int
+            number of permutations
+        perm_range : int [optional]
+            permutation range if permutation over samples is used to create
+            surrogates (default='max')
+
+    Returns:
+        numpy array
+            surrogate data with dimensions
+            (realisations * n_perm) x len(idx_list)
     """
+    # Allocate memory for surrogates
     n_realisations = data.n_realisations(current_value)
     surrogates = np.empty((n_realisations * n_perm, len(idx_list)))
+
+    # Generate surrogates by permuting over replications if possible (no.
+    # replications needs to be sufficient); else permute samples over time.
     i_1 = 0
     i_2 = n_realisations
-    if _sufficient_replications(data, n_perm):
+    if _sufficient_replications(data, n_perm):  # permute replications
         for perm in range(n_perm):
             surrogates[i_1:i_2, ] = data.permute_replications(current_value,
                                                               idx_list)[0]
             i_1 = i_2
             i_2 += n_realisations
-    else:
+    else:  # permute samples
         for perm in range(n_perm):
             surrogates[i_1:i_2, ] = data.permute_samples(current_value,
                                                          idx_list,
