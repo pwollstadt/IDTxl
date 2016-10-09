@@ -6,6 +6,7 @@ This module exports methods for CMI estimation in the Estimator_cmi class.
 from pkg_resources import resource_filename
 import jpype as jp
 import numpy as np
+import math
 from scipy.special import digamma
 from . import idtxl_utils as utils
 from . import neighbour_search_opencl as nsocl
@@ -284,70 +285,173 @@ def jidt_kraskov(self, var1, var2, conditional, opts=None):
     calc.setObservations(var1, var2, conditional)
     return calc.computeAverageLocalOfObservations()
 
-#def jidt_discrete(self, var1, var2, conditional, alph1, alph2, alphc, opts=None):
-#    """Calculate conditional mutual infor with JIDT's implementation for discrete
-#    variables"
-#
-#    Calculate the conditional mutual information between three variables. Call
-#    JIDT via jpype and use the discrete estimator.
-#
-#    References
-#    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-#    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
-#
-#    This function is ment to be imported into the set_estimator module and used
-#    as a method in the Estimator_cmi class.
-#
-#    Args:
-#        self : instance of Estimator_cmi
-#            function is supposed to be used as part of the Estimator_cmi class
-#        var1 : numpy array of integers
-#            realisations of the first random variable, where dimensions are
-#            realisations x variable dimension
-#        var2 : numpy array of integers
-#            realisations of the second random variable
-#        conditional : numpy array on integers
-#            realisations of the random variable for conditioning
-#        alph1 : alphabet size of var1
-#        alph2 : alphabet size of var2
-#        alphc : alphabet size of conditional variable
-#        opts : dict [optional]
-#            sets estimation parameters:
-#
-#    Returns:
-#        float
-#            conditional mutual information
-#
-#    Note:
-#    """
-#    if opts is None:
-#        opts = {}
-#    try:
-#        num_threads = str(opts['num_threads'])
-#    except KeyError:
-#        num_threads = 'USE_ALL'
-#    try:
-#        debug = opts['debug']
-#    except KeyError:
-#        debug = False
-#    assert(var1.type = 'int....'), 'data received by discrete calculator are not integers'
-#
-#    jarLocation = resource_filename(__name__, 'infodynamics.jar')
-#    if not jp.isJVMStarted():
-#        jp.startJVM(jp.getDefaultJVMPath(), '-ea', ('-Djava.class.path=' +
-#                    jarLocation))
-#
-#    calcClass = (jp.JPackage('infodynamics.measures.discrete.....').
-#                 .....)
-#    calc = calcClass()
-#    calc.setProperty('NUM_THREADS', num_threads)
-#    calc.setDebug(debug)
-#
-#    if conditional is None:
-#        cond_dim = 0
-#    else:
-#        cond_dim = conditional.shape[1]
-#        assert(conditional.size != 0), 'Conditional Array is empty.'
-#    calc.initialise(var1.shape[1], var2.shape[1], cond_dim)
-#    calc.setObservations(var1, var2, conditional)
-#    return calc.computeAverageLocalOfObservations()
+def jidt_discrete(self, var1, var2, conditional, opts=None):
+    """Calculate conditional mutual infor with JIDT's implementation for discrete
+    variables"
+
+    Calculate the conditional mutual information between two variables given
+    the third. Call JIDT via jpype and use the discrete estimator.
+
+    References:
+    
+    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
+    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
+
+    This function is ment to be imported into the set_estimator module and used
+    as a method in the Estimator_cmi class.
+
+    Args:
+        self : instance of Estimator_cmi
+            function is supposed to be used as part of the Estimator_cmi class
+        var1 : numpy array (either of integers or doubles to be discretised)
+            realisations of the first random variable.
+            Can be multidimensional (i.e. multivariate) where dimensions of the
+            array are realisations x variable dimension
+        var2 : numpy array (either of integers or doubles to be discretised)
+            realisations of the second random variable.
+            Can be multidimensional (i.e. multivariate) where dimensions of the
+            array are realisations x variable dimension
+        conditional : numpy array (either of integers or doubles to be discretised)
+            realisations of the conditional random variable.
+            Can be multidimensional (i.e. multivariate) where dimensions of the
+            array are realisations x variable dimension
+        alph1 : alphabet size of var1
+        alph2 : alphabet size of var2
+        alphc : alphabet size of conditional variable
+        opts : dict [optional]
+            sets estimation parameters:
+            - 'num_discrete_bins' - number of discrete bins/levels or the base of 
+                            each dimension of the discrete variables (default=2 for binary).
+                            If this is set, then parameters 'alph1', 'alph2' and
+                            'alphc' are all set to this value.
+            - 'alph1' - number of discrete bins/levels for var2
+                        (default=2 for binary, or the value set for 'num_discrete_bins').
+            - 'alph2' - number of discrete bins/levels for var1
+                        (default=2 for binary, or the value set for 'num_discrete_bins').
+            - 'alphc' - number of discrete bins/levels for conditional
+                        (default=2 for binary, or the value set for 'num_discrete_bins').
+            - 'discretise_method' - if and how to discretise incoming continuous variables
+                            to discrete values.
+                            'max_ent' means to use a maximum entropy binning
+                            'equal' means to use equal size bins
+                            'none' means variables are already discrete (default='none')
+            - 'debug' - set debug prints from the calculator on
+
+    Returns:
+        float
+            conditional mutual information
+
+    Note:
+    """
+    # Parse parameters:
+    if opts is None:
+        opts = {}
+    try:
+        alph1 = int(opts['alph1'])
+    except KeyError:
+        alph1 = int(2)
+    try:
+        alph2 = int(opts['alph2'])
+    except KeyError:
+        alph2 = int(2)
+    try:
+        alphc = int(opts['alphc'])
+    except KeyError:
+        alphc = int(2)
+    try:
+        num_discrete_bins = int(opts['num_discrete_bins'])
+        alph1 = num_discrete_bins
+        alph2 = num_discrete_bins
+        alphc = num_discrete_bins
+    except KeyError:
+        # Do nothing, we don't need the parameter if it is not here
+        pass
+    try:
+        discretise_method = opts['discretise_method']
+    except KeyError:
+        discretise_method = 'none'
+    try:
+        debug = opts['debug']
+    except KeyError:
+        debug = False
+
+    # Work out the number of samples and dimensions for each variable, before
+    #  we collapse all dimensions down:
+    if len(var1.shape) > 1:
+        # var1 is is multidimensional
+        var1_dimensions = var1.shape[1]
+    else:
+        # var1 is unidimensional
+        var1_dimensions = 1
+    if len(var2.shape) > 1:
+        # var2 is is multidimensional
+        var2_dimensions = var2.shape[1]
+    else:
+        # var2 is unidimensional
+        var2_dimensions = 1
+    
+    # Treat the conditional variable separately, as we're allowing
+    #  this to be null and then calculating a MI instead:
+    if (conditional is None) or (alphc == 0):
+        alphc = 0
+        varc_dimensions = 0
+        # Then we will make a MI call here
+    else:
+        # Else we have a non-trivial conditional variable:
+        assert(conditional.size != 0), 'Conditional Array is empty.'
+        if len(conditional.shape) > 1:
+            # conditional is is multidimensional
+            varc_dimensions = conditional.shape[1]
+        else:
+            # conditional is unidimensional
+            varc_dimensions = 1
+    
+    # Now discretise if required
+    if (discretise_method == 'equal'):
+        var1 = utils.discretise(var1, alph1)
+        var2 = utils.discretise(var2, alph2)
+        if (alphc > 0):
+            conditional = utils.discretise(conditional, alphc)
+    elif (discretise_method == 'max_ent'):
+        var1 = utils.discretise_max_ent(var1, alph1)
+        var2 = utils.discretise_max_ent(var2, alph2)
+        if (alphc > 0):
+            conditional = utils.discretise_max_ent(conditional, alphc)
+    # Else don't discretise at all, assume it is already done
+    
+    # Then collapse any mulitvariates into univariate arrays:
+    var1 = utils.combine_discrete_dimensions(var1, alph1)
+    var2 = utils.combine_discrete_dimensions(var2, alph2)
+    if (alphc > 0):
+        conditional = utils.combine_discrete_dimensions(conditional, alphc)
+    
+    # And finally make the CMI calculation:
+    jarLocation = resource_filename(__name__, 'infodynamics.jar')
+    if not jp.isJVMStarted():
+        jp.startJVM(jp.getDefaultJVMPath(), '-ea', ('-Djava.class.path=' +
+                    jarLocation))
+    if (alphc > 0):
+        # We have a non-trivial conditional, so make a proper conditional MI calculation
+        calcClass = (jp.JPackage('infodynamics.measures.discrete').
+                 ConditionalMutualInformationCalculatorDiscrete)
+        calc = calcClass(alph1, alph2, alphc)
+        calc.setDebug(debug)
+        calc.initialise()
+        # Unfortunately no faster way to pass numpy arrays in than this list conversion
+        calc.addObservations(jp.JArray(jp.JInt, 1)(var1.tolist()),
+                         jp.JArray(jp.JInt, 1)(var2.tolist()),
+                         jp.JArray(jp.JInt, 1)(conditional.tolist()))
+        return calc.computeAverageLocalOfObservations()
+    else:
+        # We have no conditional, so make an MI calculation
+        calcClass = (jp.JPackage('infodynamics.measures.discrete').
+                 MutualInformationCalculatorDiscrete)
+        calc = calcClass(int(max(math.pow(alph1, var1_dimensions),
+                                 math.pow(alph2, var2_dimensions))), 0)
+        calc.setDebug(debug)
+        calc.initialise()
+        # Unfortunately no faster way to pass numpy arrays in than this list conversion
+        calc.addObservations(jp.JArray(jp.JInt, 1)(var1.tolist()),
+                         jp.JArray(jp.JInt, 1)(var2.tolist()))
+        return calc.computeAverageLocalOfObservations()
+

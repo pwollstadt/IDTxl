@@ -104,3 +104,142 @@ def autocorrelation(x):
 #     result = r / (variance * (n.arange(n, 0, -1)))
 #==============================================================================
     return 3
+
+
+def discretise(a, numBins):
+    """Discretise continuous data into discrete values (with 0 as lowest)
+    by evenly partitioning the range of the data, one dimension at a time.
+    Adapted from infodynamics.utils.MatrixUtils.discretise() from JIDT by J.Lizier
+    
+    Args:
+        a : numpy array
+            data to be discretised. Dimensions are
+            realisations x variable dimension
+        numBins : int
+            number of discrete levels or bins to partition the data into
+
+    Returns:
+        numpy array
+            discretised data
+    """
+    
+    num_samples = a.shape[0]
+    if (len(a.shape) == 1):
+        # It's a unidimensional array
+        discretised_values = np.zeros(num_samples, dtype=np.int_)
+        theMin = a.min()
+        theMax = a.max()
+        binInterval = (theMax - theMin) / numBins
+        for t in range(num_samples):
+            discretised_values[t] = int((a[t] - theMin) / binInterval)
+            if (discretised_values[t] == numBins):
+                # This occurs for the maximum value; put it in the largest bin (base - 1)
+                discretised_values[t] = discretised_values[t] - 1
+        return discretised_values
+    
+    # Else, multivariate array
+    num_dimensions = a.shape[1]
+    discretised_values = np.zeros([num_samples, num_dimensions], dtype=np.int_)
+    for v in range(a.shape[1]):
+        # Bin dimension v:
+        theMin = a[:,v].min()
+        theMax = a[:,v].max()
+        binInterval = (theMax - theMin) / numBins
+        for t in range(num_samples):
+            discretised_values[t,v] = int((a[t,v] - theMin) / binInterval)
+            if (discretised_values[t,v] == numBins):
+                # This occurs for the maximum value; put it in the largest bin (base - 1)
+                discretised_values[t,v] = discretised_values[t,v] - 1
+    return discretised_values
+
+
+def discretise_max_ent(a, numBins):
+    """Discretise continuous data into discrete values (with 0 as lowest)
+    by making a maximum entropy partitioning, one dimension at a time.
+    Adapted from infodynamics.utils.MatrixUtils.discretiseMaxEntropy() from JIDT by J.Lizier
+    
+    Args:
+        a : numpy array
+            data to be discretised. Dimensions are
+            realisations x variable dimension
+        numBins : int
+            number of discrete levels or bins to partition the data into
+
+    Returns:
+        numpy array
+            discretised data
+    """
+    
+    num_samples = a.shape[0]
+    if (len(a.shape) == 1):
+        # It's a unidimensional array
+        discretised_values = np.zeros(num_samples, dtype=np.int_)
+        cuttoff_values = np.zeros(numBins)
+        sorted_copy = np.sort(a)
+        for bin in range(numBins):
+            compartmentSize = int((bin+1)*(num_samples)/numBins)-1;
+            cuttoff_values[bin] = sorted_copy[compartmentSize]
+        for t in range(num_samples):
+            for m in range(numBins):
+                if (a[t] <= cuttoff_values[m]):
+                    discretised_values[t] = m
+                    break
+        return discretised_values
+    
+    # Else, multivariate array
+    num_dimensions = a.shape[1]
+    discretised_values = np.zeros([num_samples, num_dimensions], dtype=np.int_)
+    for v in range(num_dimensions):
+        # Bin dimension v:
+        cuttoff_values = np.zeros(numBins)
+        sorted_copy = np.sort(a[:,v])
+        for bin in range(numBins):
+            compartmentSize = int((bin+1)*(num_samples)/numBins)-1;
+            cuttoff_values[bin] = sorted_copy[compartmentSize]
+        for t in range(num_samples):
+            for m in range(numBins):
+                if (a[t,v] <= cuttoff_values[m]):
+                    discretised_values[t,v] = m
+                    break
+    return discretised_values
+
+
+def combine_discrete_dimensions(a, numBins):
+    """Combine all dimensions for a discrete variable down into a single
+    dimensional value for each sample.
+    This is done basically by multiplying each dimension
+    by a different power of the base (numBins).
+    Adapted from infodynamics.utils.MatrixUtils.computeCombinedValues() from JIDT by J.Lizier
+    
+    Args:
+        a : numpy array
+            data to be combined across all variable dimensions. Dimensions are
+            realisations (samples) x variable dimension
+        numBins : int
+            number of discrete levels or bins for each variable dimension
+
+    Returns:
+        numpy array
+            a univariate array -- one entry now for each sample,
+            with all dimensions of the data now combined for that sample
+    """
+    if (len(a.shape) == 1):
+        # It's already a unidimensional array
+        return a
+    
+    # Else, 2D array assumed
+    num_samples = a.shape[0]
+    dimensions = a.shape[1]
+    combined_values = np.zeros(num_samples, dtype=np.int_)
+    for t in range(num_samples):
+        combined_value = 0
+        multiplier = 1
+        for c in range(dimensions - 1, -1, -1):
+            combined_value = combined_value + a[t][c] * multiplier
+            multiplier = multiplier * numBins
+            if multiplier <= 0:
+                # Multiplier has overflown
+                raise ArithmaticError('Combination of numBins and number of dimensions of a leads to overflow in making unidimensional array')
+        combined_values[t] = int(combined_value)
+    return combined_values
+
