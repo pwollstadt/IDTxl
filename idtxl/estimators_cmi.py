@@ -315,18 +315,15 @@ def jidt_discrete(self, var1, var2, conditional, opts=None):
             realisations of the conditional random variable.
             Can be multidimensional (i.e. multivariate) where dimensions of the
             array are realisations x variable dimension
-        alph1 : alphabet size of var1
-        alph2 : alphabet size of var2
-        alphc : alphabet size of conditional variable
         opts : dict [optional]
             sets estimation parameters:
             - 'num_discrete_bins' - number of discrete bins/levels or the base of 
                             each dimension of the discrete variables (default=2 for binary).
                             If this is set, then parameters 'alph1', 'alph2' and
                             'alphc' are all set to this value.
-            - 'alph1' - number of discrete bins/levels for var2
+            - 'alph1' - number of discrete bins/levels for var1
                         (default=2 for binary, or the value set for 'num_discrete_bins').
-            - 'alph2' - number of discrete bins/levels for var1
+            - 'alph2' - number of discrete bins/levels for var2
                         (default=2 for binary, or the value set for 'num_discrete_bins').
             - 'alphc' - number of discrete bins/levels for conditional
                         (default=2 for binary, or the value set for 'num_discrete_bins').
@@ -434,7 +431,9 @@ def jidt_discrete(self, var1, var2, conditional, opts=None):
         # We have a non-trivial conditional, so make a proper conditional MI calculation
         calcClass = (jp.JPackage('infodynamics.measures.discrete').
                  ConditionalMutualInformationCalculatorDiscrete)
-        calc = calcClass(alph1, alph2, alphc)
+        calc = calcClass(int(math.pow(alph1, var1_dimensions)),
+                         int(math.pow(alph2, var2_dimensions)),
+                         int(math.pow(alphc, varc_dimensions)))
         calc.setDebug(debug)
         calc.initialise()
         # Unfortunately no faster way to pass numpy arrays in than this list conversion
