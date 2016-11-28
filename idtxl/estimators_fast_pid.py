@@ -107,7 +107,7 @@ def pid(s1, s2, t, cfg):
         # The prob_inc = 1 / (number of samples * repeated doubling)
         # THIS MAY NEED SOME TIDYING
         prob_inc = np.multiply(
-            np.divide(np.float128(1), x2=np.float128(num_samples)),
+            np.divide(np.float128(1), np.float128(num_samples)),
             np.divide(np.float128(1), np.float128(rep)))
 
         # Want to store number of unsuccessful swaps in a row
