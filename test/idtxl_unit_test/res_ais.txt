@@ -1,0 +1,1 @@
+{"2": {"ais": 0.32024995786922883, "ais_pval": 0.045454545454545456, "ais_sign": true, "current_value": [2, 5], "process": 2, "selected_vars": [[2, 

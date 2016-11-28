@@ -1,4 +1,15 @@
-test_group_comparison():
+"""Test group comparison for multivariate transfer entropy estimation.
+
+This module provides unit tests for group comparison after transfer entropy
+estimators.
+
+@author: patricia
+"""
+import numpy as np
+from idtxl.data import Data
+
+def test_group_comparison():
+    """Unit test for group comparison."""
     r0 = {
         'current_value': (0, 5),
         'conditional_sources': [(1, 1), (1, 2), (1, 3), (2, 1), (2, 0)],
@@ -74,8 +85,8 @@ test_group_comparison():
         'alpha_comp': 0.5
         }
 
-    comp = Compare_single_recording(options)
-    comp.compare(res_0, res_1, data_1, data_2)
+    # comp = Compare_single_recording(options)
+    # comp.compare(res_0, res_1, data_1, data_2)
 
-if __name__ == '__main__':
-    test_group_comparison()
+# if __name__ == '__main__':
+    #test_group_comparison()
