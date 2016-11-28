@@ -22,11 +22,13 @@ except ImportError:
 def is_parallel(estimator_name):
     """Check if estimator can estimate CMI for multiple chunks in parallel."""
     parallel_estimators = {'opencl_kraskov': True,
-                           'jidt_kraskov': False}
+                           'jidt_kraskov': False,
+                           'jidt_discrete': False}
     try:
         return parallel_estimators[estimator_name]
     except KeyError:
-        raise KeyError('Unknown estimator name.')
+        print('Unknown estimator name, assuming estimator to be serial.')
+        return False
 
 
 def opencl_kraskov(self, var1, var2, n_chunks=1, opts=None):

@@ -22,7 +22,8 @@ def is_parallel(estimator_name):
     try:
         return parallel_estimators[estimator_name]
     except KeyError:
-        raise KeyError('Unknown estimator name.')
+        print('Unknown estimator name, assuming estimator to be serial.')
+        return False
 
 
 def jidt_kraskov(self, process, opts):

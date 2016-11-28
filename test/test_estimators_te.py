@@ -31,16 +31,16 @@ def test_multivariate_te_corr_gaussian():
     cov = 0.4
     source_1 = [rn.normalvariate(0, 1) for r in range(n)]  # correlated src
     # source_2 = [rn.normalvariate(0, 1) for r in range(n)]  # uncorrelated src
-    target = [sum(pair) for pair in zip(
-        [cov * y for y in source_1],
-        [(1 - cov) * y for y in [rn.normalvariate(0, 1) for r in range(n)]])]
+    target = [0] + [sum(pair) for pair in zip(
+        [cov * y for y in source_1[0:n - 1]],
+        [(1 - cov) * y for y in [rn.normalvariate(0, 1) for r in range(n - 1)]])]
     # Cast everything to numpy so the idtxl estimator understands it.
-    source_1 = np.expand_dims(np.array(source_1), axis=1).astype(float)
+    # source_1 = np.expand_dims(np.array(source_1), axis=1).astype(float)
     # source_2 = np.expand_dims(np.array(source_2), axis=1)
-    target = np.expand_dims(np.array(target), axis=1).astype(float)
+    # target = np.expand_dims(np.array(target), axis=1).astype(float)
 
     dat = Data(normalise=True)
-    dat.set_data(np.vstack((source_1[1:].T, target[:-1].T)), 'ps')
+    # dat.set_data(np.vstack((source_1[1:].T, target[:-1].T)), 'ps')
     analysis_opts = {
         'kraskov_k': 4,
         'normalise': 'false',
@@ -50,12 +50,12 @@ def test_multivariate_te_corr_gaussian():
         'tau_target': 1,
         'tau_source': 1,
         'source_target_delay': 1,
-        'history_target':1,
+        'history_target': 1,
         'history_source': 1,
         }
     te_est = Estimator_te('jidt_kraskov')
-    te_est.estimate(source_1, target, analysis_opts)
-
+    te_res = te_est.estimate(np.array(source_1), np.array(target), analysis_opts)
+    print('correlated Gaussians: TE result {0:.4f} bits; expected to be {1:0.4f} bit for the copy'.format(te_res, np.log(1 / (1 - cov ** 2))))
 
 def test_te_estimator_jidt_discrete():
     """Test TE estimation on sets of discrete random data.
@@ -124,5 +124,5 @@ def test_te_estimator_jidt_discrete():
     assert (np.abs(res_5c - 1) < 0.01), ('TE calculation for delayed XOR failed.')
 
 if __name__ == '__main__':
-    test_cmi_estimator_jidt_discrete()
+    test_te_estimator_jidt_discrete()
     test_multivariate_te_corr_gaussian()

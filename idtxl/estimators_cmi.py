@@ -10,6 +10,7 @@ import math
 from scipy.special import digamma
 from . import neighbour_search_opencl as nsocl
 from . import idtxl_exceptions as ex
+from . import idtxl_utils as utils
 try:
     import jpype as jp
 except ImportError:
@@ -25,7 +26,8 @@ def is_parallel(estimator_name):
     # To add a new parallel estimator, add estimator name to the following
     # dictionary and set the value to True.
     parallel_estimators = {'opencl_kraskov': True,
-                           'jidt_kraskov': False}
+                           'jidt_kraskov': False,
+                           'jidt_discrete': False}
     try:
         return parallel_estimators[estimator_name]
     except KeyError:
@@ -317,7 +319,7 @@ def jidt_discrete(self, var1, var2, conditional, opts=None):
     the third. Call JIDT via jpype and use the discrete estimator.
 
     References:
-    
+
     Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
     studying the dynamics of complex systems. Front. Robot. AI, 1(11).
 
@@ -341,7 +343,7 @@ def jidt_discrete(self, var1, var2, conditional, opts=None):
             array are realisations x variable dimension
         opts : dict [optional]
             sets estimation parameters:
-            - 'num_discrete_bins' - number of discrete bins/levels or the base of 
+            - 'num_discrete_bins' - number of discrete bins/levels or the base of
                             each dimension of the discrete variables (default=2 for binary).
                             If this is set, then parameters 'alph1', 'alph2' and
                             'alphc' are all set to this value.
@@ -410,7 +412,7 @@ def jidt_discrete(self, var1, var2, conditional, opts=None):
     else:
         # var2 is unidimensional
         var2_dimensions = 1
-    
+
     # Treat the conditional variable separately, as we're allowing
     #  this to be null and then calculating a MI instead:
     if (conditional is None) or (alphc == 0):
@@ -426,7 +428,7 @@ def jidt_discrete(self, var1, var2, conditional, opts=None):
         else:
             # conditional is unidimensional
             varc_dimensions = 1
-    
+
     # Now discretise if required
     if (discretise_method == 'equal'):
         var1 = utils.discretise(var1, alph1)
@@ -439,13 +441,13 @@ def jidt_discrete(self, var1, var2, conditional, opts=None):
         if (alphc > 0):
             conditional = utils.discretise_max_ent(conditional, alphc)
     # Else don't discretise at all, assume it is already done
-    
+
     # Then collapse any mulitvariates into univariate arrays:
     var1 = utils.combine_discrete_dimensions(var1, alph1)
     var2 = utils.combine_discrete_dimensions(var2, alph2)
     if (alphc > 0):
         conditional = utils.combine_discrete_dimensions(conditional, alphc)
-    
+
     # And finally make the CMI calculation:
     jarLocation = resource_filename(__name__, 'infodynamics.jar')
     if not jp.isJVMStarted():
@@ -477,4 +479,3 @@ def jidt_discrete(self, var1, var2, conditional, opts=None):
         calc.addObservations(jp.JArray(jp.JInt, 1)(var1.tolist()),
                          jp.JArray(jp.JInt, 1)(var2.tolist()))
         return calc.computeAverageLocalOfObservations()
-

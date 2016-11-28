@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 """Provide transfer entropy estimators for the Estimator_te class.
 
 This module exports methods for transfer entropy (TE) estimation in the
@@ -20,11 +19,13 @@ except ImportError:
 def is_parallel(estimator_name):
     """Check if estimator can estimate CMI for multiple chunks in parallel."""
     parallel_estimators = {'opencl_kraskov': True,
-                           'jidt_kraskov': False}
+                           'jidt_kraskov': False,
+                           'jidt_discrete': False}
     try:
         return parallel_estimators[estimator_name]
     except KeyError:
-        raise KeyError('Unknown estimator name.')
+        print('Unknown estimator name, assuming estimator to be serial.')
+        return False
 
 
 def jidt_kraskov(self, source, target, opts):
