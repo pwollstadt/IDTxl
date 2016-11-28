@@ -168,6 +168,8 @@ def test_cmi_no_c_estimator_ocl():
                                    'identical, this  is unlikely for random'
                                    'data.')
 
+
+
 def test_compare_opencl_jidt_implementation():
     """Compare results from OpenCl and JIDT implementation."""
     n = 4000
@@ -197,6 +199,64 @@ def test_compare_opencl_jidt_implementation():
                          conditional=None, n_chunks=n_chunks, opts=opts)
     print('result jidt: {0}, result opencl: {1}'.format(res_jidt, res_opencl))
 
+
+def test_cmi_estimator_jidt_discrete():
+    """Test CMI estimation on sets of discrete random data.
+    """
+    opts = {'num_discrete_bins': 2, 'time_diff': 0, 'discretise_method' : 'none'}
+    calculator_name = 'jidt_discrete'
+    est = Estimator_cmi(calculator_name)
+    n = 1000 # Need this to be an even number for the test to work
+    source_1 = np.zeros(n, np.int_)
+    source_2 = np.zeros(n, np.int_)
+    source_3 = np.zeros(n, np.int_)
+    target = np.zeros(n, np.int_)
+
+    # Test 1: target is either a copy of the source or independent,
+    #  no conditional so this reverts to an MI calculation:
+    for t in range(n):
+        source_1[t] = (t >= n/2) * 1
+        source_2[t] = t % 2
+        source_3[t] = (t < n/2) * source_2[t] + (t >= n/2) * (1 - source_2[t])
+        target[t] = source_1[t]
+    res_1a = est.estimate(var1=source_1, var2=target, conditional=None, opts=opts)
+    res_1b = est.estimate(var1=source_2, var2=target, conditional=None, opts=opts)
+    print('Example 1a: CMI result {0:.4f} bits; expected to be 1 bit for the copy (no conditional)'
+        .format(res_1a))
+    print('Example 1b: CMI result {0:.4f} bits; expected to be 0 bits for the '
+          'uncorrelated variable (no conditional).'.format(res_1b))
+    assert (res_1a == 1), ('CMI calculation for copy failed.')
+    assert (res_1b == 0), ('CMI calculation for no correlation failed.')
+
+    # Test 2: target is either a copy of the source or independent,
+    #  conditional supplied (and is either irrelevant or a copy, respectively)
+    res_2a = est.estimate(var1=source_1, var2=target, conditional=source_2, opts=opts)
+    res_2b = est.estimate(var1=source_2, var2=target, conditional=source_1, opts=opts)
+    print('Example 2a: CMI result {0:.4f} bits; expected to be 1 bit for the copy (irrelevant conditional)'
+        .format(res_2a))
+    print('Example 2b: CMI result {0:.4f} bits; expected to be 0 bits for the '
+          'uncorrelated variable (relevant conditional).'.format(res_2b))
+    assert (res_2a == 1), ('CMI calculation for copy failed.')
+    assert (res_2b == 0), ('CMI calculation for no correlation failed.')
+
+    # Test 3: target is a copy of the source,
+    #  conditional supplied (and is also a copy)
+    res_3 = est.estimate(var1=source_1, var2=target, conditional=source_1, opts=opts)
+    print('Example 3: CMI result {0:.4f} bits; expected to be 0 bit for the copy (conditional also copy)'
+        .format(res_3))
+    assert (res_3 == 0), ('CMI calculation for copy with copied conditional failed.')
+
+    # Test 4: target is an xor of the source and conditional
+    res_4a = est.estimate(var1=source_2, var2=target, conditional=source_3, opts=opts)
+    res_4b = est.estimate(var1=source_3, var2=target, conditional=source_2, opts=opts)
+    print('Example 4a: CMI result {0:.4f} bits; expected to be 1 bit for XOR'
+        .format(res_4a))
+    print('Example 4b: CMI result {0:.4f} bits; expected to be 1 bit for XOR'
+        .format(res_4b))
+    assert (res_4a == 1), ('CMI calculation for XOR 1 failed.')
+    assert (res_4b == 1), ('CMI calculation for XOR 1 failed.')
+
+
 # TODO: add assertions for the right values
 
 if __name__ == '__main__':
@@ -204,3 +264,4 @@ if __name__ == '__main__':
     test_cmi_estimator_jidt_kraskov()
     test_cmi_estimator_ocl()
     test_cmi_no_c_estimator_ocl()
+    test_cmi_estimator_jidt_discrete()
