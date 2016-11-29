@@ -240,9 +240,16 @@ def test_multivariate_te_mute():
 
     network_analysis = Multivariate_te(max_lag_sources=3, min_lag_sources=1,
                                        max_lag_target=3, options=analysis_opts)
-    res_max_ent = network_analysis.analyse_network(dat, targets=[1, 2])
+    res_me = network_analysis.analyse_network(dat, targets=[1, 2])
     analysis_opts = {'discretise_method': 'equal'}
-    res_equal = network_analysis.analyse_network(dat, targets=[1, 2])
+    res_eq = network_analysis.analyse_network(dat, targets=[1, 2])
+
+    assert (np.isclose(res_eq[1]['omnibus_te'], res_me[1]['omnibus_te'],
+            rtol=0.05)), ('TE into first target is not equal for both binning'
+                          ' methods.')
+    assert (np.isclose(res_eq[2]['omnibus_te'], res_me[2]['omnibus_te'],
+            rtol=0.05)), ('TE into second target is not equal for both binning'
+                          ' methods.')
 
 
 if __name__ == '__main__':
