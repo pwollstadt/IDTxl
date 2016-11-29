@@ -204,7 +204,7 @@ def jidt_kraskov(self, var1, var2, opts=None):
     calc.initialise(var1.shape[1], var2.shape[1])
     calc.setObservations(var1, var2)
     if local_values:
-        return calc.computeLocalOfPreviousObservations()
+        return np.array(calc.computeLocalOfPreviousObservations())
     else:
         return calc.computeAverageLocalOfObservations()
 
@@ -252,7 +252,6 @@ def jidt_discrete(self, var1, var2, opts=None):
             mutual information
 
     """
-
     # Parse parameters:
     if opts is None:
         opts = {}

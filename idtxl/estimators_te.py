@@ -6,6 +6,7 @@ Estimator_te class.
 """
 from pkg_resources import resource_filename
 import math
+import numpy as np
 from . import idtxl_exceptions as ex
 from . import idtxl_utils as utils
 try:
@@ -138,7 +139,7 @@ def jidt_kraskov(self, source, target, opts):
                     delay)
     calc.setObservations(source, target)
     if local_values:
-        return calc.computeLocalOfPreviousObservations()
+        return np.array(calc.computeLocalOfPreviousObservations())
     else:
         return calc.computeAverageLocalOfObservations()
 

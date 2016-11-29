@@ -4,8 +4,8 @@ This module exports methods for active information storage (AIS) estimation in
 the Estimator_ais class.
 
 """
-
 from pkg_resources import resource_filename
+import numpy as np
 from . import idtxl_exceptions as ex
 try:
     import jpype as jp
@@ -121,6 +121,6 @@ def jidt_kraskov(self, process, opts):
     calc.initialise(history, tau)
     calc.setObservations(process)
     if local_values:
-        return calc.computeLocalOfPreviousObservations()
+        return np.array(calc.computeLocalOfPreviousObservations())
     else:
         return calc.computeAverageLocalOfObservations()
