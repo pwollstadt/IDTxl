@@ -4,6 +4,7 @@ Created on Mon Apr  4 10:41:33 2016
 
 @author: patricia
 """
+import os
 import random as rn
 import numpy as np
 from idtxl.multivariate_te import Multivariate_te
@@ -178,8 +179,9 @@ def test_multivariate_te_lorenz_2():
         This test takes several hours and may take one to two days on some
         machines.
     """
-    d = np.load('/home/patricia/repos/IDTxl/testing/data/'
-                'lorenz_2_exampledata.npy')
+    # load simulated data from 2 coupled Lorenz systems 1->2, u = 45 ms
+    d = np.load(os.path.join(os.path.dirname(__file__),
+                'data/lorenz_2_exampledata.npy'))
     dat = Data()
     dat.set_data(d, 'psr')
     analysis_opts = {
@@ -242,9 +244,9 @@ def test_multivariate_te_mute():
 
 def test_multivariate_te_multiple_runs():
     """Test TE estimation using multiple runs on the GPU.
-    
+
     Test if data is correctly split over multiple runs, if the problem size exceeds
-    the GPU global memory and thus requires multiple runs. Using a number of 
+    the GPU global memory and thus requires multiple runs. Using a number of
     permutations of 7000 requires two runs on a GPU with global memory of about
     6 GB.
     """

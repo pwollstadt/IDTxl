@@ -2,6 +2,7 @@
 
 @author: patricia
 """
+import os
 import random as rn
 import numpy as np
 from idtxl.multivariate_te import Multivariate_te
@@ -176,8 +177,9 @@ def test_multivariate_te_lorenz_2():
         This test takes several hours and may take one to two days on some
         machines.
     """
-    d = np.load('/home/patricia/repos/IDTxl/testing/data/'
-                'lorenz_2_exampledata.npy')
+
+    d = np.load(os.path.join(os.path.dirname(__file__),
+                'data/lorenz_2_exampledata.npy'))
     dat = Data()
     dat.set_data(d, 'psr')
     analysis_opts = {
@@ -238,12 +240,14 @@ def test_multivariate_te_mute():
 
     network_analysis = Multivariate_te(max_lag_sources=3, min_lag_sources=1,
                                        max_lag_target=3, options=analysis_opts)
-    res = network_analysis.analyse_network(dat, targets=[1, 2])
+    res_max_ent = network_analysis.analyse_network(dat, targets=[1, 2])
+    analysis_opts = {'discretise_method': 'equal'}
+    res_equal = network_analysis.analyse_network(dat, targets=[1, 2])
 
 
 if __name__ == '__main__':
-    test_multivariate_te_mute()
     test_multivariate_te_lorenz_2()
+    test_multivariate_te_mute()
     test_multivariate_te_random()
     test_multivariate_te_corr_gaussian()
     test_multivariate_te_corr_gaussian('opencl_kraskov')

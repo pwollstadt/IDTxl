@@ -4,12 +4,14 @@ Created on Wed Apr  6 12:34:31 2016
 
 @author: patricia
 """
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from data import Data
 from set_estimator import Estimator_te
 
-d = np.load('/home/patricia/repos/IDTxl/testing/data/lorenz_2_exampledata.npy')
+d = np.load(os.path.join(os.path.dirname(__file__),
+            'data/lorenz_2_exampledata.npy'))
 dat = Data()
 dat.set_data(d[:, :, :20], 'psr')
 
