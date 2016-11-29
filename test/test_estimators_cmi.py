@@ -9,6 +9,7 @@ Created on Thu Mar 31 11:29:06 2016
 import math
 import random as rn
 import numpy as np
+import pytest
 from idtxl.set_estimator import Estimator_cmi
 
 
@@ -136,7 +137,7 @@ def test_cmi_estimator_ocl():
 
 
 def test_cmi_no_c_estimator_ocl():
-    """Tests CMI estimation without a conditional variable
+    """Tests CMI estimation without a conditional variable.
 
     The estimator should fall back to MI estimation and provide the correct
     result.
@@ -266,10 +267,52 @@ def test_cmi_estimator_jidt_discrete():
     assert (res_4a == 1), ('CMI calculation for XOR 1 failed.')
     assert (res_4b == 1), ('CMI calculation for XOR 1 failed.')
 
+def test_cmi_estimator_jidt_discrete_discretisation():
+    """Test CMI estimation discretisation methods and error handling"""
+    opts = {'num_discrete_bins': 2,
+            'time_diff': 0,
+            'discretise_method': 'none'}
+    calculator_name = 'jidt_discrete'
+    est = Estimator_cmi(calculator_name)
+    n = 1000  # Need this to be an even number for the test to work
+    cov = 0.4
+
+    # Test 1: input is not an integer array
+    source_1 = [rn.normalvariate(0, 1) for r in range(n)]  # correlated src
+    source_2 = [rn.normalvariate(0, 1) for r in range(n)]  # uncorrelated src
+    target = [sum(pair) for pair in zip(
+        [cov * y for y in source_1],
+        [(1 - cov) * y for y in [rn.normalvariate(0, 1) for r in range(n)]])]
+    # Cast everything to numpy so the idtxl estimator understands it.
+    source_1 = np.expand_dims(np.array(source_1), axis=1)
+    source_2 = np.expand_dims(np.array(source_2), axis=1)
+    target = np.expand_dims(np.array(target), axis=1)
+
+    with pytest.raises(AssertionError):
+        est.estimate(var1=source_1, var2=target, conditional=None, opts=opts)
+
+    # Test 2: alphabet sizes not specified correctly
+    source_1 = np.zeros(n, np.int_)
+    source_2 = np.zeros(n, np.int_)
+    source_3 = np.zeros(n, np.int_)
+    target = np.zeros(n, np.int_)
+
+    for t in range(n):
+        source_1[t] = (t >= n/2) * 1
+        source_2[t] = t % 2
+        source_3[t] = (t < n/2) * source_2[t] + (t >= n/2) * (1 - source_2[t])
+        target[t] = source_1[t]
+
+    opts = {'alpha1': 0,
+            'time_diff': 0,
+            'discretise_method': 'none'}
+    with pytest.raises(AssertionError):
+        est.estimate(var1=source_2, var2=target, conditional=None, opts=opts)
 
 # TODO: add assertions for the right values
 
 if __name__ == '__main__':
+    test_cmi_estimator_jidt_discrete_discretisation()
     test_compare_opencl_jidt_implementation()
     test_cmi_estimator_jidt_kraskov()
     test_cmi_estimator_ocl()

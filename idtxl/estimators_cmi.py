@@ -440,7 +440,19 @@ def jidt_discrete(self, var1, var2, conditional, opts=None):
         var2 = utils.discretise_max_ent(var2, alph2)
         if (alphc > 0):
             conditional = utils.discretise_max_ent(conditional, alphc)
-    # Else don't discretise at all, assume it is already done
+    elif (discretise_method == 'none'):  # check if data is really discretised
+        assert issubclass(var1.dtype.type, np.int64), ('No discretisation '
+               'requested, but input 1 is not an integer numpy array.')
+        assert issubclass(var2.dtype.type, np.int64), ('No discretisation '
+               'requested, but input 2 is not an integer numpy array.')
+        assert min(var1) >= 0, 'Minimum of input 1 is smaller than 0.'
+        assert min(var2) >= 0, 'Minimum of input 1 is smaller than 0.'
+        assert max(var1) < alph1, ('Maximum of input 1 is larger than the '
+                                   'alphabet size - 1.')
+        assert max(var2) < alph2, ('Maximum of input 2 is larger than the '
+                                   'alphabet size - 1.')
+    else:
+        raise ValueError('Unkown discretisation method.')
 
     # Then collapse any mulitvariates into univariate arrays:
     var1 = utils.combine_discrete_dimensions(var1, alph1)
