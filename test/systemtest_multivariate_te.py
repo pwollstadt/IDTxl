@@ -267,8 +267,8 @@ def test_multivariate_te_multiple_runs():
 
 if __name__ == '__main__':
     # test_multivariate_te_mute()
-    # test_multivariate_te_lorenz_2()
-    # test_multivariate_te_random()
-    test_multivariate_te_multiple_runs()
+    test_multivariate_te_lorenz_2()
+    test_multivariate_te_random()
+    # test_multivariate_te_multiple_runs()
     test_multivariate_te_corr_gaussian()
     test_multivariate_te_corr_gaussian('opencl_kraskov')

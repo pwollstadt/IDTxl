@@ -67,17 +67,35 @@ class Network_inference(Network_analysis):
     def _initialise(self, data, sources, target):
         """Check input and set everything to initial values."""
         # Check the provided target and sources.
-        self.target = target
+        self._check_target(target, data.n_processes)
         self._check_source_set(sources, data.n_processes)
 
-        # Check provided search depths for source and target
+        # Check provided search depths (lags) for source and target, set the
+        # current_value.
+        max_lag = max(self.max_lag_sources, self.max_lag_target)
+
+        assert self.min_lag_sources > 0, 'min_lag_sources must be greater 0.'
+        assert self.max_lag_sources > 0, 'max_lag_sources must be greater 0.'
+        assert self.max_lag_target > 0, 'max_lag_target must be greater 0.'
+        assert self.tau_sources > 0, 'tau_sources must be greater 0.'
+        assert self.tau_target > 0, 'tau_sources must be greater 0.'
+        assert type(self.min_lag_sources) is int, ('min_lag_sources must be an'
+                                                   ' integer.')
+        assert type(self.max_lag_sources) is int, ('max_lag_sources must be an'
+                                                   ' integer.')
+        assert type(self.max_lag_target) is int, ('max_lag_target must be an '
+                                                  'integer.')
+        assert type(self.tau_sources) is int, ('tau_sources must be an '
+                                               'integer.')
+        assert type(self.tau_target) is int, ('tau_sources must be an '
+                                              'integer.')
         assert(self.min_lag_sources <= self.max_lag_sources), (
             'min_lag_sources ({0}) must be smaller or equal to max_lag_sources'
             ' ({1}).'.format(self.min_lag_sources, self.max_lag_sources))
-        max_lag = max(self.max_lag_sources, self.max_lag_target)
         assert(data.n_samples >= max_lag + 1), (
             'Not enough samples in data ({0}) to allow for the chosen maximum '
             'lag ({1})'.format(data.n_samples, max_lag))
+
         self.current_value = (self.target, max_lag)
         [cv_realisation, repl_idx] = data.get_realisations(
                                              current_value=self.current_value,
@@ -115,6 +133,16 @@ class Network_inference(Network_analysis):
         except KeyError:
             pass
 
+    def _check_target(self, target, n_processes):
+        """Set and check the target provided by the user."""
+        assert type(target) is int, 'The target has to be an int'
+        if target > n_processes:
+            raise RuntimeError('Trying to analyse target {0} that is not in '
+                               'the number of processes in the data ({1}).'
+                               .format(target, n_processes))
+        assert target >= 0, 'Can not add negative values as target.'
+        self.target = target
+
     def _check_source_set(self, sources, n_processes):
         """Set default if no source set was provided by the user."""
         if sources == 'all':
@@ -122,15 +150,26 @@ class Network_inference(Network_analysis):
             sources.pop(self.target)
         elif type(sources) is int:
             sources = [sources]
+        elif type(sources) is list:
+            assert type(sources[0]) is int, 'Source list has to contain ints.'
+        else:
+            raise TypeError('Sources have to be passes as a single int, list of '
+	                    'ints or "all".')
 
         if self.target in sources:
             raise RuntimeError('The target ({0}) should not be in the list '
                                'of sources ({1}).'.format(self.target,
                                                           sources))
-        else:
-            self.source_set = sources
-            if VERBOSE:
-                print('Testing sources {0}'.format(self.source_set))
+        if max(sources) > n_processes:
+            raise RuntimeError('The list of sources {0} contains indices greater '
+	                       'than the number of processes {1} in the data.'.format(
+			               sources, n_processes))
+        if min(sources) < 0:
+            raise RuntimeError('Sources can not have negative indices {0}.'.format(sources))	   
+
+        self.source_set = sources
+        if VERBOSE:
+            print('Testing sources {0}'.format(self.source_set))
 
     def _include_target_candidates(self, data):
         """Test candidates from the target's past."""
