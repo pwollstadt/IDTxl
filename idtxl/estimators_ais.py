@@ -97,7 +97,7 @@ def jidt_kraskov(self, process, opts):
 
     # Get defaults for estimator options.
     kraskov_k = str(opts.get('kraskov_k', 4))
-    normalise = str(opts.get('normalise', 'false'))
+    normalise = str(opts.get('normalise', False)).lower()
     theiler_t = str(opts.get('theiler_t', 0))  # TODO necessary?
     noise_level = str(opts.get('noise_level', 1e-8))
     local_values = opts.get('local_values', False)

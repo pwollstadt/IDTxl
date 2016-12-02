@@ -183,7 +183,7 @@ def jidt_kraskov(self, var1, var2, opts=None):
 
     # Get defaults for estimator options
     kraskov_k = str(opts.get('kraskov_k', 4))
-    normalise = str(opts.get('normalise', 'false'))
+    normalise = str(opts.get('normalise', False)).lower()
     theiler_t = str(opts.get('theiler_t', 0))  # TODO necessary?
     noise_level = str(opts.get('noise_level', 1e-8))
     local_values = opts.get('local_values', False)
@@ -255,22 +255,11 @@ def jidt_discrete(self, var1, var2, opts=None):
     # Parse parameters:
     if opts is None:
         opts = {}
-    try:
-        num_discrete_bins = int(opts['num_discrete_bins'])
-    except KeyError:
-        num_discrete_bins = int(2)
-    try:
-        time_diff = int(opts['time_diff'])
-    except KeyError:
-        time_diff = int(0)
-    try:
-        discretise_method = opts['discretise_method']
-    except KeyError:
-        discretise_method = 'none'
-    try:
-        debug = opts['debug']
-    except KeyError:
-        debug = False
+
+    num_discrete_bins = int(opts.get('num_discrete_bins', 2))
+    time_diff = int(opts.get('time_diff', 0))
+    discretise_method = opts.get('discretise_method', 'none')
+    debug = opts.get('debug', False)
 
     # Work out the number of samples and dimensions for each variable, before
     #  we collapse all dimensions down:

@@ -6,57 +6,6 @@ as proposed in
 Bertschinger, Rauh, Olbrich, Jost, Ay; Quantifying Unique Information,
 Entropy 2014, 16, 2161-2183; doi:10.3390/e16042161
 
-The pid estimator returns estimates of shared information, unique
-information and synergistic information that two random variables X and
-Y have about a third variable Z. The estimator finds these estimates by
-permuting the initial joint probability distribution of X, Y, and Z to
-find a permuted distribution Q that minimizes the unique information in
-X about Z (as proposed by Bertschinger and colleagues). The unique in-
-formation is defined as the conditional mutual information I(X;Z|Y).
-
-The estimator iteratively permutes the joint probability distribution of
-X, Y, and Z under the constraint that the marginal distributions (X, Z)
-and (Y, Z) stay constant. This is done by swapping two realizations of X
-which have the same corresponding value in Z, e.g.:
-
-    X [1, 0, 1, 1, 0, 1, 0, 0, 1, 1]
-    Y [0, 0, 1, 1, 1, 0, 0, 0, 1, 1]
-    ---------------------------------
-    Z [1, 1, 0, 0, 0, 1, 1, 0, 1, 0]
-
-    Possible swaps: X[0] and X[1]; X[0] and X[4]; X[2] and X[8]; ...
-
-After each swap, I(X;Z|Y) is re-calculated under the new distribution;
-if the CMI is lower than the current permutation is kept and the next
-swap is tested. The iteration stops after the provided number of
-iterations.
-
-Example:
-    import numpy as np
-    import pid
-
-    n = 5000
-    alph = 2
-    x = np.random.randint(0, alph, n)
-    y = np.random.randint(0, alph, n)
-    z = np.logical_xor(x, y).astype(int)
-    cfg = {
-        'alphabetsize': 2,
-        'jarpath': '/home/user/infodynamics-dist-1.3/infodynamics.jar',
-        'iterations': 10000
-    }
-    [est, opt] = pid(x, y, z, cfg)
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of the GNU General Public License as published by the
-Free Software Foundation;
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY.
-
-Version 1.0 by Patricia Wollstadt, Raul Vicente, Michael Wibral
-Frankfurt, Germany, 2016
-
 """
 import sys
 import numpy as np
@@ -72,8 +21,46 @@ except ImportError:
 def pid(s1_o, s2_o, target_o, cfg):
     """Estimate partial information decomposition of discrete variables.
 
-    The estimator finds shared information, unique information and
-    synergistic information between three discrete input variables.
+    The pid estimator returns estimates of shared information, unique
+    information and synergistic information that two random variables X and
+    Y have about a third variable Z. The estimator finds these estimates by
+    permuting the initial joint probability distribution of X, Y, and Z to
+    find a permuted distribution Q that minimizes the unique information in
+    X about Z (as proposed by Bertschinger and colleagues). The unique in-
+    formation is defined as the conditional mutual information I(X;Z|Y).
+
+    The estimator iteratively permutes the joint probability distribution of
+    X, Y, and Z under the constraint that the marginal distributions (X, Z)
+    and (Y, Z) stay constant. This is done by swapping two realizations of X
+    which have the same corresponding value in Z, e.g.:
+
+        X [1, 0, 1, 1, 0, 1, 0, 0, 1, 1]
+        Y [0, 0, 1, 1, 1, 0, 0, 0, 1, 1]
+        ---------------------------------
+        Z [1, 1, 0, 0, 0, 1, 1, 0, 1, 0]
+
+        Possible swaps: X[0] and X[1]; X[0] and X[4]; X[2] and X[8]; ...
+
+    After each swap, I(X;Z|Y) is re-calculated under the new distribution;
+    if the CMI is lower than the current permutation is kept and the next
+    swap is tested. The iteration stops after the provided number of
+    iterations.
+
+    Example:
+        import numpy as np
+        import pid
+
+        n = 5000
+        alph = 2
+        x = np.random.randint(0, alph, n)
+        y = np.random.randint(0, alph, n)
+        z = np.logical_xor(x, y).astype(int)
+        cfg = {
+            'alphabetsize': 2,
+            'jarpath': '/home/user/infodynamics-dist-1.3/infodynamics.jar',
+            'iterations': 10000
+        }
+        [est, opt] = pid(x, y, z, cfg)
 
     Args:
         s1 (numpy array): 1D array containing realizations of a discrete

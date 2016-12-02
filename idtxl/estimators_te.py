@@ -114,7 +114,7 @@ def jidt_kraskov(self, source, target, opts):
 
     # Get defaults for estimator options.
     kraskov_k = str(opts.get('kraskov_k', 4))
-    normalise = str(opts.get('normalise', 'false'))
+    normalise = str(opts.get('normalise', False)).lower()
     theiler_t = str(opts.get('theiler_t', 0))  # TODO necessary?
     noise_level = str(opts.get('noise_level', 1e-8))
     local_values = opts.get('local_values', False)
@@ -145,8 +145,7 @@ def jidt_kraskov(self, source, target, opts):
 
 
 def jidt_discrete(self, source, target, opts=None):
-    """Calculate transfer entropy with JIDT's implementation for discrete
-    variables
+    """Calculate TE with JIDT's implementation for discrete variables.
 
     Calculate the transfer entropy between two time series processes.
     Call JIDT via jpype and use the discrete estimator. Transfer entropy is
@@ -177,19 +176,20 @@ def jidt_discrete(self, source, target, opts=None):
             array are realisations x variable dimension
         opts : dict [optional]
             sets estimation parameters:
-            - 'num_discrete_bins' - number of discrete bins/levels or the base of
-                            each dimension of the discrete variables (default=2 for binary).
-                            If this is set, then parameters 'alph_source', 'alph_target' and
-                            'alphc' are all set to this value.
+
+            - 'num_discrete_bins' - number of discrete bins/levels or the base
+               of each dimension of the discrete variables (default=2 for
+               binary). If this is set, then parameters 'alph_source',
+               'alph_target' and 'alphc' are all set to this value
             - 'alph_source' - number of discrete bins/levels for source
-                        (default=2 for binary, or the value set for 'num_discrete_bins').
+              (default=2 for binary, or the value set for 'num_discrete_bins')
             - 'alph_target' - number of discrete bins/levels for target
-                        (default=2 for binary, or the value set for 'num_discrete_bins').
-            - 'discretise_method' - if and how to discretise incoming continuous variables
-                            to discrete values.
-                            'max_ent' means to use a maximum entropy binning
-                            'equal' means to use equal size bins
-                            'none' means variables are already discrete (default='none')
+              (default=2 for binary, or the value set for 'num_discrete_bins')
+            - 'discretise_method' - if and how to discretise incoming
+              continuous variables to discrete values.
+              'max_ent' means to use a maximum entropy binning
+              'equal' means to use equal size bins
+              'none' means variables are already discrete (default='none')
             - 'history_target' - number of samples in the target's past to
               consider (mandatory to provide)
             - 'history_source' - number of samples in the source's past to
@@ -203,20 +203,13 @@ def jidt_discrete(self, source, target, opts=None):
     Returns:
         float
             transfer entropy
-
-    Note:
     """
     # Parse parameters:
     if opts is None:
         opts = {}
-    try:
-        alph_source = int(opts['alph_source'])
-    except KeyError:
-        alph_source = int(2)
-    try:
-        alph_target = int(opts['alph_target'])
-    except KeyError:
-        alph_target = int(2)
+
+    alph_source = int(opts.get('alph_source', 2))
+    alph_target = int(opts.get('alph_target', 2))
     try:
         num_discrete_bins = int(opts['num_discrete_bins'])
         alph_source = num_discrete_bins
@@ -224,10 +217,7 @@ def jidt_discrete(self, source, target, opts=None):
     except KeyError:
         # Do nothing, we don't need the parameter if it is not here
         pass
-    try:
-        discretise_method = opts['discretise_method']
-    except KeyError:
-        discretise_method = 'none'
+    discretise_method = opts.get('discretise_method', 'none')
     try:
         history_target = opts['history_target']
     except KeyError:
@@ -236,22 +226,10 @@ def jidt_discrete(self, source, target, opts=None):
         history_source = opts['history_source']
     except KeyError:
         history_source = history_target
-    try:
-        tau_target = opts['tau_target']
-    except KeyError:
-        tau_target = 1
-    try:
-        tau_source = opts['tau_source']
-    except KeyError:
-        tau_source = 1
-    try:
-        delay = opts['source_target_delay']
-    except KeyError:
-        delay = 1
-    try:
-        debug = opts['debug']
-    except KeyError:
-        debug = False
+    tau_target = opts.get('tau_target', 1)
+    tau_source = opts.get('tau_source', 1)
+    delay = opts.get('source_target_delay', 1)
+    debug = opts.get('debug', False)
 
     # Work out the number of samples and dimensions for each variable, before
     #  we collapse all dimensions down:
