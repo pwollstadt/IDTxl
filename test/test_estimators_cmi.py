@@ -268,7 +268,7 @@ def test_cmi_estimator_jidt_discrete():
     assert (res_4b == 1), ('CMI calculation for XOR 1 failed.')
 
 def test_cmi_estimator_jidt_discrete_discretisation():
-    """Test CMI estimation discretisation methods and error handling"""
+    """Test CMI estimation discretisation methods and error handling."""
     opts = {'num_discrete_bins': 2,
             'time_diff': 0,
             'discretise_method': 'none'}
@@ -303,7 +303,7 @@ def test_cmi_estimator_jidt_discrete_discretisation():
         source_3[t] = (t < n/2) * source_2[t] + (t >= n/2) * (1 - source_2[t])
         target[t] = source_1[t]
 
-    opts = {'alpha1': 0,
+    opts = {'alph1': 0,
             'time_diff': 0,
             'discretise_method': 'none'}
     with pytest.raises(AssertionError):
