@@ -279,11 +279,11 @@ def jidt_kraskov(self, var1, var2, conditional=None, opts=None):
 
     # Get defaults for estimator options
     kraskov_k = str(opts.get('kraskov_k', str(4)))
-    normalise = str(opts.get('normalise', 'false'))
+    normalise = str(opts.get('normalise', False)).lower()
     theiler_t = str(opts.get('theiler_t', 0))  # TODO necessary?
     noise_level = str(opts.get('noise_level', 1e-8))
     num_threads = str(opts.get('num_threads', 'USE_ALL'))
-    # debug = opts.get('debug', 'false')
+    # debug = opts.get('debug', False).lower()
 
     # Start JAVA virtual machine.
     jarLocation = resource_filename(__name__, 'infodynamics.jar')
@@ -312,8 +312,7 @@ def jidt_kraskov(self, var1, var2, conditional=None, opts=None):
     return calc.computeAverageLocalOfObservations()
 
 def jidt_discrete(self, var1, var2, conditional, opts=None):
-    """Calculate conditional mutual infor with JIDT's implementation for discrete
-    variables"
+    """Calculate CMI with JIDT's implementation for discrete variables.
 
     Calculate the conditional mutual information between two variables given
     the third. Call JIDT via jpype and use the discrete estimator.
@@ -343,21 +342,21 @@ def jidt_discrete(self, var1, var2, conditional, opts=None):
             array are realisations x variable dimension
         opts : dict [optional]
             sets estimation parameters:
-            - 'num_discrete_bins' - number of discrete bins/levels or the base of
-                            each dimension of the discrete variables (default=2 for binary).
-                            If this is set, then parameters 'alph1', 'alph2' and
-                            'alphc' are all set to this value.
-            - 'alph1' - number of discrete bins/levels for var1
-                        (default=2 for binary, or the value set for 'num_discrete_bins').
-            - 'alph2' - number of discrete bins/levels for var2
-                        (default=2 for binary, or the value set for 'num_discrete_bins').
+            - 'num_discrete_bins' - number of discrete bins/levels or the base
+              of each dimension of the discrete variables (default=2 for
+              binary). If this is set, then parameters 'alph1', 'alph2' and
+              'alphc' are all set to this value
+            - 'alph1' - number of discrete bins/levels for var1 (default=2 for
+              binary, or the value set for 'num_discrete_bins')
+            - 'alph2' - number of discrete bins/levels for var2 (default=2 for
+              binary, or the value set for 'num_discrete_bins')
             - 'alphc' - number of discrete bins/levels for conditional
-                        (default=2 for binary, or the value set for 'num_discrete_bins').
-            - 'discretise_method' - if and how to discretise incoming continuous variables
-                            to discrete values.
-                            'max_ent' means to use a maximum entropy binning
-                            'equal' means to use equal size bins
-                            'none' means variables are already discrete (default='none')
+              (default=2 for binary, or the value set for 'num_discrete_bins')
+            - 'discretise_method' - if and how to discretise incoming
+              continuous variables to discrete values.
+              'max_ent' means to use a maximum entropy binning
+              'equal' means to use equal size bins
+              'none' means variables are already discrete (default='none')
             - 'debug' - set debug prints from the calculator on
 
     Returns:
@@ -369,18 +368,10 @@ def jidt_discrete(self, var1, var2, conditional, opts=None):
     # Parse parameters:
     if opts is None:
         opts = {}
-    try:
-        alph1 = int(opts['alph1'])
-    except KeyError:
-        alph1 = int(2)
-    try:
-        alph2 = int(opts['alph2'])
-    except KeyError:
-        alph2 = int(2)
-    try:
-        alphc = int(opts['alphc'])
-    except KeyError:
-        alphc = int(2)
+    alph1 = int(opts.get('alph1', 2))
+    alph2 = int(opts.get('alph2', 2))
+    alphc = int(opts.get('alphc', 2))
+
     try:
         num_discrete_bins = int(opts['num_discrete_bins'])
         alph1 = num_discrete_bins
@@ -389,14 +380,8 @@ def jidt_discrete(self, var1, var2, conditional, opts=None):
     except KeyError:
         # Do nothing, we don't need the parameter if it is not here
         pass
-    try:
-        discretise_method = opts['discretise_method']
-    except KeyError:
-        discretise_method = 'none'
-    try:
-        debug = opts['debug']
-    except KeyError:
-        debug = False
+    discretise_method = opts.get('discretise_method', 'none')
+    debug = opts.get('debug', False)
 
     # Work out the number of samples and dimensions for each variable, before
     #  we collapse all dimensions down:
