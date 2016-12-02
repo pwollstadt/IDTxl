@@ -110,18 +110,11 @@ def jidt_kraskov(self, source, target, opts):
     tau_target = opts.get('tau_target', 1)
     tau_source = opts.get('tau_source', 1)
     delay = opts.get('source_target_delay', 1)
-<<<<<<< HEAD
     debug = opts.get('debug', False)
 
     # Get defaults for estimator options.
     kraskov_k = str(opts.get('kraskov_k', 4))
     normalise = str(opts.get('normalise', False)).lower()
-=======
-
-    # Get defaults for estimator options.
-    kraskov_k = str(opts.get('kraskov_k', 4))
-    normalise = str(opts.get('normalise', 'false'))
->>>>>>> 5e72c9a... Add and update documentation and inline comments.
     theiler_t = str(opts.get('theiler_t', 0))  # TODO necessary?
     noise_level = str(opts.get('noise_level', 1e-8))
     local_values = opts.get('local_values', False)
