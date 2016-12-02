@@ -5,6 +5,7 @@ from . import estimators_te
 from . import estimators_ais
 from . import estimators_cmi
 from . import estimators_mi
+from . import estimators_pid
 
 
 class Estimator(object):
@@ -194,4 +195,20 @@ class Estimator_mi(Estimator):
             self.estimator_name = estimator_name
             self.add_estimator(estimator,
                                estimators_mi.is_parallel(estimator_name),
+                               estimator_name)
+
+
+class Estimator_pid(Estimator):
+    """Set the requested PID estimator."""
+
+    def __init__(self, estimator_name):
+        try:
+            estimator = getattr(estimators_pid, estimator_name)
+        except AttributeError:
+            raise AttributeError('The requested PID estimator "{0}" was not '
+                                 'found.'.format(estimator_name))
+        else:
+            self.estimator_name = estimator_name
+            self.add_estimator(estimator,
+                               estimators_pid.is_parallel(estimator_name),
                                estimator_name)
