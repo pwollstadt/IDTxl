@@ -501,6 +501,21 @@ def mi_against_surrogates(analysis_setup, data, opts=None):
     return [orig_mi, significance, p_value]
 
 
+def check_n_perm(n_perm, alpha):
+    """Check if no. permutations is big enough to obtain the requested alpha.
+
+    Note:
+        The no. permutations must be big enough to theoretically allow for the
+        detection of a p-value that is smaller than the critical alpha level.
+        Otherwise the permutation test is pointless. The smalles possible
+        p-value is 1/n_perm.
+    """
+    if not 1.0 / n_perm < alpha:
+        raise RuntimeError('The number of permutations {0} is to small to test'
+                           ' the requested alpha level {1}. The number of '
+                           'permutations must be greater than (1/alpha).'.
+                               format(n_perm, alpha))
+
 def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
     """Create a table of surrogate transfer entropy values.
 
@@ -624,12 +639,7 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
             the test's p-value
     """
     assert(distribution.ndim == 1)
-    assert(1.0 / distribution.shape[0] < alpha), ('The number of permutations '
-                                                  'is to small ({0}) to test '
-                                                  'the requested alpha level '
-                                                  '({1}).'.format(
-                                                       distribution.shape[0],
-                                                       alpha))
+    check_n_perm(distribution.shape[0], alpha)
 #    if (1.0 / distribution.shape[0] >= alpha):
 #        print('The number of permutations is to small ({0}) to test the '
 #              'requested alpha level ({1}).'.format(distribution.shape[0],

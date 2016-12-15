@@ -2,6 +2,7 @@
 import sys
 import copy as cp
 import numpy as np
+from scipy.special import binom
 from .set_estimator import Estimator_cmi
 from . import stats
 from . import idtxl_utils
@@ -10,46 +11,22 @@ VERBOSE = True
 
 
 class Network_comparison():
+    """Set up network comparison for inference on networks.
 
-    def __init__(self, options):
-        try:
-            self.cmi_calculator = Estimator_cmi(options['cmi_calc_name'])
-        except KeyError:
-            raise KeyError('You have to provide an estimator name.')
-        try:
-            self.n_permutations = options['n_perm_comp']
-        except KeyError:
-            self.n_permutations = 10
-        try:
-            self.alpha = options['alpha_comp']
-        except KeyError:
-            self.alpha = 0.05
-        try:
-            self.tail = options['tail']
-        except KeyError:
-            self.tail = 'two'
-        try:
-            self.stats_type = options['stats_type']
-        except KeyError:
-            raise KeyError('You have to provide a "stats_type", "dependent" '
-                           'or "independent".')
-        self._check_n_perm()
-
-
-class Compare_single_recording(Network_comparison):
-    """Statisticall compare two networks from a single recording.
-
-    Arguments:
+    Args:
         network_1 : dict
             results from network inference
         network_2 : dict
             results from network inference
         options : dict
             options for statistical comparison of networks
-            'cmi_calc_name' - estimator to be used for CMI calculation
-            (For estimator options see the respective documentation.)
-            'n_perm_comp' - number of permutations (default=500)
-            'alpha_comp' - critical alpha level for statistical significance
+
+            - 'stats_type' - 'dependent' or 'independent' for dependent or
+              independent units of observation
+            - 'cmi_calc_name' - estimator to be used for CMI calculation
+              (For estimator options see the respective documentation.)
+            - 'n_perm_comp' - number of permutations (default=500)
+            - 'alpha_comp' - critical alpha level for statistical significance
             (default=0.05)
 
     Returns:
@@ -57,127 +34,211 @@ class Compare_single_recording(Network_comparison):
             statistical significance of difference of each source
         numpy array, float
             the test's p-values for each difference
-
     """
 
     def __init__(self, options):
-        super().__init__(options)
+        try:
+            self.stats_type = options['stats_type']
+        except KeyError:
+            raise KeyError('You have to provide a "stats_type": "dependent" '
+                           'or "independent".')
+        try:
+            self._cmi_calculator = Estimator_cmi(options['cmi_calc_name'])
+        except KeyError:
+            raise KeyError('No CMI calculator was specified!')
+        self.n_permutations = options.get('n_perm_comp', 10)
+        self.alpha = options.get('alpha_comp', 0.05)
+        self.tail = options.get('tail', 'two')
+        self.cmi_opts = options
+        stats.check_n_perm(self.n_permutations, self.alpha)
 
-    def compare(self, network_a, network_b, data_a, data_b):
-        # Generate union of links from both networks.
-        if VERBOSE:
-            print('\n------------------- (1) create union of networks')
+    def compare_within(self, network_a, network_b, data_a, data_b):
+        """Compare two networks within an unit of observation under two conditions.
+
+        Arguments:
+            network_a : dict
+                results from network inference, condition a
+            network_b : dict
+                results from network inference, condition b
+            data_a : Data object
+                data from which network_a was inferred
+            data_b : Data object
+                data from which network_b was inferred
+
+        Returns
+            dict
+                results of network comparison
+        """
+        # Check input and analysis parameters.
+        self._check_n_perm_within(data_a, data_b)
+        self._check_n_realisations(data_a, data_b)
+
+        # Main comparison.
+        print('\n-------------------------- (1) create union of networks')
         self._create_union(network_a, network_b)
+        print('\n-------------------------- (2) calculate original TE values')
+        self._calculate_cmi_diff_within(data_a, data_b)
+        print('\n-------------------------- (3) create surrogate distribution')
+        self._create_surrogate_distribution_within(data_a, data_b)
+        print('\n-------------------------- (4) determine p-value')
+        [pvalue, sign] = self._p_value_union()
+        return self.union, pvalue, sign
 
-        # Calculate test statistic from original data.
-        if VERBOSE:
-            print('\n------------------- (2) calculate original TE values')
-        cmi_diff = self._calculate_cmi_diff(data_a, data_b, options)
+    def compare_between(self, network_set_a, network_set_b, data_set_a,
+                        data_set_b):
+        """Compare networks between units of observation under two conditions.
 
-        # Generate surrogate distribution.
-        surr_distribution = np.zeros((self.n_permutations,
-                                      self.union['n_sources_tot']))
-        if VERBOSE:
-            print('\n------------------- (3) generate surrogate distributions')
-            print('n_perm: {0}. Done:    '.format(self.n_permutations), end='')
-        for p in range(self.n_permutations):
-            surr_distribution[p, ] = self._calculate_cmi_diff(data_a, data_b,
-                                                              options,
-                                                              permute=True)
-            if VERBOSE:
-                print('\b\b\b{num:03d}'.format(num=p + 1), end='')
-                sys.stdout.flush()
-        if VERBOSE:
-            print(' ')
+        Arguments:
+            network_set_a : numpy array of dicts
+                results from network inference for multiple subjects observed
+                under condition a
+            network_set_b : numpy array of dicts
+                results from network inference for multiple subjects observed
+                under condition b
+            data_a : numpy array of Data objects
+                set of data from which network_set_a was inferred
+            data_b : numpy array of Data objects
+                set of data from which network_set_b was inferred
 
-        # Test each original difference against its surrogate distribution.
-        significance = np.empty(self.union['n_sources_tot'])
-        pvalue = np.empty(self.union['n_sources_tot'])
-        for c in range(self.union['n_sources_tot']):
-            [s, p] = stats._find_pvalue(cmi_diff[c], surr_distribution[:, c],
-                                        self.alpha, tail=self.tail)
-            significance[c] = s
-            pvalue[c] = p
+        Returns
+            dict
+                results of network comparison
+        """
+        # Check input and analysis parameters.
+        network_all = np.hstack((network_set_a, network_set_b))
+        data_all = np.hstack((data_set_a, data_set_b))
+        self._check_n_perm_between(data_set_a, data_set_b)
+        self._check_n_realisations(*data_all)
 
-        return significance, pvalue
+        # Main comparison.
+        print('\n-------------------------- (1) create union of networks')
+        self._create_union(*network_all)
+        print('\n-------------------------- (2) calculate original TE values')
+        self._calculate_cmi_diff_between(data_set_a, data_set_b)
+        print('\n-------------------------- (3) create surrogate distribution')
+        self._create_surrogate_distribution_between(data_set_a, data_set_b)
+        print('\n-------------------------- (4) determine p-value')
+        [pvalue, sign] = self._p_value_union()
+        return self.union, pvalue, sign
 
-    def _check_n_perm(self):
-        sufficient = True
-        # TODO add this
-        if not sufficient:
-            raise ValueError('The number of realisations is not high enough to'
-                             ' allow for a sufficient number of permuations.')
+    def _check_n_perm_within(self, data_a, data_b):
+        """Check if requested no. permutations is sufficient for comparison."""
+        assert data_a.n_replications == data_b.n_replications, ('Unequal no. '
+                                'replications in the two data sets.')
+        n_replications = data_a.n_replications
+        if self.stats_type == 'dependent':
+            if self.n_permutations > 2**n_replications:
+                raise RuntimeError('The number of replications {0} in the data'
+                                   ' are not sufficient to enable the '
+                                   'requested no. permutations {1}'.format(
+                                                       n_replications,
+                                                       self.n_permutations))
+        elif self.stats_type == 'independent':
+            if self.n_permutations > binom(2*n_replications, n_replications):
+                raise RuntimeError('The number of replications {0} in the data'
+                                   ' are not sufficient to enable the '
+                                   'requested no. permutations {1}'.format(
+                                                       n_replications,
+                                                       self.n_permutations))
+        else:
+            raise RuntimeError('Unknown ''stats_type''!')
 
-    def _create_union(self, network_a, network_b):
-        """Create the union of sources for two networks."""
-        targets = np.array([i for i in network_a.keys()] +
-                           [i for i in network_b.keys()])
-        targets = np.unique(targets)
-        self.union = {}
+    def _check_n_perm_between(self, data_set_a, data_set_b):
+        """Check if requested no. permutations is sufficient for comparison."""
+
+        if self.stats_type == 'dependent':
+            assert len(data_set_a) == len(data_set_b), ('The number of data '
+                                    'sets is not equal between conditions.')
+            n_data_sets = len(data_set_a)
+            if self.n_permutations > 2**n_data_sets:
+                raise RuntimeError('The number of data sets per condition {0} '
+                                   'is not sufficient to enable the '
+                                   'requested no. permutations {1}'.format(
+                                                       n_data_sets,
+                                                       self.n_permutations))
+        elif self.stats_type == 'independent':
+            max_len = max(len(data_set_a), len(data_set_b))
+            total_len = len(data_set_a) + len(data_set_b)
+            if self.n_permutations > binom(total_len, max_len):
+                raise RuntimeError('The total number of data sets {0} is not '
+                                   'sufficient to enable the requested no. '
+                                   'permutations {1}'.format(
+                                                       total_len,
+                                                       self.n_permutations))
+        else:
+            raise RuntimeError('Unknown ''stats_type''!')
+
+    def _check_n_realisations(self, *data_sets):
+        """Check if all data sets have an equal no. realisations."""
+        n_data_sets = len(data_sets)
+        n_realisations = data_sets[0].n_realisations()
+        for d in data_sets:
+            if d.n_realisations() != n_realisations:
+                raise RuntimeError('Unequal no. realisations between data '
+                                   'sets.')
+
+    def _create_union(self, *networks):
+        """Create the union from a set of individual networks."""
+
+        targets = []
+        for nw in networks:
+            k = [i for i in nw.keys()]
+            try:
+                k.remove('fdr')
+            except ValueError:
+                pass
+            targets = targets + k
+        targets = np.unique(np.array(targets))
 
         # Get the maximum lags from the networks, we need this to get
         # realisations of variables later on.
+        self.union = {}
         self.union['targets'] = targets
-        self.union['n_sources_tot'] = 0
-        self.union['max_lag'] = network_a[targets[0]]['current_value'][1]
+        self.union['max_lag'] = networks[0][targets[0]]['current_value'][1]
 
-        for t in targets:
-            self.union[t] = {}
-            try:
-                lag = network_a[t]['current_value'][1]
-                if self.union['max_lag'] != lag:
-                    raise ValueError('Networks seem to have been analyzed '
-                                     'using different lags.')
-            except KeyError:
-                pass
-            try:
-                lag = network_b[t]['current_value'][1]
-                if self.union['max_lag'] != lag:
-                    raise ValueError('Networks seem to have been analyzed '
-                                     'using different lags.')
-            except KeyError:
-                pass
+        # Get the union of sources for each target in the union network.
+        for nw in networks:
+            for t in targets:
+                self.union[t] = {}
+                self.union[t]['conditional_sources'] = []
+                self.union[t]['conditional_target'] = []
 
-            try:
-                cond_src_a = network_a[t]['conditional_sources']
-                cond_tgt_a = network_a[t]['conditional_target']
-            except KeyError:
-                cond_src_a = []
-                cond_tgt_a = []
-            try:
-                cond_src_b = network_b[t]['conditional_sources']
-                cond_tgt_b = network_b[t]['conditional_target']
-            except KeyError:
-                cond_src_b = []
-                cond_tgt_b = []
-
-            # TODO convert lags to indices before adding them to the union
-
-            try:
-                self.union[t]['conditional_sources'] += cond_src_a
-                self.union[t]['conditional_target'] += cond_tgt_a
-            except KeyError:
-                self.union[t]['conditional_sources'] = cond_src_a
-                self.union[t]['conditional_target'] = cond_tgt_a
-            for c in cond_src_b:
+                # Check if the max_lag is the same for each network going into
+                # the comparison.
                 try:
-                    self.union[t]['conditional_sources'].index(c)
-                except ValueError:
-                    self.union[t]['conditional_sources'].append(c)
-            for c in cond_tgt_b:
+                    lag = nw[t]['current_value'][1]
+                    if self.union['max_lag'] != lag:
+                        raise ValueError('Networks seem to have been analyzed '
+                                         'using different lags.')
+                except KeyError:
+                    pass
+
+                # Get the conditionals from source and target for the current
+                # network and target. Use an empty array if no sources were
+                # selected for that target.
                 try:
-                    self.union[t]['conditional_target'].index(c)
-                except ValueError:
-                    self.union[t]['conditional_target'].append(c)
+                    cond_src = nw[t]['selected_vars_sources']
+                except KeyError:
+                    cond_src = []
+                try:
+                    cond_tgt = nw[t]['selected_vars_target']
+                except KeyError:
+                    cond_tgt = []
+                # TODO convert lags to indices before adding them to the union
 
-            self.union['n_sources_tot'] += len(
-                                        self.union[t]['conditional_sources'])
+                # Add conditional if it isn't already in the union network.
+                for c in cond_src:
+                    if c not in self.union[t]['conditional_sources']:
+                        self.union[t]['conditional_sources'].append(c)
+                for c in cond_tgt:
+                    if c not in self.union[t]['conditional_target']:
+                        self.union[t]['conditional_target'].append(c)
 
-    def _calculate_cmi_diff(self, data_a, data_b, cmi_options=None,
-                            permute=False):
+
+    def _calculate_cmi_diff_within(self, data_a, data_b, permute=False):
         """Calculate the difference in TE for each source and target.
 
-        Arguments:
+        Args:
             data_a : Data instance
                 first set of raw data
             data_a : Data instance
@@ -186,74 +247,256 @@ class Compare_single_recording(Network_comparison):
                 options for CMI estimation
             permute : bool [optional]
                 if True, permute data from same replications between sets a and
-                b
+                b, depending on the stats type set for the instance
 
         Returns:
             numpy array
                 TE differences
         """
-        te_diff = np.arange(0)
-        # Calculate TE for each candidate for each target.
+        # re-calculate TE for each data object using the union network mask
+        self.cmi_diff = self._calculate_diff(self._calculate_cmi(data_a),
+                                             self._calculate_cmi(data_b))
+
+    def _calculate_cmi_diff_between(self, data_set_a, data_set_b):
+        """Calculate the difference in CMI between two groups of data.
+        """
+        self.cmi_diff = self._get_diff_of_mean(data_set_a, data_set_b,
+                                               permute=False)
+        # TODO idea: loop over pairs of data in data_set_a and *_b and feed it to the within function?
+        # is the mean of differences the same as the difference of the mean? > yes
+        # BUT: such an implementation doesn't allow for unbalanced designs > this sucks and needs to
+        # be changed in the within function as well
+
+    def _get_diff_of_mean(self, data_set_a, data_set_b, permute=False):
+        # re-calculate TE for each data object using the union network mask
+        cmi_union_a = []
+        for d in data_set_a:
+            cmi_union_a.append(self._calculate_cmi(d))
+        cmi_union_b = []
+        for d in data_set_b:
+            cmi_union_b.append(self._calculate_cmi(d))
+
+        if permute:
+            cmi_all = cmi_union_a + cmi_union_b
+            new_partition_a = np.random.choice(range(len(cmi_all)),
+                                               size=len(cmi_union_a),
+                                               replace=False)
+            new_partition_b = list(set(range(0, len(cmi_all))) -
+                              set(new_partition_a))
+            cmi_a_perm = [cmi_all[i] for i in new_partition_a]
+            cmi_b_perm = [cmi_all[i] for i in new_partition_b]
+
+            return self._calculate_diff(self._calculate_mean(cmi_a_perm),
+                                        self._calculate_mean(cmi_b_perm))
+
+        else:
+            return self._calculate_diff(self._calculate_mean(cmi_union_a),
+                                        self._calculate_mean(cmi_union_b))
+
+        # get the mean difference between the two sets of TE estimates
+
+
+    def _calculate_cmi(self, data):
+        """Calculate CMI for each source/target combi in the union network."""
+
+        cmi = {}
         for t in self.union['targets']:
-            # Get realisations for the current target only once and reuse in
-            # the CMI calculation for each source.
             current_val = (t, self.union['max_lag'])
             cond_full = (self.union[t]['conditional_target'] +
                          self.union[t]['conditional_sources'])
-            [cur_val_real_a, repl_idx] = data_a.get_realisations(current_val,
-                                                                 [current_val])
-            cur_val_real_b = data_b.get_realisations(current_val,
-                                                     [current_val])[0]
-            cond_full_real_a = data_a.get_realisations(current_val,
-                                                       cond_full)[0]
-            cond_full_real_b = data_b.get_realisations(current_val,
-                                                       cond_full)[0]
+            # get realisations of the current value and the full cond. set.
+            [cur_val_real, repl_idx] = data.get_realisations(current_val,
+                                                             [current_val])
+            cond_full_real = data.get_realisations(current_val, cond_full)[0]
 
-            if permute:
-                [cond_full_real_a,
-                 cond_full_real_b,
-                 cur_val_real_a,
-                 cur_val_real_b, ] = (self._permute_replications(
-                                                             cond_full_real_a,
-                                                             cond_full_real_b,
-                                                             cur_val_real_a,
-                                                             cur_val_real_b,
-                                                             repl_idx))
+#            if permute:
+#                [cond_full_real_a,
+#                 cond_full_real_b,
+#                 cur_val_real_a,
+#                 cur_val_real_b] = self._permute_replications(cond_full_real_a,
+#                                                              cond_full_real_b,
+#                                                              cur_val_real_a,
+#                                                              cur_val_real_b,
+#                                                              repl_idx)
 
-            te_diff_temp = np.zeros(len(self.union[t]['conditional_sources']))
-            i = 0
+            # Calculate TE from each source to current target t
+            cmi_temp = []
             for c in self.union[t]['conditional_sources']:
                 current_cond = cp.copy(self.union[t]['conditional_sources'])
                 current_cond.pop(current_cond.index(c))
 
-                # Calculate first TE.
+                # get realisations of current TE-source from the set of all
+                # conditionals and calculate the CMI
                 [cond_real, source_real] = self._separate_realisations(
                                                              cond_full,
                                                              c,
-                                                             cond_full_real_a)
+                                                             cond_full_real)
+                cmi_temp.append(self._cmi_calculator.estimate(
+                                                        cur_val_real,
+                                                        source_real,
+                                                        cond_real,
+                                                        self.cmi_opts))
 
-                cmi_a = self.cmi_calculator.estimate(cur_val_real_a,
-                                                     source_real,
-                                                     cond_real,
-                                                     options)
+            cmi[t] = np.array(cmi_temp)
 
-                # Calculate second TE.
-                [cond_real, source_real] = self._separate_realisations(
+        return cmi
+
+    def _calculate_cmi_permuted(self, data, data_perm):
+        """Calculate surrogate CMI for union network
+
+        Calculate CMI for each source/target combi after permuting realisations
+        of sources between the two data sets. Results can be used in a
+        surrogate permutation test of the CMI.
+        """
+
+        cmi_a = {}
+        cmi_b = {}
+        for t in self.union['targets']:
+
+            # Get full conditioning set for current target.
+            cond_full = (self.union[t]['conditional_target'] +
+                         self.union[t]['conditional_sources'])
+            # Get realisations, where realisations are permuted replication-
+            # wise between two data sets (e.g., from different conditions)
+            [cond_full_perm_a,
+             cur_val_perm_a,
+             cond_full_perm_b,
+             cur_val_perm_b] = self._get_permuted_replications(data,
+                                                               data_perm,
+                                                               t)
+            # Calculate TE from each source to current target t
+            cmi_temp_a = []
+            cmi_temp_b = []
+            for c in self.union[t]['conditional_sources']:
+                current_cond = cp.copy(self.union[t]['conditional_sources'])
+                current_cond.pop(current_cond.index(c))
+
+                # Get realisations of current (permuted) TE-source from the set
+                # of all conditionals and calculate the CMI.
+                [cond_real_a, source_real_a] = self._separate_realisations(
                                                              cond_full,
                                                              c,
-                                                             cond_full_real_b)
-                cmi_b = self.cmi_calculator.estimate(cur_val_real_b,
-                                                     source_real,
-                                                     cond_real,
-                                                     options)
-                te_diff_temp[i] = cmi_a - cmi_b
+                                                             cond_full_perm_a)
+                cmi_temp_a.append(self._cmi_calculator.estimate(
+                                                        cur_val_perm_a,
+                                                        source_real_a,
+                                                        cond_real_a,
+                                                        self.cmi_opts))
+                [cond_real_b, source_real_b] = self._separate_realisations(
+                                                             cond_full,
+                                                             c,
+                                                             cond_full_perm_b)
+                cmi_temp_b.append(self._cmi_calculator.estimate(
+                                                        cur_val_perm_b,
+                                                        source_real_b,
+                                                        cond_real_b,
+                                                        self.cmi_opts))
+            cmi_a[t] = np.array(cmi_temp_a)
+            cmi_b[t] = np.array(cmi_temp_b)
+
+        return cmi_a, cmi_b
+
+    def _calculate_mean(self, cmi_set):
+        """Calculate the mean CMI over multiple networks for all targets."""
+        cmi_mean = {}
+        for t in self.union['targets']:
+            n_sources = cmi_set[0][t].shape[0]
+            n_datasets = len(cmi_set)
+            temp = np.empty((n_datasets, n_sources))
+            i = 0
+            for c in cmi_set:
+                temp[i,:] = c[t]
                 i += 1
-            te_diff = np.hstack((te_diff, te_diff_temp))
-        return te_diff
+            cmi_mean[t] = np.mean(temp, axis=0)
+        return cmi_mean
 
-    def _permute_replications(self, cond_a, cond_b, cur_val_a, cur_val_b,
-                              repl_idx):
-        """Permute realisations in replications between two conditions."""
+    def _calculate_diff(self, cmi_a, cmi_b):
+        """Calculate the difference between two CMI estimates over all targets.
+        """
+        cmi_diff = {}
+        for t in self.union['targets']:
+            cmi_diff[t] = cmi_a[t] - cmi_b[t]
+        return cmi_diff
+
+    def _create_surrogate_distribution_within(self, data_a, data_b):
+        """Create the surrogate distribution for network inference.
+
+        Create distribution by permuting realisations between conditions and
+        re-calculating the conditional mutual information (CMI). Realisations
+        are shuffled as whole trials, the permutation strategy depends on the
+        stats type set in the instance (dependent or independent).
+
+        Args:
+            data_a : Data instance
+                first set of raw data
+            data_a : Data instance
+                second set of raw data
+        """
+        self.cmi_surr = []
+        for p in range(self.n_permutations):
+            [cmi_a, cmi_b] = self._calculate_cmi_permuted(data_a, data_b)
+            self.cmi_surr.append(self._calculate_diff(cmi_a, cmi_b))
+
+    def _create_surrogate_distribution_between(self, data_set_a, data_set_b):
+        """Create the surrogate distribution for network inference.
+
+        Create distribution by permuting CMI estimates between conditions and
+        re-calculating the mean of differences. The permutation strategy
+        depends on the stats type set in the instance (dependent or
+        independent).
+
+        Args:
+            data_a : Data instance
+                first set of raw data
+            data_a : Data instance
+                second set of raw data
+        """
+        self.cmi_surr = []
+        for p in range(self.n_permutations):
+            self.cmi_surr.append(self._get_diff_of_mean(data_set_a,
+                                                        data_set_b,
+                                                        permute=True))
+
+    def _p_value_union(self):
+        """Calculate the p-value for the TE between each source and target."""
+        # Test each original difference against its surrogate distribution.
+        significance = {}
+        pvalue = {}
+        for t in self.union['targets']:
+            n_sources = self.cmi_surr[0][t].shape[0]
+            if n_sources == 0:
+                continue
+            surr_temp = np.zeros((self.n_permutations, n_sources))
+            significance[t] = np.empty(n_sources, dtype=bool)
+            pvalue[t] = np.empty(n_sources)
+            for p in range(self.n_permutations):
+                surr_temp[p, :] = self.cmi_surr[p][t]
+            for s in range(n_sources):
+                [sign, pval] = stats._find_pvalue(self.cmi_diff[t][s],
+                                                  surr_temp[:, s],
+                                                  self.alpha,
+                                                  self.tail)
+                significance[t][s] = sign
+                pvalue[t][s] = pval
+        return pvalue, significance
+
+    def _get_permuted_replications(self, data_a, data_b, target):
+        """Return realisations with replications permuted between conditions."""
+
+        # Get indices of current value and full conditioning set in the
+        # union network.
+        current_val = (target, self.union['max_lag'])
+        cond_full = (self.union[target]['conditional_target'] +
+                     self.union[target]['conditional_sources'])
+
+        # Get realisations of the current value and the full cond. set.
+        [cur_val_a, repl_idx] = data_a.get_realisations(current_val,
+                                                        [current_val])
+        cur_val_b = data_b.get_realisations(current_val, [current_val])[0]
+        cond_a = data_a.get_realisations(current_val, cond_full)[0]
+        cond_b = data_b.get_realisations(current_val, cond_full)[0]
+
+        # Get no. replications and no. samples per replication.
         n_repl = max(repl_idx) + 1
         n_per_repl = sum(repl_idx == 0)
 
@@ -307,7 +550,7 @@ class Compare_single_recording(Network_comparison):
         else:
             raise ValueError('Unkown "stats_type": {0}, should be "dependent" '
                              'or "independent".'.format(self.stats_type))
-        return cond_a_perm, cond_b_perm, cur_val_a_perm, cur_val_b_perm
+        return cond_a_perm, cur_val_a_perm, cond_b_perm, cur_val_b_perm
 
     def _separate_realisations(self, idx_full, idx_single, real_full):
         """Remove single indexes' realisations from a set of realisations.

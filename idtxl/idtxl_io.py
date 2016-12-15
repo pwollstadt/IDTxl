@@ -1,5 +1,6 @@
 """Provide load and save functionality for IDTxl results."""
 import json
+import pickle
 import copy as cp
 import numpy as np
 from .data import Data
@@ -125,3 +126,18 @@ def load(file_path):
         d = Data(f['data'], dim_order='psr', normalise=False)
         d.normalise = f['normalised']
         return d
+
+def save_pickle(obj, name):
+    """Save objects using Python's pickle module.
+
+    Note:
+        pickle.HIGHEST_PROTOCOL is a binary format, which may be inconvenient,
+        but is good for performance. Protocol 0 is a text format.
+    """
+    with open(name + '.pkl', 'wb') as f:
+        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+def load_pickle(name):
+    """Load objects that have been saved using Python's pickle module."""
+    with open(name + '.pkl', 'rb') as f:
+        return pickle.load(f)
