@@ -1,0 +1,7 @@
+idtxl.pyinfo module
+===================
+
+.. automodule:: idtxl.pyinfo
+    :members:
+    :undoc-members:
+    :show-inheritance:

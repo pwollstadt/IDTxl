@@ -11,9 +11,9 @@ Note:
 """
 import numpy as np
 import itertools as it
-import stats
-from network_analysis import Network_analysis
-from set_estimator import Estimator_cmi
+from . import stats
+from .network_analysis import Network_analysis
+from .set_estimator import Estimator_cmi
 
 VERBOSE = True
 
@@ -111,9 +111,9 @@ class Bivariate_te(Network_analysis):
         super().__init__()
 
     def analyse_network(self, data, targets='all', sources='all'):
-        """Find multivariate transfer entropy between all nodes in the network.
+        """Find bivariate transfer entropy between all nodes in the network.
 
-        Estimate multivariate transfer entropy between provided sources and
+        Estimate bivariate transfer entropy between provided sources and
         each target. Custom source sets can be provided for each target, as
         lists of lists of nodes.
 
@@ -132,13 +132,13 @@ class Bivariate_te(Network_analysis):
             >>>     }
             >>> target = 0
             >>> sources = [1, 2, 3]
-            >>> network_analysis = Multivariate_te(max_lag, analysis_opts,
-            >>>                                    min_lag)
+            >>> network_analysis = Bivariate_te(max_lag, analysis_opts,
+            >>>                                 min_lag)
             >>> res = network_analysis.analyse_single_target(dat, target,
             >>>                                              sources)
 
         Note:
-            For more details on the estimation of multivariate transfer entropy
+            For more details on the estimation of bivariate transfer entropy
             see documentation of class method 'analyse_single_target'.
 
         Args:
@@ -183,10 +183,10 @@ class Bivariate_te(Network_analysis):
         return results
 
     def analyse_single_target(self, data, target, sources='all'):
-        """Find multivariate transfer entropy between sources and a target.
+        """Find bivariate transfer entropy between sources and a target.
 
-        Find multivariate transfer entropy between all source processes and the
-        target process. Uses multivariate, non-uniform embedding found through
+        Find bivariate transfer entropy between all source processes and the
+        target process. Uses bivariate, non-uniform embedding found through
         information maximisation (see Faes, ???, and Lizier, 2012). This is
         done in four steps (see Lizier and Faes for details):
 

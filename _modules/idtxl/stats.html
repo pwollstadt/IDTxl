@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+
+
+
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    
+    <title>idtxl.stats &mdash; IDTxl 0.1 documentation</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    
+
+<link rel="stylesheet" href="../../_static/css/basicstrap-base.css" type="text/css" />
+<link rel="stylesheet" id="current-theme" href="../../_static/css/bootstrap3/bootswatch-spacelab.css" type="text/css" />
+<link rel="stylesheet" id="current-adjust-theme" href="../../_static/css/adjust_theme/bootswatch-spacelab.css" type="text/css" />
+
+<link rel="stylesheet" href="../../_static/css/font-awesome.min.css">
+
+<style type="text/css">
+  body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+  }
+</style>
+
+<link rel="stylesheet" href="../../_static/css/basicstrap.css" type="text/css" />
+<link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+<script type="text/javascript">
+  var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:    '../../',
+            VERSION:     '0.1',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE:  true
+  };
+</script>
+    <script type="text/javascript" src="../../_static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/bootstrap3.min.js"></script>
+<script type="text/javascript" src="../../_static/js/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="../../_static/js/basicstrap.js"></script>
+<script type="text/javascript">
+</script>
+    <link rel="top" title="IDTxl 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div id="navbar-top" class="navbar navbar-fixed-top navbar-default" role="navigation" aria-label="top navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../../index.html">IDTxl 0.1 documentation</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+
+            
+              <li><a href="../../py-modindex.html" title="Python Module Index" >modules </a></li>
+              <li><a href="../../genindex.html" title="General Index" accesskey="I">index </a></li>
+              <li><a href="../index.html" accesskey="U">Module code</a></li>
+            
+
+            <li class="visible-xs">
+                <form class="search form-search form-inline navbar-form navbar-right sp-searchbox" action="../../search.html" method="get">
+                  <div class="input-append input-group">
+                    <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+                    <span class="input-group-btn">
+                    <input type="submit" class="btn" value="Go" />
+                    </span>
+                  </div>
+                  <input type="hidden" name="check_keywords" value="yes" />
+                  <input type="hidden" name="area" value="default" />
+                </form>
+            </li>
+
+            
+
+          </ul>
+
+        </div>
+      </div>
+    </div>
+    
+
+    <!-- container -->
+    <div class="container">
+
+      <!-- row -->
+      <div class="row">
+        
+        
+
+        <div class="col-md-9" id="content-wrapper">
+          <div class="document" role="main">
+            <div class="documentwrapper">
+              <div class="bodywrapper">
+                <div class="body">
+                  
+  <h1>Source code for idtxl.stats</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Provide statistics functions.</span>
+
+<span class="sd">Created on Mon Mar  7 18:13:27 2016</span>
+
+<span class="sd">@author: patricia</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">copy</span> <span class="kn">as</span> <span class="nn">cp</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">idtxl_utils</span> <span class="k">as</span> <span class="n">utils</span>
+
+<span class="n">VERBOSE</span> <span class="o">=</span> <span class="bp">True</span>
+
+
+<div class="viewcode-block" id="network_fdr"><a class="viewcode-back" href="../../idtxl.html#idtxl.stats.network_fdr">[docs]</a><span class="k">def</span> <span class="nf">network_fdr</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">correct_by_target</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Perform FDR-correction on results of network inference.</span>
+
+<span class="sd">    Perform correction of the false discovery rate (FDR) after network</span>
+<span class="sd">    analysis. FDR correction can either be applied at the target level</span>
+<span class="sd">    (by correcting omnibus p-values) or at the single-link level (by correcting</span>
+<span class="sd">    p-values of individual links between single samples and the target).</span>
+<span class="sd">    Reference for FDR correction:</span>
+
+<span class="sd">    Genovese, C.R., Lazar, N.A., &amp; Nichols, T. (2002). Thresholding of</span>
+<span class="sd">    statistical maps in functional neuroimaging using the false discovery</span>
+<span class="sd">    rate. Neuroimage, 15(4), 870-878.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        results : dict</span>
+<span class="sd">            network inference results where each dict entry represents results</span>
+<span class="sd">            for one target node</span>
+<span class="sd">        alpha : float [optional]</span>
+<span class="sd">            critical alpha value for statistical significance (default=0.05)</span>
+<span class="sd">        correct_by_target : bool</span>
+<span class="sd">            if true p-values are corrected on the target level and on the</span>
+<span class="sd">            single-link level otherwise (default=True)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict</span>
+<span class="sd">            input results structure pruned of non-significant links.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Make a copy that can be changed and returned after testing.</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+    <span class="c"># Get candidates and their test results from the results dictionary, i.e.,</span>
+    <span class="c"># collect results over targets.</span>
+    <span class="n">pval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">target_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">cands</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">correct_by_target</span><span class="p">:</span>  <span class="c"># correct p-value of whole target (all candidates)</span>
+        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">res</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="s">&#39;omnibus_sign&#39;</span><span class="p">]:</span>  <span class="c"># skip if not significant</span>
+                <span class="k">continue</span>
+            <span class="n">pval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pval</span><span class="p">,</span> <span class="n">res</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="s">&#39;omnibus_pval&#39;</span><span class="p">])</span>
+            <span class="n">target_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target_idx</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>   <span class="c"># correct p-value of single candidates</span>
+        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">res</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="s">&#39;omnibus_sign&#39;</span><span class="p">]:</span>  <span class="c"># skip if not significant</span>
+                <span class="k">continue</span>
+            <span class="n">n_sign</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="s">&#39;cond_sources_pval&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">size</span>
+            <span class="n">pval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pval</span><span class="p">,</span> <span class="n">res</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="s">&#39;cond_sources_pval&#39;</span><span class="p">])</span>
+            <span class="n">target_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target_idx</span><span class="p">,</span>
+                                   <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_sign</span><span class="p">)</span> <span class="o">*</span> <span class="n">target</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+            <span class="n">cands</span> <span class="o">=</span> <span class="n">cands</span> <span class="o">+</span> <span class="n">res</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="s">&#39;selected_vars_sources&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">pval</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;No links in final results. Return ...&#39;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="c"># Sort all p-values in ascending order.</span>
+    <span class="n">sort_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">pval</span><span class="p">)</span>
+    <span class="n">pval</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+    <span class="c"># Calculate threshold (exact or by approximating the harmonic sum).</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">pval</span><span class="o">.</span><span class="n">size</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">1000</span><span class="p">:</span>
+        <span class="n">thresh</span> <span class="o">=</span> <span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">alpha</span> <span class="o">/</span>
+                  <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">thresh</span> <span class="o">=</span> <span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">alpha</span> <span class="o">/</span>
+                  <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">e</span><span class="p">))</span>  <span class="c"># aprx. harmonic sum with Euler&#39;s number</span>
+
+    <span class="c"># Compare data to threshold.</span>
+    <span class="n">sign</span> <span class="o">=</span> <span class="n">pval</span> <span class="o">&lt;=</span> <span class="n">thresh</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">sign</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="n">first_false</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">sign</span><span class="p">))[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">sign</span><span class="p">[</span><span class="n">first_false</span><span class="p">:]</span> <span class="o">=</span> <span class="bp">False</span>  <span class="c"># avoids false positives due to equal pvals</span>
+
+    <span class="c"># Go over list of all candidates and remove them from the results dict.</span>
+    <span class="n">sign</span> <span class="o">=</span> <span class="n">sign</span><span class="p">[</span><span class="n">sort_idx</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">sign</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">sign</span><span class="p">[</span><span class="n">s</span><span class="p">]:</span>
+            <span class="k">continue</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c"># remove non-significant candidate and it&#39;s p-value from results</span>
+            <span class="k">if</span> <span class="n">correct_by_target</span><span class="p">:</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">target_idx</span><span class="p">[</span><span class="n">s</span><span class="p">]</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;selected_vars_full&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;selected_vars_target&#39;</span><span class="p">]</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;cond_sources_te&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;cond_sources_pval&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;selected_vars_sources&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;omnibus_pval&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;omnibus_sign&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">target_idx</span><span class="p">[</span><span class="n">s</span><span class="p">]</span>
+                <span class="n">cand</span> <span class="o">=</span> <span class="n">cands</span><span class="p">[</span><span class="n">s</span><span class="p">]</span>
+                <span class="n">cand_ind</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;selected_vars_sources&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">cand</span><span class="p">)</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;selected_vars_sources&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">cand_ind</span><span class="p">)</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;cond_sources_pval&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+                                    <span class="n">res</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;cond_sources_pval&#39;</span><span class="p">],</span> <span class="n">cand_ind</span><span class="p">)</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;cond_sources_te&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+                                    <span class="n">res</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;cond_sources_te&#39;</span><span class="p">],</span> <span class="n">cand_ind</span><span class="p">)</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;selected_vars_full&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span>
+                                    <span class="n">res</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;selected_vars_full&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">cand</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+</div>
+<div class="viewcode-block" id="omnibus_test"><a class="viewcode-back" href="../../idtxl.html#idtxl.stats.omnibus_test">[docs]</a><span class="k">def</span> <span class="nf">omnibus_test</span><span class="p">(</span><span class="n">analysis_setup</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">opts</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Perform an omnibus test on identified conditional variables.</span>
+
+<span class="sd">    Test the joint information transfer from all identified sources to the</span>
+<span class="sd">    current value conditional on candidates in the target&#39;s past. To test for</span>
+<span class="sd">    significance, this is repeated for shuffled realisations of the sources.</span>
+<span class="sd">    The distribution of values from shuffled data is then used as test</span>
+<span class="sd">    distribution.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        analysis_setup : Multivariate_te instance</span>
+<span class="sd">            information on the current analysis</span>
+<span class="sd">        data : Data instance</span>
+<span class="sd">            raw data</span>
+<span class="sd">        opts : dict [optional]</span>
+<span class="sd">            parameters for statistical testing, can contain</span>
+
+<span class="sd">            - &#39;n_perm_omnibus&#39; - number of permutations (default=500)</span>
+<span class="sd">            - &#39;alpha_omnibus&#39; - critical alpha level (default=0.05)</span>
+<span class="sd">            - &#39;perm_range&#39; - permutation range if permutation over samples is</span>
+<span class="sd">              used to create surrogates (default=&#39;max&#39;)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bool</span>
+<span class="sd">            statistical significance</span>
+<span class="sd">        float</span>
+<span class="sd">            the test&#39;s p-value</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">opts</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">opts</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">n_permutations</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;n_perm_omnibus&#39;</span><span class="p">,</span> <span class="mi">21</span><span class="p">)</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;alpha_omnibus&#39;</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
+    <span class="n">perm_range</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;perm_range_omnibus&#39;</span><span class="p">,</span> <span class="s">&#39;max&#39;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;no. target sources: {0}, no. sources: {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                    <span class="nb">len</span><span class="p">(</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">selected_vars_target</span><span class="p">),</span>
+                                    <span class="nb">len</span><span class="p">(</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">)))</span>
+
+    <span class="c"># Create temporary variables b/c realisations for sources and targets are</span>
+    <span class="c"># created on the fly, which is costly, so we want to re-use them after</span>
+    <span class="c"># creation. (This does not apply to the current value realisations).</span>
+    <span class="n">cond_source_realisations</span> <span class="o">=</span> <span class="p">(</span><span class="n">analysis_setup</span>
+                                <span class="o">.</span><span class="n">_selected_vars_sources_realisations</span><span class="p">)</span>
+    <span class="n">cond_target_realisations</span> <span class="o">=</span> <span class="p">(</span><span class="n">analysis_setup</span>
+                                <span class="o">.</span><span class="n">_selected_vars_target_realisations</span><span class="p">)</span>
+    <span class="n">te_orig</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">_cmi_calculator</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span>
+                            <span class="n">var1</span><span class="o">=</span><span class="n">cond_source_realisations</span><span class="p">,</span>
+                            <span class="n">var2</span><span class="o">=</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">_current_value_realisations</span><span class="p">,</span>
+                            <span class="n">conditional</span><span class="o">=</span><span class="n">cond_target_realisations</span><span class="p">,</span>
+                            <span class="n">opts</span><span class="o">=</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="c"># Create the surrogate distribution by permuting the conditional sources.</span>
+    <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;omnibus test, n_perm: {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_permutations</span><span class="p">))</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    # Calculate TE in parallel for all permutations</span>
+<span class="sd">    surr_cond_real = np.empty(</span>
+<span class="sd">        (n_permutations * data.n_realisations(analysis_setup.current_value),</span>
+<span class="sd">         len(analysis_setup.selected_vars_sources)))</span>
+<span class="sd">    i_1 = 0</span>
+<span class="sd">    i_2 = data.n_realisations(analysis_setup.current_value)</span>
+<span class="sd">    for perm in range(n_permutations):</span>
+<span class="sd">        if permute_over_replications:</span>
+<span class="sd">            surr_cond_real[i_1:i_2, ] = data.permute_data(</span>
+<span class="sd">                                    analysis_setup.current_value,</span>
+<span class="sd">                                    analysis_setup.selected_vars_sources)[0]</span>
+<span class="sd">        else:</span>
+<span class="sd">            surr_cond_real[i_1:i_2, ] = _permute_realisations(</span>
+<span class="sd">                                            cond_source_realisations,</span>
+<span class="sd">                                            analysis_setup._replication_index)</span>
+<span class="sd">        i_1 = i_2</span>
+<span class="sd">        i_2 += data.n_realisations(analysis_setup.current_value)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+    <span class="n">surr_cond_real</span> <span class="o">=</span> <span class="n">_generate_surrogates</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>
+                                          <span class="n">analysis_setup</span><span class="o">.</span><span class="n">current_value</span><span class="p">,</span>
+                                          <span class="n">analysis_setup</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">,</span>
+                                          <span class="n">n_permutations</span><span class="p">,</span>
+                                          <span class="n">perm_range</span><span class="p">)</span>
+
+    <span class="n">surr_distribution</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">_cmi_calculator</span><span class="o">.</span><span class="n">estimate_mult</span><span class="p">(</span>
+                            <span class="n">n_chunks</span><span class="o">=</span><span class="n">n_permutations</span><span class="p">,</span>
+                            <span class="n">options</span><span class="o">=</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">options</span><span class="p">,</span>
+                            <span class="n">re_use</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;var2&#39;</span><span class="p">,</span> <span class="s">&#39;conditional&#39;</span><span class="p">],</span>
+                            <span class="n">var1</span><span class="o">=</span><span class="n">surr_cond_real</span><span class="p">,</span>
+                            <span class="n">var2</span><span class="o">=</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">_current_value_realisations</span><span class="p">,</span>
+                            <span class="n">conditional</span><span class="o">=</span><span class="n">cond_target_realisations</span><span class="p">)</span>
+    <span class="p">[</span><span class="n">significance</span><span class="p">,</span> <span class="n">pvalue</span><span class="p">]</span> <span class="o">=</span> <span class="n">_find_pvalue</span><span class="p">(</span><span class="n">te_orig</span><span class="p">,</span> <span class="n">surr_distribution</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">significance</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39; -- significant&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39; -- not significant&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">significance</span><span class="p">,</span> <span class="n">pvalue</span><span class="p">,</span> <span class="n">te_orig</span>
+
+</div>
+<div class="viewcode-block" id="max_statistic"><a class="viewcode-back" href="../../idtxl.html#idtxl.stats.max_statistic">[docs]</a><span class="k">def</span> <span class="nf">max_statistic</span><span class="p">(</span><span class="n">analysis_setup</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">candidate_set</span><span class="p">,</span> <span class="n">te_max_candidate</span><span class="p">,</span>
+                  <span class="n">opts</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Perform maximum statistics for one candidate source.</span>
+
+<span class="sd">    Test if a transfer entropy value is significantly bigger than the maximum</span>
+<span class="sd">    values obtained from surrogates of all remanining candidates.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        analysis_setup : Multivariate_te instance</span>
+<span class="sd">            information on the current analysis</span>
+<span class="sd">        data : Data instance</span>
+<span class="sd">            raw data</span>
+<span class="sd">        candidate_set : list of tuples</span>
+<span class="sd">            list of indices of remaning candidates</span>
+<span class="sd">        te_max_candidate : float</span>
+<span class="sd">            transfer entropy value to be tested</span>
+<span class="sd">        opts : dict [optional]</span>
+<span class="sd">            parameters for statistical testing, can contain:</span>
+
+<span class="sd">            - &#39;n_perm_max_stat&#39; - number of permutations (default=500)</span>
+<span class="sd">            - &#39;alpha_max_stat&#39; - critical alpha level (default=0.05)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bool</span>
+<span class="sd">            statistical significance</span>
+<span class="sd">        float</span>
+<span class="sd">            the test&#39;s p-value</span>
+<span class="sd">        numpy array</span>
+<span class="sd">            surrogate table</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">opts</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">opts</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">n_perm</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;n_perm_max_stat&#39;</span><span class="p">,</span> <span class="mi">21</span><span class="p">)</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;alpha_max_stat&#39;</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">candidate_set</span><span class="p">),</span> <span class="s">&#39;The candidate set is empty.&#39;</span>
+
+    <span class="n">surr_table</span> <span class="o">=</span> <span class="n">_create_surrogate_table</span><span class="p">(</span><span class="n">analysis_setup</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">candidate_set</span><span class="p">,</span>
+                                         <span class="n">n_perm</span><span class="p">)</span>
+    <span class="n">max_distribution</span> <span class="o">=</span> <span class="n">_find_table_max</span><span class="p">(</span><span class="n">surr_table</span><span class="p">)</span>
+    <span class="p">[</span><span class="n">significance</span><span class="p">,</span> <span class="n">pvalue</span><span class="p">]</span> <span class="o">=</span> <span class="n">_find_pvalue</span><span class="p">(</span><span class="n">te_max_candidate</span><span class="p">,</span> <span class="n">max_distribution</span><span class="p">,</span>
+                                          <span class="n">alpha</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">significance</span><span class="p">,</span> <span class="n">pvalue</span><span class="p">,</span> <span class="n">surr_table</span>
+
+</div>
+<div class="viewcode-block" id="max_statistic_sequential"><a class="viewcode-back" href="../../idtxl.html#idtxl.stats.max_statistic_sequential">[docs]</a><span class="k">def</span> <span class="nf">max_statistic_sequential</span><span class="p">(</span><span class="n">analysis_setup</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">opts</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Perform sequential maximum statistics for a set of candidate sources.</span>
+
+<span class="sd">    Test if sorted transfer entropy (TE) values are significantly bigger than</span>
+<span class="sd">    their respective counterpart obtained from surrogates of all remanining</span>
+<span class="sd">    candidates: test if the biggest TE is bigger than the distribution</span>
+<span class="sd">    of biggest TE surrogate values; test if the 2nd biggest TE is bigger than</span>
+<span class="sd">    the distribution of 2nd biggest surrogate TE values; ...</span>
+<span class="sd">    Stop comparison if a TE value is non significant, all smaller values are</span>
+<span class="sd">    considered non-significant as well.</span>
+
+<span class="sd">    This function will re-use the surrogate table created in the last min-stats</span>
+<span class="sd">    round if that table is in the analysis_setup. This saves the complete</span>
+<span class="sd">    calculation of surrogates for this statistic.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        analysis_setup : Multivariate_te instance</span>
+<span class="sd">            information on the current analysis</span>
+<span class="sd">        data : Data instance</span>
+<span class="sd">            raw data</span>
+<span class="sd">        opts : dict [optional]</span>
+<span class="sd">            parameters for statistical testing, can contain:</span>
+
+<span class="sd">            - &#39;n_perm_max_seq&#39; - number of permutations</span>
+<span class="sd">              (default=&#39;n_perm_min_stat&#39;|500)</span>
+<span class="sd">            - &#39;alpha_max_seq&#39; - critical alpha level (default=0.05)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        numpy array, bool</span>
+<span class="sd">            statistical significance of each source</span>
+<span class="sd">        numpy array, float</span>
+<span class="sd">            the test&#39;s p-values for each source</span>
+<span class="sd">        numpy array, float</span>
+<span class="sd">            TE values for individual sources</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">opts</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">opts</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">n_permutations</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s">&#39;n_perm_max_seq&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>  <span class="c"># use the same n_perm as for min_stats if surr table is reused</span>
+            <span class="n">n_permutations</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">_min_stats_surr_table</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>  <span class="c"># is surr table is None, use default</span>
+            <span class="n">n_permutations</span> <span class="o">=</span> <span class="mi">500</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;alpha_max_seq&#39;</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
+
+    <span class="c"># Calculate TE for each candidate in the conditional source set and sort</span>
+    <span class="c"># TE values.</span>
+    <span class="n">candidate_realisations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">n_realisations</span><span class="p">(</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">current_value</span><span class="p">)</span> <span class="o">*</span>
+                         <span class="nb">len</span><span class="p">(</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">conditional_realisations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">n_realisations</span><span class="p">(</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">current_value</span><span class="p">)</span> <span class="o">*</span>
+                            <span class="nb">len</span><span class="p">(</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">),</span>
+                         <span class="nb">len</span><span class="p">(</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">i_1</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">i_2</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">n_realisations</span><span class="p">(</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">current_value</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">conditional</span> <span class="ow">in</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">:</span>
+        <span class="p">[</span><span class="n">temp_cond</span><span class="p">,</span> <span class="n">temp_cand</span><span class="p">]</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">_separate_realisations</span><span class="p">(</span>
+                                            <span class="n">analysis_setup</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="p">,</span>
+                                            <span class="n">conditional</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">temp_cond</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">conditional_realisations</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">conditional_realisations</span><span class="p">[</span><span class="n">i_1</span><span class="p">:</span><span class="n">i_2</span><span class="p">,</span> <span class="p">]</span> <span class="o">=</span> <span class="n">temp_cond</span>
+        <span class="n">candidate_realisations</span><span class="p">[</span><span class="n">i_1</span><span class="p">:</span><span class="n">i_2</span><span class="p">,</span> <span class="p">]</span> <span class="o">=</span> <span class="n">temp_cand</span>
+        <span class="n">i_1</span> <span class="o">=</span> <span class="n">i_2</span>
+        <span class="n">i_2</span> <span class="o">+=</span> <span class="n">data</span><span class="o">.</span><span class="n">n_realisations</span><span class="p">(</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">current_value</span><span class="p">)</span>
+
+    <span class="n">individual_te</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">_cmi_calculator</span><span class="o">.</span><span class="n">estimate_mult</span><span class="p">(</span>
+                            <span class="n">n_chunks</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">),</span>
+                            <span class="n">options</span><span class="o">=</span><span class="n">opts</span><span class="p">,</span>
+                            <span class="n">re_use</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;var2&#39;</span><span class="p">],</span>
+                            <span class="n">var1</span><span class="o">=</span><span class="n">candidate_realisations</span><span class="p">,</span>
+                            <span class="n">var2</span><span class="o">=</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">_current_value_realisations</span><span class="p">,</span>
+                            <span class="n">conditional</span><span class="o">=</span><span class="n">conditional_realisations</span><span class="p">)</span>
+
+    <span class="n">selected_vars_order</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">argsort_descending</span><span class="p">(</span><span class="n">individual_te</span><span class="p">)</span>
+    <span class="n">individual_te_sorted</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">sort_descending</span><span class="p">(</span><span class="n">individual_te</span><span class="p">)</span>
+
+    <span class="c"># Re-use or create surrogate table and sort it, this saves some time</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">_min_stats_surr_table</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span>
+            <span class="n">n_permutations</span> <span class="o">&lt;=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">_min_stats_surr_table</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">surr_table</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">_min_stats_surr_table</span><span class="p">[:,</span> <span class="p">:</span><span class="n">n_permutations</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">)</span> <span class="o">==</span> <span class="n">surr_table</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">surr_table</span> <span class="o">=</span> <span class="n">_create_surrogate_table</span><span class="p">(</span>
+                                        <span class="n">analysis_setup</span><span class="p">,</span>
+                                        <span class="n">data</span><span class="p">,</span>
+                                        <span class="n">analysis_setup</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">,</span>
+                                        <span class="n">n_permutations</span><span class="p">)</span>
+    <span class="n">max_distribution</span> <span class="o">=</span> <span class="n">_sort_table_max</span><span class="p">(</span><span class="n">surr_table</span><span class="p">)</span>
+
+    <span class="c"># Compare each TE value with the distribution of the same rank, starting</span>
+    <span class="c"># with the highest TE.</span>
+    <span class="n">significance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">individual_te</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">pvalue</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">individual_te</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">individual_te</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">_find_pvalue</span><span class="p">(</span><span class="n">individual_te_sorted</span><span class="p">[</span><span class="n">c</span><span class="p">],</span>
+                              <span class="n">max_distribution</span><span class="p">[</span><span class="n">c</span><span class="p">,</span> <span class="p">],</span> <span class="n">alpha</span><span class="p">)</span>
+        <span class="n">significance</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+        <span class="n">pvalue</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span><span class="p">:</span>  <span class="c"># break as soon as a candidate is no longer significant</span>
+            <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&#39;Stopping sequential max stats at candidate with rank &#39;</span>
+                      <span class="s">&#39;{0}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+            <span class="k">break</span>
+
+    <span class="c"># Get back original order and return results.</span>
+    <span class="n">significance</span> <span class="o">=</span> <span class="n">significance</span><span class="p">[</span><span class="n">selected_vars_order</span><span class="p">]</span>
+    <span class="n">pvalue</span> <span class="o">=</span> <span class="n">pvalue</span><span class="p">[</span><span class="n">selected_vars_order</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">significance</span><span class="p">,</span> <span class="n">pvalue</span><span class="p">,</span> <span class="n">individual_te</span>
+
+
+<span class="c"># TODO opts is part of analysis setup, see mi_stats below</span></div>
+<div class="viewcode-block" id="min_statistic"><a class="viewcode-back" href="../../idtxl.html#idtxl.stats.min_statistic">[docs]</a><span class="k">def</span> <span class="nf">min_statistic</span><span class="p">(</span><span class="n">analysis_setup</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">candidate_set</span><span class="p">,</span> <span class="n">te_min_candidate</span><span class="p">,</span>
+                  <span class="n">opts</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Perform minimum statistics for one candidate source.</span>
+
+<span class="sd">    Test if a transfer entropy value is significantly bigger than the minimum</span>
+<span class="sd">    values obtained from surrogates of all remanining candidates.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        analysis_setup : Multivariate_te instance</span>
+<span class="sd">            information on the current analysis</span>
+<span class="sd">        data : Data instance</span>
+<span class="sd">            raw data</span>
+<span class="sd">        candidate_set : list of tuples</span>
+<span class="sd">            list of indices of remaning candidates</span>
+<span class="sd">        te_min_candidate : float</span>
+<span class="sd">            transfer entropy value to be tested</span>
+<span class="sd">        opts : dict [optional]</span>
+<span class="sd">            parameters for statistical testing, can contain:</span>
+
+<span class="sd">            - &#39;n_perm_min_stat&#39; - number of permutations (default=500)</span>
+<span class="sd">            - &#39;alpha_min_stat&#39; - critical alpha level (default=0.05)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bool</span>
+<span class="sd">            statistical significance</span>
+<span class="sd">        float</span>
+<span class="sd">            the test&#39;s p-value</span>
+<span class="sd">        numpy array</span>
+<span class="sd">            surrogate table</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">opts</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">opts</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">n_perm</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;n_perm_min_stat&#39;</span><span class="p">,</span> <span class="mi">21</span><span class="p">)</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;alpha_min_stat&#39;</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">candidate_set</span><span class="p">),</span> <span class="s">&#39;The candidate set is empty.&#39;</span>
+
+    <span class="n">surr_table</span> <span class="o">=</span> <span class="n">_create_surrogate_table</span><span class="p">(</span><span class="n">analysis_setup</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">candidate_set</span><span class="p">,</span>
+                                         <span class="n">n_perm</span><span class="p">)</span>
+    <span class="n">min_distribution</span> <span class="o">=</span> <span class="n">_find_table_min</span><span class="p">(</span><span class="n">surr_table</span><span class="p">)</span>
+    <span class="p">[</span><span class="n">significance</span><span class="p">,</span> <span class="n">pvalue</span><span class="p">]</span> <span class="o">=</span> <span class="n">_find_pvalue</span><span class="p">(</span><span class="n">te_min_candidate</span><span class="p">,</span> <span class="n">min_distribution</span><span class="p">,</span>
+                                          <span class="n">alpha</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">significance</span><span class="p">,</span> <span class="n">pvalue</span><span class="p">,</span> <span class="n">surr_table</span>
+
+</div>
+<div class="viewcode-block" id="mi_against_surrogates"><a class="viewcode-back" href="../../idtxl.html#idtxl.stats.mi_against_surrogates">[docs]</a><span class="k">def</span> <span class="nf">mi_against_surrogates</span><span class="p">(</span><span class="n">analysis_setup</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">opts</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test estimaed mutual information for significance against surrogate data.</span>
+
+<span class="sd">    Shuffle realisations of the current value (point to be predicted) and re-</span>
+<span class="sd">    calculate mutual information (MI) for shuffled data. The actual estimated</span>
+<span class="sd">    MI is then compared against this distribution of MI values from surrogate</span>
+<span class="sd">    data.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        analysis_setup : Multivariate_te instance</span>
+<span class="sd">            information on the current analysis</span>
+<span class="sd">        data : Data instance</span>
+<span class="sd">            raw data</span>
+<span class="sd">        opts : dict [optional]</span>
+<span class="sd">            parameters for statistical testing, can contain:</span>
+
+<span class="sd">            - &#39;n_perm_mi&#39; - number of permutations (default=500)</span>
+<span class="sd">            - &#39;alpha_mi&#39; - critical alpha level (default=0.05)</span>
+<span class="sd">            - &#39;tail_mi&#39; - tail for testing, can be &#39;one&#39; or &#39;two&#39;</span>
+<span class="sd">              (default=&#39;one&#39;)</span>
+<span class="sd">            - &#39;perm_range&#39; - permutation range if permutation over samples is</span>
+<span class="sd">              used to create surrogates (default=&#39;max&#39;)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        float</span>
+<span class="sd">            estimated MI value</span>
+<span class="sd">        bool</span>
+<span class="sd">            statistical significance</span>
+<span class="sd">        float</span>
+<span class="sd">            p_value for estimated MI value</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">opts</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">opts</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">n_perm</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;n_perm_mi&#39;</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;alpha_mi&#39;</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
+    <span class="n">tail</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;tail_mi&#39;</span><span class="p">,</span> <span class="s">&#39;one&#39;</span><span class="p">)</span>
+    <span class="n">perm_range</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;perm_range&#39;</span><span class="p">,</span> <span class="s">&#39;max&#39;</span><span class="p">)</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    surr_realisations = np.empty(</span>
+<span class="sd">                        (data.n_realisations(analysis_setup.current_value) *</span>
+<span class="sd">                         (n_perm + 1), 1))</span>
+<span class="sd">    i_1 = 0</span>
+<span class="sd">    i_2 = data.n_realisations(analysis_setup.current_value)</span>
+<span class="sd">    # The first chunk holds the original data</span>
+<span class="sd">    surr_realisations[i_1:i_2, ] = analysis_setup._current_value_realisations</span>
+<span class="sd">    # Create surrogate data by shuffling the realisations of the current value.</span>
+<span class="sd">    for perm in range(n_perm):</span>
+<span class="sd">        i_1 = i_2</span>
+<span class="sd">        i_2 += data.n_realisations(analysis_setup.current_value)</span>
+<span class="sd">        # Check the permutation type for the current candidate.</span>
+<span class="sd">        if permute_over_replications:</span>
+<span class="sd">            surr_temp = data.permute_data(analysis_setup.current_value,</span>
+<span class="sd">                                          [analysis_setup.current_value])[0]</span>
+<span class="sd">        else:</span>
+<span class="sd">            [real, repl_idx] = data.get_realisations(</span>
+<span class="sd">                                            analysis_setup.current_value,</span>
+<span class="sd">                                            [analysis_setup.current_value])</span>
+<span class="sd">            surr_temp = _permute_realisations(real, repl_idx, perm_range)</span>
+<span class="sd">        # Add current shuffled realisation to the array of all realisations for</span>
+<span class="sd">        # parallel MI estimation.</span>
+<span class="sd">        # surr_realisations[i_1:i_2, ] = surr_temp</span>
+<span class="sd">        [real, repl_idx] = data.get_realisations(</span>
+<span class="sd">                                            analysis_setup.current_value,</span>
+<span class="sd">                                            [analysis_setup.current_value])</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+    <span class="n">surr_realisations</span> <span class="o">=</span> <span class="n">_generate_surrogates</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>
+                                             <span class="n">analysis_setup</span><span class="o">.</span><span class="n">current_value</span><span class="p">,</span>
+                                             <span class="p">[</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">current_value</span><span class="p">],</span>
+                                             <span class="n">n_perm</span><span class="p">,</span>
+                                             <span class="n">perm_range</span><span class="p">)</span>
+
+    <span class="n">surr_dist</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">_cmi_calculator</span><span class="o">.</span><span class="n">estimate_mult</span><span class="p">(</span>
+                            <span class="n">n_chunks</span><span class="o">=</span><span class="n">n_perm</span><span class="p">,</span>
+                            <span class="n">options</span><span class="o">=</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">options</span><span class="p">,</span>
+                            <span class="n">re_use</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;var2&#39;</span><span class="p">],</span>
+                            <span class="n">var1</span><span class="o">=</span><span class="n">surr_realisations</span><span class="p">,</span>
+                            <span class="n">var2</span><span class="o">=</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">_selected_vars_realisations</span><span class="p">,</span>
+                            <span class="n">conditional</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+    <span class="n">orig_mi</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">_cmi_calculator</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span>
+                            <span class="n">opts</span><span class="o">=</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">options</span><span class="p">,</span>
+                            <span class="n">var1</span><span class="o">=</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">_current_value_realisations</span><span class="p">,</span>
+                            <span class="n">var2</span><span class="o">=</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">_selected_vars_realisations</span><span class="p">,</span>
+                            <span class="n">conditional</span><span class="o">=</span><span class="bp">None</span>
+                            <span class="p">)</span>
+    <span class="p">[</span><span class="n">significance</span><span class="p">,</span> <span class="n">p_value</span><span class="p">]</span> <span class="o">=</span> <span class="n">_find_pvalue</span><span class="p">(</span><span class="n">statistic</span><span class="o">=</span><span class="n">orig_mi</span><span class="p">,</span>
+                                           <span class="n">distribution</span><span class="o">=</span><span class="n">surr_dist</span><span class="p">,</span>
+                                           <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                                           <span class="n">tail</span><span class="o">=</span><span class="n">tail</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">orig_mi</span><span class="p">,</span> <span class="n">significance</span><span class="p">,</span> <span class="n">p_value</span><span class="p">]</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_create_surrogate_table</span><span class="p">(</span><span class="n">analysis_setup</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">idx_test_set</span><span class="p">,</span> <span class="n">n_perm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a table of surrogate transfer entropy values.</span>
+
+<span class="sd">    Calculate transfer entropy between surrogates for each source in the test</span>
+<span class="sd">    set and the target in the analysis setup using the current conditional in</span>
+<span class="sd">    the analysis setup.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        analysis_setup : Multivariate_te instance</span>
+<span class="sd">            information on the current analysis</span>
+<span class="sd">        data : Data instance</span>
+<span class="sd">            raw data</span>
+<span class="sd">        idx_test_set : list of tuples</span>
+<span class="sd">            list of indices indicating samples to be used as sources</span>
+<span class="sd">        n_perm : int</span>
+<span class="sd">            number of permutations for testing</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        numpy array</span>
+<span class="sd">            surrogate TE values, dimensions: (length test set, number of</span>
+<span class="sd">            surrogates)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Check if n_replications is high enough to allow for the requested number</span>
+    <span class="c"># of permutations. If not permute samples over time</span>
+
+    <span class="c"># permute_over_replications = _permute_over_replications(data, n_perm)</span>
+    <span class="n">perm_range</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;perm_range&#39;</span><span class="p">,</span> <span class="s">&#39;max&#39;</span><span class="p">)</span>
+
+    <span class="c"># Create surrogate table.</span>
+    <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">create surrogates table with {0} permutations&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_perm</span><span class="p">))</span>
+    <span class="n">surr_table</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">idx_test_set</span><span class="p">),</span> <span class="n">n_perm</span><span class="p">))</span>  <span class="c"># surrogate TE values</span>
+    <span class="n">current_value_realisations</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">_current_value_realisations</span>
+    <span class="n">idx_c</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">idx_test_set</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\t</span><span class="s">cand. {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                <span class="n">analysis_setup</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">([</span><span class="n">candidate</span><span class="p">])[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        surr_candidate_realisations = np.empty(</span>
+<span class="sd">                (data.n_realisations(analysis_setup.current_value) * n_perm,</span>
+<span class="sd">                1))</span>
+<span class="sd">        i_1 = 0</span>
+<span class="sd">        i_2 = data.n_realisations(analysis_setup.current_value)</span>
+<span class="sd">        for perm in range(n_perm):</span>
+<span class="sd">            # Check the permutation type for the current candidate.</span>
+<span class="sd">            if permute_over_replications:</span>
+<span class="sd">                sur_temp = data.permute_data(analysis_setup.current_value,</span>
+<span class="sd">                                             [candidate])[0]</span>
+<span class="sd">            else:</span>
+<span class="sd">                [real, repl_idx] = data.get_realisations(</span>
+<span class="sd">                                                analysis_setup.current_value,</span>
+<span class="sd">                                                [candidate])</span>
+<span class="sd">                sur_temp = _permute_realisations(real, repl_idx, perm_range)</span>
+
+<span class="sd">            surr_candidate_realisations[i_1:i_2, ] = sur_temp</span>
+<span class="sd">            i_1 = i_2</span>
+<span class="sd">            i_2 += data.n_realisations(analysis_setup.current_value)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">surr_candidate_realisations</span> <span class="o">=</span> <span class="n">_generate_surrogates</span><span class="p">(</span>
+                                                 <span class="n">data</span><span class="p">,</span>
+                                                 <span class="n">analysis_setup</span><span class="o">.</span><span class="n">current_value</span><span class="p">,</span>
+                                                 <span class="p">[</span><span class="n">candidate</span><span class="p">],</span>
+                                                 <span class="n">n_perm</span><span class="p">,</span>
+                                                 <span class="n">perm_range</span><span class="p">)</span>
+        <span class="n">surr_table</span><span class="p">[</span><span class="n">idx_c</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">_cmi_calculator</span><span class="o">.</span><span class="n">estimate_mult</span><span class="p">(</span>
+                    <span class="n">n_chunks</span><span class="o">=</span><span class="n">n_perm</span><span class="p">,</span>
+                    <span class="n">options</span><span class="o">=</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">options</span><span class="p">,</span>
+                    <span class="n">re_use</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;var2&#39;</span><span class="p">,</span> <span class="s">&#39;conditional&#39;</span><span class="p">],</span>
+                    <span class="n">var1</span><span class="o">=</span><span class="n">surr_candidate_realisations</span><span class="p">,</span>  <span class="c"># too long</span>
+                    <span class="n">var2</span><span class="o">=</span><span class="n">current_value_realisations</span><span class="p">,</span>
+                    <span class="n">conditional</span><span class="o">=</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">_selected_vars_realisations</span><span class="p">)</span>
+        <span class="n">idx_c</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">surr_table</span>
+
+
+<span class="k">def</span> <span class="nf">_find_table_max</span><span class="p">(</span><span class="n">table</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find maximum for each column of a table.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_find_table_min</span><span class="p">(</span><span class="n">table</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find minimum for each column of a table.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_sort_table_min</span><span class="p">(</span><span class="n">table</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sort each column in a table in ascending order.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">permutation</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">table</span><span class="p">[:,</span> <span class="n">permutation</span><span class="p">]</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">table</span>
+
+
+<span class="k">def</span> <span class="nf">_sort_table_max</span><span class="p">(</span><span class="n">table</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sort each column in a table in descending order.&quot;&quot;&quot;</span>
+    <span class="n">table_sorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">permutation</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">table</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">table_sorted</span><span class="p">[:,</span> <span class="n">permutation</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">sort_descending</span><span class="p">(</span>
+                                            <span class="n">table</span><span class="p">[:,</span> <span class="n">permutation</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">table_sorted</span>
+
+
+<span class="k">def</span> <span class="nf">_find_pvalue</span><span class="p">(</span><span class="n">statistic</span><span class="p">,</span> <span class="n">distribution</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">tail</span><span class="o">=</span><span class="s">&#39;one&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find p-value of a test statistic under some distribution.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        statistic : numeric</span>
+<span class="sd">            value to be tested against distribution</span>
+<span class="sd">        distribution : numpy array</span>
+<span class="sd">            1-dimensional distribution of values, test distribution</span>
+<span class="sd">        alpha : float [optional]</span>
+<span class="sd">            critical alpha level for statistical significance (default=0.05)</span>
+<span class="sd">        tail : str [optional]</span>
+<span class="sd">            &#39;one&#39; or &#39;two&#39; for one-/two-tailed testing (default=&#39;one&#39;)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bool</span>
+<span class="sd">            statistical significance</span>
+<span class="sd">        float</span>
+<span class="sd">            the test&#39;s p-value</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">distribution</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">assert</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">distribution</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">alpha</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;The number of permutations &#39;</span>
+                                                  <span class="s">&#39;is to small ({0}) to test &#39;</span>
+                                                  <span class="s">&#39;the requested alpha level &#39;</span>
+                                                  <span class="s">&#39;({1}).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                                       <span class="n">distribution</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                       <span class="n">alpha</span><span class="p">))</span>
+<span class="c">#    if (1.0 / distribution.shape[0] &gt;= alpha):</span>
+<span class="c">#        print(&#39;The number of permutations is to small ({0}) to test the &#39;</span>
+<span class="c">#              &#39;requested alpha level ({1}).&#39;.format(distribution.shape[0],</span>
+<span class="c">#                                                    alpha))</span>
+    <span class="k">if</span> <span class="n">tail</span> <span class="o">==</span> <span class="s">&#39;one&#39;</span><span class="p">:</span>
+        <span class="n">pvalue</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">distribution</span> <span class="o">&gt;</span> <span class="n">statistic</span><span class="p">)</span> <span class="o">/</span> <span class="n">distribution</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">tail</span> <span class="o">==</span> <span class="s">&#39;two&#39;</span><span class="p">:</span>
+        <span class="n">p_bigger</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">distribution</span> <span class="o">&gt;</span> <span class="n">statistic</span><span class="p">)</span> <span class="o">/</span> <span class="n">distribution</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">p_smaller</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">distribution</span> <span class="o">&lt;</span> <span class="n">statistic</span><span class="p">)</span> <span class="o">/</span> <span class="n">distribution</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">pvalue</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">p_bigger</span><span class="p">,</span> <span class="n">p_smaller</span><span class="p">)</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">((</span><span class="s">&#39;Unkown value for &quot;tail&quot; (should be &quot;one&quot; or &quot;two&quot;):&#39;</span>
+                          <span class="s">&#39; {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tail</span><span class="p">)))</span>
+
+    <span class="c"># If the statistic is larger than all values in the test distribution, set</span>
+    <span class="c"># the p-value to the smallest possible value 1/n_perm.</span>
+    <span class="k">if</span> <span class="n">pvalue</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">pvalue</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">distribution</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">significance</span> <span class="o">=</span> <span class="n">pvalue</span> <span class="o">&lt;</span> <span class="n">alpha</span>
+
+    <span class="k">return</span> <span class="n">significance</span><span class="p">,</span> <span class="n">pvalue</span>
+
+
+<span class="k">def</span> <span class="nf">_sufficient_replications</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">n_perm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test if no. replications is high enough for surrogate creation.</span>
+
+<span class="sd">    Test if the number of replications is high enough to allow for the required</span>
+<span class="sd">    number of permutations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">n_replications</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">n_perm</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+
+<span class="k">def</span> <span class="nf">_generate_surrogates</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">current_value</span><span class="p">,</span> <span class="n">idx_list</span><span class="p">,</span> <span class="n">n_perm</span><span class="p">,</span>
+                         <span class="n">perm_range</span><span class="o">=</span><span class="s">&#39;max&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate surrogate data for statistical testing.</span>
+
+<span class="sd">    The method for data generation depends on whether sufficient replications</span>
+<span class="sd">    of the data exists. If the number of replications is high enough</span>
+<span class="sd">    (reps! &gt; n_permutations), surrogates are created by shuffling data over</span>
+<span class="sd">    replications (while keeping the temporal order of samples intact). If the</span>
+<span class="sd">    number of replications is too low, samples are shuffled over time (while</span>
+<span class="sd">    keeping the order of replications intact).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data : Data instance</span>
+<span class="sd">            raw data for analysis</span>
+<span class="sd">        current_value : tuple</span>
+<span class="sd">            index of the current value in current analysis, has to have the</span>
+<span class="sd">            form (idx process, idx sample)</span>
+<span class="sd">        idx_list : list of tuples</span>
+<span class="sd">            list of variables, for which surrogates have to be created</span>
+<span class="sd">        n_perm : int</span>
+<span class="sd">            number of permutations</span>
+<span class="sd">        perm_range : int [optional]</span>
+<span class="sd">            permutation range if permutation over samples is used to create</span>
+<span class="sd">            surrogates (default=&#39;max&#39;)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        numpy array</span>
+<span class="sd">            surrogate data with dimensions</span>
+<span class="sd">            (realisations * n_perm) x len(idx_list)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Allocate memory for surrogates</span>
+    <span class="n">n_realisations</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">n_realisations</span><span class="p">(</span><span class="n">current_value</span><span class="p">)</span>
+    <span class="n">surrogates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">n_realisations</span> <span class="o">*</span> <span class="n">n_perm</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx_list</span><span class="p">)))</span>
+
+    <span class="c"># Generate surrogates by permuting over replications if possible (no.</span>
+    <span class="c"># replications needs to be sufficient); else permute samples over time.</span>
+    <span class="n">i_1</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">i_2</span> <span class="o">=</span> <span class="n">n_realisations</span>
+    <span class="k">if</span> <span class="n">_sufficient_replications</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">n_perm</span><span class="p">):</span>  <span class="c"># permute replications</span>
+        <span class="k">for</span> <span class="n">perm</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_perm</span><span class="p">):</span>
+            <span class="n">surrogates</span><span class="p">[</span><span class="n">i_1</span><span class="p">:</span><span class="n">i_2</span><span class="p">,</span> <span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">permute_replications</span><span class="p">(</span><span class="n">current_value</span><span class="p">,</span>
+                                                              <span class="n">idx_list</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">i_1</span> <span class="o">=</span> <span class="n">i_2</span>
+            <span class="n">i_2</span> <span class="o">+=</span> <span class="n">n_realisations</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c"># permute samples</span>
+        <span class="k">for</span> <span class="n">perm</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_perm</span><span class="p">):</span>
+            <span class="n">surrogates</span><span class="p">[</span><span class="n">i_1</span><span class="p">:</span><span class="n">i_2</span><span class="p">,</span> <span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">permute_samples</span><span class="p">(</span><span class="n">current_value</span><span class="p">,</span>
+                                                         <span class="n">idx_list</span><span class="p">,</span>
+                                                         <span class="n">perm_range</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">i_1</span> <span class="o">=</span> <span class="n">i_2</span>
+            <span class="n">i_2</span> <span class="o">+=</span> <span class="n">n_realisations</span>
+    <span class="k">return</span> <span class="n">surrogates</span>
+</pre></div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+         
+<div class="col-md-3 hidden-xs" id="sidebar-wrapper">
+  <div class="sidebar hidden-xs" role="navigation" aria-label="main navigation">
+<div id="searchbox" role="search">
+  <h3>Quick search</h3>
+  <form class="search form-inline" action="../../search.html" method="get">
+      <div class="input-append input-group">
+        <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+        <span class="input-group-btn">
+        <input type="submit" class="btn" value="Go" />
+        </span>
+      </div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+  </div>
+</div> 
+        
+      </div><!-- /row -->
+
+      <!-- row -->
+      <div class="row footer-relbar">
+<div id="navbar-related" class=" related navbar navbar-default" role="navigation" aria-label="related navigation">
+  <div class="navbar-inner">
+    <ul class="nav navbar-nav ">
+        <li><a href="../../index.html">IDTxl 0.1 documentation</a></li>
+    </ul>
+<ul class="nav navbar-nav pull-right hidden-xs hidden-sm">
+      
+        <li><a href="../../py-modindex.html" title="Python Module Index" >modules</a></li>
+        <li><a href="../../genindex.html" title="General Index" >index</a></li>
+        <li><a href="../index.html" >Module code</a></li>
+        <li><a href="#">top</a></li> 
+      
+    </ul>
+  </div>
+</div>
+      </div><!-- /row -->
+
+      <!-- footer -->
+      <footer role="contentinfo">
+          &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.
+      </footer>
+      <!-- /footer -->
+
+    </div>
+    <!-- /container -->
+
+  </body>
+</html>

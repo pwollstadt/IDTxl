@@ -1,0 +1,7 @@
+idtxl.matarray2idtxl module
+===========================
+
+.. automodule:: idtxl.matarray2idtxl
+    :members:
+    :undoc-members:
+    :show-inheritance:

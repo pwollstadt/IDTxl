@@ -1,0 +1,7 @@
+idtxl.network_analysis module
+=============================
+
+.. automodule:: idtxl.network_analysis
+    :members:
+    :undoc-members:
+    :show-inheritance:

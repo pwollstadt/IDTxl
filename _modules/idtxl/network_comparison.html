@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+
+
+
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    
+    <title>idtxl.network_comparison &mdash; IDTxl 0.1 documentation</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    
+
+<link rel="stylesheet" href="../../_static/css/basicstrap-base.css" type="text/css" />
+<link rel="stylesheet" id="current-theme" href="../../_static/css/bootstrap3/bootswatch-spacelab.css" type="text/css" />
+<link rel="stylesheet" id="current-adjust-theme" href="../../_static/css/adjust_theme/bootswatch-spacelab.css" type="text/css" />
+
+<link rel="stylesheet" href="../../_static/css/font-awesome.min.css">
+
+<style type="text/css">
+  body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+  }
+</style>
+
+<link rel="stylesheet" href="../../_static/css/basicstrap.css" type="text/css" />
+<link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+<script type="text/javascript">
+  var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:    '../../',
+            VERSION:     '0.1',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE:  true
+  };
+</script>
+    <script type="text/javascript" src="../../_static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/bootstrap3.min.js"></script>
+<script type="text/javascript" src="../../_static/js/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="../../_static/js/basicstrap.js"></script>
+<script type="text/javascript">
+</script>
+    <link rel="top" title="IDTxl 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div id="navbar-top" class="navbar navbar-fixed-top navbar-default" role="navigation" aria-label="top navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../../index.html">IDTxl 0.1 documentation</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+
+            
+              <li><a href="../../py-modindex.html" title="Python Module Index" >modules </a></li>
+              <li><a href="../../genindex.html" title="General Index" accesskey="I">index </a></li>
+              <li><a href="../index.html" accesskey="U">Module code</a></li>
+            
+
+            <li class="visible-xs">
+                <form class="search form-search form-inline navbar-form navbar-right sp-searchbox" action="../../search.html" method="get">
+                  <div class="input-append input-group">
+                    <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+                    <span class="input-group-btn">
+                    <input type="submit" class="btn" value="Go" />
+                    </span>
+                  </div>
+                  <input type="hidden" name="check_keywords" value="yes" />
+                  <input type="hidden" name="area" value="default" />
+                </form>
+            </li>
+
+            
+
+          </ul>
+
+        </div>
+      </div>
+    </div>
+    
+
+    <!-- container -->
+    <div class="container">
+
+      <!-- row -->
+      <div class="row">
+        
+        
+
+        <div class="col-md-9" id="content-wrapper">
+          <div class="document" role="main">
+            <div class="documentwrapper">
+              <div class="bodywrapper">
+                <div class="body">
+                  
+  <h1>Source code for idtxl.network_comparison</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Perform inference statistics on groups of data.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">copy</span> <span class="kn">as</span> <span class="nn">cp</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.set_estimator</span> <span class="kn">import</span> <span class="n">Estimator_cmi</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">idtxl_utils</span>
+
+<span class="n">VERBOSE</span> <span class="o">=</span> <span class="bp">True</span>
+
+
+<div class="viewcode-block" id="Network_comparison"><a class="viewcode-back" href="../../idtxl.html#idtxl.network_comparison.Network_comparison">[docs]</a><span class="k">class</span> <span class="nc">Network_comparison</span><span class="p">():</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cmi_calculator</span> <span class="o">=</span> <span class="n">Estimator_cmi</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s">&#39;cmi_calc_name&#39;</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&#39;You have to provide an estimator name.&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_permutations</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s">&#39;n_perm_comp&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_permutations</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s">&#39;alpha_comp&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.05</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tail</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s">&#39;tail&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tail</span> <span class="o">=</span> <span class="s">&#39;two&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats_type</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s">&#39;stats_type&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&#39;You have to provide a &quot;stats_type&quot;, &quot;dependent&quot; &#39;</span>
+                           <span class="s">&#39;or &quot;independent&quot;.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_n_perm</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="Compare_single_recording"><a class="viewcode-back" href="../../idtxl.html#idtxl.network_comparison.Compare_single_recording">[docs]</a><span class="k">class</span> <span class="nc">Compare_single_recording</span><span class="p">(</span><span class="n">Network_comparison</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Statisticall compare two networks from a single recording.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        network_1 : dict</span>
+<span class="sd">            results from network inference</span>
+<span class="sd">        network_2 : dict</span>
+<span class="sd">            results from network inference</span>
+<span class="sd">        options : dict</span>
+<span class="sd">            options for statistical comparison of networks</span>
+<span class="sd">            &#39;cmi_calc_name&#39; - estimator to be used for CMI calculation</span>
+<span class="sd">            (For estimator options see the respective documentation.)</span>
+<span class="sd">            &#39;n_perm_comp&#39; - number of permutations (default=500)</span>
+<span class="sd">            &#39;alpha_comp&#39; - critical alpha level for statistical significance</span>
+<span class="sd">            (default=0.05)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        numpy array, bool</span>
+<span class="sd">            statistical significance of difference of each source</span>
+<span class="sd">        numpy array, float</span>
+<span class="sd">            the test&#39;s p-values for each difference</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Compare_single_recording.compare"><a class="viewcode-back" href="../../idtxl.html#idtxl.network_comparison.Compare_single_recording.compare">[docs]</a>    <span class="k">def</span> <span class="nf">compare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">network_a</span><span class="p">,</span> <span class="n">network_b</span><span class="p">,</span> <span class="n">data_a</span><span class="p">,</span> <span class="n">data_b</span><span class="p">):</span>
+        <span class="c"># Generate union of links from both networks.</span>
+        <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">------------------- (1) create union of networks&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_union</span><span class="p">(</span><span class="n">network_a</span><span class="p">,</span> <span class="n">network_b</span><span class="p">)</span>
+
+        <span class="c"># Calculate test statistic from original data.</span>
+        <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">------------------- (2) calculate original TE values&#39;</span><span class="p">)</span>
+        <span class="n">cmi_diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cmi_diff</span><span class="p">(</span><span class="n">data_a</span><span class="p">,</span> <span class="n">data_b</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+
+        <span class="c"># Generate surrogate distribution.</span>
+        <span class="n">surr_distribution</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">n_permutations</span><span class="p">,</span>
+                                      <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="s">&#39;n_sources_tot&#39;</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">------------------- (3) generate surrogate distributions&#39;</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;n_perm: {0}. Done:    &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_permutations</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_permutations</span><span class="p">):</span>
+            <span class="n">surr_distribution</span><span class="p">[</span><span class="n">p</span><span class="p">,</span> <span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cmi_diff</span><span class="p">(</span><span class="n">data_a</span><span class="p">,</span> <span class="n">data_b</span><span class="p">,</span>
+                                                              <span class="n">options</span><span class="p">,</span>
+                                                              <span class="n">permute</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\b\b\b</span><span class="s">{num:03d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num</span><span class="o">=</span><span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+
+        <span class="c"># Test each original difference against its surrogate distribution.</span>
+        <span class="n">significance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="s">&#39;n_sources_tot&#39;</span><span class="p">])</span>
+        <span class="n">pvalue</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="s">&#39;n_sources_tot&#39;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="s">&#39;n_sources_tot&#39;</span><span class="p">]):</span>
+            <span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">_find_pvalue</span><span class="p">(</span><span class="n">cmi_diff</span><span class="p">[</span><span class="n">c</span><span class="p">],</span> <span class="n">surr_distribution</span><span class="p">[:,</span> <span class="n">c</span><span class="p">],</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span> <span class="n">tail</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tail</span><span class="p">)</span>
+            <span class="n">significance</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+            <span class="n">pvalue</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span>
+
+        <span class="k">return</span> <span class="n">significance</span><span class="p">,</span> <span class="n">pvalue</span>
+</div>
+    <span class="k">def</span> <span class="nf">_check_n_perm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sufficient</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="c"># TODO add this</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sufficient</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;The number of realisations is not high enough to&#39;</span>
+                             <span class="s">&#39; allow for a sufficient number of permuations.&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_create_union</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">network_a</span><span class="p">,</span> <span class="n">network_b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create the union of sources for two networks.&quot;&quot;&quot;</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">network_a</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span> <span class="o">+</span>
+                           <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">network_b</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">union</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c"># Get the maximum lags from the networks, we need this to get</span>
+        <span class="c"># realisations of variables later on.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="s">&#39;targets&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">targets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="s">&#39;n_sources_tot&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="s">&#39;max_lag&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">network_a</span><span class="p">[</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="s">&#39;current_value&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">lag</span> <span class="o">=</span> <span class="n">network_a</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;current_value&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="s">&#39;max_lag&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">lag</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Networks seem to have been analyzed &#39;</span>
+                                     <span class="s">&#39;using different lags.&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">lag</span> <span class="o">=</span> <span class="n">network_b</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;current_value&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="s">&#39;max_lag&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">lag</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Networks seem to have been analyzed &#39;</span>
+                                     <span class="s">&#39;using different lags.&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">cond_src_a</span> <span class="o">=</span> <span class="n">network_a</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;conditional_sources&#39;</span><span class="p">]</span>
+                <span class="n">cond_tgt_a</span> <span class="o">=</span> <span class="n">network_a</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;conditional_target&#39;</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">cond_src_a</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">cond_tgt_a</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">cond_src_b</span> <span class="o">=</span> <span class="n">network_b</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;conditional_sources&#39;</span><span class="p">]</span>
+                <span class="n">cond_tgt_b</span> <span class="o">=</span> <span class="n">network_b</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;conditional_target&#39;</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">cond_src_b</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">cond_tgt_b</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="c"># TODO convert lags to indices before adding them to the union</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;conditional_sources&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cond_src_a</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;conditional_target&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cond_tgt_a</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;conditional_sources&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cond_src_a</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;conditional_target&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cond_tgt_a</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cond_src_b</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;conditional_sources&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;conditional_sources&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cond_tgt_b</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;conditional_target&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;conditional_target&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="s">&#39;n_sources_tot&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;conditional_sources&#39;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_calculate_cmi_diff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_a</span><span class="p">,</span> <span class="n">data_b</span><span class="p">,</span> <span class="n">cmi_options</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                            <span class="n">permute</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the difference in TE for each source and target.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            data_a : Data instance</span>
+<span class="sd">                first set of raw data</span>
+<span class="sd">            data_a : Data instance</span>
+<span class="sd">                second set of raw data</span>
+<span class="sd">            cmi_options : dict [optional]</span>
+<span class="sd">                options for CMI estimation</span>
+<span class="sd">            permute : bool [optional]</span>
+<span class="sd">                if True, permute data from same replications between sets a and</span>
+<span class="sd">                b</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy array</span>
+<span class="sd">                TE differences</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">te_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c"># Calculate TE for each candidate for each target.</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="s">&#39;targets&#39;</span><span class="p">]:</span>
+            <span class="c"># Get realisations for the current target only once and reuse in</span>
+            <span class="c"># the CMI calculation for each source.</span>
+            <span class="n">current_val</span> <span class="o">=</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="s">&#39;max_lag&#39;</span><span class="p">])</span>
+            <span class="n">cond_full</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;conditional_target&#39;</span><span class="p">]</span> <span class="o">+</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;conditional_sources&#39;</span><span class="p">])</span>
+            <span class="p">[</span><span class="n">cur_val_real_a</span><span class="p">,</span> <span class="n">repl_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_a</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span><span class="n">current_val</span><span class="p">,</span>
+                                                                 <span class="p">[</span><span class="n">current_val</span><span class="p">])</span>
+            <span class="n">cur_val_real_b</span> <span class="o">=</span> <span class="n">data_b</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span><span class="n">current_val</span><span class="p">,</span>
+                                                     <span class="p">[</span><span class="n">current_val</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">cond_full_real_a</span> <span class="o">=</span> <span class="n">data_a</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span><span class="n">current_val</span><span class="p">,</span>
+                                                       <span class="n">cond_full</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">cond_full_real_b</span> <span class="o">=</span> <span class="n">data_b</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span><span class="n">current_val</span><span class="p">,</span>
+                                                       <span class="n">cond_full</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">permute</span><span class="p">:</span>
+                <span class="p">[</span><span class="n">cond_full_real_a</span><span class="p">,</span>
+                 <span class="n">cond_full_real_b</span><span class="p">,</span>
+                 <span class="n">cur_val_real_a</span><span class="p">,</span>
+                 <span class="n">cur_val_real_b</span><span class="p">,</span> <span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_permute_replications</span><span class="p">(</span>
+                                                             <span class="n">cond_full_real_a</span><span class="p">,</span>
+                                                             <span class="n">cond_full_real_b</span><span class="p">,</span>
+                                                             <span class="n">cur_val_real_a</span><span class="p">,</span>
+                                                             <span class="n">cur_val_real_b</span><span class="p">,</span>
+                                                             <span class="n">repl_idx</span><span class="p">))</span>
+
+            <span class="n">te_diff_temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;conditional_sources&#39;</span><span class="p">]))</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;conditional_sources&#39;</span><span class="p">]:</span>
+                <span class="n">current_cond</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;conditional_sources&#39;</span><span class="p">])</span>
+                <span class="n">current_cond</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">current_cond</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+
+                <span class="c"># Calculate first TE.</span>
+                <span class="p">[</span><span class="n">cond_real</span><span class="p">,</span> <span class="n">source_real</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_separate_realisations</span><span class="p">(</span>
+                                                             <span class="n">cond_full</span><span class="p">,</span>
+                                                             <span class="n">c</span><span class="p">,</span>
+                                                             <span class="n">cond_full_real_a</span><span class="p">)</span>
+
+                <span class="n">cmi_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmi_calculator</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">cur_val_real_a</span><span class="p">,</span>
+                                                     <span class="n">source_real</span><span class="p">,</span>
+                                                     <span class="n">cond_real</span><span class="p">,</span>
+                                                     <span class="n">options</span><span class="p">)</span>
+
+                <span class="c"># Calculate second TE.</span>
+                <span class="p">[</span><span class="n">cond_real</span><span class="p">,</span> <span class="n">source_real</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_separate_realisations</span><span class="p">(</span>
+                                                             <span class="n">cond_full</span><span class="p">,</span>
+                                                             <span class="n">c</span><span class="p">,</span>
+                                                             <span class="n">cond_full_real_b</span><span class="p">)</span>
+                <span class="n">cmi_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmi_calculator</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">cur_val_real_b</span><span class="p">,</span>
+                                                     <span class="n">source_real</span><span class="p">,</span>
+                                                     <span class="n">cond_real</span><span class="p">,</span>
+                                                     <span class="n">options</span><span class="p">)</span>
+                <span class="n">te_diff_temp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmi_a</span> <span class="o">-</span> <span class="n">cmi_b</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">te_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">te_diff</span><span class="p">,</span> <span class="n">te_diff_temp</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">te_diff</span>
+
+    <span class="k">def</span> <span class="nf">_permute_replications</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cond_a</span><span class="p">,</span> <span class="n">cond_b</span><span class="p">,</span> <span class="n">cur_val_a</span><span class="p">,</span> <span class="n">cur_val_b</span><span class="p">,</span>
+                              <span class="n">repl_idx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Permute realisations in replications between two conditions.&quot;&quot;&quot;</span>
+        <span class="n">n_repl</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">repl_idx</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">n_per_repl</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">repl_idx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c"># Make copies such as to not overwrite the arrays in the caller scope.</span>
+        <span class="n">cond_a_perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">cond_a</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">cond_b_perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">cond_b</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">cur_val_a_perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">cur_val_a</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">cur_val_b_perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">cur_val_b</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="c"># Swap or permute arrays depending on the stats type.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_type</span> <span class="o">==</span> <span class="s">&#39;dependent&#39;</span><span class="p">:</span>
+            <span class="n">swap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n_repl</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">),</span>
+                             <span class="n">n_per_repl</span><span class="p">)</span>
+            <span class="n">cond_a_perm</span><span class="p">[</span><span class="n">swap</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">cond_b</span><span class="p">[</span><span class="n">swap</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">cond_b_perm</span><span class="p">[</span><span class="n">swap</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">cond_a</span><span class="p">[</span><span class="n">swap</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">cond_a_perm</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">swap</span><span class="p">),</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">cond_b</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">swap</span><span class="p">),</span> <span class="p">:]</span>
+            <span class="n">cond_b_perm</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">swap</span><span class="p">),</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">cond_a</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">swap</span><span class="p">),</span> <span class="p">:]</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_type</span> <span class="o">==</span> <span class="s">&#39;independent&#39;</span><span class="p">:</span>
+            <span class="n">resample_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">n_repl</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">n_repl</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="n">resample_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">setdiff1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_repl</span> <span class="o">*</span> <span class="mi">2</span><span class="p">),</span> <span class="n">resample_a</span><span class="p">)</span>
+
+            <span class="c"># Resample group A.</span>
+            <span class="n">ind_0</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">ind_1</span> <span class="o">=</span> <span class="n">n_per_repl</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">resample_a</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">r</span> <span class="o">&gt;=</span> <span class="n">n_repl</span><span class="p">:</span>
+                    <span class="n">cond_a_perm</span><span class="p">[</span><span class="n">ind_0</span><span class="p">:</span><span class="n">ind_1</span><span class="p">,</span> <span class="p">]</span> <span class="o">=</span> <span class="n">cond_b</span><span class="p">[</span>
+                                                <span class="n">repl_idx</span> <span class="o">==</span> <span class="p">(</span><span class="n">r</span> <span class="o">-</span> <span class="n">n_repl</span><span class="p">),</span> <span class="p">:]</span>
+                    <span class="n">cur_val_a_perm</span><span class="p">[</span><span class="n">ind_0</span><span class="p">:</span><span class="n">ind_1</span><span class="p">,</span> <span class="p">]</span> <span class="o">=</span> <span class="n">cur_val_b</span><span class="p">[</span>
+                                                <span class="n">repl_idx</span> <span class="o">==</span> <span class="p">(</span><span class="n">r</span> <span class="o">-</span> <span class="n">n_repl</span><span class="p">),</span> <span class="p">:]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cond_a_perm</span><span class="p">[</span><span class="n">ind_0</span><span class="p">:</span><span class="n">ind_1</span><span class="p">,</span> <span class="p">]</span> <span class="o">=</span> <span class="n">cond_a</span><span class="p">[</span><span class="n">repl_idx</span> <span class="o">==</span> <span class="n">r</span><span class="p">,</span> <span class="p">:]</span>
+                    <span class="n">cur_val_a_perm</span><span class="p">[</span><span class="n">ind_0</span><span class="p">:</span><span class="n">ind_1</span><span class="p">,</span> <span class="p">]</span> <span class="o">=</span> <span class="n">cur_val_a</span><span class="p">[</span><span class="n">repl_idx</span> <span class="o">==</span> <span class="n">r</span><span class="p">,</span> <span class="p">:]</span>
+                <span class="n">ind_0</span> <span class="o">=</span> <span class="n">ind_1</span>
+                <span class="n">ind_1</span> <span class="o">=</span> <span class="n">ind_0</span> <span class="o">+</span> <span class="n">n_per_repl</span>
+            <span class="c"># Resample group B.</span>
+            <span class="n">ind_0</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">ind_1</span> <span class="o">=</span> <span class="n">n_per_repl</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">resample_b</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">r</span> <span class="o">&gt;=</span> <span class="n">n_repl</span><span class="p">:</span>
+                    <span class="n">cond_b_perm</span><span class="p">[</span><span class="n">ind_0</span><span class="p">:</span><span class="n">ind_1</span><span class="p">,</span> <span class="p">]</span> <span class="o">=</span> <span class="n">cond_b</span><span class="p">[</span>
+                                                <span class="n">repl_idx</span> <span class="o">==</span> <span class="p">(</span><span class="n">r</span> <span class="o">-</span> <span class="n">n_repl</span><span class="p">),</span> <span class="p">:]</span>
+                    <span class="n">cur_val_b_perm</span><span class="p">[</span><span class="n">ind_0</span><span class="p">:</span><span class="n">ind_1</span><span class="p">,</span> <span class="p">]</span> <span class="o">=</span> <span class="n">cur_val_b</span><span class="p">[</span>
+                                                <span class="n">repl_idx</span> <span class="o">==</span> <span class="p">(</span><span class="n">r</span> <span class="o">-</span> <span class="n">n_repl</span><span class="p">),</span> <span class="p">:]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cond_b_perm</span><span class="p">[</span><span class="n">ind_0</span><span class="p">:</span><span class="n">ind_1</span><span class="p">,</span> <span class="p">]</span> <span class="o">=</span> <span class="n">cond_a</span><span class="p">[</span><span class="n">repl_idx</span> <span class="o">==</span> <span class="n">r</span><span class="p">,</span> <span class="p">:]</span>
+                    <span class="n">cur_val_b_perm</span><span class="p">[</span><span class="n">ind_0</span><span class="p">:</span><span class="n">ind_1</span><span class="p">,</span> <span class="p">]</span> <span class="o">=</span> <span class="n">cur_val_a</span><span class="p">[</span><span class="n">repl_idx</span> <span class="o">==</span> <span class="n">r</span><span class="p">,</span> <span class="p">:]</span>
+                <span class="n">ind_0</span> <span class="o">=</span> <span class="n">ind_1</span>
+                <span class="n">ind_1</span> <span class="o">=</span> <span class="n">ind_0</span> <span class="o">+</span> <span class="n">n_per_repl</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Unkown &quot;stats_type&quot;: {0}, should be &quot;dependent&quot; &#39;</span>
+                             <span class="s">&#39;or &quot;independent&quot;.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stats_type</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">cond_a_perm</span><span class="p">,</span> <span class="n">cond_b_perm</span><span class="p">,</span> <span class="n">cur_val_a_perm</span><span class="p">,</span> <span class="n">cur_val_b_perm</span>
+
+    <span class="k">def</span> <span class="nf">_separate_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx_full</span><span class="p">,</span> <span class="n">idx_single</span><span class="p">,</span> <span class="n">real_full</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove single indexes&#39; realisations from a set of realisations.</span>
+
+<span class="sd">        Remove the realisations of a single index from a set of realisations.</span>
+<span class="sd">        Return both the single realisation and realisations for the remaining</span>
+<span class="sd">        set. This allows us to reuse the collected realisations when pruning</span>
+<span class="sd">        the conditional set after candidates have been included.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            idx_full: list of indices indicating the full set</span>
+<span class="sd">            idx_single: index to be removed</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            realisation_single: numpy array with realisations for single index</span>
+<span class="sd">            realisations_remaining: numpy array with remaining realisations</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">idx_full</span><span class="p">)</span> <span class="o">==</span> <span class="n">real_full</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="p">(</span><span class="s">&#39;Index list does not &#39;</span>
+                                                      <span class="s">&#39;correspond with full &#39;</span>
+                                                      <span class="s">&#39;realisations.&#39;</span><span class="p">)</span>
+        <span class="n">array_idx_single</span> <span class="o">=</span> <span class="n">idx_full</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx_single</span><span class="p">)</span>
+        <span class="n">real_single</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">real_full</span><span class="p">[:,</span> <span class="n">array_idx_single</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">real_remaining</span> <span class="o">=</span> <span class="n">idtxl_utils</span><span class="o">.</span><span class="n">remove_column</span><span class="p">(</span><span class="n">real_full</span><span class="p">,</span> <span class="n">array_idx_single</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">real_remaining</span><span class="p">,</span> <span class="n">real_single</span></div>
+</pre></div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+         
+<div class="col-md-3 hidden-xs" id="sidebar-wrapper">
+  <div class="sidebar hidden-xs" role="navigation" aria-label="main navigation">
+<div id="searchbox" role="search">
+  <h3>Quick search</h3>
+  <form class="search form-inline" action="../../search.html" method="get">
+      <div class="input-append input-group">
+        <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+        <span class="input-group-btn">
+        <input type="submit" class="btn" value="Go" />
+        </span>
+      </div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+  </div>
+</div> 
+        
+      </div><!-- /row -->
+
+      <!-- row -->
+      <div class="row footer-relbar">
+<div id="navbar-related" class=" related navbar navbar-default" role="navigation" aria-label="related navigation">
+  <div class="navbar-inner">
+    <ul class="nav navbar-nav ">
+        <li><a href="../../index.html">IDTxl 0.1 documentation</a></li>
+    </ul>
+<ul class="nav navbar-nav pull-right hidden-xs hidden-sm">
+      
+        <li><a href="../../py-modindex.html" title="Python Module Index" >modules</a></li>
+        <li><a href="../../genindex.html" title="General Index" >index</a></li>
+        <li><a href="../index.html" >Module code</a></li>
+        <li><a href="#">top</a></li> 
+      
+    </ul>
+  </div>
+</div>
+      </div><!-- /row -->
+
+      <!-- footer -->
+      <footer role="contentinfo">
+          &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.
+      </footer>
+      <!-- /footer -->
+
+    </div>
+    <!-- /container -->
+
+  </body>
+</html>

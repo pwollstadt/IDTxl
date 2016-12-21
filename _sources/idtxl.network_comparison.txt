@@ -1,0 +1,7 @@
+idtxl.network_comparison module
+===============================
+
+.. automodule:: idtxl.network_comparison
+    :members:
+    :undoc-members:
+    :show-inheritance:

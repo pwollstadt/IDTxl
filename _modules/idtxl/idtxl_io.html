@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+
+
+
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    
+    <title>idtxl.idtxl_io &mdash; IDTxl 0.1 documentation</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    
+
+<link rel="stylesheet" href="../../_static/css/basicstrap-base.css" type="text/css" />
+<link rel="stylesheet" id="current-theme" href="../../_static/css/bootstrap3/bootswatch-spacelab.css" type="text/css" />
+<link rel="stylesheet" id="current-adjust-theme" href="../../_static/css/adjust_theme/bootswatch-spacelab.css" type="text/css" />
+
+<link rel="stylesheet" href="../../_static/css/font-awesome.min.css">
+
+<style type="text/css">
+  body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+  }
+</style>
+
+<link rel="stylesheet" href="../../_static/css/basicstrap.css" type="text/css" />
+<link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+<script type="text/javascript">
+  var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:    '../../',
+            VERSION:     '0.1',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE:  true
+  };
+</script>
+    <script type="text/javascript" src="../../_static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/bootstrap3.min.js"></script>
+<script type="text/javascript" src="../../_static/js/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="../../_static/js/basicstrap.js"></script>
+<script type="text/javascript">
+</script>
+    <link rel="top" title="IDTxl 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div id="navbar-top" class="navbar navbar-fixed-top navbar-default" role="navigation" aria-label="top navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../../index.html">IDTxl 0.1 documentation</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+
+            
+              <li><a href="../../py-modindex.html" title="Python Module Index" >modules </a></li>
+              <li><a href="../../genindex.html" title="General Index" accesskey="I">index </a></li>
+              <li><a href="../index.html" accesskey="U">Module code</a></li>
+            
+
+            <li class="visible-xs">
+                <form class="search form-search form-inline navbar-form navbar-right sp-searchbox" action="../../search.html" method="get">
+                  <div class="input-append input-group">
+                    <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+                    <span class="input-group-btn">
+                    <input type="submit" class="btn" value="Go" />
+                    </span>
+                  </div>
+                  <input type="hidden" name="check_keywords" value="yes" />
+                  <input type="hidden" name="area" value="default" />
+                </form>
+            </li>
+
+            
+
+          </ul>
+
+        </div>
+      </div>
+    </div>
+    
+
+    <!-- container -->
+    <div class="container">
+
+      <!-- row -->
+      <div class="row">
+        
+        
+
+        <div class="col-md-9" id="content-wrapper">
+          <div class="document" role="main">
+            <div class="documentwrapper">
+              <div class="bodywrapper">
+                <div class="body">
+                  
+  <h1>Source code for idtxl.idtxl_io</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Provide load and save functionality for IDTxl results.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">copy</span> <span class="kn">as</span> <span class="nn">cp</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.data</span> <span class="kn">import</span> <span class="n">Data</span>
+
+<span class="n">VERBOSE</span> <span class="o">=</span> <span class="bp">True</span>
+
+
+<div class="viewcode-block" id="save"><a class="viewcode-back" href="../../idtxl.html#idtxl.idtxl_io.save">[docs]</a><span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="n">file_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Save IDTxl data to disk.</span>
+
+<span class="sd">    Save different data types to disk. Supported types are:</span>
+
+<span class="sd">    - dictionaries with results, e.g., from Multivariate_te</span>
+<span class="sd">    - numpy array</span>
+<span class="sd">    - instance of IDTXL Data object</span>
+
+<span class="sd">    Note that while numpy arrays and Data instances are saved in binary for</span>
+<span class="sd">    performance, dictionaries are saved in the json format, which is human-</span>
+<span class="sd">    readable and also easily read into other programs (e.g., MATLAB:</span>
+<span class="sd">    http://undocumentedmatlab.com/blog/json-matlab-integration).</span>
+
+<span class="sd">    File extensions are</span>
+
+<span class="sd">    - .txt for dictionaries (JSON file)</span>
+<span class="sd">    - .npy for numpy array</span>
+<span class="sd">    - .npz for Data instances</span>
+
+<span class="sd">    If the extension is not provided in the file_path, the function will add it</span>
+<span class="sd">    depending on the type of the data to be written.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dat : dict | numpy array | Data object</span>
+<span class="sd">            data to be saved to disk</span>
+<span class="sd">        file_path : string</span>
+<span class="sd">            string with file name (including the path)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Check if a file extension is provided in the file_path. Note that the</span>
+    <span class="c"># numpy save functions don&#39;t need an extension, they are added if missing.</span>
+    <span class="k">if</span> <span class="n">file_path</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">add_extension</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">add_extension</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">dat</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">add_extension</span><span class="p">:</span>
+            <span class="n">file_path</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">file_path</span><span class="p">,</span> <span class="s">&#39;.txt&#39;</span><span class="p">])</span>
+        <span class="c"># JSON does not recognize numpy arrays and data types, they have to be</span>
+        <span class="c"># converted before dumping them.</span>
+        <span class="n">dat_json</span> <span class="o">=</span> <span class="n">_remove_numpy</span><span class="p">(</span><span class="n">dat</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;writing file {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_path</span><span class="p">))</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="n">dat_json</span><span class="p">,</span> <span class="n">fp</span><span class="o">=</span><span class="n">outfile</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">dat</span><span class="p">)</span> <span class="ow">is</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="c"># TODO this can&#39;t handle scalars, handle this as an exception</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">dat</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">dat</span><span class="p">)</span> <span class="ow">is</span> <span class="n">__name__</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Data</span><span class="p">:</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">savez</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">dat</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">normalised</span><span class="o">=</span><span class="n">dat</span><span class="o">.</span><span class="n">normalise</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_remove_numpy</span><span class="p">(</span><span class="n">dat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Remove all numpy data structures and types from dictionary.</span>
+
+<span class="sd">    JSON can not handle numpy types and data structures, they have to be</span>
+<span class="sd">    convertedto native python types first.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dat_json</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">dat</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">dat_json</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;{0}, type: {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dat_json</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="nb">type</span><span class="p">(</span><span class="n">dat_json</span><span class="p">[</span><span class="n">k</span><span class="p">])))</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">dat_json</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="ow">is</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+            <span class="n">dat_json</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">dat_json</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">dat_json</span>
+
+
+<div class="viewcode-block" id="load"><a class="viewcode-back" href="../../idtxl.html#idtxl.idtxl_io.load">[docs]</a><span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Load IDTxl data from disk.</span>
+
+<span class="sd">    Load different data types to disk. Supported types are:</span>
+
+<span class="sd">    - dictionaries with results, e.g., from Multivariate_te</span>
+<span class="sd">    - numpy array</span>
+<span class="sd">    - instance of IDTXL Data object</span>
+
+<span class="sd">    File extensions are</span>
+
+<span class="sd">    - .txt for dictionaries (JSON file)</span>
+<span class="sd">    - .npy for numpy array</span>
+<span class="sd">    - .npz for Data instances</span>
+
+<span class="sd">    Note that while numpy arrays and Data instances are saved in binary for</span>
+<span class="sd">    performance, dictionaries are saved in the json format, which is human-</span>
+<span class="sd">    readable and also easily read into other programs (e.g., MATLAB:</span>
+<span class="sd">    http://undocumentedmatlab.com/blog/json-matlab-integration).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        file_path : string</span>
+<span class="sd">            string with file name (including the path)</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Check extension of provided file path, this is needed to determine the</span>
+    <span class="c"># file type to be loaded.</span>
+    <span class="n">ext</span> <span class="o">=</span> <span class="n">file_path</span><span class="p">[</span><span class="n">file_path</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">ext</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="p">(</span><span class="s">&#39;Could not determine file format of &quot;file_path&quot;, &#39;</span>
+                           <span class="s">&#39;please provide one of the following extensions: &#39;</span>
+                           <span class="s">&#39;&quot;.txt&quot;, &quot;.npy&quot;, &quot;.npz&quot;.&#39;</span><span class="p">)</span>
+
+    <span class="c"># Load data depending on the file type.</span>
+    <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s">&#39;txt&#39;</span><span class="p">:</span>  <span class="c"># JSON file</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;loading dictionary from disc&#39;</span><span class="p">)</span>
+        <span class="c"># with file_path as infile:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_data</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_data</span><span class="p">)</span>
+            <span class="c"># TODO convert lists to np.arrays?</span>
+    <span class="k">elif</span> <span class="n">ext</span> <span class="o">==</span> <span class="s">&#39;npy&#39;</span><span class="p">:</span>  <span class="c"># single numpy array</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;loading numpy array from disc&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">ext</span> <span class="o">==</span> <span class="s">&#39;npz&#39;</span><span class="p">:</span>  <span class="c"># instance of IDTxl Data object</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;loading data object from disc&#39;</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">Data</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">],</span> <span class="n">dim_order</span><span class="o">=</span><span class="s">&#39;psr&#39;</span><span class="p">,</span> <span class="n">normalise</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">normalise</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s">&#39;normalised&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+</pre></div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+         
+<div class="col-md-3 hidden-xs" id="sidebar-wrapper">
+  <div class="sidebar hidden-xs" role="navigation" aria-label="main navigation">
+<div id="searchbox" role="search">
+  <h3>Quick search</h3>
+  <form class="search form-inline" action="../../search.html" method="get">
+      <div class="input-append input-group">
+        <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+        <span class="input-group-btn">
+        <input type="submit" class="btn" value="Go" />
+        </span>
+      </div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+  </div>
+</div> 
+        
+      </div><!-- /row -->
+
+      <!-- row -->
+      <div class="row footer-relbar">
+<div id="navbar-related" class=" related navbar navbar-default" role="navigation" aria-label="related navigation">
+  <div class="navbar-inner">
+    <ul class="nav navbar-nav ">
+        <li><a href="../../index.html">IDTxl 0.1 documentation</a></li>
+    </ul>
+<ul class="nav navbar-nav pull-right hidden-xs hidden-sm">
+      
+        <li><a href="../../py-modindex.html" title="Python Module Index" >modules</a></li>
+        <li><a href="../../genindex.html" title="General Index" >index</a></li>
+        <li><a href="../index.html" >Module code</a></li>
+        <li><a href="#">top</a></li> 
+      
+    </ul>
+  </div>
+</div>
+      </div><!-- /row -->
+
+      <!-- footer -->
+      <footer role="contentinfo">
+          &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.
+      </footer>
+      <!-- /footer -->
+
+    </div>
+    <!-- /container -->
+
+  </body>
+</html>

@@ -1,0 +1,7 @@
+idtxl.stats module
+==================
+
+.. automodule:: idtxl.stats
+    :members:
+    :undoc-members:
+    :show-inheritance:

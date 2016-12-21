@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+
+
+
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    
+    <title>idtxl.neighbour_search_opencl &mdash; IDTxl 0.1 documentation</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    
+
+<link rel="stylesheet" href="../../_static/css/basicstrap-base.css" type="text/css" />
+<link rel="stylesheet" id="current-theme" href="../../_static/css/bootstrap3/bootswatch-spacelab.css" type="text/css" />
+<link rel="stylesheet" id="current-adjust-theme" href="../../_static/css/adjust_theme/bootswatch-spacelab.css" type="text/css" />
+
+<link rel="stylesheet" href="../../_static/css/font-awesome.min.css">
+
+<style type="text/css">
+  body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+  }
+</style>
+
+<link rel="stylesheet" href="../../_static/css/basicstrap.css" type="text/css" />
+<link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+<script type="text/javascript">
+  var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:    '../../',
+            VERSION:     '0.1',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE:  true
+  };
+</script>
+    <script type="text/javascript" src="../../_static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/bootstrap3.min.js"></script>
+<script type="text/javascript" src="../../_static/js/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="../../_static/js/basicstrap.js"></script>
+<script type="text/javascript">
+</script>
+    <link rel="top" title="IDTxl 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div id="navbar-top" class="navbar navbar-fixed-top navbar-default" role="navigation" aria-label="top navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../../index.html">IDTxl 0.1 documentation</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+
+            
+              <li><a href="../../py-modindex.html" title="Python Module Index" >modules </a></li>
+              <li><a href="../../genindex.html" title="General Index" accesskey="I">index </a></li>
+              <li><a href="../index.html" accesskey="U">Module code</a></li>
+            
+
+            <li class="visible-xs">
+                <form class="search form-search form-inline navbar-form navbar-right sp-searchbox" action="../../search.html" method="get">
+                  <div class="input-append input-group">
+                    <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+                    <span class="input-group-btn">
+                    <input type="submit" class="btn" value="Go" />
+                    </span>
+                  </div>
+                  <input type="hidden" name="check_keywords" value="yes" />
+                  <input type="hidden" name="area" value="default" />
+                </form>
+            </li>
+
+            
+
+          </ul>
+
+        </div>
+      </div>
+    </div>
+    
+
+    <!-- container -->
+    <div class="container">
+
+      <!-- row -->
+      <div class="row">
+        
+        
+
+        <div class="col-md-9" id="content-wrapper">
+          <div class="document" role="main">
+            <div class="documentwrapper">
+              <div class="bodywrapper">
+                <div class="body">
+                  
+  <h1>Source code for idtxl.neighbour_search_opencl</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">resource_filename</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">idtxl_exceptions</span> <span class="k">as</span> <span class="n">ex</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pyopencl</span> <span class="kn">as</span> <span class="nn">cl</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">ex</span><span class="o">.</span><span class="n">opencl_missing</span><span class="p">(</span><span class="s">&#39;PyOpenCl is not available on this system. To use &#39;</span>
+                      <span class="s">&#39;OpenCL-powered CMI estimation install it from &#39;</span>
+                      <span class="s">&#39;https://pypi.python.org/pypi/pyopencl&#39;</span><span class="p">)</span>
+
+<span class="n">VERBOSE</span> <span class="o">=</span> <span class="bp">False</span>
+
+
+<div class="viewcode-block" id="knn_search"><a class="viewcode-back" href="../../idtxl.html#idtxl.neighbour_search_opencl.knn_search">[docs]</a><span class="k">def</span> <span class="nf">knn_search</span><span class="p">(</span><span class="n">pointset</span><span class="p">,</span> <span class="n">n_dim</span><span class="p">,</span> <span class="n">knn_k</span><span class="p">,</span> <span class="n">theiler_t</span><span class="p">,</span> <span class="n">n_chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">gpuid</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Interface with OpenCL knn search from Python/IDTxl.</span>
+
+<span class="sd">    Function checks input for correct dimensionality and transposes point sets</span>
+<span class="sd">    if necessary. Function also checks the maximum available memory on the GPU</span>
+<span class="sd">    device and splits chunks over multiple calls to the GPU (runs).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># check for a data layout in memory as expected by the low level functions</span>
+    <span class="c"># ndim * [n_points * n_chunks]</span>
+    <span class="k">if</span> <span class="n">n_dim</span> <span class="o">!=</span> <span class="n">pointset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">assert</span> <span class="n">n_dim</span> <span class="o">==</span> <span class="n">pointset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="s">&#39;Given dimension does not match &#39;</span>
+                                            <span class="s">&#39;data.&#39;</span><span class="p">)</span>
+        <span class="n">pointset</span> <span class="o">=</span> <span class="n">pointset</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;search GPU: fixed shape of input data&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pointset</span><span class="o">.</span><span class="n">flags</span><span class="p">[</span><span class="s">&#39;C_CONTIGUOUS&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">pointset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">pointset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;search GPU: fixed memory layout of input data&#39;</span><span class="p">)</span>
+
+    <span class="c"># Allocate memory for GPU search output.</span>
+    <span class="n">indexes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">knn_k</span><span class="p">,</span> <span class="n">pointset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">knn_k</span><span class="p">,</span> <span class="n">pointset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="c"># Calculate the maximum number of chunks that fit into the GPU&#39;s global</span>
+    <span class="c"># memory given the current chunk size. Calculate the number of necessary</span>
+    <span class="c"># runs (calls to the GPU) given the max. number of chunks that fit onto the</span>
+    <span class="c"># GPU and the actual number of chunks.</span>
+    <span class="n">max_chunks_per_run</span> <span class="o">=</span> <span class="n">_get_max_chunks_per_run</span><span class="p">(</span><span class="n">gpuid</span><span class="p">,</span> <span class="n">n_chunks</span><span class="p">,</span> <span class="n">pointset</span><span class="p">,</span>
+                                                 <span class="n">distances</span><span class="p">,</span> <span class="n">indexes</span><span class="p">)</span>
+    <span class="n">max_chunks_per_run</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">max_chunks_per_run</span><span class="p">,</span> <span class="n">n_chunks</span><span class="p">)</span>  <span class="c"># check if chunks fit into GPU in one run</span>
+    <span class="n">n_runs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">n_chunks</span> <span class="o">/</span> <span class="n">max_chunks_per_run</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="n">chunksize</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pointset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">n_chunks</span><span class="p">)</span>
+    <span class="n">i_1</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">i_2</span> <span class="o">=</span> <span class="n">max_chunks_per_run</span> <span class="o">*</span> <span class="n">chunksize</span>
+    <span class="n">pointdim</span> <span class="o">=</span> <span class="n">pointset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">n_points</span> <span class="o">=</span> <span class="n">pointset</span><span class="p">[:,</span> <span class="n">i_1</span><span class="p">:</span><span class="n">i_2</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_runs</span><span class="p">):</span>
+        <span class="c"># print(&#39;run: {0}, index 1: {1}, index 2: {2}&#39;.format(r, i_1, i_2))</span>
+        <span class="c"># print(&#39;no. points: {0}, no. chunks: {1}, pointset shape: {2}&#39;.format(n_points, n_chunks, pointset[:, i_1:i_2].shape))</span>
+        <span class="n">success</span> <span class="o">=</span> <span class="n">clFindKnn</span><span class="p">(</span><span class="n">indexes</span><span class="p">[:,</span> <span class="n">i_1</span><span class="p">:</span><span class="n">i_2</span><span class="p">],</span> <span class="n">distances</span><span class="p">[:,</span> <span class="n">i_1</span><span class="p">:</span><span class="n">i_2</span><span class="p">],</span>
+                            <span class="n">pointset</span><span class="p">[:,</span> <span class="n">i_1</span><span class="p">:</span><span class="n">i_2</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float32&#39;</span><span class="p">),</span>
+                            <span class="n">pointset</span><span class="p">[:,</span> <span class="n">i_1</span><span class="p">:</span><span class="n">i_2</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float32&#39;</span><span class="p">),</span>
+                            <span class="nb">int</span><span class="p">(</span><span class="n">knn_k</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">theiler_t</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_chunks</span><span class="p">),</span>
+                            <span class="nb">int</span><span class="p">(</span><span class="n">pointdim</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_points</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">gpuid</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;Error in OpenCL knn search!&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">1</span>
+        <span class="n">i_1</span> <span class="o">=</span> <span class="n">i_2</span>
+        <span class="n">i_2</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">i_2</span> <span class="o">+</span> <span class="n">max_chunks_per_run</span> <span class="o">*</span> <span class="n">chunksize</span><span class="p">,</span> <span class="n">pointset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">indexes</span><span class="p">,</span> <span class="n">distances</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="range_search"><a class="viewcode-back" href="../../idtxl.html#idtxl.neighbour_search_opencl.range_search">[docs]</a><span class="k">def</span> <span class="nf">range_search</span><span class="p">(</span><span class="n">pointset</span><span class="p">,</span> <span class="n">n_dim</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">theiler_t</span><span class="p">,</span> <span class="n">n_chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">gpuid</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Interface with OpenCL range search from Python/IDTxl.</span>
+
+<span class="sd">    Function checks input for correct dimensionality and transposes point sets</span>
+<span class="sd">    if necessary. Function also checks the maximum available memory on the GPU</span>
+<span class="sd">    device and splits chunks over multiple calls to the GPU (runs).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># check for a data layout in memory as expected by the low level functions</span>
+    <span class="c"># ndim * [n_points * n_chunks]</span>
+    <span class="k">if</span> <span class="n">n_dim</span> <span class="o">!=</span> <span class="n">pointset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">assert</span> <span class="n">n_dim</span> <span class="o">==</span> <span class="n">pointset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="s">&#39;Given dimension does not match &#39;</span>
+                                            <span class="s">&#39;data axis.&#39;</span><span class="p">)</span>
+        <span class="n">pointset</span> <span class="o">=</span> <span class="n">pointset</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;search GPU: fixed shape input data&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pointset</span><span class="o">.</span><span class="n">flags</span><span class="p">[</span><span class="s">&#39;C_CONTIGUOUS&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">pointset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">pointset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;search GPU: fixed memory layout of input data&#39;</span><span class="p">)</span>
+
+    <span class="c"># Allocate memory for GPU search output</span>
+    <span class="n">pointcount</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">pointset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+    <span class="c"># Calculate the maximum number of chunks that fit into the GPU&#39;s global</span>
+    <span class="c"># memory given the current chunk size. Calculate the number of necessary</span>
+    <span class="c"># runs (calls to the GPU) given the max. number of chunks that fit onto the</span>
+    <span class="c"># GPU and the actual number of chunks.</span>
+    <span class="n">max_chunks_per_run</span> <span class="o">=</span> <span class="n">_get_max_chunks_per_run</span><span class="p">(</span><span class="n">gpuid</span><span class="p">,</span> <span class="n">n_chunks</span><span class="p">,</span> <span class="n">pointset</span><span class="p">,</span>
+                                                 <span class="n">pointcount</span><span class="p">,</span> <span class="n">radius</span><span class="p">)</span>
+    <span class="n">max_chunks_per_run</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">max_chunks_per_run</span><span class="p">,</span> <span class="n">n_chunks</span><span class="p">)</span>  <span class="c"># check if chunks fit into GPU in one run</span>
+    <span class="n">n_runs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">n_chunks</span> <span class="o">/</span> <span class="n">max_chunks_per_run</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="n">chunksize</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pointset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">n_chunks</span><span class="p">)</span>
+    <span class="n">i_1</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">i_2</span> <span class="o">=</span> <span class="n">max_chunks_per_run</span> <span class="o">*</span> <span class="n">chunksize</span>
+    <span class="n">pointdim</span> <span class="o">=</span> <span class="n">pointset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">n_points</span> <span class="o">=</span> <span class="n">pointset</span><span class="p">[:,</span> <span class="n">i_1</span><span class="p">:</span><span class="n">i_2</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_runs</span><span class="p">):</span>
+        <span class="n">success</span> <span class="o">=</span> <span class="n">clFindRSAll</span><span class="p">(</span><span class="n">pointcount</span><span class="p">[</span><span class="n">i_1</span><span class="p">:</span><span class="n">i_2</span><span class="p">],</span>
+                              <span class="n">pointset</span><span class="p">[:,</span> <span class="n">i_1</span><span class="p">:</span><span class="n">i_2</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float32&#39;</span><span class="p">),</span>
+                              <span class="n">pointset</span><span class="p">[:,</span> <span class="n">i_1</span><span class="p">:</span><span class="n">i_2</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float32&#39;</span><span class="p">),</span>
+                              <span class="n">radius</span><span class="p">[</span><span class="n">i_1</span><span class="p">:</span><span class="n">i_2</span><span class="p">],</span> <span class="n">theiler_t</span><span class="p">,</span> <span class="n">n_chunks</span><span class="p">,</span> <span class="n">pointdim</span><span class="p">,</span>
+                              <span class="n">n_points</span><span class="p">,</span> <span class="n">gpuid</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;Error in OpenCL knn search!&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">1</span>
+        <span class="n">i_1</span> <span class="o">=</span> <span class="n">i_2</span>
+        <span class="n">i_2</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">i_2</span> <span class="o">+</span> <span class="n">max_chunks_per_run</span> <span class="o">*</span> <span class="n">chunksize</span><span class="p">,</span> <span class="n">pointset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">pointcount</span>
+</div>
+<div class="viewcode-block" id="clFindKnn"><a class="viewcode-back" href="../../idtxl.html#idtxl.neighbour_search_opencl.clFindKnn">[docs]</a><span class="k">def</span> <span class="nf">clFindKnn</span><span class="p">(</span><span class="n">h_bf_indexes</span><span class="p">,</span> <span class="n">h_bf_distances</span><span class="p">,</span> <span class="n">h_pointset</span><span class="p">,</span> <span class="n">h_query</span><span class="p">,</span> <span class="n">kth</span><span class="p">,</span> <span class="n">thelier</span><span class="p">,</span>
+              <span class="n">nchunks</span><span class="p">,</span> <span class="n">pointdim</span><span class="p">,</span> <span class="n">signallength</span><span class="p">,</span> <span class="n">gpuid</span><span class="p">):</span>
+
+    <span class="n">triallength</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">signallength</span> <span class="o">/</span> <span class="n">nchunks</span><span class="p">)</span>
+<span class="c">#    print &#39;Values:&#39;, pointdim, triallength, signallength, kth, thelier</span>
+
+    <span class="sd">&#39;&#39;&#39;for platform in cl.get_platforms():</span>
+<span class="sd">        for device in platform.get_devices():</span>
+<span class="sd">            print(&quot;===============================================================&quot;)</span>
+<span class="sd">            print(&quot;Platform name:&quot;, platform.name)</span>
+<span class="sd">            print(&quot;Platform profile:&quot;, platform.profile)</span>
+<span class="sd">            print(&quot;Platform vendor:&quot;, platform.vendor)</span>
+<span class="sd">            print(&quot;Platform version:&quot;, platform.version)</span>
+<span class="sd">            print(&quot;---------------------------------------------------------------&quot;)</span>
+<span class="sd">            print(&quot;Device name:&quot;, device.name)</span>
+<span class="sd">            print(&quot;Device type:&quot;, cl.device_type.to_string(device.type))</span>
+<span class="sd">            print(&quot;Device memory: &quot;, device.global_mem_size//1024//1024, &#39;MB&#39;)</span>
+<span class="sd">            print(&quot;Device max clock speed:&quot;, device.max_clock_frequency, &#39;MHz&#39;)</span>
+<span class="sd">            print(&quot;Device compute units:&quot;, device.max_compute_units)</span>
+<span class="sd">            print(&quot;Device max work group size:&quot;, device.max_work_group_size)</span>
+<span class="sd">            print(&quot;Device max work item sizes:&quot;, device.max_work_item_sizes)&#39;&#39;&#39;</span>
+
+    <span class="c"># Set up OpenCL</span>
+    <span class="n">my_gpu_devices</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">queue</span> <span class="o">=</span> <span class="n">_get_device</span><span class="p">(</span><span class="n">gpuid</span><span class="p">)</span>
+
+    <span class="c"># Check memory resources.</span>
+    <span class="n">usedmem</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">h_query</span><span class="o">.</span><span class="n">nbytes</span> <span class="o">+</span> <span class="n">h_pointset</span><span class="o">.</span><span class="n">nbytes</span> <span class="o">+</span> <span class="n">h_bf_distances</span><span class="o">.</span><span class="n">nbytes</span> <span class="o">+</span>
+                   <span class="n">h_bf_indexes</span><span class="o">.</span><span class="n">nbytes</span><span class="p">)</span> <span class="o">//</span> <span class="mi">1024</span> <span class="o">//</span> <span class="mi">1024</span><span class="p">)</span>
+    <span class="n">totalmem</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">my_gpu_devices</span><span class="p">[</span><span class="n">gpuid</span><span class="p">]</span><span class="o">.</span><span class="n">global_mem_size</span> <span class="o">//</span> <span class="mi">1024</span> <span class="o">//</span> <span class="mi">1024</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">totalmem</span><span class="o">*</span><span class="mf">0.90</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">usedmem</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">((</span><span class="s">&quot;WARNING:&quot;</span><span class="p">,</span> <span class="n">usedmem</span><span class="p">,</span> <span class="s">&quot;Mb used out of&quot;</span><span class="p">,</span> <span class="n">totalmem</span><span class="p">,</span>
+               <span class="s">&quot;Mb. The GPU could run out of memory.&quot;</span><span class="p">))</span>
+
+    <span class="c"># Create OpenCL buffers</span>
+    <span class="n">d_bf_query</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Buffer</span><span class="p">(</span><span class="n">context</span><span class="p">,</span>
+                           <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_ONLY</span> <span class="o">|</span> <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">COPY_HOST_PTR</span><span class="p">,</span>
+                           <span class="n">hostbuf</span><span class="o">=</span><span class="n">h_query</span><span class="p">)</span>
+    <span class="n">d_bf_pointset</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Buffer</span><span class="p">(</span>
+                        <span class="n">context</span><span class="p">,</span>
+                        <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_ONLY</span> <span class="o">|</span> <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">COPY_HOST_PTR</span><span class="p">,</span>
+                        <span class="n">hostbuf</span><span class="o">=</span><span class="n">h_pointset</span><span class="p">)</span>
+    <span class="n">d_bf_distances</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Buffer</span><span class="p">(</span><span class="n">context</span><span class="p">,</span>
+                               <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_WRITE</span><span class="p">,</span>
+                               <span class="n">h_bf_distances</span><span class="o">.</span><span class="n">nbytes</span><span class="p">)</span>
+    <span class="n">d_bf_indexes</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Buffer</span><span class="p">(</span><span class="n">context</span><span class="p">,</span>
+                             <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_WRITE</span><span class="p">,</span>
+                             <span class="n">h_bf_indexes</span><span class="o">.</span><span class="n">nbytes</span><span class="p">)</span>
+
+    <span class="c"># Kernel Launch</span>
+    <span class="n">kernelLocation</span> <span class="o">=</span> <span class="n">resource_filename</span><span class="p">(</span><span class="n">__name__</span><span class="p">,</span> <span class="s">&#39;gpuKnnBF_kernel.cl&#39;</span><span class="p">)</span>
+    <span class="n">kernelsource</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">kernelLocation</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="n">program</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Program</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">kernelsource</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+    <span class="n">kernelKNNshared</span> <span class="o">=</span> <span class="n">program</span><span class="o">.</span><span class="n">kernelKNNshared</span>
+    <span class="n">kernelKNNshared</span><span class="o">.</span><span class="n">set_scalar_arg_dtypes</span><span class="p">([</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                                           <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                                           <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">])</span>
+
+    <span class="c"># Size of workitems and NDRange</span>
+    <span class="k">if</span> <span class="n">signallength</span><span class="o">/</span><span class="n">nchunks</span> <span class="o">&lt;</span> <span class="n">my_gpu_devices</span><span class="p">[</span><span class="n">gpuid</span><span class="p">]</span><span class="o">.</span><span class="n">max_work_group_size</span><span class="p">:</span>
+        <span class="n">workitems_x</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="k">elif</span> <span class="n">my_gpu_devices</span><span class="p">[</span><span class="n">gpuid</span><span class="p">]</span><span class="o">.</span><span class="n">max_work_group_size</span> <span class="o">&lt;</span> <span class="mi">256</span><span class="p">:</span>
+        <span class="n">workitems_x</span> <span class="o">=</span> <span class="n">my_gpu_devices</span><span class="p">[</span><span class="n">gpuid</span><span class="p">]</span><span class="o">.</span><span class="n">max_work_group_size</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">workitems_x</span> <span class="o">=</span> <span class="mi">256</span>
+
+    <span class="k">if</span> <span class="n">signallength</span> <span class="o">%</span> <span class="n">workitems_x</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(((</span><span class="n">signallength</span><span class="p">)</span><span class="o">/</span><span class="n">workitems_x</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">signallength</span><span class="o">/</span><span class="n">workitems_x</span><span class="p">)</span>
+
+    <span class="n">NDRange_x</span> <span class="o">=</span> <span class="n">workitems_x</span> <span class="o">*</span> <span class="n">temp</span>
+
+    <span class="c"># Local memory for distances and indexes</span>
+    <span class="n">localmem</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span><span class="o">*</span><span class="n">kth</span><span class="o">*</span><span class="n">workitems_x</span> <span class="o">+</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span><span class="o">*</span><span class="n">kth</span><span class="o">*</span><span class="n">workitems_x</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1024</span>
+    <span class="k">if</span> <span class="n">localmem</span> <span class="o">&gt;</span> <span class="n">my_gpu_devices</span><span class="p">[</span><span class="n">gpuid</span><span class="p">]</span><span class="o">.</span><span class="n">local_mem_size</span> <span class="o">/</span> <span class="mi">1024</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;Localmem alocation will fail. {0} kb available, and it needs &#39;</span>
+              <span class="s">&#39;{1} kb.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">my_gpu_devices</span><span class="p">[</span><span class="n">gpuid</span><span class="p">]</span><span class="o">.</span><span class="n">local_mem_size</span><span class="o">/</span><span class="mi">1024</span><span class="p">,</span>
+                               <span class="n">localmem</span><span class="p">))</span>
+    <span class="n">localmem1</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">LocalMemory</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span><span class="o">*</span><span class="n">kth</span><span class="o">*</span><span class="n">workitems_x</span><span class="p">)</span>
+    <span class="n">localmem2</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">LocalMemory</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span><span class="o">*</span><span class="n">kth</span><span class="o">*</span><span class="n">workitems_x</span><span class="p">)</span>
+
+    <span class="n">kernelKNNshared</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span> <span class="p">(</span><span class="n">NDRange_x</span><span class="p">,),</span> <span class="p">(</span><span class="n">workitems_x</span><span class="p">,),</span> <span class="n">d_bf_query</span><span class="p">,</span>
+                    <span class="n">d_bf_pointset</span><span class="p">,</span> <span class="n">d_bf_indexes</span><span class="p">,</span> <span class="n">d_bf_distances</span><span class="p">,</span> <span class="n">pointdim</span><span class="p">,</span>
+                    <span class="n">triallength</span><span class="p">,</span> <span class="n">signallength</span><span class="p">,</span> <span class="n">kth</span><span class="p">,</span> <span class="n">thelier</span><span class="p">,</span> <span class="n">localmem1</span><span class="p">,</span>
+                    <span class="n">localmem2</span><span class="p">)</span>
+    <span class="n">queue</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
+
+    <span class="c"># Download results</span>
+    <span class="n">cl</span><span class="o">.</span><span class="n">enqueue_copy</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span> <span class="n">h_bf_distances</span><span class="p">,</span> <span class="n">d_bf_distances</span><span class="p">)</span>
+    <span class="n">cl</span><span class="o">.</span><span class="n">enqueue_copy</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span> <span class="n">h_bf_indexes</span><span class="p">,</span> <span class="n">d_bf_indexes</span><span class="p">)</span>
+
+    <span class="c"># Free buffers</span>
+    <span class="n">d_bf_distances</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+    <span class="n">d_bf_indexes</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+    <span class="n">d_bf_query</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+    <span class="n">d_bf_pointset</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="mi">1</span>
+</div>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd"> * Range search being radius a vector of length number points in queryset/pointset</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<div class="viewcode-block" id="clFindRSAll"><a class="viewcode-back" href="../../idtxl.html#idtxl.neighbour_search_opencl.clFindRSAll">[docs]</a><span class="k">def</span> <span class="nf">clFindRSAll</span><span class="p">(</span><span class="n">h_bf_npointsrange</span><span class="p">,</span> <span class="n">h_pointset</span><span class="p">,</span> <span class="n">h_query</span><span class="p">,</span> <span class="n">h_vecradius</span><span class="p">,</span> <span class="n">thelier</span><span class="p">,</span>
+                <span class="n">nchunks</span><span class="p">,</span> <span class="n">pointdim</span><span class="p">,</span> <span class="n">signallength</span><span class="p">,</span> <span class="n">gpuid</span><span class="p">):</span>
+
+    <span class="n">triallength</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">signallength</span> <span class="o">/</span> <span class="n">nchunks</span><span class="p">)</span>
+    <span class="c"># print &#39;Values:&#39;, pointdim, triallength, signallength, kth, thelier</span>
+
+    <span class="sd">&#39;&#39;&#39;for platform in cl.get_platforms():</span>
+<span class="sd">        for device in platform.get_devices():</span>
+<span class="sd">            print(&quot;===============================================================&quot;)</span>
+<span class="sd">            print(&quot;Platform name:&quot;, platform.name)</span>
+<span class="sd">            print(&quot;Platform profile:&quot;, platform.profile)</span>
+<span class="sd">            print(&quot;Platform vendor:&quot;, platform.vendor)</span>
+<span class="sd">            print(&quot;Platform version:&quot;, platform.version)</span>
+<span class="sd">            print(&quot;---------------------------------------------------------------&quot;)</span>
+<span class="sd">            print(&quot;Device name:&quot;, device.name)</span>
+<span class="sd">            print(&quot;Device type:&quot;, cl.device_type.to_string(device.type))</span>
+<span class="sd">            print(&quot;Device memory: &quot;, device.global_mem_size//1024//1024, &#39;MB&#39;)</span>
+<span class="sd">            print(&quot;Device max clock speed:&quot;, device.max_clock_frequency, &#39;MHz&#39;)</span>
+<span class="sd">            print(&quot;Device compute units:&quot;, device.max_compute_units)</span>
+<span class="sd">            print(&quot;Device max work group size:&quot;, device.max_work_group_size)</span>
+<span class="sd">            print(&quot;Device max work item sizes:&quot;, device.max_work_item_sizes)&#39;&#39;&#39;</span>
+
+    <span class="c"># Set up OpenCL</span>
+    <span class="n">my_gpu_devices</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">queue</span> <span class="o">=</span> <span class="n">_get_device</span><span class="p">(</span><span class="n">gpuid</span><span class="p">)</span>
+
+    <span class="c"># Check memory resources.</span>
+    <span class="n">usedmem</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">h_query</span><span class="o">.</span><span class="n">nbytes</span> <span class="o">+</span> <span class="n">h_pointset</span><span class="o">.</span><span class="n">nbytes</span> <span class="o">+</span> <span class="n">h_vecradius</span><span class="o">.</span><span class="n">nbytes</span> <span class="o">+</span>
+                   <span class="n">h_bf_npointsrange</span><span class="o">.</span><span class="n">nbytes</span><span class="p">)</span> <span class="o">//</span> <span class="mi">1024</span> <span class="o">//</span> <span class="mi">1024</span><span class="p">)</span>
+    <span class="n">totalmem</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">my_gpu_devices</span><span class="p">[</span><span class="n">gpuid</span><span class="p">]</span><span class="o">.</span><span class="n">global_mem_size</span> <span class="o">//</span> <span class="mi">1024</span> <span class="o">//</span> <span class="mi">1024</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">totalmem</span><span class="o">*</span><span class="mf">0.90</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">usedmem</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;WARNING: {0} Mb used from a total of {1} Mb. GPU could get &#39;</span>
+              <span class="s">&#39;without memory.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">usedmem</span><span class="p">,</span> <span class="n">totalmem</span><span class="p">))</span>
+
+    <span class="c"># Create OpenCL buffers</span>
+    <span class="n">d_bf_query</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Buffer</span><span class="p">(</span><span class="n">context</span><span class="p">,</span>
+                           <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_ONLY</span> <span class="o">|</span> <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">COPY_HOST_PTR</span><span class="p">,</span>
+                           <span class="n">hostbuf</span><span class="o">=</span><span class="n">h_query</span><span class="p">)</span>
+    <span class="n">d_bf_pointset</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Buffer</span><span class="p">(</span>
+                        <span class="n">context</span><span class="p">,</span>
+                        <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_ONLY</span> <span class="o">|</span> <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">COPY_HOST_PTR</span><span class="p">,</span>
+                        <span class="n">hostbuf</span><span class="o">=</span><span class="n">h_pointset</span><span class="p">)</span>
+    <span class="n">d_bf_vecradius</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Buffer</span><span class="p">(</span>
+                           <span class="n">context</span><span class="p">,</span>
+                           <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_ONLY</span> <span class="o">|</span> <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">COPY_HOST_PTR</span><span class="p">,</span>
+                           <span class="n">hostbuf</span><span class="o">=</span><span class="n">h_vecradius</span><span class="p">)</span>
+    <span class="n">d_bf_npointsrange</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Buffer</span><span class="p">(</span><span class="n">context</span><span class="p">,</span>
+                                  <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_WRITE</span><span class="p">,</span>
+                                  <span class="n">h_bf_npointsrange</span><span class="o">.</span><span class="n">nbytes</span><span class="p">)</span>
+
+    <span class="c"># Kernel Launch</span>
+    <span class="n">kernelLocation</span> <span class="o">=</span> <span class="n">resource_filename</span><span class="p">(</span><span class="n">__name__</span><span class="p">,</span> <span class="s">&#39;gpuKnnBF_kernel.cl&#39;</span><span class="p">)</span>
+    <span class="n">kernelsource</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">kernelLocation</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="n">program</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Program</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">kernelsource</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+    <span class="n">kernelBFRSAllshared</span> <span class="o">=</span> <span class="n">program</span><span class="o">.</span><span class="n">kernelBFRSAllshared</span>
+    <span class="n">kernelBFRSAllshared</span><span class="o">.</span><span class="n">set_scalar_arg_dtypes</span><span class="p">([</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span>
+                                               <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                                               <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="bp">None</span><span class="p">])</span>
+
+    <span class="c"># Size of workitems and NDRange</span>
+    <span class="k">if</span> <span class="n">signallength</span><span class="o">/</span><span class="n">nchunks</span> <span class="o">&lt;</span> <span class="n">my_gpu_devices</span><span class="p">[</span><span class="n">gpuid</span><span class="p">]</span><span class="o">.</span><span class="n">max_work_group_size</span><span class="p">:</span>
+        <span class="n">workitems_x</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="k">elif</span> <span class="n">my_gpu_devices</span><span class="p">[</span><span class="n">gpuid</span><span class="p">]</span><span class="o">.</span><span class="n">max_work_group_size</span> <span class="o">&lt;</span> <span class="mi">256</span><span class="p">:</span>
+        <span class="n">workitems_x</span> <span class="o">=</span> <span class="n">my_gpu_devices</span><span class="p">[</span><span class="n">gpuid</span><span class="p">]</span><span class="o">.</span><span class="n">max_work_group_size</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">workitems_x</span> <span class="o">=</span> <span class="mi">256</span>
+
+    <span class="k">if</span> <span class="n">signallength</span> <span class="o">%</span> <span class="n">workitems_x</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(((</span><span class="n">signallength</span><span class="p">)</span><span class="o">/</span><span class="n">workitems_x</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">signallength</span><span class="o">/</span><span class="n">workitems_x</span><span class="p">)</span>
+
+    <span class="n">NDRange_x</span> <span class="o">=</span> <span class="n">workitems_x</span> <span class="o">*</span> <span class="n">temp</span>
+
+    <span class="c"># Local memory for rangesearch. Actually not used, better results with</span>
+    <span class="c"># private memory</span>
+    <span class="n">localmem</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">LocalMemory</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span><span class="o">*</span><span class="n">workitems_x</span><span class="p">)</span>
+
+    <span class="n">kernelBFRSAllshared</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span> <span class="p">(</span><span class="n">NDRange_x</span><span class="p">,),</span> <span class="p">(</span><span class="n">workitems_x</span><span class="p">,),</span> <span class="n">d_bf_query</span><span class="p">,</span>
+                        <span class="n">d_bf_pointset</span><span class="p">,</span> <span class="n">d_bf_vecradius</span><span class="p">,</span> <span class="n">d_bf_npointsrange</span><span class="p">,</span>
+                        <span class="n">pointdim</span><span class="p">,</span> <span class="n">triallength</span><span class="p">,</span> <span class="n">signallength</span><span class="p">,</span> <span class="n">thelier</span><span class="p">,</span> <span class="n">localmem</span><span class="p">)</span>
+    <span class="n">queue</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
+
+    <span class="c"># Download results</span>
+    <span class="n">cl</span><span class="o">.</span><span class="n">enqueue_copy</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span> <span class="n">h_bf_npointsrange</span><span class="p">,</span> <span class="n">d_bf_npointsrange</span><span class="p">)</span>
+
+    <span class="c"># Free buffers</span>
+    <span class="n">d_bf_npointsrange</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+    <span class="n">d_bf_vecradius</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+    <span class="n">d_bf_query</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+    <span class="n">d_bf_pointset</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="mi">1</span>
+
+</div>
+<div class="viewcode-block" id="find_nonempty"><a class="viewcode-back" href="../../idtxl.html#idtxl.neighbour_search_opencl.find_nonempty">[docs]</a><span class="k">def</span> <span class="nf">find_nonempty</span><span class="p">(</span><span class="n">a_list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find non-empty device in list.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">a_list</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">a_list</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">get_devices</span><span class="p">(</span><span class="n">device_type</span><span class="o">=</span><span class="n">cl</span><span class="o">.</span><span class="n">device_type</span><span class="o">.</span><span class="n">GPU</span><span class="p">)</span> <span class="o">!=</span> <span class="p">[]:</span>
+            <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&#39;found empty platform&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">a_list</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">==</span> <span class="p">[]:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;all platforms empty&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">idx</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_get_max_chunks_per_run</span><span class="p">(</span><span class="n">gpuid</span><span class="p">,</span> <span class="n">n_chunks</span><span class="p">,</span> <span class="n">pointset</span><span class="p">,</span> <span class="n">ar1</span><span class="p">,</span> <span class="n">ar2</span><span class="p">):</span> <span class="c"># TODO make this more generic, i.e., a variable number of arrays as input</span>
+    <span class="sd">&quot;&quot;&quot;Calculate number of chunks per GPU run.</span>
+
+<span class="sd">    Checks the global memory on the requested GPU device and the problem size,</span>
+<span class="sd">    which is defined by twice the size of the pointset (used as reference and</span>
+<span class="sd">    query set by the GPU, i.e., it is passed twice to the device), and two</span>
+<span class="sd">    additional arrays (pointcount and radii for range search, and indices and</span>
+<span class="sd">    distances for knn search).</span>
+
+<span class="sd">    The function calculates the maximum number of chunks that can be searched</span>
+<span class="sd">    on the GPU in parallel and returns this number.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        gpuid : int</span>
+<span class="sd">            number of the GPU device</span>
+<span class="sd">        n_chunks : int</span>
+<span class="sd">            number of chunks in the input data</span>
+<span class="sd">        pointset : numpy array</span>
+<span class="sd">            search space and query points, axes are assumed to represent</span>
+<span class="sd">            [variable dim x points]</span>
+<span class="sd">        ar1 : numpy array</span>
+<span class="sd">            first auxiliary array used for range or knn search</span>
+<span class="sd">        ar2 : numpy array</span>
+<span class="sd">            second auxiliary array used for range or knn search</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        int</span>
+<span class="sd">            maximum number of chunks that fits onto the GPU in one run</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        The function assumes transposed input arrays, i.e., the orientation of</span>
+<span class="sd">        the point sets differs from the main code. This is due to the</span>
+<span class="sd">        implementation of the low-level OpenCl functions and may change in the</span>
+<span class="sd">        future. TODO</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Check memory resources, we check that the required memory per run does</span>
+    <span class="c"># not exceed (total_mem * 0.90), this is also used inside the PyOpenCl code</span>
+    <span class="c"># from Mario and colleagues.</span>
+    <span class="n">my_gpu_devices</span> <span class="o">=</span> <span class="n">_get_device</span><span class="p">(</span><span class="n">gpuid</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">chunksize</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pointset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">n_chunks</span><span class="p">)</span>
+    <span class="n">total_mem</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">my_gpu_devices</span><span class="p">[</span><span class="n">gpuid</span><span class="p">]</span><span class="o">.</span><span class="n">global_mem_size</span> <span class="o">/</span> <span class="mi">1024</span> <span class="o">/</span> <span class="mi">1024</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ar2</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">mem_per_chunk</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="mi">2</span> <span class="o">*</span> <span class="n">pointset</span><span class="p">[:,</span> <span class="p">:</span><span class="n">chunksize</span><span class="p">]</span><span class="o">.</span><span class="n">nbytes</span> <span class="o">+</span>
+                                     <span class="n">ar1</span><span class="p">[:,</span> <span class="p">:</span><span class="n">chunksize</span><span class="p">]</span><span class="o">.</span><span class="n">nbytes</span> <span class="o">+</span>
+                                     <span class="n">ar2</span><span class="p">[:,</span> <span class="p">:</span><span class="n">chunksize</span><span class="p">]</span><span class="o">.</span><span class="n">nbytes</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1024</span> <span class="o">/</span> <span class="mi">1024</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c"># when testing this for range searches, the 2nd array is only one-dimensional TODO make this more elegant</span>
+        <span class="n">mem_per_chunk</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="mi">2</span> <span class="o">*</span> <span class="n">pointset</span><span class="p">[:,</span> <span class="p">:</span><span class="n">chunksize</span><span class="p">]</span><span class="o">.</span><span class="n">nbytes</span> <span class="o">+</span>
+                                     <span class="n">ar1</span><span class="p">[:</span><span class="n">chunksize</span><span class="p">]</span><span class="o">.</span><span class="n">nbytes</span> <span class="o">+</span>
+                                     <span class="n">ar2</span><span class="p">[:</span><span class="n">chunksize</span><span class="p">]</span><span class="o">.</span><span class="n">nbytes</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1024</span> <span class="o">/</span> <span class="mi">1024</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;no. chunks: {0}, chunksize: {1} points, device global memory: &#39;</span>
+              <span class="s">&#39;{2} MB, memory per chunk: {3} MB&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_chunks</span><span class="p">,</span>
+                                                        <span class="n">chunksize</span><span class="p">,</span>
+                                                        <span class="n">total_mem</span><span class="p">,</span>
+                                                        <span class="n">mem_per_chunk</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">mem_per_chunk</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">total_mem</span> <span class="o">*</span> <span class="mf">0.90</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">((</span><span class="s">&#39;Size of single chunk exceeds GPU global memory. &#39;</span>
+                            <span class="s">&#39;Reduce Problem size.&#39;</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">chunks_per_run</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">total_mem</span> <span class="o">*</span> <span class="mf">0.90</span> <span class="o">/</span> <span class="n">mem_per_chunk</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;max. allowed no. chunks per run is {0}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">chunks_per_run</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">chunks_per_run</span>
+
+
+<span class="k">def</span> <span class="nf">_get_device</span><span class="p">(</span><span class="n">gpuid</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return GPU devices, context, and queue.&quot;&quot;&quot;</span>
+    <span class="n">platform</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">get_platforms</span><span class="p">()</span>
+    <span class="n">platf_idx</span> <span class="o">=</span> <span class="n">find_nonempty</span><span class="p">(</span><span class="n">platform</span><span class="p">)</span>
+    <span class="n">my_gpu_devices</span> <span class="o">=</span> <span class="n">platform</span><span class="p">[</span><span class="n">platf_idx</span><span class="p">]</span><span class="o">.</span><span class="n">get_devices</span><span class="p">(</span>
+                                                <span class="n">device_type</span><span class="o">=</span><span class="n">cl</span><span class="o">.</span><span class="n">device_type</span><span class="o">.</span><span class="n">GPU</span><span class="p">)</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Context</span><span class="p">(</span><span class="n">devices</span><span class="o">=</span><span class="n">my_gpu_devices</span><span class="p">)</span>
+    <span class="n">queue</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">CommandQueue</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">my_gpu_devices</span><span class="p">[</span><span class="n">gpuid</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">((</span><span class="s">&quot;Selected Device: &quot;</span><span class="p">,</span> <span class="n">my_gpu_devices</span><span class="p">[</span><span class="n">gpuid</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">my_gpu_devices</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">queue</span>
+</pre></div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+         
+<div class="col-md-3 hidden-xs" id="sidebar-wrapper">
+  <div class="sidebar hidden-xs" role="navigation" aria-label="main navigation">
+<div id="searchbox" role="search">
+  <h3>Quick search</h3>
+  <form class="search form-inline" action="../../search.html" method="get">
+      <div class="input-append input-group">
+        <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+        <span class="input-group-btn">
+        <input type="submit" class="btn" value="Go" />
+        </span>
+      </div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+  </div>
+</div> 
+        
+      </div><!-- /row -->
+
+      <!-- row -->
+      <div class="row footer-relbar">
+<div id="navbar-related" class=" related navbar navbar-default" role="navigation" aria-label="related navigation">
+  <div class="navbar-inner">
+    <ul class="nav navbar-nav ">
+        <li><a href="../../index.html">IDTxl 0.1 documentation</a></li>
+    </ul>
+<ul class="nav navbar-nav pull-right hidden-xs hidden-sm">
+      
+        <li><a href="../../py-modindex.html" title="Python Module Index" >modules</a></li>
+        <li><a href="../../genindex.html" title="General Index" >index</a></li>
+        <li><a href="../index.html" >Module code</a></li>
+        <li><a href="#">top</a></li> 
+      
+    </ul>
+  </div>
+</div>
+      </div><!-- /row -->
+
+      <!-- footer -->
+      <footer role="contentinfo">
+          &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.
+      </footer>
+      <!-- /footer -->
+
+    </div>
+    <!-- /container -->
+
+  </body>
+</html>

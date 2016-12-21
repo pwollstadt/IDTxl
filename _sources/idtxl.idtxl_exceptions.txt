@@ -1,0 +1,7 @@
+idtxl.idtxl_exceptions module
+=============================
+
+.. automodule:: idtxl.idtxl_exceptions
+    :members:
+    :undoc-members:
+    :show-inheritance:

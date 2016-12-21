@@ -1,0 +1,7 @@
+idtxl.neighbour_search_cuda module
+==================================
+
+.. automodule:: idtxl.neighbour_search_cuda
+    :members:
+    :undoc-members:
+    :show-inheritance:

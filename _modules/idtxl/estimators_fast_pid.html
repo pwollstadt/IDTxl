@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+
+
+
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    
+    <title>idtxl.estimators_fast_pid &mdash; IDTxl 0.1 documentation</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    
+
+<link rel="stylesheet" href="../../_static/css/basicstrap-base.css" type="text/css" />
+<link rel="stylesheet" id="current-theme" href="../../_static/css/bootstrap3/bootswatch-spacelab.css" type="text/css" />
+<link rel="stylesheet" id="current-adjust-theme" href="../../_static/css/adjust_theme/bootswatch-spacelab.css" type="text/css" />
+
+<link rel="stylesheet" href="../../_static/css/font-awesome.min.css">
+
+<style type="text/css">
+  body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+  }
+</style>
+
+<link rel="stylesheet" href="../../_static/css/basicstrap.css" type="text/css" />
+<link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+<script type="text/javascript">
+  var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:    '../../',
+            VERSION:     '0.1',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE:  true
+  };
+</script>
+    <script type="text/javascript" src="../../_static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/bootstrap3.min.js"></script>
+<script type="text/javascript" src="../../_static/js/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="../../_static/js/basicstrap.js"></script>
+<script type="text/javascript">
+</script>
+    <link rel="top" title="IDTxl 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div id="navbar-top" class="navbar navbar-fixed-top navbar-default" role="navigation" aria-label="top navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../../index.html">IDTxl 0.1 documentation</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+
+            
+              <li><a href="../../py-modindex.html" title="Python Module Index" >modules </a></li>
+              <li><a href="../../genindex.html" title="General Index" accesskey="I">index </a></li>
+              <li><a href="../index.html" accesskey="U">Module code</a></li>
+            
+
+            <li class="visible-xs">
+                <form class="search form-search form-inline navbar-form navbar-right sp-searchbox" action="../../search.html" method="get">
+                  <div class="input-append input-group">
+                    <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+                    <span class="input-group-btn">
+                    <input type="submit" class="btn" value="Go" />
+                    </span>
+                  </div>
+                  <input type="hidden" name="check_keywords" value="yes" />
+                  <input type="hidden" name="area" value="default" />
+                </form>
+            </li>
+
+            
+
+          </ul>
+
+        </div>
+      </div>
+    </div>
+    
+
+    <!-- container -->
+    <div class="container">
+
+      <!-- row -->
+      <div class="row">
+        
+        
+
+        <div class="col-md-9" id="content-wrapper">
+          <div class="document" role="main">
+            <div class="documentwrapper">
+              <div class="bodywrapper">
+                <div class="body">
+                  
+  <h1>Source code for idtxl.estimators_fast_pid</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Provide a fast implementation of the PDI estimator for discrete data.</span>
+
+<span class="sd">This module exports a fast implementation of the partial information</span>
+<span class="sd">decomposition (PID) estimator for discrete data. The estimator does not require</span>
+<span class="sd">JAVA or GPU modules to run.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="pid"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_fast_pid.pid">[docs]</a><span class="k">def</span> <span class="nf">pid</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">cfg</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Fast implementation of the PID estimator.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">s1</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">s2</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">t</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Inputs s1, s2, target have to be vectors&#39;</span>
+                         <span class="s">&#39;(1D-arrays).&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">s2</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Number of samples s1, s2 and t must be equal&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">alph_s1</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s">&#39;alph_s1&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;The cfg argument should be a dictionary.&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&#39;&quot;alph_s1&quot; is missing from the cfg dictionary.&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">alph_s2</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s">&#39;alph_s2&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&#39;&quot;alph_s2&quot; is missing from the cfg dictionary.&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">alph_t</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s">&#39;alph_t&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&#39;&quot;alph_t&quot; is missing from the cfg dictionary.&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">max_unsuc_swaps_row_parm</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s">&#39;max_unsuc_swaps_row_parm&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&#39;&quot;max_unsuc_swaps_row_parm&quot; is missing from the cfg&#39;</span>
+                       <span class="s">&#39;dictionary.&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">num_reps</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s">&#39;num_reps&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&#39;&quot;num_reps&quot; is missing from the cfg dictionary.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">num_reps</span> <span class="o">&gt;</span> <span class="mi">63</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Number of reps must be 63 or less to prevent integer&#39;</span>
+                         <span class="s">&#39; overflow&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">max_iters</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s">&#39;max_iters&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;&quot;max_iters&quot; is missing from the cfg dictionary.&#39;</span><span class="p">)</span>
+        <span class="k">raise</span>
+
+    <span class="c"># -- DEFINE PARAMETERS -- #</span>
+
+    <span class="n">num_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+    <span class="c"># Max swaps = number of possible swaps * control parameter</span>
+    <span class="n">num_pos_swaps</span> <span class="o">=</span> <span class="n">alph_t</span> <span class="o">*</span> <span class="n">alph_s1</span> <span class="o">*</span> <span class="p">(</span><span class="n">alph_s1</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">alph_s2</span> <span class="o">*</span> <span class="p">(</span><span class="n">alph_s2</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">max_unsuc_swaps_row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">num_pos_swaps</span> <span class="o">*</span> <span class="n">max_unsuc_swaps_row_parm</span><span class="p">)</span>
+
+    <span class="c"># -- CALCULATE PROBABLITIES -- #</span>
+
+    <span class="c"># Declare arrays for counts</span>
+    <span class="n">t_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">alph_t</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+    <span class="n">s1_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">alph_s1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+    <span class="n">s2_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">alph_s2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+    <span class="n">joint_t_s1_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">alph_t</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+    <span class="n">joint_t_s2_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">alph_t</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+    <span class="n">joint_s1_s2_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">alph_s1</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+    <span class="n">joint_t_s1_s2_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">alph_t</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">),</span>
+                                   <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+
+    <span class="c"># Count observations</span>
+    <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">):</span>
+        <span class="n">t_count</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="n">obs</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">s1_count</span><span class="p">[</span><span class="n">s1</span><span class="p">[</span><span class="n">obs</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">s2_count</span><span class="p">[</span><span class="n">s2</span><span class="p">[</span><span class="n">obs</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">joint_t_s1_count</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="n">obs</span><span class="p">],</span> <span class="n">s1</span><span class="p">[</span><span class="n">obs</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">joint_t_s2_count</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="n">obs</span><span class="p">],</span> <span class="n">s2</span><span class="p">[</span><span class="n">obs</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">joint_s1_s2_count</span><span class="p">[</span><span class="n">s1</span><span class="p">[</span><span class="n">obs</span><span class="p">],</span> <span class="n">s2</span><span class="p">[</span><span class="n">obs</span><span class="p">]]</span> <span class="o">+=</span><span class="mi">1</span>
+        <span class="n">joint_t_s1_s2_count</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="n">obs</span><span class="p">],</span> <span class="n">s1</span><span class="p">[</span><span class="n">obs</span><span class="p">],</span> <span class="n">s2</span><span class="p">[</span><span class="n">obs</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c"># Fixed probabilities</span>
+    <span class="n">t_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">t_count</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float128&#39;</span><span class="p">)</span>
+    <span class="n">s1_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">s1_count</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float128&#39;</span><span class="p">)</span>
+    <span class="n">s2_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">s2_count</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float128&#39;</span><span class="p">)</span>
+    <span class="n">joint_t_s1_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">joint_t_s1_count</span><span class="p">,</span>
+                                <span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float128&#39;</span><span class="p">)</span>
+    <span class="n">joint_t_s2_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">joint_t_s2_count</span><span class="p">,</span>
+                                <span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float128&#39;</span><span class="p">)</span>
+
+    <span class="c"># Variable probabilities</span>
+    <span class="n">joint_s1_s2_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">joint_s1_s2_count</span><span class="p">,</span>
+                                 <span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float128&#39;</span><span class="p">)</span>
+    <span class="n">joint_t_s1_s2_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">joint_t_s1_s2_count</span><span class="p">,</span>
+                                   <span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float128&#39;</span><span class="p">)</span>
+
+    <span class="c"># -- VIRTUALISED SWAPS -- #</span>
+
+    <span class="c"># Calculate the initial cmi and store it</span>
+    <span class="n">cond_mut_info</span> <span class="o">=</span> <span class="n">_cmi_prob</span><span class="p">(</span><span class="n">s2_prob</span><span class="p">,</span> <span class="n">joint_t_s2_prob</span><span class="p">,</span> <span class="n">joint_s1_s2_prob</span><span class="p">,</span>
+                              <span class="n">joint_t_s1_s2_prob</span><span class="p">)</span>
+    <span class="n">cur_cond_mut_info</span> <span class="o">=</span> <span class="n">cond_mut_info</span>
+
+    <span class="c"># Declare reps array of repeated doubling to half the prob_inc</span>
+    <span class="c"># WARNING: num_reps greater than 63 results in integer overflow</span>
+    <span class="n">reps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_reps</span><span class="p">)))</span>
+
+    <span class="c"># Replication loop</span>
+    <span class="k">for</span> <span class="n">rep</span> <span class="ow">in</span> <span class="n">reps</span><span class="p">:</span>
+
+        <span class="c"># The prob_inc = 1 / (number of samples * repeated doubling)</span>
+        <span class="c"># THIS MAY NEED SOME TIDYING</span>
+        <span class="n">prob_inc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float128</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">float128</span><span class="p">(</span><span class="n">num_samples</span><span class="p">)),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float128</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">float128</span><span class="p">(</span><span class="n">rep</span><span class="p">)))</span>
+
+        <span class="c"># Want to store number of unsuccessful swaps in a row</span>
+        <span class="n">unsuccessful_swaps_row</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c"># SWAP LOOP</span>
+        <span class="k">for</span> <span class="n">attempt_swap</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_iters</span><span class="p">):</span>
+
+            <span class="c"># Pick a random candidate from the targets</span>
+            <span class="n">t_cand</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph_t</span><span class="p">)</span>
+            <span class="n">s1_cand</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">)</span>
+            <span class="n">s2_cand</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">)</span>
+
+            <span class="c"># Pick a swap candidate</span>
+            <span class="n">s1_prim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph_s1</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">s1_prim</span> <span class="o">&gt;=</span> <span class="n">s1_cand</span><span class="p">):</span>
+                <span class="n">s1_prim</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">s2_prim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph_s2</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">s2_prim</span> <span class="o">&gt;=</span> <span class="n">s2_cand</span><span class="p">):</span>
+                <span class="n">s2_prim</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="c"># Ensure we can decrement without introducing neg probs</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">t_cand</span><span class="p">,</span> <span class="n">s1_cand</span><span class="p">,</span> <span class="n">s2_cand</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">prob_inc</span>
+                <span class="ow">and</span> <span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">t_cand</span><span class="p">,</span> <span class="n">s1_prim</span><span class="p">,</span> <span class="n">s2_prim</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">prob_inc</span>
+                <span class="ow">and</span> <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">s1_cand</span><span class="p">,</span> <span class="n">s2_cand</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">prob_inc</span>
+                <span class="ow">and</span> <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">s1_prim</span><span class="p">,</span> <span class="n">s2_prim</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">prob_inc</span><span class="p">):</span>
+
+                <span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">t_cand</span><span class="p">,</span> <span class="n">s1_cand</span><span class="p">,</span> <span class="n">s2_cand</span><span class="p">]</span> <span class="o">-=</span> <span class="n">prob_inc</span>
+                <span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">t_cand</span><span class="p">,</span> <span class="n">s1_prim</span><span class="p">,</span> <span class="n">s2_prim</span><span class="p">]</span> <span class="o">-=</span> <span class="n">prob_inc</span>
+                <span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">t_cand</span><span class="p">,</span> <span class="n">s1_cand</span><span class="p">,</span> <span class="n">s2_prim</span><span class="p">]</span> <span class="o">+=</span> <span class="n">prob_inc</span>
+                <span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">t_cand</span><span class="p">,</span> <span class="n">s1_prim</span><span class="p">,</span> <span class="n">s2_cand</span><span class="p">]</span> <span class="o">+=</span> <span class="n">prob_inc</span>
+
+                <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">s1_cand</span><span class="p">,</span> <span class="n">s2_cand</span><span class="p">]</span> <span class="o">-=</span> <span class="n">prob_inc</span>
+                <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">s1_prim</span><span class="p">,</span> <span class="n">s2_prim</span><span class="p">]</span> <span class="o">-=</span> <span class="n">prob_inc</span>
+                <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">s1_cand</span><span class="p">,</span> <span class="n">s2_prim</span><span class="p">]</span> <span class="o">+=</span> <span class="n">prob_inc</span>
+                <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">s1_prim</span><span class="p">,</span> <span class="n">s2_cand</span><span class="p">]</span> <span class="o">+=</span> <span class="n">prob_inc</span>
+
+                <span class="c"># Calculate the cmi after this virtual swap</span>
+                <span class="n">cond_mut_info</span> <span class="o">=</span> <span class="n">_cmi_prob</span><span class="p">(</span><span class="n">s2_prob</span><span class="p">,</span>
+                                          <span class="n">joint_t_s2_prob</span><span class="p">,</span>
+                                          <span class="n">joint_s1_s2_prob</span><span class="p">,</span>
+                                          <span class="n">joint_t_s1_s2_prob</span><span class="p">)</span>
+
+                <span class="c"># If improved keep it, reset the unsuccessful swap counter</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">cond_mut_info</span> <span class="o">&lt;</span> <span class="n">cur_cond_mut_info</span><span class="p">):</span>
+                    <span class="n">cur_cond_mut_info</span> <span class="o">=</span> <span class="n">cond_mut_info</span>
+                    <span class="n">unsuccessful_swaps_row</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="c"># Else undo the changes, record unsuccessful swap</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">t_cand</span><span class="p">,</span> <span class="n">s1_cand</span><span class="p">,</span> <span class="n">s2_cand</span><span class="p">]</span> <span class="o">+=</span> <span class="n">prob_inc</span>
+                    <span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">t_cand</span><span class="p">,</span> <span class="n">s1_prim</span><span class="p">,</span> <span class="n">s2_prim</span><span class="p">]</span> <span class="o">+=</span> <span class="n">prob_inc</span>
+                    <span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">t_cand</span><span class="p">,</span> <span class="n">s1_cand</span><span class="p">,</span> <span class="n">s2_prim</span><span class="p">]</span> <span class="o">-=</span> <span class="n">prob_inc</span>
+                    <span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">t_cand</span><span class="p">,</span> <span class="n">s1_prim</span><span class="p">,</span> <span class="n">s2_cand</span><span class="p">]</span> <span class="o">-=</span> <span class="n">prob_inc</span>
+
+                    <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">s1_cand</span><span class="p">,</span> <span class="n">s2_cand</span><span class="p">]</span> <span class="o">+=</span> <span class="n">prob_inc</span>
+                    <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">s1_prim</span><span class="p">,</span> <span class="n">s2_prim</span><span class="p">]</span> <span class="o">+=</span> <span class="n">prob_inc</span>
+                    <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">s1_cand</span><span class="p">,</span> <span class="n">s2_prim</span><span class="p">]</span> <span class="o">-=</span> <span class="n">prob_inc</span>
+                    <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">s1_prim</span><span class="p">,</span> <span class="n">s2_cand</span><span class="p">]</span> <span class="o">-=</span> <span class="n">prob_inc</span>
+
+                    <span class="n">unsuccessful_swaps_row</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">unsuccessful_swaps_row</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">unsuccessful_swaps_row</span> <span class="o">&gt;=</span> <span class="n">max_unsuc_swaps_row</span><span class="p">):</span>
+                <span class="k">break</span>
+
+        <span class="c"># print(cond_mut_info, &#39;\t&#39;, prob_inc,&#39;\t&#39;, unsuccessful_swaps_row)</span>
+
+    <span class="c"># -- PID Evaluation -- #</span>
+
+    <span class="c"># Classical mutual information terms</span>
+    <span class="n">mi_target_s1</span> <span class="o">=</span> <span class="n">_mi_prob</span><span class="p">(</span><span class="n">t_prob</span><span class="p">,</span> <span class="n">s1_prob</span><span class="p">,</span> <span class="n">joint_t_s1_prob</span><span class="p">)</span>
+    <span class="n">mi_target_s2</span> <span class="o">=</span> <span class="n">_mi_prob</span><span class="p">(</span><span class="n">t_prob</span><span class="p">,</span> <span class="n">s2_prob</span><span class="p">,</span> <span class="n">joint_t_s2_prob</span><span class="p">)</span>
+    <span class="n">jointmi_s1s2_target</span> <span class="o">=</span> <span class="n">_joint_mi</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">,</span> <span class="n">alph_t</span><span class="p">)</span>
+
+    <span class="c"># PID terms</span>
+    <span class="n">unq_s1</span> <span class="o">=</span> <span class="n">cond_mut_info</span>
+    <span class="n">shd_s1_s2</span> <span class="o">=</span> <span class="n">mi_target_s1</span> <span class="o">-</span> <span class="n">unq_s1</span>
+    <span class="n">unq_s2</span> <span class="o">=</span> <span class="n">mi_target_s2</span> <span class="o">-</span> <span class="n">shd_s1_s2</span>
+    <span class="n">syn_s1_s2</span> <span class="o">=</span> <span class="n">jointmi_s1s2_target</span> <span class="o">-</span> <span class="n">unq_s1</span> <span class="o">-</span> <span class="n">unq_s2</span> <span class="o">-</span> <span class="n">shd_s1_s2</span>
+
+    <span class="n">estimate</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;unq_s1&#39;</span><span class="p">:</span> <span class="n">unq_s1</span><span class="p">,</span>
+        <span class="s">&#39;unq_s2&#39;</span><span class="p">:</span> <span class="n">unq_s2</span><span class="p">,</span>
+        <span class="s">&#39;shd_s1_s2&#39;</span><span class="p">:</span> <span class="n">shd_s1_s2</span><span class="p">,</span>
+        <span class="s">&#39;syn_s1_s2&#39;</span><span class="p">:</span> <span class="n">syn_s1_s2</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">estimate</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_cmi_prob</span><span class="p">(</span><span class="n">s2cond_prob</span><span class="p">,</span> <span class="n">joint_t_s2cond_prob</span><span class="p">,</span> <span class="n">joint_s1_s2cond_prob</span><span class="p">,</span>
+              <span class="n">joint_t_s1_s2cond_prob</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate probabilities for CMI estimation.&quot;&quot;&quot;</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float128&#39;</span><span class="p">)</span>
+
+    <span class="p">[</span><span class="n">alph_t</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">,</span> <span class="n">alph_s2cond</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">joint_t_s1_s2cond_prob</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">sym_s1</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">sym_s2cond</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph_s2cond</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">sym_t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph_t</span><span class="p">):</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="n">s2cond_prob</span><span class="p">[</span><span class="n">sym_s2cond</span><span class="p">]</span> <span class="o">*</span>
+                        <span class="n">joint_t_s2cond_prob</span><span class="p">[</span><span class="n">sym_t</span><span class="p">,</span> <span class="n">sym_s2cond</span><span class="p">]</span> <span class="o">*</span>
+                        <span class="n">joint_s1_s2cond_prob</span><span class="p">[</span><span class="n">sym_s1</span><span class="p">,</span> <span class="n">sym_s2cond</span><span class="p">]</span> <span class="o">*</span>
+                        <span class="n">joint_t_s1_s2cond_prob</span><span class="p">[</span><span class="n">sym_t</span><span class="p">,</span> <span class="n">sym_s1</span><span class="p">,</span> <span class="n">sym_s2cond</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+
+                    <span class="n">local_contrib</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">joint_t_s1_s2cond_prob</span><span class="p">[</span><span class="n">sym_t</span><span class="p">,</span> <span class="n">sym_s1</span><span class="p">,</span>
+                                                      <span class="n">sym_s2cond</span><span class="p">])</span> <span class="o">+</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">s2cond_prob</span><span class="p">[</span><span class="n">sym_s2cond</span><span class="p">])</span> <span class="o">-</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">joint_t_s2cond_prob</span><span class="p">[</span><span class="n">sym_t</span><span class="p">,</span> <span class="n">sym_s2cond</span><span class="p">])</span> <span class="o">-</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">joint_s1_s2cond_prob</span><span class="p">[</span><span class="n">sym_s1</span><span class="p">,</span> <span class="n">sym_s2cond</span><span class="p">])</span>
+                        <span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+                    <span class="n">weighted_contrib</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">joint_t_s1_s2cond_prob</span><span class="p">[</span><span class="n">sym_t</span><span class="p">,</span> <span class="n">sym_s1</span><span class="p">,</span> <span class="n">sym_s2cond</span><span class="p">]</span> <span class="o">*</span>
+                        <span class="n">local_contrib</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">weighted_contrib</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">total</span> <span class="o">+=</span> <span class="n">weighted_contrib</span>
+    <span class="k">return</span> <span class="n">total</span>
+
+<span class="k">def</span> <span class="nf">_mi_prob</span><span class="p">(</span><span class="n">s1_prob</span><span class="p">,</span> <span class="n">s2_prob</span><span class="p">,</span> <span class="n">joint_s1_s2_prob</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; MI calculator in the prob domain.&quot;&quot;&quot;</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float128&#39;</span><span class="p">)</span>
+
+    <span class="p">[</span><span class="n">alph_s1</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">joint_s1_s2_prob</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">sym_s1</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">sym_s2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">s1_prob</span><span class="p">[</span><span class="n">sym_s1</span><span class="p">]</span> <span class="o">*</span> <span class="n">s2_prob</span><span class="p">[</span><span class="n">sym_s2</span><span class="p">]</span> <span class="o">*</span>
+                    <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">sym_s1</span><span class="p">,</span> <span class="n">sym_s2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+
+                <span class="n">local_contrib</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">sym_s1</span><span class="p">,</span> <span class="n">sym_s2</span><span class="p">])</span> <span class="o">-</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">s1_prob</span><span class="p">[</span><span class="n">sym_s1</span><span class="p">])</span> <span class="o">-</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">s2_prob</span><span class="p">[</span><span class="n">sym_s2</span><span class="p">]))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+                <span class="n">weighted_contrib</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">sym_s1</span><span class="p">,</span> <span class="n">sym_s2</span><span class="p">]</span> <span class="o">*</span>
+                    <span class="n">local_contrib</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">weighted_contrib</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">total</span> <span class="o">+=</span> <span class="n">weighted_contrib</span>
+
+    <span class="k">return</span> <span class="n">total</span>
+
+<span class="k">def</span> <span class="nf">_joint_mi</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">,</span> <span class="n">alph_t</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Joint MI calculator in the samples domain.&quot;&quot;&quot;</span>
+    <span class="p">[</span><span class="n">s12</span><span class="p">,</span> <span class="n">alph_s12</span><span class="p">]</span> <span class="o">=</span> <span class="n">_join_variables</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">)</span>
+
+    <span class="n">t_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">alph_t</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+    <span class="n">s12_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">alph_s12</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+    <span class="n">joint_t_s12_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">alph_t</span><span class="p">,</span> <span class="n">alph_s12</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+
+    <span class="n">num_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">):</span>
+        <span class="n">t_count</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="n">obs</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">s12_count</span><span class="p">[</span><span class="n">s12</span><span class="p">[</span><span class="n">obs</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">joint_t_s12_count</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="n">obs</span><span class="p">],</span> <span class="n">s12</span><span class="p">[</span><span class="n">obs</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">t_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">t_count</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float128&#39;</span><span class="p">)</span>
+    <span class="n">s12_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">s12_count</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float128&#39;</span><span class="p">)</span>
+    <span class="n">joint_t_s12_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">joint_t_s12_count</span><span class="p">,</span>
+                                 <span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float128&#39;</span><span class="p">)</span>
+
+    <span class="n">jmi</span> <span class="o">=</span> <span class="n">_mi_prob</span><span class="p">(</span><span class="n">t_prob</span><span class="p">,</span> <span class="n">s12_prob</span><span class="p">,</span> <span class="n">joint_t_s12_prob</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">jmi</span>
+
+
+<span class="k">def</span> <span class="nf">_join_variables</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">alph_a</span><span class="p">,</span> <span class="n">alph_b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Join two sequences of random variables (RV) into a new RV.</span>
+
+<span class="sd">    Works like the method &#39;computeCombinedValues&#39; implemented in JIDT</span>
+<span class="sd">    (https://github.com/jlizier/jidt/blob/master/java/source/</span>
+<span class="sd">    infodynamics/utils/MatrixUtils.java).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        a, b (np array): sequence of integer numbers of arbitrary base</span>
+<span class="sd">            (representing observations from two RVs)</span>
+<span class="sd">        alph_a, alph_b (int): alphabet size of a and b</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np array, int: joined RV</span>
+<span class="sd">        int: alphabet size of new RV</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="n">Error</span>
+
+    <span class="k">if</span> <span class="n">alph_b</span> <span class="o">&lt;</span> <span class="n">alph_a</span><span class="p">:</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span>
+        <span class="n">alph_a</span><span class="p">,</span> <span class="n">alph_b</span> <span class="o">=</span> <span class="n">alph_b</span><span class="p">,</span> <span class="n">alph_a</span>
+
+    <span class="n">joined</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">joined</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">mult</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">joined</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">mult</span> <span class="o">*</span> <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">mult</span> <span class="o">*=</span> <span class="n">alph_a</span>
+        <span class="n">joined</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">mult</span> <span class="o">*</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="n">alph_new</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">*</span> <span class="n">alph_a</span> <span class="o">+</span> <span class="n">alph_b</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    for (int r = 0; r &lt; rows; r++) {</span>
+<span class="sd">        // For each row in vec1</span>
+<span class="sd">        int combinedRowValue = 0;</span>
+<span class="sd">        int multiplier = 1;</span>
+<span class="sd">        for (int c = columns - 1; c &gt;= 0; c--) {</span>
+<span class="sd">            // Add in the contribution from each column</span>
+<span class="sd">            combinedRowValue += separateValues[r][c] * multiplier;</span>
+<span class="sd">            multiplier *= base;</span>
+<span class="sd">        }</span>
+<span class="sd">        combinedValues[r] = combinedRowValue;</span>
+<span class="sd">    } &#39;&#39;&#39;</span>
+
+    <span class="k">return</span> <span class="n">joined</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="n">alph_new</span>
+</pre></div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+         
+<div class="col-md-3 hidden-xs" id="sidebar-wrapper">
+  <div class="sidebar hidden-xs" role="navigation" aria-label="main navigation">
+<div id="searchbox" role="search">
+  <h3>Quick search</h3>
+  <form class="search form-inline" action="../../search.html" method="get">
+      <div class="input-append input-group">
+        <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+        <span class="input-group-btn">
+        <input type="submit" class="btn" value="Go" />
+        </span>
+      </div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+  </div>
+</div> 
+        
+      </div><!-- /row -->
+
+      <!-- row -->
+      <div class="row footer-relbar">
+<div id="navbar-related" class=" related navbar navbar-default" role="navigation" aria-label="related navigation">
+  <div class="navbar-inner">
+    <ul class="nav navbar-nav ">
+        <li><a href="../../index.html">IDTxl 0.1 documentation</a></li>
+    </ul>
+<ul class="nav navbar-nav pull-right hidden-xs hidden-sm">
+      
+        <li><a href="../../py-modindex.html" title="Python Module Index" >modules</a></li>
+        <li><a href="../../genindex.html" title="General Index" >index</a></li>
+        <li><a href="../index.html" >Module code</a></li>
+        <li><a href="#">top</a></li> 
+      
+    </ul>
+  </div>
+</div>
+      </div><!-- /row -->
+
+      <!-- footer -->
+      <footer role="contentinfo">
+          &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.
+      </footer>
+      <!-- /footer -->
+
+    </div>
+    <!-- /container -->
+
+  </body>
+</html>

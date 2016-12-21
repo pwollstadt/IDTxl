@@ -19,7 +19,7 @@ import os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('.idtxl'))
 
 # -- General configuration ------------------------------------------------
 
@@ -31,10 +31,12 @@ import os
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    #'sphinx.ext.napoleon',  # everything looks fine without this
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
+    'sphinxjp.themes.basicstrap', # https://pythonhosted.org/sphinxjp.themes.basicstrap/
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -52,6 +54,7 @@ master_doc = 'index'
 # General information about the project.
 project = 'IDTxl'
 copyright = '2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente'
+author = 'Patricia Wollstadt, Michael Wibral, Joseph T. Lizier, Finn Connor, Raul Vicente'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -95,22 +98,34 @@ exclude_patterns = []
 pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
-#modindex_common_prefix = []
+modindex_common_prefix = ['idtxl.']  # This way, modindex is sorted by module
+                                     # not by package (which is idtxl for all)
 
 # If true, keep warnings as "system message" paragraphs in the built documents.
 #keep_warnings = False
+
+# If true, `todo` and `todoList` produce output, else they produce nothing.
+todo_include_todos = False
 
 
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+html_theme = 'basicstrap'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+html_theme_options = {
+	'nav_fixed': True,
+	'nav_width': '950px',
+	'rightsidebar': True,
+	'content_fixed': True,
+	'content_width': '900px',
+	'inner_theme': True,
+	'inner_theme_name': 'bootswatch-spacelab', # https://bootswatch.com/default/ 'flatly'
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
@@ -157,10 +172,10 @@ html_static_path = ['_static']
 #html_additional_pages = {}
 
 # If false, no module index is generated.
-#html_domain_indices = True
+html_domain_indices = True
 
 # If false, no index is generated.
-#html_use_index = True
+html_use_index = True
 
 # If true, the index is split into individual pages for each letter.
 #html_split_index = False

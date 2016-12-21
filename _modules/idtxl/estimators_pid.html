@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+
+
+
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    
+    <title>idtxl.estimators_pid &mdash; IDTxl 0.1 documentation</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    
+
+<link rel="stylesheet" href="../../_static/css/basicstrap-base.css" type="text/css" />
+<link rel="stylesheet" id="current-theme" href="../../_static/css/bootstrap3/bootswatch-spacelab.css" type="text/css" />
+<link rel="stylesheet" id="current-adjust-theme" href="../../_static/css/adjust_theme/bootswatch-spacelab.css" type="text/css" />
+
+<link rel="stylesheet" href="../../_static/css/font-awesome.min.css">
+
+<style type="text/css">
+  body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+  }
+</style>
+
+<link rel="stylesheet" href="../../_static/css/basicstrap.css" type="text/css" />
+<link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+<script type="text/javascript">
+  var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:    '../../',
+            VERSION:     '0.1',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE:  true
+  };
+</script>
+    <script type="text/javascript" src="../../_static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/bootstrap3.min.js"></script>
+<script type="text/javascript" src="../../_static/js/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="../../_static/js/basicstrap.js"></script>
+<script type="text/javascript">
+</script>
+    <link rel="top" title="IDTxl 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div id="navbar-top" class="navbar navbar-fixed-top navbar-default" role="navigation" aria-label="top navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../../index.html">IDTxl 0.1 documentation</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+
+            
+              <li><a href="../../py-modindex.html" title="Python Module Index" >modules </a></li>
+              <li><a href="../../genindex.html" title="General Index" accesskey="I">index </a></li>
+              <li><a href="../index.html" accesskey="U">Module code</a></li>
+            
+
+            <li class="visible-xs">
+                <form class="search form-search form-inline navbar-form navbar-right sp-searchbox" action="../../search.html" method="get">
+                  <div class="input-append input-group">
+                    <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+                    <span class="input-group-btn">
+                    <input type="submit" class="btn" value="Go" />
+                    </span>
+                  </div>
+                  <input type="hidden" name="check_keywords" value="yes" />
+                  <input type="hidden" name="area" value="default" />
+                </form>
+            </li>
+
+            
+
+          </ul>
+
+        </div>
+      </div>
+    </div>
+    
+
+    <!-- container -->
+    <div class="container">
+
+      <!-- row -->
+      <div class="row">
+        
+        
+
+        <div class="col-md-9" id="content-wrapper">
+          <div class="document" role="main">
+            <div class="documentwrapper">
+              <div class="bodywrapper">
+                <div class="body">
+                  
+  <h1>Source code for idtxl.estimators_pid</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Partical information decomposition for discrete random variables.</span>
+
+<span class="sd">This module provides an estimator for partial information decomposition</span>
+<span class="sd">as proposed in</span>
+
+<span class="sd">Bertschinger, Rauh, Olbrich, Jost, Ay; Quantifying Unique Information,</span>
+<span class="sd">Entropy 2014, 16, 2161-2183; doi:10.3390/e16042161</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">idtxl_exceptions</span> <span class="k">as</span> <span class="n">ex</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">jpype</span> <span class="kn">as</span> <span class="nn">jp</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">ex</span><span class="o">.</span><span class="n">jpype_missing</span><span class="p">(</span><span class="s">&#39;Jpype is not available on this system. To use &#39;</span>
+                     <span class="s">&#39;JAVA/JIDT-powered PID estimation install it from &#39;</span>
+                     <span class="s">&#39;https://pypi.python.org/pypi/JPype1&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="pid"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_pid.pid">[docs]</a><span class="k">def</span> <span class="nf">pid</span><span class="p">(</span><span class="n">s1_o</span><span class="p">,</span> <span class="n">s2_o</span><span class="p">,</span> <span class="n">target_o</span><span class="p">,</span> <span class="n">cfg</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Estimate partial information decomposition of discrete variables.</span>
+
+<span class="sd">    The pid estimator returns estimates of shared information, unique</span>
+<span class="sd">    information and synergistic information that two random variables X and</span>
+<span class="sd">    Y have about a third variable Z. The estimator finds these estimates by</span>
+<span class="sd">    permuting the initial joint probability distribution of X, Y, and Z to</span>
+<span class="sd">    find a permuted distribution Q that minimizes the unique information in</span>
+<span class="sd">    X about Z (as proposed by Bertschinger and colleagues). The unique in-</span>
+<span class="sd">    formation is defined as the conditional mutual information I(X;Z|Y).</span>
+
+<span class="sd">    The estimator iteratively permutes the joint probability distribution of</span>
+<span class="sd">    X, Y, and Z under the constraint that the marginal distributions (X, Z)</span>
+<span class="sd">    and (Y, Z) stay constant. This is done by swapping two realizations of X</span>
+<span class="sd">    which have the same corresponding value in Z, e.g.:</span>
+
+<span class="sd">        X [1, 0, 1, 1, 0, 1, 0, 0, 1, 1]</span>
+<span class="sd">        Y [0, 0, 1, 1, 1, 0, 0, 0, 1, 1]</span>
+<span class="sd">        ---------------------------------</span>
+<span class="sd">        Z [1, 1, 0, 0, 0, 1, 1, 0, 1, 0]</span>
+
+<span class="sd">        Possible swaps: X[0] and X[1]; X[0] and X[4]; X[2] and X[8]; ...</span>
+
+<span class="sd">    After each swap, I(X;Z|Y) is re-calculated under the new distribution;</span>
+<span class="sd">    if the CMI is lower than the current permutation is kept and the next</span>
+<span class="sd">    swap is tested. The iteration stops after the provided number of</span>
+<span class="sd">    iterations.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        import numpy as np</span>
+<span class="sd">        import pid</span>
+
+<span class="sd">        n = 5000</span>
+<span class="sd">        alph = 2</span>
+<span class="sd">        x = np.random.randint(0, alph, n)</span>
+<span class="sd">        y = np.random.randint(0, alph, n)</span>
+<span class="sd">        z = np.logical_xor(x, y).astype(int)</span>
+<span class="sd">        cfg = {</span>
+<span class="sd">            &#39;alphabetsize&#39;: 2,</span>
+<span class="sd">            &#39;jarpath&#39;: &#39;/home/user/infodynamics-dist-1.3/infodynamics.jar&#39;,</span>
+<span class="sd">            &#39;iterations&#39;: 10000</span>
+<span class="sd">        }</span>
+<span class="sd">        [est, opt] = pid(x, y, z, cfg)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        s1 (numpy array): 1D array containing realizations of a discrete</span>
+<span class="sd">            random variable (this is the source variable the algorithm</span>
+<span class="sd">            calculates the actual UI for)</span>
+<span class="sd">        s2 (numpy array): 1D array containing realizations of a discrete</span>
+<span class="sd">            random variable (the other source variable)</span>
+<span class="sd">        target (numpy array): 1D array containing realizations of a discrete</span>
+<span class="sd">            random variable</span>
+<span class="sd">        cfg (dict): dictionary with estimation parameters, must contain</span>
+<span class="sd">            values for &#39;alphabetsize&#39; (no. values in each variable s1, s2,</span>
+<span class="sd">            target), &#39;jarpath&#39; (string with path to JIDT jar file),</span>
+<span class="sd">            &#39;iterations&#39; (no. iterations of the estimator)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        est (dict): estimated decomposition, contains: MI/CMI values computed</span>
+<span class="sd">            from non-permuted distributions; PID estimates (shared,</span>
+<span class="sd">            synergistic, unique information); I(target;s1,s2) under permuted</span>
+<span class="sd">            distribution Q</span>
+<span class="sd">        opt (dict): additional information about iterative optimization,</span>
+<span class="sd">            contains: final permutation Q; cfg dictionary; array with</span>
+<span class="sd">            I(target:s1|s2) for each iteration; array with delta</span>
+<span class="sd">            I(target:s1|s2) for each iteration; I(target:s1,s2) for each</span>
+<span class="sd">            iteration</span>
+
+<span class="sd">    Note:   variables names joined by &quot;_&quot; enter a mutual information</span>
+<span class="sd">            computation together i.e. mi_va1_var2 --&gt; I(var1 : var2).</span>
+<span class="sd">            variables names joined directly form a new joint variable</span>
+<span class="sd">            mi_var1var2_var3 --&gt; I(var3:(var1,var2))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># make deep copies of input arrays to avoid side effects</span>
+    <span class="n">s1</span> <span class="o">=</span> <span class="n">s1_o</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">s2</span> <span class="o">=</span> <span class="n">s2_o</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">target_o</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">s1</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">s2</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">target</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Inputs s1, s2, target have to be vectors&#39;</span>
+                         <span class="s">&#39;(1D-arrays).&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">jarpath</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s">&#39;jarpath&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;The cfg argument should be a dictionary.&#39;</span><span class="p">)</span>
+        <span class="k">raise</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;&quot;jarpath&quot; is missing from the cfg dictionary.&#39;</span><span class="p">)</span>
+        <span class="k">raise</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">alph_s1</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s">&#39;alph_s1&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;&quot;alphabetsize&quot; is missing from the cfg dictionary.&#39;</span><span class="p">)</span>
+        <span class="k">raise</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">alph_s2</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s">&#39;alph_s2&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;&quot;alphabetsize&quot; is missing from the cfg dictionary.&#39;</span><span class="p">)</span>
+        <span class="k">raise</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">alph_t</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s">&#39;alph_t&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;&quot;alphabetsize&quot; is missing from the cfg dictionary.&#39;</span><span class="p">)</span>
+        <span class="k">raise</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">iterations</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s">&#39;iterations&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;&quot;iterations&quot; is missing from the cfg dictionary.&#39;</span><span class="p">)</span>
+        <span class="k">raise</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">jp</span><span class="o">.</span><span class="n">isJVMStarted</span><span class="p">():</span>
+        <span class="n">jp</span><span class="o">.</span><span class="n">startJVM</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">getDefaultJVMPath</span><span class="p">(),</span>
+                    <span class="s">&#39;-ea&#39;</span><span class="p">,</span> <span class="s">&#39;-Djava.class.path=&#39;</span> <span class="o">+</span> <span class="n">jarpath</span><span class="p">,</span> <span class="s">&quot;-Xmx3000M&quot;</span><span class="p">)</span>
+    <span class="c"># what if it&#39;s there already - do we have to attach to it?</span>
+
+    <span class="c"># transform variables as far as possible outside the loops below</span>
+    <span class="c"># (note: only these variables should change when executing the loop)</span>
+    <span class="n">target_jA</span> <span class="o">=</span> <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">ndim</span><span class="p">)(</span><span class="n">target</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+    <span class="n">s2_jA</span> <span class="o">=</span> <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="n">s2</span><span class="o">.</span><span class="n">ndim</span><span class="p">)(</span><span class="n">s2</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+    <span class="n">s1_list</span> <span class="o">=</span> <span class="n">s1</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="n">s1_dim</span> <span class="o">=</span> <span class="n">s1</span><span class="o">.</span><span class="n">ndim</span>
+
+    <span class="n">Cmi_calc_class</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s">&#39;infodynamics.measures.discrete&#39;</span><span class="p">)</span>
+                      <span class="o">.</span><span class="n">ConditionalMutualInformationCalculatorDiscrete</span><span class="p">)</span>
+    <span class="n">Mi_calc_class</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s">&#39;infodynamics.measures.discrete&#39;</span><span class="p">)</span>
+                     <span class="o">.</span><span class="n">MutualInformationCalculatorDiscrete</span><span class="p">)</span>
+<span class="c">#</span>
+<span class="c">#   cmi_calc = Cmi_calc_class(alphabet,alphabet,alphabet)</span>
+    <span class="n">cmi_calc_target_s1_cond_s2</span> <span class="o">=</span> <span class="n">Cmi_calc_class</span><span class="p">(</span><span class="n">alph_t</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">)</span>
+
+    <span class="c"># MAX THE CORRECT WAY TO GO?</span>
+    <span class="n">alph_max_s1_t</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">alph_s1</span><span class="p">,</span> <span class="n">alph_t</span><span class="p">)</span>
+    <span class="n">alph_max_s2_t</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">alph_s2</span><span class="p">,</span> <span class="n">alph_t</span><span class="p">)</span>
+    <span class="n">alph_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">alph_s1</span><span class="o">*</span><span class="n">alph_s2</span><span class="p">,</span> <span class="n">alph_t</span><span class="p">)</span>
+
+<span class="c">#   mi_calc  = Mi_calc_class(alphabet)</span>
+    <span class="n">mi_calc_s1</span> <span class="o">=</span> <span class="n">Mi_calc_class</span><span class="p">(</span><span class="n">alph_max_s1_t</span><span class="p">)</span>
+    <span class="n">mi_calc_s2</span> <span class="o">=</span> <span class="n">Mi_calc_class</span><span class="p">(</span><span class="n">alph_max_s2_t</span><span class="p">)</span>
+
+<span class="c">#   jointmi_calc = Mi_calc_class(alphabet ** 2)</span>
+    <span class="n">jointmi_calc</span> <span class="o">=</span> <span class="n">Mi_calc_class</span><span class="p">(</span><span class="n">alph_max</span><span class="p">)</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;initialized all estimators&quot;</span><span class="p">)</span>
+    <span class="n">cmi_target_s1_cond_s2</span> <span class="o">=</span> <span class="n">_calculate_cmi</span><span class="p">(</span><span class="n">cmi_calc_target_s1_cond_s2</span><span class="p">,</span>
+                                           <span class="n">target</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">)</span>
+    <span class="n">jointmi_s1s2_target</span> <span class="o">=</span> <span class="n">_calculate_jointmi</span><span class="p">(</span><span class="n">jointmi_calc</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+<span class="c">#   print(&quot;Original joint mutual information: {0}&quot;.format(jointmi_s1s2_target))</span>
+    <span class="n">mi_target_s1</span> <span class="o">=</span> <span class="n">_calculate_mi</span><span class="p">(</span><span class="n">mi_calc_s1</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+<span class="c">#   print(&quot;Original mutual information I(target:s1): {0}&quot;.format(mi_target_s1))</span>
+    <span class="n">mi_target_s2</span> <span class="o">=</span> <span class="n">_calculate_mi</span><span class="p">(</span><span class="n">mi_calc_s2</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+<span class="c">#   print(&quot;Original mutual information I(target:s2): {0}&quot;.format(mi_target_s2))</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Original redundancy - synergy: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">mi_target_s1</span> <span class="o">+</span> <span class="n">mi_target_s2</span> <span class="o">-</span> <span class="n">jointmi_s1s2_target</span><span class="p">))</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">reps</span> <span class="o">=</span> <span class="n">iterations</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="c"># collect estimates in each iteration</span>
+    <span class="n">cmi_q_target_s1_cond_s2_all</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">reps</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float128&#39;</span><span class="p">)</span>
+    <span class="n">cmi_q_target_s1_cond_s2_delta</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">reps</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float128&#39;</span><span class="p">)</span>  <span class="c"># collect delta of estimates</span>
+    <span class="n">cmi_q_target_s1_cond_s2_all</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmi_target_s1_cond_s2</span>  <span class="c"># initial I(s1;target|Y)</span>
+    <span class="n">unsuccessful</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="c">#    print(&#39;Starting [                   ]&#39;, end=&#39;&#39;)</span>
+<span class="c">#    print(&#39;\b&#39; * 21, end=&#39;&#39;)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">reps</span><span class="p">):</span>
+<span class="c">#        steps = reps/20</span>
+<span class="c">#        if i%steps == 0:</span>
+<span class="c">#            print(&#39;\b.&#39;, end=&#39;&#39;)</span>
+<span class="c">#            sys.stdout.flush()</span>
+
+        <span class="c"># print(&#39;iteration &#39; + str(i + 1) + &#39; of &#39; + str(reps - 1)</span>
+
+        <span class="n">s1_new_list</span> <span class="o">=</span> <span class="n">s1_list</span>
+
+        <span class="n">ind_new</span> <span class="o">=</span> <span class="n">ind</span>
+
+        <span class="c"># swapping: pick sample at random, find all other samples that</span>
+        <span class="c"># are potential matches (have the same value in target), pick one of</span>
+        <span class="c"># the matches for the actual swap</span>
+        <span class="n">swap_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">swap_candidates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">target</span> <span class="o">==</span> <span class="n">target</span><span class="p">[</span><span class="n">swap_1</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">swap_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">swap_candidates</span><span class="p">)</span>
+
+        <span class="c"># swap value in s1 and index to keep track</span>
+        <span class="n">s1_new_list</span><span class="p">[</span><span class="n">swap_1</span><span class="p">],</span> <span class="n">s1_new_list</span><span class="p">[</span><span class="n">swap_2</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">s1_new_list</span><span class="p">[</span><span class="n">swap_2</span><span class="p">],</span>
+                                                    <span class="n">s1_new_list</span><span class="p">[</span><span class="n">swap_1</span><span class="p">])</span>
+        <span class="n">ind_new</span><span class="p">[</span><span class="n">swap_1</span><span class="p">],</span> <span class="n">ind_new</span><span class="p">[</span><span class="n">swap_2</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">ind_new</span><span class="p">[</span><span class="n">swap_2</span><span class="p">],</span>
+                                            <span class="n">ind_new</span><span class="p">[</span><span class="n">swap_1</span><span class="p">])</span>
+
+        <span class="c"># calculate CMI under new swapped distribution</span>
+        <span class="n">cmi_new</span> <span class="o">=</span> <span class="n">_calculate_cmi_from_jA_list</span><span class="p">(</span><span class="n">cmi_calc_target_s1_cond_s2</span><span class="p">,</span>
+                                              <span class="n">target_jA</span><span class="p">,</span>
+                                              <span class="n">s1_new_list</span><span class="p">,</span>
+                                              <span class="n">s1_dim</span><span class="p">,</span>
+                                              <span class="n">s2_jA</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">less_equal</span><span class="p">(</span><span class="n">cmi_new</span><span class="p">,</span> <span class="n">cmi_q_target_s1_cond_s2_all</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])):</span>
+            <span class="n">s1_list</span> <span class="o">=</span> <span class="n">s1_new_list</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">ind_new</span>
+            <span class="n">cmi_q_target_s1_cond_s2_all</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmi_new</span>
+            <span class="n">cmi_q_target_s1_cond_s2_delta</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmi_q_target_s1_cond_s2_all</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">cmi_new</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cmi_q_target_s1_cond_s2_all</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmi_q_target_s1_cond_s2_all</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">unsuccessful</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;Unsuccessful swaps: {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">unsuccessful</span><span class="p">))</span>
+    <span class="c"># convert the final s1 back to an array</span>
+    <span class="n">s1_final</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">s1_new_list</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+    <span class="c"># estimate unq/syn/shd information</span>
+    <span class="n">jointmi_q_s1s2_target</span> <span class="o">=</span> <span class="n">_calculate_jointmi</span><span class="p">(</span>
+                                            <span class="n">jointmi_calc</span><span class="p">,</span> <span class="n">s1_final</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+    <span class="n">unq_s1</span> <span class="o">=</span> <span class="n">_get_last_value</span><span class="p">(</span><span class="n">cmi_q_target_s1_cond_s2_all</span><span class="p">)</span>  <span class="c"># Bertschinger, 2014, p. 2163</span>
+
+    <span class="c"># NEED TO REINITIALISE the calculator</span>
+    <span class="n">cmi_calc_target_s2_cond_s1</span> <span class="o">=</span> <span class="n">Cmi_calc_class</span><span class="p">(</span><span class="n">alph_t</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">)</span>
+    <span class="n">unq_s2</span> <span class="o">=</span> <span class="n">_calculate_cmi</span><span class="p">(</span><span class="n">cmi_calc_target_s2_cond_s1</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">s1_final</span><span class="p">)</span>  <span class="c"># Bertschinger, 2014, p. 2166</span>
+    <span class="n">syn_s1s2</span> <span class="o">=</span> <span class="n">jointmi_s1s2_target</span> <span class="o">-</span> <span class="n">jointmi_q_s1s2_target</span>  <span class="c"># Bertschinger, 2014, p. 2163</span>
+    <span class="n">shd_s1s2</span> <span class="o">=</span> <span class="n">mi_target_s1</span> <span class="o">+</span> <span class="n">mi_target_s2</span> <span class="o">-</span> <span class="n">jointmi_q_s1s2_target</span>  <span class="c"># Bertschinger, 2014, p. 2167</span>
+
+    <span class="n">estimate</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;unq_s1&#39;</span><span class="p">:</span> <span class="n">unq_s1</span><span class="p">,</span>
+        <span class="s">&#39;unq_s2&#39;</span><span class="p">:</span> <span class="n">unq_s2</span><span class="p">,</span>
+        <span class="s">&#39;shd_s1s2&#39;</span><span class="p">:</span> <span class="n">shd_s1s2</span><span class="p">,</span>
+        <span class="s">&#39;syn_s1s2&#39;</span><span class="p">:</span> <span class="n">syn_s1s2</span><span class="p">,</span>
+        <span class="s">&#39;jointmi_q_s1s2_target&#39;</span><span class="p">:</span> <span class="n">jointmi_q_s1s2_target</span><span class="p">,</span>
+        <span class="s">&#39;orig_cmi_target_s1_cond_s2&#39;</span><span class="p">:</span> <span class="n">cmi_target_s1_cond_s2</span><span class="p">,</span>  <span class="c"># orignial values (empirical P)</span>
+        <span class="s">&#39;orig_jointmi_s1s2_target&#39;</span><span class="p">:</span> <span class="n">jointmi_s1s2_target</span><span class="p">,</span>
+        <span class="s">&#39;orig_mi_target_s1&#39;</span><span class="p">:</span> <span class="n">mi_target_s1</span><span class="p">,</span>
+        <span class="s">&#39;orig_mi_target_s2&#39;</span><span class="p">:</span> <span class="n">mi_target_s2</span>
+    <span class="p">}</span>
+    <span class="c"># useful outputs for plotting/debugging</span>
+    <span class="n">optimization</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;q&#39;</span><span class="p">:</span> <span class="n">ind_new</span><span class="p">,</span>
+        <span class="s">&#39;unsuc_swaps&#39;</span><span class="p">:</span> <span class="n">unsuccessful</span><span class="p">,</span>
+        <span class="s">&#39;cmi_q_target_s1_cond_s2_all&#39;</span><span class="p">:</span> <span class="n">cmi_q_target_s1_cond_s2_all</span><span class="p">,</span>
+        <span class="s">&#39;cmi_q_target_s1_cond_s2_delta&#39;</span><span class="p">:</span> <span class="n">cmi_q_target_s1_cond_s2_delta</span><span class="p">,</span>
+        <span class="s">&#39;cfg&#39;</span><span class="p">:</span> <span class="n">cfg</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">estimate</span><span class="p">,</span> <span class="n">optimization</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_nan</span><span class="p">(</span><span class="n">shape</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return 1D numpy array of nans.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        shape (int): length of array</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        numpy array: array filled with nans</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">a</span>
+
+
+<span class="k">def</span> <span class="nf">_calculate_cmi</span><span class="p">(</span><span class="n">cmi_calc</span><span class="p">,</span> <span class="n">var_1</span><span class="p">,</span> <span class="n">var_2</span><span class="p">,</span> <span class="n">cond</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate conditional MI from three variables usind JIDT.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        cmi_calc (JIDT calculator object): JIDT calculator for conditio-</span>
+<span class="sd">            nal mutual information</span>
+<span class="sd">        var_1, var_2 (1D numpy array): realizations of two discrete</span>
+<span class="sd">            random variables</span>
+<span class="sd">        cond (1D numpy array): realizations of a discrete random</span>
+<span class="sd">            variable for conditioning</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        double: conditional mutual information between var_1 and var_2</span>
+<span class="sd">            conditional on cond</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">var_1_java</span> <span class="o">=</span> <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="n">var_1</span><span class="o">.</span><span class="n">ndim</span><span class="p">)(</span><span class="n">var_1</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+    <span class="n">var_2_java</span> <span class="o">=</span> <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="n">var_2</span><span class="o">.</span><span class="n">ndim</span><span class="p">)(</span><span class="n">var_2</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+    <span class="n">cond_java</span> <span class="o">=</span> <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="n">cond</span><span class="o">.</span><span class="n">ndim</span><span class="p">)(</span><span class="n">cond</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+    <span class="n">cmi_calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">()</span>
+    <span class="n">cmi_calc</span><span class="o">.</span><span class="n">addObservations</span><span class="p">(</span><span class="n">var_1_java</span><span class="p">,</span> <span class="n">var_2_java</span><span class="p">,</span> <span class="n">cond_java</span><span class="p">)</span>
+    <span class="n">cmi</span> <span class="o">=</span> <span class="n">cmi_calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">cmi</span>
+
+<span class="k">def</span> <span class="nf">_calculate_cmi_from_jA_list</span><span class="p">(</span><span class="n">cmi_calc</span><span class="p">,</span> <span class="n">var_1_java</span><span class="p">,</span> <span class="n">var_2_list</span><span class="p">,</span> <span class="n">var_2_ndim</span><span class="p">,</span>
+                                <span class="n">cond_java</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate conditional MI from three variables usind JIDT.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        cmi_calc (JIDT calculator object): JIDT calculator for conditio-</span>
+<span class="sd">            nal mutual information</span>
+<span class="sd">        var_1, var_2 (1D numpy array): realizations of two discrete</span>
+<span class="sd">            random variables</span>
+<span class="sd">        cond (1D numpy array): realizations of a discrete random</span>
+<span class="sd">            variable for conditioning</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        double: conditional mutual information between var_1 and var_2</span>
+<span class="sd">            conditional on cond</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<span class="c">#    var_1_java = jp.JArray(jp.JInt, var_1.ndim)(var_1.tolist())</span>
+    <span class="n">var_2_java</span> <span class="o">=</span> <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="n">var_2_ndim</span><span class="p">)(</span><span class="n">var_2_list</span><span class="p">)</span>
+<span class="c">#    cond_java = jp.JArray(jp.JInt, cond.ndim)(cond.tolist())</span>
+    <span class="n">cmi_calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">()</span>
+    <span class="n">cmi_calc</span><span class="o">.</span><span class="n">addObservations</span><span class="p">(</span><span class="n">var_1_java</span><span class="p">,</span> <span class="n">var_2_java</span><span class="p">,</span> <span class="n">cond_java</span><span class="p">)</span>
+    <span class="n">cmi</span> <span class="o">=</span> <span class="n">cmi_calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">cmi</span>
+
+
+<span class="k">def</span> <span class="nf">_calculate_mi</span><span class="p">(</span><span class="n">mi_calc</span><span class="p">,</span> <span class="n">var_1</span><span class="p">,</span> <span class="n">var_2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate MI from two variables usind JIDT.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mi_calc (JIDT calculator object): JIDT calculator for mutual</span>
+<span class="sd">            information</span>
+<span class="sd">        var_1, var_2, (1D numpy array): realizations of some discrete</span>
+<span class="sd">            random variables</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        double: mutual information between input variables</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mi_calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">()</span>
+    <span class="n">mi_calc</span><span class="o">.</span><span class="n">addObservations</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="n">var_1</span><span class="o">.</span><span class="n">ndim</span><span class="p">)(</span><span class="n">var_1</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span>
+                            <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="n">var_2</span><span class="o">.</span><span class="n">ndim</span><span class="p">)(</span><span class="n">var_2</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+    <span class="n">mi</span> <span class="o">=</span> <span class="n">mi_calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">mi</span>
+
+
+<span class="k">def</span> <span class="nf">_calculate_jointmi</span><span class="p">(</span><span class="n">jointmi_calc</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate MI from three variables usind JIDT.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        jointmi_calc (JIDT calculator object): JIDT calculator for</span>
+<span class="sd">            mutual information</span>
+<span class="sd">        var_1, var_2, var_3 (1D numpy array): realizations of some</span>
+<span class="sd">            discrete random variables</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        double: mutual information between all three input variables</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mUtils</span> <span class="o">=</span> <span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s">&#39;infodynamics.utils&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">MatrixUtils</span>
+    <span class="c"># speed critical line ?</span>
+    <span class="n">s12</span> <span class="o">=</span> <span class="n">mUtils</span><span class="o">.</span><span class="n">computeCombinedValues</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">2</span><span class="p">)(</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">))</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span> <span class="mi">2</span><span class="p">)</span>
+<span class="c">#    [s12, alph_joined] = _join_variables(s1, s2, 2, 2)</span>
+    <span class="n">jointmi_calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">()</span>
+<span class="c">#    jointmi_calc.addObservations(jp.JArray(jp.JInt, s12.T.ndim)(s12.T.tolist()),</span>
+<span class="c">#                                 jp.JArray(jp.JInt, target.ndim)(target.tolist()))</span>
+    <span class="n">jointmi_calc</span><span class="o">.</span><span class="n">addObservations</span><span class="p">(</span><span class="n">s12</span><span class="p">,</span><span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">ndim</span><span class="p">)(</span><span class="n">target</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+
+    <span class="n">jointmi</span> <span class="o">=</span> <span class="n">jointmi_calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">jointmi</span>
+
+
+<span class="k">def</span> <span class="nf">_get_last_value</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the highest-index value that is not a NaN from an array.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x (1D numpy array): array where some entries are nan</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        int/double: entry in x with highest index, which is not nan (if</span>
+<span class="sd">            no such value exists, nan is returned)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="n">ind</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;Couldn not find a value that is not -inf.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+
+<span class="c">#def test_logical_xor():</span>
+<span class="c">#</span>
+<span class="c">#    # logical XOR</span>
+<span class="c">#    n = 1000</span>
+<span class="c">#    alph = 2</span>
+<span class="c">#    s1 = np.random.randint(0, alph, n)</span>
+<span class="c">#    s2 = np.random.randint(0, alph, n)</span>
+<span class="c">#    target = np.logical_xor(s1, s2).astype(int)</span>
+<span class="c">#    cfg = {</span>
+<span class="c">#        &#39;alph_s1&#39;: 2,</span>
+<span class="c">#        &#39;alph_s2&#39;: 2,</span>
+<span class="c">#        &#39;alph_t&#39;: 2,</span>
+<span class="c">#        &#39;jarpath&#39;: &#39;infodynamics.jar&#39;,</span>
+<span class="c">#        &#39;iterations&#39;: 1000</span>
+<span class="c">#    }</span>
+<span class="c">#    print(&#39;Testing PID estimator on binary AND, pointsset size{0}, iterations: {1}&#39;.format(</span>
+<span class="c">#                                                        n, cfg[&#39;iterations&#39;]))</span>
+<span class="c">#    [est, opt] = pid(s1, s2, target, cfg)</span>
+<span class="c">#    print(&quot;----Results: ----&quot;)</span>
+<span class="c">#    print(&quot;unq_s1: {0}&quot;.format(est[&#39;unq_s1&#39;]))</span>
+<span class="c">#    print(&quot;unq_s2: {0}&quot;.format(est[&#39;unq_s2&#39;]))</span>
+<span class="c">#    print(&quot;shd_s1s2: {0}&quot;.format(est[&#39;shd_s1s2&#39;]))</span>
+<span class="c">#    print(&quot;syn_s1s2: {0}&quot;.format(est[&#39;syn_s1s2&#39;]))</span>
+<span class="c">#    assert 0.9 &lt; est[&#39;syn_s1s2&#39;] &lt;=1.1, &#39;incorrect synergy: {0}, expected was {1}&#39;.format(est[&#39;syn_s1s2&#39;], 0.98)</span>
+<span class="c">#</span>
+<span class="c">#if __name__ == &#39;__main__&#39;:</span>
+<span class="c">#    test_logical_xor()</span>
+</pre></div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+         
+<div class="col-md-3 hidden-xs" id="sidebar-wrapper">
+  <div class="sidebar hidden-xs" role="navigation" aria-label="main navigation">
+<div id="searchbox" role="search">
+  <h3>Quick search</h3>
+  <form class="search form-inline" action="../../search.html" method="get">
+      <div class="input-append input-group">
+        <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+        <span class="input-group-btn">
+        <input type="submit" class="btn" value="Go" />
+        </span>
+      </div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+  </div>
+</div> 
+        
+      </div><!-- /row -->
+
+      <!-- row -->
+      <div class="row footer-relbar">
+<div id="navbar-related" class=" related navbar navbar-default" role="navigation" aria-label="related navigation">
+  <div class="navbar-inner">
+    <ul class="nav navbar-nav ">
+        <li><a href="../../index.html">IDTxl 0.1 documentation</a></li>
+    </ul>
+<ul class="nav navbar-nav pull-right hidden-xs hidden-sm">
+      
+        <li><a href="../../py-modindex.html" title="Python Module Index" >modules</a></li>
+        <li><a href="../../genindex.html" title="General Index" >index</a></li>
+        <li><a href="../index.html" >Module code</a></li>
+        <li><a href="#">top</a></li> 
+      
+    </ul>
+  </div>
+</div>
+      </div><!-- /row -->
+
+      <!-- footer -->
+      <footer role="contentinfo">
+          &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.
+      </footer>
+      <!-- /footer -->
+
+    </div>
+    <!-- /container -->
+
+  </body>
+</html>

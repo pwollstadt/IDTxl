@@ -1,0 +1,7 @@
+idtxl.visualise_graph module
+============================
+
+.. automodule:: idtxl.visualise_graph
+    :members:
+    :undoc-members:
+    :show-inheritance:

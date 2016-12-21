@@ -1,0 +1,7 @@
+idtxl.ft2idtxl module
+=====================
+
+.. automodule:: idtxl.ft2idtxl
+    :members:
+    :undoc-members:
+    :show-inheritance:

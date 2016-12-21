@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+
+
+
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    
+    <title>idtxl.matarray2idtxl &mdash; IDTxl 0.1 documentation</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    
+
+<link rel="stylesheet" href="../../_static/css/basicstrap-base.css" type="text/css" />
+<link rel="stylesheet" id="current-theme" href="../../_static/css/bootstrap3/bootswatch-spacelab.css" type="text/css" />
+<link rel="stylesheet" id="current-adjust-theme" href="../../_static/css/adjust_theme/bootswatch-spacelab.css" type="text/css" />
+
+<link rel="stylesheet" href="../../_static/css/font-awesome.min.css">
+
+<style type="text/css">
+  body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+  }
+</style>
+
+<link rel="stylesheet" href="../../_static/css/basicstrap.css" type="text/css" />
+<link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+<script type="text/javascript">
+  var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:    '../../',
+            VERSION:     '0.1',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE:  true
+  };
+</script>
+    <script type="text/javascript" src="../../_static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/bootstrap3.min.js"></script>
+<script type="text/javascript" src="../../_static/js/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="../../_static/js/basicstrap.js"></script>
+<script type="text/javascript">
+</script>
+    <link rel="top" title="IDTxl 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div id="navbar-top" class="navbar navbar-fixed-top navbar-default" role="navigation" aria-label="top navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../../index.html">IDTxl 0.1 documentation</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+
+            
+              <li><a href="../../py-modindex.html" title="Python Module Index" >modules </a></li>
+              <li><a href="../../genindex.html" title="General Index" accesskey="I">index </a></li>
+              <li><a href="../index.html" accesskey="U">Module code</a></li>
+            
+
+            <li class="visible-xs">
+                <form class="search form-search form-inline navbar-form navbar-right sp-searchbox" action="../../search.html" method="get">
+                  <div class="input-append input-group">
+                    <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+                    <span class="input-group-btn">
+                    <input type="submit" class="btn" value="Go" />
+                    </span>
+                  </div>
+                  <input type="hidden" name="check_keywords" value="yes" />
+                  <input type="hidden" name="area" value="default" />
+                </form>
+            </li>
+
+            
+
+          </ul>
+
+        </div>
+      </div>
+    </div>
+    
+
+    <!-- container -->
+    <div class="container">
+
+      <!-- row -->
+      <div class="row">
+        
+        
+
+        <div class="col-md-9" id="content-wrapper">
+          <div class="document" role="main">
+            <div class="documentwrapper">
+              <div class="bodywrapper">
+                <div class="body">
+                  
+  <h1>Source code for idtxl.matarray2idtxl</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Import MATLAB arrays into IDTxl.</span>
+
+<span class="sd">Module with functions to import matrices from matfiles (version&gt;7.3, hdf5)</span>
+<span class="sd">to IDTxL.</span>
+
+<span class="sd">Functions in this module read the (neurophysiological) data from a Fieldtrip</span>
+<span class="sd">file with the basic fields necessary for the MATLAB version TRENTOOL and create</span>
+<span class="sd">a numpy array usable as input to TXL.</span>
+
+<span class="sd">provides the functions:</span>
+<span class="sd">    matarray2idtxlconverter(filename, arrayname, order) =     takes a filename,</span>
+<span class="sd">                    the name of the array variable (arrayname) inside,</span>
+<span class="sd">                    and the order of sensor axis,  time axisand (CHECK THIS!!)</span>
+<span class="sd">                    repetition axis (as a list)</span>
+
+<span class="sd">@author: Michael Wibral</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+
+<span class="k">def</span> <span class="nf">_matarray_2_numpyarray</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">array_name</span><span class="p">,</span> <span class="n">order_list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read Matlab hdf5 file into IDTxl.</span>
+
+<span class="sd">    reads a matlab hdf5 file (&quot;-v7.3&#39; or higher, .mat) with a SINGLE</span>
+<span class="sd">    array inside and returns a numpy array with dimensions that</span>
+<span class="sd">    are channel x time x trials, using np.swapaxes where necessary</span>
+
+<span class="sd">    Created on Wed Mar 19 12:34:36 2014</span>
+
+<span class="sd">    @author: Michael Wibral</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;Converting matlab array from file (v7.3) to numpy array&#39;</span><span class="p">)</span>
+    <span class="c"># 1. create a python object that represents the hdf5 file on disk</span>
+    <span class="n">mat_file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+    <span class="c"># assert that at least one of the keys found at the top level</span>
+    <span class="c"># of the HDF file  matches the name of the array we wanted</span>
+    <span class="k">assert</span> <span class="n">array_name</span> <span class="ow">in</span> <span class="n">mat_file</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="p">(</span><span class="s">&#39;array {0} not in mat file or not &#39;</span>
+                                           <span class="s">&#39;a variable at the top level&#39;</span>
+                                           <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">array_name</span><span class="p">))</span>
+
+    <span class="c"># 2. Create an object for the matlab array (from the hdf5 hierachy)</span>
+    <span class="n">the_array</span> <span class="o">=</span> <span class="n">mat_file</span><span class="p">[</span><span class="n">array_name</span><span class="p">][()]</span> <span class="c"># trailing [()] ensures everything is read</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;From HDF5: &#39;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">the_array</span><span class="p">)</span>
+    <span class="c"># 3. Convert to numpyarray</span>
+    <span class="n">the_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">the_array</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;as numpy: &#39;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">the_array</span><span class="p">)</span>
+
+    <span class="c"># 4. swapaxes according to the information provided by the user</span>
+    <span class="n">the_array</span> <span class="o">=</span> <span class="n">reorder_array</span><span class="p">(</span><span class="n">the_array</span><span class="p">,</span> <span class="n">order_list</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">the_array</span>
+
+
+<div class="viewcode-block" id="reorder_array"><a class="viewcode-back" href="../../idtxl.html#idtxl.matarray2idtxl.reorder_array">[docs]</a><span class="k">def</span> <span class="nf">reorder_array</span><span class="p">(</span><span class="n">the_array</span><span class="p">,</span> <span class="n">order_list</span><span class="p">):</span>
+    <span class="c"># put time first as by agrreement in IDTxL</span>
+    <span class="n">time_dimension</span> <span class="o">=</span> <span class="n">order_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s">&#39;time&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">time_dimension</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">the_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">the_array</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">time_dimension</span><span class="p">)</span>
+        <span class="c"># also swap the list to reflect the new arrangement</span>
+        <span class="n">order_list</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">order_list</span><span class="p">[</span><span class="n">time_dimension</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+									<span class="n">order_list</span><span class="p">[</span><span class="n">time_dimension</span><span class="p">],</span> <span class="n">order_list</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c"># put channel second</span>
+    <span class="n">channel_dimension</span> <span class="o">=</span> <span class="n">order_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s">&#39;channel&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">channel_dimension</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">the_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">the_array</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">channel_dimension</span><span class="p">)</span>
+        <span class="c"># also swap the list to reflect the new arrangement</span>
+        <span class="n">order_list</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">order_list</span><span class="p">[</span><span class="n">channel_dimension</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+								<span class="n">order_list</span><span class="p">[</span><span class="n">channel_dimension</span><span class="p">],</span> <span class="n">order_list</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="c"># put repetitions third - unnecessary in principle as n-1 permutations</span>
+    <span class="c"># are guaranteed to sort our array dimensions for n dimensions</span>
+    <span class="c"># assert order_list.index(&#39;repetition&#39;) == 3, print(&#39;something went wrong with reordering&#39;)</span>
+
+    <span class="c"># uncomment the following code when expanding</span>
+    <span class="c"># repetition_dimension = order_list.index(&#39;repetition&#39;)</span>
+    <span class="c"># if repetition_dimension !=2:</span>
+    <span class="c">#    the_array = np.swapaxes(the_array,2,repetition_dimension)</span>
+    <span class="c">#    # also swap the list to reflect the new arrangement</span>
+    <span class="c">#    order_list[3], order_list[repetition_dimension] = \</span>
+    <span class="c">#    order_list[repetition_dimension], order_list[3]</span>
+
+    <span class="c"># put further dimensions fourth in future versions...</span>
+    <span class="k">return</span> <span class="n">the_array</span>
+
+</div>
+<div class="viewcode-block" id="matarray2idtxl"><a class="viewcode-back" href="../../idtxl.html#idtxl.matarray2idtxl.matarray2idtxl">[docs]</a><span class="k">def</span> <span class="nf">matarray2idtxl</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">array_name</span><span class="p">,</span> <span class="n">order_list</span><span class="p">):</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;Creating Python dictionary from matlab array: &#39;</span> <span class="o">+</span> <span class="n">array_name</span><span class="p">)</span>
+    <span class="n">NPData</span> <span class="o">=</span> <span class="n">_matarray_2_numpyarray</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">array_name</span><span class="p">,</span> <span class="n">order_list</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">NPData</span><span class="p">)</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">NPData</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">NPData</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">label</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;channel{0:04d}.txt&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">label</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+
+    <span class="n">NPfsample</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">NPtime</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">NPData</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="c"># take unit time steps</span>
+
+    <span class="n">TXLdata</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;np_timeseries&#39;</span><span class="p">:</span> <span class="n">NPData</span><span class="p">,</span>
+        <span class="s">&#39;label&#39;</span><span class="p">:</span> <span class="n">label</span><span class="p">,</span>
+        <span class="s">&#39;time&#39;</span><span class="p">:</span> <span class="n">NPtime</span><span class="p">,</span>
+        <span class="s">&#39;fsample&#39;</span><span class="p">:</span> <span class="n">NPfsample</span><span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">TXLdata</span></div>
+</pre></div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+         
+<div class="col-md-3 hidden-xs" id="sidebar-wrapper">
+  <div class="sidebar hidden-xs" role="navigation" aria-label="main navigation">
+<div id="searchbox" role="search">
+  <h3>Quick search</h3>
+  <form class="search form-inline" action="../../search.html" method="get">
+      <div class="input-append input-group">
+        <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+        <span class="input-group-btn">
+        <input type="submit" class="btn" value="Go" />
+        </span>
+      </div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+  </div>
+</div> 
+        
+      </div><!-- /row -->
+
+      <!-- row -->
+      <div class="row footer-relbar">
+<div id="navbar-related" class=" related navbar navbar-default" role="navigation" aria-label="related navigation">
+  <div class="navbar-inner">
+    <ul class="nav navbar-nav ">
+        <li><a href="../../index.html">IDTxl 0.1 documentation</a></li>
+    </ul>
+<ul class="nav navbar-nav pull-right hidden-xs hidden-sm">
+      
+        <li><a href="../../py-modindex.html" title="Python Module Index" >modules</a></li>
+        <li><a href="../../genindex.html" title="General Index" >index</a></li>
+        <li><a href="../index.html" >Module code</a></li>
+        <li><a href="#">top</a></li> 
+      
+    </ul>
+  </div>
+</div>
+      </div><!-- /row -->
+
+      <!-- footer -->
+      <footer role="contentinfo">
+          &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.
+      </footer>
+      <!-- /footer -->
+
+    </div>
+    <!-- /container -->
+
+  </body>
+</html>

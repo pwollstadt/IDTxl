@@ -1,0 +1,7 @@
+idtxl.idtxl_io module
+=====================
+
+.. automodule:: idtxl.idtxl_io
+    :members:
+    :undoc-members:
+    :show-inheritance:

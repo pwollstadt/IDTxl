@@ -41,7 +41,7 @@
     <script type="text/javascript" src="_static/js/jquery.min.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/bootstrap3.min.js"></script>
 <script type="text/javascript" src="_static/js/jquery.cookie.min.js"></script>
 <script type="text/javascript" src="_static/js/basicstrap.js"></script>
@@ -49,7 +49,7 @@
 </script>
     <link rel="top" title="IDTxl 0.1 documentation" href="index.html" />
     <link rel="next" title="Helper functions" href="idtxl_helper.html" />
-    <link rel="prev" title="Algorithms for network inference" href="idtxl_network_inference.html" /> 
+    <link rel="prev" title="Algorithms for network comparison" href="idtxl_network_comparison.html" /> 
   </head>
   <body role="document">
     <div id="navbar-top" class="navbar navbar-fixed-top navbar-default" role="navigation" aria-label="top navigation">
@@ -81,7 +81,7 @@
               </li>
 
             
-              <li><a href="idtxl_network_inference.html" title="Algorithms for network inference" accesskey="P">previous </a></li>
+              <li><a href="idtxl_network_comparison.html" title="Algorithms for network comparison" accesskey="P">previous </a></li>
               <li><a href="idtxl_helper.html" title="Helper functions" accesskey="N">next </a></li>
               <li><a href="py-modindex.html" title="Python Module Index" >modules </a></li>
               <li><a href="genindex.html" title="General Index" accesskey="I">index </a></li>
@@ -133,13 +133,13 @@
 in the Estimator_cmi class.</p>
 <dl class="function">
 <dt id="idtxl.estimators_cmi.is_parallel">
-<code class="descclassname">idtxl.estimators_cmi.</code><code class="descname">is_parallel</code><span class="sig-paren">(</span><em>estimator_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_cmi.html#is_parallel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_cmi.is_parallel" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">idtxl.estimators_cmi.</tt><tt class="descname">is_parallel</tt><big>(</big><em>estimator_name</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_cmi.html#is_parallel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_cmi.is_parallel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check if estimator can estimate CMI for multiple chunks in parallel.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="idtxl.estimators_cmi.jidt_discrete">
-<code class="descclassname">idtxl.estimators_cmi.</code><code class="descname">jidt_discrete</code><span class="sig-paren">(</span><em>self</em>, <em>var1</em>, <em>var2</em>, <em>conditional</em>, <em>opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_cmi.html#jidt_discrete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_cmi.jidt_discrete" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">idtxl.estimators_cmi.</tt><tt class="descname">jidt_discrete</tt><big>(</big><em>self</em>, <em>var1</em>, <em>var2</em>, <em>conditional</em>, <em>opts=None</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_cmi.html#jidt_discrete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_cmi.jidt_discrete" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate CMI with JIDT&#8217;s implementation for discrete variables.</p>
 <p>Calculate the conditional mutual information between two variables given
 the third. Call JIDT via jpype and use the discrete estimator.</p>
@@ -201,7 +201,7 @@ continuous variables to discrete values.
 
 <dl class="function">
 <dt id="idtxl.estimators_cmi.jidt_kraskov">
-<code class="descclassname">idtxl.estimators_cmi.</code><code class="descname">jidt_kraskov</code><span class="sig-paren">(</span><em>self</em>, <em>var1</em>, <em>var2</em>, <em>conditional=None</em>, <em>opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_cmi.html#jidt_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_cmi.jidt_kraskov" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">idtxl.estimators_cmi.</tt><tt class="descname">jidt_kraskov</tt><big>(</big><em>self</em>, <em>var1</em>, <em>var2</em>, <em>conditional=None</em>, <em>opts=None</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_cmi.html#jidt_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_cmi.jidt_kraskov" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate conditional mutual infor with JIDT&#8217;s Kraskov implementation.</p>
 <p>Calculate the conditional mutual information between three variables. Call
 JIDT via jpype and use the Kraskov 1 estimator. If no conditional is given
@@ -258,7 +258,7 @@ runs replicable set noise_level to 0.</dd>
 
 <dl class="function">
 <dt id="idtxl.estimators_cmi.opencl_kraskov">
-<code class="descclassname">idtxl.estimators_cmi.</code><code class="descname">opencl_kraskov</code><span class="sig-paren">(</span><em>self</em>, <em>var1</em>, <em>var2</em>, <em>conditional=None</em>, <em>n_chunks=1</em>, <em>opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_cmi.html#opencl_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_cmi.opencl_kraskov" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">idtxl.estimators_cmi.</tt><tt class="descname">opencl_kraskov</tt><big>(</big><em>self</em>, <em>var1</em>, <em>var2</em>, <em>conditional=None</em>, <em>n_chunks=1</em>, <em>opts=None</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_cmi.html#opencl_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_cmi.opencl_kraskov" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate conditional mutual infor using opencl Kraskov implementation.</p>
 <p>Calculate the conditional mutual information between three variables using
 an opencl-based Kraskov type 1 estimator. References:</p>
@@ -314,13 +314,13 @@ noise_level to 0.</dd>
 in the Estimator_mi class.</p>
 <dl class="function">
 <dt id="idtxl.estimators_mi.is_parallel">
-<code class="descclassname">idtxl.estimators_mi.</code><code class="descname">is_parallel</code><span class="sig-paren">(</span><em>estimator_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_mi.html#is_parallel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_mi.is_parallel" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">idtxl.estimators_mi.</tt><tt class="descname">is_parallel</tt><big>(</big><em>estimator_name</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_mi.html#is_parallel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_mi.is_parallel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check if estimator can estimate CMI for multiple chunks in parallel.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="idtxl.estimators_mi.jidt_discrete">
-<code class="descclassname">idtxl.estimators_mi.</code><code class="descname">jidt_discrete</code><span class="sig-paren">(</span><em>self</em>, <em>var1</em>, <em>var2</em>, <em>opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_mi.html#jidt_discrete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_mi.jidt_discrete" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">idtxl.estimators_mi.</tt><tt class="descname">jidt_discrete</tt><big>(</big><em>self</em>, <em>var1</em>, <em>var2</em>, <em>opts=None</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_mi.html#jidt_discrete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_mi.jidt_discrete" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate mutual information with JIDT&#8217;s discrete-variable implementation.</p>
 <p>Calculate the mutual information between two variables. Call JIDT via jpype
 and use the discrete estimator.</p>
@@ -380,7 +380,7 @@ array are realisations x variable dimension</dd>
 
 <dl class="function">
 <dt id="idtxl.estimators_mi.jidt_kraskov">
-<code class="descclassname">idtxl.estimators_mi.</code><code class="descname">jidt_kraskov</code><span class="sig-paren">(</span><em>self</em>, <em>var1</em>, <em>var2</em>, <em>opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_mi.html#jidt_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_mi.jidt_kraskov" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">idtxl.estimators_mi.</tt><tt class="descname">jidt_kraskov</tt><big>(</big><em>self</em>, <em>var1</em>, <em>var2</em>, <em>opts=None</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_mi.html#jidt_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_mi.jidt_kraskov" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate mutual information with JIDT&#8217;s Kraskov implementation.</p>
 <p>Calculate the mutual information between two variables. Call JIDT via jpype
 and use the Kraskov 1 estimator. References:</p>
@@ -434,7 +434,7 @@ runs replicable set noise_level to 0.</dd>
 
 <dl class="function">
 <dt id="idtxl.estimators_mi.opencl_kraskov">
-<code class="descclassname">idtxl.estimators_mi.</code><code class="descname">opencl_kraskov</code><span class="sig-paren">(</span><em>self</em>, <em>var1</em>, <em>var2</em>, <em>n_chunks=1</em>, <em>opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_mi.html#opencl_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_mi.opencl_kraskov" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">idtxl.estimators_mi.</tt><tt class="descname">opencl_kraskov</tt><big>(</big><em>self</em>, <em>var1</em>, <em>var2</em>, <em>n_chunks=1</em>, <em>opts=None</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_mi.html#opencl_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_mi.opencl_kraskov" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate mutual information using an opencl Kraskov implementation.</p>
 <p>Calculate the mutual information between two variables using an
 opencl-based Kraskov type 1 estimator. Multiple MIs can be estimated in
@@ -488,13 +488,13 @@ noise_level to 0.</dd>
 Estimator_te class.</p>
 <dl class="function">
 <dt id="idtxl.estimators_te.is_parallel">
-<code class="descclassname">idtxl.estimators_te.</code><code class="descname">is_parallel</code><span class="sig-paren">(</span><em>estimator_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_te.html#is_parallel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_te.is_parallel" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">idtxl.estimators_te.</tt><tt class="descname">is_parallel</tt><big>(</big><em>estimator_name</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_te.html#is_parallel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_te.is_parallel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check if estimator can estimate CMI for multiple chunks in parallel.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="idtxl.estimators_te.jidt_discrete">
-<code class="descclassname">idtxl.estimators_te.</code><code class="descname">jidt_discrete</code><span class="sig-paren">(</span><em>self</em>, <em>source</em>, <em>target</em>, <em>opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_te.html#jidt_discrete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_te.jidt_discrete" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">idtxl.estimators_te.</tt><tt class="descname">jidt_discrete</tt><big>(</big><em>self</em>, <em>source</em>, <em>target</em>, <em>opts=None</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_te.html#jidt_discrete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_te.jidt_discrete" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate TE with JIDT&#8217;s implementation for discrete variables.</p>
 <p>Calculate the transfer entropy between two time series processes.
 Call JIDT via jpype and use the discrete estimator. Transfer entropy is
@@ -573,7 +573,7 @@ and target (default=1)</p>
 
 <dl class="function">
 <dt id="idtxl.estimators_te.jidt_kraskov">
-<code class="descclassname">idtxl.estimators_te.</code><code class="descname">jidt_kraskov</code><span class="sig-paren">(</span><em>self</em>, <em>source</em>, <em>target</em>, <em>opts</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_te.html#jidt_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_te.jidt_kraskov" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">idtxl.estimators_te.</tt><tt class="descname">jidt_kraskov</tt><big>(</big><em>self</em>, <em>source</em>, <em>target</em>, <em>opts</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_te.html#jidt_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_te.jidt_kraskov" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate transfer entropy with JIDT&#8217;s Kraskov implementation.</p>
 <p>Calculate transfer entropy between a source and a target variable using
 JIDT&#8217;s implementation of the Kraskov type 1 estimator. Transfer entropy is
@@ -667,18 +667,16 @@ runs replicable set noise_level to 0.</dd>
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="idtxl_network_inference.html"
-                        title="previous chapter">Algorithms for network inference</a></p>
+  <p class="topless"><a href="idtxl_network_comparison.html"
+                        title="previous chapter">Algorithms for network comparison</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="idtxl_helper.html"
                         title="next chapter">Helper functions</a></p>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/idtxl_estimators.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/idtxl_estimators.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
 <div id="searchbox" role="search">
   <h3>Quick search</h3>
   <form class="search form-inline" action="search.html" method="get">
@@ -709,7 +707,7 @@ runs replicable set noise_level to 0.</dd>
     </ul>
 <ul class="nav navbar-nav pull-right hidden-xs hidden-sm">
       
-        <li><a href="idtxl_network_inference.html" title="Algorithms for network inference" >previous</a></li>
+        <li><a href="idtxl_network_comparison.html" title="Algorithms for network comparison" >previous</a></li>
         <li><a href="idtxl_helper.html" title="Helper functions" >next</a></li>
         <li><a href="py-modindex.html" title="Python Module Index" >modules</a></li>
         <li><a href="genindex.html" title="General Index" >index</a></li>
@@ -722,8 +720,8 @@ runs replicable set noise_level to 0.</dd>
 
       <!-- footer -->
       <footer role="contentinfo">
-          &copy; Copyright 2016, Patricia Wollstadt, Joseph T. Lizier, Michael Wibral.
-        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.3.1.
+          &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.
       </footer>
       <!-- /footer -->
 
