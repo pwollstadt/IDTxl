@@ -259,9 +259,13 @@ class Multivariate_te(Network_analysis):
 
         Returns:
             dict
-                results consisting of conditional sets (full, from sources,
-                from target), results for omnibus test (joint influence of
-                source cands.), pvalues for each significant source candidate
+                results consisting of sets of selected variables as (full, from
+                sources only, from target only), pvalues and TE for each
+                significant source variable, the current value for this
+                analysis, results for omnibus test (joint influence of all
+                selected source variables on the target, omnibus TE, p-value,
+                and significance); NOTE that all variables are listed as tuples
+                (process, lag wrt. current value)
         """
         # Check input and clean up object if it was used before.
         self._initialise(data, sources, target)
@@ -286,15 +290,16 @@ class Multivariate_te(Network_analysis):
         results = {
             'current_value': self.current_value,
             'selected_vars_full': self._idx_to_lag(self.selected_vars_full),
-            'selected_vars_sources': self._idx_to_lag(
-                                                self.selected_vars_sources),
             'selected_vars_target': self._idx_to_lag(
                                                 self.selected_vars_target),
+            'selected_vars_sources': self._idx_to_lag(
+                                                self.selected_vars_sources),
+            'selected_sources_pval': self.pvalues_sign_sources,
+            'selected_sources_te': self.te_sign_sources,
             'omnibus_te': self.te_omnibus,
             'omnibus_pval': self.pvalue_omnibus,
-            'omnibus_sign': self.sign_omnibus,
-            'cond_sources_pval': self.pvalues_sign_sources,
-            'cond_sources_te': self.te_sign_sources}
+            'omnibus_sign': self.sign_omnibus
+            }
         return results
 
     def _initialise(self, data, sources, target):

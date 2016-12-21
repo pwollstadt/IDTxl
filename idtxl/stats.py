@@ -56,8 +56,8 @@ def network_fdr(results, alpha=0.05, correct_by_target=True):
         for target in res.keys():
             if not res[target]['omnibus_sign']:  # skip if not significant
                 continue
-            n_sign = res[target]['cond_sources_pval'].size
-            pval = np.append(pval, res[target]['cond_sources_pval'])
+            n_sign = res[target]['selected_sources_pval'].size
+            pval = np.append(pval, res[target]['selected_sources_pval'])
             target_idx = np.append(target_idx,
                                    np.ones(n_sign) * target).astype(int)
             cands = cands + res[target]['selected_vars_sources']
@@ -94,8 +94,8 @@ def network_fdr(results, alpha=0.05, correct_by_target=True):
             if correct_by_target:
                 t = target_idx[s]
                 res[t]['selected_vars_full'] = res[t]['selected_vars_target']
-                res[t]['cond_sources_te'] = None
-                res[t]['cond_sources_pval'] = None
+                res[t]['selected_sources_te'] = None
+                res[t]['selected_sources_pval'] = None
                 res[t]['selected_vars_sources'] = []
                 res[t]['omnibus_pval'] = 1
                 res[t]['omnibus_sign'] = False
@@ -104,10 +104,10 @@ def network_fdr(results, alpha=0.05, correct_by_target=True):
                 cand = cands[s]
                 cand_ind = res[t]['selected_vars_sources'].index(cand)
                 res[t]['selected_vars_sources'].pop(cand_ind)
-                res[t]['cond_sources_pval'] = np.delete(
-                                    res[t]['cond_sources_pval'], cand_ind)
-                res[t]['cond_sources_te'] = np.delete(
-                                    res[t]['cond_sources_te'], cand_ind)
+                res[t]['selected_sources_pval'] = np.delete(
+                                    res[t]['selected_sources_pval'], cand_ind)
+                res[t]['selected_sources_te'] = np.delete(
+                                    res[t]['selected_sources_te'], cand_ind)
                 res[t]['selected_vars_full'].pop(
                                     res[t]['selected_vars_full'].index(cand))
     return res

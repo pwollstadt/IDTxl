@@ -54,24 +54,24 @@ def test_network_fdr():
                              (2, 1), (2, 0)],
         'omnibus_pval': 0.0001,
         'omnibus_sign': True,
-        'cond_sources_pval': np.array([0.001, 0.0014, 0.01, 0.045, 0.047]),
-        'cond_sources_te': np.array([1.1, 1.0, 0.8, 0.7, 0.63])
+        'selected_sources_pval': np.array([0.001, 0.0014, 0.01, 0.045, 0.047]),
+        'selected_sources_te': np.array([1.1, 1.0, 0.8, 0.7, 0.63])
         }
     target_1 = {
         'selected_vars_sources': [(1, 2), (2, 1), (2, 2)],
         'selected_vars_full': [(1, 0), (1, 1), (1, 2), (2, 1), (2, 2)],
         'omnibus_pval': 0.031,
         'omnibus_sign': True,
-        'cond_sources_pval': np.array([0.00001, 0.00014, 0.01]),
-        'cond_sources_te': np.array([1.8, 1.75, 0.75])
+        'selected_sources_pval': np.array([0.00001, 0.00014, 0.01]),
+        'selected_sources_te': np.array([1.8, 1.75, 0.75])
         }
     target_2 = {
         'selected_vars_sources': [],
         'selected_vars_full': [(2, 0), (2, 1)],
         'omnibus_pval': 0.41,
         'omnibus_sign': False,
-        'cond_sources_pval': None,
-        'cond_sources_te': np.array([])
+        'selected_sources_pval': None,
+        'selected_sources_te': np.array([])
         }
     res = {
         0: target_0,
@@ -84,11 +84,11 @@ def test_network_fdr():
         assert (not res_pruned[2]['selected_vars_sources']), ('Target ')
 
         for k in res_pruned.keys():
-            if res_pruned[k]['cond_sources_pval'] is None:
+            if res_pruned[k]['selected_sources_pval'] is None:
                 assert (not res_pruned[k]['selected_vars_sources'])
             else:
                 assert (len(res_pruned[k]['selected_vars_sources']) ==
-                        len(res_pruned[k]['cond_sources_pval'])), (
+                        len(res_pruned[k]['selected_sources_pval'])), (
                                 'Source list and list of p-values should have '
                                 'the same length.')
 
@@ -115,7 +115,7 @@ def test_find_pvalue():
                            alpha, tail)
     # Test assertion that no. permutations is high enough to theoretically
     # calculate the requested alpha level.
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         stats._find_pvalue(test_val, distribution[:5], alpha, tail)
     # Check if wrong parameter for tail raises a value error.
     with pytest.raises(ValueError):
