@@ -1,10 +1,13 @@
+import os
 import time
 import numpy as np
 from idtxl.multivariate_te import Multivariate_te
 from idtxl.data import Data
 
 start_time = time.time()
-d = np.load('./data/lorenz_2_exampledata.npy')  # 2 Lorenz systems 1->2, u = 45 ms
+# load simulated data from 2 coupled Lorenz systems 1->2, u = 45 ms
+d = np.load(os.path.join(os.path.dirname(__file__),
+            'data/lorenz_2_exampledata.npy'))
 dat = Data()
 dat.set_data(d[:, :, 0:100], 'psr')
 analysis_opts = {
@@ -26,5 +29,3 @@ np.savez('/home/patriciaw/Dropbox/BIC/#idtxl/test/test_lorenz',
          res_1, res_2)
 np.save('/home/patriciaw/Dropbox/BIC/#idtxl/test/test_lorenz_time',
         runtime)
-
-

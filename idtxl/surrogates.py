@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
+"""Create surrogate data.
+
 Created on Tue Apr  5 16:40:40 2016
 
 @author: patricia
@@ -45,7 +45,6 @@ def create_surrogates(realisations, replication_idx, n_perm, options=None):
             - depending on the shuffling method, further options may be
             defined, see help for function 'permute_over_time()' in this module
     """
-
     if options is None:
         options = {}
     try:
@@ -119,7 +118,6 @@ def permute_over_replications(realisations, replication_idx):
         numpy array
             permuted realisations
     """
-
     samples_per_repl = sum(replication_idx == replication_idx[0])
     replications_perm = np.random.permutation(max(replication_idx))
     replication_idx_perm = np.repeat(replications_perm, samples_per_repl)
@@ -128,6 +126,7 @@ def permute_over_replications(realisations, replication_idx):
     return realisations_perm
 
 
+# TODO the following with all subfunctions should got into the Data class
 def permute_over_time(realisations, replication_idx, perm_type, *kwargs):
     """Permute realisations in time within each replication.
 
@@ -269,7 +268,6 @@ def _swap_blocks(n_per_repl, block_size, swap_range):
         numpy array
             permuted indices with length n_per_repl
     """
-
     n_blocks = np.ceil(n_per_repl / block_size).astype(int)
     rem_samples = n_per_repl % block_size
 

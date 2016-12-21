@@ -33,7 +33,7 @@ def test_pid_and():
     print('Uni s2              ', est['unq_s2'])
     print('Shared s1_s2        ', est['shd_s1_s2'])
     print('Synergy s1_s2       ', est['syn_s1_s2'])
-    assert np.isclose(0.5, est['syn_s1_s2'][0]), 'Synergy is not 0.5.'
+    assert np.isclose(0.5, est['syn_s1_s2'][0], rtol=0.05), 'Synergy is not 0.5.'
 
 
 def test_pid_xor():
@@ -49,7 +49,7 @@ def test_pid_xor():
     print('Uni s2              ', est['unq_s2'])
     print('Shared s1_s2        ', est['shd_s1_s2'])
     print('Synergy s1_s2       ', est['syn_s1_s2'])
-    assert np.isclose(1, est['syn_s1_s2'][0]), 'Synergy is not 1.'
+    assert np.isclose(1, est['syn_s1_s2'][0], rtol=0.05), 'Synergy is not 1.'
 
 
 def test_pip_source_copy():
@@ -65,10 +65,10 @@ def test_pip_source_copy():
     print('Uni s2              ', est['unq_s2'])
     print('Shared s1_s2        ', est['shd_s1_s2'])
     print('Synergy s1_s2       ', est['syn_s1_s2'])
-    assert np.isclose(1, est['unq_s1'][0]), 'Unique information 1 is not 0.'
-    assert np.isclose(0, est['unq_s2'][0]), 'Unique information 2 is not 0.'
-    assert np.isclose(0, est['shd_s1_s2'][0]), 'Shared information is not 0.'
-    assert np.isclose(0, est['syn_s1_s2'][0]), 'Synergy is not 0.'
+    assert np.isclose(1, est['unq_s1'][0], rtol=0.05), 'Unique information 1 is not 0.'
+    assert np.isclose(0, est['unq_s2'][0], atol=0.05), 'Unique information 2 is not 0.'
+    assert np.isclose(0, est['shd_s1_s2'][0], atol=0.05), 'Shared information is not 0.'
+    assert np.isclose(0, est['syn_s1_s2'][0], atol=0.05), 'Synergy is not 0.'
 
 
 if __name__ == '__main__':

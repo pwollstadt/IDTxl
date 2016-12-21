@@ -1,22 +1,14 @@
-# -*- coding: utf-8 -*-
-"""
+"""Estimate bivariate transfer entropy.
+
+Calculate bivariate transfer entropy (TE) using the maximum statistic.
+
 Created on Wed Apr 06 17:58:31 2016
-
-Greedy algorithm for multivariate network inference using transfer entropy.
-For details see Lizier ??? and Faes ???.
-
-If executed as standalone, the script applies the algorithm to example data
-presented in Montalto, PLOS ONE, 2014, (eq. 14).
-
-Eample:
-    python multivariate_te.py
 
 Note:
     Written for Python 3.4+
 
 @author: patricia
 """
-import copy as cp
 import numpy as np
 import itertools as it
 import stats
@@ -88,6 +80,7 @@ class Bivariate_te(Network_analysis):
             index of target process
 
     """
+
     # TODO right now 'options' holds all optional params (stats AND estimator).
     # We could split this up by adding the stats options to the analyse_*
     # methods?
@@ -263,7 +256,6 @@ class Bivariate_te(Network_analysis):
 
     def _initialise(self, data, sources, target):
         """Check input and set everything to initial values."""
-
         # Check the provided target and sources.
         self.target = target
         self._check_source_set(sources, data.n_processes)
@@ -401,45 +393,17 @@ class Bivariate_te(Network_analysis):
     def _define_candidates(self, processes, samples):
         """Build a list of candidate indices.
 
-            Args:
-                processes : list of int
-                    process indices
-                samples: list of int
-                    sample indices
+        Args:
+            processes : list of int
+                process indices
+            samples: list of int
+                sample indices
 
-            Returns:
-                a list of tuples, where each tuple holds the index of one
-                candidate and has the form (process index, sample index)
+        Returns:
+            a list of tuples, where each tuple holds the index of one
+            candidate and has the form (process index, sample index)
         """
         candidate_set = []
         for idx in it.product(processes, samples):
             candidate_set.append(idx)
         return candidate_set
-
-    def _clean_up(self):
-        """Remove temporary data (realisations) at the end of the analysis."""
-        self._current_value_realisations = None
-        self._selected_vars_sources_realisations = None
-        self._selected_vars_target_realisations = None
-        self._current_value_realisations = None
-        self.min_stats_surr_table = None
-
-    def _idx_to_lag(self, idx_list):
-        """Change sample indices to lags for each index in the list."""
-        lag_list = cp.copy(idx_list)
-        for c in idx_list:
-            lag_list[idx_list.index(c)] = (c[0], self.current_value[1] - c[1])
-        return lag_list
-
-    def _force_conditionals(self, cond, data):
-        """Enforce a given conditional."""
-        if type(cond) is str:
-            if cond == 'faes':
-                cond = self._define_candidates(self.source_set,
-                                               [self.current_value[1]])
-
-        print('Adding the following variables to the conditioning set: {0}.'.
-              format(self._idx_to_lag(cond)))
-        self._append_selected_vars_idx(cond)
-        self._append_selected_vars_realisations(
-                        data.get_realisations(self.current_value, cond)[0])

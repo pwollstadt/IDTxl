@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Apr  4 10:41:33 2016
+"""System test for multivariate TE using the discrete JIDT estimator.
 
 @author: patricia
 """
@@ -11,7 +9,7 @@ from idtxl.multivariate_te import Multivariate_te
 from idtxl.data import Data
 
 
-def test_multivariate_te_corr_gaussian(estimator=None):
+def test_multivariate_te_corr_gaussian():
     """Test multivariate TE estimation on correlated Gaussians.
 
     Run the multivariate TE algorithm on two sets of random Gaussian data with
@@ -29,9 +27,6 @@ def test_multivariate_te_corr_gaussian(estimator=None):
         This test runs considerably faster than other system tests.
         This produces strange small values for non-coupled sources.  TODO
     """
-    if estimator is None:
-        estimator = 'jidt_kraskov'
-
     n = 1000
     cov = 0.4
     source_1 = [rn.normalvariate(0, 1) for r in range(n)]  # correlated src
@@ -47,7 +42,8 @@ def test_multivariate_te_corr_gaussian(estimator=None):
     dat = Data(normalise=True)
     dat.set_data(np.vstack((source_1[1:].T, target[:-1].T)), 'ps')
     analysis_opts = {
-        'cmi_calc_name': estimator,
+        'cmi_calc_name': 'jidt_discrete',
+        'discretise_method': 'max_ent',
         'n_perm_max_stat': 21,
         'n_perm_min_stat': 21,
         'n_perm_omnibus': 21,
@@ -95,7 +91,8 @@ def test_multivariate_te_lagged_copies():
     dat = Data()
     dat.set_data(np.vstack((d_0, d_1)), 'psr')
     analysis_opts = {
-        'cmi_calc_name': 'jidt_kraskov',
+        'cmi_calc_name': 'jidt_discrete',
+        'discretise_method': 'max_ent',
         'n_perm_max_stat': 21,
         'n_perm_min_stat': 21,
         'n_perm_omnibus': 500,
@@ -139,7 +136,8 @@ def test_multivariate_te_random():
     dat = Data()
     dat.set_data(d, 'psr')
     analysis_opts = {
-        'cmi_calc_name': 'jidt_kraskov',
+        'cmi_calc_name': 'jidt_discrete',
+        'discretise_method': 'max_ent',
         'n_perm_max_stat': 200,
         'n_perm_min_stat': 200,
         'n_perm_omnibus': 500,
@@ -179,13 +177,14 @@ def test_multivariate_te_lorenz_2():
         This test takes several hours and may take one to two days on some
         machines.
     """
-    # load simulated data from 2 coupled Lorenz systems 1->2, u = 45 ms
+
     d = np.load(os.path.join(os.path.dirname(__file__),
                 'data/lorenz_2_exampledata.npy'))
     dat = Data()
     dat.set_data(d, 'psr')
     analysis_opts = {
-        'cmi_calc_name': 'jidt_kraskov',
+        'cmi_calc_name': 'jidt_discrete',
+        'discretise_method': 'max_ent',
         'n_perm_max_stat': 21,  # 200
         'n_perm_min_stat': 21,  # 200
         'n_perm_omnibus': 21,
@@ -230,7 +229,8 @@ def test_multivariate_te_mute():
     dat = Data()
     dat.generate_mute_data(n_samples=1000, n_replications=10)
     analysis_opts = {
-        'cmi_calc_name': 'jidt_kraskov',
+        'cmi_calc_name': 'jidt_discrete',
+        'discretise_method': 'max_ent',
         'n_perm_max_stat': 21,
         'n_perm_min_stat': 21,
         'n_perm_omnibus': 21,
@@ -240,35 +240,21 @@ def test_multivariate_te_mute():
 
     network_analysis = Multivariate_te(max_lag_sources=3, min_lag_sources=1,
                                        max_lag_target=3, options=analysis_opts)
-    res = network_analysis.analyse_network(dat, targets=[1, 2])
+    res_me = network_analysis.analyse_network(dat, targets=[1, 2])
+    analysis_opts = {'discretise_method': 'equal'}
+    res_eq = network_analysis.analyse_network(dat, targets=[1, 2])
 
-def test_multivariate_te_multiple_runs():
-    """Test TE estimation using multiple runs on the GPU.
+    assert (np.isclose(res_eq[1]['omnibus_te'], res_me[1]['omnibus_te'],
+            rtol=0.05)), ('TE into first target is not equal for both binning'
+                          ' methods.')
+    assert (np.isclose(res_eq[2]['omnibus_te'], res_me[2]['omnibus_te'],
+            rtol=0.05)), ('TE into second target is not equal for both binning'
+                          ' methods.')
 
-    Test if data is correctly split over multiple runs, if the problem size exceeds
-    the GPU global memory and thus requires multiple runs. Using a number of
-    permutations of 7000 requires two runs on a GPU with global memory of about
-    6 GB.
-    """
-    dat = Data()
-    dat.generate_mute_data(n_samples=1000, n_replications=10)
-    analysis_opts = {
-        'cmi_calc_name': 'opencl_kraskov',
-        'n_perm_max_stat': 7000,
-        'n_perm_min_stat': 7000,
-        'n_perm_omnibus': 21,
-        'n_perm_max_seq': 21,  # this should be equal to the min stats b/c we
-                               # reuse the surrogate table from the min stats
-        }
-
-    network_analysis = Multivariate_te(max_lag_sources=3, min_lag_sources=1,
-                                       max_lag_target=3, options=analysis_opts)
-    res = network_analysis.analyse_network(dat, targets=[1, 2])
 
 if __name__ == '__main__':
-    # test_multivariate_te_mute()
-    # test_multivariate_te_lorenz_2()
-    # test_multivariate_te_random()
-    test_multivariate_te_multiple_runs()
+    test_multivariate_te_lorenz_2()
+    test_multivariate_te_mute()
+    test_multivariate_te_random()
     test_multivariate_te_corr_gaussian()
     test_multivariate_te_corr_gaussian('opencl_kraskov')

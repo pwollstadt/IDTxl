@@ -1,9 +1,0 @@
-trentoolxl/
-	trentoolxl/
-		__inti__.py
-	docs/		// html-formatted documentation
-		images/
-	setup.py
-	README.txt	// should be Windows-readable and reStructuredText! What does the software do? How do I install it?
-	COPYING.txt 	// required by the LGPL 
-	MANIFEST.in	// tells distutils to also include the Licence file and documentation

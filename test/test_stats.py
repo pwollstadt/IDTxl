@@ -38,8 +38,10 @@ def test_max_statistic_sequential():
     setup.current_value = (0, 4)
     setup.selected_vars_sources = [(1, 1), (1, 2)]
     setup.selected_vars_full = [(0, 1), (1, 1), (1, 2)]
-    setup._selected_vars_realisations = np.random.rand(1000, 3)
-    setup._current_value_realisations = np.random.rand(1000, 1)
+    setup._selected_vars_realisations = np.random.rand(dat.n_realisations(setup.current_value),
+                                                       len(setup.selected_vars_full))
+    setup._current_value_realisations = np.random.rand(dat.n_realisations(setup.current_value),
+                                                       1)
     [sign, p, te] = stats.max_statistic_sequential(analysis_setup=setup,
                                                    data=dat, opts=opts)
 
@@ -89,61 +91,6 @@ def test_network_fdr():
                         len(res_pruned[k]['cond_sources_pval'])), (
                                 'Source list and list of p-values should have '
                                 'the same length.')
-
-
-def test_permute_realisations():
-    n = 30
-    n_var = 3
-    n_per_repl = 5
-    real = np.arange(n).reshape(n_var, n / n_var).T
-    reps = int(n / n_var / n_per_repl)
-    real_idx = np.repeat(np.arange(reps), n_per_repl)
-    # real_idx = np.zeros(60).astype(int)
-    rng = 3
-    perm = stats._permute_realisations(realisations=real,
-                                       replication_idx=real_idx,
-                                       perm_range=rng)
-    # Assert the permutation worked.
-    assert (not (perm == real).all()), 'Permutation did not work.'
-    assert (np.unique(perm) == np.unique(real)).all(), ('Entries in original '
-                                                        'and permuted '
-                                                        'realisations are not '
-                                                        'the same.')
-    # Assert that samples have been swapped within the permutation range for
-    # the first replication.
-    samples = np.arange(rng)
-    i = 0
-    for p in range(n_per_repl // rng):
-        assert (np.unique(perm[i:i + rng, 0]) == samples).all(), ('The '
-            'permutation range was not respected.')
-        samples += rng
-        i += rng
-    rem = n_per_repl % rng
-    if rem > 0:
-        assert (np.unique(perm[i:i + rem, 0]) == samples[0:rem]).all(), ('The '
-            'remainder did not contain the same realisations.')
-
-    # Test assertions that perm_range is not too low or too high.
-    with pytest.raises(AssertionError):
-        stats._permute_realisations(realisations=real,
-                                    replication_idx=real_idx,
-                                    perm_range=1)
-    with pytest.raises(AssertionError):
-        stats._permute_realisations(realisations=real,
-                                    replication_idx=real_idx,
-                                    perm_range=np.inf)
-    # Test assertion of equal array sizes. replication_idx must hold the
-    # replication number for each entry in realisations, i.e., dimensions
-    # must be equal.
-    with pytest.raises(AssertionError):
-        stats._permute_realisations(realisations=real,
-                                    replication_idx=real_idx[:1],
-                                    perm_range=rng)
-    # Test ValueError if a string other than 'max' is given for perm_range.
-    with pytest.raises(ValueError):
-        stats._permute_realisations(realisations=real,
-                                    replication_idx=real_idx,
-                                    perm_range='foo')
 
 
 def test_find_pvalue():
@@ -211,7 +158,6 @@ def test_sort_table_min():
 
 if __name__ == '__main__':
     test_network_fdr()
-    test_permute_realisations()
     test_find_pvalue()
     test_find_table_max()
     test_find_table_min()
