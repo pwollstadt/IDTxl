@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-IDTxl documentation 
+IDTxl documentation
 =================================
 
 Welcome to the IDTxl user documentation. IDTxl is being hosted at
@@ -29,6 +29,7 @@ Module contents
    :maxdepth: 3
 
    idtxl_network_inference.rst
+   idtxl_network_comparison.rst
    idtxl_estimators.rst
    idtxl_helper.rst
 
@@ -38,4 +39,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

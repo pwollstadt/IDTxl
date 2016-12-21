@@ -108,10 +108,37 @@
                 <div class="body">
                   
   <h1>Source code for idtxl.estimators_te</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">resource_filename</span>
-<span class="kn">import</span> <span class="nn">jpype</span> <span class="kn">as</span> <span class="nn">jp</span>
+<span></span><span class="sd">&quot;&quot;&quot;Provide transfer entropy estimators for the Estimator_te class.</span>
+
+<span class="sd">This module exports methods for transfer entropy (TE) estimation in the</span>
+<span class="sd">Estimator_te class.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">resource_filename</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">idtxl_exceptions</span> <span class="k">as</span> <span class="n">ex</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">idtxl_utils</span> <span class="k">as</span> <span class="n">utils</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">jpype</span> <span class="kn">as</span> <span class="nn">jp</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">ex</span><span class="o">.</span><span class="n">jpype_missing</span><span class="p">(</span><span class="s1">&#39;Jpype is not available on this system. To use &#39;</span>
+                     <span class="s1">&#39;JAVA/JIDT-powered TE estimation install it from &#39;</span>
+                     <span class="s1">&#39;https://pypi.python.org/pypi/JPype1&#39;</span><span class="p">)</span>
 
 
+<div class="viewcode-block" id="is_parallel"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_te.is_parallel">[docs]</a><span class="k">def</span> <span class="nf">is_parallel</span><span class="p">(</span><span class="n">estimator_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check if estimator can estimate CMI for multiple chunks in parallel.&quot;&quot;&quot;</span>
+    <span class="n">parallel_estimators</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;opencl_kraskov&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                           <span class="s1">&#39;jidt_kraskov&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+                           <span class="s1">&#39;jidt_discrete&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">parallel_estimators</span><span class="p">[</span><span class="n">estimator_name</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Unknown estimator name, assuming estimator to be serial.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+</div>
 <div class="viewcode-block" id="jidt_kraskov"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_te.jidt_kraskov">[docs]</a><span class="k">def</span> <span class="nf">jidt_kraskov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">opts</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculate transfer entropy with JIDT&#39;s Kraskov implementation.</span>
 
@@ -155,18 +182,24 @@
 <span class="sd">            - &#39;theiler_t&#39; - no. next temporal neighbours ignored in KNN and</span>
 <span class="sd">              range searches (default=&#39;ACT&#39;, the autocorr. time of the target)</span>
 <span class="sd">            - &#39;noise_level&#39; - random noise added to the data (default=1e-8)</span>
-<span class="sd">            - &#39;history_source&#39; - number of samples in the source&#39;s past to</span>
-<span class="sd">              consider</span>
+<span class="sd">            - &#39;local_values&#39; - return local TE instead of average TE</span>
+<span class="sd">              (default=False)</span>
 <span class="sd">            - &#39;history_target&#39; - number of samples in the target&#39;s past to</span>
-<span class="sd">              consider (default=same as the source history)</span>
+<span class="sd">              consider (mandatory to provide)</span>
+<span class="sd">            - &#39;history_source&#39; - number of samples in the source&#39;s past to</span>
+<span class="sd">              consider (default=same as the target history)</span>
 <span class="sd">            - &#39;tau_source&#39; - source&#39;s embedding delay (default=1)</span>
 <span class="sd">            - &#39;tau_target&#39; - target&#39;s embedding delay (default=1)</span>
 <span class="sd">            - &#39;source_target_delay&#39; - information transfer delay between source</span>
 <span class="sd">              and target (default=1)</span>
+<span class="sd">            - &#39;debug&#39; - set debug prints from the calculator on (default=False)</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        float</span>
 <span class="sd">            transfer entropy from source to target</span>
+<span class="sd">        OR</span>
+<span class="sd">        numpy array of floats</span>
+<span class="sd">            local transfer entropy if local_values is set</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        Some technical details: JIDT normalises over realisations, IDTxl</span>
@@ -175,55 +208,37 @@
 <span class="sd">        CMI estimator does add noise to the data as a default. To make analysis</span>
 <span class="sd">        runs replicable set noise_level to 0.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">opts</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">opts</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">kraskov_k</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">])</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="n">kraskov_k</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;normalise&#39;</span><span class="p">]:</span>
-            <span class="n">normalise</span> <span class="o">=</span> <span class="s1">&#39;true&#39;</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">normalise</span> <span class="o">=</span> <span class="s1">&#39;false&#39;</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="n">normalise</span> <span class="o">=</span> <span class="s1">&#39;false&#39;</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">theiler_t</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s1">&#39;theiler_t&#39;</span><span class="p">])</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="n">theiler_t</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">noise_level</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s1">&#39;noise_level&#39;</span><span class="p">])</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="n">noise_level</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="mf">1e-8</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">opts</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Opts should be a dictionary.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Get histories.</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">history_target</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;history_target&#39;</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;No history was provided for TE estimation.&#39;</span><span class="p">)</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">history_source</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;history_source&#39;</span><span class="p">]</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="n">history_source</span> <span class="o">=</span> <span class="n">history_target</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">tau_target</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;tau_target&#39;</span><span class="p">]</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="n">tau_target</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">tau_source</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;tau_source&#39;</span><span class="p">]</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="n">tau_source</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">delay</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;source_target_delay&#39;</span><span class="p">]</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="n">delay</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">history_source</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;history_source&#39;</span><span class="p">,</span> <span class="n">history_target</span><span class="p">)</span>
+    <span class="n">tau_target</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tau_target&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">tau_source</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tau_source&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">delay</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;source_target_delay&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">debug</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;debug&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
 
+    <span class="c1"># Get defaults for estimator options.</span>
+    <span class="n">kraskov_k</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+    <span class="n">normalise</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;normalise&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">))</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">theiler_t</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;theiler_t&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>  <span class="c1"># TODO necessary?</span>
+    <span class="n">noise_level</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;noise_level&#39;</span><span class="p">,</span> <span class="mf">1e-8</span><span class="p">))</span>
+    <span class="n">local_values</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;local_values&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+
+    <span class="c1"># Start JAVA virtual machine.</span>
     <span class="n">jarLocation</span> <span class="o">=</span> <span class="n">resource_filename</span><span class="p">(</span><span class="n">__name__</span><span class="p">,</span> <span class="s1">&#39;infodynamics.jar&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">jp</span><span class="o">.</span><span class="n">isJVMStarted</span><span class="p">():</span>
         <span class="n">jp</span><span class="o">.</span><span class="n">startJVM</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">getDefaultJVMPath</span><span class="p">(),</span> <span class="s1">&#39;-ea&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;-Djava.class.path=&#39;</span> <span class="o">+</span>
                                                     <span class="n">jarLocation</span><span class="p">))</span>
+    <span class="c1"># Estimate TE.</span>
     <span class="n">calcClass</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.continuous.kraskov&#39;</span><span class="p">)</span><span class="o">.</span>
                  <span class="n">TransferEntropyCalculatorKraskov</span><span class="p">)</span>
     <span class="n">calc</span> <span class="o">=</span> <span class="n">calcClass</span><span class="p">()</span>
+    <span class="n">calc</span><span class="o">.</span><span class="n">setDebug</span><span class="p">(</span><span class="n">debug</span><span class="p">)</span>
     <span class="n">calc</span><span class="o">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s1">&#39;NORMALISE&#39;</span><span class="p">,</span> <span class="n">normalise</span><span class="p">)</span>
     <span class="n">calc</span><span class="o">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">kraskov_k</span><span class="p">)</span>
     <span class="n">calc</span><span class="o">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s1">&#39;PROP_KRASKOV_ALG_NUM&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
@@ -233,6 +248,144 @@
                     <span class="n">history_source</span><span class="p">,</span> <span class="n">tau_source</span><span class="p">,</span>
                     <span class="n">delay</span><span class="p">)</span>
     <span class="n">calc</span><span class="o">.</span><span class="n">setObservations</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">local_values</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalOfPreviousObservations</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="jidt_discrete"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_te.jidt_discrete">[docs]</a><span class="k">def</span> <span class="nf">jidt_discrete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">opts</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate TE with JIDT&#39;s implementation for discrete variables.</span>
+
+<span class="sd">    Calculate the transfer entropy between two time series processes.</span>
+<span class="sd">    Call JIDT via jpype and use the discrete estimator. Transfer entropy is</span>
+<span class="sd">    defined as the conditional mutual information between the source&#39;s past</span>
+<span class="sd">    state and the target&#39;s current value, conditional on the target&#39;s past.</span>
+
+<span class="sd">    References:</span>
+
+<span class="sd">    Schreiber, T. (2000). Measuring information transfer. Physical Review</span>
+<span class="sd">    Letters, 85(2), 461.</span>
+
+<span class="sd">    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for</span>
+<span class="sd">    studying the dynamics of complex systems. Front. Robot. AI, 1(11).</span>
+
+<span class="sd">    This function is ment to be imported into the set_estimator module and used</span>
+<span class="sd">    as a method in the Estimator_te class.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        self : instance of Estimator_te</span>
+<span class="sd">            function is supposed to be used as part of the Estimator_te class</span>
+<span class="sd">        source : numpy array (either of integers or doubles to be discretised)</span>
+<span class="sd">            time series realisations of the first random variable.</span>
+<span class="sd">            Can be multidimensional (i.e. multivariate) where dimensions of the</span>
+<span class="sd">            array are realisations x variable dimension</span>
+<span class="sd">        target : numpy array (either of integers or doubles to be discretised)</span>
+<span class="sd">            time series realisations of the second random variable.</span>
+<span class="sd">            Can be multidimensional (i.e. multivariate) where dimensions of the</span>
+<span class="sd">            array are realisations x variable dimension</span>
+<span class="sd">        opts : dict [optional]</span>
+<span class="sd">            sets estimation parameters:</span>
+
+<span class="sd">            - &#39;num_discrete_bins&#39; - number of discrete bins/levels or the base</span>
+<span class="sd">               of each dimension of the discrete variables (default=2 for</span>
+<span class="sd">               binary). If this is set, then parameters &#39;alph_source&#39;,</span>
+<span class="sd">               &#39;alph_target&#39; and &#39;alphc&#39; are all set to this value</span>
+<span class="sd">            - &#39;alph_source&#39; - number of discrete bins/levels for source</span>
+<span class="sd">              (default=2 for binary, or the value set for &#39;num_discrete_bins&#39;)</span>
+<span class="sd">            - &#39;alph_target&#39; - number of discrete bins/levels for target</span>
+<span class="sd">              (default=2 for binary, or the value set for &#39;num_discrete_bins&#39;)</span>
+<span class="sd">            - &#39;discretise_method&#39; - if and how to discretise incoming</span>
+<span class="sd">              continuous variables to discrete values.</span>
+<span class="sd">              &#39;max_ent&#39; means to use a maximum entropy binning</span>
+<span class="sd">              &#39;equal&#39; means to use equal size bins</span>
+<span class="sd">              &#39;none&#39; means variables are already discrete (default=&#39;none&#39;)</span>
+<span class="sd">            - &#39;history_target&#39; - number of samples in the target&#39;s past to</span>
+<span class="sd">              consider (mandatory to provide)</span>
+<span class="sd">            - &#39;history_source&#39; - number of samples in the source&#39;s past to</span>
+<span class="sd">              consider (default=same as the target history)</span>
+<span class="sd">            - &#39;tau_source&#39; - source&#39;s embedding delay (default=1)</span>
+<span class="sd">            - &#39;tau_target&#39; - target&#39;s embedding delay (default=1)</span>
+<span class="sd">            - &#39;source_target_delay&#39; - information transfer delay between source</span>
+<span class="sd">              and target (default=1)</span>
+<span class="sd">            - &#39;debug&#39; - set debug prints from the calculator on (default=False)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        float</span>
+<span class="sd">            transfer entropy</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Parse parameters:</span>
+    <span class="k">if</span> <span class="n">opts</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">opts</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">alph_source</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;alph_source&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">alph_target</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;alph_target&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">num_discrete_bins</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s1">&#39;num_discrete_bins&#39;</span><span class="p">])</span>
+        <span class="n">alph_source</span> <span class="o">=</span> <span class="n">num_discrete_bins</span>
+        <span class="n">alph_target</span> <span class="o">=</span> <span class="n">num_discrete_bins</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="c1"># Do nothing, we don&#39;t need the parameter if it is not here</span>
+        <span class="k">pass</span>
+    <span class="n">discretise_method</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;discretise_method&#39;</span><span class="p">,</span> <span class="s1">&#39;none&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">history_target</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;history_target&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;No history was provided for TE estimation.&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">history_source</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;history_source&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">history_source</span> <span class="o">=</span> <span class="n">history_target</span>
+    <span class="n">tau_target</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tau_target&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">tau_source</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tau_source&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">delay</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;source_target_delay&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">debug</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;debug&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+
+    <span class="c1"># Work out the number of samples and dimensions for each variable, before</span>
+    <span class="c1">#  we collapse all dimensions down:</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># source is is multidimensional</span>
+        <span class="n">source_dimensions</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># source is unidimensional</span>
+        <span class="n">source_dimensions</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># target is is multidimensional</span>
+        <span class="n">target_dimensions</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># target is unidimensional</span>
+        <span class="n">target_dimensions</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># Now discretise if required</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">discretise_method</span> <span class="o">==</span> <span class="s1">&#39;equal&#39;</span><span class="p">):</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">discretise</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">alph_source</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">discretise</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">alph_target</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="n">discretise_method</span> <span class="o">==</span> <span class="s1">&#39;max_ent&#39;</span><span class="p">):</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">discretise_max_ent</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">alph_source</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">discretise_max_ent</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">alph_target</span><span class="p">)</span>
+    <span class="c1"># Else don&#39;t discretise at all, assume it is already done</span>
+
+    <span class="c1"># Then collapse any mulitvariates into univariate arrays:</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">combine_discrete_dimensions</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">alph_source</span><span class="p">)</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">combine_discrete_dimensions</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">alph_target</span><span class="p">)</span>
+
+    <span class="c1"># And finally make the TE calculation:</span>
+    <span class="n">jarLocation</span> <span class="o">=</span> <span class="n">resource_filename</span><span class="p">(</span><span class="n">__name__</span><span class="p">,</span> <span class="s1">&#39;infodynamics.jar&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">jp</span><span class="o">.</span><span class="n">isJVMStarted</span><span class="p">():</span>
+        <span class="n">jp</span><span class="o">.</span><span class="n">startJVM</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">getDefaultJVMPath</span><span class="p">(),</span> <span class="s1">&#39;-ea&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;-Djava.class.path=&#39;</span> <span class="o">+</span>
+                    <span class="n">jarLocation</span><span class="p">))</span>
+    <span class="n">calcClass</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.discrete&#39;</span><span class="p">)</span><span class="o">.</span>
+             <span class="n">TransferEntropyCalculatorDiscrete</span><span class="p">)</span>
+    <span class="n">calc</span> <span class="o">=</span> <span class="n">calcClass</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">alph_source</span><span class="p">,</span> <span class="n">source_dimensions</span><span class="p">),</span>
+                             <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">alph_target</span><span class="p">,</span> <span class="n">target_dimensions</span><span class="p">))),</span>
+                     <span class="n">history_target</span><span class="p">,</span> <span class="n">tau_target</span><span class="p">,</span>
+                     <span class="n">history_source</span><span class="p">,</span> <span class="n">tau_source</span><span class="p">,</span>
+                     <span class="n">delay</span><span class="p">)</span>
+    <span class="n">calc</span><span class="o">.</span><span class="n">setDebug</span><span class="p">(</span><span class="n">debug</span><span class="p">)</span>
+    <span class="n">calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">()</span>
+    <span class="c1"># Unfortunately no faster way to pass numpy arrays in than this list conversion</span>
+    <span class="n">calc</span><span class="o">.</span><span class="n">addObservations</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">source</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span>
+                     <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">target</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
     <span class="k">return</span> <span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span></div>
 </pre></div>
 

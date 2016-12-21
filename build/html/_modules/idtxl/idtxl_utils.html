@@ -1,0 +1,348 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>idtxl.idtxl_utils &mdash; IDTxl 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="IDTxl 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">IDTxl 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for idtxl.idtxl_utils</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Provide IDTxl utility functions.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">pprint</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="n">VERBOSE</span> <span class="o">=</span> <span class="bp">True</span>
+
+
+<div class="viewcode-block" id="swap_chars"><a class="viewcode-back" href="../../idtxl_helper.html#idtxl.idtxl_utils.swap_chars">[docs]</a><span class="k">def</span> <span class="nf">swap_chars</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">i_1</span><span class="p">,</span> <span class="n">i_2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Swap to characters in a string.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; print(swap_chars(&#39;heLlotHere&#39;, 2, 6))</span>
+<span class="sd">        &#39;heHlotLere&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">i_1</span> <span class="o">&gt;</span> <span class="n">i_2</span><span class="p">:</span>
+        <span class="n">i_1</span><span class="p">,</span> <span class="n">i_2</span> <span class="o">=</span> <span class="n">i_2</span><span class="p">,</span> <span class="n">i_1</span>
+    <span class="k">return</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">i_1</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="n">i_2</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="n">i_1</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">i_2</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="n">i_1</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="n">i_2</span><span class="o">+</span><span class="mi">1</span><span class="p">:]])</span>
+
+</div>
+<div class="viewcode-block" id="print_dict"><a class="viewcode-back" href="../../idtxl_helper.html#idtxl.idtxl_utils.print_dict">[docs]</a><span class="k">def</span> <span class="nf">print_dict</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Use Python&#39;s pretty printer to print dictionaries to the console.&quot;&quot;&quot;</span>
+    <span class="n">pp</span> <span class="o">=</span> <span class="n">pprint</span><span class="o">.</span><span class="n">PrettyPrinter</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="n">indent</span><span class="p">)</span>
+    <span class="n">pp</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="standardise"><a class="viewcode-back" href="../../idtxl_helper.html#idtxl.idtxl_utils.standardise">[docs]</a><span class="k">def</span> <span class="nf">standardise</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">dimension</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Z-standardise a numpy array along a given dimension.</span>
+
+<span class="sd">    Standardise array along the axis defined in dimension using the denominator</span>
+<span class="sd">    (N - df) for the calculation of the standard deviation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        a : numpy array</span>
+<span class="sd">            data to be standardised</span>
+<span class="sd">        dimension : int [optional]</span>
+<span class="sd">            dimension along which array should be standardised</span>
+<span class="sd">        df : int [optional]</span>
+<span class="sd">            degrees of freedom for the denominator of the standard derivation</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        numpy array</span>
+<span class="sd">            standardised data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">a</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">dimension</span><span class="p">))</span> <span class="o">/</span> <span class="n">a</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">dimension</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="n">df</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">a</span>
+
+</div>
+<div class="viewcode-block" id="sort_descending"><a class="viewcode-back" href="../../idtxl_helper.html#idtxl.idtxl_utils.sort_descending">[docs]</a><span class="k">def</span> <span class="nf">sort_descending</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sort array in descending order.&quot;&quot;&quot;</span>
+    <span class="c"># http://stackoverflow.com/questions/26984414/</span>
+    <span class="c">#       efficiently-sorting-a-numpy-array-in-descending-order</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">a</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="argsort_descending"><a class="viewcode-back" href="../../idtxl_helper.html#idtxl.idtxl_utils.argsort_descending">[docs]</a><span class="k">def</span> <span class="nf">argsort_descending</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sort array in descending order and return sortind indices.&quot;&quot;&quot;</span>
+    <span class="c"># http://stackoverflow.com/questions/16486252/</span>
+    <span class="c">#       is-it-possible-to-use-argsort-in-descending-order</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="remove_row"><a class="viewcode-back" href="../../idtxl_helper.html#idtxl.idtxl_utils.remove_row">[docs]</a><span class="k">def</span> <span class="nf">remove_row</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Remove a row from a numpy array.</span>
+
+<span class="sd">    This is faster than logical indexing (&#39;25 times faster&#39;), because it does</span>
+<span class="sd">    not make copies, see</span>
+<span class="sd">    http://scipy.github.io/old-wiki/pages/PerformanceTips</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        a : numpy array</span>
+<span class="sd">            2-dimensional numpy array</span>
+<span class="sd">        i : int</span>
+<span class="sd">            row index to be removed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:,</span> <span class="p">:]</span>
+    <span class="n">b</span><span class="p">[:</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="k">return</span> <span class="n">b</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+
+</div>
+<div class="viewcode-block" id="remove_column"><a class="viewcode-back" href="../../idtxl_helper.html#idtxl.idtxl_utils.remove_column">[docs]</a><span class="k">def</span> <span class="nf">remove_column</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Remove a column from a numpy array.</span>
+
+<span class="sd">    This is faster than logical indexing (&#39;25 times faster&#39;), because it does</span>
+<span class="sd">    not make copies, see</span>
+<span class="sd">    http://scipy.github.io/old-wiki/pages/PerformanceTips</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        a : numpy array</span>
+<span class="sd">            2-dimensional numpy array</span>
+<span class="sd">        i : int</span>
+<span class="sd">            column index to be removed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">b</span><span class="p">[:,</span> <span class="n">j</span><span class="p">:]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:,</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">b</span><span class="p">[:,</span> <span class="p">:</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:,</span> <span class="p">:</span><span class="n">j</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">b</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+
+</div>
+<div class="viewcode-block" id="autocorrelation"><a class="viewcode-back" href="../../idtxl_helper.html#idtxl.idtxl_utils.autocorrelation">[docs]</a><span class="k">def</span> <span class="nf">autocorrelation</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate autocorrelation of a vector.&quot;&quot;&quot;</span>
+    <span class="c"># TODO check this, function taken from here:</span>
+    <span class="c"># http://stackoverflow.com/questions/14297012/</span>
+    <span class="c">#       estimate-autocorrelation-using-python</span>
+    <span class="c"># after Wikipedie:</span>
+    <span class="c"># https://en.wikipedia.org/wiki/Autocorrelation#Estimation</span>
+
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    n = len(x)</span>
+<span class="sd">    variance = x.var()</span>
+<span class="sd">    x = x - x.mean()</span>
+<span class="sd">    r = np.correlate(x, x, mode = &#39;full&#39;)[-n:]</span>
+<span class="sd">    assert n.allclose(r,</span>
+<span class="sd">                      N.array([(x[:n-k]*x[-(n-k):]).sum() for k in range(n)]))</span>
+<span class="sd">    result = r / (variance * (n.arange(n, 0, -1)))</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="mi">3</span>
+
+</div>
+<div class="viewcode-block" id="discretise"><a class="viewcode-back" href="../../idtxl_helper.html#idtxl.idtxl_utils.discretise">[docs]</a><span class="k">def</span> <span class="nf">discretise</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">numBins</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Discretise continuous data into discrete values (with 0 as lowest)</span>
+<span class="sd">    by evenly partitioning the range of the data, one dimension at a time.</span>
+<span class="sd">    Adapted from infodynamics.utils.MatrixUtils.discretise() from JIDT by J.Lizier</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        a : numpy array</span>
+<span class="sd">            data to be discretised. Dimensions are</span>
+<span class="sd">            realisations x variable dimension</span>
+<span class="sd">        numBins : int</span>
+<span class="sd">            number of discrete levels or bins to partition the data into</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        numpy array</span>
+<span class="sd">            discretised data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">num_samples</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="c"># It&#39;s a unidimensional array</span>
+        <span class="n">discretised_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_samples</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">)</span>
+        <span class="n">theMin</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">theMax</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">binInterval</span> <span class="o">=</span> <span class="p">(</span><span class="n">theMax</span> <span class="o">-</span> <span class="n">theMin</span><span class="p">)</span> <span class="o">/</span> <span class="n">numBins</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">):</span>
+            <span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">a</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="n">theMin</span><span class="p">)</span> <span class="o">/</span> <span class="n">binInterval</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">==</span> <span class="n">numBins</span><span class="p">):</span>
+                <span class="c"># This occurs for the maximum value; put it in the largest bin (base - 1)</span>
+                <span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">discretised_values</span>
+
+    <span class="c"># Else, multivariate array</span>
+    <span class="n">num_dimensions</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">discretised_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">num_samples</span><span class="p">,</span> <span class="n">num_dimensions</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="c"># Bin dimension v:</span>
+        <span class="n">theMin</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:,</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">theMax</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:,</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">binInterval</span> <span class="o">=</span> <span class="p">(</span><span class="n">theMax</span> <span class="o">-</span> <span class="n">theMin</span><span class="p">)</span> <span class="o">/</span> <span class="n">numBins</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">):</span>
+            <span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">a</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">v</span><span class="p">]</span> <span class="o">-</span> <span class="n">theMin</span><span class="p">)</span> <span class="o">/</span> <span class="n">binInterval</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">v</span><span class="p">]</span> <span class="o">==</span> <span class="n">numBins</span><span class="p">):</span>
+                <span class="c"># This occurs for the maximum value; put it in the largest bin (base - 1)</span>
+                <span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">v</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">discretised_values</span>
+
+</div>
+<div class="viewcode-block" id="discretise_max_ent"><a class="viewcode-back" href="../../idtxl_helper.html#idtxl.idtxl_utils.discretise_max_ent">[docs]</a><span class="k">def</span> <span class="nf">discretise_max_ent</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">numBins</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Discretise continuous data into discrete values (with 0 as lowest)</span>
+<span class="sd">    by making a maximum entropy partitioning, one dimension at a time.</span>
+<span class="sd">    Adapted from infodynamics.utils.MatrixUtils.discretiseMaxEntropy() from JIDT by J.Lizier</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        a : numpy array</span>
+<span class="sd">            data to be discretised. Dimensions are</span>
+<span class="sd">            realisations x variable dimension</span>
+<span class="sd">        numBins : int</span>
+<span class="sd">            number of discrete levels or bins to partition the data into</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        numpy array</span>
+<span class="sd">            discretised data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">num_samples</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="c"># It&#39;s a unidimensional array</span>
+        <span class="n">discretised_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_samples</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">)</span>
+        <span class="n">cuttoff_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">numBins</span><span class="p">)</span>
+        <span class="n">sorted_copy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="k">for</span> <span class="nb">bin</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numBins</span><span class="p">):</span>
+            <span class="n">compartmentSize</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="nb">bin</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">num_samples</span><span class="p">)</span><span class="o">/</span><span class="n">numBins</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+            <span class="n">cuttoff_values</span><span class="p">[</span><span class="nb">bin</span><span class="p">]</span> <span class="o">=</span> <span class="n">sorted_copy</span><span class="p">[</span><span class="n">compartmentSize</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numBins</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">cuttoff_values</span><span class="p">[</span><span class="n">m</span><span class="p">]):</span>
+                    <span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span>
+                    <span class="k">break</span>
+        <span class="k">return</span> <span class="n">discretised_values</span>
+
+    <span class="c"># Else, multivariate array</span>
+    <span class="n">num_dimensions</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">discretised_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">num_samples</span><span class="p">,</span> <span class="n">num_dimensions</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_dimensions</span><span class="p">):</span>
+        <span class="c"># Bin dimension v:</span>
+        <span class="n">cuttoff_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">numBins</span><span class="p">)</span>
+        <span class="n">sorted_copy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">a</span><span class="p">[:,</span><span class="n">v</span><span class="p">])</span>
+        <span class="k">for</span> <span class="nb">bin</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numBins</span><span class="p">):</span>
+            <span class="n">compartmentSize</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="nb">bin</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">num_samples</span><span class="p">)</span><span class="o">/</span><span class="n">numBins</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+            <span class="n">cuttoff_values</span><span class="p">[</span><span class="nb">bin</span><span class="p">]</span> <span class="o">=</span> <span class="n">sorted_copy</span><span class="p">[</span><span class="n">compartmentSize</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numBins</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">v</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">cuttoff_values</span><span class="p">[</span><span class="n">m</span><span class="p">]):</span>
+                    <span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span>
+                    <span class="k">break</span>
+    <span class="k">return</span> <span class="n">discretised_values</span>
+
+</div>
+<div class="viewcode-block" id="combine_discrete_dimensions"><a class="viewcode-back" href="../../idtxl_helper.html#idtxl.idtxl_utils.combine_discrete_dimensions">[docs]</a><span class="k">def</span> <span class="nf">combine_discrete_dimensions</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">numBins</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Combine all dimensions for a discrete variable down into a single</span>
+<span class="sd">    dimensional value for each sample.</span>
+<span class="sd">    This is done basically by multiplying each dimension</span>
+<span class="sd">    by a different power of the base (numBins).</span>
+<span class="sd">    Adapted from infodynamics.utils.MatrixUtils.computeCombinedValues() from JIDT by J.Lizier</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        a : numpy array</span>
+<span class="sd">            data to be combined across all variable dimensions. Dimensions are</span>
+<span class="sd">            realisations (samples) x variable dimension</span>
+<span class="sd">        numBins : int</span>
+<span class="sd">            number of discrete levels or bins for each variable dimension</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        numpy array</span>
+<span class="sd">            a univariate array -- one entry now for each sample,</span>
+<span class="sd">            with all dimensions of the data now combined for that sample</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="c"># It&#39;s already a unidimensional array</span>
+        <span class="k">return</span> <span class="n">a</span>
+
+    <span class="c"># Else, 2D array assumed</span>
+    <span class="n">num_samples</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">dimensions</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">combined_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_samples</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">):</span>
+        <span class="n">combined_value</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">multiplier</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dimensions</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">combined_value</span> <span class="o">=</span> <span class="n">combined_value</span> <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="n">c</span><span class="p">]</span> <span class="o">*</span> <span class="n">multiplier</span>
+            <span class="n">multiplier</span> <span class="o">=</span> <span class="n">multiplier</span> <span class="o">*</span> <span class="n">numBins</span>
+            <span class="k">if</span> <span class="n">multiplier</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c"># Multiplier has overflown</span>
+                <span class="k">raise</span> <span class="n">ArithmaticError</span><span class="p">(</span><span class="s">&#39;Combination of numBins and number of dimensions of a leads to overflow in making unidimensional array&#39;</span><span class="p">)</span>
+        <span class="n">combined_values</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">combined_value</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">combined_values</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">IDTxl 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

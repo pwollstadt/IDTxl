@@ -1,0 +1,646 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Information theoretic estimators &mdash; IDTxl 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="IDTxl 0.1 documentation" href="index.html" />
+    <link rel="next" title="Helper functions" href="idtxl_helper.html" />
+    <link rel="prev" title="Algorithms for network comparison" href="idtxl_network_comparison.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="idtxl_helper.html" title="Helper functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="idtxl_network_comparison.html" title="Algorithms for network comparison"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">IDTxl 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="information-theoretic-estimators">
+<h1>Information theoretic estimators<a class="headerlink" href="#information-theoretic-estimators" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-idtxl.estimators_cmi">
+<span id="idtxl-estimators-cmi-module"></span><h2>idtxl.estimators_cmi module<a class="headerlink" href="#module-idtxl.estimators_cmi" title="Permalink to this headline">¶</a></h2>
+<p>Provide CMI estimators for the Estimator_cmi class.</p>
+<p>This module exports methods for conditional mutual information (CMI) estimation
+in the Estimator_cmi class.</p>
+<dl class="function">
+<dt id="idtxl.estimators_cmi.is_parallel">
+<tt class="descclassname">idtxl.estimators_cmi.</tt><tt class="descname">is_parallel</tt><big>(</big><em>estimator_name</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_cmi.html#is_parallel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_cmi.is_parallel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if estimator can estimate CMI for multiple chunks in parallel.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="idtxl.estimators_cmi.jidt_discrete">
+<tt class="descclassname">idtxl.estimators_cmi.</tt><tt class="descname">jidt_discrete</tt><big>(</big><em>self</em>, <em>var1</em>, <em>var2</em>, <em>conditional</em>, <em>opts=None</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_cmi.html#jidt_discrete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_cmi.jidt_discrete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate CMI with JIDT&#8217;s implementation for discrete variables.</p>
+<p>Calculate the conditional mutual information between two variables given
+the third. Call JIDT via jpype and use the discrete estimator.</p>
+<p>References:</p>
+<p>Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
+studying the dynamics of complex systems. Front. Robot. AI, 1(11).</p>
+<p>This function is ment to be imported into the set_estimator module and used
+as a method in the Estimator_cmi class.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>self <span class="classifier-delimiter">:</span> <span class="classifier">instance of Estimator_cmi</span></dt>
+<dd>function is supposed to be used as part of the Estimator_cmi class</dd>
+<dt>var1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array (either of integers or doubles to be discretised)</span></dt>
+<dd>realisations of the first random variable.
+Can be multidimensional (i.e. multivariate) where dimensions of the
+array are realisations x variable dimension</dd>
+<dt>var2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array (either of integers or doubles to be discretised)</span></dt>
+<dd>realisations of the second random variable.
+Can be multidimensional (i.e. multivariate) where dimensions of the
+array are realisations x variable dimension</dd>
+<dt>conditional <span class="classifier-delimiter">:</span> <span class="classifier">numpy array (either of integers or doubles to be discretised)</span></dt>
+<dd>realisations of the conditional random variable.
+Can be multidimensional (i.e. multivariate) where dimensions of the
+array are realisations x variable dimension</dd>
+<dt>opts <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">sets estimation parameters:
+- &#8216;num_discrete_bins&#8217; - number of discrete bins/levels or the base</p>
+<blockquote>
+<div>of each dimension of the discrete variables (default=2 for
+binary). If this is set, then parameters &#8216;alph1&#8217;, &#8216;alph2&#8217; and
+&#8216;alphc&#8217; are all set to this value</div></blockquote>
+<ul class="last simple">
+<li>&#8216;alph1&#8217; - number of discrete bins/levels for var1 (default=2 for
+binary, or the value set for &#8216;num_discrete_bins&#8217;)</li>
+<li>&#8216;alph2&#8217; - number of discrete bins/levels for var2 (default=2 for
+binary, or the value set for &#8216;num_discrete_bins&#8217;)</li>
+<li>&#8216;alphc&#8217; - number of discrete bins/levels for conditional
+(default=2 for binary, or the value set for &#8216;num_discrete_bins&#8217;)</li>
+<li>&#8216;discretise_method&#8217; - if and how to discretise incoming
+continuous variables to discrete values.
+&#8216;max_ent&#8217; means to use a maximum entropy binning
+&#8216;equal&#8217; means to use equal size bins
+&#8216;none&#8217; means variables are already discrete (default=&#8217;none&#8217;)</li>
+<li>&#8216;debug&#8217; - set debug prints from the calculator on</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float</dt>
+<dd>conditional mutual information</dd>
+</dl>
+</dd>
+</dl>
+<p>Note:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="idtxl.estimators_cmi.jidt_kraskov">
+<tt class="descclassname">idtxl.estimators_cmi.</tt><tt class="descname">jidt_kraskov</tt><big>(</big><em>self</em>, <em>var1</em>, <em>var2</em>, <em>conditional=None</em>, <em>opts=None</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_cmi.html#jidt_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_cmi.jidt_kraskov" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate conditional mutual infor with JIDT&#8217;s Kraskov implementation.</p>
+<p>Calculate the conditional mutual information between three variables. Call
+JIDT via jpype and use the Kraskov 1 estimator. If no conditional is given
+(is None), the function returns the mutual information between var1 and
+var2. References:</p>
+<p>Kraskov, A., Stoegbauer, H., &amp; Grassberger, P. (2004). Estimating mutual
+information. Physical review E, 69(6), 066138.</p>
+<p>Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
+studying the dynamics of complex systems. Front. Robot. AI, 1(11).</p>
+<p>This function is ment to be imported into the set_estimator module and used
+as a method in the Estimator_cmi class.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>self <span class="classifier-delimiter">:</span> <span class="classifier">instance of Estimator_cmi</span></dt>
+<dd>function is supposed to be used as part of the Estimator_cmi class</dd>
+<dt>var1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of the first random variable, where dimensions are
+realisations x variable dimension</dd>
+<dt>var2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of the second random variable</dd>
+<dt>conditional <span class="classifier-delimiter">:</span> <span class="classifier">numpy array [optional]</span></dt>
+<dd>realisations of the random variable for conditioning, if no
+conditional is provided, return MI between var1 and var2</dd>
+<dt>opts <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">sets estimation parameters:</p>
+<ul class="last simple">
+<li>&#8216;kraskov_k&#8217; - no. nearest neighbours for KNN search (default=4)</li>
+<li>&#8216;normalise&#8217; - z-standardise data (default=False)</li>
+<li>&#8216;theiler_t&#8217; - no. next temporal neighbours ignored in KNN and
+range searches (default=&#8217;ACT&#8217;, the autocorr. time of the target)</li>
+<li>&#8216;noise_level&#8217; - random noise added to the data (default=1e-8)</li>
+<li>&#8216;num_threads&#8217; - no. CPU threads used for estimation
+(default=&#8217;USE_ALL&#8217;, this uses all available cores on the
+machine!)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float</dt>
+<dd>conditional mutual information</dd>
+</dl>
+</dd>
+<dt>Note:</dt>
+<dd>Some technical details: JIDT normalises over realisations, IDTxl
+normalises over raw data once, outside the CMI calculator to save
+computation time. The Theiler window ignores trial boundaries. The
+CMI estimator does add noise to the data as a default. To make analysis
+runs replicable set noise_level to 0.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="idtxl.estimators_cmi.opencl_kraskov">
+<tt class="descclassname">idtxl.estimators_cmi.</tt><tt class="descname">opencl_kraskov</tt><big>(</big><em>self</em>, <em>var1</em>, <em>var2</em>, <em>conditional=None</em>, <em>n_chunks=1</em>, <em>opts=None</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_cmi.html#opencl_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_cmi.opencl_kraskov" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate conditional mutual infor using opencl Kraskov implementation.</p>
+<p>Calculate the conditional mutual information between three variables using
+an opencl-based Kraskov type 1 estimator. References:</p>
+<p>Kraskov, A., Stoegbauer, H., &amp; Grassberger, P. (2004). Estimating mutual
+information. Physical review E, 69(6), 066138.</p>
+<p>This function is ment to be imported into the set_estimator module and used
+as a method in the Estimator_cmi class.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>self <span class="classifier-delimiter">:</span> <span class="classifier">instance of Estimator_cmi</span></dt>
+<dd>function is supposed to be used as part of the Estimator_cmi class</dd>
+<dt>var1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of the first random variable, where dimensions are
+realisations x variable dimension</dd>
+<dt>var2: numpy array</dt>
+<dd>realisations of the second random variable</dd>
+<dt>conditional <span class="classifier-delimiter">:</span> <span class="classifier">numpy array [optional]</span></dt>
+<dd>realisations of the random variable for conditioning, if no
+conditional is provided, return MI between var1 and var2</dd>
+<dt>n_chunks <span class="classifier-delimiter">:</span> <span class="classifier">int [optional]</span></dt>
+<dd>number of data sets or chunks (default=1)</dd>
+<dt>opts <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">sets estimation parameters:</p>
+<ul class="last simple">
+<li>&#8216;kraskov_k&#8217; - no. nearest neighbours for KNN search (default=4)</li>
+<li>&#8216;theiler_t&#8217; - no. next temporal neighbours ignored in KNN and
+range searches (default=&#8217;ACT&#8217;, the autocorr. time of the target)</li>
+<li>&#8216;noise_level&#8217; - random noise added to the data (default=1e-8)</li>
+<li>&#8216;gpuid&#8217; - device ID (default=0)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float</dt>
+<dd>conditional mutual information</dd>
+</dl>
+</dd>
+<dt>Note:</dt>
+<dd>The Theiler window ignores trial boundaries. The CMI estimator does add
+noise to the data as a default. To make analysis runs replicable set
+noise_level to 0.</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-idtxl.estimators_mi">
+<span id="idtxl-estimators-mi-module"></span><h2>idtxl.estimators_mi module<a class="headerlink" href="#module-idtxl.estimators_mi" title="Permalink to this headline">¶</a></h2>
+<p>Provide mutual information estimators for the Estimator_mi class.</p>
+<p>This module exports methods for mutual information (MI) estimation
+in the Estimator_mi class.</p>
+<dl class="function">
+<dt id="idtxl.estimators_mi.is_parallel">
+<tt class="descclassname">idtxl.estimators_mi.</tt><tt class="descname">is_parallel</tt><big>(</big><em>estimator_name</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_mi.html#is_parallel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_mi.is_parallel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if estimator can estimate CMI for multiple chunks in parallel.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="idtxl.estimators_mi.jidt_discrete">
+<tt class="descclassname">idtxl.estimators_mi.</tt><tt class="descname">jidt_discrete</tt><big>(</big><em>self</em>, <em>var1</em>, <em>var2</em>, <em>opts=None</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_mi.html#jidt_discrete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_mi.jidt_discrete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate mutual information with JIDT&#8217;s discrete-variable implementation.</p>
+<p>Calculate the mutual information between two variables. Call JIDT via jpype
+and use the discrete estimator.</p>
+<p>References:</p>
+<p>Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
+studying the dynamics of complex systems. Front. Robot. AI, 1(11).</p>
+<p>This function is meant to be imported into the set_estimator module and used
+as a method in the Estimator_mi class.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>self <span class="classifier-delimiter">:</span> <span class="classifier">instance of Estimator_mi</span></dt>
+<dd>function is supposed to be used as part of the Estimator_mi class</dd>
+<dt>var1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array (either of integers or doubles to be discretised)</span></dt>
+<dd>realisations of the first random variable.
+Can be multidimensional (i.e. multivariate) where dimensions of the
+array are realisations x variable dimension</dd>
+<dt>var2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array (either of integers or doubles to be discretised)</span></dt>
+<dd>realisations of the second random variable.
+Can be multidimensional (i.e. multivariate) where dimensions of the
+array are realisations x variable dimension</dd>
+<dt>opts <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">sets estimation parameters:
+- &#8216;num_discrete_bins&#8217; - number of discrete bins/levels or the base of</p>
+<blockquote>
+<div>each dimension of the discrete variables (default=2 for binary)</div></blockquote>
+<ul class="last">
+<li><dl class="first docutils">
+<dt>&#8216;time_diff&#8217; - time difference across which to take MI from variable 1</dt>
+<dd><p class="first last">to variable 2, i.e. lag from variable 1 to 2 (default=0)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>&#8216;discretise_method&#8217; - if and how to discretise incoming continuous variables</dt>
+<dd><p class="first last">to discrete values.
+&#8216;max_ent&#8217; means to use a maximum entropy binning
+&#8216;equal&#8217; means to use equal size bins
+&#8216;none&#8217; means variables are already discrete (default=&#8217;none&#8217;)</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">&#8216;debug&#8217; - set debug prints from the calculator on</p>
+</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float</dt>
+<dd>mutual information</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="idtxl.estimators_mi.jidt_kraskov">
+<tt class="descclassname">idtxl.estimators_mi.</tt><tt class="descname">jidt_kraskov</tt><big>(</big><em>self</em>, <em>var1</em>, <em>var2</em>, <em>opts=None</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_mi.html#jidt_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_mi.jidt_kraskov" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate mutual information with JIDT&#8217;s Kraskov implementation.</p>
+<p>Calculate the mutual information between two variables. Call JIDT via jpype
+and use the Kraskov 1 estimator. References:</p>
+<p>Kraskov, A., Stoegbauer, H., &amp; Grassberger, P. (2004). Estimating mutual
+information. Physical review E, 69(6), 066138.</p>
+<p>Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
+studying the dynamics of complex systems. Front. Robot. AI, 1(11).</p>
+<p>This function is ment to be imported into the set_estimator module and used
+as a method in the Estimator_mi class.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>self <span class="classifier-delimiter">:</span> <span class="classifier">instance of Estimator_mi</span></dt>
+<dd>function is supposed to be used as part of the Estimator_mi class</dd>
+<dt>var1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of the first random variable, where dimensions are
+realisations x variable dimension</dd>
+<dt>var2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of the second random variable</dd>
+<dt>opts <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">sets estimation parameters:</p>
+<ul class="last simple">
+<li>&#8216;kraskov_k&#8217; - no. nearest neighbours for KNN search (default=4)</li>
+<li>&#8216;normalise&#8217; - z-standardise data (default=False)</li>
+<li>&#8216;theiler_t&#8217; - no. next temporal neighbours ignored in KNN and
+range searches (default=&#8217;ACT&#8217;, the autocorr. time of the target)</li>
+<li>&#8216;noise_level&#8217; - random noise added to the data (default=1e-8)</li>
+<li>&#8216;local_values&#8217; - return local TE instead of average TE
+(default=False)</li>
+<li>&#8216;num_threads&#8217; - no. CPU threads used for estimation
+(default=&#8217;USE_ALL&#8217;, this uses all available cores on the
+machine!)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float</dt>
+<dd>mutual information</dd>
+</dl>
+</dd>
+<dt>Note:</dt>
+<dd>Some technical details: JIDT normalises over realisations, IDTxl
+normalises over raw data once, outside the MI calculator to save
+computation time. The Theiler window ignores trial boundaries. The
+MI estimator does add noise to the data as a default. To make analysis
+runs replicable set noise_level to 0.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="idtxl.estimators_mi.opencl_kraskov">
+<tt class="descclassname">idtxl.estimators_mi.</tt><tt class="descname">opencl_kraskov</tt><big>(</big><em>self</em>, <em>var1</em>, <em>var2</em>, <em>n_chunks=1</em>, <em>opts=None</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_mi.html#opencl_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_mi.opencl_kraskov" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate mutual information using an opencl Kraskov implementation.</p>
+<p>Calculate the mutual information between two variables using an
+opencl-based Kraskov type 1 estimator. Multiple MIs can be estimated in
+parallel, where each instance is called a &#8216;chunk&#8217;. References:</p>
+<p>Kraskov, A., Stoegbauer, H., &amp; Grassberger, P. (2004). Estimating mutual
+information. Physical review E, 69(6), 066138.</p>
+<p>This function is ment to be imported into the set_estimator module and used
+as a method in the Estimator_mi class.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>self <span class="classifier-delimiter">:</span> <span class="classifier">instance of Estimator_mi</span></dt>
+<dd>function is supposed to be used as part of the Estimator_mi class</dd>
+<dt>var1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of the first random variable, where dimensions are
+realisations x variable dimension</dd>
+<dt>var2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of the second random variable</dd>
+<dt>n_chunks <span class="classifier-delimiter">:</span> <span class="classifier">int [optional]</span></dt>
+<dd>number of data sets or chunks (default=1)</dd>
+<dt>opts <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">sets estimation parameters:</p>
+<ul class="last simple">
+<li>&#8216;kraskov_k&#8217; - no. nearest neighbours for KNN search (default=4)</li>
+<li>&#8216;theiler_t&#8217; - no. next temporal neighbours ignored in KNN and
+range searches (default=&#8217;ACT&#8217;, the autocorr. time of the target)</li>
+<li>&#8216;noise_level&#8217; - random noise added to the data (default=1e-8)</li>
+<li>&#8216;gpuid&#8217; - ID of the GPU device to be used (default=0)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float</dt>
+<dd>conditional mutual information</dd>
+</dl>
+</dd>
+<dt>Note:</dt>
+<dd>The Theiler window ignores trial boundaries. The MI estimator does add
+noise to the data as a default. To make analysis runs replicable set
+noise_level to 0.</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-idtxl.estimators_te">
+<span id="idtxl-estimators-te-module"></span><h2>idtxl.estimators_te module<a class="headerlink" href="#module-idtxl.estimators_te" title="Permalink to this headline">¶</a></h2>
+<p>Provide transfer entropy estimators for the Estimator_te class.</p>
+<p>This module exports methods for transfer entropy (TE) estimation in the
+Estimator_te class.</p>
+<dl class="function">
+<dt id="idtxl.estimators_te.is_parallel">
+<tt class="descclassname">idtxl.estimators_te.</tt><tt class="descname">is_parallel</tt><big>(</big><em>estimator_name</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_te.html#is_parallel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_te.is_parallel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if estimator can estimate CMI for multiple chunks in parallel.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="idtxl.estimators_te.jidt_discrete">
+<tt class="descclassname">idtxl.estimators_te.</tt><tt class="descname">jidt_discrete</tt><big>(</big><em>self</em>, <em>source</em>, <em>target</em>, <em>opts=None</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_te.html#jidt_discrete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_te.jidt_discrete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate TE with JIDT&#8217;s implementation for discrete variables.</p>
+<p>Calculate the transfer entropy between two time series processes.
+Call JIDT via jpype and use the discrete estimator. Transfer entropy is
+defined as the conditional mutual information between the source&#8217;s past
+state and the target&#8217;s current value, conditional on the target&#8217;s past.</p>
+<p>References:</p>
+<p>Schreiber, T. (2000). Measuring information transfer. Physical Review
+Letters, 85(2), 461.</p>
+<p>Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
+studying the dynamics of complex systems. Front. Robot. AI, 1(11).</p>
+<p>This function is ment to be imported into the set_estimator module and used
+as a method in the Estimator_te class.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>self <span class="classifier-delimiter">:</span> <span class="classifier">instance of Estimator_te</span></dt>
+<dd>function is supposed to be used as part of the Estimator_te class</dd>
+<dt>source <span class="classifier-delimiter">:</span> <span class="classifier">numpy array (either of integers or doubles to be discretised)</span></dt>
+<dd>time series realisations of the first random variable.
+Can be multidimensional (i.e. multivariate) where dimensions of the
+array are realisations x variable dimension</dd>
+<dt>target <span class="classifier-delimiter">:</span> <span class="classifier">numpy array (either of integers or doubles to be discretised)</span></dt>
+<dd>time series realisations of the second random variable.
+Can be multidimensional (i.e. multivariate) where dimensions of the
+array are realisations x variable dimension</dd>
+<dt>opts <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">sets estimation parameters:</p>
+<ul class="last">
+<li><dl class="first docutils">
+<dt>&#8216;num_discrete_bins&#8217; - number of discrete bins/levels or the base</dt>
+<dd><p class="first last">of each dimension of the discrete variables (default=2 for
+binary). If this is set, then parameters &#8216;alph_source&#8217;,
+&#8216;alph_target&#8217; and &#8216;alphc&#8217; are all set to this value</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">&#8216;alph_source&#8217; - number of discrete bins/levels for source
+(default=2 for binary, or the value set for &#8216;num_discrete_bins&#8217;)</p>
+</li>
+<li><p class="first">&#8216;alph_target&#8217; - number of discrete bins/levels for target
+(default=2 for binary, or the value set for &#8216;num_discrete_bins&#8217;)</p>
+</li>
+<li><p class="first">&#8216;discretise_method&#8217; - if and how to discretise incoming
+continuous variables to discrete values.
+&#8216;max_ent&#8217; means to use a maximum entropy binning
+&#8216;equal&#8217; means to use equal size bins
+&#8216;none&#8217; means variables are already discrete (default=&#8217;none&#8217;)</p>
+</li>
+<li><p class="first">&#8216;history_target&#8217; - number of samples in the target&#8217;s past to
+consider (mandatory to provide)</p>
+</li>
+<li><p class="first">&#8216;history_source&#8217; - number of samples in the source&#8217;s past to
+consider (default=same as the target history)</p>
+</li>
+<li><p class="first">&#8216;tau_source&#8217; - source&#8217;s embedding delay (default=1)</p>
+</li>
+<li><p class="first">&#8216;tau_target&#8217; - target&#8217;s embedding delay (default=1)</p>
+</li>
+<li><p class="first">&#8216;source_target_delay&#8217; - information transfer delay between source
+and target (default=1)</p>
+</li>
+<li><p class="first">&#8216;debug&#8217; - set debug prints from the calculator on (default=False)</p>
+</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float</dt>
+<dd>transfer entropy</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="idtxl.estimators_te.jidt_kraskov">
+<tt class="descclassname">idtxl.estimators_te.</tt><tt class="descname">jidt_kraskov</tt><big>(</big><em>self</em>, <em>source</em>, <em>target</em>, <em>opts</em><big>)</big><a class="reference internal" href="_modules/idtxl/estimators_te.html#jidt_kraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_te.jidt_kraskov" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate transfer entropy with JIDT&#8217;s Kraskov implementation.</p>
+<p>Calculate transfer entropy between a source and a target variable using
+JIDT&#8217;s implementation of the Kraskov type 1 estimator. Transfer entropy is
+defined as the conditional mutual information between the source&#8217;s past
+state and the target&#8217;s current value, conditional on the target&#8217;s past.</p>
+<p>Past states need to be defined in the opts dictionary, where a past state
+is defined as a uniform embedding with parameters history and tau. The
+history describes the number of samples taken from a variable&#8217;s past, tau
+descrices the embedding delay, i.e., the spacing between every two samples
+from the processes&#8217; past.</p>
+<p>References:</p>
+<p>Schreiber, T. (2000). Measuring information transfer. Physical Review
+Letters, 85(2), 461.</p>
+<p>Kraskov, A., Stoegbauer, H., &amp; Grassberger, P. (2004). Estimating mutual
+information. Physical review E, 69(6), 066138.</p>
+<p>Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
+studying the dynamics of complex systems. Front. Robot. AI, 1(11).</p>
+<p>This function is ment to be imported into the set_estimator module and used
+as a method in the Estimator_cmi class.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>self <span class="classifier-delimiter">:</span> <span class="classifier">instance of Estimator_cmi</span></dt>
+<dd>function is supposed to be used as part of the Estimator_cmi class</dd>
+<dt>source <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of the source variable</dd>
+<dt>target <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of the target variable</dd>
+<dt>opts <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">sets estimation parameters:</p>
+<ul class="last simple">
+<li>&#8216;kraskov_k&#8217; - no. nearest neighbours for KNN search (default=4)</li>
+<li>&#8216;normalise&#8217; - z-standardise data (default=False)</li>
+<li>&#8216;theiler_t&#8217; - no. next temporal neighbours ignored in KNN and
+range searches (default=&#8217;ACT&#8217;, the autocorr. time of the target)</li>
+<li>&#8216;noise_level&#8217; - random noise added to the data (default=1e-8)</li>
+<li>&#8216;local_values&#8217; - return local TE instead of average TE
+(default=False)</li>
+<li>&#8216;history_target&#8217; - number of samples in the target&#8217;s past to
+consider (mandatory to provide)</li>
+<li>&#8216;history_source&#8217; - number of samples in the source&#8217;s past to
+consider (default=same as the target history)</li>
+<li>&#8216;tau_source&#8217; - source&#8217;s embedding delay (default=1)</li>
+<li>&#8216;tau_target&#8217; - target&#8217;s embedding delay (default=1)</li>
+<li>&#8216;source_target_delay&#8217; - information transfer delay between source
+and target (default=1)</li>
+<li>&#8216;debug&#8217; - set debug prints from the calculator on (default=False)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first docutils">
+<dt>float</dt>
+<dd>transfer entropy from source to target</dd>
+</dl>
+<p>OR
+numpy array of floats</p>
+<blockquote class="last">
+<div>local transfer entropy if local_values is set</div></blockquote>
+</dd>
+<dt>Note:</dt>
+<dd>Some technical details: JIDT normalises over realisations, IDTxl
+normalises over raw data once, outside the CMI calculator to save
+computation time. The Theiler window ignores trial boundaries. The
+CMI estimator does add noise to the data as a default. To make analysis
+runs replicable set noise_level to 0.</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Information theoretic estimators</a><ul>
+<li><a class="reference internal" href="#module-idtxl.estimators_cmi">idtxl.estimators_cmi module</a></li>
+<li><a class="reference internal" href="#module-idtxl.estimators_mi">idtxl.estimators_mi module</a></li>
+<li><a class="reference internal" href="#module-idtxl.estimators_te">idtxl.estimators_te module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="idtxl_network_comparison.html"
+                        title="previous chapter">Algorithms for network comparison</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="idtxl_helper.html"
+                        title="next chapter">Helper functions</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/idtxl_estimators.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="idtxl_helper.html" title="Helper functions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="idtxl_network_comparison.html" title="Algorithms for network comparison"
+             >previous</a> |</li>
+        <li><a href="index.html">IDTxl 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

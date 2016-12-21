@@ -1,15 +1,8 @@
-<<<<<<< HEAD
-"""
-Created on Thu Mar 10 14:24:31 2016
-
-Iterative greedy algorithm for multivariate network inference using transfer 
-=======
 """Estimate multivarate TE.
 
 Created on Thu Mar 10 14:24:31 2016
 
 Iterative greedy algorithm for multivariate network inference using transfer
->>>>>>> master
 entropy. For details see Lizier 2012 and Faes 2011.
 
 Note:
