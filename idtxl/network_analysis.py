@@ -281,11 +281,23 @@ class Network_analysis():
         self._min_stats_surr_table = None
 
     def _idx_to_lag(self, idx_list):
-        """Change sample indices to lags for each index in the list."""
+        """Change sample indices to lags for each sample in the list."""
         lag_list = cp.copy(idx_list)
         for c in idx_list:
+            if c[1] > self.current_value[1]:
+                raise IndexError('Sample time index larger than current '
+                                 'value.')
             lag_list[idx_list.index(c)] = (c[0], self.current_value[1] - c[1])
         return lag_list
+
+    def _lag_to_idx(self, lag_list):
+        """Change sample lags to indices for each sample in the list."""
+        idx_list = cp.copy(lag_list)
+        for c in lag_list:
+            if c[1] > self.current_value[1]:
+                raise IndexError('Sample lag larger than current value.')
+            idx_list[lag_list.index(c)] = (c[0], self.current_value[1] - c[1])
+        return idx_list
 
     def _force_conditionals(self, cond, data):
         """Enforce a given conditioning set."""
