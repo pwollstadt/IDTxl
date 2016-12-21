@@ -1,11 +1,11 @@
 """Perform inference statistics on groups of data."""
-import sys
 import copy as cp
 import numpy as np
 from scipy.special import binom
 from .set_estimator import Estimator_cmi
 from . import stats
 from . import idtxl_utils
+from .network_analysis import Network_analysis
 
 VERBOSE = True
 
@@ -82,6 +82,8 @@ class Network_comparison():
         self._create_surrogate_distribution_within(data_a, data_b)
         print('\n-------------------------- (4) determine p-value')
         [pvalue, sign] = self._p_value_union()
+
+        self._clean_up()  # remove temp. attributes, Convert lags to indices
         return self.union, pvalue, sign
 
     def compare_between(self, network_set_a, network_set_b, data_set_a,
@@ -119,12 +121,14 @@ class Network_comparison():
         self._create_surrogate_distribution_between(data_set_a, data_set_b)
         print('\n-------------------------- (4) determine p-value')
         [pvalue, sign] = self._p_value_union()
+
+        self._clean_up()  # remove temp. attributes, Convert lags to indices
         return self.union, pvalue, sign
 
     def _check_n_perm_within(self, data_a, data_b):
         """Check if requested no. permutations is sufficient for comparison."""
-        assert data_a.n_replications == data_b.n_replications, ('Unequal no. '
-                                'replications in the two data sets.')
+        assert data_a.n_replications == data_b.n_replications, (
+                            'Unequal no. replications in the two data sets.')
         n_replications = data_a.n_replications
         if self.stats_type == 'dependent':
             if self.n_permutations > 2**n_replications:
@@ -145,10 +149,9 @@ class Network_comparison():
 
     def _check_n_perm_between(self, data_set_a, data_set_b):
         """Check if requested no. permutations is sufficient for comparison."""
-
         if self.stats_type == 'dependent':
-            assert len(data_set_a) == len(data_set_b), ('The number of data '
-                                    'sets is not equal between conditions.')
+            assert len(data_set_a) == len(data_set_b), (
+                    'The number of data sets is not equal between conditions.')
             n_data_sets = len(data_set_a)
             if self.n_permutations > 2**n_data_sets:
                 raise RuntimeError('The number of data sets per condition {0} '
@@ -170,7 +173,6 @@ class Network_comparison():
 
     def _check_n_realisations(self, *data_sets):
         """Check if all data sets have an equal no. realisations."""
-        n_data_sets = len(data_sets)
         n_realisations = data_sets[0].n_realisations()
         for d in data_sets:
             if d.n_realisations() != n_realisations:
@@ -179,7 +181,7 @@ class Network_comparison():
 
     def _create_union(self, *networks):
         """Create the union from a set of individual networks."""
-
+        # Collect targets over all networks
         targets = []
         for nw in networks:
             k = [i for i in nw.keys()]
@@ -214,17 +216,19 @@ class Network_comparison():
                     pass
 
                 # Get the conditionals from source and target for the current
-                # network and target. Use an empty array if no sources were
+                # network and target (convert them from sample lags to indices
+                # before adding them). Use an empty array if no sources were
                 # selected for that target.
                 try:
-                    cond_src = nw[t]['selected_vars_sources']
+                    cond_src = self._lag_to_idx(nw[t]['selected_vars_sources'],
+                                                self.union['max_lag'])
                 except KeyError:
                     cond_src = []
                 try:
-                    cond_tgt = nw[t]['selected_vars_target']
+                    cond_tgt = self._lag_to_idx(nw[t]['selected_vars_target'],
+                                                self.union['max_lag'])
                 except KeyError:
                     cond_tgt = []
-                # TODO convert lags to indices before adding them to the union
 
                 # Add conditional if it isn't already in the union network.
                 for c in cond_src:
@@ -234,6 +238,25 @@ class Network_comparison():
                     if c not in self.union[t]['conditional_target']:
                         self.union[t]['conditional_target'].append(c)
 
+    def _lag_to_idx(self, lag_list, max_lag):
+        """Convert sample lags to time indices.
+
+        Use method from Network_analysis class to convert lags.
+        """
+        if not hasattr(self, 'netw_analysis'):
+            self.netw_analysis = Network_analysis()
+            self.netw_analysis.current_value = (0, max_lag)
+        return self.netw_analysis._lag_to_idx(lag_list)
+
+    def _idx_to_lag(self, idx_list, max_lag):
+        """Convert sample time indices to lags.
+
+        Use method from Network_analysis class to convert time indices.
+        """
+        if not hasattr(self, 'netw_analysis'):
+            self.netw_analysis = Network_analysis()
+            self.netw_analysis.current_value = (0, max_lag)
+        return self.netw_analysis._idx_to_lag(idx_list)
 
     def _calculate_cmi_diff_within(self, data_a, data_b, permute=False):
         """Calculate the difference in TE for each source and target.
@@ -258,14 +281,14 @@ class Network_comparison():
                                              self._calculate_cmi(data_b))
 
     def _calculate_cmi_diff_between(self, data_set_a, data_set_b):
-        """Calculate the difference in CMI between two groups of data.
-        """
+        """Calculate the difference in CMI between two groups of data."""
         self.cmi_diff = self._get_diff_of_mean(data_set_a, data_set_b,
                                                permute=False)
-        # TODO idea: loop over pairs of data in data_set_a and *_b and feed it to the within function?
-        # is the mean of differences the same as the difference of the mean? > yes
-        # BUT: such an implementation doesn't allow for unbalanced designs > this sucks and needs to
-        # be changed in the within function as well
+        # TODO idea: loop over pairs of data in data_set_a and *_b and feed it
+        # to the within function? is the mean of differences the same as the
+        # difference of the mean? > yes
+        # BUT: such an implementation doesn't allow for unbalanced designs
+        # > this sucks and needs to be changed in the within function as well
 
     def _get_diff_of_mean(self, data_set_a, data_set_b, permute=False):
         # re-calculate TE for each data object using the union network mask
@@ -282,7 +305,7 @@ class Network_comparison():
                                                size=len(cmi_union_a),
                                                replace=False)
             new_partition_b = list(set(range(0, len(cmi_all))) -
-                              set(new_partition_a))
+                                   set(new_partition_a))
             cmi_a_perm = [cmi_all[i] for i in new_partition_a]
             cmi_b_perm = [cmi_all[i] for i in new_partition_b]
 
@@ -295,10 +318,8 @@ class Network_comparison():
 
         # get the mean difference between the two sets of TE estimates
 
-
     def _calculate_cmi(self, data):
         """Calculate CMI for each source/target combi in the union network."""
-
         cmi = {}
         for t in self.union['targets']:
             current_val = (t, self.union['max_lag'])
@@ -342,13 +363,12 @@ class Network_comparison():
         return cmi
 
     def _calculate_cmi_permuted(self, data, data_perm):
-        """Calculate surrogate CMI for union network
+        """Calculate surrogate CMI for union network.
 
         Calculate CMI for each source/target combi after permuting realisations
         of sources between the two data sets. Results can be used in a
         surrogate permutation test of the CMI.
         """
-
         cmi_a = {}
         cmi_b = {}
         for t in self.union['targets']:
@@ -405,14 +425,13 @@ class Network_comparison():
             temp = np.empty((n_datasets, n_sources))
             i = 0
             for c in cmi_set:
-                temp[i,:] = c[t]
+                temp[i, :] = c[t]
                 i += 1
             cmi_mean[t] = np.mean(temp, axis=0)
         return cmi_mean
 
     def _calculate_diff(self, cmi_a, cmi_b):
-        """Calculate the difference between two CMI estimates over all targets.
-        """
+        """Calculate the difference between two CMI estimates over targets."""
         cmi_diff = {}
         for t in self.union['targets']:
             cmi_diff[t] = cmi_a[t] - cmi_b[t]
@@ -480,9 +499,21 @@ class Network_comparison():
                 pvalue[t][s] = pval
         return pvalue, significance
 
-    def _get_permuted_replications(self, data_a, data_b, target):
-        """Return realisations with replications permuted between conditions."""
+    def _clean_up(self):
+        """Clean up bevor returning."""
+        # convert time indices to lags for selected variables
+        for t in self.union['targets']:
+            self.union[t]['conditional_sources'] = self._idx_to_lag(
+                                        self.union[t]['conditional_sources'],
+                                        self.union['max_lag'])
+            self.union[t]['conditional_target'] = self._idx_to_lag(
+                                        self.union[t]['conditional_target'],
+                                        self.union['max_lag'])
+        # remove Network_analysis instance
+        del self.netw_analysis
 
+    def _get_permuted_replications(self, data_a, data_b, target):
+        """Return realisations with replications permuted betw. conditions."""
         # Get indices of current value and full conditioning set in the
         # union network.
         current_val = (target, self.union['max_lag'])
