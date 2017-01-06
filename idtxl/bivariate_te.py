@@ -26,11 +26,11 @@ class Bivariate_te(Network_analysis):
     data class.
 
     Args:
-        max_lag : int
-            maximum temporal search depth
-        min_lag : int
-            minimum temporal search depth
-        options : dict [optional]
+        max_lag_sources : int
+            maximum temporal search depth for candidates in the sources' past
+        min_lag_sources : int
+            minimum temporal search depth for candidates in the sources' past
+        options : dict
             parameters for estimator use and statistics:
 
             - 'n_perm_*' - number of permutations, where * can be 'max_stat',
@@ -44,6 +44,14 @@ class Bivariate_te(Network_analysis):
               conditionals when estimating TE; can either be a list of
               variables, where each variable is described as (idx process, lag
               wrt to current value) or can be a string: 'faes' for Faes-Method
+
+        max_lag_target : int [optional]
+            maximum temporal search depth for candidates in the target's past
+            (default=same as max_lag_sources)
+        tau_sources : int [optinal]
+            spacing between candidates in the sources' past (default=1)
+        tau_target : int [optinal]
+            spacing between candidates in the target's past (default=1)
 
     Attributes:
         selected_vars_full : list of tuples
@@ -64,6 +72,10 @@ class Bivariate_te(Network_analysis):
             maximum temporal search depth for candidates in the sources' past
         min_lag_sources : int
             minimum temporal search depth for candidates in the sources' past
+        tau_sources : int
+            spacing between candidates in the sources' past
+        tau_target : int
+            spacing between candidates in the target's past
         pvalue_omnibus : float
             p-value of the omnibus test
         pvalues_sign_sources : numpy array
@@ -78,15 +90,15 @@ class Bivariate_te(Network_analysis):
             list with indices of source processes
         target : list
             index of target process
-
+        options : dict
+            dictionary with the analysis options
     """
 
     # TODO right now 'options' holds all optional params (stats AND estimator).
     # We could split this up by adding the stats options to the analyse_*
     # methods?
-    def __init__(self, max_lag_sources, min_lag_sources, max_lag_target,
-                 tau_sources=1, tau_target=1, options=None):
-
+    def __init__(self, max_lag_sources, min_lag_sources, options,
+                 max_lag_target=None, tau_sources=1, tau_target=1):
         if max_lag_target is None:
             self.max_lag_target = max_lag_sources
         else:
