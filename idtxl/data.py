@@ -247,6 +247,8 @@ class Data():
         i = 0
         for idx in idx_list:
             r = 0
+            # get the last sample as negative value, i.e., no. samples from the
+            # end of the array
             last_sample = idx[1] - current_value[1]  # indexing is much faster
             if last_sample == 0:                     # than looping over time!
                 last_sample = None

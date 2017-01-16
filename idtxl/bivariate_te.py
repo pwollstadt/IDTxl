@@ -125,9 +125,8 @@ class Bivariate_te(Network_analysis):
     def analyse_network(self, data, targets='all', sources='all'):
         """Find bivariate transfer entropy between all nodes in the network.
 
-        Estimate bivariate transfer entropy between provided sources and
-        each target. Custom source sets can be provided for each target, as
-        lists of lists of nodes.
+        Estimate bivariate transfer entropy (TE) between all nodes in the
+        network or between selected sources and targets.
 
         Example:
 
@@ -142,12 +141,9 @@ class Bivariate_te(Network_analysis):
             >>>     'n_perm_omnibus': 500,
             >>>     'n_perm_max_seq': 500,
             >>>     }
-            >>> target = 0
-            >>> sources = [1, 2, 3]
-            >>> network_analysis = Bivariate_te(max_lag, analysis_opts,
-            >>>                                 min_lag)
-            >>> res = network_analysis.analyse_single_target(dat, target,
-            >>>                                              sources)
+            >>> network_analysis = Bivariate_te(max_lag, min_lag,
+            >>>                                 analysis_opts)
+            >>> res = network_analysis.analyse_network(dat)
 
         Note:
             For more details on the estimation of bivariate transfer entropy
@@ -156,15 +152,25 @@ class Bivariate_te(Network_analysis):
         Args:
             data : Data instance
                 raw data for analysis
-            targets : list of int
-                index of target processes
-            sources : list of int | list of list | 'all'
-                indices of source processes for each target;
+            targets : list of int | 'all' [optinal]
+                index of target processes (default='all')
+            sources : list of int | list of list | 'all'  [optional]
+                indices of source processes for each target (default='all');
                 if 'all', all sources are tested for each target;
                 if list of int, sources specified in the list are tested for
                 each target;
                 if list of list, sources specified in each inner list are
                 tested for the corresponding target
+
+        Returns:
+            dict
+                results consisting of
+
+                - conditional sets (full, from sources, from target),
+                - results for omnibus test (joint influence of source cands.),
+                - pvalues for each significant source candidate
+
+                for each target
         """
         if targets == 'all':
             targets = [t for t in range(data.n_processes)]
@@ -197,10 +203,13 @@ class Bivariate_te(Network_analysis):
     def analyse_single_target(self, data, target, sources='all'):
         """Find bivariate transfer entropy between sources and a target.
 
-        Find bivariate transfer entropy between all source processes and the
-        target process. Uses bivariate, non-uniform embedding found through
-        information maximisation (see Faes, ???, and Lizier, 2012). This is
-        done in four steps (see Lizier and Faes for details):
+        Find bivariate transfer entropy (TE) between all potential source
+        processes and the target process. Uses bivariate, non-uniform embedding
+        found through information maximisation (see Faes et al., 2011, Phys Rev
+        E 83, 051112 and Lizier & Rubinov, 2012, Max Planck Institute:
+        Preprint. Retrieved from
+        http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf). Bivariate
+        TE is calculated in four steps (see Lizier and Faes for details):
 
         (1) find all relevant samples in the target processes' own past, by
             iteratively adding candidate samples that have significant
@@ -215,14 +224,35 @@ class Bivariate_te(Network_analysis):
             between the final conditional set and the current value, and for
             significant transfer of all individual samples in the set)
 
+        Example:
+
+            >>> dat = Data()
+            >>> dat.generate_mute_data(100, 5)
+            >>> max_lag = 5
+            >>> min_lag = 4
+            >>> analysis_opts = {
+            >>>     'cmi_calc_name': 'jidt_kraskov',
+            >>>     'n_perm_max_stat': 200,
+            >>>     'n_perm_min_stat': 200,
+            >>>     'n_perm_omnibus': 500,
+            >>>     'n_perm_max_seq': 500,
+            >>>     }
+            >>> target = 0
+            >>> sources = [1, 2, 3]
+            >>> network_analysis = Bivariate_te(max_lag, min_lag,
+            >>>                                 analysis_opts)
+            >>> res = network_analysis.analyse_single_target(dat, target,
+            >>>                                              sources)
+
         Args:
             data : Data instance
                 raw data for analysis
             target : int
                 index of target process
-            sources : list of int, int, or 'all'
-                single index or list of indices of source processes, if 'all',
-                all possible sources for the given target are tested
+            sources : list of int | int | 'all' [optional]
+                single index or list of indices of source processes
+                (default='all'), if 'all', all possible sources for the given
+                target are tested
 
         Returns:
             dict
