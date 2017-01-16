@@ -409,7 +409,8 @@ def test_p_value_union():
     comp.cmi_diff[target][source] = 0.1
     [p, s] = comp._p_value_union()
     assert (s[target] == np.array([True, False])).all(), (
-                                    'The p-value was not calculated correctly')
+                                    'The p-value was not calculated correctly:'
+                                    ' {0}'.fomat(s[target]))
 
 if __name__ == '__main__':
     test_p_value_union()

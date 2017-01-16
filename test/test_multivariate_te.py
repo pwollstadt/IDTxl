@@ -20,23 +20,23 @@ def test_multivariate_te_init():
     sources = [2, 3, 4]
     dat = Data()
     dat.generate_mute_data(100, 5)
-    nw_0 = Multivariate_te(max_lag_sources, min_lag_sources, max_lag_target,
-                           analysis_opts)
+    nw_0 = Multivariate_te(max_lag_sources, min_lag_sources, analysis_opts,
+                           max_lag_target)
     nw_0.analyse_single_target(dat, target, sources)
 
     # This should just run: Test what happens if the target max lag is bigger
     # than the source max lag
     max_lag_sources = 5
     max_lag_target = 7
-    nw_1 = Multivariate_te(max_lag_sources, min_lag_sources, max_lag_target,
-                           analysis_opts)
+    nw_1 = Multivariate_te(max_lag_sources, min_lag_sources, analysis_opts,
+                           max_lag_target)
     nw_1.analyse_single_target(dat, target, sources)
 
     # The following should crash: min lag bigger than max lag
     max_lag_sources = 5
     min_lag_sources = 7
-    nw_2 = Multivariate_te(max_lag_sources, min_lag_sources, max_lag_target,
-                           analysis_opts)
+    nw_2 = Multivariate_te(max_lag_sources, min_lag_sources, analysis_opts,
+                           max_lag_target)
     with pytest.raises(AssertionError):
         nw_2.analyse_single_target(dat, target, sources)
 
@@ -58,8 +58,8 @@ def test_multivariate_te_initialise():
     n_points = n_procs * (max_lag_sources + 1) * n_repl
     dat.set_data(np.arange(n_points).reshape(n_procs, max_lag_sources + 1,
                                              n_repl), 'psr')
-    nw_0 = Multivariate_te(max_lag_sources, min_lag_sources, max_lag_target,
-                           analysis_opts)
+    nw_0 = Multivariate_te(max_lag_sources, min_lag_sources, analysis_opts,
+                           max_lag_target)
     nw_0._initialise(dat, 'all', target)
     assert (not nw_0.selected_vars_full)
     assert (not nw_0.selected_vars_sources)
@@ -72,8 +72,8 @@ def test_multivariate_te_initialise():
 
     # Check if the Faes method is working
     analysis_opts['add_conditionals'] = 'faes'
-    nw_1 = Multivariate_te(max_lag_sources, min_lag_sources, max_lag_target,
-                           analysis_opts)
+    nw_1 = Multivariate_te(max_lag_sources, min_lag_sources, analysis_opts,
+                           max_lag_target)
     dat.generate_mute_data()
     sources = [1, 2, 3]
     target = [0]
@@ -84,8 +84,8 @@ def test_multivariate_te_initialise():
 
     # Adding a variable that is not in the data set.
     analysis_opts['add_conditionals'] = (8, 0)
-    nw_1 = Multivariate_te(max_lag_sources, min_lag_sources, max_lag_target,
-                           analysis_opts)
+    nw_1 = Multivariate_te(max_lag_sources, min_lag_sources, analysis_opts,
+                           max_lag_target)
     dat.generate_mute_data()
     sources = [1, 2, 3]
     target = [0]
@@ -106,22 +106,22 @@ def test_check_source_set():
     min_lag_sources = 5
     max_lag_target = 5
     analysis_opts = {'cmi_calc_name': 'jidt_kraskov'}
-    nw_0 = Multivariate_te(max_lag_sources, min_lag_sources, max_lag_target,
-                           analysis_opts)
+    nw_0 = Multivariate_te(max_lag_sources, min_lag_sources, analysis_opts,
+                           max_lag_target)
     sources = [1, 2, 3]
     nw_0._check_source_set(sources, dat.n_processes)
 
     # Assert that initialisation fails if the target is also in the source list
     sources = [0, 1, 2, 3]
-    nw_0 = Multivariate_te(max_lag_sources, min_lag_sources, max_lag_target,
-                           analysis_opts)
+    nw_0 = Multivariate_te(max_lag_sources, min_lag_sources, analysis_opts,
+                           max_lag_target)
     nw_0.target = 0
     with pytest.raises(RuntimeError):
         nw_0._check_source_set(sources, dat.n_processes)
 
     sources = 1
-    nw_0 = Multivariate_te(max_lag_sources, min_lag_sources, max_lag_target,
-                           analysis_opts)
+    nw_0 = Multivariate_te(max_lag_sources, min_lag_sources, analysis_opts,
+                           max_lag_target)
     nw_0._check_source_set(sources, dat.n_processes)
     assert (type(nw_0.source_set) is list)
 
@@ -135,7 +135,7 @@ def test_include_source_candidates():
     procs = [target]
     samples = np.arange(current_val[1] - 1, current_val[1] - max_lag_target,
                         -tau_target)
-    nw = Multivariate_te(5, 1, 5, analysis_opts)
+    nw = Multivariate_te(5, 1, analysis_opts, 5)
     candidates = nw._define_candidates(procs, samples)
     assert (1, 9) in candidates, 'Sample missing from candidates: (1, 9).'
     assert (1, 6) in candidates, 'Sample missing from candidates: (1, 6).'
@@ -167,6 +167,7 @@ def test_indices_to_lags():
 
 
 if __name__ == '__main__':
-    test_multivariate_te_initialise()  # my own function _initialise
-    test_multivariate_te_init()  # init function of the Class
     test_check_source_set()
+    test_multivariate_te_initialise()  # test my own _initialise function
+    test_multivariate_te_init()  # test init function of the Class
+

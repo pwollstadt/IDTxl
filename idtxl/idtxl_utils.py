@@ -215,12 +215,46 @@ def discretise_max_ent(a, numBins):
     return discretised_values
 
 
+def separate_arrays(idx_all, idx_single, a):
+    """Separate a single column from all other columns in a 2D-array.
+
+    Return the separated single column and the remaining columns of a 2D-
+    array.
+
+    Args:
+        idx_all : list<Object>
+            list of variables indicating the full set
+        idx_single : <Object>
+            single variable indicating the column to be separated, variable
+            must be contained in idx_all
+        a : numpy array
+            2D-array with the same length along axis 1 as idx_all
+            (.shape[1] == len(idx_all))
+
+    Returns:
+        numpy array
+            remaining columns in full array
+        numpy array
+            column at single index
+    """
+    assert(len(idx_all) == a.shape[1]), ('Length of full index list does '
+                                         'not correspond to array size '
+                                         'along 1st axis.')
+    array_idx_single = idx_all.index(idx_single)
+    real_single = np.expand_dims(a[:, array_idx_single], axis=1)
+    real_remaining = remove_column(a, array_idx_single)
+    return real_remaining, real_single
+
+
 def combine_discrete_dimensions(a, numBins):
-    """Combine all dimensions for a discrete variable down into a single
-    dimensional value for each sample.
-    This is done basically by multiplying each dimension
-    by a different power of the base (numBins).
-    Adapted from infodynamics.utils.MatrixUtils.computeCombinedValues() from JIDT by J.Lizier
+    """Combine multi-dimensional discrete variable into a single dimension.
+
+    Combine all dimensions for a discrete variable down into a single
+    dimensional value for each sample. This is done basically by multiplying
+    each dimension by a different power of the base (numBins).
+
+    Adapted from infodynamics.utils.MatrixUtils.computeCombinedValues() from
+    JIDT by J.Lizier.
 
     Args:
         a : numpy array
@@ -250,6 +284,6 @@ def combine_discrete_dimensions(a, numBins):
             multiplier = multiplier * numBins
             if multiplier <= 0:
                 # Multiplier has overflown
-                raise ArithmaticError('Combination of numBins and number of dimensions of a leads to overflow in making unidimensional array')
+                raise ArithmeticError('Combination of numBins and number of dimensions of a leads to overflow in making unidimensional array')
         combined_values[t] = int(combined_value)
     return combined_values

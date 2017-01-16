@@ -9,7 +9,6 @@ Note:
 @author: patricia
 """
 import numpy as np
-import itertools as it
 from . import stats
 from .network_analysis import Network_analysis
 from .set_estimator import Estimator_cmi
@@ -181,20 +180,11 @@ class Single_process_storage(Network_analysis):
 
         # Main algorithm.
         print('\n---------------------------- (1) include candidates')
-        candidates = self._define_candidates()
-        samples_found = self._include_candidates(candidates, data)
-
+        self._include_process_candidates(data)
         print('\n---------------------------- (2) prune source candidates')
-        # If no candidates were found in the process' past, return 0.
-        if samples_found:
-            self._prune_candidates(data)
+        self._prune_candidates(data)
         print('\n---------------------------- (3) final statistics')
-        if self._selected_vars_full:
-            self._test_final_conditional(data)
-        else:
-            self.ais = np.nan
-            self.sign = False
-            self.pvalue = 1
+        self._test_final_conditional(data)
 
         # Clean up and return results.
         if VERBOSE:
@@ -217,7 +207,7 @@ class Single_process_storage(Network_analysis):
         assert(data.n_samples >= self.max_lag + 1), (
             'Not enough samples in data ({0}) to allow for the chosen maximum '
             'lag ({1})'.format(data.n_samples, self.max_lag))
-        self._current_value = (process, self.max_lag)
+        self.current_value = (process, self.max_lag)
         [cv_realisation, repl_idx] = data.get_realisations(
                                              current_value=self.current_value,
                                              idx_list=[self.current_value])
@@ -250,6 +240,15 @@ class Single_process_storage(Network_analysis):
             self._force_conditionals(cond, data)
         except KeyError:
             pass
+
+    def _include_process_candidates(self, data):
+        """Test candidates in the process's past."""
+        process = [self.process]
+        samples = np.arange(self.current_value[1] - 1,
+                            self.current_value[1] - self.max_lag - 1,
+                            -self.tau)
+        candidates = self._define_candidates(process, samples)
+        self._include_candidates(candidates, data)
 
     def _include_candidates(self, candidate_set, data):
         """Inlcude informative candidates into the conditioning set.
@@ -360,8 +359,8 @@ class Single_process_storage(Network_analysis):
                 # Separate the candidate realisations and all other
                 # realisations to test the candidate's individual contribution.
                 [temp_cond, temp_cand] = self._separate_realisations(
-                                                    self.selected_vars_sources,
-                                                    candidate)
+                                            self.selected_vars_sources,
+                                            candidate)
                 if temp_cond is None:
                     conditional_realisations = None
                 else:
@@ -406,36 +405,20 @@ class Single_process_storage(Network_analysis):
 
     def _test_final_conditional(self, data):  # TODO test this!
         """Perform statistical test on AIS using the final conditional set."""
-        print(self._idx_to_lag(self.selected_vars_full))
-        [ais, s, p] = stats.mi_against_surrogates(self, data, self.options)
+        if self._selected_vars_full:
+            print(self._idx_to_lag(self.selected_vars_full))
+            [ais, s, p] = stats.mi_against_surrogates(self, data, self.options)
 
-        # If a parallel estimator was used, an array of AIS estimates is
-        # returned. Make the output uniform for both estimator types.
-        if type(ais) is np.ndarray:
-            assert ais.shape[0] == 1, 'AIS result is not a scalar.'
-            ais = ais[0]
+            # If a parallel estimator was used, an array of AIS estimates is
+            # returned. Make the output uniform for both estimator types.
+            if type(ais) is np.ndarray:
+                assert ais.shape[0] == 1, 'AIS result is not a scalar.'
+                ais = ais[0]
 
-        self.ais = ais
-        self.sign = s
-        self.pvalue = p
-
-    def _define_candidates(self):
-        """Build a list of candidate indices.
-
-        Note that for AIS estimation, the candidate set is defined as the past
-        of the process up to the max_lag defined by the user (samples spaced
-        by tau if requested). This function thus does not need to take
-        arguments as the same function in multivariate TE estimation.
-
-        Returns:
-            a list of tuples, where each tuple holds the index of one
-            candidate and has the form (process index, sample index)
-        """
-        process = [self.process]
-        samples = np.arange(self.current_value[1] - 1,
-                            self.current_value[1] - self.max_lag - 1,
-                            -self.tau)
-        candidate_set = []
-        for idx in it.product(process, samples):
-            candidate_set.append(idx)
-        return candidate_set
+            self.ais = ais
+            self.sign = s
+            self.pvalue = p
+        else:
+            self.ais = np.nan
+            self.sign = False
+            self.pvalue = 1

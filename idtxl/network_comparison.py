@@ -4,13 +4,13 @@ import numpy as np
 from scipy.special import binom
 from .set_estimator import Estimator_cmi
 from . import stats
-from . import idtxl_utils
+from . import idtxl_utils as utils
 from .network_analysis import Network_analysis
 
 VERBOSE = True
 
 
-class Network_comparison():
+class Network_comparison(Network_analysis):
     """Set up network comparison between two experimental conditions.
 
     The class provides methods for the comparison of networks inferred from
@@ -133,7 +133,7 @@ class Network_comparison():
             'tail': self.tail,
             'cmi_diff': self.cmi_diff,
             'cmi_surr': self.cmi_surr,
-            'cmi_opts': self._idx_to_lag,
+            'cmi_opts': self.cmi_opts,
             'union_network': self.union,
             'pval': pvalue,
             'sign': sign
@@ -317,25 +317,25 @@ class Network_comparison():
                     if c not in self.union[t]['selected_vars_target']:
                         self.union[t]['selected_vars_target'].append(c)
 
-    def _lag_to_idx(self, lag_list, max_lag):
-        """Convert sample lags to time indices.
-
-        Use method from Network_analysis class to convert lags.
-        """
-        if not hasattr(self, 'netw_analysis'):
-            self.netw_analysis = Network_analysis()
-            self.netw_analysis.current_value = (0, max_lag)
-        return self.netw_analysis._lag_to_idx(lag_list)
-
-    def _idx_to_lag(self, idx_list, max_lag):
-        """Convert sample time indices to lags.
-
-        Use method from Network_analysis class to convert time indices.
-        """
-        if not hasattr(self, 'netw_analysis'):
-            self.netw_analysis = Network_analysis()
-            self.netw_analysis.current_value = (0, max_lag)
-        return self.netw_analysis._idx_to_lag(idx_list)
+    # def _lag_to_idx(self, lag_list, max_lag):
+    #     """Convert sample lags to time indices.
+    #
+    #     Use method from Network_analysis class to convert lags.
+    #     """
+    #     if not hasattr(self, 'netw_analysis'):
+    #         self.netw_analysis = Network_analysis()
+    #         self.netw_analysis.current_value = (0, max_lag)
+    #     return self.netw_analysis._lag_to_idx(lag_list)
+    #
+    # def _idx_to_lag(self, idx_list, max_lag):
+    #     """Convert sample time indices to lags.
+    #
+    #     Use method from Network_analysis class to convert time indices.
+    #     """
+    #     if not hasattr(self, 'netw_analysis'):
+    #         self.netw_analysis = Network_analysis()
+    #         self.netw_analysis.current_value = (0, max_lag)
+    #     return self.netw_analysis._idx_to_lag(idx_list)
 
     def _calculate_cmi_diff_within(self, data_a, data_b, permute=False):
         """Calculate the difference in CMI within a subject.
@@ -455,7 +455,7 @@ class Network_comparison():
 
                 # get realisations of current TE-source from the set of all
                 # conditionals and calculate the CMI
-                [cond_real, source_real] = self._separate_realisations(
+                [cond_real, source_real] = utils.separate_arrays(
                                                              cond_full,
                                                              c,
                                                              cond_full_real)
@@ -507,7 +507,7 @@ class Network_comparison():
 
                 # Get realisations of current (permuted) TE-source from the set
                 # of all conditionals and calculate the CMI.
-                [cond_real_a, source_real_a] = self._separate_realisations(
+                [cond_real_a, source_real_a] = utils.separate_arrays(
                                                              cond_full,
                                                              c,
                                                              cond_full_perm_a)
@@ -516,7 +516,7 @@ class Network_comparison():
                                                         source_real_a,
                                                         cond_real_a,
                                                         self.cmi_opts))
-                [cond_real_b, source_real_b] = self._separate_realisations(
+                [cond_real_b, source_real_b] = utils.separate_arrays(
                                                              cond_full,
                                                              c,
                                                              cond_full_perm_b)
@@ -676,8 +676,6 @@ class Network_comparison():
             self.union[t]['selected_vars_target'] = self._idx_to_lag(
                                         self.union[t]['selected_vars_target'],
                                         self.union['max_lag'])
-        # remove Network_analysis instance
-        del self.netw_analysis
 
     def _get_permuted_replications(self, data_a, data_b, target):
         """Return realisations with replications permuted betw. two data sets.
@@ -758,29 +756,3 @@ class Network_comparison():
             raise ValueError('Unkown "stats_type": {0}, should be "dependent" '
                              'or "independent".'.format(self.stats_type))
         return cond_a_perm, cur_val_a_perm, cond_b_perm, cur_val_b_perm
-
-    # TODO the following is also in network analysis -> maybe the comparison
-    # class should inherit from that? See Trello-Card
-    def _separate_realisations(self, idx_full, idx_single, real_full):
-        """Remove single indexes' realisations from a set of realisations.
-
-        Remove the realisations of a single index from a set of realisations.
-        Return both the single realisation and realisations for the remaining
-        set. This allows us to reuse the collected realisations when pruning
-        the conditional set after candidates have been included.
-
-        Args:
-            idx_full: list of indices indicating the full set
-            idx_single: index to be removed
-
-        Returns:
-            realisation_single: numpy array with realisations for single index
-            realisations_remaining: numpy array with remaining realisations
-        """
-        assert(len(idx_full) == real_full.shape[1]), ('Index list does not '
-                                                      'correspond with full '
-                                                      'realisations.')
-        array_idx_single = idx_full.index(idx_single)
-        real_single = np.expand_dims(real_full[:, array_idx_single], axis=1)
-        real_remaining = idtxl_utils.remove_column(real_full, array_idx_single)
-        return real_remaining, real_single
