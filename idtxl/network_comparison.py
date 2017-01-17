@@ -512,7 +512,7 @@ class Network_comparison(Network_analysis):
                                                              c,
                                                              cond_full_perm_a)
                 cmi_temp_a.append(self._cmi_calculator.estimate(
-                                                        cur_val_perm_a,
+                                                        cur_val_perm_a,  # TODO do we need the permuted data here?
                                                         source_real_a,
                                                         cond_real_a,
                                                         self.cmi_opts))
@@ -680,8 +680,25 @@ class Network_comparison(Network_analysis):
     def _get_permuted_replications(self, data_a, data_b, target):
         """Return realisations with replications permuted betw. two data sets.
 
+        Return surrogate data for a given target for the conditioning and the
+
+        where original data
+
         Create surrogate data by permuting realisations of the conditioning set
-        replications
+        over replications. All realisations in one replication get swapped
+        between the two conditions to generate surrogate data.
+
+        Args:
+            data_a : Data instance
+                raw data, condition A
+            data_b : Data instance
+                raw data, condition B
+            target : int
+                index of the target in the union network
+
+        Returns:
+            cond_a_perm, cur_val_a_perm, cond_b_perm, cur_val_b_perm
+
         """
         # Get indices of current value and full conditioning set in the
         # union network.

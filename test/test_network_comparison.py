@@ -57,8 +57,8 @@ from idtxl.data import Data
 # idtxl_io.save_pickle(res_4, path + 'mute_res_4')
 
 
-
 def test_network_comparison_use_cases():
+    """Run all intended use cases, within/between, dependent/independent."""
     dat = Data()
     dat.generate_mute_data(100, 5)
 
@@ -96,43 +96,45 @@ def test_network_comparison_use_cases():
     print('\n\nTEST 0 - independent within')
     comparison_opts['stats_type'] = 'independent'
     comp = Network_comparison(comparison_opts)
-    c_0 = comp.compare_within(res_0, res_1, dat, dat)
+    comp.compare_within(res_0, res_1, dat, dat)
 
     print('\n\nTEST 1 - dependent within')
     comparison_opts['stats_type'] = 'dependent'
     comp = Network_comparison(comparison_opts)
-    c_1 = comp.compare_within(res_0, res_1, dat, dat)
+    comp.compare_within(res_0, res_1, dat, dat)
 
     print('\n\nTEST 2 - independent between')
     comparison_opts['stats_type'] = 'independent'
     comp = Network_comparison(comparison_opts)
-    c_2 = comp.compare_between(network_set_a=np.array((res_0, res_1)),
-                               network_set_b=np.array((res_2, res_3)),
-                               data_set_a=np.array((dat, dat)),
-                               data_set_b=np.array((dat, dat)))
+    comp.compare_between(network_set_a=np.array((res_0, res_1)),
+                         network_set_b=np.array((res_2, res_3)),
+                         data_set_a=np.array((dat, dat)),
+                         data_set_b=np.array((dat, dat)))
 
     print('\n\nTEST 3 - dependent between')
     comp = Network_comparison(comparison_opts)
-    comparison_opts ['stats_type'] = 'dependent'
-    c_3 = comp.compare_between(network_set_a=np.array((res_0, res_1)),
-                               network_set_b=np.array((res_2, res_3)),
-                               data_set_a=np.array((dat, dat)),
-                               data_set_b=np.array((dat, dat)))
+    comparison_opts['stats_type'] = 'dependent'
+    comp.compare_between(network_set_a=np.array((res_0, res_1)),
+                         network_set_b=np.array((res_2, res_3)),
+                         data_set_a=np.array((dat, dat)),
+                         data_set_b=np.array((dat, dat)))
 
     print('\n\nTEST 4 - independent within unbalanced')
     comparison_opts['stats_type'] = 'independent'
     comp = Network_comparison(comparison_opts)
-    c_4 = comp.compare_within(res_0, res_1, dat, dat)
+    comp.compare_within(res_0, res_1, dat, dat)
 
     print('\n\nTEST 5 - independent between unbalanced')
     comparison_opts['stats_type'] = 'independent'
     comp = Network_comparison(comparison_opts)
-    c_5 = comp.compare_between(network_set_a=np.array((res_0, res_1)),
-                               network_set_b=np.array((res_2, res_3, res_4)),
-                               data_set_a=np.array((dat, dat)),
-                               data_set_b=np.array((dat, dat, dat)))
+    comp.compare_between(network_set_a=np.array((res_0, res_1)),
+                         network_set_b=np.array((res_2, res_3, res_4)),
+                         data_set_a=np.array((dat, dat)),
+                         data_set_b=np.array((dat, dat, dat)))
+
 
 def test_assertions():
+    """Test if input checks raise errors."""
     dat = Data()
     dat.generate_mute_data(100, 5)
 
@@ -215,7 +217,9 @@ def test_assertions():
     with pytest.raises(IndexError):
         comp.compare_within(res_0, res_99, dat2, dat2)
 
+
 def test_create_union_network():
+    """Test creation of union of multiple networks."""
     dat1 = Data()
     dat1.generate_mute_data(100, 5)
     dat2 = Data()
@@ -251,10 +255,10 @@ def test_create_union_network():
     assert (comp.union['targets'] == ref_targets).all(), (
                                         'Union does not include all targets.')
     assert np.array([True for i in ref_targets if
-            i in comp.union.keys()]).all(), ('Not all targets contained in '
-                                             'union network.')
-    assert comp.union['max_lag'] == res_0[0]['current_value'][1], ('The max. '
-                'lag was not defined correctly.')
+                     i in comp.union.keys()]).all(), (
+                                'Not all targets contained in union network.')
+    assert comp.union['max_lag'] == res_0[0]['current_value'][1], (
+                                    'The max. lag was not defined correctly.')
 
     src_union = comp._idx_to_lag(comp.union[1]['selected_vars_sources'],
                                  comp.union['max_lag'])
@@ -266,8 +270,9 @@ def test_create_union_network():
     with pytest.raises(ValueError):
         comp._create_union(res_0, res_1)
 
-def test_get_permuted_replications():
 
+def test_get_permuted_replications():
+    """Test if permutation of replications works."""
     # Load previously generated example data
     res_0 = np.load(os.path.join(os.path.dirname(__file__),
                     'data/mute_res_0.pkl'))
@@ -288,8 +293,8 @@ def test_get_permuted_replications():
     comp = Network_comparison(comparison_opts)
     comp._create_union(res_0, res_1)
 
-
-    # check permutation for dependent samples test
+    # Check permutation for dependent samples test: Replace realisations by
+    # zeros and ones, check if realisations get swapped correctly.
     dat1 = Data()
     dat1.normalise = False
     dat1.set_data(np.zeros((5, 100, 5)), 'psr')
@@ -305,8 +310,11 @@ def test_get_permuted_replications():
     n_vars = cond_a_perm.shape[1]
     assert (np.sum(cond_a_perm + cond_b_perm, axis=1) == n_vars).all(), (
                 'Dependent samples permutation did not work correctly.')
+    assert np.logical_xor(cond_a_perm, cond_b_perm).all(), (
+                'Dependent samples permutation did not work correctly.')
 
-    # check permutation for independent samples test
+    # Check permutations for independent samples test: Check the sum over
+    # realisations.
     comparison_opts['stats_type'] = 'independent'
     comp = Network_comparison(comparison_opts)
     comp._create_union(res_0, res_1)
@@ -325,7 +333,9 @@ def test_get_permuted_replications():
     with pytest.raises(AssertionError):
         comp._get_permuted_replications(data_a=dat1, data_b=dat2, target=1)
 
+
 def test_calculate_cmi():
+    """Test if the CMI is estimated correctly."""
     dat = Data()
     n = 1000
     cov = 0.4
@@ -358,7 +368,9 @@ def test_calculate_cmi():
     np.testing.assert_almost_equal(cmi[1][0], cmi_expected, decimal=1,
                    err_msg='when calculating cmi for correlated Gaussians.')
 
+
 def test_calculate_mean():
+    """Test if mean over CMI estimates is calculated correctly."""
     dat = Data()
     dat.generate_mute_data(100, 5)
     res_0 = np.load(os.path.join(os.path.dirname(__file__),
@@ -382,7 +394,9 @@ def test_calculate_mean():
         assert (cmi_mean[t] == cmi[t]).all(), ('Error in mean of CMI for '
                                                'target {0}'.format(t))
 
+
 def test_p_value_union():
+    """Test if the p-value is calculated correctly."""
     dat = Data()
     dat.generate_mute_data(100, 5)
     res_0 = np.load(os.path.join(os.path.dirname(__file__),
@@ -402,21 +416,31 @@ def test_p_value_union():
         }
     comp = Network_comparison(comparison_opts)
     comp.compare_within(res_0, res_1, dat, dat)
+
+    # Replace the surrogate CMI by all zeros for source 0 and all ones for
+    # source 1. Set the CMI difference to 0.5 for both sources. Check if this
+    # results in one significant and one non-significant result with the
+    # correct p-values.
     target = 1
-    source = 1
     for p in range(comp.n_permutations):
         comp.cmi_surr[p][target] = np.array([0, 1])
-    comp.cmi_diff[target][source] = 0.1
+    comp.cmi_diff[target] = np.array([0.5, 0.5])
     [p, s] = comp._p_value_union()
     assert (s[target] == np.array([True, False])).all(), (
-                                    'The p-value was not calculated correctly:'
-                                    ' {0}'.fomat(s[target]))
+                                    'The significance was not determined '
+                                    'correctly: {0}'.fomat(s[target]))
+    p_1 = 1 / comparison_opts['n_perm_comp']
+    p_2 = 1.0
+    print(p[target])
+    assert (p[target] == np.array([p_1, p_2])).all(), (
+                                'The p-value was not calculated correctly: {0}'
+                                .fomat(p[target]))
 
 if __name__ == '__main__':
+    test_network_comparison_use_cases()
     test_p_value_union()
     test_calculate_mean()
     test_calculate_cmi()
     test_get_permuted_replications()
     test_assertions()
-    test_network_comparison_use_cases()
     test_create_union_network()
