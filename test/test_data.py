@@ -81,26 +81,26 @@ def test_data_normalisation():
                                                       'target did not work.')
 
 
-def test_get_data():
+def test_get_realisations():
     """Test low-level function for data retrieval."""
     dat = Data()
     dat.generate_mute_data()
     idx_list = [(0, 4), (0, 6)]
     current_value = (0, 3)
     with pytest.raises(RuntimeError):
-        dat._get_data(idx_list, current_value)
+        dat._get_realisations(idx_list, current_value)
 
     # Test retrieved data for one/two replications in time (i.e., the current
     # value is equal to the last sample)
     n = 7
     d = Data(np.arange(n + 1), 's', normalise=False)
     current_value = (0, n)
-    dat = d._get_data([(0, 1)], current_value)[0]
+    dat = d._get_realisations([(0, 1)], current_value)[0]
     assert (dat[0][0] == 1)
     assert (dat.shape == (1, 1))
     d = Data(np.arange(n + 2), 's', normalise=False)
     current_value = (0, n)
-    dat = d._get_data([(0, 1)], current_value)[0]
+    dat = d._get_realisations([(0, 1)], current_value)[0]
     assert (dat[0][0] == 1)
     assert (dat[1][0] == 2)
     assert (dat.shape == (2, 1))
@@ -109,7 +109,7 @@ def test_get_data():
     n = 7
     d = Data(np.arange(n), 's', normalise=False)
     current_value = (0, n)
-    dat = d._get_data([current_value], current_value)[0]
+    dat = d._get_realisations([current_value], current_value)[0]
 
 
 def test_permute_replications():
@@ -171,8 +171,32 @@ def test_permute_replications():
 def test_permute_samples():
     pass
 
+def test_get_data_slice():
+    n = 10
+    n_replications = 3
+    d = Data(np.vstack((np.zeros(n), np.ones(n), 2 * np.ones(n))),
+             'rs', normalise=False)
+    [s, i] =  d._get_data_slice(process=0, offset_samples=0, shuffle=False)
+
+    # test unshuffled slicing
+    for r in range(n_replications):
+        assert s[r][0] == i[r], 'Replication index {0} is not correct.'.format(
+                                                                            r)
+    # test shuffled slicing
+    [s, i] = d._get_data_slice(process=0, offset_samples=0, shuffle=True)
+    for r in range(n_replications):
+        assert s[r][0] == i[r], 'Replication index {0} is not correct.'.format(
+                                                                            r)
+
+    offset = 3
+    d = Data(np.arange(n), 's', normalise=False)
+    [s, i] =  d._get_data_slice(process=0, offset_samples=offset,
+                                shuffle=False)
+    assert s.shape[1] == (n - offset), 'Offset not handled correctly.'
+
 if __name__ == '__main__':
-    test_get_data()
+    test_get_data_slice()
+    test_get_realisations()
     test_data_normalisation()
     test_set_data()
     test_permute_replications()

@@ -190,7 +190,7 @@ class Data():
         self.n_samples = data.shape[1]
         self.n_replications = data.shape[2]
 
-    def _get_data(self, idx_list, current_value, shuffle=False):
+    def _get_realisations(self, idx_list, current_value, shuffle=False):
         """Return realisations for a list of indices.
 
         Return realisations for indices in list. Optionally, realisations can
@@ -211,7 +211,8 @@ class Data():
                 variable indices
             current_value : tuple
                 index of the current value in current analysis, has to have the
-                form (idx process, idx sample)
+                form (idx process, idx sample); if current_value == idx, all
+                samples for a process are returned
             shuffle: bool
                 if true permute blocks of replications over trials
 
@@ -277,34 +278,86 @@ class Data():
 
         return realisations, replications_index
 
-    def get_realisations(self, current_value, idx_list):
-        """Return all realisations of a random variable in the data.
+    def _get_data_slice(self, process, offset_samples=0, shuffle=False):
+        """Return data slice for a single process.
 
-        Return realisations of random variables represented by a list of
-        indices. An index is expected to have the form (process index, sample
-        index). The analysis_setup contains information like for example the
-        current_value in TE analysis, which are needed to identify variable
-        realisations in the raw data.
+        Return data slice for process. Optionally, an offset can be provided
+        such that data are returnded from sample 'offset_samples' onwards.
+        Also, data
+        can be shuffled over replications to create surrogate data for
+        statistical testing. For shuffling, data blocks are permuted over
+        replications while their temporal order stays intact within
+        replications:
+
+        orig:
+            repl. index:   1 1 1 1 2 2 2 2 3 3 3 3 4 4 4 4 5 5 5 5 6 6 6 6 ...
+            sample index:  1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 ...
+
+        shuffled:
+            repl. index:   3 3 3 3 1 1 1 1 4 4 4 4 6 6 6 6 2 2 2 2 5 5 5 5 ...
+            sample index:  1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 ...
+
+        If the current_value is provided, data are returned from an offset
+        specified by the index wrt the current_value.
 
         Args:
-            current_value : tuple
-                index of the current_value in the data
-            idx_list : list of tuples
-                indices of variables
+            process: int
+                process index
+            offset_samples : int
+                offset in samples
+            shuffle: bool
+                if true permute blocks of data over trials
 
         Returns:
             numpy array
-                realisations with dimensions replications x number of indices
+                data slice with dimensions no. samples - offset x no.
+                replications
             numpy array
-                replication index for each realisation
-
-        Raises:
-            TypeError
-                If idx is not a list
+                list of replications indices
         """
-        if type(idx_list) is not list:
-            raise TypeError('idx_realisations must be a list of tuples.')
-        return self._get_data(idx_list, current_value, shuffle=False)
+        # Check if requested indices are smaller than the current_value.
+        if not offset_samples <= self.n_samples:
+            print('Offset {0} must be smaller than number of samples in the '
+                  ' data ({1})'.format(offset_samples, self.n_samples))
+            raise RuntimeError('Offset must be smaller than no. samples.')
+
+        # Allocate memory.
+        data_slice = np.empty((self.n_samples - offset_samples,
+                               self.n_replications))
+
+        # Shuffle the replication order if requested. This creates surrogate
+        # data by permuting replications while keeping the order of samples
+        # intact.
+        if shuffle:
+            replication_index = np.random.permutation(self.n_replications)
+        else:
+            replication_index = np.arange(self.n_replications)
+
+        try:
+            data_slice = self.data[process, offset_samples:, replication_index]
+        except IndexError:
+            raise IndexError('You tried to access process {0} with an offset '
+                             'of {1} in a data set of {2} processes and {3} '
+                             'samples.'.format(process, offset_samples,
+                                               self.n_processes,
+                                               self.n_samples))
+        assert(not np.isnan(data_slice).any()), ('There are nans in the '
+                                                 'retrieved data slice.')
+        return data_slice, replication_index
+
+    def slice_permute_replications(self, scale):
+        """Return data slice with permuted replications (time stays intact).
+
+        Create surrogate data by permuting realisations over replications while
+        keeping the temporal structure (order of samples) intact. Return
+        realisations for all indices in the list, where an index is expected to
+        have the form (process index, sample index). Realisations are permuted
+        block-wise by permuting the order of replications
+        """
+        return self._get_data_slice(process=scale, shuffle=True)
+
+    def slice_permute_samples(self, scale, perm_opts=None):
+        pass
 
     def permute_replications(self, current_value, idx_list):
         """Return realisations with permuted replications (time stays intact).
@@ -341,7 +394,7 @@ class Data():
         """
         if type(idx_list) is not list:
             raise TypeError('idx needs to be a list of tuples.')
-        return self._get_data(idx_list, current_value, shuffle=True)
+        return self._get_realisations(idx_list, current_value, shuffle=True)
 
     def permute_samples(self, current_value, idx_list, perm_range='max'):
         """Return realisations with permuted samples (repl. stays intact).

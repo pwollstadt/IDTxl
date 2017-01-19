@@ -680,12 +680,12 @@ def _generate_surrogates(data, current_value, idx_list, n_perm,
                          perm_range='max'):
     """Generate surrogate data for statistical testing.
 
-    The method for data generation depends on whether sufficient replications
-    of the data exists. If the number of replications is high enough
-    (reps! > n_permutations), surrogates are created by shuffling data over
-    replications (while keeping the temporal order of samples intact). If the
-    number of replications is too low, samples are shuffled over time (while
-    keeping the order of replications intact).
+    The method for surrogate generation depends on whether sufficient
+    replications of the data exists. If the number of replications is high
+    enough (reps! > n_permutations), surrogates are created by shuffling data
+    over replications (while keeping the temporal order of samples intact). If
+    the number of replications is too low, samples are shuffled over time
+    (while keeping the order of replications intact).
 
     Args:
         data : Data instance
@@ -727,4 +727,44 @@ def _generate_surrogates(data, current_value, idx_list, n_perm,
                                                          perm_range)[0]
             i_1 = i_2
             i_2 += n_realisations
+    return surrogates
+
+
+def _generate_spectral_surrogates(data, scale, n_perm, perm_opts=None):
+    """Generate surrogate data for statistical testing of spectral TE.
+
+    The method for surrogate generation depends on whether sufficient
+    replications of the data exists. If the number of replications is high
+    enough (reps! > n_permutations), surrogates are created by shuffling data
+    over replications (while keeping the temporal order of samples intact). If
+    the number of replications is too low, samples are shuffled over time
+    (while keeping the order of replications intact).
+
+    Args:
+        data : Data instance
+            raw data for analysis
+        scale : int
+            index of the scale to be shuffled
+        n_perm : int
+            number of permutations
+        perm_opts : dict [optional]
+            options for surrogate creation by shuffling samples over time
+
+    Returns:
+        numpy array
+            surrogate data with dimensions
+            (realisations * n_perm) x len(idx_list)
+    """
+    # Allocate memory for surrogates
+    surrogates = np.empty((data.n_samples, data.n_replications, n_perm))
+
+    # Generate surrogates by permuting over replications if possible (no.
+    # replications needs to be sufficient); else permute samples over time.
+    if _sufficient_replications(data, n_perm):  # permute replications
+        for perm in range(n_perm):
+            surrogates[:, :, perm] = data.slice_permute_replications(scale)
+    else:  # permute samples
+        for perm in range(n_perm):
+            surrogates[:, :, perm] = data.slice_permute_samples(scale,
+                                                                perm_opts)
     return surrogates
