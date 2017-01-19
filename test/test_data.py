@@ -194,7 +194,68 @@ def test_get_data_slice():
                                 shuffle=False)
     assert s.shape[1] == (n - offset), 'Offset not handled correctly.'
 
+
+def test_create_surrogates():
+    pass
+
+
+def test_swap_blocks():
+    """Test block-wise swapping of samples."""
+    d = Data()
+    d.generate_mute_data()
+
+    # block_size divides the length of the data to be permuted, swap_range
+    # leads to 2 remaining blocks
+    n = 50
+    block_size = 5
+    swap_range = 4
+    perm = d._swap_blocks(n, block_size, swap_range)
+    assert sum(perm == 0) == block_size, 'Incorrect block size.'
+    assert perm.shape[0] == n, 'Incorrect length of permuted indices.'
+
+    # block_size leads to one block of length 1, swap_range divides the no.
+    # blocks
+    n = 50
+    block_size = 7
+    swap_range = 4
+    perm = d._swap_blocks(n, block_size, swap_range)
+    assert sum(perm == 0) == block_size, 'Incorrect block size.'
+    assert perm.shape[0] == n, 'Incorrect length of permuted indices.'
+    n_blocks = np.ceil(n/7).astype(int)
+    assert n_blocks == 8, 'No. blocks is incorrect.'
+    assert sum(perm == n_blocks - 1) == 1, ('No. remaining samples in the last'
+                                            ' block is incorrect.')
+
+    # no remaining samples or blocks
+    n = 30
+    block_size = 5
+    swap_range = 3
+    perm = d._swap_blocks(n, block_size, swap_range)
+    assert sum(perm == 0) == block_size, 'Incorrect block size.'
+    assert perm.shape[0] == n, 'Incorrect length of permuted indices.'
+
+
+def test_circular_shift():
+    """Test circular shifting of samples."""
+    d = Data()
+    d.generate_mute_data()
+    n = 20
+    max_shift = 10
+    [perm, shift] = d._circular_shift(n, max_shift)
+    assert perm[0] == (n - shift), 'First index after circular shift is wrong!'
+    assert shift <= max_shift, 'Actual shift exceeded max_shift.'
+    assert perm.shape[0] == n, 'Incorrect length of permuted indices.'
+
+
+def test_swap_local():
+    pass
+
+
 if __name__ == '__main__':
+    test_swap_blocks()
+    test_circular_shift()
+    test_swap_local()
+    test_create_surrogates()
     test_get_data_slice()
     test_get_realisations()
     test_data_normalisation()

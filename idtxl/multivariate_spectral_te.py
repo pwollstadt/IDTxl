@@ -51,7 +51,7 @@ class Multivariate_spectral_te(Network_analysis):
         self.tail = options.get('tail', 'two')
         self.cmi_opts = options
 
-    def analyse_network(self, res_network, targets='all', sources='all'):
+    def analyse_network(self, res_network, data, targets='all', sources='all'):
         """Find multivariate spectral transfer entropy between all nodes.
 
         Estimate multivariate transfer entropy (TE) between all nodes in the
@@ -89,6 +89,8 @@ class Multivariate_spectral_te(Network_analysis):
         Args:
             res_network: dict
                 results from multivariate network inference, e.g., using TE
+            data : Data instance
+                raw data from which the network was inferred
             targets : list of int | 'all' [optinal]
                 index of target processes (default='all')
             sources : list of int | list of list | 'all' [optional]
@@ -111,7 +113,7 @@ class Multivariate_spectral_te(Network_analysis):
         # TODO see Multivariate_te.analyse_network()
         return 1
 
-    def analyse_single_target(self, res_target, target, sources='all'):
+    def analyse_single_target(self, res_target, data, sources='all'):
         """Find multivariate spectral transfer entropy into a target.
 
         Test multivariate spectral transfer entropy (TE) between all source
@@ -148,12 +150,24 @@ class Multivariate_spectral_te(Network_analysis):
             >>>                                    analysis_opts)
             >>> res = network_analysis.analyse_single_target(dat, target,
             >>>                                              sources)
+            >>>
+            >>> spectral_opts = {
+            >>>     'cmi_calc_name': 'jidt_kraskov',
+            >>>     'n_perm_spec': 200,
+            >>>     'alpha_spec': 0.05
+            >>>     }
+            >>> spectral_analysis = Multivariate_spectral_te(spectral_opts)
+            >>> res_spec = spectral_analysis.analyse_single_target(res, dat)
 
-        Args:
+            Note:
+            For more details on the estimation of multivariate transfer entropy
+            see documentation of class method 'analyse_single_target'.
+
+            Args:
+            res_network: dict
+                results from multivariate network inference, e.g., using TE
             data : Data instance
-                raw data for analysis
-            target : int
-                index of target process
+                raw data from which the network was inferred
             sources : list of int | int | 'all' [optional]
                 single index or list of indices of source processes
                 (default='all'), if 'all', all possible sources for the given
@@ -177,5 +191,11 @@ class Multivariate_spectral_te(Network_analysis):
         # Main algorithm.
         for s in idx_list_sources:
             # TODO do stuff
+            # new methods in class Data():
+            # dat._get_data_slice
+            # dat.slice_permute_samples
+            # dat.slice_permute_replications
+            # new method in module stats:
+            # stats._generate_spectral_surrogates
 
         return 1
