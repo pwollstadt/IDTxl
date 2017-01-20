@@ -451,7 +451,7 @@ class Multivariate_te(Network_inference):
             if not significant:
                 if VERBOSE:
                     print(' -- not significant')
-                self._remove_candidate(min_candidate)
+                self._remove_var(min_candidate)
             else:
                 if VERBOSE:
                     print(' -- significant')
@@ -477,7 +477,7 @@ class Multivariate_te(Network_inference):
                 # backwards over the candidates to remove them iteratively.
                 for i in range(s.shape[0] - 1, -1, -1):
                     if not s[i]:
-                        self._remove_candidate(self.selected_vars_sources[i])
+                        self._remove_var(self.selected_vars_sources[i])
                         p = np.delete(p, i)
                         te = np.delete(te, i)
                 self.pvalues_sign_sources = p

@@ -7,6 +7,7 @@ Created on Mon Mar  7 18:13:27 2016
 import copy as cp
 import itertools as it
 import numpy as np
+from . import idtxl_utils as utils
 
 
 class Network_analysis():
@@ -287,6 +288,19 @@ class Network_analysis():
                 self.selected_vars_target.append(i)
             else:
                 self.selected_vars_sources.append(i)
+
+    def _remove_var(self, idx):
+        """Remove a single variable and its realisations from the object."""
+        self._selected_vars_realisations = utils.remove_column(
+                                         self._selected_vars_realisations,
+                                         self.selected_vars_full.index(idx))
+        self.selected_vars_full.pop(self.selected_vars_full.index(idx))
+        if idx[0] == self.target:
+            self.selected_vars_target.pop(
+                                        self.selected_vars_target.index(idx))
+        else:
+            self.selected_vars_sources.pop(
+                                        self.selected_vars_sources.index(idx))
 
     def _clean_up(self):
         """Remove temporary data (realisations) at the end of the analysis."""

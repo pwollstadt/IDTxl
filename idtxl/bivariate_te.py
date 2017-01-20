@@ -317,7 +317,7 @@ class Bivariate_te(Network_inference):
         # backwards over the candidates to remove them iteratively.
         for i in range(s.shape[0] - 1, -1, -1):
             if not s[i]:
-                self._remove_candidate(self.selected_vars_sources[i])
+                self._remove_var(self.selected_vars_sources[i])
                 p = np.delete(p, i)
                 te = np.delete(te, i)
         self.pvalues_sign_sources = p

@@ -396,7 +396,7 @@ class Single_process_storage(Network_analysis):
             if not significant:
                 if VERBOSE:
                     print(' -- not significant')
-                self._remove_candidate(min_candidate)
+                self._remove_var(min_candidate)
             else:
                 if VERBOSE:
                     print(' -- significant')
@@ -407,7 +407,7 @@ class Single_process_storage(Network_analysis):
         """Perform statistical test on AIS using the final conditional set."""
         if self._selected_vars_full:
             print(self._idx_to_lag(self.selected_vars_full))
-            [ais, s, p] = stats.mi_against_surrogates(self, data, self.options)
+            [ais, s, p] = stats.mi_against_surrogates(self, data)
 
             # If a parallel estimator was used, an array of AIS estimates is
             # returned. Make the output uniform for both estimator types.

@@ -190,7 +190,7 @@ class Data():
         self.n_samples = data.shape[1]
         self.n_replications = data.shape[2]
 
-    def _get_realisations(self, idx_list, current_value, shuffle=False):
+    def get_realisations(self, current_value, idx_list, shuffle=False):
         """Return realisations for a list of indices.
 
         Return realisations for indices in list. Optionally, realisations can
@@ -474,7 +474,7 @@ class Data():
         """
         if type(idx_list) is not list:
             raise TypeError('idx needs to be a list of tuples.')
-        return self._get_realisations(idx_list, current_value, shuffle=True)
+        return self.get_realisations(current_value, idx_list, shuffle=True)
 
     def permute_samples(self, current_value, idx_list, perm_opts):
         """Return realisations with permuted samples (repl. stays intact).
@@ -570,7 +570,7 @@ class Data():
             data_temp = realisations[mask, :]
             realisations_perm[mask, :] = data_temp[perm, :]
             perm_idx[mask] = perm
-        return self._permute_samples(realisations, replication_idx, perm_opts)
+        return realisations_perm, perm_idx
 
     def _get_permutation_samples(self, n_samples, perm_opts=None):
         """Generate permutation of n samples.
@@ -659,6 +659,12 @@ class Data():
 
         elif perm_type == 'local':
             perm_range = perm_opts.get('perm_range', round(n_samples / 10))
+            if type(perm_range) is str:
+                if perm_range != 'max':
+                    raise ValueError('Got {0} as input for perm_range. For '
+                                     'permutation strategy ''local'' either an int'
+                                     ' or ''max'' has to be provided.'.format(
+                                                                      perm_range))
             perm = self._swap_local(n_samples, perm_range)
 
         else:
@@ -666,7 +672,7 @@ class Data():
                                                                     perm_type))
         return perm
 
-    def _swap_local(n, perm_range):
+    def _swap_local(self, n, perm_range):
         """Permute n samples within blocks of length 'perm_range'.
 
         Args:
@@ -699,7 +705,7 @@ class Data():
                 perm[-remainder:] = np.random.permutation(remainder) + i
         return perm
 
-    def _swap_blocks(n, block_size, perm_range):
+    def _swap_blocks(self, n, block_size, perm_range):
         """Permute blocks of samples in a time series within a given range.
 
         Permute n samples by swapping blocks of samples within a given range.
@@ -743,7 +749,7 @@ class Data():
                           np.repeat(perm[idx_last_block], rem_samples),
                           np.repeat(perm[idx_last_block + 1:], block_size)))
 
-    def _circular_shift(n, max_shift):
+    def _circular_shift(self, n, max_shift):
         """Permute samples through shifting by a random number of samples.
 
         A time series is shifted circularly by a random number of samples. A

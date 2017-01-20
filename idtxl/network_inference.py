@@ -4,10 +4,7 @@ Created on Mon Mar  7 18:13:27 2016
 
 @author: patricia
 """
-import itertools as it
 import numpy as np
-import copy as cp
-from . import idtxl_utils as utils
 from .network_analysis import Network_analysis
 
 VERBOSE = True
@@ -171,19 +168,6 @@ class Network_inference(Network_analysis):
         candidates = self._define_candidates(procs, samples)
         # TODO include non-selected target candidates as further candidates, they may get selected due to synergies
         self._include_candidates(candidates, data)
-
-    def _remove_candidate(self, idx):
-        """Remove a single candidate and its realisations from the object."""
-        self._selected_vars_realisations = utils.remove_column(
-                                         self._selected_vars_realisations,
-                                         self.selected_vars_full.index(idx))
-        self.selected_vars_full.pop(self.selected_vars_full.index(idx))
-        if idx[0] == self.target:
-            self.selected_vars_target.pop(
-                                        self.selected_vars_target.index(idx))
-        else:
-            self.selected_vars_sources.pop(
-                                        self.selected_vars_sources.index(idx))
 
     def _force_conditionals(self, cond, data):
         """Enforce a given conditioning set."""

@@ -88,19 +88,19 @@ def test_get_realisations():
     idx_list = [(0, 4), (0, 6)]
     current_value = (0, 3)
     with pytest.raises(RuntimeError):
-        dat._get_realisations(idx_list, current_value)
+        dat.get_realisations(current_value, idx_list)
 
     # Test retrieved data for one/two replications in time (i.e., the current
     # value is equal to the last sample)
     n = 7
     d = Data(np.arange(n + 1), 's', normalise=False)
     current_value = (0, n)
-    dat = d._get_realisations([(0, 1)], current_value)[0]
+    dat = d.get_realisations(current_value, [(0, 1)])[0]
     assert (dat[0][0] == 1)
     assert (dat.shape == (1, 1))
     d = Data(np.arange(n + 2), 's', normalise=False)
     current_value = (0, n)
-    dat = d._get_realisations([(0, 1)], current_value)[0]
+    dat = d.get_realisations(current_value, [(0, 1)])[0]
     assert (dat[0][0] == 1)
     assert (dat[1][0] == 2)
     assert (dat.shape == (2, 1))
@@ -109,7 +109,7 @@ def test_get_realisations():
     n = 7
     d = Data(np.arange(n), 's', normalise=False)
     current_value = (0, n)
-    dat = d._get_realisations([current_value], current_value)[0]
+    dat = d.get_realisations(current_value, [current_value])[0]
 
 
 def test_permute_replications():
@@ -132,14 +132,18 @@ def test_permute_replications():
     rng = 3
     current_value = (0, 3)
     l = [(0, 0), (0, 1), (0, 2)]
-    #data = Data(np.arange(n), 's', normalise=False)
+    # data = Data(np.arange(n), 's', normalise=False)
     data = Data(np.vstack((np.arange(n),
                            np.arange(n))).astype(int),
-                         'rs',
-                         normalise=False)
+                'rs',
+                normalise=False)
+    perm_opts = {
+        'perm_type': 'local',
+        'perm_range': rng
+    }
     [perm, perm_idx] = data.permute_samples(current_value=current_value,
                                             idx_list=l,
-                                            perm_range=rng)
+                                            perm_opts=perm_opts)
     samples = np.arange(rng)
     i = 0
     n_per_repl = int(data.n_realisations(current_value) / data.n_replications)
@@ -154,19 +158,25 @@ def test_permute_replications():
             'remainder did not contain the same realisations.')
 
     # Test assertions that perm_range is not too low or too high.
+    perm_opts = {
+        'perm_type': 'local',
+        'perm_range': 1
+    }
     with pytest.raises(AssertionError):
         data.permute_samples(current_value=current_value,
                              idx_list=l,
-                             perm_range=1)
+                             perm_opts=perm_opts)
+    perm_opts['perm_range'] = np.inf
     with pytest.raises(AssertionError):
         data.permute_samples(current_value=current_value,
                              idx_list=l,
-                             perm_range=np.inf)
+                             perm_opts=perm_opts)
     # Test ValueError if a string other than 'max' is given for perm_range.
+    perm_opts['perm_range'] = 'foo'
     with pytest.raises(ValueError):
         data.permute_samples(current_value=current_value,
                              idx_list=l,
-                             perm_range='foo')
+                             perm_opts=perm_opts)
 
 def test_permute_samples():
     pass

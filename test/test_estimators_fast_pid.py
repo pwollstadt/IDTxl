@@ -1,5 +1,4 @@
-"""Unit tests for fast PID estimator.
-"""
+"""Unit tests for fast PID estimator. """
 import time as tm
 import numpy as np
 import idtxl.estimators_fast_pid as epid

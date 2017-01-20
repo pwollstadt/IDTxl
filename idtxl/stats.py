@@ -410,7 +410,7 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
     return significance, pvalue, surr_table
 
 
-def mi_against_surrogates(analysis_setup, data, opts=None):
+def mi_against_surrogates(analysis_setup, data):
     """Test estimaed mutual information for significance against surrogate data.
 
     Shuffle realisations of the current value (point to be predicted) and re-
@@ -420,11 +420,8 @@ def mi_against_surrogates(analysis_setup, data, opts=None):
 
     Args:
         analysis_setup : Multivariate_te instance
-            information on the current analysis
-        data : Data instance
-            raw data
-        opts : dict [optional]
-            parameters for statistical testing, can contain:
+            information on the current analysis, should have an Attribute
+            'options', a dict with fields
 
             - 'n_perm_mi' - number of permutations (default=500)
             - 'alpha_mi' - critical alpha level (default=0.05)
@@ -432,6 +429,9 @@ def mi_against_surrogates(analysis_setup, data, opts=None):
               (default='one')
             - 'perm_range' - permutation range if permutation over samples is
               used to create surrogates (default='max')
+
+        data : Data instance
+            raw data
 
     Returns:
         float
@@ -441,12 +441,13 @@ def mi_against_surrogates(analysis_setup, data, opts=None):
         float
             p_value for estimated MI value
     """
-    if opts is None:
-        opts = {}
+    assert hasattr(analysis_setup, 'options'), ('The analysis setup should '
+                                                'have an options attribute '
+                                                'with parameters for '
+                                                'statistical testing.')
     n_perm = analysis_setup.options.get('n_perm_mi', 500)
     alpha = analysis_setup.options.get('alpha_mi', 0.05)
     tail = analysis_setup.options.get('tail_mi', 'one')
-    perm_range = analysis_setup.options.get('perm_range', 'max')
     '''
     surr_realisations = np.empty(
                         (data.n_realisations(analysis_setup.current_value) *
@@ -479,7 +480,7 @@ def mi_against_surrogates(analysis_setup, data, opts=None):
                                              analysis_setup.current_value,
                                              [analysis_setup.current_value],
                                              n_perm,
-                                             perm_range)
+                                             analysis_setup.options)
 
     surr_dist = analysis_setup._cmi_calculator.estimate_mult(
                             n_chunks=n_perm,
@@ -542,7 +543,7 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
     # of permutations. If not permute samples over time
 
     # permute_over_replications = _permute_over_replications(data, n_perm)
-    perm_range = analysis_setup.options.get('perm_range', 'max')
+    # perm_range = analysis_setup.options.get('perm_range', 'max')
 
     # Create surrogate table.
     if VERBOSE:
@@ -580,7 +581,7 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
                                                  analysis_setup.current_value,
                                                  [candidate],
                                                  n_perm,
-                                                 perm_range)
+                                                 analysis_setup.options)
         surr_table[idx_c, :] = analysis_setup._cmi_calculator.estimate_mult(
                     n_chunks=n_perm,
                     options=analysis_setup.options,
@@ -677,7 +678,7 @@ def _sufficient_replications(data, n_perm):
 
 
 def _generate_surrogates(data, current_value, idx_list, n_perm,
-                         perm_range='max'):
+                         perm_opts=None):
     """Generate surrogate data for statistical testing.
 
     The method for surrogate generation depends on whether sufficient
@@ -697,9 +698,8 @@ def _generate_surrogates(data, current_value, idx_list, n_perm,
             list of variables, for which surrogates have to be created
         n_perm : int
             number of permutations
-        perm_range : int [optional]
-            permutation range if permutation over samples is used to create
-            surrogates (default='max')
+        perm_opts : dict [optional]
+            options for surrogate creation by shuffling samples over time
 
     Returns:
         numpy array
@@ -710,21 +710,27 @@ def _generate_surrogates(data, current_value, idx_list, n_perm,
     n_realisations = data.n_realisations(current_value)
     surrogates = np.empty((n_realisations * n_perm, len(idx_list)))
 
+    # Check if the user requested to permute samples in time and not over
+    # replications (default)
+    permute_in_time = perm_opts.get('permute_in_time', False)
+
     # Generate surrogates by permuting over replications if possible (no.
     # replications needs to be sufficient); else permute samples over time.
     i_1 = 0
     i_2 = n_realisations
-    if _sufficient_replications(data, n_perm):  # permute replications
+    # permute replications
+    if _sufficient_replications(data, n_perm) and not permute_in_time:
         for perm in range(n_perm):
             surrogates[i_1:i_2, ] = data.permute_replications(current_value,
                                                               idx_list)[0]
             i_1 = i_2
             i_2 += n_realisations
-    else:  # permute samples
+    # permute samples
+    else:
         for perm in range(n_perm):
             surrogates[i_1:i_2, ] = data.permute_samples(current_value,
                                                          idx_list,
-                                                         perm_range)[0]
+                                                         perm_opts)[0]
             i_1 = i_2
             i_2 += n_realisations
     return surrogates
