@@ -17,6 +17,7 @@
 .spyderworkspace
 *.bac*
 *.in~
+.vscode
 
 # Profiling          #
 ######################
