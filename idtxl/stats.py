@@ -686,7 +686,8 @@ def _generate_surrogates(data, current_value, idx_list, n_perm,
     enough (reps! > n_permutations), surrogates are created by shuffling data
     over replications (while keeping the temporal order of samples intact). If
     the number of replications is too low, samples are shuffled over time
-    (while keeping the order of replications intact).
+    (while keeping the order of replications intact). The latter method can be
+    forced by setting 'permute_in_time' to True in 'perm_opts'.
 
     Args:
         data : Data instance
@@ -699,7 +700,11 @@ def _generate_surrogates(data, current_value, idx_list, n_perm,
         n_perm : int
             number of permutations
         perm_opts : dict [optional]
-            options for surrogate creation by shuffling samples over time
+            options for surrogate creation by shuffling samples over time, set
+            'permute_in_time' to True to create surrogates by shuffling data
+            over time. See Data.permute_samples() for options for surrogate
+            creation.
+
 
     Returns:
         numpy array

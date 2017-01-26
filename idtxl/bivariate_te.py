@@ -44,6 +44,10 @@ class Bivariate_te(Network_inference):
               conditionals when estimating TE; can either be a list of
               variables, where each variable is described as (idx process, lag
               wrt to current value) or can be a string: 'faes' for Faes-Method
+            - 'permute_in_time' - force surrogate creation by shuffling
+              realisations in time instead of shuffling replications; see
+              documentation of Data.permute_samples() for further options
+              (default=False)
 
         max_lag_target : int [optional]
             maximum temporal search depth for candidates in the target's past

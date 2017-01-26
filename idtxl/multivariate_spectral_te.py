@@ -31,7 +31,11 @@ class Multivariate_spectral_te(Network_analysis):
               (default=0.05)
             - 'cmi_calc_name' - estimator to be used for CMI calculation
               (For estimator options see the respective documentation.)
-            - 'tail' - test tail ('one' or 'two')
+            - 'permute_in_time' - force surrogate creation by shuffling
+              realisations in time instead of shuffling replications; see
+              documentation of Data.permute_samples() for further options
+              (default=False)
+
     """
 
     # TODO right now 'options' holds all optional params (stats AND estimator).
