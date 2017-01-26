@@ -24,7 +24,6 @@ class Network_analysis():
         self.selected_vars_target = []
         self._current_value_realisations = None
         self._selected_vars_realisations = None
-        self._selected_vars_repl_idx = None
 
     @property
     def current_value(self):
@@ -150,20 +149,6 @@ class Network_analysis():
     def _selected_vars_sources_realisations(self, realisations):
         self.__selected_vars_sources_realisations = realisations
 
-    @property
-    def _selected_vars_repl_idx(self):
-        """Get list of indices of replications of the selected vars.
-
-        Note:
-            This is helpful to generate permutations over replications when
-            doing statistical testing of the full set of selected variables.
-        """
-        return self.__selected_vars_repl_idx
-
-    @_selected_vars_repl_idx.setter
-    def _selected_vars_repl_idx(self, idx_list):
-        self.__selected_vars_repl_idx = idx_list
-
     def _append_selected_vars_realisations(self, realisations):
         """Append realisations of conditionals to existing realisations.
 
@@ -268,7 +253,8 @@ class Network_analysis():
 
         Returns:
             a list of tuples, where each tuple holds the index of one
-            candidate and has the form (process index, sample index)
+            candidate and has the form (process index, sample index), indices
+            are absolute values with respect to some data array.
         """
         candidate_set = []
         for idx in it.product(processes, samples):
@@ -289,8 +275,8 @@ class Network_analysis():
             else:
                 self.selected_vars_sources.append(i)
 
-    def _remove_var(self, idx):
-        """Remove a single variable and its realisations from the object."""
+    def _remove_selected_var(self, idx):
+        """Remove a single selected variable and its realisations."""
         self._selected_vars_realisations = utils.remove_column(
                                          self._selected_vars_realisations,
                                          self.selected_vars_full.index(idx))
