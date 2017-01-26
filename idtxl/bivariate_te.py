@@ -313,15 +313,15 @@ class Bivariate_te(Network_inference):
             selected_vars_realisations : numpy array
                 realisations of the conditional set
         """
-        self._append_selected_vars_idx(candidate_set)
-        self._append_selected_vars_realisations(
+        self._append_selected_vars(
+                candidate_set,
                 data.get_realisations(self.current_value, candidate_set)[0])
         [s, p, te] = stats.max_statistic_sequential(self, data, self.options)
         # Remove non-significant sources from the candidate set. Loop
         # backwards over the candidates to remove them iteratively.
         for i in range(s.shape[0] - 1, -1, -1):
             if not s[i]:
-                self._remove_var(self.selected_vars_sources[i])
+                self._remove_selected_var(self.selected_vars_sources[i])
                 p = np.delete(p, i)
                 te = np.delete(te, i)
         self.pvalues_sign_sources = p

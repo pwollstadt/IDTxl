@@ -360,10 +360,10 @@ class Multivariate_te(Network_inference):
                     print(' -- significant')
                 success = True
                 candidate_set.pop(np.argmax(temp_te))
-                self._append_selected_vars_idx([max_candidate])
-                self._append_selected_vars_realisations(
-                            data.get_realisations(self.current_value,
-                                                  [max_candidate])[0])
+                self._append_selected_vars(
+                        [max_candidate],
+                        data.get_realisations(self.current_value,
+                                              [max_candidate])[0])
             else:
                 if VERBOSE:
                     print(' -- not significant')
@@ -449,7 +449,7 @@ class Multivariate_te(Network_inference):
             if not significant:
                 if VERBOSE:
                     print(' -- not significant')
-                self._remove_var(min_candidate)
+                self._remove_selected_var(min_candidate)
             else:
                 if VERBOSE:
                     print(' -- significant')
@@ -475,7 +475,7 @@ class Multivariate_te(Network_inference):
                 # backwards over the candidates to remove them iteratively.
                 for i in range(s.shape[0] - 1, -1, -1):
                     if not s[i]:
-                        self._remove_var(self.selected_vars_sources[i])
+                        self._remove_selected_var(self.selected_vars_sources[i])
                         p = np.delete(p, i)
                         te = np.delete(te, i)
                 self.pvalues_sign_sources = p

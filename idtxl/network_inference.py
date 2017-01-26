@@ -149,8 +149,8 @@ class Network_inference(Network_analysis):
                    'adding point at t-1 in the target'))
             idx = (self.current_value[0], self.current_value[1] - 1)
             realisations = data.get_realisations(self.current_value, [idx])[0]
-            self._append_selected_vars_idx([idx])
-            self._append_selected_vars_realisations(realisations)
+            self._append_selected_vars([idx], realisations)
+
 
     def _include_source_candidates(self, data):
         """Test candidates in the source's past."""
@@ -173,6 +173,6 @@ class Network_inference(Network_analysis):
 
         print('Adding the following variables to the conditioning set: {0}.'.
               format(self._idx_to_lag(cond)))
-        self._append_selected_vars_idx(cond)
-        self._append_selected_vars_realisations(
-                        data.get_realisations(self.current_value, cond)[0])
+        self._append_selected_vars(cond,
+                                   data.get_realisations(self.current_value,
+                                                         cond)[0])

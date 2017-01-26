@@ -279,7 +279,7 @@ class Single_process_storage(Network_analysis):
         while candidate_set:
             # Get realisations for all candidates.
             cand_real = data.get_realisations(self.current_value,
-                                                           candidate_set)[0]
+                                              candidate_set)[0]
             cand_real = cand_real.T.reshape(cand_real.size, 1)
 
             # Calculate the (C)MI for each candidate and the target.
@@ -312,10 +312,10 @@ class Single_process_storage(Network_analysis):
                 # Remove candidate from candidate set and add it to the
                 # selected variables (used as the conditioning set).
                 candidate_set.pop(np.argmax(temp_te))
-                self._append_selected_vars_idx([max_candidate])
-                self._append_selected_vars_realisations(
-                            data.get_realisations(self.current_value,
-                                                  [max_candidate])[0])
+                self._append_selected_vars(
+                        [max_candidate],
+                        data.get_realisations(self.current_value,
+                                              [max_candidate])[0])
             else:
                 if VERBOSE:
                     print(' -- not significant')
@@ -391,7 +391,7 @@ class Single_process_storage(Network_analysis):
             if not significant:
                 if VERBOSE:
                     print(' -- not significant')
-                self._remove_var(min_candidate)
+                self._remove_selected_var(min_candidate)
             else:
                 if VERBOSE:
                     print(' -- significant')

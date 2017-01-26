@@ -275,6 +275,23 @@ class Network_analysis():
             else:
                 self.selected_vars_sources.append(i)
 
+    def _append_selected_vars(self, idx, realisations):
+        """Append indices and realisation of selected variables.
+
+        Args:
+            idx : list of tuples
+                indeces of selected variables, where each entry is a tuple
+                (idx process, idx sample), where indices are absolute values
+                with respect to entries in a data array
+            realisations : numpy array
+                realisations of the selected variables
+        """
+        assert len(idx) == realisations.shape[1], (
+            'Dimensionality of realisations array ({0}) and length of index '
+            'list ({1}) do not match.'.format(realisations.shape[1], len(idx)))
+        self._append_selected_vars_idx(idx)
+        self._append_selected_vars_realisations(realisations)
+
     def _remove_selected_var(self, idx):
         """Remove a single selected variable and its realisations."""
         self._selected_vars_realisations = utils.remove_column(
