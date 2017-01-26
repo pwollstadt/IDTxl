@@ -277,28 +277,21 @@ class Single_process_storage(Network_analysis):
         """
         success = False
         while candidate_set:
-            # Find the candidate with maximum TE.
-            candidate_realisations = np.empty(
-                                    (data.n_realisations(self.current_value) *
-                                     len(candidate_set), 1))
-            i_1 = 0
-            i_2 = data.n_realisations(self.current_value)
-            for candidate in candidate_set:
-                candidate_realisations[i_1:i_2, 0] = data.get_realisations(
-                                self.current_value,
-                                [candidate])[0].reshape(
-                                    data.n_realisations(self.current_value),)
-                i_1 = i_2
-                i_2 += data.n_realisations(self.current_value)
+            # Get realisations for all candidates.
+            cand_real = data.get_realisations(self.current_value,
+                                                           candidate_set)[0]
+            cand_real = cand_real.T.reshape(cand_real.size, 1)
+
+            # Calculate the (C)MI for each candidate and the target.
             temp_te = self._cmi_calculator.estimate_mult(
                                 n_chunks=len(candidate_set),
                                 options=self.options,
                                 re_use=['var2', 'conditional'],
-                                var1=candidate_realisations,
+                                var1=cand_real,
                                 var2=self._current_value_realisations,
                                 conditional=self._selected_vars_realisations)
 
-            # Test max TE for significance with maximum statistics.
+            # Test max CMI for significance with maximum statistics.
             te_max_candidate = max(temp_te)
             max_candidate = candidate_set[np.argmax(temp_te)]
             if VERBOSE:
@@ -316,6 +309,8 @@ class Single_process_storage(Network_analysis):
                 if VERBOSE:
                     print(' -- significant')
                 success = True
+                # Remove candidate from candidate set and add it to the
+                # selected variables (used as the conditioning set).
                 candidate_set.pop(np.argmax(temp_te))
                 self._append_selected_vars_idx([max_candidate])
                 self._append_selected_vars_realisations(
