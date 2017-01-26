@@ -12,7 +12,11 @@ Note:
 import numpy as np
 import itertools as it
 from . import stats
+<<<<<<< HEAD
 from .network_inference import Network_inference
+=======
+from .network_analysis import Network_analysis
+>>>>>>> cbbcfef... Fix relative imports from IDTxl
 from .set_estimator import Estimator_cmi
 
 VERBOSE = True
