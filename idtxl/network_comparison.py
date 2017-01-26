@@ -47,7 +47,7 @@ class Network_comparison(Network_analysis):
         union : dict
             union of all networks entering the comparison, used as the basis
             for statistical comparison
-        cmi_opts : dict
+        options : dict
             parameters for CMI estimation
         cmi_diff : dict
             original difference in CMI estimates for each source variable >
@@ -78,7 +78,7 @@ class Network_comparison(Network_analysis):
         self.n_permutations = options.get('n_perm_comp', 10)
         self.alpha = options.get('alpha_comp', 0.05)
         self.tail = options.get('tail', 'two')
-        self.cmi_opts = options
+        self.options = options
         stats.check_n_perm(self.n_permutations, self.alpha)
 
     def compare_within(self, network_a, network_b, data_a, data_b):
@@ -104,7 +104,7 @@ class Network_comparison(Network_analysis):
                 ('union_network'), parameters used for statistical comparison
                 (critical alpha level, 'alpha'; number of permutations,
                 'n_permutations'; statistics type, 'stats_type', test tail,
-                'tail'), parameters used for CMI estimation ('cmi_opts'),
+                'tail'), parameters used for CMI estimation ('options'),
                 the original CMI difference ('cmi_diff'), the surrogate CMI
                 values ('cmi_surr'), the p-value for each source variable >
                 target combination in the union network ('pval') and their
@@ -133,7 +133,7 @@ class Network_comparison(Network_analysis):
             'tail': self.tail,
             'cmi_diff': self.cmi_diff,
             'cmi_surr': self.cmi_surr,
-            'cmi_opts': self.cmi_opts,
+            'options': self.options,
             'union_network': self.union,
             'pval': pvalue,
             'sign': sign
@@ -167,7 +167,7 @@ class Network_comparison(Network_analysis):
                 ('union_network'), parameters used for statistical comparison
                 (critical alpha level, 'alpha'; number of permutations,
                 'n_permutations'; statistics type, 'stats_type', test tail,
-                'tail'), parameters used for CMI estimation ('cmi_opts'),
+                'tail'), parameters used for CMI estimation ('options'),
                 the original CMI difference ('cmi_diff'), the surrogate CMI
                 values ('cmi_surr'), the p-value for each source variable >
                 target combination in the union network ('pval') and their
@@ -198,7 +198,7 @@ class Network_comparison(Network_analysis):
             'tail': self.tail,
             'cmi_diff': self.cmi_diff,
             'cmi_surr': self.cmi_surr,
-            'cmi_opts': self._idx_to_lag,
+            'options': self.options,
             'union_network': self.union,
             'pval': pvalue,
             'sign': sign
@@ -211,7 +211,7 @@ class Network_comparison(Network_analysis):
                             'Unequal no. replications in the two data sets.')
         n_replications = data_a.n_replications
         if self.stats_type == 'dependent':
-            if 2**n_replications < self.n_permutations :
+            if 2**n_replications < self.n_permutations:
                 raise RuntimeError('The number of replications {0} in the data'
                                    ' are not sufficient to enable the '
                                    'requested no. permutations {1}'.format(
@@ -316,26 +316,6 @@ class Network_comparison(Network_analysis):
                 for c in cond_tgt:
                     if c not in self.union[t]['selected_vars_target']:
                         self.union[t]['selected_vars_target'].append(c)
-
-    # def _lag_to_idx(self, lag_list, max_lag):
-    #     """Convert sample lags to time indices.
-    #
-    #     Use method from Network_analysis class to convert lags.
-    #     """
-    #     if not hasattr(self, 'netw_analysis'):
-    #         self.netw_analysis = Network_analysis()
-    #         self.netw_analysis.current_value = (0, max_lag)
-    #     return self.netw_analysis._lag_to_idx(lag_list)
-    #
-    # def _idx_to_lag(self, idx_list, max_lag):
-    #     """Convert sample time indices to lags.
-    #
-    #     Use method from Network_analysis class to convert time indices.
-    #     """
-    #     if not hasattr(self, 'netw_analysis'):
-    #         self.netw_analysis = Network_analysis()
-    #         self.netw_analysis.current_value = (0, max_lag)
-    #     return self.netw_analysis._idx_to_lag(idx_list)
 
     def _calculate_cmi_diff_within(self, data_a, data_b, permute=False):
         """Calculate the difference in CMI within a subject.
@@ -463,7 +443,7 @@ class Network_comparison(Network_analysis):
                                                         cur_val_real,
                                                         source_real,
                                                         cond_real,
-                                                        self.cmi_opts))
+                                                        self.options))
 
             cmi[t] = np.array(cmi_temp)
 
@@ -515,7 +495,7 @@ class Network_comparison(Network_analysis):
                                                         cur_val_perm_a,  # TODO do we need the permuted data here?
                                                         source_real_a,
                                                         cond_real_a,
-                                                        self.cmi_opts))
+                                                        self.options))
                 [cond_real_b, source_real_b] = utils.separate_arrays(
                                                              cond_full,
                                                              c,
@@ -524,7 +504,7 @@ class Network_comparison(Network_analysis):
                                                         cur_val_perm_b,
                                                         source_real_b,
                                                         cond_real_b,
-                                                        self.cmi_opts))
+                                                        self.options))
             cmi_a[t] = np.array(cmi_temp_a)
             cmi_b[t] = np.array(cmi_temp_b)
 
@@ -749,7 +729,8 @@ class Network_comparison(Network_analysis):
                 if r >= n_repl:     # take realisation from cond B
                     r_perm = r - n_repl
                     cond_a_perm[i_0:i_1, ] = cond_b[repl_idx_b == r_perm, :]
-                    cur_val_a_perm[i_0:i_1, ] = cur_val_b[repl_idx_b== r_perm, :]
+                    cur_val_a_perm[i_0:i_1, ] = cur_val_b[repl_idx_b == r_perm,
+                                                          :]
                 else:     # take original realisation from cond A
                     cond_a_perm[i_0:i_1, ] = cond_a[repl_idx_a == r, :]
                     cur_val_a_perm[i_0:i_1, ] = cur_val_a[repl_idx_a == r, :]
@@ -763,7 +744,8 @@ class Network_comparison(Network_analysis):
                 if r >= n_repl:     # take realisation from cond A
                     r_perm = r - n_repl
                     cond_b_perm[i_0:i_1, ] = cond_b[repl_idx_b == r_perm, :]
-                    cur_val_b_perm[i_0:i_1, ] = cur_val_b[repl_idx_b == r_perm, :]
+                    cur_val_b_perm[i_0:i_1, ] = cur_val_b[repl_idx_b == r_perm,
+                                                          :]
                 else:
                     cond_b_perm[i_0:i_1, ] = cond_a[repl_idx_a == r, :]
                     cur_val_b_perm[i_0:i_1, ] = cur_val_a[repl_idx_a == r, :]
