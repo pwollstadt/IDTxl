@@ -275,6 +275,13 @@ class Multivariate_te(Network_inference):
                     self._idx_to_lag(self.selected_vars_target)))
         self._clean_up()  # remove realisations and min_stats surrogate table
         results = {
+            'sources_tested': self.source_set,
+            'max_lag_sources': self.max_lag_sources,
+            'min_lag_sources': self.min_lag_sources,
+            'max_lag_target': self.max_lag_target,
+            'tau_sources': self.tau_sources,
+            'tau_target': self.tau_target,
+            'options': self.options,
             'current_value': self.current_value,
             'selected_vars_full': self._idx_to_lag(self.selected_vars_full),
             'selected_vars_target': self._idx_to_lag(
