@@ -68,11 +68,6 @@ class Data():
         if data is not None:
             self.set_data(data, dim_order)
 
-    @property
-    def data(self):
-        """Return data array."""
-        return self._data
-
     def n_realisations(self, current_value=None):
         """Number of realisations over samples and replications.
 
@@ -105,6 +100,11 @@ class Data():
     def n_realisations_repl(self):
         """Number of realisations over replications."""
         return self.n_replications
+
+    @property
+    def data(self):
+        """Return data array."""
+        return self._data
 
     @data.setter
     def data(self, d):
