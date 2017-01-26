@@ -10,8 +10,6 @@ import random as rn
 import numpy as np
 import math
 from idtxl.set_estimator import Estimator_te
-from idtxl.data import Data
-import idtxl.idtxl_utils
 
 
 def test_multivariate_te_corr_gaussian():
@@ -36,7 +34,7 @@ def test_multivariate_te_corr_gaussian():
             [rn.normalvariate(0, 1) for r in range(n - 1)]])]
     analysis_opts = {
         'kraskov_k': 4,
-        'normalise': 'false',
+        'normalise': False,
         'theiler_t': 0,
         'noise_level': 1e-8,
         'local_values': False,
@@ -49,9 +47,13 @@ def test_multivariate_te_corr_gaussian():
     te_est = Estimator_te('jidt_kraskov')
     te_res = te_est.estimate(np.array(source), np.array(target),
                              analysis_opts)
-    print('correlated Gaussians: TE result {0:.4f} bits; expected to be'
+    te_exp = np.log(1 / (1 - cov ** 2))
+    print('Correlated Gaussians: TE result {0:.4f} bits; expected to be '
           '{1:0.4f} bit for the copy'
-          .format(te_res, np.log(1 / (1 - cov ** 2))))
+          .format(te_res, te_exp))
+    np.testing.assert_approx_equal(
+                            te_res, te_exp, significant=1,
+                            err_msg='TE is not close to expected result.')
 
 
 def test_te_estimator_jidt_discrete():
@@ -149,7 +151,7 @@ def test_te_local_values():
             [rn.normalvariate(0, 1) for r in range(n - 1)]])]
     analysis_opts = {
         'kraskov_k': 4,
-        'normalise': 'false',
+        'normalise': False,
         'theiler_t': 0,
         'noise_level': 1e-8,
         'local_values': True,

@@ -50,7 +50,7 @@ def test_mi_local_values():
     target = np.expand_dims(np.array(target), axis=1)
     analysis_opts = {
         'kraskov_k': 4,
-        'normalise': 'false',
+        'normalise': False,
         'theiler_t': 0,
         'noise_level': 1e-8,
         'local_values': True

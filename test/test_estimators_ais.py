@@ -23,7 +23,7 @@ def test_ais_gaussian():
 
     analysis_opts = {
         'kraskov_k': 4,
-        'normalise': 'false',
+        'normalise': False,
         'theiler_t': 0,
         'noise_level': 1e-8,
         'local_values': False,
@@ -32,8 +32,8 @@ def test_ais_gaussian():
         }
     ais_est = Estimator_ais('jidt_kraskov')
     ais = ais_est.estimate(source, analysis_opts)
-    print('AIS for random normal data without memory (calling estimator '
-          'directly, expected is something close to 0): {0}'.format(ais))
+    assert np.abs(ais) < 0.1, ('AIS should be close to 0, but is '
+                               '{0}.'.format(ais))
 
 
 def test_ais_local_values():
@@ -42,7 +42,7 @@ def test_ais_local_values():
     source = [rn.normalvariate(0, 1) for r in range(n)]
     analysis_opts = {
         'kraskov_k': 4,
-        'normalise': 'false',
+        'normalise': False,
         'theiler_t': 0,
         'noise_level': 1e-8,
         'local_values': True,
