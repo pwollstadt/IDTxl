@@ -611,11 +611,11 @@ class Data():
                 - perm_type : str [optional]
                   permutation type, can be
 
-                    - 'circular' (default): shifts time series by a random
+                    - 'random': swaps samples at random (default),
+                    - 'circular': shifts time series by a random
                       number of samples
-                    - 'block': swaps blocks of samples,
-                    - 'local': swaps samples within a given range, or
-                    - 'random': swaps samples at random,
+                    - 'block': swaps blocks of samples, or
+                    - 'local': swaps samples within a given range
 
                 - additional options depending on the perm_type (n is the
                   number of samples):
@@ -640,7 +640,7 @@ class Data():
             numpy Array
                 permuted indices of samples
         """
-        perm_type = perm_opts.get('perm_type', 'block')
+        perm_type = perm_opts.get('perm_type', 'random')
 
         # Get the permutaion 'mask' for one replication (the same mask is then
         # applied to each replication).
