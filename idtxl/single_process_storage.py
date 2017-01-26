@@ -15,6 +15,9 @@ from .set_estimator import Estimator_cmi
 
 VERBOSE = True
 
+# TODO use target instead of process to define the process that is analyzed.
+# This would reuse an attribute set in the parent class.
+
 
 class Single_process_storage(Network_analysis):
     """Set up analysis of storage in each process of the network.
@@ -69,9 +72,6 @@ class Single_process_storage(Network_analysis):
             list with indices of analyzed processes
     """
 
-    # TODO right now 'options' holds all optional params (stats AND estimator).
-    # We could split this up by adding the stats options to the analyse_*
-    # methods?
     def __init__(self, max_lag, options, tau=1):
         self.max_lag = max_lag
         self.tau = tau
@@ -416,4 +416,4 @@ class Single_process_storage(Network_analysis):
         else:
             self.ais = np.nan
             self.sign = False
-            self.pvalue = 1
+            self.pvalue = 1.0
