@@ -54,14 +54,6 @@ class Network_inference(Network_analysis):
         self.tau_target = tau_target
 
         # Create class attributes for estimation
-        self.target = None
-        self.current_value = None
-        self.selected_vars_full = []
-        self.selected_vars_sources = []
-        self.selected_vars_target = []
-        self._current_value_realisations = None
-        self._selected_vars_realisations = None
-        self._selected_vars_repl_idx = None
         self.te_omnibus = None
         self.te_sign_sources = None
         self.sign_omnibus = False
@@ -70,6 +62,7 @@ class Network_inference(Network_analysis):
         self.pvalues_sign_sources = None
         self.options = options
         self._min_stats_surr_table = None
+        super().__init__()
 
     def _initialise(self, data, sources, target):
         """Check input and set everything to initial values."""
