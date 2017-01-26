@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from .multivariate_te import Multivariate_te
 
+VERBOSE = False
+
 
 def generate_network_graph(res):
     """Generate graph object for the full network.
@@ -22,20 +24,23 @@ def generate_network_graph(res):
         instance of a directed graph class from the networkx
         package (DiGraph)
     """
-    g = nx.DiGraph()
-    g.add_nodes_from(list(res.keys()))
+    graph = nx.DiGraph()
+    # add all targets as vertices
+    graph.add_nodes_from(list(res.keys()))
     # Add edges as significant sources.
     for n in res.keys():
         s = np.array(res[n]['selected_vars_sources'],
                      dtype=[('sources', np.int), ('lags', np.int)])
         s = np.unique(s['sources'])
         if s.size > 0:
-            print(n)
-            print(s)
             edges = [x for x in it.product(s, [n])]
-            print(edges)
-            g.add_edges_from(edges)
-    return g
+            graph.add_nodes_from(s)
+            graph.add_edges_from(edges)
+            if VERBOSE:
+                print(edges)
+                print(n)
+                print(s)
+    return graph
 
 
 def generate_source_graph(res, sign_sources=True):
@@ -57,13 +62,17 @@ def generate_source_graph(res, sign_sources=True):
         instance of a directed graph class from the networkx
         package (DiGraph)
     """
-    g = nx.DiGraph()
-    target = (res['current_value'][0], 0)
-    g.add_node(target)
+    try:
+        target = (res['current_value'][0], 0)
+    except KeyError:
+        KeyError('Input res should be result of analyse_single_target() '
+                 'method.')
+    graph = nx.DiGraph()
+    graph.add_node(target)
     # Add either all tested candidates or only significant ones
     # to the graph.
     if sign_sources:
-        g.add_nodes_from(res['selected_vars_full'][:])
+        graph.add_nodes_from(res['selected_vars_full'][:])
     else:
         procs = res['sources_tested']
         samples = np.arange(res['current_value'][1] - res['min_lag_sources'],
@@ -71,14 +80,15 @@ def generate_source_graph(res, sign_sources=True):
                             -res['tau_sources'])
         define_candidates = Multivariate_te._define_candidates
         nodes = define_candidates(_, procs, samples)
-        g.add_nodes_from(nodes)
+        graph.add_nodes_from(nodes)
 
     for v in range(len(res['selected_vars_full'])):
-        g.add_edge(res['selected_vars_full'][v], target)  # here, I could also add additional info
-    print(g.node)
-    print(g.edge)
-    g.number_of_edges()
-    return g
+        graph.add_edge(res['selected_vars_full'][v], target)  # here, I could also add additional info
+    if VERBOSE:
+        print(graph.node)
+        print(graph.edge)
+        graph.number_of_edges()
+    return graph
 
 
 def plot_network(res):
@@ -102,20 +112,20 @@ def plot_network(res):
     except KeyError:
         print('plotting non-corrected network!')
 
-    g = generate_network_graph(res)
-    print(g.node)
+    graph = generate_network_graph(res)
+    print(graph.node)
     f, (ax1, ax2) = plt.subplots(1, 2)
-    adj_matrix = nx.to_numpy_matrix(g)
+    adj_matrix = nx.to_numpy_matrix(graph)
     cmap = sns.light_palette('cadetblue', n_colors=2, as_cmap=True)
     sns.heatmap(adj_matrix, cmap=cmap, cbar=False, ax=ax1,
-                square=True, linewidths=1, xticklabels=g.nodes(),
-                yticklabels=g.nodes())
+                square=True, linewidths=1, xticklabels=graph.nodes(),
+                yticklabels=graph.nodes())
     ax1.xaxis.tick_top()
     plt.setp(ax1.yaxis.get_majorticklabels(), rotation=0)
-    nx.draw_circular(g, with_labels=True, node_size=300, alpha=1.0, ax=ax2,
+    nx.draw_circular(graph, with_labels=True, node_size=300, alpha=1.0, ax=ax2,
                      node_color='cadetblue', hold=True, font_weight='bold')
     plt.show()
-    return g
+    return graph
 
 
 def plot_selected_vars(res, sign_sources=True):
@@ -137,15 +147,15 @@ def plot_selected_vars(res, sign_sources=True):
         instance of a directed graph class from the networkx
         package (DiGraph)
     """
-    g = generate_source_graph(res, sign_sources)
-    n = np.array(g.nodes(),
+    graph = generate_source_graph(res, sign_sources)
+    n = np.array(graph.nodes(),
                  dtype=[('procs', np.int), ('lags', np.int)])
     target = tuple(n[n['lags'] == 0][0])
     max_lag = max(res['max_lag_sources'], res['max_lag_target'])
     ind = 0
-    color = ['lavender' for c in range(g.number_of_nodes())]
-    pos = nx.spring_layout(g)
-    for n in g.node:
+    color = ['lavender' for c in range(graph.number_of_nodes())]
+    pos = nx.spring_layout(graph)
+    for n in graph.node:
         if n == target:  # current value
             pos[n] = np.array([max_lag, 0])
         elif n[0] == target[0]:  # target history
@@ -163,23 +173,25 @@ def plot_selected_vars(res, sign_sources=True):
             color[ind] = 'red'
         ind += 1
 
-    print(g.node)
-    print(color)
-    f, (ax1, ax2) = plt.subplots(1, 2)
-    adj_matrix = nx.to_numpy_matrix(g)
-    adj_matrix = adj_matrix[:, g.nodes().index(target)]
-    cmap = sns.light_palette('cadetblue', n_colors=2, as_cmap=True)
-    sns.heatmap(adj_matrix, cmap=cmap, cbar=False, ax=ax1,
-                square=True, linewidths=1, xticklabels=[target],
-                yticklabels=g.nodes())
-    ax1.xaxis.tick_top()
-    plt.setp(ax1.yaxis.get_majorticklabels(), rotation=0)
-    nx.draw(g, pos=pos, with_labels=True, font_weight='bold', node_size=900,
-            alpha=0.7, node_shape='s', ax=ax2, node_color=color, hold=True)
+    if VERBOSE:
+        print(graph.node)
+        print(color)
+    # f, (ax1, ax2) = plt.subplots(1, 1)
+    # adj_matrix = nx.to_numpy_matrix(graph)
+    # adj_matrix = adj_matrix[:, graph.nodes().index(target)]
+    # cmap = sns.light_palette('cadetblue', n_colors=2, as_cmap=True)
+    # sns.heatmap(adj_matrix, cmap=cmap, cbar=False, ax=ax1,
+    #             square=True, linewidths=1, xticklabels=[target],
+    #             yticklabels=graph.nodes())
+    #ax1.xaxis.tick_top()
+    #plt.setp(ax1.yaxis.get_majorticklabels(), rotation=0)
+    plt.figure()
+    nx.draw(graph, pos=pos, with_labels=True, font_weight='bold', node_size=900,
+            alpha=0.7, node_shape='s', node_color=color, hold=True)
     plt.plot([-0.5, max_lag + 0.5], [0.5, 0.5],
              linestyle='--', linewidth=1, color='0.5')
     plt.show()
-    return g
+    return graph
 
 
 def plot_mute_graph():
@@ -195,10 +207,10 @@ def plot_mute_graph():
         3 -> 4, u = 1
         4 -> 3, u = 1
     """
-    g = nx.DiGraph()
-    g.add_nodes_from(np.arange(5))
-    # g.add_edges_from([(0, 1), (0, 2), (0, 3), (3, 4), (4, 3)])
-    g.add_weighted_edges_from([(0, 1, 2), (0, 2, 3),
+    graph = nx.DiGraph()
+    graph.add_nodes_from(np.arange(5))
+    # graph.add_edges_from([(0, 1), (0, 2), (0, 3), (3, 4), (4, 3)])
+    graph.add_weighted_edges_from([(0, 1, 2), (0, 2, 3),
                                (0, 3, 2), (3, 4, 1), (4, 3, 1)],
                               weight='delay')
     pos = {
@@ -208,10 +220,11 @@ def plot_mute_graph():
         3: np.array([2, 1]),
         4: np.array([3, 1]),
     }
-    nx.draw(g, pos=pos, with_labels=True, node_size=900, alpha=1.0,
+    plt.figure()
+    nx.draw(graph, pos=pos, with_labels=True, node_size=900, alpha=1.0,
             node_color='cadetblue', font_weight='bold',
             edge_color=['k', 'k', 'r', 'k', 'k'], hold=True)
-    nx.draw_networkx_edge_labels(g, pos=pos)
+    nx.draw_networkx_edge_labels(graph, pos=pos)
     plt.text(2, 0.1, 'non-linear interaction in red')
     plt.show()
     # see here for an example on how to plot edge labels:
