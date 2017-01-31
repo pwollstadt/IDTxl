@@ -632,7 +632,7 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
             critical alpha level for statistical significance (default=0.05)
         tail : str [optional]
             'one' for one-tailed testing H1 > H0, 'one_smaller' for one-
-	    tailed testing H1 < H0, or 'two' for two-tailed testing 
+	    tailed testing H1 < H0, or 'two' for two-tailed testing
 	    (default='one')
 
     Returns:
@@ -649,7 +649,7 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
 #                                                    alpha))
     if tail == 'one':
         pvalue = sum(distribution > statistic) / distribution.shape[0]
-    if tail == 'one_smaller':
+    elif tail == 'one_smaller':
         pvalue = sum(distribution < statistic) / distribution.shape[0]
     elif tail == 'two':
         p_bigger = sum(distribution > statistic) / distribution.shape[0]

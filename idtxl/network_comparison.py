@@ -422,22 +422,22 @@ class Network_comparison(Network_analysis):
 
             # get realisations of the current value and the full cond. set.
             current_val = (t, self.union['max_lag'])
-            cond_full = (self.union[t]['selected_vars_target'] +
-                         self.union[t]['selected_vars_sources'])
+            idx_cond_full = (self.union[t]['selected_vars_target'] +
+                             self.union[t]['selected_vars_sources'])
             [cur_val_real, repl_idx] = data.get_realisations(current_val,
                                                              [current_val])
-            cond_full_real = data.get_realisations(current_val, cond_full)[0]
+            cond_full_real = data.get_realisations(current_val, idx_cond_full)[0]
 
             # Calculate TE from each source variable to current target t
-            for c in self.union[t]['selected_vars_sources']:
+            for idx_source in self.union[t]['selected_vars_sources']:
                 current_cond = cp.copy(self.union[t]['selected_vars_sources'])
-                current_cond.pop(current_cond.index(c))
+                current_cond.pop(current_cond.index(idx_source))
 
                 # get realisations of current TE-source from the set of all
                 # conditionals and calculate the CMI
                 [cond_real, source_real] = utils.separate_arrays(
-                                                             cond_full,
-                                                             c,
+                                                             idx_cond_full,
+                                                             idx_source,
                                                              cond_full_real)
                 cmi_temp.append(self._cmi_calculator.estimate(
                                                         cur_val_real,
@@ -470,40 +470,43 @@ class Network_comparison(Network_analysis):
                 continue
 
             # Get full conditioning set for current target.
-            cond_full = (self.union[t]['selected_vars_target'] +
-                         self.union[t]['selected_vars_sources'])
-            # Get realisations, where realisations are permuted replication-
-            # wise between two data sets (e.g., from different conditions)
+            idx_cond_full = (self.union[t]['selected_vars_target'] +
+                             self.union[t]['selected_vars_sources'])
+            # Get realisations, where realisations are permuted/swapped
+            # replication-wise between two data sets (e.g., from different
+            # conditions)
             [cond_full_perm_a,
              cur_val_perm_a,
              cond_full_perm_b,
              cur_val_perm_b] = self._get_permuted_replications(data_a,
                                                                data_b,
                                                                t)
-            # Calculate TE from each source to current target t
-            for c in self.union[t]['selected_vars_sources']:
+            # Calculate CMI from each source to current target t from permuted
+            # data
+            for idx_source in self.union[t]['selected_vars_sources']:
                 current_cond = cp.copy(self.union[t]['selected_vars_sources'])
-                current_cond.pop(current_cond.index(c))
+                current_cond.pop(current_cond.index(idx_source))
 
                 # Get realisations of current (permuted) TE-source from the set
-                # of all conditionals and calculate the CMI.
-                [cond_real_a, source_real_a] = utils.separate_arrays(
-                                                             cond_full,
-                                                             c,
+                # of all conditionals and calculate the CMI. Do this for both
+                # conditions.
+                [temp_cond_real_a, source_real_a] = utils.separate_arrays(
+                                                             idx_cond_full,
+                                                             idx_source,
                                                              cond_full_perm_a)
                 cmi_temp_a.append(self._cmi_calculator.estimate(
-                                                        cur_val_perm_a,  # TODO do we need the permuted data here?
+                                                        cur_val_perm_a,
                                                         source_real_a,
-                                                        cond_real_a,
+                                                        temp_cond_real_a,
                                                         self.options))
-                [cond_real_b, source_real_b] = utils.separate_arrays(
-                                                             cond_full,
-                                                             c,
+                [temp_cond_real_b, source_real_b] = utils.separate_arrays(
+                                                             idx_cond_full,
+                                                             idx_source,
                                                              cond_full_perm_b)
                 cmi_temp_b.append(self._cmi_calculator.estimate(
                                                         cur_val_perm_b,
                                                         source_real_b,
-                                                        cond_real_b,
+                                                        temp_cond_real_b,
                                                         self.options))
             cmi_a[t] = np.array(cmi_temp_a)
             cmi_b[t] = np.array(cmi_temp_b)
@@ -683,38 +686,38 @@ class Network_comparison(Network_analysis):
         # Get indices of current value and full conditioning set in the
         # union network.
         current_val = (target, self.union['max_lag'])
-        cond_full = (self.union[target]['selected_vars_target'] +
-                     self.union[target]['selected_vars_sources'])
+        idx_cond_full = (self.union[target]['selected_vars_target'] +
+                         self.union[target]['selected_vars_sources'])
 
         # Get realisations of the current value and the full conditioning set.
         assert data_a.n_replications == data_b.n_replications, (
                             'Unequal no. replications in the two data sets.')
-        [cur_val_a, repl_idx_a] = data_a.get_realisations(current_val,
-                                                          [current_val])
-        [cur_val_b, repl_idx_b] = data_b.get_realisations(current_val,
-                                                          [current_val])
-        cond_a = data_a.get_realisations(current_val, cond_full)[0]
-        cond_b = data_b.get_realisations(current_val, cond_full)[0]
+        [cur_val_a_real, repl_idx_a] = data_a.get_realisations(current_val,
+                                                               [current_val])
+        [cur_val_b_real, repl_idx_b] = data_b.get_realisations(current_val,
+                                                               [current_val])
+        cond_a_real = data_a.get_realisations(current_val, idx_cond_full)[0]
+        cond_b_real = data_b.get_realisations(current_val, idx_cond_full)[0]
 
         # Get no. replications and no. samples per replication.
         n_repl = max(repl_idx_a) + 1
         n_per_repl = sum(repl_idx_a == 0)
 
         # Make copies such that arrays in the caller scope are not overwritten.
-        cond_a_perm = np.empty(cond_a.shape)
-        cond_b_perm = np.empty(cond_b.shape)
-        cur_val_a_perm = np.empty(cur_val_a.shape)
-        cur_val_b_perm = np.empty(cur_val_b.shape)
+        cond_a_perm = cp.copy(cond_a_real)
+        cond_b_perm = cp.copy(cond_b_real)
+        cur_val_a_perm = cp.copy(cur_val_a_real)
+        cur_val_b_perm = cp.copy(cur_val_b_real)
 
         # Swap or permute realisations of the conditioning set depending on the
         # stats type.
         if self.stats_type == 'dependent':
             swap = np.repeat(np.random.randint(2, size=n_repl).astype(bool),
                              n_per_repl)
-            cond_a_perm[swap, :] = cond_b[swap, :]
-            cond_b_perm[swap, :] = cond_a[swap, :]
-            cond_a_perm[np.invert(swap), :] = cond_a[np.invert(swap), :]
-            cond_b_perm[np.invert(swap), :] = cond_b[np.invert(swap), :]
+            cond_a_perm[swap, :] = cond_b_real[swap, :]
+            cond_b_perm[swap, :] = cond_a_real[swap, :]
+            cur_val_a_perm[swap, :] = cur_val_b_real[swap, :]
+            cur_val_b_perm[swap, :] = cur_val_a_real[swap, :]
 
         elif self.stats_type == 'independent':
             # Pool replications from both data sets and draw two samples of
@@ -728,12 +731,14 @@ class Network_comparison(Network_analysis):
             for r in resample_a:
                 if r >= n_repl:     # take realisation from cond B
                     r_perm = r - n_repl
-                    cond_a_perm[i_0:i_1, ] = cond_b[repl_idx_b == r_perm, :]
-                    cur_val_a_perm[i_0:i_1, ] = cur_val_b[repl_idx_b == r_perm,
-                                                          :]
-                else:     # take original realisation from cond A
-                    cond_a_perm[i_0:i_1, ] = cond_a[repl_idx_a == r, :]
-                    cur_val_a_perm[i_0:i_1, ] = cur_val_a[repl_idx_a == r, :]
+                    cond_a_perm[i_0:i_1, ] = cond_b_real[repl_idx_b ==
+                                                         r_perm, :]
+                    cur_val_a_perm[i_0:i_1, ] = cur_val_b_real[repl_idx_b ==
+                                                               r_perm, :]
+                else:               # take realisation from cond A otherwise
+                    cond_a_perm[i_0:i_1, ] = cond_a_real[repl_idx_a == r, :]
+                    cur_val_a_perm[i_0:i_1, ] = cur_val_a_real[repl_idx_a == r,
+                                                               :]
                 i_0 = i_1
                 i_1 = i_0 + n_per_repl
 
@@ -741,14 +746,16 @@ class Network_comparison(Network_analysis):
             i_0 = 0
             i_1 = n_per_repl
             for r in resample_b:
-                if r >= n_repl:     # take realisation from cond A
+                if r >= n_repl:     # take realisation from cond B
                     r_perm = r - n_repl
-                    cond_b_perm[i_0:i_1, ] = cond_b[repl_idx_b == r_perm, :]
-                    cur_val_b_perm[i_0:i_1, ] = cur_val_b[repl_idx_b == r_perm,
-                                                          :]
-                else:
-                    cond_b_perm[i_0:i_1, ] = cond_a[repl_idx_a == r, :]
-                    cur_val_b_perm[i_0:i_1, ] = cur_val_a[repl_idx_a == r, :]
+                    cond_b_perm[i_0:i_1, ] = cond_b_real[repl_idx_b ==
+                                                         r_perm, :]
+                    cur_val_b_perm[i_0:i_1, ] = cur_val_b_real[repl_idx_b ==
+                                                               r_perm, :]
+                else:               # take realisation from cond A otherwise
+                    cond_b_perm[i_0:i_1, ] = cond_a_real[repl_idx_a == r, :]
+                    cur_val_b_perm[i_0:i_1, ] = cur_val_a_real[repl_idx_a == r,
+                                                               :]
                 i_0 = i_1
                 i_1 = i_0 + n_per_repl
         else:
