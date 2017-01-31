@@ -426,7 +426,8 @@ class Network_comparison(Network_analysis):
                              self.union[t]['selected_vars_sources'])
             [cur_val_real, repl_idx] = data.get_realisations(current_val,
                                                              [current_val])
-            cond_full_real = data.get_realisations(current_val, idx_cond_full)[0]
+            cond_full_real = data.get_realisations(current_val,
+                                                   idx_cond_full)[0]
 
             # Calculate TE from each source variable to current target t
             for idx_source in self.union[t]['selected_vars_sources']:

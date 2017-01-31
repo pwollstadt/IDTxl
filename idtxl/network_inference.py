@@ -159,7 +159,8 @@ class Network_inference(Network_analysis):
                             self.current_value[1] - self.max_lag_sources,
                             -self.tau_sources)
         candidates = self._define_candidates(procs, samples)
-        # TODO include non-selected target candidates as further candidates, they may get selected due to synergies
+        # TODO include non-selected target candidates as further candidates, 
+        # they may get selected due to synergies
         self._include_candidates(candidates, data)
 
     def _force_conditionals(self, cond, data):

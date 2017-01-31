@@ -4,7 +4,6 @@ Created on Mon Mar  7 18:13:27 2016
 
 @author: patricia
 """
-import copy as cp
 import numpy as np
 from . import idtxl_utils as utils
 
@@ -662,9 +661,9 @@ class Data():
             if type(perm_range) is str:
                 if perm_range != 'max':
                     raise ValueError('Got {0} as input for perm_range. For '
-                                     'permutation strategy ''local'' either an int'
-                                     ' or ''max'' has to be provided.'.format(
-                                                                      perm_range))
+                                     'permutation strategy ''local'' either an'
+                                     ' int or ''max'' has to be provided.'
+                                     .format(perm_range))
             perm = self._swap_local(n_samples, perm_range)
 
         else:

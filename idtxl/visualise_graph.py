@@ -176,18 +176,10 @@ def plot_selected_vars(res, sign_sources=True):
     if VERBOSE:
         print(graph.node)
         print(color)
-    # f, (ax1, ax2) = plt.subplots(1, 1)
-    # adj_matrix = nx.to_numpy_matrix(graph)
-    # adj_matrix = adj_matrix[:, graph.nodes().index(target)]
-    # cmap = sns.light_palette('cadetblue', n_colors=2, as_cmap=True)
-    # sns.heatmap(adj_matrix, cmap=cmap, cbar=False, ax=ax1,
-    #             square=True, linewidths=1, xticklabels=[target],
-    #             yticklabels=graph.nodes())
-    #ax1.xaxis.tick_top()
-    #plt.setp(ax1.yaxis.get_majorticklabels(), rotation=0)
     plt.figure()
-    nx.draw(graph, pos=pos, with_labels=True, font_weight='bold', node_size=900,
-            alpha=0.7, node_shape='s', node_color=color, hold=True)
+    nx.draw(graph, pos=pos, with_labels=True, font_weight='bold',
+            node_size=900, alpha=0.7, node_shape='s', node_color=color,
+            hold=True)
     plt.plot([-0.5, max_lag + 0.5], [0.5, 0.5],
              linestyle='--', linewidth=1, color='0.5')
     plt.show()
@@ -210,9 +202,8 @@ def plot_mute_graph():
     graph = nx.DiGraph()
     graph.add_nodes_from(np.arange(5))
     # graph.add_edges_from([(0, 1), (0, 2), (0, 3), (3, 4), (4, 3)])
-    graph.add_weighted_edges_from([(0, 1, 2), (0, 2, 3),
-                               (0, 3, 2), (3, 4, 1), (4, 3, 1)],
-                              weight='delay')
+    graph.add_weighted_edges_from([(0, 1, 2), (0, 2, 3), (0, 3, 2), (3, 4, 1),
+                                   (4, 3, 1)], weight='delay')
     pos = {
         0: np.array([1, 1]),
         1: np.array([0, 2]),
