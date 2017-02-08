@@ -25,6 +25,12 @@ To **get started** have a look at the [wiki](https://github.com/pwollstadt/IDTxl
 - Mario Martínez Zarzuela, Department of Signal Theory and Communications and Telematics Engineering, University of Valladolid, Valladolid, Spain
 - Michael Lindner, Center for Integrative Neuroscience and Neurodynamics, University of Reading, Reading, UK
 
+## Acknowledgements
+
+This project has been supported by funding through:
+
+- Universities Australia - Deutscher Akademischer Austauschdienst (German Academic Exchange Service) UA-DAAD Australia-Germany Joint Research Co-operation grant "Measuring neural information synthesis and its impairment", Wibral, Lizier, Priesemann, Wollstadt, Finn, 2016-17
+- Australian Research Council Discovery Early Career Researcher Award (DECRA) "Relating function of complex networks to structure using information theory", Lizier, 2016-19
 
 ## References
 + Multivariate transfer entropy: *Lizier & Rubinov, 2012, Preprint, Technical Report 25/2012,
