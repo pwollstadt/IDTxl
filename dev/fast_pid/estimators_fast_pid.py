@@ -299,7 +299,7 @@ def _join_variables(a, b, alph_a, alph_b):
         int: alphabet size of new RV
     """
     if a.shape[0] != b.shape[0]:
-        raise Error
+        raise RuntimeError('Variables a and b need to have the same shape.')
 
     if alph_b < alph_a:
         a, b = b, a
