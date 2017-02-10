@@ -681,12 +681,13 @@ def pid_sydney(self, s1, s2, t, opts):
     unq_s2 = mi_target_s2 - shd_s1_s2
     syn_s1_s2 = jointmi_s1s2_target - unq_s1 - unq_s2 - shd_s1_s2
 
+    # Return scalars instead of 1-element numpy arrays
     estimate = {
         'joint_mi_s1s2_t': jointmi_s1s2_target,
-        'unq_s1': unq_s1,
-        'unq_s2': unq_s2,
-        'shd_s1_s2': shd_s1_s2,
-        'syn_s1_s2': syn_s1_s2,
+        'unq_s1': unq_s1[0],
+        'unq_s2': unq_s2[0],
+        'shd_s1_s2': shd_s1_s2[0],
+        'syn_s1_s2': syn_s1_s2[0],
     }
 
     return estimate
