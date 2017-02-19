@@ -24,7 +24,7 @@ Y = np.asarray([0, 1, 0, 1])
 # Y = np.random.randint(0, ALPH_Y, n)
 
 
-CFG = {
+analysis_opts = {
     'alph_s1': ALPH_X,
     'alph_s2': ALPH_Y,
     'alph_t': ALPH_Z,
@@ -127,11 +127,11 @@ def _estimate(Z):
     """Estimate PID for a given target."""
     # Sydney estimator
     tic = tm.time()
-    est_sydney = pid_sydney.estimate(X, Y, Z, CFG)
+    est_sydney = pid_sydney.estimate(X, Y, Z, analysis_opts)
     t_sydney = tm.time() - tic
     # Tartu estimator
     tic = tm.time()
-    est_tartu = pid_tartu.estimate(X, Y, Z, CFG)
+    est_tartu = pid_tartu.estimate(X, Y, Z, analysis_opts)
     t_tartu = tm.time() - tic
 
     print('\nCopied source')
