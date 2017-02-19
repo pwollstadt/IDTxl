@@ -23,17 +23,20 @@ class Partial_information_decomposition(Network_inference):
     synergistic information in the two sources about the target.
     """
 
-    def __init__(self, options):
+    def __init__(self, options, lags_sources):
         try:
             self.calculator_name = options['pid_calc_name']
         except KeyError:
             raise KeyError('Calculator name was not specified!')
         print('\n\nSetting calculator to: {0}'.format(self.calculator_name))
         self._pid_calculator = Estimator_pid(self.calculator_name)
-        super().__init__(None, None, options)
+        super().__init__(max_lag_sources=max(lags_sources),
+                         min_lag_sources=None,
+                         options=options)
 
     def analyse_single_target(self, data, target, sources):
         """Return PID for two sources and a target."""
+        # TODO add lags between sources and target, with default = [1, 1]
         source1_realisations = data.get_realisations(self.current_value,
                                                      [sources[0]])
         source2_realisations = data.get_realisations(self.current_value,
