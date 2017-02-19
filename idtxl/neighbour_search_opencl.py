@@ -321,12 +321,14 @@ def find_nonempty(a_list):
     """Find non-empty device in list."""
     for idx in range(0, len(a_list)):
         if a_list[idx].get_devices(device_type=cl.device_type.GPU) != []:
+            # print('Found platform at idx {0}: {1}'.format(idx, a_list[idx]))
             break
         else:
             if VERBOSE:
                 print('found empty platform')
 
-    if a_list[idx] == []:
+    # if a_list[idx] == []:
+    if not a_list[idx]:
         print('all platforms empty')
     else:
         return idx
