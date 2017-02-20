@@ -19,6 +19,8 @@ except ImportError:
 
 VERBOSE = False
 
+# TODO add support for multivariate estimation for Tartu and Sydney estimator
+
 
 def is_parallel(estimator_name):
     """Check if estimator can estimate CMI for multiple chunks in parallel."""

@@ -107,6 +107,7 @@ class Estimator(object):
         # If estimator does not support parallel estimation, loop over chunks
         # and estimate iteratively for individual chunks.
         else:
+            # TODO the use of a fixed key var1 may be a problem if the estimator uses different names for its arguments
             assert data['var1'].shape[0] % n_chunks == 0, (
                     'No. chunks does not match data length.')
             chunk_size = int(data['var1'].shape[0] / n_chunks)
