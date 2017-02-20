@@ -10,7 +10,7 @@ Note:
 """
 import numpy as np
 from . import stats
-from .network_analysis import Network_analysis
+from .single_process_analysis import Single_process_analysis
 from .set_estimator import Estimator_cmi
 
 VERBOSE = True
@@ -19,7 +19,7 @@ VERBOSE = True
 # This would reuse an attribute set in the parent class.
 
 
-class Single_process_storage(Network_analysis):
+class Active_information_storage(Single_process_analysis):
     """Set up analysis of storage in each process of the network.
 
     Set parameters necessary for active information storage (AIS) in every

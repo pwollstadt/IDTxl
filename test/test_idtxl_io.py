@@ -2,7 +2,7 @@
 import os
 from idtxl import idtxl_io as io
 from idtxl.data import Data
-from idtxl.single_process_storage import Single_process_storage
+from idtxl.active_information_storage import Active_information_storage
 
 
 # def test_save_te_results():
@@ -18,7 +18,9 @@ from idtxl.single_process_storage import Single_process_storage
 #         'tail_mi': 'one',
 #         }
 #     processes = [2, 3]
-#     network_analysis = Single_process_storage(max_lag, analysis_opts, tau=1)
+#     network_analysis = Active_information_storage(max_lag,
+#                                                   analysis_opts,
+#                                                   tau=1)
 #     res_ais = network_analysis.analyse_network(dat, processes)
 #
 #     cwd = os.getcwd()

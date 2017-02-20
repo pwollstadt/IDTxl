@@ -5,7 +5,7 @@ This module provides unit tests for the AIS analysis class.
 import random as rn
 import numpy as np
 from idtxl.data import Data
-from idtxl.single_process_storage import Single_process_storage
+from idtxl.active_information_storage import Active_information_storage
 
 def test_single_source_storage_gaussian():
     n = 1000
@@ -21,10 +21,13 @@ def test_single_source_storage_gaussian():
         'tail_mi': 'one',
         }
     processes = [1]
-    network_analysis = Single_process_storage(max_lag, analysis_opts, tau=1)
+    network_analysis = Active_information_storage(max_lag, analysis_opts,
+                                                  tau=1)
     res = network_analysis.analyse_network(dat, processes)
-    print('AIS for random normal data without memory (expected is NaN): {0}'.format(res[1]['ais']))
-    assert res[1]['ais'] is np.nan, 'Estimator did not return nan for memoryless data.'
+    print('AIS for random normal data without memory (expected is NaN): '
+          '{0}'.format(res[1]['ais']))
+    assert res[1]['ais'] is np.nan, ('Estimator did not return nan for '
+                                     'memoryless data.')
 
 def test_compare_jidt_open_cl_estimator():
     """Compare results from OpenCl and JIDT estimators for AIS calculation."""
@@ -38,10 +41,12 @@ def test_compare_jidt_open_cl_estimator():
         'tail_mi': 'one',
         }
     processes = [2, 3]
-    network_analysis = Single_process_storage(max_lag, analysis_opts, tau=1)
+    network_analysis = Active_information_storage(max_lag, analysis_opts,
+                                                  tau=1)
     res_opencl = network_analysis.analyse_network(dat, processes)
     analysis_opts['cmi_calc_name'] = 'jidt_kraskov'
-    network_analysis = Single_process_storage(max_lag, analysis_opts, tau=1)
+    network_analysis = Active_information_storage(max_lag, analysis_opts,
+                                                  tau=1)
     res_jidt = network_analysis.analyse_network(dat, processes)
     # Note that I require equality up to three digits. Results become more exact for bigger
     # data sizes, but this takes too long for a unit test.
