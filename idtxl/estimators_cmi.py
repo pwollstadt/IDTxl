@@ -306,7 +306,10 @@ def jidt_kraskov(self, var1, var2, conditional=None, opts=None):
     else:
         cond_dim = conditional.shape[1]
         assert(conditional.size != 0), 'Conditional Array is empty.'
-    assert(var1.shape[0] == var2.shape[0]), 'Unequal number of observations.'
+    assert(var1.shape[0] == var2.shape[0]), ('Unequal number of observations ('
+                                             'var1: {0}, var2: {1}).'.format(
+                                                         var1.shape[0],
+                                                         var2.shape[0]))
     calc.initialise(var1.shape[1], var2.shape[1], cond_dim)
     calc.setObservations(var1, var2, conditional)
     return calc.computeAverageLocalOfObservations()
