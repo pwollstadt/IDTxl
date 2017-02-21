@@ -156,7 +156,49 @@ def test_sort_table_min():
                                                          'return maximum for '
                                                          'last row.')
 
+
+def test_data_type():
+    """Test if stats always returns surrogates with the correct data type."""
+    # Change data type for the same object instance.
+    d_int = np.random.randint(0, 10, size=(3, 50))
+    dat = Data(d_int, dim_order='ps', normalise=False)
+    # The concrete type depends on the platform:
+    # https://mail.scipy.org/pipermail/numpy-discussion/2011-November/059261.html
+    assert dat.data_type is np.int64, 'Data type did not change.'
+    assert issubclass(type(dat.data[0 ,0, 0]), np.integer), ('Data type is not'
+                                                             ' an int.')
+    surr = stats._generate_surrogates(data=dat,
+                                      current_value=(0, 5),
+                                      idx_list=[(1, 3), (2, 4)],
+                                      n_perm=20)
+    assert issubclass(type(surr[0, 0]), np.integer), ('Realisations type is '
+                                                      'not an int.')
+    surr = stats._generate_spectral_surrogates(data=dat,
+                                               scale=1,
+                                               n_perm=20)
+    assert issubclass(type(surr[0, 0, 0]), np.integer), ('Realisations type is '
+                                                         'not an int.')
+
+    d_float = np.random.randn(3, 50)
+    dat.set_data(d_float, dim_order='ps')
+    assert dat.data_type is np.float64, 'Data type did not change.'
+    assert issubclass(type(dat.data[0, 0, 0]), np.float), ('Data type is not '
+                                                           'a float.')
+    surr = stats._generate_surrogates(data=dat,
+                                      current_value=(0, 5),
+                                      idx_list=[(1, 3), (2, 4)],
+                                      n_perm=20)
+    assert issubclass(type(surr[0, 0]), np.float), ('Realisations type is not '
+                                                    'a float.')
+    surr = stats._generate_spectral_surrogates(data=dat,
+                                               scale=1,
+                                               n_perm=20)
+    assert issubclass(type(surr[0, 0, 0]), np.float), ('Realisations type is '
+                                                       'not a float.')
+
+
 if __name__ == '__main__':
+    test_data_type()
     test_network_fdr()
     test_find_pvalue()
     test_find_table_max()
