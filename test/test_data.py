@@ -186,8 +186,8 @@ def test_permute_samples():
 def test_get_data_slice():
     n = 10
     n_replications = 3
-    d = Data(np.vstack((np.zeros(n).astype(int), 
-                        np.ones(n).astype(int), 
+    d = Data(np.vstack((np.zeros(n).astype(int),
+                        np.ones(n).astype(int),
                         2 * np.ones(n).astype(int))),
              'rs', normalise=False)
     [s, i] = d._get_data_slice(process=0, offset_samples=0, shuffle=False)
