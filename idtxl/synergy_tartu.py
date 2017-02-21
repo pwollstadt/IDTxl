@@ -1,7 +1,7 @@
 # This is file TartuSynergy.py  ( Python 3.x )
 # Uses numpy, cvxopt, and gurobipy
 #
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #
 # Main function: solve_PDF()
 # ==========================
@@ -20,7 +20,8 @@
 # Usage
 # -----
 #
-# def solve_PDF(pdf, true_pdf=None, true_result=None, true_CI=None, true_SI=None,
+# def solve_PDF(pdf, true_pdf=None, true_result=None, true_CI=None,
+#               true_SI=None,
 #               feas_eps  =1.e-10, feas_eps_2 =1.e-6,
 #               kkt_eps   =1.e-5,  kkt_eps_2  =.01,
 #               kkt_search_eps =.5, max_zero_probability=1.e-5,
@@ -71,12 +72,13 @@
 #                      Max of violations of the KKT-system constraints
 # CI, SI               Synergetic and shared information
 #
-#^ END OF DOCUMENTATION
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# ^ END OF DOCUMENTATION
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 from cvxopt import solvers, matrix, spmatrix, spdiag, log
 import numpy
-from math import sqrt
+
+VERBOSE = False
 
 # ******************************************************************************************************************************************************
 # *  M a r g i n a l s
@@ -309,7 +311,8 @@ class Compute_UI:
                   len(list_b))
             exit(1)
         dim_space = len(self.var_idx) - rk
-        print("Solution space has dimension ", dim_space)
+        if VERBOSE:
+            print("Solution space has dimension ", dim_space)
 
     def create_ieqs(self):
         if not self.create_equations_called:
@@ -451,7 +454,8 @@ class Compute_UI:
 
         self.solver_ret = solvers.cp(
             self.callback, G=self.G, h=self.h, A=self.A, b=self.b)
-        print("Solver terminated with status ", self.solver_ret['status'])
+        if VERBOSE:
+            print("Solver terminated with status ", self.solver_ret['status'])
 
         self.p_final = dict()
         for xyz, i in self.var_idx.items():
@@ -878,7 +882,7 @@ class Compute_UI:
                     prev_viol = kkt_viol
             #^ if kkt_viol finite
             kkt_viol_list.append((the_ZERO, kkt_viol))
-            if show_progress == False and the_ZERO > stop_search_prob_eps:
+            if show_progress is False and the_ZERO > stop_search_prob_eps:
                 break
         #^ for the_ZERO
         if show_progress:
@@ -936,7 +940,7 @@ def I_X_Y(p):
     return mysum / log(2)
 #^ I_X_Y()
 
-
+# Unique information in Y (if evaluated with respect to p)
 def cond_I_X_Y__Z(p):
     # Conditional mutual information I( X ; Y | Z )
     p_z = marginal_z(p)
@@ -950,17 +954,32 @@ def cond_I_X_Y__Z(p):
     return mysum / log(2)
 #^ cond_I_X_Y__Z()
 
+# Unique information in Y (if evaluated with respect to p)
+def cond_I_X_Z__Y(p):
+    # Conditional mutual information I( X ; Y | Z )
+    p_y = marginal_y(p)
+    p_xy = marginal_xy(p)
+    p_yz = marginal_yz(p)
+    mysum = 0
+    for xyz, t in p.items():
+        x, y, z = xyz
+        if t > 0:
+            mysum += t * log((t * p_y[y]) / (p_xy[(x, y)] * p_yz[(y, z)]))
+    return mysum / log(2)
+#^ cond_I_X_Y__Z()
+
 # Synergistic Information
-
-
 def wriggle_CI(p, q):
+    # Calculate the synergistic info as the difference of tho MIs evaluated
+    # with respect to p (see p. 2163)
     return I_X_YZ(p) - I_X_YZ(q)
 #^ wriggle_CI()
 
 # Shared Information
-
-
 def wriggle_SI(q):
+    # Calculate the shared info as the CoI (Bertschinger, eq. (3)) evaluated
+    # using q (see p. 2163), where the CoI is the MI(X:Y) - the unique info in
+    # Y (which is I(X:Y|Z) evaluated with respect to p)
     return I_X_Y(q) - cond_I_X_Y__Z(q)
 #^ wriggle_SI()
 
@@ -1118,6 +1137,8 @@ def solve_PDF(pdf, true_pdf=None, true_result=None, true_CI=None, true_SI=None,
         the_p = cui.p_final
         wCI = wriggle_CI(pdf, the_p)
         wSI = wriggle_SI(the_p)
+        wUI_Y = cond_I_X_Y__Z(the_p)  # PW: I added this to also get the UIs
+        wUI_Z = cond_I_X_Z__Y(the_p)
 
         if verbose:
             print("solve_PDF(): Testing solution.")
@@ -1129,7 +1150,7 @@ def solve_PDF(pdf, true_pdf=None, true_result=None, true_CI=None, true_SI=None,
             if verbose:
                 print("solve_PDF(): Done. Returning a solution with 1-norm of primal violation",
                       feas, "and maximum dual violation ", kkt)
-            return the_p, feas, kkt, wCI, wSI
+            return the_p, feas, kkt, wCI, wSI, wUI_Y, wUI_Z
         else:
             if verbose:
                 print("solve_PDF(): Improving solution")
@@ -1150,7 +1171,7 @@ def solve_PDF(pdf, true_pdf=None, true_result=None, true_CI=None, true_SI=None,
                     if verbose:
                         print("solve_PDF(): Returning a solution with 1-norm of primal violation",
                               feas, "and maximum dual violation ", kkt)
-                    return the_p, feas, kkt, wCI, wSI
+                    return the_p, feas, kkt, wCI, wSI, wUI_Y, wUI_Z
                 else:
                     if verbose:
                         print("solve_PDF(): Giving up.")
@@ -1167,7 +1188,7 @@ def solve_PDF(pdf, true_pdf=None, true_result=None, true_CI=None, true_SI=None,
                         if verbose:
                             print("solve_PDF(): Returning a solution with 1-norm of primal violation",
                                   feas, "and maximum dual violation ", kkt)
-                        return the_p, feas, kkt, wCI, wSI
+                        return the_p, feas, kkt, wCI, wSI, wUI_Y, wUI_Z
                     else:
                         if verbose:
                             print("solve_PDF(): Giving up.")
@@ -1196,5 +1217,5 @@ def solve_PDF(pdf, true_pdf=None, true_result=None, true_CI=None, true_SI=None,
     #^ for iterations (REPEAT-UNTIL)
     print("Giving up.  Returning a solution with 1-norm of primal violation",
           feas, "and maximum dual violation ", kkt)
-    return the_p, feas, kkt, wCI, wSI
+    return the_p, feas, kkt, wCI, wSI, wUI_Y, wUI_Z
 # solve_PDF()

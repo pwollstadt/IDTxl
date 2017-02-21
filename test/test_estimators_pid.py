@@ -107,8 +107,12 @@ def test_xor_long():
     print('Estimator            Sydney\t\tTartu\n')
     print('PID evaluation       {:.3f} s\t\t{:.3f} s\n'.format(t_sydney,
                                                                t_tartu))
-    print('Uni s1               {0:.8f}'.format(est_sydney['unq_s1']))
-    print('Uni s2               {0:.8f}'.format(est_sydney['unq_s2']))
+    print('Uni s1               {0:.8f}\t\t{1:.8f}'.format(
+                                                    est_sydney['unq_s1'],
+                                                    est_tartu['unq_s1']))
+    print('Uni s2               {0:.8f}\t\t{1:.8f}'.format(
+                                                    est_sydney['unq_s2'],
+                                                    est_tartu['unq_s2']))
     print('Shared s1_s2         {0:.8f}\t\t{1:.8f}'.format(
                                                     est_sydney['shd_s1_s2'],
                                                     est_tartu['shd_s1_s2']))
@@ -138,8 +142,12 @@ def _estimate(Z):
     print('Estimator            Sydney\t\tTartu\n')
     print('PID evaluation       {:.3f} s\t\t{:.3f} s\n'.format(t_sydney,
                                                                t_tartu))
-    print('Uni s1               {0:.8f}'.format(est_sydney['unq_s1']))
-    print('Uni s2               {0:.8f}'.format(est_sydney['unq_s2']))
+    print('Uni s1               {0:.8f}\t\t{1:.8f}'.format(
+                                                    est_sydney['unq_s1'],
+                                                    est_tartu['unq_s1']))
+    print('Uni s2               {0:.8f}\t\t{1:.8f}'.format(
+                                                    est_sydney['unq_s2'],
+                                                    est_tartu['unq_s2']))
     print('Shared s1_s2         {0:.8f}\t\t{1:.8f}'.format(
                                                     est_sydney['shd_s1_s2'],
                                                     est_tartu['shd_s1_s2']))
@@ -150,7 +158,7 @@ def _estimate(Z):
 
 
 if __name__ == '__main__':
+    test_xor_long()
     test_pid_and()
     test_pid_xor()
     test_pip_source_copy()
-    test_xor_long()
