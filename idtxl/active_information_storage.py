@@ -358,15 +358,18 @@ class Active_information_storage(Single_process_analysis):
                                             candidate)
                 if temp_cond is None:
                     conditional_realisations = None
+                    re_use = ['var2', 'conditional']
                 else:
                     conditional_realisations[i_1:i_2, ] = temp_cond
+                    re_use = ['var2']
                 candidate_realisations[i_1:i_2, ] = temp_cand
                 i_1 = i_2
                 i_2 += data.n_realisations(self.current_value)
+
             temp_te = self._cmi_calculator.estimate_mult(
                                     n_chunks=len(self.selected_vars_sources),
                                     options=self.options,
-                                    re_use=['var2'],
+                                    re_use=re_use,
                                     var1=candidate_realisations,
                                     var2=self._current_value_realisations,
                                     conditional=conditional_realisations)
