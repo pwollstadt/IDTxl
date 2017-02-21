@@ -107,17 +107,27 @@ class Estimator(object):
         # If estimator does not support parallel estimation, loop over chunks
         # and estimate iteratively for individual chunks.
         else:
-            # TODO the use of a fixed key var1 may be a problem if the estimator uses different names for its arguments
-            assert data['var1'].shape[0] % n_chunks == 0, (
-                    'No. chunks does not match data length.')
-            chunk_size = int(data['var1'].shape[0] / n_chunks)
-            idx_1 = 0
-            idx_2 = chunk_size
-            res = np.empty((n_chunks))
             # Find arrays that have to be cut up into chunks because they are
             # not re-used.
             slice_vars = list(set(data.keys()).difference(set(re_use)))
+            if not slice_vars:
+                # If there is nothing to slice, we only have one chunk and can
+                # return the estimate directly.
+                return [self.estimate(opts=options, **data)]
+
+            n_samples_total = data[slice_vars[0]].shape[0]
+            assert n_samples_total % n_chunks == 0, (
+                    'No. chunks ({0}) does not match data length ({1}). '
+                    'Remainder: {2}.'.format(
+                                    n_chunks,
+                                    data[slice_vars[0]].shape[0],
+                                    data[slice_vars[0]].shape[0] % n_chunks))
+            chunk_size = int(n_samples_total / n_chunks)
+            idx_1 = 0
+            idx_2 = chunk_size
+            res = np.empty((n_chunks))
             i = 0
+            # Cut data into chunks and call estimator serially.
             for c in range(n_chunks):
                 chunk_data = {}
                 for v in slice_vars:  # NOTE: I am consciously not creating a deep copy here to save memory
