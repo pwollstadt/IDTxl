@@ -152,6 +152,7 @@ class Data():
             self.data = self._normalise_data(data_ordered)
         else:
             self.data = data_ordered
+        self.data_type = type(self.data[0, 0, 0])
 
     def _normalise_data(self, d):
         """Z-standardise data separately for each process."""
@@ -233,7 +234,8 @@ class Data():
         # Allocate memory.
         n_real_time = self.n_realisations_samples(current_value)
         n_real_repl = self.n_realisations_repl()
-        realisations = np.empty((n_real_time * n_real_repl, len(idx_list)))
+        realisations = np.empty((n_real_time * n_real_repl,
+                                 len(idx_list))).astype(self.data_type)
 
         # Shuffle the replication order if requested. This creates surrogate
         # data by permuting replications while keeping the order of samples
@@ -320,10 +322,6 @@ class Data():
                   ' data ({1})'.format(offset_samples, self.n_samples))
             raise RuntimeError('Offset must be smaller than no. samples.')
 
-        # Allocate memory.
-        data_slice = np.empty((self.n_samples - offset_samples,
-                               self.n_replications))
-
         # Shuffle the replication order if requested. This creates surrogate
         # data by permuting replications while keeping the order of samples
         # intact.
@@ -342,7 +340,7 @@ class Data():
                                                self.n_samples))
         assert(not np.isnan(data_slice).any()), ('There are nans in the '
                                                  'retrieved data slice.')
-        return data_slice, replication_index
+        return data_slice.T, replication_index
 
     def slice_permute_replications(self, process):
         """Return data slice with permuted replications (time stays intact).
@@ -431,9 +429,9 @@ class Data():
             replications is too small to allow a sufficient number of
             permutations for the generation of surrogate data.
         """
-        dat_slice = self._get_data_slice(process, shuffle=True)
-        dat_slice_perm = np.zeros(dat_slice.shape)
-        perm = self._get_permutation_samples(dat_slice.shape[1], perm_opts)
+        dat_slice = self._get_data_slice(process, shuffle=True)[0]
+        dat_slice_perm = np.empty(dat_slice.shape).astype(self.data_type)
+        perm = self._get_permutation_samples(dat_slice.shape[0], perm_opts)
         for r in range(self.n_replications):
             dat_slice_perm[:, r] = dat_slice[perm, r]
         return dat_slice_perm, perm
@@ -475,7 +473,7 @@ class Data():
             raise TypeError('idx needs to be a list of tuples.')
         return self.get_realisations(current_value, idx_list, shuffle=True)
 
-    def permute_samples(self, current_value, idx_list, perm_opts):
+    def permute_samples(self, current_value, idx_list, perm_opts=None):
         """Return realisations with permuted samples (repl. stays intact).
 
         Create surrogate data by permuting realisations over samples (time)
@@ -557,12 +555,14 @@ class Data():
             replications is too small to allow a sufficient number of
             permutations for the generation of surrogate data.
         """
+        if perm_opts is None:
+            perm_opts = dict()
         [realisations, replication_idx] = self.get_realisations(current_value,
                                                                 idx_list)
         n_samples = sum(replication_idx == 0)
         perm = self._get_permutation_samples(n_samples, perm_opts)
         # Apply the permutation to data from each replication.
-        realisations_perm = np.empty(realisations.shape)
+        realisations_perm = np.empty(realisations.shape).astype(self.data_type)
         perm_idx = np.empty(realisations_perm.shape[0])
         for r in range(max(replication_idx) + 1):
             mask = replication_idx == r
@@ -639,6 +639,8 @@ class Data():
             numpy Array
                 permuted indices of samples
         """
+        if perm_opts is None:
+            perm_opts = dict()
         perm_type = perm_opts.get('perm_type', 'random')
 
         # Get the permutaion 'mask' for one replication (the same mask is then

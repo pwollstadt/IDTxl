@@ -119,8 +119,8 @@ def test_permute_replications():
                            np.ones(n) * 1,
                            np.ones(n) * 2,
                            np.ones(n) * 3)).astype(int),
-                         'rs',
-                         normalise=False)
+                'rs',
+                normalise=False)
     current_value = (0, n)
     l = [(0, 1), (0, 3), (0, 7)]
     [perm, perm_idx] = data.permute_replications(current_value=current_value,
@@ -148,14 +148,14 @@ def test_permute_replications():
     i = 0
     n_per_repl = int(data.n_realisations(current_value) / data.n_replications)
     for p in range(n_per_repl // rng):
-        assert (np.unique(perm[i:i + rng, 0]) == samples).all(), ('The '
-            'permutation range was not respected.')
+        assert (np.unique(perm[i:i + rng, 0]) == samples).all(), (
+                                    'The permutation range was not respected.')
         samples += rng
         i += rng
     rem = n_per_repl % rng
     if rem > 0:
-        assert (np.unique(perm[i:i + rem, 0]) == samples[0:rem]).all(), ('The '
-            'remainder did not contain the same realisations.')
+        assert (np.unique(perm[i:i + rem, 0]) == samples[0:rem]).all(), (
+                        'The remainder did not contain the same realisations.')
 
     # Test assertions that perm_range is not too low or too high.
     perm_opts = {
@@ -178,31 +178,34 @@ def test_permute_replications():
                              idx_list=l,
                              perm_opts=perm_opts)
 
+
 def test_permute_samples():
     pass
+
 
 def test_get_data_slice():
     n = 10
     n_replications = 3
-    d = Data(np.vstack((np.zeros(n), np.ones(n), 2 * np.ones(n))),
+    d = Data(np.vstack((np.zeros(n).astype(int), 
+                        np.ones(n).astype(int), 
+                        2 * np.ones(n).astype(int))),
              'rs', normalise=False)
-    [s, i] =  d._get_data_slice(process=0, offset_samples=0, shuffle=False)
+    [s, i] = d._get_data_slice(process=0, offset_samples=0, shuffle=False)
 
     # test unshuffled slicing
     for r in range(n_replications):
-        assert s[r][0] == i[r], 'Replication index {0} is not correct.'.format(
+        assert s[0][r] == i[r], 'Replication index {0} is not correct.'.format(
                                                                             r)
     # test shuffled slicing
     [s, i] = d._get_data_slice(process=0, offset_samples=0, shuffle=True)
     for r in range(n_replications):
-        assert s[r][0] == i[r], 'Replication index {0} is not correct.'.format(
+        assert s[0][r] == i[r], 'Replication index {0} is not correct.'.format(
                                                                             r)
 
     offset = 3
     d = Data(np.arange(n), 's', normalise=False)
-    [s, i] =  d._get_data_slice(process=0, offset_samples=offset,
-                                shuffle=False)
-    assert s.shape[1] == (n - offset), 'Offset not handled correctly.'
+    [s, i] = d._get_data_slice(process=0, offset_samples=offset, shuffle=False)
+    assert s.shape[0] == (n - offset), 'Offset not handled correctly.'
 
 
 def test_create_surrogates():
@@ -261,7 +264,41 @@ def test_swap_local():
     pass
 
 
+def test_data_type():
+    """Test if data class always returns the correct data type."""
+    # Change data type for the same object instance.
+    d_int = np.random.randint(0, 10, size=(3, 50))
+    dat = Data(d_int, dim_order='ps', normalise=False)
+    # The concrete type depends on the platform:
+    # https://mail.scipy.org/pipermail/numpy-discussion/2011-November/059261.html
+    assert dat.data_type is np.int64, 'Data type did not change.'
+    assert issubclass(type(dat.data[0, 0, 0]), np.integer), ('Data type is not'
+                                                             ' an int.')
+    d_float = np.random.randn(3, 50)
+    dat.set_data(d_float, dim_order='ps')
+    assert dat.data_type is np.float64, 'Data type did not change.'
+    assert issubclass(type(dat.data[0, 0, 0]), np.float), ('Data type is not '
+                                                           'a float.')
+
+    # Check if data returned by the object have the correct type.
+    d_int = np.random.randint(0, 10, size=(3, 50, 5))
+    dat = Data(d_int, dim_order='psr', normalise=False)
+    real = dat.get_realisations((0, 5), [(1, 1), (1, 3)])[0]
+    assert issubclass(type(real[0, 0]), np.integer), ('Realisations type is '
+                                                      'not an int.')
+    sl = dat._get_data_slice(0)[0]
+    assert issubclass(type(sl[0, 0]), np.integer), ('Data slice type is not an'
+                                                    ' int.')
+    sl_perm = dat.slice_permute_samples(0)[0]
+    assert issubclass(type(sl_perm[0, 0]), np.integer), ('Permuted data slice '
+                                                         'type is not an int.')
+    samples = dat.permute_samples((0, 5), [(1, 1), (1, 3)])[0]
+    assert issubclass(type(samples[0, 0]), np.integer), ('Permuted samples '
+                                                         'type is not an int.')
+
+
 if __name__ == '__main__':
+    test_data_type()
     test_swap_blocks()
     test_circular_shift()
     test_swap_local()
