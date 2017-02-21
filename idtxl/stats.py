@@ -113,7 +113,7 @@ def network_fdr(results, alpha=0.05, correct_by_target=True):
     return res
 
 
-def omnibus_test(analysis_setup, data, opts=None):
+def omnibus_test(analysis_setup, data, opts=None): # TODO we don't need the opts, they're part of the setup
     """Perform an omnibus test on identified conditional variables.
 
     Test the joint information transfer from all identified sources to the
@@ -485,7 +485,7 @@ def mi_against_surrogates(analysis_setup, data):
     surr_dist = analysis_setup._cmi_calculator.estimate_mult(
                             n_chunks=n_perm,
                             options=analysis_setup.options,
-                            re_use=['var2'],
+                            re_use=['var2', 'conditional'],
                             var1=surr_realisations,
                             var2=analysis_setup._selected_vars_realisations,
                             conditional=None)
@@ -502,6 +502,219 @@ def mi_against_surrogates(analysis_setup, data):
     return [orig_mi, significance, p_value]
 
 
+def unq_against_surrogates(analysis_setup, data):
+    """Test the unique information in the PID estimate against surrogate data.
+
+    Shuffle realisations of both sources individually and re-calculate PID,
+    in particular the unique information from shuffled data. The original
+    unique information is then compared against the distribution of values
+    calculated from surrogate data.
+
+    Args:
+        analysis_setup : Partial_information_decomposition instance
+            information on the current analysis, should have an Attribute
+            'options', a dict with optional fields
+
+            - 'n_perm' - number of permutations (default=500)
+            - 'alpha' - critical alpha level (default=0.05)
+            - 'tail' - tail for testing, can be 'one' or 'two'
+              (default='one')
+
+        data : Data instance
+            raw data
+
+    Returns:
+        dict
+            PID estimate from original data
+        bool
+            statistical significance of the unique information in source 1
+        float
+            p-value of the unique information in source 1
+        bool
+            statistical significance of the unique information in source 2
+        float
+            p-value of the unique information in source 2
+    """
+
+    # Get analysis options and defaults.
+    n_perm = analysis_setup.options.get('n_perm', 21)  # TODO set to default
+    alpha = analysis_setup.options.get('alpha', 0.05)
+    tail = analysis_setup.options.get('tail', 'one')
+
+    # Get realisations
+    target_realisations = data.get_realisations(
+                                            analysis_setup.current_value,
+                                            [analysis_setup.current_value])[0]
+    source_1_realisations = data.get_realisations(
+                                        analysis_setup.current_value,
+                                        [analysis_setup.sources[0]])[0]
+    source_2_realisations = data.get_realisations(
+                                        analysis_setup.current_value,
+                                        [analysis_setup.sources[1]])[0]
+    orig_pid = analysis_setup._pid_calculator.estimate(
+                            opts=analysis_setup.options,
+                            s1=source_1_realisations,
+                            s2=source_2_realisations,
+                            t=target_realisations)
+
+    # Test unique information from source 1
+    surr_realisations = _generate_surrogates(data,
+                                             analysis_setup.current_value,
+                                             [analysis_setup.sources[0]],
+                                             n_perm,
+                                             analysis_setup.options)
+    # Calculate surrogate distribution for unique information of source 1.
+    # Note: calling  .estimate_mult does not work here because the PID
+    # estimator returns a dictionary not a single value. We have to get the
+    # unique from the dictionary manually.
+    surr_dist_s1 = np.empty(n_perm)
+    chunk_size = int(surr_realisations.shape[0] / n_perm)
+    i_1 = 0
+    i_2 = chunk_size
+    if VERBOSE:
+            print('\nTesting unq information in s1')
+    for p in range(n_perm):
+        if VERBOSE:
+            print('\tperm {0} of {1}'.format(p, n_perm))
+        pid_est = analysis_setup._pid_calculator.estimate(
+                                opts=analysis_setup.options,
+                                s1=surr_realisations[i_1:i_2, :],
+                                s2=source_2_realisations,
+                                t=target_realisations
+                                )
+        surr_dist_s1[p] = pid_est['unq_s1']
+        i_1 = i_2
+        i_2 += chunk_size
+
+    # Test unique information from source 2
+    surr_realisations = _generate_surrogates(data,
+                                             analysis_setup.current_value,
+                                             [analysis_setup.sources[1]],
+                                             n_perm,
+                                             analysis_setup.options)
+    # Calculate surrogate distribution for unique information of source 2.
+    surr_dist_s2 = np.empty(n_perm)
+    chunk_size = int(surr_realisations.shape[0] / n_perm)
+    i_1 = 0
+    i_2 = chunk_size
+    if VERBOSE:
+            print('\nTesting unq information in s2')
+    for p in range(n_perm):
+        if VERBOSE:
+            print('\tperm {0} of {1}'.format(p, n_perm))
+        pid_est = analysis_setup._pid_calculator.estimate(
+                                opts=analysis_setup.options,
+                                s1=source_1_realisations,
+                                s2=surr_realisations[i_1:i_2, :],
+                                t=target_realisations)
+        surr_dist_s2[p] = pid_est['unq_s2']
+        i_1 = i_2
+        i_2 += chunk_size
+    [sign_1, p_val_1] = _find_pvalue(statistic=orig_pid['unq_s1'],
+                                     distribution=surr_dist_s1,
+                                     alpha=alpha,
+                                     tail=tail)
+    [sign_2, p_val_2] = _find_pvalue(statistic=orig_pid['unq_s2'],
+                                     distribution=surr_dist_s2,
+                                     alpha=alpha,
+                                     tail=tail)
+    return [orig_pid, sign_1, p_val_1, sign_2, p_val_2]
+
+
+def syn_shd_against_surrogates(analysis_setup, data):
+    """Test the shared/synergistic information in the PID estimate.
+
+    Shuffle realisations of the target and re-calculate PID, in particular the
+    synergistic and shared information from shuffled data. The original
+    shared and synergistic information are then compared against the
+    distribution of values calculated from surrogate data.
+
+    Args:
+        analysis_setup : Partial_information_decomposition instance
+            information on the current analysis, should have an Attribute
+            'options', a dict with optional fields
+
+            - 'n_perm' - number of permutations (default=500)
+            - 'alpha' - critical alpha level (default=0.05)
+            - 'tail' - tail for testing, can be 'one' or 'two'
+              (default='one')
+
+        data : Data instance
+            raw data
+
+    Returns:
+        dict
+            PID estimate from original data
+        bool
+            statistical significance of the shared information
+        float
+            p-value of the shared information
+        bool
+            statistical significance of the synergistic information
+        float
+            p-value of the synergistic information
+    """
+    # Get analysis options and defaults.
+    n_perm = analysis_setup.options.get('n_perm', 21)  # TODO set to default
+    alpha = analysis_setup.options.get('alpha', 0.05)
+    tail = analysis_setup.options.get('tail', 'one')
+
+    # Get realisations
+    target_realisations = data.get_realisations(
+                                            analysis_setup.current_value,
+                                            [analysis_setup.current_value])[0]
+    source_1_realisations = data.get_realisations(
+                                        analysis_setup.current_value,
+                                        [analysis_setup.sources[0]])[0]
+    source_2_realisations = data.get_realisations(
+                                        analysis_setup.current_value,
+                                        [analysis_setup.sources[1]])[0]
+    orig_pid = analysis_setup._pid_calculator.estimate(
+                            opts=analysis_setup.options,
+                            s1=source_1_realisations,
+                            s2=source_2_realisations,
+                            t=target_realisations)
+
+    # Test shared and synergistic information from both sources
+    surr_realisations = _generate_surrogates(data,
+                                             analysis_setup.current_value,
+                                             [analysis_setup.current_value],
+                                             n_perm,
+                                             analysis_setup.options)
+    # Calculate surrogate distribution for shd/syn information of both sources.
+    # Note: calling  .estimate_mult does not work here because the PID
+    # estimator returns a dictionary not a single value. We have to get the
+    # shared info and synergy from the dictionary manually.
+    surr_dist_shd = np.empty(n_perm)
+    surr_dist_syn = np.empty(n_perm)
+    chunk_size = int(surr_realisations.shape[0] / n_perm)
+    i_1 = 0
+    i_2 = chunk_size
+    if VERBOSE:
+            print('\nTesting shd and syn information in both sources')
+    for p in range(n_perm):
+        if VERBOSE:
+            print('\tperm {0} of {1}'.format(p, n_perm))
+        pid_est = analysis_setup._pid_calculator.estimate(
+                                opts=analysis_setup.options,
+                                s1=source_1_realisations,
+                                s2=source_2_realisations,
+                                t=surr_realisations[i_1:i_2, :])
+        surr_dist_shd[p] = pid_est['shd_s1_s2']
+        surr_dist_syn[p] = pid_est['syn_s1_s2']
+        i_1 = i_2
+        i_2 += chunk_size
+    [sign_shd, p_val_shd] = _find_pvalue(statistic=orig_pid['shd_s1_s2'],
+                                         distribution=surr_dist_shd,
+                                         alpha=alpha,
+                                         tail=tail)
+    [sign_syn, p_val_syn] = _find_pvalue(statistic=orig_pid['syn_s1_s2'],
+                                         distribution=surr_dist_syn,
+                                         alpha=alpha,
+                                         tail=tail)
+    return [orig_pid, sign_shd, p_val_shd, sign_syn, p_val_syn]
+
+
 def check_n_perm(n_perm, alpha):
     """Check if no. permutations is big enough to obtain the requested alpha.
 
@@ -514,8 +727,9 @@ def check_n_perm(n_perm, alpha):
     if not 1.0 / n_perm < alpha:
         raise RuntimeError('The number of permutations {0} is to small to test'
                            ' the requested alpha level {1}. The number of '
-                           'permutations must be greater than (1/alpha).'.
-                               format(n_perm, alpha))
+                           'permutations must be greater than (1/alpha).'
+                           .format(n_perm, alpha))
+
 
 
 def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
@@ -644,10 +858,7 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
     """
     assert(distribution.ndim == 1)
     check_n_perm(distribution.shape[0], alpha)
-#    if (1.0 / distribution.shape[0] >= alpha):
-#        print('The number of permutations is to small ({0}) to test the '
-#              'requested alpha level ({1}).'.format(distribution.shape[0],
-#                                                    alpha))
+
     if tail == 'one':
         pvalue = sum(distribution > statistic) / distribution.shape[0]
     elif tail == 'one_smaller':
@@ -658,8 +869,8 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
         pvalue = min(p_bigger, p_smaller)
         alpha = alpha / 2
     else:
-        raise ValueError(('Unkown value for "tail" (should be "one" or "two"):'
-                          ' {0}'.format(tail)))
+        raise ValueError(('Unkown value for "tail" (should be "one" or "two"'
+                          'or "one_smaller"): {0}'.format(tail)))
 
     # If the statistic is larger than all values in the test distribution, set
     # the p-value to the smallest possible value 1/n_perm.
@@ -715,9 +926,12 @@ def _generate_surrogates(data, current_value, idx_list, n_perm,
             surrogate data with dimensions
             (realisations * n_perm) x len(idx_list)
     """
+    if perm_opts is None:
+        perm_opts = {}
     # Allocate memory for surrogates
     n_realisations = data.n_realisations(current_value)
-    surrogates = np.empty((n_realisations * n_perm, len(idx_list)))
+    surrogates = np.empty((n_realisations * n_perm,
+                           len(idx_list))).astype(data.data_type)
 
     # Check if the user requested to permute samples in time and not over
     # replications (default)
@@ -770,16 +984,19 @@ def _generate_spectral_surrogates(data, scale, n_perm, perm_opts=None):
             surrogate data with dimensions
             (realisations * n_perm) x len(idx_list)
     """
+    if perm_opts is None:
+        perm_opts = {}
     # Allocate memory for surrogates
-    surrogates = np.empty((data.n_samples, data.n_replications, n_perm))
+    surrogates = np.empty((data.n_samples, data.n_replications,
+                           n_perm)).astype(data.data_type)
 
     # Generate surrogates by permuting over replications if possible (no.
     # replications needs to be sufficient); else permute samples over time.
     if _sufficient_replications(data, n_perm):  # permute replications
         for perm in range(n_perm):
-            surrogates[:, :, perm] = data.slice_permute_replications(scale)
+            surrogates[:, :, perm] = data.slice_permute_replications(scale)[0]
     else:  # permute samples
         for perm in range(n_perm):
             surrogates[:, :, perm] = data.slice_permute_samples(scale,
-                                                                perm_opts)
+                                                                perm_opts)[0]
     return surrogates

@@ -8,7 +8,7 @@ Entropy 2014, 16, 2161-2183; doi:10.3390/e16042161
 
 """
 import numpy as np
-from . import synergy_tartu
+#from . import synergy_tartu
 from . import idtxl_exceptions as ex
 try:
     import jpype as jp
@@ -157,7 +157,7 @@ def pid_frankfurt(self, s1, s2, t, opts):
 
     # transform variables as far as possible outside the loops below
     # (note: only these variables should change when executing the loop)
-    target_jA = jp.JArray(jp.JInt, target.ndim)(target.tolist())
+    target_jA = jp.JArray(jp.JInt, t.ndim)(t.tolist())
     s2_jA = jp.JArray(jp.JInt, s2.ndim)(s2.tolist())
     s1_list = s1_cp.tolist()
     s1_dim = s1_cp.ndim
@@ -199,8 +199,8 @@ def pid_frankfurt(self, s1, s2, t, opts):
     ind = np.arange(n)
     # collect estimates in each iteration
     cmi_q_target_s1_cond_s2_all = -np.inf * np.ones(reps).astype('float128')
-    cmi_q_target_s1_cond_s2_delta = -np.inf * np.ones(reps).astype('float128')  # collect delta of estimates
-    cmi_q_target_s1_cond_s2_all[0] = cmi_target_s1_cond_s2  # initial I(s1;target|Y)
+    cmi_q_target_s1_cond_s2_delta = -np.inf * np.ones(reps).astype('float128')
+    cmi_q_target_s1_cond_s2_all[0] = cmi_target_s1_cond_s2
     unsuccessful = 0
 
     for i in range(1, reps):
@@ -256,7 +256,7 @@ def pid_frankfurt(self, s1, s2, t, opts):
         'shd_s1s2': shd_s1s2,
         'syn_s1s2': syn_s1s2,
         'jointmi_q_s1s2_target': jointmi_q_s1s2_target,
-        'orig_cmi_target_s1_cond_s2': cmi_target_s1_cond_s2,  # orignial values (empirical P)
+        'orig_cmi_target_s1_cond_s2': cmi_target_s1_cond_s2,
         'orig_jointmi_s1s2_target': jointmi_s1s2_target,
         'orig_mi_target_s1': mi_target_s1,
         'orig_mi_target_s2': mi_target_s2
@@ -372,9 +372,11 @@ def _calculate_jointmi(jointmi_calc, s1, s2, target):
                 jp.JArray(jp.JInt, 2)(np.column_stack((s1, s2)).tolist()), 2)
 #    [s12, alph_joined] = _join_variables(s1, s2, 2, 2)
     jointmi_calc.initialise()
-#    jointmi_calc.addObservations(jp.JArray(jp.JInt, s12.T.ndim)(s12.T.tolist()),
-#                                 jp.JArray(jp.JInt, target.ndim)(target.tolist()))
-    jointmi_calc.addObservations(s12,
+#    jointmi_calc.addObservations(
+#                           jp.JArray(jp.JInt, s12.T.ndim)(s12.T.tolist()),
+#                           jp.JArray(jp.JInt, target.ndim)(target.tolist()))
+    jointmi_calc.addObservations(
+                            s12,
                             jp.JArray(jp.JInt, target.ndim)(target.tolist()))
 
     jointmi = jointmi_calc.computeAverageLocalOfObservations()
@@ -435,7 +437,7 @@ def pid_sydney(self, s1, s2, t, opts):
             estimated decomposition, contains the joint distribution, unique,
             shared, and synergistic information
     """
-    _check_input(s1, s2, t, opts)
+    s1, s2, t, opts = _check_input(s1, s2, t, opts)
 
     try:
         alph_s1 = opts['alph_s1']
@@ -554,7 +556,8 @@ def pid_sydney(self, s1, s2, t, opts):
         raise ValueError('joint MI {0} smaller than cMI {1}'
                          ''.format(jointmi_s1s2_t, cond_mut_info1))
     else:
-        print('Passed sanity check on jMI and cMI')
+        if VERBOSE:
+            print('Passed sanity check on jMI and cMI')
 
     # Declare reps array of repeated doubling to half the prob_inc
     # WARNING: num_reps greater than 63 results in integer overflow
@@ -570,8 +573,8 @@ def pid_sydney(self, s1, s2, t, opts):
     # powers of integers
     # another idea would be to decrement by something slightly smaller than 2
 #    num_reps = num_reps + np.int32(np.floor(np.log(max_joint_nonzero_count)/np.log(2)))
-    print("num_reps:")
-    print(num_reps)
+    if VERBOSE:
+        print('num_reps: {0}'.format(num_reps))
     reps = np.array(np.power(2, range(0, num_reps)))
 
     # Replication loop
@@ -615,9 +618,9 @@ def pid_sydney(self, s1, s2, t, opts):
             # this is very important as we start swaps in the size of the
             # maximum probability
             if (joint_t_s1_s2_prob[t_cand, s1_cand, s2_cand] >= prob_inc and
-                joint_t_s1_s2_prob[t_cand, s1_prim, s2_prim] >= prob_inc and
-                joint_s1_s2_prob[s1_cand, s2_cand] >= prob_inc and
-                joint_s1_s2_prob[s1_prim, s2_prim] >= prob_inc):
+                    joint_t_s1_s2_prob[t_cand, s1_prim, s2_prim] >= prob_inc and
+                    joint_s1_s2_prob[s1_cand, s2_cand] >= prob_inc and
+                    joint_s1_s2_prob[s1_prim, s2_prim] >= prob_inc):
 
                 joint_t_s1_s2_prob[t_cand, s1_cand, s2_cand] -= prob_inc
                 joint_t_s1_s2_prob[t_cand, s1_prim, s2_prim] -= prob_inc
@@ -675,7 +678,8 @@ def pid_sydney(self, s1, s2, t, opts):
     mi_target_s1 = _mi_prob(t_prob, s1_prob, joint_t_s1_prob)
     mi_target_s2 = _mi_prob(t_prob, s2_prob, joint_t_s2_prob)
     jointmi_s1s2_target = _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t)
-    print('jointmi_s1s2_target: {0}'.format(jointmi_s1s2_target))
+    if VERBOSE:
+        print('jointmi_s1s2_target: {0}'.format(jointmi_s1s2_target))
 
     # PID terms
     unq_s1 = cond_mut_info1
@@ -793,12 +797,12 @@ def _join_variables(a, b, alph_a, alph_b):
 
 
 # TODO fix this - no idea why it does not yield the correct results
-#def _try_swap(cur_cond_mut_info, joint_t_s1_s2_prob, joint_s1_s2_prob,
+# def _try_swap(cur_cond_mut_info, joint_t_s1_s2_prob, joint_s1_s2_prob,
 #              joint_t_s2_prob, s2_prob,
 #              t_cand, s1_prim, s2_prim, s1_cand, s2_cand,
 #              prob_inc, unsuccessful_swaps_row):
-##            unsuccessful_swaps_row_local = unsuccessful_swaps_row
-##            print("unsuccessful_swaps_row_local: {0}".format(unsuccessful_swaps_row_local))
+# #            unsuccessful_swaps_row_local = unsuccessful_swaps_row
+# #            print("unsuccessful_swaps_row_local: {0}".format(unsuccessful_swaps_row_local))
 #            if (joint_t_s1_s2_prob[t_cand, s1_cand, s2_cand] >= prob_inc
 #            and joint_t_s1_s2_prob[t_cand, s1_prim, s2_prim] >= prob_inc
 #            and joint_s1_s2_prob[s1_cand, s2_cand] >= prob_inc
@@ -898,7 +902,7 @@ def pid_tartu(self, s1, s2, t, opts):
     max_zero_probability = opts.get('max_zero_probability', 1.e-5)
     verbose = opts.get('verbose', False)
 
-    _check_input(s1, s2, t, opts)
+    s1, s2, t, opts = _check_input(s1, s2, t, opts)
     counts = dict()
     n_samples = s1.shape[0]
 
@@ -918,13 +922,15 @@ def pid_tartu(self, s1, s2, t, opts):
                                      true_SI, feas_eps, kkt_eps, feas_eps_2,
                                      kkt_eps_2, kkt_search_eps,
                                      max_zero_probability, verbose)
-    optpdf, feas, kkt, CI, SI = retval
+    optpdf, feas, kkt, CI, SI, UI_s1, UI_s2 = retval
     estimate = {
         'kkt': kkt,
         'feas': feas,
         'optpdf': optpdf,
         'shd_s1_s2': SI,
         'syn_s1_s2': CI,
+        'unq_s1': UI_s1,
+        'unq_s2': UI_s2,
     }
     if get_sorted_pdf:
         estimate['sorted_pdf'] = synergy_tartu.sorted_pdf(pdf)
@@ -933,17 +939,62 @@ def pid_tartu(self, s1, s2, t, opts):
 
 def _check_input(s1, s2, t, opts):
     """Check input to PID estimators."""
-    if s1.ndim != 1 or s2.ndim != 1 or t.ndim != 1:
-        raise ValueError('Inputs s1, s2, target have to be vectors'
-                         '(1D-arrays).')
-    if (len(t) != len(s1) or len(t) != len(s2)):
-        raise ValueError('Number of samples s1, s2 and t must be equal')
+#    if s1.ndim != 1 or s2.ndim != 1 or t.ndim != 1:
+#        raise ValueError('Inputs s1, s2, target have to be vectors'
+#                         '(1D-arrays).')
+#    if (len(t) != len(s1) or len(t) != len(s2)):
+#        raise ValueError('Number of samples s1, s2 and t must be equal')
+
+    # In general, IDTxl expects 2D inputs because JIDT/JPYPE only accepts those
+    # and we have a multivariate approach, i.e., a vector is a special case of
+    # 2D-data. Squeeze 2D arrays if the dimension of the second axis is 1.
+    # Otherwise combine multivariate sources into a single variable for
+    # estimation.
+    if s1.ndim != 1:
+        if s1.shape[1] == 1:
+            s1 = np.squeeze(s1)
+        elif s1.ndim == 2 and s1.shape[1] > 1:
+            s1_joint = s1[:, 0]
+            alph_new = len(np.unique(s1[:, 0]))
+            for col in range(1, s1.shape[1]):
+                alph_col = len(np.unique(s1[:, col]))
+                s1_joint, alph_new = _join_variables(s1_joint, s1[:, col],
+                                                     alph_new, alph_col)
+            opts['alph_s1'] = alph_new
+        else:
+            raise ValueError('Input source 1 s1 has to be a 1D or 2D numpy '
+                             'array.')
+
+    if s2.ndim != 1:
+        if s2.shape[1] == 1:
+            s2 = np.squeeze(s2)
+        elif s2.ndim == 2 and s2.shape[1] > 1:
+            s2_joint = s2[:, 0]
+            alph_new = len(np.unique(s2[:, 0]))
+            for col in range(1, s2.shape[1]):
+                alph_col = len(np.unique(s2[:, col]))
+                s2_joint, alph_new = _join_variables(s2_joint, s2[:, col],
+                                                     alph_new, alph_col)
+            opts['alph_s2'] = alph_new
+        else:
+            raise ValueError('Input source 2 s2 has to be a 1D or 2D numpy '
+                             'array.')
+    if t.ndim != 1:
+        if t.shape[1] == 1:
+            t = np.squeeze(t)
+        else:  # For now we only allow 1D-targets
+            raise ValueError('Input target t has to be a vector '
+                             '(t.shape[1]=1).')
+
+    # Check types of remaining inputs.
     if type(opts) != dict:
         raise TypeError('The opts argument should be a dictionary.')
 
     if not issubclass(s1.dtype.type, np.int64):
-        raise TypeError('Input s1 (source 2) must be an integer numpy array.')
+        raise TypeError('Input s1 (source 1) must be an integer numpy array.')
     if not issubclass(s2.dtype.type, np.int64):
-        raise TypeError('Input s2 (source 1) must be an integer numpy array.')
+        raise TypeError('Input s2 (source 2) must be an integer numpy array.')
     if not issubclass(t.dtype.type, np.int64):
         raise TypeError('Input t (target) must be an integer numpy array.')
+
+    return s1, s2, t, opts
