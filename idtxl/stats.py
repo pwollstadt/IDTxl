@@ -185,11 +185,11 @@ def omnibus_test(analysis_setup, data, opts=None): # TODO we don't need the opts
         i_1 = i_2
         i_2 += data.n_realisations(analysis_setup.current_value)
         '''
-    surr_cond_real = _generate_surrogates(data,
-                                          analysis_setup.current_value,
-                                          analysis_setup.selected_vars_sources,
-                                          n_permutations,
-                                          perm_range)
+    surr_cond_real = _get_surrogates(data,
+                                     analysis_setup.current_value,
+                                     analysis_setup.selected_vars_sources,
+                                     n_permutations,
+                                     perm_range)
 
     surr_distribution = analysis_setup._cmi_calculator.estimate_mult(
                             n_chunks=n_permutations,
@@ -476,11 +476,11 @@ def mi_against_surrogates(analysis_setup, data):
                                             analysis_setup.current_value,
                                             [analysis_setup.current_value])
         '''
-    surr_realisations = _generate_surrogates(data,
-                                             analysis_setup.current_value,
-                                             [analysis_setup.current_value],
-                                             n_perm,
-                                             analysis_setup.options)
+    surr_realisations = _get_surrogates(data,
+                                        analysis_setup.current_value,
+                                        [analysis_setup.current_value],
+                                        n_perm,
+                                        analysis_setup.options)
 
     surr_dist = analysis_setup._cmi_calculator.estimate_mult(
                             n_chunks=n_perm,
@@ -558,11 +558,11 @@ def unq_against_surrogates(analysis_setup, data):
                             t=target_realisations)
 
     # Test unique information from source 1
-    surr_realisations = _generate_surrogates(data,
-                                             analysis_setup.current_value,
-                                             [analysis_setup.sources[0]],
-                                             n_perm,
-                                             analysis_setup.options)
+    surr_realisations = _get_surrogates(data,
+                                        analysis_setup.current_value,
+                                        [analysis_setup.sources[0]],
+                                        n_perm,
+                                        analysis_setup.options)
     # Calculate surrogate distribution for unique information of source 1.
     # Note: calling  .estimate_mult does not work here because the PID
     # estimator returns a dictionary not a single value. We have to get the
@@ -587,11 +587,11 @@ def unq_against_surrogates(analysis_setup, data):
         i_2 += chunk_size
 
     # Test unique information from source 2
-    surr_realisations = _generate_surrogates(data,
-                                             analysis_setup.current_value,
-                                             [analysis_setup.sources[1]],
-                                             n_perm,
-                                             analysis_setup.options)
+    surr_realisations = _get_surrogates(data,
+                                        analysis_setup.current_value,
+                                        [analysis_setup.sources[1]],
+                                        n_perm,
+                                        analysis_setup.options)
     # Calculate surrogate distribution for unique information of source 2.
     surr_dist_s2 = np.empty(n_perm)
     chunk_size = int(surr_realisations.shape[0] / n_perm)
@@ -676,11 +676,11 @@ def syn_shd_against_surrogates(analysis_setup, data):
                             t=target_realisations)
 
     # Test shared and synergistic information from both sources
-    surr_realisations = _generate_surrogates(data,
-                                             analysis_setup.current_value,
-                                             [analysis_setup.current_value],
-                                             n_perm,
-                                             analysis_setup.options)
+    surr_realisations = _get_surrogates(data,
+                                        analysis_setup.current_value,
+                                        [analysis_setup.current_value],
+                                        n_perm,
+                                        analysis_setup.options)
     # Calculate surrogate distribution for shd/syn information of both sources.
     # Note: calling  .estimate_mult does not work here because the PID
     # estimator returns a dictionary not a single value. We have to get the
@@ -729,7 +729,6 @@ def check_n_perm(n_perm, alpha):
                            ' the requested alpha level {1}. The number of '
                            'permutations must be greater than (1/alpha).'
                            .format(n_perm, alpha))
-
 
 
 def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
@@ -791,7 +790,7 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
             i_1 = i_2
             i_2 += data.n_realisations(analysis_setup.current_value)
         '''
-        surr_candidate_realisations = _generate_surrogates(
+        surr_candidate_realisations = _get_surrogates(
                                                  data,
                                                  analysis_setup.current_value,
                                                  [candidate],
@@ -893,17 +892,18 @@ def _sufficient_replications(data, n_perm):
         return False
 
 
-def _generate_surrogates(data, current_value, idx_list, n_perm,
-                         perm_opts=None):
-    """Generate surrogate data for statistical testing.
+def _get_surrogates(data, current_value, idx_list, n_perm,
+                    perm_opts=None):
+    """Return surrogate data for statistical testing.
 
-    The method for surrogate generation depends on whether sufficient
-    replications of the data exists. If the number of replications is high
-    enough (reps! > n_permutations), surrogates are created by shuffling data
-    over replications (while keeping the temporal order of samples intact). If
-    the number of replications is too low, samples are shuffled over time
-    (while keeping the order of replications intact). The latter method can be
-    forced by setting 'permute_in_time' to True in 'perm_opts'.
+    Calls surrogate generation methods of the data instance. The method for
+    surrogate generation depends on whether sufficient replications of the data
+    exists. If the number of replications is high enough (reps! >
+    n_permutations), surrogates are created by shuffling data over replications
+    (while keeping the temporal order of samples intact). If the number of
+    replications is too low, samples are shuffled over time (while keeping the
+    order of replications intact). The latter method can be forced by setting
+    'permute_in_time' to True in 'perm_opts'.
 
     Args:
         data : Data instance

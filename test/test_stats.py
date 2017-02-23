@@ -167,7 +167,7 @@ def test_data_type():
     assert dat.data_type is np.int64, 'Data type did not change.'
     assert issubclass(type(dat.data[0 ,0, 0]), np.integer), ('Data type is not'
                                                              ' an int.')
-    surr = stats._generate_surrogates(data=dat,
+    surr = stats._get_surrogates(data=dat,
                                       current_value=(0, 5),
                                       idx_list=[(1, 3), (2, 4)],
                                       n_perm=20)
@@ -184,7 +184,7 @@ def test_data_type():
     assert dat.data_type is np.float64, 'Data type did not change.'
     assert issubclass(type(dat.data[0, 0, 0]), np.float), ('Data type is not '
                                                            'a float.')
-    surr = stats._generate_surrogates(data=dat,
+    surr = stats._get_surrogates(data=dat,
                                       current_value=(0, 5),
                                       idx_list=[(1, 3), (2, 4)],
                                       n_perm=20)
