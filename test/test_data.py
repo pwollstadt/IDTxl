@@ -180,7 +180,49 @@ def test_permute_replications():
 
 
 def test_permute_samples():
-    pass
+    """Test surrogate creation by permuting samples."""
+    n = 20
+    dat = Data(np.arange(n), 's', normalise=False)
+
+    perm = dat.permute_samples(current_value=(0, 0),
+                               idx_list=[(0, 0)],
+                               perm_opts=None)[0]
+    assert (sorted(np.squeeze(perm)) == np.arange(n)).all(), (
+                            'Permutation did not contain the correct values.')
+    opts = {'perm_type': 'circular'}
+    perm = dat.permute_samples(current_value=(0, 0),
+                               idx_list=[(0, 0)],
+                               perm_opts=opts)[0]
+    idx_start = np.where(np.squeeze(perm) == 0)[0][0]
+    assert (np.squeeze(np.vstack((perm[idx_start:], perm[:idx_start]))) ==
+            np.arange(n)).all(), ('Circular shifting went wrong.')
+
+    opts = {'perm_type': 'block'}
+    perm = dat.permute_samples(current_value=(0, 0),
+                               idx_list=[(0, 0)],
+                               perm_opts=opts)[0]
+    block_size = int(round(n / 10))
+    for b in range(0, n, block_size):
+        assert perm[b + 1] - perm[b] == 1, 'Block permutation went wrong.'
+
+    opts = {'perm_type': 'block', 'block_size': 3}
+    perm = dat.permute_samples(current_value=(0, 0),
+                               idx_list=[(0, 0)],
+                               perm_opts=opts)[0]
+    for b in range(0, n, opts['block_size']):
+        assert perm[b + 1] - perm[b] == 1, 'Block permutation went wrong.'
+
+    opts = {'perm_type': 'block', 'block_size': 3, 'perm_range': 2}
+    perm = dat.permute_samples(current_value=(0, 0),
+                               idx_list=[(0, 0)],
+                               perm_opts=opts)[0]
+    opts = {'perm_type': 'local'}
+    perm = dat.permute_samples(current_value=(0, 0),
+                               idx_list=[(0, 0)],
+                               perm_opts=opts)[0]
+    perm_range = int(round(n / 10))
+    for b in range(0, n, perm_range):
+        assert abs(perm[b + 1] - perm[b]) == 1, 'Block permutation went wrong.'
 
 
 def test_get_data_slice():
@@ -208,10 +250,6 @@ def test_get_data_slice():
     assert s.shape[0] == (n - offset), 'Offset not handled correctly.'
 
 
-def test_create_surrogates():
-    pass
-
-
 def test_swap_blocks():
     """Test block-wise swapping of samples."""
     d = Data()
@@ -223,7 +261,6 @@ def test_swap_blocks():
     block_size = 5
     swap_range = 4
     perm = d._swap_blocks(n, block_size, swap_range)
-    assert sum(perm == 0) == block_size, 'Incorrect block size.'
     assert perm.shape[0] == n, 'Incorrect length of permuted indices.'
 
     # block_size leads to one block of length 1, swap_range divides the no.
@@ -232,7 +269,6 @@ def test_swap_blocks():
     block_size = 7
     swap_range = 4
     perm = d._swap_blocks(n, block_size, swap_range)
-    assert sum(perm == 0) == block_size, 'Incorrect block size.'
     assert perm.shape[0] == n, 'Incorrect length of permuted indices.'
     n_blocks = np.ceil(n/7).astype(int)
     assert n_blocks == 8, 'No. blocks is incorrect.'
@@ -244,7 +280,6 @@ def test_swap_blocks():
     block_size = 5
     swap_range = 3
     perm = d._swap_blocks(n, block_size, swap_range)
-    assert sum(perm == 0) == block_size, 'Incorrect block size.'
     assert perm.shape[0] == n, 'Incorrect length of permuted indices.'
 
 
@@ -298,11 +333,11 @@ def test_data_type():
 
 
 if __name__ == '__main__':
+    test_permute_samples()
     test_data_type()
     test_swap_blocks()
     test_circular_shift()
     test_swap_local()
-    test_create_surrogates()
     test_get_data_slice()
     test_get_realisations()
     test_data_normalisation()

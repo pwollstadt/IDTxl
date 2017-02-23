@@ -229,6 +229,9 @@ class Data():
                 replication index for each realisation with dimensions (no.
                 samples * no.replications) x number of indices
         """
+        if not hasattr(self, 'data'):
+            raise AttributeError('No data has been added to this Data() '
+                                 'instance.')
         # Check if requested indices are smaller than the current_value.
         if not all(np.array([x[1] for x in idx_list]) <= current_value[1]):
             print('Index list: {0}\ncurrent value: {1}'.format(idx_list,
@@ -522,11 +525,11 @@ class Data():
                 - perm_type : str [optional]
                   permutation type, can be
 
-                    - 'circular' (default): shifts time series by a random
+                    - 'random' (default): swaps samples at random,
+                    - 'circular': shifts time series by a random
                       number of samples
                     - 'block': swaps blocks of samples,
                     - 'local': swaps samples within a given range, or
-                    - 'random': swaps samples at random,
 
                 - additional options depending on the perm_type (n is the
                   number of samples):
@@ -654,17 +657,19 @@ class Data():
             perm = np.random.permutation(n_samples)
 
         elif perm_type == 'circular':
-            max_shift = perm_opts.get('max_shift', round(n_samples / 2))
+            max_shift = perm_opts.get('max_shift', int(round(n_samples / 2)))
             perm = self._circular_shift(n_samples, max_shift)[0]
 
         elif perm_type == 'block':
-            block_size = perm_opts.get('block_size', round(n_samples / 10))
+            block_size = perm_opts.get('block_size',
+                                       int(round(n_samples / 10)))
             perm_range = perm_opts.get('perm_range',
                                        int(np.ceil(n_samples / block_size)))
             perm = self._swap_blocks(n_samples, block_size, perm_range)
 
         elif perm_type == 'local':
-            perm_range = perm_opts.get('perm_range', round(n_samples / 10))
+            perm_range = perm_opts.get('perm_range',
+                                       int(round(n_samples / 10)))
             if type(perm_range) is str:
                 if perm_range != 'max':
                     raise ValueError('Got {0} as input for perm_range. For '
@@ -736,24 +741,35 @@ class Data():
 
         # First permute block(!) indices.
         if perm_range == n_blocks:  # permute all blocks randomly
-            perm = np.random.permutation(n_blocks)
+            perm_blocks = np.random.permutation(n_blocks)
         else:  # build a permutation that permutes only within the perm_range
-            perm = np.empty(n_blocks, dtype=int)
+            perm_blocks = np.empty(n_blocks, dtype=int)
 
             i = 0
             for p in range(n_blocks // perm_range):
-                perm[i:i + perm_range] = np.random.permutation(perm_range) + i
+                perm_blocks[i:i + perm_range] = np.random.permutation(
+                                                                perm_range) + i
                 i += perm_range
             if rem_blocks > 0:
-                perm[-rem_blocks:] = np.random.permutation(rem_blocks) + i
+                perm_blocks[-rem_blocks:] = np.random.permutation(
+                                                                rem_blocks) + i
 
-        idx_last_block = [i for i, j in enumerate(perm) if j == max(perm)][0]
+        # Get the block index for each sample index, take into account that the
+        # last block may have fewer samples if n_samples % block_size isn't 0.
+        idx_blocks = np.hstack((np.repeat(np.arange(n_blocks - 1), block_size),
+                                np.repeat(n_blocks - 1, rem_samples)))
 
-        # Blow up block indices so we get one permuted index for each samples
-        # in a block.
-        return np.hstack((np.repeat(perm[:idx_last_block], block_size),
-                          np.repeat(perm[idx_last_block], rem_samples),
-                          np.repeat(perm[idx_last_block + 1:], block_size)))
+        # Permute samples indices according to permuted block indices.
+        perm = np.zeros(n).astype(int)  # allocate memory
+        idx_orig = np.arange(n)  # original order of sample indices
+        i_0 = 0
+        for b in perm_blocks:  # loop over permuted blocks
+            idx = idx_blocks == b  # indices of samples in curr. permuted block
+            i_1 = i_0 + sum(idx)
+            perm[i_0:i_1] = idx_orig[idx]  # append samples to permutation
+            i_0 = i_1
+
+        return perm
 
     def _circular_shift(self, n, max_shift):
         """Permute samples through shifting by a random number of samples.
