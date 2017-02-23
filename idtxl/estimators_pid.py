@@ -8,7 +8,7 @@ Entropy 2014, 16, 2161-2183; doi:10.3390/e16042161
 
 """
 import numpy as np
-#from . import synergy_tartu
+from . import synergy_tartu
 from . import idtxl_exceptions as ex
 try:
     import jpype as jp
