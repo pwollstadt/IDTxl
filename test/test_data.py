@@ -108,7 +108,7 @@ def test_get_realisations():
     # Test retrieval of realisations of the current value.
     n = 7
     d = Data(np.arange(n), 's', normalise=False)
-    current_value = (0, n)
+    current_value = (0, n - 1)
     dat = d.get_realisations(current_value, [current_value])[0]
 
 
@@ -121,7 +121,7 @@ def test_permute_replications():
                            np.ones(n) * 3)).astype(int),
                 'rs',
                 normalise=False)
-    current_value = (0, n)
+    current_value = (0, n - 1)
     l = [(0, 1), (0, 3), (0, 7)]
     [perm, perm_idx] = data.permute_replications(current_value=current_value,
                                                  idx_list=l)
