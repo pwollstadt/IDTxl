@@ -75,7 +75,7 @@ def test_network_analysis():
 
 def test_analyse_single_target():
     """Test call to network_analysis method."""
-    n = 20
+    n = 50
     alph = 2
     x = np.random.randint(0, alph, n)
     y = np.random.randint(0, alph, n)
