@@ -91,7 +91,7 @@ class Partial_information_decomposition(Single_process_analysis):
         results = {}
         for t in range(len(targets)):
             if VERBOSE:
-                print('####### analysing target with index {0} from list {1}'
+                print('\n####### analysing target with index {0} from list {1}'
                       .format(t, targets))
             r = self.analyse_single_target(data, targets[t], sources[t],
                                            lags[t])
@@ -146,22 +146,33 @@ class Partial_information_decomposition(Single_process_analysis):
         return results
 
     def _initialise(self, data, target, sources, lags):
-        self.target = target
+        if type(target) is not int:
+            raise RuntimeError('Target must be an integer.')
+        if len(sources) != 2:
+            raise RuntimeError('List of sources must have length 2.')
         if lags is None:
             self.lags = [1, 1]
         else:
             if len(lags) != 2:
-                RuntimeError('List of lags must have length 2.')
-            else:
-                self.lags = lags
+                raise RuntimeError('List of lags must have length 2.')
+            if lags[0] >= data.n_samples:
+                raise RuntimeError('Lag 1 ({0}) is larger than the number of '
+                                   'samples in the data set ({1}).'.format(
+                                                   lags[0], data.n_samples))
+            if lags[1] >= data.n_samples:
+                raise RuntimeError('Lag 2 ({0}) is larger than the number of '
+                                   'samples in the data set ({1}).'.format(
+                                                   lags[1], data.n_samples))
+        if target in sources:
+            raise RuntimeError('The target ({0}) should not be in the list '
+                               'of sources ({1}).'.format(target, sources))
+        self.lags = lags
         self.max_lag = max(self.lags)
         self.current_value = (target, self.max_lag)
-        if len(sources) != 2:
-            RuntimeError('List of sources must have length 2.')
-        else:
-            # TODO works for single vars only, change to multivariate?
-            self.sources = self._lag_to_idx([(sources[0], lags[0]),
-                                             (sources[1], lags[1])])
+        self.target = target
+        # TODO works for single vars only, change to multivariate?
+        self.sources = self._lag_to_idx([(sources[0], lags[0]),
+                                         (sources[1], lags[1])])
 
     def _calculate_pid(self, data):
 

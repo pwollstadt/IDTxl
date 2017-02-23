@@ -124,9 +124,9 @@ class Network_inference(Network_analysis):
             sources = [sources]
 
         if self.target in sources:
-            raise RuntimeError('The target {0} should not be in the list '
-                               'of sources {1}.'.format(self.target,
-                                                        sources))
+            raise RuntimeError('The target ({0}) should not be in the list '
+                               'of sources ({1}).'.format(self.target,
+                                                          sources))
         else:
             self.source_set = sources
             if VERBOSE:
@@ -159,7 +159,7 @@ class Network_inference(Network_analysis):
                             self.current_value[1] - self.max_lag_sources,
                             -self.tau_sources)
         candidates = self._define_candidates(procs, samples)
-        # TODO include non-selected target candidates as further candidates, 
+        # TODO include non-selected target candidates as further candidates,
         # they may get selected due to synergies
         self._include_candidates(candidates, data)
 

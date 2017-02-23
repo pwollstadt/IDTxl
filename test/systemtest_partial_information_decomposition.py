@@ -3,7 +3,6 @@
 @author: patricia
 """
 import time as tm
-import pytest
 import numpy as np
 from idtxl.partial_information_decomposition import (
                                         Partial_information_decomposition)
@@ -26,7 +25,7 @@ def test_pid_xor_data():
     pid = Partial_information_decomposition(options=analysis_opts)
     tic = tm.time()
     est_tartu = pid.analyse_single_target(data=dat, target=2, sources=[0, 1],
-                                           lags=[0, 0])
+                                          lags=[0, 0])
     t_tartu = tm.time() - tic
 
     # Run Sydney estimator
@@ -72,11 +71,13 @@ def test_pid_xor_data():
                                                     est_sydney['syn_s1_s2']))
     assert 0.9 < est_tartu['syn_s1_s2'] <= 1.1, (
             'Tartu estimator incorrect synergy: {0}, should approx. 1'.format(
-                                                    est_sydney['syn_s1_s2']))
+                                                    est_tartu['syn_s1_s2']))
     # TODO: est = pid.analyse_network(data=dat, target=0)
 
+
 def test_multivariate_sources():
-    pass # TODO implement multivariate sources
+    pass  # TODO implement multivariate sources
+
 
 if __name__ == '__main__':
     test_pid_xor_data()
