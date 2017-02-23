@@ -94,6 +94,11 @@ class Data():
         if current_value is None:
             return self.n_samples
         else:
+            if current_value[1] >= self.n_samples:
+                raise RuntimeError('The sample index of the current value '
+                                   '({0}) is larger than the number of samples'
+                                   ' in the data set ({1}).'.format(
+                                              current_value, self.n_samples))
             return self.n_samples - current_value[1]
 
     def n_realisations_repl(self):
