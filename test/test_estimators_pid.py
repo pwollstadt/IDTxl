@@ -6,6 +6,7 @@ Created on Mon Apr 11 21:51:56 2016
 """
 import time as tm
 import numpy as np
+import pytest
 from idtxl.set_estimator import Estimator_pid
 
 
@@ -157,8 +158,33 @@ def _estimate(Z):
     return est_sydney, est_tartu
 
 
+def test_int_types():
+    """Test PID estimator on different integer types."""
+    Z = np.logical_xor(X, Y).astype(np.int32)
+    print(type(Z))
+    print(type(Z[0]))
+    est_sydney, est_tartu = _estimate(Z)
+    assert np.isclose(1, est_sydney['syn_s1_s2']), 'Synergy is not 1.'
+    assert np.isclose(1, est_tartu['syn_s1_s2']), 'Synergy is not 1.'
+
+    Z = np.logical_xor(X, Y).astype(np.int64)
+    print(Z)
+    print(type(Z))
+    print(type(Z[0]))
+    est_sydney, est_tartu = _estimate(Z)
+    assert np.isclose(1, est_sydney['syn_s1_s2']), 'Synergy is not 1.'
+    assert np.isclose(1, est_tartu['syn_s1_s2']), 'Synergy is not 1.'
+
+    Z = [0, 1, 1, 0]
+    print(type(Z))
+    print(type(Z[0]))
+    with pytest.raises(TypeError):  # Test incorrect input type
+        est_sydney, est_tartu = _estimate(Z)
+
+
 if __name__ == '__main__':
     test_xor_long()
     test_pid_and()
     test_pid_xor()
     test_pip_source_copy()
+    test_int_types()

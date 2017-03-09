@@ -950,6 +950,13 @@ def _check_input(s1, s2, t, opts):
     # 2D-data. Squeeze 2D arrays if the dimension of the second axis is 1.
     # Otherwise combine multivariate sources into a single variable for
     # estimation.
+
+    if (type(s1) != np.ndarray or type(s2) != np.ndarray or
+            type(t) != np.ndarray):
+        raise TypeError('All inputs, s1, s2, t, must be numpy arrays.')
+
+    # Convert IDTxl 2D vectors to 1D arrays. Remove unneeded axis or combine
+    # multivariate inputs into a single variable.
     if s1.ndim != 1:
         if s1.shape[1] == 1:
             s1 = np.squeeze(s1)
@@ -990,11 +997,11 @@ def _check_input(s1, s2, t, opts):
     if type(opts) != dict:
         raise TypeError('The opts argument should be a dictionary.')
 
-    if not issubclass(s1.dtype.type, np.int64):
+    if not issubclass(s1.dtype.type, np.integer):
         raise TypeError('Input s1 (source 1) must be an integer numpy array.')
-    if not issubclass(s2.dtype.type, np.int64):
+    if not issubclass(s2.dtype.type, np.integer):
         raise TypeError('Input s2 (source 2) must be an integer numpy array.')
-    if not issubclass(t.dtype.type, np.int64):
+    if not issubclass(t.dtype.type, np.integer):
         raise TypeError('Input t (target) must be an integer numpy array.')
 
     return s1, s2, t, opts
