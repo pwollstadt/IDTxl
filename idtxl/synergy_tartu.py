@@ -74,8 +74,19 @@
 #
 # ^ END OF DOCUMENTATION
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-from cvxopt import solvers, matrix, spmatrix, spdiag, log
+from . import idtxl_exceptions as ex
+try:
+    import gurobipy as gurobi
+except ImportError:
+    ex.jpype_missing('gurobipy is not available on this system. To use the '
+                     'Tartu PID-estimator install Gurobi from '
+                     'https://www.gurobi.com/')
+try:
+    from cvxopt import solvers, matrix, spmatrix, spdiag, log
+except ImportError:
+    ex.jpype_missing('cvxopt is not available on this system. To use the Tartu'
+                     ' PID-estimator install it from '
+                     'https://pypi.python.org/pypi/cvxopt')
 import numpy
 
 VERBOSE = False
@@ -565,11 +576,10 @@ class Compute_UI:
         return viol
 
     class KKT_System:
-        import gurobipy as gurobi
 
         def __init__(self, cui):
             self.cui = cui
-            self.model = Compute_UI.KKT_System.gurobi.Model("kkt")
+            self.model = gurobi.Model("kkt")
             self.model.params.logToConsole = 0
 
             # Add the variables:
@@ -656,7 +666,7 @@ class Compute_UI:
 
             self.model.update()
             self.model.optimize()
-            if self.model.status == Compute_UI.KKT_System.gurobi.GRB.Status.OPTIMAL:
+            if self.model.status == gurobi.GRB.Status.OPTIMAL:
                 t = self.t_var.getAttr("x")
                 return t
             else:
@@ -665,7 +675,6 @@ class Compute_UI:
     #^ class KKT_System
 
     def solve_KKT_system(self, p, ZERO=1.e-1000):
-        import gurobipy as gurobi
 
         model = gurobi.Model("kkt")
         model.params.logToConsole = 0
@@ -771,7 +780,6 @@ class Compute_UI:
     #^ make_KKT_lp()
 
     def try_to_improve_by_LP(self, p):
-        import gurobipy as gurobi
 
         model = gurobi.Model("improve")
         model.params.logToConsole = 0

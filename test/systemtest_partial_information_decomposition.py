@@ -72,7 +72,7 @@ def test_pid_xor_data():
     assert 0.9 < est_tartu['syn_s1_s2'] <= 1.1, (
             'Tartu estimator incorrect synergy: {0}, should approx. 1'.format(
                                                     est_tartu['syn_s1_s2']))
-    # TODO: est = pid.analyse_network(data=dat, target=0)
+    # TODO test this: est = pid.analyse_network(data=dat, target=0)
 
 
 def test_multivariate_sources():
