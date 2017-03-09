@@ -541,7 +541,7 @@ def unq_against_surrogates(analysis_setup, data):
     alpha = analysis_setup.options.get('alpha', 0.05)
     tail = analysis_setup.options.get('tail', 'one')
 
-    # Get realisations
+    # Get realisations and estimate PID for orginal data
     target_realisations = data.get_realisations(
                                             analysis_setup.current_value,
                                             [analysis_setup.current_value])[0]
@@ -659,7 +659,7 @@ def syn_shd_against_surrogates(analysis_setup, data):
     alpha = analysis_setup.options.get('alpha', 0.05)
     tail = analysis_setup.options.get('tail', 'one')
 
-    # Get realisations
+    # Get realisations and estimate PID for original data
     target_realisations = data.get_realisations(
                                             analysis_setup.current_value,
                                             [analysis_setup.current_value])[0]

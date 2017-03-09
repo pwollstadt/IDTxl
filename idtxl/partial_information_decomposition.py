@@ -54,14 +54,24 @@ class Partial_information_decomposition(Single_process_analysis):
 
         Example:
 
-            >>> dat = Data()
-            >>> dat.generate_mute_data(100, 5)
+            >>> n = 20
+            >>> alph = 2
+            >>> x = np.random.randint(0, alph, n)
+            >>> y = np.random.randint(0, alph, n)
+            >>> z = np.logical_xor(x, y).astype(int)
+            >>> dat = Data(np.vstack((x, y, z)), 'ps', normalise=False)
             >>> analysis_opts = {
-            >>>     'cmi_calc_name': 'pid_sydney',
-            >>>     }
-            >>> targets = [0, 1, 1, 2, 2, 3]
-            >>> sources = [[1, 2], [0, 2], [0, 3], [0, 1], [3, 4], [0, 2]]
-            >>> lags = [[1, 1], [3, 2], [2, 2], [1, 1], [3, 1], [3, 2]]
+            >>>     'alpha': 0.1,
+            >>>     'alph_s1': alph,
+            >>>     'alph_s2': alph,
+            >>>     'alph_t': alph,
+            >>>     'max_unsuc_swaps_row_parm': 60,
+            >>>     'num_reps': 63,
+            >>>     'max_iters': 1000,
+            >>>     'pid_calc_name': 'pid_sydney'}
+            >>> targets = [0, 1, 2]
+            >>> sources = [[1, 2], [0, 2], [0, 1]]
+            >>> lags = [[1, 1], [3, 2], [0, 0]]
             >>> pid_analysis = Partial_information_decomposition(analysis_opts)
             >>> res = pid_analysis.analyse_network(dat, targets, sources, lags)
 
@@ -83,7 +93,8 @@ class Partial_information_decomposition(Single_process_analysis):
 
         Returns:
             dict
-                results # TODO include doc
+                results for each target, see documentation of
+                'analyse_single_target' for details
         """
         if not len(targets) == len(sources) == len(lags):
             raise RuntimeError('Lists of targets, sources, and lags must have'
@@ -106,11 +117,21 @@ class Partial_information_decomposition(Single_process_analysis):
 
         Example:
 
-            >>> dat = Data()
-            >>> dat.generate_mute_data(100, 5)
+            >>> n = 20
+            >>> alph = 2
+            >>> x = np.random.randint(0, alph, n)
+            >>> y = np.random.randint(0, alph, n)
+            >>> z = np.logical_xor(x, y).astype(int)
+            >>> dat = Data(np.vstack((x, y, z)), 'ps', normalise=False)
             >>> analysis_opts = {
-            >>>     'cmi_calc_name': 'pid_sydney',
-            >>>     }
+            >>>     'alpha': 0.1,
+            >>>     'alph_s1': alph,
+            >>>     'alph_s2': alph,
+            >>>     'alph_t': alph,
+            >>>     'max_unsuc_swaps_row_parm': 60,
+            >>>     'num_reps': 63,
+            >>>     'max_iters': 1000,
+            >>>     'pid_calc_name': 'pid_sydney'}
             >>> pid_analysis = Partial_information_decomposition(analysis_opts)
             >>> res = pid_analysis.analyse_single_target(data=dat,
             >>>                                          target=0,
@@ -129,7 +150,9 @@ class Partial_information_decomposition(Single_process_analysis):
 
         Returns:
             dict
-                results # TODO include doc
+                unique, shared and synergistic information from both sources,
+                statistical significance and p-values, indices of source
+                variables, and options used for estimation
         """
         # Check input and initialise values for analysis.
         self._initialise(data, target, sources, lags)
@@ -176,12 +199,31 @@ class Partial_information_decomposition(Single_process_analysis):
 
     def _calculate_pid(self, data):
 
-        [orig_pid, sign_1, p_val_1,
-         sign_2, p_val_2] = stats.unq_against_surrogates(self, data)
-        [orig_pid, sign_shd,
-         p_val_shd, sign_syn, p_val_syn] = stats.syn_shd_against_surrogates(
-                                                                        self,
-                                                                        data)
+        # TODO Discuss how and if the following statistical testing should be
+        # included included. Remove dummy results.
+        # [orig_pid, sign_1, p_val_1,
+        #  sign_2, p_val_2] = stats.unq_against_surrogates(self, data)
+        # [orig_pid, sign_shd,
+        #  p_val_shd, sign_syn, p_val_syn] = stats.syn_shd_against_surrogates(
+        #                                                                 self,
+        sign_1 = sign_2 = sign_shd = sign_syn = False
+        p_val_1 = p_val_2 = p_val_shd = p_val_syn = 1.0
+
+        target_realisations = data.get_realisations(
+                                            self.current_value,
+                                            [self.current_value])[0]
+        source_1_realisations = data.get_realisations(
+                                            self.current_value,
+                                            [self.sources[0]])[0]
+        source_2_realisations = data.get_realisations(
+                                            self.current_value,
+                                            [self.sources[1]])[0]
+        orig_pid = self._pid_calculator.estimate(
+                                opts=self.options,
+                                s1=source_1_realisations,
+                                s2=source_2_realisations,
+                                t=target_realisations)
+
         if VERBOSE:
             print('\nunq information s1: {0:.8f}, s2: {1:.8f}'.format(
                                                            orig_pid['unq_s1'],
