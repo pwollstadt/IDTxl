@@ -12,15 +12,15 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="1294.3317pt"
-   height="1217.6056pt"
-   viewBox="0 0 1293.9192 1217.6056"
+   width="1569.75pt"
+   height="1389pt"
+   viewBox="0 0 1569.3269 1389"
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
    sodipodi:docname="classes_idtxl.svg">
   <metadata
-     id="metadata638">
+     id="metadata681">
     <rdf:RDF>
       <cc:Work
          rdf:about="">
@@ -32,7 +32,7 @@
     </rdf:RDF>
   </metadata>
   <defs
-     id="defs636" />
+     id="defs679" />
   <sodipodi:namedview
      pagecolor="#ffffff"
      bordercolor="#666666"
@@ -44,11 +44,11 @@
      inkscape:pageshadow="2"
      inkscape:window-width="1920"
      inkscape:window-height="1141"
-     id="namedview634"
+     id="namedview677"
      showgrid="false"
-     inkscape:zoom="0.45714286"
-     inkscape:cx="885.76274"
-     inkscape:cy="724.64796"
+     inkscape:zoom="0.32324881"
+     inkscape:cx="798.23004"
+     inkscape:cy="657.34123"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
@@ -57,1287 +57,1292 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0" />
-  <g
-     class="node"
-     id="node1"
-     transform="translate(182.15322,1469)">
-    <title
-       id="title10">0</title>
-    <polygon
-       style="fill:none;stroke:#000000"
-       id="polygon12"
-       points="245.5,-865.5 415.5,-865.5 415.5,-631.5 245.5,-631.5 245.5,-631.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text14"
-       font-size="14.00"
-       y="-850.29999"
-       x="330.5">Active_information_storage</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline16"
-       points="245.5,-842.5 415.5,-842.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text18"
-       font-size="14.00"
-       y="-827.29999"
-       x="253.5">ais : NoneType</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text20"
-       font-size="14.00"
-       y="-812.29999"
-       x="253.5">calculator_name</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text22"
-       font-size="14.00"
-       y="-797.29999"
-       x="253.5">current_value : tuple</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text24"
-       font-size="14.00"
-       y="-782.29999"
-       x="253.5">max_lag</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text26"
-       font-size="14.00"
-       y="-767.29999"
-       x="253.5">options</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text28"
-       font-size="14.00"
-       y="-752.29999"
-       x="253.5">process</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text30"
-       font-size="14.00"
-       y="-737.29999"
-       x="253.5">pvalue : NoneType, float</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text32"
-       font-size="14.00"
-       y="-722.29999"
-       x="253.5">selected_vars_full : list</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text34"
-       font-size="14.00"
-       y="-707.29999"
-       x="253.5">selected_vars_sources : list</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text36"
-       font-size="14.00"
-       y="-692.29999"
-       x="253.5">sign : bool</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text38"
-       font-size="14.00"
-       y="-677.29999"
-       x="253.5">tau : int</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline40"
-       points="245.5,-669.5 415.5,-669.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text42"
-       font-size="14.00"
-       y="-654.29999"
-       x="253.5">analyse_network()</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text44"
-       font-size="14.00"
-       y="-639.29999"
-       x="253.5">analyse_single_process()</text>
-  </g>
-  <g
-     class="node"
-     id="node18"
-     transform="translate(311.75,1644)">
-    <title
-       id="title47">17</title>
-    <polygon
-       style="fill:none;stroke:#000000"
-       id="polygon49"
-       points="408,-1219.5 259,-1219.5 259,-1219.5 259,-1289.5 408,-1289.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text51"
-       font-size="14.00"
-       y="-1274.3"
-       x="333.5">Single_process_analysis</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline53"
-       points="259,-1266.5 408,-1266.5 " />
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline55"
-       points="259,-1242.5 408,-1242.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text57"
-       font-size="14.00"
-       y="-1227.3"
-       x="333.5" />
-  </g>
+  <polygon
+     points="551.5,-865.5 551.5,-631.5 381.5,-631.5 381.5,-631.5 381.5,-865.5 "
+     id="polygon12"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="466.75"
+     y="793.70001"
+     font-size="14.00"
+     id="text14"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle">Active_information_storage</text>
+  <polyline
+     points="381.5,-842.5 551.5,-842.5 "
+     id="polyline16"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="389.75"
+     y="816.70001"
+     font-size="14.00"
+     id="text18"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">ais : NoneType</text>
+  <text
+     x="389.75"
+     y="831.70001"
+     font-size="14.00"
+     id="text20"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">calculator_name</text>
+  <text
+     x="389.75"
+     y="846.70001"
+     font-size="14.00"
+     id="text22"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">current_value : tuple</text>
+  <text
+     x="389.75"
+     y="861.70001"
+     font-size="14.00"
+     id="text24"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">max_lag</text>
+  <text
+     x="389.75"
+     y="876.70001"
+     font-size="14.00"
+     id="text26"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">options</text>
+  <text
+     x="389.75"
+     y="891.70001"
+     font-size="14.00"
+     id="text28"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">process</text>
+  <text
+     x="389.75"
+     y="906.70001"
+     font-size="14.00"
+     id="text30"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">pvalue : float, NoneType</text>
+  <text
+     x="389.75"
+     y="921.70001"
+     font-size="14.00"
+     id="text32"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">selected_vars_full : list</text>
+  <text
+     x="389.75"
+     y="936.70001"
+     font-size="14.00"
+     id="text34"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">selected_vars_sources : list</text>
+  <text
+     x="389.75"
+     y="951.70001"
+     font-size="14.00"
+     id="text36"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">sign : bool</text>
+  <text
+     x="389.75"
+     y="966.70001"
+     font-size="14.00"
+     id="text38"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">tau : int</text>
+  <polyline
+     points="381.5,-669.5 551.5,-669.5 "
+     id="polyline40"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="389.75"
+     y="989.70001"
+     font-size="14.00"
+     id="text42"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">analyse_network()</text>
+  <text
+     x="389.75"
+     y="1004.7"
+     font-size="14.00"
+     id="text44"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">analyse_single_process()</text>
+  <polygon
+     points="541,-1219.5 392,-1219.5 392,-1219.5 392,-1289.5 541,-1289.5 "
+     id="polygon49"
+     style="fill:none;stroke:#000000"
+     transform="translate(122.75,1644)" />
+  <text
+     x="589.25"
+     y="369.69995"
+     font-size="14.00"
+     id="text51"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle">Single_process_analysis</text>
+  <polyline
+     points="392,-1266.5 541,-1266.5 "
+     id="polyline53"
+     style="fill:none;stroke:#000000"
+     transform="translate(122.75,1644)" />
+  <polyline
+     points="392,-1242.5 541,-1242.5 "
+     id="polyline55"
+     style="fill:none;stroke:#000000"
+     transform="translate(122.75,1644)" />
+  <text
+     x="466.75"
+     y="416.69995"
+     font-size="14.00"
+     id="text57"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle" />
   <path
-     d="m 557.53051,601.27025 c 0.651,-109.394 55.62161,-90.47553 56.07461,-166.56553"
+     d="M 466.75,778.239 589.25625,434.72"
      id="path62"
      inkscape:connector-curvature="0"
      style="fill:none;stroke:#000000"
      sodipodi:nodetypes="cc" />
   <polygon
-     points="329.738,-1209.48 329.738,-1209.48 333.297,-1219.46 336.738,-1209.44 "
+     points="463,-1209.46 466.5,-1219.46 470,-1209.46 463,-1209.46 "
      id="polygon64"
      style="fill:none;stroke:#000000"
-     transform="translate(280.19536,1644)" />
-  <g
-     class="node"
-     id="node3"
-     transform="translate(-130.91831,1360.1056)">
-    <title
-       id="title150">2</title>
-    <polygon
-       style="fill:none;stroke:#000000"
-       id="polygon152"
-       points="1210.5,-437 1210.5,-143 1038.5,-143 1038.5,-143 1038.5,-437 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text154"
-       font-size="14.00"
-       y="-421.79999"
-       x="1124.5">Data</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline156"
-       points="1038.5,-414 1210.5,-414 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text158"
-       font-size="14.00"
-       y="-398.79999"
-       x="1046.5">data</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text160"
-       font-size="14.00"
-       y="-383.79999"
-       x="1046.5">data</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text162"
-       font-size="14.00"
-       y="-368.79999"
-       x="1046.5">data_type : type</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text164"
-       font-size="14.00"
-       y="-353.79999"
-       x="1046.5">n_processes</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text166"
-       font-size="14.00"
-       y="-338.79999"
-       x="1046.5">n_replications</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text168"
-       font-size="14.00"
-       y="-323.79999"
-       x="1046.5">n_samples</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text170"
-       font-size="14.00"
-       y="-308.79999"
-       x="1046.5">normalise : bool</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline172"
-       points="1038.5,-301 1210.5,-301 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text174"
-       font-size="14.00"
-       y="-285.79999"
-       x="1046.5">generate_mute_data()</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text176"
-       font-size="14.00"
-       y="-270.79999"
-       x="1046.5">get_realisations()</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text178"
-       font-size="14.00"
-       y="-255.8"
-       x="1046.5">n_realisations()</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text180"
-       font-size="14.00"
-       y="-240.8"
-       x="1046.5">n_realisations_repl()</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text182"
-       font-size="14.00"
-       y="-225.8"
-       x="1046.5">n_realisations_samples()</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text184"
-       font-size="14.00"
-       y="-210.8"
-       x="1046.5">permute_replications()</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text186"
-       font-size="14.00"
-       y="-195.8"
-       x="1046.5">permute_samples()</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text188"
-       font-size="14.00"
-       y="-180.8"
-       x="1046.5">set_data()</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text190"
-       font-size="14.00"
-       y="-165.8"
-       x="1046.5">slice_permute_replications()</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text192"
-       font-size="14.00"
-       y="-150.8"
-       x="1046.5">slice_permute_samples()</text>
-  </g>
-  <g
-     class="node"
-     id="node4"
-     transform="translate(0.25,1718.375)">
-    <title
-       id="title195">3</title>
-    <polygon
-       style="fill:none;stroke:#000000"
-       id="polygon197"
-       points="434,-820.5 607,-820.5 607,-676.5 434,-676.5 434,-676.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text199"
-       font-size="14.00"
-       y="-805.29999"
-       x="520.5">Estimator</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline201"
-       points="434,-797.5 607,-797.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text203"
-       font-size="14.00"
-       y="-782.29999"
-       x="442">estimate</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text205"
-       font-size="14.00"
-       y="-767.29999"
-       x="442">estimator_name</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text207"
-       font-size="14.00"
-       y="-752.29999"
-       x="442">estimator_name : NoneType</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text209"
-       font-size="14.00"
-       y="-737.29999"
-       x="442">is_parallel : NoneType</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline211"
-       points="434,-729.5 607,-729.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text213"
-       font-size="14.00"
-       y="-714.29999"
-       x="442">add_estimator()</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text215"
-       font-size="14.00"
-       y="-699.29999"
-       x="442">estimate()</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text217"
-       font-size="14.00"
-       y="-684.29999"
-       x="442">estimate_mult()</text>
-  </g>
-  <g
-     class="node"
-     id="node5"
-     transform="translate(0.25,1469)">
-    <title
-       id="title220">4</title>
-    <polygon
-       style="fill:none;stroke:#000000"
-       id="polygon222"
-       points="460.5,-255.5 460.5,-324.5 564.5,-324.5 564.5,-255.5 460.5,-255.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text224"
-       font-size="14.00"
-       y="-309.29999"
-       x="512.5">Estimator_ais</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline226"
-       points="460.5,-301.5 564.5,-301.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text228"
-       font-size="14.00"
-       y="-286.29999"
-       x="468.5">estimator_name</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline230"
-       points="460.5,-278.5 564.5,-278.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text232"
-       font-size="14.00"
-       y="-263.29999"
-       x="512.5" />
-  </g>
+     transform="translate(122.75,1644)" />
+  <polygon
+     points="143,-828 143,-669 0,-669 0,-669 0,-828 "
+     id="polygon69"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="71.75"
+     y="831.20001"
+     font-size="14.00"
+     id="text71"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle">Bivariate_te</text>
+  <polyline
+     points="0,-805 143,-805 "
+     id="polyline73"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="8.25"
+     y="854.20001"
+     font-size="14.00"
+     id="text75"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">calculator_name</text>
+  <text
+     x="8.25"
+     y="869.20001"
+     font-size="14.00"
+     id="text77"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">pvalue_omnibus</text>
+  <text
+     x="8.25"
+     y="884.20001"
+     font-size="14.00"
+     id="text79"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">pvalues_sign_sources</text>
+  <text
+     x="8.25"
+     y="899.20001"
+     font-size="14.00"
+     id="text81"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">sign_omnibus</text>
+  <text
+     x="8.25"
+     y="914.20001"
+     font-size="14.00"
+     id="text83"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">te_omnibus</text>
+  <text
+     x="8.25"
+     y="929.20001"
+     font-size="14.00"
+     id="text85"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">te_sign_sources</text>
+  <polyline
+     points="0,-707 143,-707 "
+     id="polyline87"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="8.25"
+     y="952.20001"
+     font-size="14.00"
+     id="text89"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">analyse_network()</text>
+  <text
+     x="8.25"
+     y="967.20001"
+     font-size="14.00"
+     id="text91"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">analyse_single_target()</text>
+  <polygon
+     points="333,-1092.5 130,-1092.5 130,-1092.5 130,-1416.5 333,-1416.5 "
+     id="polygon96"
+     style="fill:none;stroke:#000000"
+     transform="translate(-73.25,1644)" />
+  <text
+     x="158.25"
+     y="242.69995"
+     font-size="14.00"
+     id="text98"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle">Network_inference</text>
+  <polyline
+     points="130,-1393.5 333,-1393.5 "
+     id="polyline100"
+     style="fill:none;stroke:#000000"
+     transform="translate(-73.25,1644)" />
+  <text
+     x="64.75"
+     y="265.69995"
+     font-size="14.00"
+     id="text102"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">current_value : tuple</text>
+  <text
+     x="64.75"
+     y="280.69995"
+     font-size="14.00"
+     id="text104"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">max_lag_sources</text>
+  <text
+     x="64.75"
+     y="295.69995"
+     font-size="14.00"
+     id="text106"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">max_lag_target : NoneType</text>
+  <text
+     x="64.75"
+     y="310.69995"
+     font-size="14.00"
+     id="text108"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">min_lag_sources</text>
+  <text
+     x="64.75"
+     y="325.69995"
+     font-size="14.00"
+     id="text110"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">options</text>
+  <text
+     x="64.75"
+     y="340.69995"
+     font-size="14.00"
+     id="text112"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">pvalue_omnibus : NoneType</text>
+  <text
+     x="64.75"
+     y="355.69995"
+     font-size="14.00"
+     id="text114"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">pvalues_sign_sources : NoneType</text>
+  <text
+     x="64.75"
+     y="370.69995"
+     font-size="14.00"
+     id="text116"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">selected_vars_full : list</text>
+  <text
+     x="64.75"
+     y="385.69995"
+     font-size="14.00"
+     id="text118"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">selected_vars_sources : list</text>
+  <text
+     x="64.75"
+     y="400.69995"
+     font-size="14.00"
+     id="text120"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">selected_vars_target : list</text>
+  <text
+     x="64.75"
+     y="415.69995"
+     font-size="14.00"
+     id="text122"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">sign_omnibus : bool</text>
+  <text
+     x="64.75"
+     y="430.69995"
+     font-size="14.00"
+     id="text124"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">sign_sign_sources : NoneType</text>
+  <text
+     x="64.75"
+     y="445.69995"
+     font-size="14.00"
+     id="text126"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">source_set : list</text>
+  <text
+     x="64.75"
+     y="460.69995"
+     font-size="14.00"
+     id="text128"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">target</text>
+  <text
+     x="64.75"
+     y="475.69995"
+     font-size="14.00"
+     id="text130"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">tau_sources : int</text>
+  <text
+     x="64.75"
+     y="490.69995"
+     font-size="14.00"
+     id="text132"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">tau_target : int</text>
+  <text
+     x="64.75"
+     y="505.69995"
+     font-size="14.00"
+     id="text134"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">te_omnibus : NoneType</text>
+  <text
+     x="64.75"
+     y="520.69995"
+     font-size="14.00"
+     id="text136"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">te_sign_sources : NoneType</text>
+  <polyline
+     points="130,-1115.5 333,-1115.5 "
+     id="polyline138"
+     style="fill:none;stroke:#000000"
+     transform="translate(-73.25,1644)" />
+  <text
+     x="231.75"
+     y="543.69995"
+     font-size="14.00"
+     id="text140"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle" />
   <path
-     d="m 513.338,1144.432 c -1.84259,-42.904 10.39218,-47.868 5.983,-91.7842"
-     id="path237"
+     d="m 96.75,815.75 c 21.56,-67.914 53.449,-168.366 80.822,-254.59"
+     id="path145"
+     inkscape:connector-curvature="0"
+     style="fill:none;stroke:#000000" />
+  <polygon
+     points="174.018,-1084 180.38,-1092.47 180.69,-1081.88 174.018,-1084 "
+     id="polygon147"
+     style="fill:none;stroke:#000000"
+     transform="translate(-73.25,1644)" />
+  <polygon
+     points="1324.5,-143 1324.5,-143 1324.5,-437 1496.5,-437 1496.5,-143 "
+     id="polygon235"
+     style="fill:none;stroke:#000000"
+     transform="translate(-141.5,1498.75)" />
+  <text
+     x="1269"
+     y="1076.95"
+     font-size="14.00"
+     id="text237"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle">Data</text>
+  <polyline
+     points="1324.5,-414 1496.5,-414 "
+     id="polyline239"
+     style="fill:none;stroke:#000000"
+     transform="translate(-141.5,1498.75)" />
+  <text
+     x="1191"
+     y="1099.95"
+     font-size="14.00"
+     id="text241"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">data</text>
+  <text
+     x="1191"
+     y="1114.95"
+     font-size="14.00"
+     id="text243"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">data</text>
+  <text
+     x="1191"
+     y="1129.95"
+     font-size="14.00"
+     id="text245"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">data_type : type</text>
+  <text
+     x="1191"
+     y="1144.95"
+     font-size="14.00"
+     id="text247"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">n_processes</text>
+  <text
+     x="1191"
+     y="1159.95"
+     font-size="14.00"
+     id="text249"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">n_replications</text>
+  <text
+     x="1191"
+     y="1174.95"
+     font-size="14.00"
+     id="text251"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">n_samples</text>
+  <text
+     x="1191"
+     y="1189.95"
+     font-size="14.00"
+     id="text253"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">normalise : bool</text>
+  <polyline
+     points="1324.5,-301 1496.5,-301 "
+     id="polyline255"
+     style="fill:none;stroke:#000000"
+     transform="translate(-141.5,1498.75)" />
+  <text
+     x="1191"
+     y="1212.95"
+     font-size="14.00"
+     id="text257"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">generate_mute_data()</text>
+  <text
+     x="1191"
+     y="1227.95"
+     font-size="14.00"
+     id="text259"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">get_realisations()</text>
+  <text
+     x="1191"
+     y="1242.95"
+     font-size="14.00"
+     id="text261"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">n_realisations()</text>
+  <text
+     x="1191"
+     y="1257.95"
+     font-size="14.00"
+     id="text263"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">n_realisations_repl()</text>
+  <text
+     x="1191"
+     y="1272.95"
+     font-size="14.00"
+     id="text265"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">n_realisations_samples()</text>
+  <text
+     x="1191"
+     y="1287.95"
+     font-size="14.00"
+     id="text267"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">permute_replications()</text>
+  <text
+     x="1191"
+     y="1302.95"
+     font-size="14.00"
+     id="text269"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">permute_samples()</text>
+  <text
+     x="1191"
+     y="1317.95"
+     font-size="14.00"
+     id="text271"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">set_data()</text>
+  <text
+     x="1191"
+     y="1332.95"
+     font-size="14.00"
+     id="text273"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">slice_permute_replications()</text>
+  <text
+     x="1191"
+     y="1347.95"
+     font-size="14.00"
+     id="text275"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">slice_permute_samples()</text>
+  <polygon
+     points="971,-676.5 798,-676.5 798,-676.5 798,-820.5 971,-820.5 "
+     id="polygon280"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1849.4145)" />
+  <text
+     x="884.75"
+     y="1044.1145"
+     font-size="14.00"
+     id="text282"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle">Estimator</text>
+  <polyline
+     points="798,-797.5 971,-797.5 "
+     id="polyline284"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1849.4145)" />
+  <text
+     x="806.25"
+     y="1067.1145"
+     font-size="14.00"
+     id="text286"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">estimate</text>
+  <text
+     x="806.25"
+     y="1082.1145"
+     font-size="14.00"
+     id="text288"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">estimator_name</text>
+  <text
+     x="806.25"
+     y="1097.1145"
+     font-size="14.00"
+     id="text290"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">estimator_name : NoneType</text>
+  <text
+     x="806.25"
+     y="1112.1145"
+     font-size="14.00"
+     id="text292"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">is_parallel : NoneType</text>
+  <polyline
+     points="798,-729.5 971,-729.5 "
+     id="polyline294"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1849.4145)" />
+  <text
+     x="806.25"
+     y="1135.1145"
+     font-size="14.00"
+     id="text296"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">add_estimator()</text>
+  <text
+     x="806.25"
+     y="1150.1145"
+     font-size="14.00"
+     id="text298"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">estimate()</text>
+  <text
+     x="806.25"
+     y="1165.1145"
+     font-size="14.00"
+     id="text300"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">estimate_mult()</text>
+  <polygon
+     points="850.5,-324.5 850.5,-255.5 746.5,-255.5 746.5,-255.5 746.5,-324.5 "
+     id="polygon305"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="798.75"
+     y="1334.7"
+     font-size="14.00"
+     id="text307"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle">Estimator_ais</text>
+  <polyline
+     points="746.5,-301.5 850.5,-301.5 "
+     id="polyline309"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="754.75"
+     y="1357.7"
+     font-size="14.00"
+     id="text311"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">estimator_name</text>
+  <polyline
+     points="746.5,-278.5 850.5,-278.5 "
+     id="polyline313"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="798.75"
+     y="1380.7"
+     font-size="14.00"
+     id="text315"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle" />
+  <path
+     d="m 805.074,1319.432 c 13.458,-71.437 45.263,-34.8475 64.37,-136.2705"
+     id="path320"
      inkscape:connector-curvature="0"
      style="fill:none;stroke:#000000"
      sodipodi:nodetypes="cc" />
   <polygon
-     points="515.575,-666.218 519.25,-676.155 522.574,-666.095 515.575,-666.218 "
-     id="polygon239"
+     points="865.768,-666.976 871.059,-676.155 872.647,-665.68 865.768,-666.976 "
+     id="polygon322"
      style="fill:none;stroke:#000000"
-     transform="translate(0.25,1718.375)" />
-  <g
-     class="node"
-     id="node6"
-     transform="translate(0.25,1469)">
-    <title
-       id="title242">5</title>
-    <polygon
-       style="fill:none;stroke:#000000"
-       id="polygon244"
-       points="190.5,-255.5 190.5,-324.5 294.5,-324.5 294.5,-255.5 190.5,-255.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text246"
-       font-size="14.00"
-       y="-309.29999"
-       x="242.5">Estimator_cmi</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline248"
-       points="190.5,-301.5 294.5,-301.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text250"
-       font-size="14.00"
-       y="-286.29999"
-       x="198.5">estimator_name</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline252"
-       points="190.5,-278.5 294.5,-278.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text254"
-       font-size="14.00"
-       y="-263.29999"
-       x="242.5" />
-  </g>
+     transform="translate(0.25,1849.4145)" />
+  <polygon
+     points="405.5,-324.5 405.5,-255.5 301.5,-255.5 301.5,-255.5 301.5,-324.5 "
+     id="polygon327"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="353.75"
+     y="1334.7"
+     font-size="14.00"
+     id="text329"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle">Estimator_cmi</text>
+  <polyline
+     points="301.5,-301.5 405.5,-301.5 "
+     id="polyline331"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="309.75"
+     y="1357.7"
+     font-size="14.00"
+     id="text333"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">estimator_name</text>
+  <polyline
+     points="301.5,-278.5 405.5,-278.5 "
+     id="polyline335"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="353.75"
+     y="1380.7"
+     font-size="14.00"
+     id="text337"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle" />
   <path
-     d="M 250.269,1144.484 C 262.785,1088.154 416.962,970.855 435.375,871 c 1.267,-6.873 2.53,-13.931 3.776,-21.061"
-     id="path259"
+     d="m 365.225,1319.311 c 18.746,-56.1 56.09,-172.469 78.525,-273.311 1.553,-6.981 3.036,-14.169 4.446,-21.44"
+     id="path342"
+     inkscape:connector-curvature="0"
+     style="fill:none;stroke:#000000" />
+  <polygon
+     points="450.175,-631.321 445.137,-626.162 447.962,-619.527 447.962,-619.527 453,-624.687 "
+     id="polygon344"
+     style="fill:#000000;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="490.75"
+     y="1042.2"
+     font-size="14.00"
+     id="text346"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#008000">_cmi_calculator</text>
+  <path
+     d="M 329.796,1319.172 C 290.631,1263.348 211.199,1147.956 150.75,1046 c -11.358,-19.157 -22.922,-40.089 -33.573,-60.062"
+     id="path351"
+     inkscape:connector-curvature="0"
+     style="fill:none;stroke:#000000" />
+  <polygon
+     points="111.28,-668.722 110.554,-661.547 116.897,-658.118 116.897,-658.118 117.623,-665.292 "
+     id="polygon353"
+     style="fill:#000000;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="194.75"
+     y="1042.2"
+     font-size="14.00"
+     id="text355"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#008000">_cmi_calculator</text>
+  <path
+     d="m 378.648,1319.13 c 28.03134,-39.7517 277.03027,-40.4416 386.9145,-100.7155 16.684,-9.489 31.678,-23.082 44.585,-37.656"
+     id="path360"
      inkscape:connector-curvature="0"
      style="fill:none;stroke:#000000"
      sodipodi:nodetypes="ccc" />
   <polygon
-     points="310.314,-619.283 310.314,-619.283 315.276,-624.516 312.354,-631.108 307.393,-625.876 "
-     id="polygon261"
-     style="fill:#000000;stroke:#000000"
-     transform="translate(128.34072,1469)" />
-  <text
-     x="486.6532"
-     y="861.07495"
-     font-size="14.00"
-     id="text263"
-     style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#008000">_cmi_calculator</text>
-  <path
-     d="m 277.38323,1144.453 c 33.15201,-77.2229 135.70327,-27.6402 195.30477,-93.8922"
-     id="path268"
-     inkscape:connector-curvature="0"
+     points="839.642,-676.35 835.819,-666.469 830.492,-671.009 830.492,-671.009 "
+     id="polygon362"
      style="fill:none;stroke:#000000"
-     sodipodi:nodetypes="cc" />
+     transform="translate(-22.5,1849.4145)" />
   <polygon
-     points="469.769,-670.316 478.476,-676.353 475.435,-666.204 469.769,-670.316 "
-     id="polygon270"
+     points="325.5,-843 325.5,-654 161.5,-654 161.5,-654 161.5,-843 "
+     id="polygon367"
      style="fill:none;stroke:#000000"
-     transform="translate(0.25,1718.375)" />
-  <g
-     class="node"
-     id="node13"
-     transform="translate(0.25,1469)">
-    <title
-       id="title273">12</title>
-    <polygon
-       style="fill:none;stroke:#000000"
-       id="polygon275"
-       points="24.5,-654 24.5,-843 188.5,-843 188.5,-654 24.5,-654 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text277"
-       font-size="14.00"
-       y="-827.79999"
-       x="106.5">Multivariate_te</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline279"
-       points="24.5,-820 188.5,-820 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text281"
-       font-size="14.00"
-       y="-804.79999"
-       x="32.5">calculator_name</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text283"
-       font-size="14.00"
-       y="-789.79999"
-       x="32.5">pvalue_omnibus</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text285"
-       font-size="14.00"
-       y="-774.79999"
-       x="32.5">pvalues_sign_sources</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text287"
-       font-size="14.00"
-       y="-759.79999"
-       x="32.5">selected_vars_full : list</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text289"
-       font-size="14.00"
-       y="-744.79999"
-       x="32.5">selected_vars_sources : list</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text291"
-       font-size="14.00"
-       y="-729.79999"
-       x="32.5">sign_omnibus</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text293"
-       font-size="14.00"
-       y="-714.79999"
-       x="32.5">te_omnibus</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text295"
-       font-size="14.00"
-       y="-699.79999"
-       x="32.5">te_sign_sources</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline297"
-       points="24.5,-692 188.5,-692 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text299"
-       font-size="14.00"
-       y="-676.79999"
-       x="32.5">analyse_network()</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text301"
-       font-size="14.00"
-       y="-661.79999"
-       x="32.5">analyse_single_target()</text>
-  </g>
+     transform="translate(0.25,1644)" />
+  <text
+     x="243.75"
+     y="816.20001"
+     font-size="14.00"
+     id="text369"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle">Multivariate_te</text>
+  <polyline
+     points="161.5,-820 325.5,-820 "
+     id="polyline371"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="169.75"
+     y="839.20001"
+     font-size="14.00"
+     id="text373"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">calculator_name</text>
+  <text
+     x="169.75"
+     y="854.20001"
+     font-size="14.00"
+     id="text375"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">pvalue_omnibus</text>
+  <text
+     x="169.75"
+     y="869.20001"
+     font-size="14.00"
+     id="text377"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">pvalues_sign_sources</text>
+  <text
+     x="169.75"
+     y="884.20001"
+     font-size="14.00"
+     id="text379"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">selected_vars_full : list</text>
+  <text
+     x="169.75"
+     y="899.20001"
+     font-size="14.00"
+     id="text381"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">selected_vars_sources : list</text>
+  <text
+     x="169.75"
+     y="914.20001"
+     font-size="14.00"
+     id="text383"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">sign_omnibus</text>
+  <text
+     x="169.75"
+     y="929.20001"
+     font-size="14.00"
+     id="text385"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">te_omnibus</text>
+  <text
+     x="169.75"
+     y="944.20001"
+     font-size="14.00"
+     id="text387"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">te_sign_sources</text>
+  <polyline
+     points="161.5,-692 325.5,-692 "
+     id="polyline389"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="169.75"
+     y="967.20001"
+     font-size="14.00"
+     id="text391"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">analyse_network()</text>
+  <text
+     x="169.75"
+     y="982.20001"
+     font-size="14.00"
+     id="text393"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">analyse_single_target()</text>
   <path
-     d="M 222.292,1144.117 C 190.408,1089.142 130.195,976.053 107.75,871 c -2.987,-13.98 -4.735,-28.865 -5.639,-43.618"
-     id="path306"
+     d="M 337.197,1319.069 C 311.141,1263.566 261.68,1149.195 243.75,1046 c -2.43,-13.985 -3.821,-28.817 -4.508,-43.496"
+     id="path398"
      inkscape:connector-curvature="0"
      style="fill:none;stroke:#000000" />
   <polygon
-     points="101.292,-653.957 97.5728,-647.779 101.845,-641.97 101.845,-641.97 105.564,-648.148 "
-     id="polygon308"
+     points="238.575,-653.769 234.781,-647.636 238.983,-641.776 238.983,-641.776 242.776,-647.908 "
+     id="polygon400"
      style="fill:#000000;stroke:#000000"
-     transform="translate(0.25,1469)" />
+     transform="translate(0.25,1644)" />
   <text
-     x="155.25"
-     y="843.57501"
+     x="287.75"
+     y="1042.2"
      font-size="14.00"
-     id="text310"
+     id="text402"
      style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#008000">_cmi_calculator</text>
-  <g
-     class="node"
-     id="node15"
-     transform="translate(130.625,1367.5)">
-    <title
-       id="title313">14</title>
-    <polygon
-       style="fill:none;stroke:#000000"
-       id="polygon315"
-       points="291.5,-884.5 157.5,-884.5 157.5,-884.5 157.5,-1073.5 291.5,-1073.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text317"
-       font-size="14.00"
-       y="-1058.3"
-       x="224.5">Network_comparison</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline319"
-       points="157.5,-1050.5 291.5,-1050.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text321"
-       font-size="14.00"
-       y="-1035.3"
-       x="165.5">alpha</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text323"
-       font-size="14.00"
-       y="-1020.3"
-       x="165.5">cmi_diff : dict</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text325"
-       font-size="14.00"
-       y="-1005.3"
-       x="165.5">cmi_surr : list</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text327"
-       font-size="14.00"
-       y="-990.29999"
-       x="165.5">n_permutations</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text329"
-       font-size="14.00"
-       y="-975.29999"
-       x="165.5">options</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text331"
-       font-size="14.00"
-       y="-960.29999"
-       x="165.5">stats_type</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text333"
-       font-size="14.00"
-       y="-945.29999"
-       x="165.5">tail</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text335"
-       font-size="14.00"
-       y="-930.29999"
-       x="165.5">union : dict</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline337"
-       points="157.5,-922.5 291.5,-922.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text339"
-       font-size="14.00"
-       y="-907.29999"
-       x="165.5">compare_between()</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text341"
-       font-size="14.00"
-       y="-892.29999"
-       x="165.5">compare_within()</text>
-  </g>
+  <polygon
+     points="425.5,-884.5 291.5,-884.5 291.5,-884.5 291.5,-1073.5 425.5,-1073.5 "
+     id="polygon407"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1364.875)" />
+  <text
+     x="358.75"
+     y="306.57495"
+     font-size="14.00"
+     id="text409"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle">Network_comparison</text>
+  <polyline
+     points="291.5,-1050.5 425.5,-1050.5 "
+     id="polyline411"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1364.875)" />
+  <text
+     x="299.75"
+     y="329.57495"
+     font-size="14.00"
+     id="text413"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">alpha</text>
+  <text
+     x="299.75"
+     y="344.57501"
+     font-size="14.00"
+     id="text415"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">cmi_diff : dict</text>
+  <text
+     x="299.75"
+     y="359.57501"
+     font-size="14.00"
+     id="text417"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">cmi_surr : list</text>
+  <text
+     x="299.75"
+     y="374.57501"
+     font-size="14.00"
+     id="text419"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">n_permutations</text>
+  <text
+     x="299.75"
+     y="389.57501"
+     font-size="14.00"
+     id="text421"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">options</text>
+  <text
+     x="299.75"
+     y="404.57501"
+     font-size="14.00"
+     id="text423"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">stats_type</text>
+  <text
+     x="299.75"
+     y="419.57501"
+     font-size="14.00"
+     id="text425"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">tail</text>
+  <text
+     x="299.75"
+     y="434.57501"
+     font-size="14.00"
+     id="text427"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">union : dict</text>
+  <polyline
+     points="291.5,-922.5 425.5,-922.5 "
+     id="polyline429"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1364.875)" />
+  <text
+     x="299.75"
+     y="457.57501"
+     font-size="14.00"
+     id="text431"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">compare_between()</text>
+  <text
+     x="299.75"
+     y="472.57501"
+     font-size="14.00"
+     id="text433"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">compare_within()</text>
   <path
-     d="M 238.683,1144.452 C 232.074,1088.076 286.10614,944.9351 321.5,795.75 344.00331,700.89856 344.333,570.1685 348.28,493.9045"
-     id="path346"
+     d="m 353.459,1319.384 c -0.472,-56.475 -1.385,-173.981 -1.709,-273.384 -0.301,-92.505 1.827,-478.24481 3.814,-554.44881"
+     id="path438"
      inkscape:connector-curvature="0"
      style="fill:none;stroke:#000000"
      sodipodi:nodetypes="csc" />
   <polygon
-     points="217.655,-872.283 221.967,-878.062 218.291,-884.266 213.979,-878.487 217.655,-872.283 "
-     id="polygon348"
+     points="351.486,-878.418 355.326,-872.315 355.326,-872.315 359.483,-878.206 355.644,-884.31 "
+     id="polygon440"
      style="fill:#000000;stroke:#000000"
-     transform="translate(130.625,1367.5)" />
+     transform="translate(0.25,1364.875)" />
   <text
-     x="401.375"
-     y="508.44995"
+     x="395.75"
+     y="1042.2"
      font-size="14.00"
-     id="text350"
+     id="text442"
      style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#008000">_cmi_calculator</text>
-  <g
-     class="node"
-     id="node7"
-     transform="translate(0.25,1469)">
-    <title
-       id="title353">6</title>
-    <polygon
-       style="fill:none;stroke:#000000"
-       id="polygon355"
-       points="582.5,-255.5 582.5,-324.5 686.5,-324.5 686.5,-255.5 582.5,-255.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text357"
-       font-size="14.00"
-       y="-309.29999"
-       x="634.5">Estimator_mi</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline359"
-       points="582.5,-301.5 686.5,-301.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text361"
-       font-size="14.00"
-       y="-286.29999"
-       x="590.5">estimator_name</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline363"
-       points="582.5,-278.5 686.5,-278.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text365"
-       font-size="14.00"
-       y="-263.29999"
-       x="634.5" />
-  </g>
+  <polygon
+     points="972.5,-324.5 972.5,-255.5 868.5,-255.5 868.5,-255.5 868.5,-324.5 "
+     id="polygon447"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="920.75"
+     y="1334.7"
+     font-size="14.00"
+     id="text449"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle">Estimator_mi</text>
+  <polyline
+     points="868.5,-301.5 972.5,-301.5 "
+     id="polyline451"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="876.75"
+     y="1357.7"
+     font-size="14.00"
+     id="text453"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">estimator_name</text>
+  <polyline
+     points="868.5,-278.5 972.5,-278.5 "
+     id="polyline455"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="920.75"
+     y="1380.7"
+     font-size="14.00"
+     id="text457"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle" />
   <path
-     d="m 628.766,1144.373 c -15.60531,-42.9857 -60.93687,-52.0444 -80.681,-92.4802"
-     id="path370"
+     d="m 918.103,1319.432 c -5.628,-71.365 -18.921,-34.5065 -26.922,-135.9635"
+     id="path462"
      inkscape:connector-curvature="0"
      style="fill:none;stroke:#000000"
      sodipodi:nodetypes="cc" />
   <polygon
-     points="544.502,-665.632 544.757,-676.223 551.163,-667.784 544.502,-665.632 "
-     id="polygon372"
+     points="887.423,-665.911 890.126,-676.155 894.402,-666.461 887.423,-665.911 "
+     id="polygon464"
      style="fill:none;stroke:#000000"
-     transform="translate(0.25,1718.375)" />
-  <g
-     class="node"
-     id="node8"
-     transform="translate(0.25,1469)">
-    <title
-       id="title375">7</title>
-    <polygon
-       style="fill:none;stroke:#000000"
-       id="polygon377"
-       points="704.5,-255.5 704.5,-324.5 808.5,-324.5 808.5,-255.5 704.5,-255.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text379"
-       font-size="14.00"
-       y="-309.29999"
-       x="756.5">Estimator_pid</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline381"
-       points="704.5,-301.5 808.5,-301.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text383"
-       font-size="14.00"
-       y="-286.29999"
-       x="712.5">estimator_name</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline385"
-       points="704.5,-278.5 808.5,-278.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text387"
-       font-size="14.00"
-       y="-263.29999"
-       x="756.5" />
-  </g>
+     transform="translate(0.25,1849.4145)" />
+  <polygon
+     points="727.5,-324.5 727.5,-255.5 623.5,-255.5 623.5,-255.5 623.5,-324.5 "
+     id="polygon469"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="675.75"
+     y="1334.7"
+     font-size="14.00"
+     id="text471"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle">Estimator_pid</text>
+  <polyline
+     points="623.5,-301.5 727.5,-301.5 "
+     id="polyline473"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="631.75"
+     y="1357.7"
+     font-size="14.00"
+     id="text475"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">estimator_name</text>
+  <polyline
+     points="623.5,-278.5 727.5,-278.5 "
+     id="polyline477"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="675.75"
+     y="1380.7"
+     font-size="14.00"
+     id="text479"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle" />
   <path
-     d="m 756.683,1144.201 c -23.33256,-52.4865 -74.48429,-50.506 -104.99017,-62.1757 -30.50587,-11.6696 -44.41083,-19.5655 -57.27883,-32.5485"
-     id="path392"
+     d="m 675.742,1319.062 c 91.41349,-57.178 94.60766,-61.8904 155.852,-137.8855"
+     id="path484"
      inkscape:connector-curvature="0"
      style="fill:none;stroke:#000000"
-     sodipodi:nodetypes="czc" />
+     sodipodi:nodetypes="cc" />
   <polygon
-     points="591.605,-666.727 587.08,-676.306 596.592,-671.64 591.605,-666.727 "
-     id="polygon394"
+     points="830.79,-676.164 827.196,-666.198 821.765,-670.615 821.765,-670.615 "
+     id="polygon486"
      style="fill:none;stroke:#000000"
-     transform="translate(0.25,1718.375)" />
-  <g
-     class="node"
-     id="node17"
-     transform="translate(0.25,1469)">
-    <title
-       id="title397">16</title>
-    <polygon
-       style="fill:none;stroke:#000000"
-       id="polygon399"
-       points="642.5,-654 642.5,-843 852.5,-843 852.5,-654 642.5,-654 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text401"
-       font-size="14.00"
-       y="-827.79999"
-       x="747.5">Partial_information_decomposition</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline403"
-       points="642.5,-820 852.5,-820 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text405"
-       font-size="14.00"
-       y="-804.79999"
-       x="650.5">calculator_name</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text407"
-       font-size="14.00"
-       y="-789.79999"
-       x="650.5">current_value : tuple</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text409"
-       font-size="14.00"
-       y="-774.79999"
-       x="650.5">lags : list</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text411"
-       font-size="14.00"
-       y="-759.79999"
-       x="650.5">max_lag</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text413"
-       font-size="14.00"
-       y="-744.79999"
-       x="650.5">options</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text415"
-       font-size="14.00"
-       y="-729.79999"
-       x="650.5">results</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text417"
-       font-size="14.00"
-       y="-714.79999"
-       x="650.5">sources</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text419"
-       font-size="14.00"
-       y="-699.79999"
-       x="650.5">target</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline421"
-       points="642.5,-692 852.5,-692 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text423"
-       font-size="14.00"
-       y="-676.79999"
-       x="650.5">analyse_network()</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text425"
-       font-size="14.00"
-       y="-661.79999"
-       x="650.5">analyse_single_target()</text>
-  </g>
+     transform="translate(7.25,1849.4145)" />
+  <polygon
+     points="779.5,-843 779.5,-654 569.5,-654 569.5,-654 569.5,-843 "
+     id="polygon491"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="674.75"
+     y="816.20001"
+     font-size="14.00"
+     id="text493"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle">Partial_information_decomposition</text>
+  <polyline
+     points="569.5,-820 779.5,-820 "
+     id="polyline495"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="577.75"
+     y="839.20001"
+     font-size="14.00"
+     id="text497"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">calculator_name</text>
+  <text
+     x="577.75"
+     y="854.20001"
+     font-size="14.00"
+     id="text499"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">current_value : tuple</text>
+  <text
+     x="577.75"
+     y="869.20001"
+     font-size="14.00"
+     id="text501"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">lags : list</text>
+  <text
+     x="577.75"
+     y="884.20001"
+     font-size="14.00"
+     id="text503"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">max_lag</text>
+  <text
+     x="577.75"
+     y="899.20001"
+     font-size="14.00"
+     id="text505"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">options</text>
+  <text
+     x="577.75"
+     y="914.20001"
+     font-size="14.00"
+     id="text507"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">results</text>
+  <text
+     x="577.75"
+     y="929.20001"
+     font-size="14.00"
+     id="text509"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">sources</text>
+  <text
+     x="577.75"
+     y="944.20001"
+     font-size="14.00"
+     id="text511"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">target</text>
+  <polyline
+     points="569.5,-692 779.5,-692 "
+     id="polyline513"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="577.75"
+     y="967.20001"
+     font-size="14.00"
+     id="text515"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">analyse_network()</text>
+  <text
+     x="577.75"
+     y="982.20001"
+     font-size="14.00"
+     id="text517"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">analyse_single_target()</text>
   <path
-     d="m 756.088,1144.432 c -1.299,-65.887 -4.231,-214.617 -6.248,-316.903"
-     id="path430"
+     d="m 675.676,1319.432 c -0.144,-65.887 -0.47,-214.617 -0.694,-316.903"
+     id="path522"
      inkscape:connector-curvature="0"
      style="fill:none;stroke:#000000" />
   <polygon
-     points="749.349,-653.706 745.468,-647.628 749.586,-641.708 749.586,-641.708 753.467,-647.786 "
-     id="polygon432"
+     points="674.705,-653.706 670.719,-647.697 674.732,-641.706 674.732,-641.706 678.719,-647.715 "
+     id="polygon524"
      style="fill:#000000;stroke:#000000"
-     transform="translate(0.25,1469)" />
+     transform="translate(0.25,1644)" />
   <text
-     x="798.375"
-     y="839.20001"
+     x="718.25"
+     y="1042.2"
      font-size="14.00"
-     id="text434"
+     id="text526"
      style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#008000">_pid_calculator</text>
-  <g
-     class="node"
-     id="node9"
-     transform="translate(0.25,1469)">
-    <title
-       id="title437">8</title>
-    <polygon
-       style="fill:none;stroke:#000000"
-       id="polygon439"
-       points="338.5,-255.5 338.5,-324.5 442.5,-324.5 442.5,-255.5 338.5,-255.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text441"
-       font-size="14.00"
-       y="-309.29999"
-       x="390.5">Estimator_te</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline443"
-       points="338.5,-301.5 442.5,-301.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text445"
-       font-size="14.00"
-       y="-286.29999"
-       x="346.5">estimator_name</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline447"
-       points="338.5,-278.5 442.5,-278.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text449"
-       font-size="14.00"
-       y="-263.29999"
-       x="390.5" />
-  </g>
+  <polygon
+     points="1094.5,-324.5 1094.5,-255.5 990.5,-255.5 990.5,-255.5 990.5,-324.5 "
+     id="polygon531"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="1042.75"
+     y="1334.7"
+     font-size="14.00"
+     id="text533"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle">Estimator_te</text>
+  <polyline
+     points="990.5,-301.5 1094.5,-301.5 "
+     id="polyline535"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="998.75"
+     y="1357.7"
+     font-size="14.00"
+     id="text537"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">estimator_name</text>
+  <polyline
+     points="990.5,-278.5 1094.5,-278.5 "
+     id="polyline539"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="1042.75"
+     y="1380.7"
+     font-size="14.00"
+     id="text541"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle" />
   <path
-     d="m 395.837,1144.117 c 14.81627,-35.0723 55.67785,-31.6163 88.238,-92.4672"
-     id="path454"
+     d="m 1039.12,1319.079 c -20.5282,-91.5358 -63.74708,-73.2975 -101.202,-137.2765"
+     id="path546"
      inkscape:connector-curvature="0"
      style="fill:none;stroke:#000000"
      sodipodi:nodetypes="cc" />
   <polygon
-     points="480.717,-668.579 487.849,-676.414 487.16,-665.841 480.717,-668.579 "
-     id="polygon456"
+     points="934.648,-665.841 932.485,-676.213 940.644,-669.454 934.648,-665.841 "
+     id="polygon548"
      style="fill:none;stroke:#000000"
-     transform="translate(0.25,1718.375)" />
-  <g
-     class="node"
-     id="node10"
-     transform="translate(-130.91831,1360.1056)">
-    <title
-       id="title459">9</title>
-    <polygon
-       style="fill:none;stroke:#000000"
-       id="polygon461"
-       points="1300,-324.5 1300,-255.5 1229,-255.5 1229,-255.5 1229,-324.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#ff0000"
-       id="text463"
-       font-size="14.00"
-       y="-309.29999"
-       x="1264.5">IdtxlError</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline465"
-       points="1229,-301.5 1300,-301.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start;fill:#ff0000"
-       id="text467"
-       font-size="14.00"
-       y="-286.29999"
-       x="1237">value</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline469"
-       points="1229,-278.5 1300,-278.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#ff0000"
-       id="text471"
-       font-size="14.00"
-       y="-263.29999"
-       x="1264.5" />
-  </g>
-  <g
-     class="node"
-     id="node11"
-     transform="translate(-130.91831,1360.1056)">
-    <title
-       id="title474">10</title>
-    <polygon
-       style="fill:none;stroke:#000000"
-       id="polygon476"
-       points="1424.5,-332 1424.5,-248 1318.5,-248 1318.5,-248 1318.5,-332 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#ff0000"
-       id="text478"
-       font-size="14.00"
-       y="-316.79999"
-       x="1371.5">IdtxlParamError</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline480"
-       points="1318.5,-309 1424.5,-309 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start;fill:#ff0000"
-       id="text482"
-       font-size="14.00"
-       y="-293.79999"
-       x="1326.5">missing_param</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start;fill:#ff0000"
-       id="text484"
-       font-size="14.00"
-       y="-278.79999"
-       x="1326.5">value</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline486"
-       points="1318.5,-271 1424.5,-271 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#ff0000"
-       id="text488"
-       font-size="14.00"
-       y="-255.8"
-       x="1371.5" />
-  </g>
-  <g
-     class="node"
-     id="node16"
-     transform="translate(0.25,1644)">
-    <title
-       id="title520">15</title>
-    <polygon
-       style="fill:none;stroke:#000000"
-       id="polygon522"
-       points="0,-1416.5 203,-1416.5 203,-1092.5 0,-1092.5 0,-1092.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text524"
-       font-size="14.00"
-       y="-1401.3"
-       x="101.5">Network_inference</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline526"
-       points="0,-1393.5 203,-1393.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text528"
-       font-size="14.00"
-       y="-1378.3"
-       x="8">current_value : tuple</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text530"
-       font-size="14.00"
-       y="-1363.3"
-       x="8">max_lag_sources</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text532"
-       font-size="14.00"
-       y="-1348.3"
-       x="8">max_lag_target : NoneType</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text534"
-       font-size="14.00"
-       y="-1333.3"
-       x="8">min_lag_sources</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text536"
-       font-size="14.00"
-       y="-1318.3"
-       x="8">options</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text538"
-       font-size="14.00"
-       y="-1303.3"
-       x="8">pvalue_omnibus : NoneType</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text540"
-       font-size="14.00"
-       y="-1288.3"
-       x="8">pvalues_sign_sources : NoneType</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text542"
-       font-size="14.00"
-       y="-1273.3"
-       x="8">selected_vars_full : list</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text544"
-       font-size="14.00"
-       y="-1258.3"
-       x="8">selected_vars_sources : list</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text546"
-       font-size="14.00"
-       y="-1243.3"
-       x="8">selected_vars_target : list</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text548"
-       font-size="14.00"
-       y="-1228.3"
-       x="8">sign_omnibus : bool</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text550"
-       font-size="14.00"
-       y="-1213.3"
-       x="8">sign_sign_sources : NoneType</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text552"
-       font-size="14.00"
-       y="-1198.3"
-       x="8">source_set : list</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text554"
-       font-size="14.00"
-       y="-1183.3"
-       x="8">target</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text556"
-       font-size="14.00"
-       y="-1168.3"
-       x="8">tau_sources : int</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text558"
-       font-size="14.00"
-       y="-1153.3"
-       x="8">tau_target : int</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text560"
-       font-size="14.00"
-       y="-1138.3"
-       x="8">te_omnibus : NoneType</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text562"
-       font-size="14.00"
-       y="-1123.3"
-       x="8">te_sign_sources : NoneType</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline564"
-       points="0,-1115.5 203,-1115.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text566"
-       font-size="14.00"
-       y="-1100.3"
-       x="101.5" />
-  </g>
-  <g
-     class="edge"
-     id="edge7"
-     transform="translate(0.25,1469)">
-    <title
-       id="title569">12-&gt;15</title>
-    <path
-       style="fill:none;stroke:#000000"
-       inkscape:connector-curvature="0"
-       id="path571"
-       d="m 105.571,-843.117 c 2.17875,-25.021 -2.8915,-47.12421 -2.373,-62.38421"
-       sodipodi:nodetypes="cc" />
-    <polygon
-       style="fill:none;stroke:#000000"
-       id="polygon573"
-       points="99.6967,-1082.46 99.6967,-1082.46 103.097,-1092.5 106.696,-1082.53 "
-       transform="translate(0,176.79852)" />
-  </g>
-  <g
-     class="node"
-     id="node14"
-     transform="translate(0.25,1644)">
-    <title
-       id="title576">13</title>
-    <polygon
-       style="fill:none;stroke:#000000"
-       id="polygon578"
-       points="149.5,-1643.5 313.5,-1643.5 313.5,-1454.5 149.5,-1454.5 149.5,-1454.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text580"
-       font-size="14.00"
-       y="-1628.3"
-       x="231.5">Network_analysis</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline582"
-       points="149.5,-1620.5 313.5,-1620.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text584"
-       font-size="14.00"
-       y="-1605.3"
-       x="157.5">current_value</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text586"
-       font-size="14.00"
-       y="-1590.3"
-       x="157.5">current_value : NoneType</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text588"
-       font-size="14.00"
-       y="-1575.3"
-       x="157.5">selected_vars_full</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text590"
-       font-size="14.00"
-       y="-1560.3"
-       x="157.5">selected_vars_full : list</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text592"
-       font-size="14.00"
-       y="-1545.3"
-       x="157.5">selected_vars_sources</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text594"
-       font-size="14.00"
-       y="-1530.3"
-       x="157.5">selected_vars_sources : list</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text596"
-       font-size="14.00"
-       y="-1515.3"
-       x="157.5">selected_vars_target</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text598"
-       font-size="14.00"
-       y="-1500.3"
-       x="157.5">selected_vars_target : list</text>
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:start"
-       id="text600"
-       font-size="14.00"
-       y="-1485.3"
-       x="157.5">target : NoneType</text>
-    <polyline
-       style="fill:none;stroke:#000000"
-       id="polyline602"
-       points="149.5,-1477.5 313.5,-1477.5 " />
-    <text
-       style="font-size:14px;font-family:Times, serif;text-anchor:middle"
-       id="text604"
-       font-size="14.00"
-       y="-1462.3"
-       x="231.5" />
-  </g>
-  <g
-     class="edge"
-     id="edge8"
-     transform="translate(0.25,1644)">
-    <title
-       id="title607">14-&gt;13</title>
-    <path
-       style="fill:none;stroke:#000000"
-       inkscape:connector-curvature="0"
-       id="path609"
-       d="m 317.531,-1350.5088 c -25.869,-52.96 -88.616,12.2888 -87.313,-93.5012"
-       sodipodi:nodetypes="cc" />
-    <polygon
-       style="fill:none;stroke:#000000"
-       id="polygon611"
-       points="233.719,-1444.02 226.719,-1444.11 226.719,-1444.11 230.342,-1454.07 " />
-  </g>
-  <g
-     class="edge"
-     id="edge9"
-     transform="translate(0.25,1644)">
-    <title
-       id="title614">15-&gt;13</title>
-    <path
-       style="fill:none;stroke:#000000"
-       inkscape:connector-curvature="0"
-       id="path616"
-       d="m 173.155,-1416.72 c 4.282,-9.64 8.525,-19.19 12.654,-28.47" />
-    <polygon
-       style="fill:none;stroke:#000000"
-       id="polygon618"
-       points="189.034,-1443.83 182.637,-1446.68 182.637,-1446.68 189.897,-1454.39 " />
-  </g>
+     transform="translate(0.25,1849.4145)" />
+  <polygon
+     points="1515,-255.5 1515,-255.5 1515,-324.5 1586,-324.5 1586,-255.5 "
+     id="polygon553"
+     style="fill:none;stroke:#000000"
+     transform="translate(-141.5,1498.75)" />
+  <text
+     x="1409"
+     y="1189.45"
+     font-size="14.00"
+     id="text555"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#ff0000">IdtxlError</text>
+  <polyline
+     points="1515,-301.5 1586,-301.5 "
+     id="polyline557"
+     style="fill:none;stroke:#000000"
+     transform="translate(-141.5,1498.75)" />
+  <text
+     x="1381.5"
+     y="1212.45"
+     font-size="14.00"
+     id="text559"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start;fill:#ff0000">value</text>
+  <polyline
+     points="1515,-278.5 1586,-278.5 "
+     id="polyline561"
+     style="fill:none;stroke:#000000"
+     transform="translate(-141.5,1498.75)" />
+  <text
+     x="1550.75"
+     y="1380.7"
+     font-size="14.00"
+     id="text563"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#ff0000" />
+  <polygon
+     points="1604.5,-248 1604.5,-248 1604.5,-332 1710.5,-332 1710.5,-248 "
+     id="polygon568"
+     style="fill:none;stroke:#000000"
+     transform="translate(-141.5,1498.75)" />
+  <text
+     x="1516"
+     y="1181.95"
+     font-size="14.00"
+     id="text570"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#ff0000">IdtxlParamError</text>
+  <polyline
+     points="1604.5,-309 1710.5,-309 "
+     id="polyline572"
+     style="fill:none;stroke:#000000"
+     transform="translate(-141.5,1498.75)" />
+  <text
+     x="1471"
+     y="1204.95"
+     font-size="14.00"
+     id="text574"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start;fill:#ff0000">missing_param</text>
+  <text
+     x="1471"
+     y="1219.95"
+     font-size="14.00"
+     id="text576"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start;fill:#ff0000">value</text>
+  <polyline
+     points="1604.5,-271 1710.5,-271 "
+     id="polyline578"
+     style="fill:none;stroke:#000000"
+     transform="translate(-141.5,1498.75)" />
+  <text
+     x="1657.75"
+     y="1388.2"
+     font-size="14.00"
+     id="text580"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#ff0000" />
   <path
-     d="M 733.4125,625.883 C 728.8455,543.932 693.16305,497.03128 682.31935,434.82815"
-     id="path623"
+     d="M 241.521,800.883 C 239.925,733.862 237.731,641.71 235.826,561.7"
+     id="path614"
+     inkscape:connector-curvature="0"
+     style="fill:none;stroke:#000000" />
+  <polygon
+     points="232.073,-1082.41 235.333,-1092.5 239.071,-1082.58 232.073,-1082.41 "
+     id="polygon616"
+     style="fill:none;stroke:#000000"
+     transform="translate(-73.25,1644)" />
+  <polygon
+     points="443.5,-1643.5 443.5,-1454.5 279.5,-1454.5 279.5,-1454.5 279.5,-1643.5 "
+     id="polygon621"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="361.75"
+     y="15.699951"
+     font-size="14.00"
+     id="text623"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle">Network_analysis</text>
+  <polyline
+     points="279.5,-1620.5 443.5,-1620.5 "
+     id="polyline625"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="287.75"
+     y="38.699951"
+     font-size="14.00"
+     id="text627"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">current_value</text>
+  <text
+     x="287.75"
+     y="53.699951"
+     font-size="14.00"
+     id="text629"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">current_value : NoneType</text>
+  <text
+     x="287.75"
+     y="68.699951"
+     font-size="14.00"
+     id="text631"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">selected_vars_full</text>
+  <text
+     x="287.75"
+     y="83.699951"
+     font-size="14.00"
+     id="text633"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">selected_vars_full : list</text>
+  <text
+     x="287.75"
+     y="98.699951"
+     font-size="14.00"
+     id="text635"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">selected_vars_sources</text>
+  <text
+     x="287.75"
+     y="113.69995"
+     font-size="14.00"
+     id="text637"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">selected_vars_sources : list</text>
+  <text
+     x="287.75"
+     y="128.69995"
+     font-size="14.00"
+     id="text639"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">selected_vars_target</text>
+  <text
+     x="287.75"
+     y="143.69995"
+     font-size="14.00"
+     id="text641"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">selected_vars_target : list</text>
+  <text
+     x="287.75"
+     y="158.69995"
+     font-size="14.00"
+     id="text643"
+     style="font-size:14px;font-family:Times, serif;text-anchor:start">target : NoneType</text>
+  <polyline
+     points="279.5,-1477.5 443.5,-1477.5 "
+     id="polyline645"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <text
+     x="361.75"
+     y="181.69995"
+     font-size="14.00"
+     id="text647"
+     style="font-size:14px;font-family:Times, serif;text-anchor:middle" />
+  <path
+     d="m 360.56534,291.40001 c 0,-27.79964 0,-50.60073 0,-91.41001"
+     id="path652"
      inkscape:connector-curvature="0"
      style="fill:none;stroke:#000000"
      sodipodi:nodetypes="cc" />
-  <g
-     class="edge"
-     id="edge11"
-     transform="translate(0.25,1644)">
-    <title
-       id="title628">17-&gt;13</title>
-    <path
-       style="fill:none;stroke:#000000"
-       inkscape:connector-curvature="0"
-       id="path630"
-       d="m 670.725,-1289.63 c -13.212,-37.88 -384.298,-100.86 -403.23,-155.15"
-       sodipodi:nodetypes="cc" />
-    <polygon
-       style="fill:none;stroke:#000000"
-       id="polygon632"
-       points="270.718,-1446.17 264.108,-1443.86 264.108,-1443.86 264.12,-1454.46 " />
-  </g>
   <polygon
-     transform="matrix(-1,0,0,1,1015.3417,1644)"
+     points="357.451,-1444.09 357.451,-1444.09 361.004,-1454.07 364.451,-1444.05 "
+     id="polygon654"
      style="fill:none;stroke:#000000"
-     id="polygon4316"
-     points="336.738,-1209.44 329.738,-1209.48 329.738,-1209.48 333.297,-1219.46 " />
+     transform="translate(0.25,1644)" />
+  <path
+     d="M 240.81596,227.59391 C 245.09796,217.95391 311.93,208.09 316.059,198.81"
+     id="path659"
+     inkscape:connector-curvature="0"
+     style="fill:none;stroke:#000000"
+     sodipodi:nodetypes="cc" />
+  <polygon
+     points="312.637,-1446.68 312.637,-1446.68 319.897,-1454.39 319.034,-1443.83 "
+     id="polygon661"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
+  <path
+     d="M 636.114,800.883 C 634.763,690.723 630.33625,483.98 607.28825,434.19"
+     id="path666"
+     inkscape:connector-curvature="0"
+     style="fill:none;stroke:#000000"
+     sodipodi:nodetypes="cc" />
+  <polygon
+     points="481.219,-1208.66 480.639,-1219.24 487.689,-1211.33 481.219,-1208.66 "
+     id="polygon668"
+     style="fill:none;stroke:#000000"
+     transform="translate(122.75,1644)" />
+  <path
+     d="M 553.49495,354.37 C 539.89395,316.49 418.293,253.51 398.804,199.22"
+     id="path673"
+     inkscape:connector-curvature="0"
+     style="fill:none;stroke:#000000"
+     sodipodi:nodetypes="cc" />
+  <polygon
+     points="395.164,-1443.86 395.164,-1443.86 395.079,-1454.46 401.752,-1446.23 "
+     id="polygon675"
+     style="fill:none;stroke:#000000"
+     transform="translate(0.25,1644)" />
 </svg>
