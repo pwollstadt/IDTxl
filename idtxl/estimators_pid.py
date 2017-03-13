@@ -413,7 +413,13 @@ def pid_sydney(self, s1, s2, t, opts):
     the output t.
 
     Improved version with larger initial swaps and checking for convergence of
-    both the unique information from sources 1 and 2.
+    both the unique information from sources 1 and 2. The function counts the 
+    empirical observations, calculates probabilities and the initial CMI, then 
+    does the vitrualised swaps until it has converged, and finally calculates 
+    the PID. The virtualised swaps stage contains two loops. An inner loop which 
+    actually does the virtualised swapping, keeping the changes if the CMI 
+    decreases; and an outer loop which decreases the size of the probability 
+    mass increment the virtualised swapping utilises.
 
     Args:
         s1 : numpy array
@@ -428,9 +434,27 @@ def pid_sydney(self, s1, s2, t, opts):
             - 'alph_s1' - alphabet size of s1
             - 'alph_s2' -  alphabet size of s2
             - 'alph_t' - alphabet size of t
-            - 'max_unsuc_swaps_row_parm' -
-            - 'num_reps' -
-            - 'max_iters' -
+            - 'max_unsuc_swaps_row_parm' - soft limit for virtualised swaps
+              based on the number of unsuccessful swaps attempted in a row. 
+              If there are too many unsuccessful swaps in a row, then it
+              will break the inner swap loop; the outer loop decrements the
+              size of the probability mass increment and then attemps
+              virtualised swaps again with the smaller probability increment.
+              The exact number of unsuccessful swaps allowed before breaking
+              is the total number of possible swaps (given our alphabet
+              sizes) times the control parameter 'max_unsuc_swaps_row_parm',
+              e.g., if the parameter is set to 3, this gives a high degree of
+              confidence that nearly (if not) all of the possible swaps have
+              been attempted before this soft limit breaks the swap loop.
+            - 'num_reps' -  number of times the outer loop will halve the
+              size of the probability increment used for the virtualised
+              swaps. This is in direct correspondence with the number of times
+              the empirical data was replicated in your original implementation.
+            - 'max_iters' - provides a hard upper bound on the number of times
+              it will attempt to perform virtualised swaps in the inner loop.
+              However, this hard limit is (practically) never used as it should
+              always hit the soft limit defined above (parameter may be removed
+              in the future).
 
     Returns:
         dict
