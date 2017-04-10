@@ -235,7 +235,7 @@ def test_non_binary_alphabet():
     }
     pid_sydney = SydneyPID(settings)
     pid_tartu = TartuPID(settings)
-    
+
     # Sydney estimator
     tic = tm.time()
     est_sydney = pid_sydney.estimate(s1, s2, target)
