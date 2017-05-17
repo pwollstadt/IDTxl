@@ -187,10 +187,9 @@ class Multivariate_te(Network_inference):
             if VERBOSE:
                 print('####### analysing target with index {0} from list {1}'
                       .format(t, targets))
-            r = self.analyse_single_target(data, targets[t], sources[t])
-            r['target'] = targets[t]
-            r['sources'] = sources[t]
-            results[targets[t]] = r
+            results[targets[t]] = self.analyse_single_target(data,
+                                                             targets[t],
+                                                             sources[t])
         results['fdr'] = stats.network_fdr(results)
         return results
 
@@ -279,6 +278,7 @@ class Multivariate_te(Network_inference):
                     self._idx_to_lag(self.selected_vars_target)))
         self._clean_up()  # remove realisations and min_stats surrogate table
         results = {
+            'target': self.target,
             'sources_tested': self.source_set,
             'max_lag_sources': self.max_lag_sources,
             'min_lag_sources': self.min_lag_sources,
@@ -460,10 +460,13 @@ class Multivariate_te(Network_inference):
         """Perform statistical test on the final conditional set."""
         if not self.selected_vars_sources:
             print('---------------------------- no sources found')
+            self.te_omnibus = None
+            self.sign_omnibus = False
+            self.pvalue_omnibus = None
             return
         else:
             print(self._idx_to_lag(self.selected_vars_full))
-            [s, p, te] = stats.omnibus_test(self, data, self.options)
+            [s, p, te] = stats.omnibus_test(self, data)
             self.te_omnibus = te
             self.sign_omnibus = s
             self.pvalue_omnibus = p

@@ -13,12 +13,19 @@ from idtxl.data import Data
 
 def test_multivariate_te_init():
     """Test instance creation for Multivariate_te class."""
+    # Test error on missing estimator
+    with pytest.raises(KeyError):
+        Multivariate_te(max_lag_sources=5,
+                        min_lag_sources=3,
+                        max_lag_target=7,
+                        options={})
+
     # Test setting of min and max lags
     analysis_opts = {'cmi_calc_name': 'jidt_kraskov'}
     dat = Data()
     dat.generate_mute_data(100, 5)
 
-   # Valid: max lag sources bigger than max lag target
+    # Valid: max lag sources bigger than max lag target
     Multivariate_te(max_lag_sources=5,
                     min_lag_sources=3,
                     max_lag_target=7,
@@ -141,7 +148,8 @@ def test_multivariate_te_one_realisation_per_replication():
     assert ((nw_0._replication_index == np.arange(n_repl)).all())
     assert (nw_0._current_value == (target, max(max_lag_sources,
                                                 max_lag_target)))
-    assert (nw_0._current_value_realisations[:,0] == dat.data[target, -1, :]).all()
+    assert (nw_0._current_value_realisations[:, 0] ==
+            dat.data[target, -1, :]).all()
 
 
 def test_faes_method():
@@ -166,9 +174,9 @@ def test_add_conditional_manually():
     """Adda variable that is not in the data set."""
     analysis_opts = {'cmi_calc_name': 'jidt_kraskov',
                      'add_conditionals': (8, 0)}
-    nw_1 = Multivariate_te(max_lag_sources=5, 
-                           min_lag_sources=3, 
-			   options=analysis_opts,
+    nw_1 = Multivariate_te(max_lag_sources=5,
+                           min_lag_sources=3,
+                           options=analysis_opts,
                            max_lag_target=7)
     dat = Data()
     dat.generate_mute_data()
@@ -203,7 +211,8 @@ def test_check_source_set():
                            max_lag_target)
     nw_0.target = 0
     with pytest.raises(RuntimeError):
-        nw_0._check_source_set(sources=[0, 1, 2, 3], n_processes=dat.n_processes)
+        nw_0._check_source_set(sources=[0, 1, 2, 3],
+                               n_processes=dat.n_processes)
 
     # Test if a single source, no list is added correctly.
     sources = 1
@@ -245,6 +254,64 @@ def test_define_candidates():
     assert (1, 3) in candidates, 'Sample missing from candidates: (1, 3).'
 
 
+def test_analyse_network():
+    """Test method for full network analysis."""
+    n_processes = 5  # the MuTE network has 5 nodes
+    dat = Data()
+    dat.generate_mute_data(10, 5)
+    nw_0 = Multivariate_te(max_lag_sources=5,
+                           min_lag_sources=4,
+                           options={'cmi_calc_name': 'jidt_kraskov'},
+                           max_lag_target=5)
+
+    # Test all to all analysis
+    r = nw_0.analyse_network(dat, targets='all', sources='all')
+    try:
+        del r['fdr']
+    except:
+        pass
+    k = list(r.keys())
+    sources = np.arange(n_processes)
+    assert all(np.array(k) == np.arange(n_processes)), (
+                'Network analysis did not run on all targets.')
+    for t in r.keys():
+        s = np.array(list(set(sources) - set([t])))
+        assert all(np.array(r[t]['sources_tested']) == s), (
+                    'Network analysis did not run on all sources for target '
+                    '{0}'. format(t))
+    # Test analysis for subset of targets
+    target_list = [1, 2, 3]
+    r = nw_0.analyse_network(dat, targets=target_list, sources='all')
+    try:
+        del r['fdr']
+    except:
+        pass
+    k = list(r.keys())
+    assert all(np.array(k) == np.array(target_list)), (
+                'Network analysis did not run on correct subset of targets.')
+    for t in r.keys():
+        s = np.array(list(set(sources) - set([t])))
+        assert all(np.array(r[t]['sources_tested']) == s), (
+                    'Network analysis did not run on all sources for target '
+                    '{0}'. format(t))
+
+    # Test analysis for subset of sources
+    source_list = [1, 2, 3]
+    target_list = [0, 4]
+    r = nw_0.analyse_network(dat, targets=target_list, sources=source_list)
+    try:
+        del r['fdr']
+    except:
+        pass
+    k = list(r.keys())
+    assert all(np.array(k) == np.array(target_list)), (
+                'Network analysis did not run for all targets.')
+    for t in r.keys():
+        assert all(r[t]['sources_tested'] == np.array(source_list)), (
+            'Network analysis did not run on the correct subset of sources '
+            'for target {0}'.format(t))
+
+
 def test_include_target_candidates():
     pass
 
@@ -270,11 +337,11 @@ def test_indices_to_lags():
 
 
 if __name__ == '__main__':
+    test_analyse_network()
     test_check_source_set()
-    test_multivariate_te_initialise()  # test my own _initialise function
     test_multivariate_te_init()  # test init function of the Class
     test_multivariate_te_one_realisation_per_replication()
     test_faes_method()
     test_add_conditional_manually()
-    test_set_source_set()
+    test_check_source_set()
     test_define_candidates()
