@@ -113,7 +113,7 @@ def network_fdr(results, alpha=0.05, correct_by_target=True):
     return res
 
 
-def omnibus_test(analysis_setup, data, opts=None): # TODO we don't need the opts, they're part of the setup
+def omnibus_test(analysis_setup, data):
     """Perform an omnibus test on identified conditional variables.
 
     Test the joint information transfer from all identified sources to the
@@ -141,11 +141,9 @@ def omnibus_test(analysis_setup, data, opts=None): # TODO we don't need the opts
         float
             the test's p-value
     """
-    if opts is None:
-        opts = {}
+    opts = analysis_setup.options
     n_permutations = opts.get('n_perm_omnibus', 21)
     alpha = opts.get('alpha_omnibus', 0.05)
-    perm_range = opts.get('perm_range_omnibus', 'max')
     print('no. target sources: {0}, no. sources: {1}'.format(
                                     len(analysis_setup.selected_vars_target),
                                     len(analysis_setup.selected_vars_sources)))
@@ -189,7 +187,7 @@ def omnibus_test(analysis_setup, data, opts=None): # TODO we don't need the opts
                                      analysis_setup.current_value,
                                      analysis_setup.selected_vars_sources,
                                      n_permutations,
-                                     perm_range)
+                                     analysis_setup.options)
 
     surr_distribution = analysis_setup._cmi_calculator.estimate_mult(
                             n_chunks=n_permutations,
