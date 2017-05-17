@@ -3,10 +3,10 @@ import numpy as np
 from . import idtxl_exceptions as ex
 try:
     import pyopencl as cl
-except ImportError:
-    ex.opencl_missing('PyOpenCl is not available on this system. To use '
-                      'OpenCL-powered CMI estimation install it from '
-                      'https://pypi.python.org/pypi/pyopencl')
+except ImportError as err:
+    ex.package_missing(err, 'PyOpenCl is not available on this system. Install'
+                            ' it using pip or the package manager to use '
+                            'OpenCL-powered CMI estimation.')
 
 VERBOSE = False
 

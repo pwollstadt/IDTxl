@@ -75,19 +75,18 @@
 # ^ END OF DOCUMENTATION
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 from . import idtxl_exceptions as ex
+import numpy
 try:
     import gurobipy as gurobi
-except ImportError:
-    ex.jpype_missing('gurobipy is not available on this system. To use the '
-                     'Tartu PID-estimator install Gurobi from '
-                     'https://www.gurobi.com/')
+except ImportError as err:
+    ex.package_missing(err, 'gurobipy is not available on this system. Install'
+                            ' it from https://www.gurobi.com/ to use the'
+                            'Tartu PID-estimator.')
 try:
     from cvxopt import solvers, matrix, spmatrix, spdiag, log
-except ImportError:
-    ex.jpype_missing('cvxopt is not available on this system. To use the Tartu'
-                     ' PID-estimator install it from '
-                     'https://pypi.python.org/pypi/cvxopt')
-import numpy
+except ImportError as err:
+    ex.package_missing(err, 'cvxopt is not available on this system. Install '
+                            'it through pip to use the Tartu PID-estimator.')
 
 VERBOSE = False
 

@@ -12,10 +12,10 @@ from . import synergy_tartu
 from . import idtxl_exceptions as ex
 try:
     import jpype as jp
-except ImportError:
-    ex.jpype_missing('Jpype is not available on this system. To use '
-                     'JAVA/JIDT-powered PID estimation install it from '
-                     'https://pypi.python.org/pypi/JPype1')
+except ImportError as err:
+    ex.package_missing(err, 'Jpype is not available on this system. Install it'
+                            ' from https://pypi.python.org/pypi/JPype1 to use '
+                            'JAVA/JIDT-powered CMI estimation.')
 
 VERBOSE = False
 
