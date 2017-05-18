@@ -413,12 +413,12 @@ def pid_sydney(self, s1, s2, t, opts):
     the output t.
 
     Improved version with larger initial swaps and checking for convergence of
-    both the unique information from sources 1 and 2. The function counts the 
-    empirical observations, calculates probabilities and the initial CMI, then 
-    does the vitrualised swaps until it has converged, and finally calculates 
-    the PID. The virtualised swaps stage contains two loops. An inner loop which 
-    actually does the virtualised swapping, keeping the changes if the CMI 
-    decreases; and an outer loop which decreases the size of the probability 
+    both the unique information from sources 1 and 2. The function counts the
+    empirical observations, calculates probabilities and the initial CMI, then
+    does the vitrualised swaps until it has converged, and finally calculates
+    the PID. The virtualised swaps stage contains two loops. An inner loop which
+    actually does the virtualised swapping, keeping the changes if the CMI
+    decreases; and an outer loop which decreases the size of the probability
     mass increment the virtualised swapping utilises.
 
     Args:
@@ -435,7 +435,7 @@ def pid_sydney(self, s1, s2, t, opts):
             - 'alph_s2' -  alphabet size of s2
             - 'alph_t' - alphabet size of t
             - 'max_unsuc_swaps_row_parm' - soft limit for virtualised swaps
-              based on the number of unsuccessful swaps attempted in a row. 
+              based on the number of unsuccessful swaps attempted in a row.
               If there are too many unsuccessful swaps in a row, then it
               will break the inner swap loop; the outer loop decrements the
               size of the probability mass increment and then attemps
@@ -462,6 +462,17 @@ def pid_sydney(self, s1, s2, t, opts):
             shared, and synergistic information
     """
     s1, s2, t, opts = _check_input(s1, s2, t, opts)
+
+    # Check if float128 is supported by the architecture
+    try:
+        np.float128()
+    except AttributeError as err:
+        if "'module' object has no attribute 'float128'" == err.args[0]:
+            raise RuntimeError('This system doesn''t seem to support float128'
+                               '(this is necessary for using the Sydney PID-'
+                               'estimator.')
+        else:
+            raise
 
     try:
         alph_s1 = opts['alph_s1']
