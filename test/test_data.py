@@ -303,10 +303,13 @@ def test_data_type():
     """Test if data class always returns the correct data type."""
     # Change data type for the same object instance.
     d_int = np.random.randint(0, 10, size=(3, 50))
+    orig_type = type(d_int[0][0])
     dat = Data(d_int, dim_order='ps', normalise=False)
     # The concrete type depends on the platform:
     # https://mail.scipy.org/pipermail/numpy-discussion/2011-November/059261.html
-    assert dat.data_type is np.int64, 'Data type did not change.'
+    # Hence, compare against the type automatically assigned by Python or
+    # against np.integer
+    assert dat.data_type is orig_type, 'Data type did not change.'
     assert issubclass(type(dat.data[0, 0, 0]), np.integer), ('Data type is not'
                                                              ' an int.')
     d_float = np.random.randn(3, 50)

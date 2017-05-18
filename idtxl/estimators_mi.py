@@ -294,9 +294,9 @@ def jidt_discrete(self, var1, var2, opts=None):
         var1 = utils.discretise_max_ent(var1, num_discrete_bins)
         var2 = utils.discretise_max_ent(var2, num_discrete_bins)
     elif (discretise_method == 'none'):  # check if data is really discretised
-        assert issubclass(var1.dtype.type, np.int64), ('No discretisation '
+        assert issubclass(var1.dtype.type, np.integer), ('No discretisation '
                'requested, but input 1 is not an integer numpy array.')
-        assert issubclass(var2.dtype.type, np.int64), ('No discretisation '
+        assert issubclass(var2.dtype.type, np.integer), ('No discretisation '
                'requested, but input 2 is not an integer numpy array.')
         assert min(var1) >= 0, 'Minimum of input 1 is smaller than 0.'
         assert min(var2) >= 0, 'Minimum of input 1 is smaller than 0.'
