@@ -1,6 +1,24 @@
+import pytest
 import random as rn
 import numpy as np
 from idtxl.set_estimator import Estimator_ais
+
+
+def test_jidt_kraskov_input():
+    """Test handling of wrong inputs to the JIDT Kraskov TE-estimator."""
+    ais_est = Estimator_ais('jidt_kraskov')
+    process = np.empty((100))
+
+    # Wrong type for options dictinoary
+    with pytest.raises(TypeError):
+        ais_est.estimate(process=process, opts=None)
+    # Missing history for the target
+    analysis_opts = {}
+    with pytest.raises(RuntimeError):
+        ais_est.estimate(process=process, opts=analysis_opts)
+    # Run analysis with all default vales
+    analysis_opts = {'history': 3}
+    ais_est.estimate(process=process, opts=analysis_opts)
 
 
 def test_ais_gaussian():
@@ -54,5 +72,6 @@ def test_ais_local_values():
     assert ais_res.shape[0] == n, 'Local AIS estimator did not return an array'
 
 if __name__ == '__main__':
+    test_jidt_kraskov_input()
     test_ais_local_values()
     test_ais_gaussian()

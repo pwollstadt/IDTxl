@@ -6,24 +6,102 @@ Created on Fri Oct 21 11:29:06 2016
 
 @author: jlizier
 """
+import pytest
 import random as rn
 import numpy as np
 import math
 from idtxl.set_estimator import Estimator_te
 
 
-def test_multivariate_te_corr_gaussian():
-    """Test multivariate TE estimation on correlated Gaussians.
+def test_jidt_kraskov_input():
+    """Test handling of wrong inputs to the JIDT Kraskov TE-estimator."""
+    te_est = Estimator_te('jidt_kraskov')
+    source = np.empty((100))
+    target = np.empty((100))
 
-    Run the multivariate TE algorithm on two sets of random Gaussian data with
-    a given covariance. The second data set is shifted by one sample creating
-    a source-target delay of one sample. This example is modeled after the
-    JIDT demo 4 for transfer entropy. The resulting TE can be compared to the
-    analytical result (but expect some error in the estimate).
+    # Wrong type for options dictinoary
+    with pytest.raises(TypeError):
+        te_est.estimate(source=source, target=target, opts=None)
+    # Missing history for the target
+    analysis_opts = {}
+    with pytest.raises(RuntimeError):
+        te_est.estimate(source=source, target=target, opts=analysis_opts)
+    # Run analysis with all default vales
+    analysis_opts = {'history_target': 3}
+    te_est.estimate(source=source, target=target, opts=analysis_opts)
+
+
+def test_jidt_discrete_input():
+    """Test handling of wrong inputs to the JIDT discrete TE-estimator."""
+    calculator_name = 'jidt_discrete'
+    te_est = Estimator_te(calculator_name)
+    n = 100
+    source = np.zeros(n, np.int_)
+    target = np.zeros(n, np.int_)
+
+    # Wrong type for options dictinoary
+    with pytest.raises(TypeError):
+        te_est.estimate(source=source, target=target, opts=None)
+    # Missing history for the target
+    analysis_opts = {}
+    with pytest.raises(RuntimeError):
+        te_est.estimate(source=source, target=target, opts=analysis_opts)
+    # Run analysis with all default vales
+    analysis_opts = {'history_target': 3}
+    te_est.estimate(source=source, target=target, opts=analysis_opts)
+
+    # Test handling of incorrect alphabet sizes
+    analysis_opts = {
+        'history_target': 3,
+        'alph_source': 2,
+        'alph_target': 2
+    }
+    source = np.random.randint(5, size=(n, 4))
+    target = np.random.randint(2, size=(n, 4))
+    with pytest.raises(RuntimeError):
+        te_est.estimate(source=source, target=target, opts=analysis_opts)
+    source = np.random.randint(2, size=(n, 4))
+    target = np.random.randint(5, size=(n, 4))
+    with pytest.raises(RuntimeError):
+        te_est.estimate(source=source, target=target, opts=analysis_opts)
+
+    # Test multidimensional variables
+    analysis_opts = {
+        'history_target': 3,
+        'alph_source': 2,
+        'alph_target': 2
+    }
+    source = np.random.randint(2, size=(n, 2))
+    target = np.random.randint(2, size=(n, 2))
+    te_est.estimate(source=source, target=target, opts=analysis_opts)
+
+    # Test discretisation methods
+    analysis_opts = {
+        'history_target': 3,
+        'discretise_method': 'equal'
+    }
+    source = np.random.randn(n, 2)
+    target = np.random.randn(n, 2)
+    te_est.estimate(source=source, target=target, opts=analysis_opts)
+    analysis_opts['discretise_method'] = 'max_ent'
+    te_est.estimate(source=source, target=target, opts=analysis_opts)
+    analysis_opts['num_discrete_bins'] = 3
+    te_est.estimate(source=source, target=target, opts=analysis_opts)
+    analysis_opts['discretise_method'] = 'equal'
+    te_est.estimate(source=source, target=target, opts=analysis_opts)
+
+
+def test_te_corr_gaussian():
+    """Test TE estimation on correlated Gaussians.
+
+    Run TE estimation on two sets of random Gaussian data with a given
+    covariance. The second data set is shifted by one sample creating a source-
+    target delay of one sample. This example is modeled after the JIDT demo 4
+    for transfer entropy. The resulting TE can be compared to the analytical
+    result (but expect some error in the estimate).
 
     Note:
         This test runs considerably faster than other system tests.
-        This produces strange small values for non-coupled sources.  TODO
     """
     n = 1000
     cov = 0.4
@@ -164,9 +242,17 @@ def test_te_local_values():
     te_est = Estimator_te('jidt_kraskov')
     te_res = te_est.estimate(np.array(source), np.array(target),
                              analysis_opts)
+    analysis_opts['local_values'] = False
+    te_avg = te_est.estimate(np.array(source), np.array(target),
+                             analysis_opts)
     assert te_res.shape[0] == n, 'Local TE estimator did not return an array.'
+    assert np.isclose(np.mean(te_res), te_avg, rtol=0.01), (
+        'Average local TE is not equal to estimated average TE.')
+
 
 if __name__ == '__main__':
+    test_jidt_discrete_input()
+    test_jidt_kraskov_input()
     test_te_local_values()
     test_te_estimator_jidt_discrete()
-    test_multivariate_te_corr_gaussian()
+    test_te_corr_gaussian()
