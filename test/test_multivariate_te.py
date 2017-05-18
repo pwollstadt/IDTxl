@@ -48,32 +48,32 @@ def test_multivariate_te_init():
         nw.analyse_single_target(data=dat, target=0, sources='all')
 
     # Invalid: negative lags or taus
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         nw = Multivariate_te(max_lag_sources=-7,
                              min_lag_sources=-4,
                              max_lag_target=-1,
                              options=analysis_opts)
         nw.analyse_single_target(data=dat, target=0, sources='all')
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         nw = Multivariate_te(max_lag_sources=1,
                              min_lag_sources=-4,
                              max_lag_target=-1,
                              options=analysis_opts)
         nw.analyse_single_target(data=dat, target=0, sources='all')
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         nw = Multivariate_te(max_lag_sources=1,
                              min_lag_sources=1,
                              max_lag_target=-1,
                              options=analysis_opts)
         nw.analyse_single_target(data=dat, target=0, sources='all')
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         nw = Multivariate_te(max_lag_sources=1,
                              min_lag_sources=1,
                              max_lag_target=1,
                              tau_sources=-1,
                              options=analysis_opts)
         nw.analyse_single_target(data=dat, target=0, sources='all')
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         nw = Multivariate_te(max_lag_sources=1,
                              min_lag_sources=1,
                              max_lag_target=1,
@@ -85,42 +85,42 @@ def test_multivariate_te_init():
     with pytest.raises(AssertionError):
         nw = Multivariate_te(max_lag_sources=3,
                              min_lag_sources=1.5,
-                             max_lag_target=1,
+                             max_lag_target=5,
                              options=analysis_opts)
         nw.analyse_single_target(data=dat, target=0, sources='all')
 
     # Invalid: sources or target is no int
     nw = Multivariate_te(max_lag_sources=3,
                          min_lag_sources=1.5,
-                         max_lag_target=1,
+                         max_lag_target=2,
                          options=analysis_opts)
-    with pytest.raises(AssertionError):
+    with pytest.raises(AssertionError):  # no int
         nw.analyse_single_target(data=dat, target=1.5, sources='all')
-    with pytest.raises(AssertionError):
+    with pytest.raises(AssertionError):  # negative
         nw.analyse_single_target(data=dat, target=-1, sources='all')
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):  # not in data
         nw.analyse_single_target(data=dat, target=10, sources='all')
-    with pytest.raises(AssertionError):
+    with pytest.raises(AssertionError):  # wrong type
         nw.analyse_single_target(data=dat, target={}, sources='all')
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):  # negative
         nw.analyse_single_target(data=dat, target=0, sources=-1)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):   # negative
         nw.analyse_single_target(data=dat, target=0, sources=[-1])
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):  # not in data
         nw.analyse_single_target(data=dat, target=0, sources=20)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):  # not in data
         nw.analyse_single_target(data=dat, target=0, sources=[20])
 
     # Force conditionals
     analysis_opts['add_conditionals'] = [(0, 1), (1, 3)]
     nw = Multivariate_te(max_lag_sources=3,
                          min_lag_sources=1.5,
-                         max_lag_target=1,
+                         max_lag_target=3,
                          options=analysis_opts)
     analysis_opts['add_conditionals'] = (8, 0)
     nw = Multivariate_te(max_lag_sources=3,
                          min_lag_sources=1.5,
-                         max_lag_target=1,
+                         max_lag_target=3,
                          options=analysis_opts)
 
 

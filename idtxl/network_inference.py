@@ -48,6 +48,15 @@ class Network_inference(Network_analysis):
             self.max_lag_target = max_lag_sources
         else:
             self.max_lag_target = max_lag_target
+        if tau_sources >= max_lag_sources:
+            raise RuntimeError('Tau has to be smaller than the max lag for '
+                               'non-uniform embedding of sources.')
+        if tau_target >= max_lag_target:
+            raise RuntimeError('Tau has to be smaller than the max lag for '
+                               'non-uniform embedding of sources.')
+        if (max_lag_sources < 0 or max_lag_target < 0 or tau_sources < 0 or
+                tau_target < 0):
+            raise RuntimeError('Tau and max lag have to be positive integers.')
         self.max_lag_sources = max_lag_sources
         self.min_lag_sources = min_lag_sources
         self.tau_sources = tau_sources
@@ -165,7 +174,7 @@ class Network_inference(Network_analysis):
 	                       'than the number of processes {1} in the data.'.format(
 			               sources, n_processes))
         if min(sources) < 0:
-            raise RuntimeError('Sources can not have negative indices {0}.'.format(sources))	   
+            raise RuntimeError('Sources can not have negative indices {0}.'.format(sources))
 
         self.source_set = sources
         if VERBOSE:
