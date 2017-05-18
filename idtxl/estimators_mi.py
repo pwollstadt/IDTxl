@@ -188,6 +188,12 @@ def jidt_kraskov(self, var1, var2, opts=None):
     noise_level = str(opts.get('noise_level', 1e-8))
     local_values = opts.get('local_values', False)
     num_threads = str(opts.get('num_threads', 'USE_ALL'))
+    lag = opts.get('lag', 0)
+
+    # Shift second variable to account for a lag if requested
+    if lag > 0:
+        var1 = var1[:-lag]
+        var2 = var2[lag:]
 
     jarLocation = resource_filename(__name__, 'infodynamics.jar')
     if not jp.isJVMStarted():
@@ -236,15 +242,17 @@ def jidt_discrete(self, var1, var2, opts=None):
             array are realisations x variable dimension
         opts : dict [optional]
             sets estimation parameters:
-            - 'num_discrete_bins' - number of discrete bins/levels or the base of
-                            each dimension of the discrete variables (default=2 for binary)
-            - 'time_diff' - time difference across which to take MI from variable 1
-                            to variable 2, i.e. lag from variable 1 to 2 (default=0)
-            - 'discretise_method' - if and how to discretise incoming continuous variables
-                            to discrete values.
-                            'max_ent' means to use a maximum entropy binning
-                            'equal' means to use equal size bins
-                            'none' means variables are already discrete (default='none')
+            - 'num_discrete_bins' - number of discrete bins/levels or the base
+                                    of each dimension of the discrete variables
+                                    (default=2 for binary)
+            - 'lag' - time difference across which to take MI from variable 1
+                      to variable 2, i.e. lag from variable 1 to 2 (default=0)
+            - 'discretise_method' - if and how to discretise incoming
+                                    continuous variables to discrete values,
+                                    can be
+                                    'max_ent' maximum entropy binning
+                                    'equal' equal size bins
+                                    'none' no binning (default='none')
             - 'debug' - set debug prints from the calculator on
 
     Returns:
@@ -257,20 +265,18 @@ def jidt_discrete(self, var1, var2, opts=None):
         opts = {}
 
     num_discrete_bins = int(opts.get('num_discrete_bins', 2))
-    time_diff = int(opts.get('time_diff', 0))
+    lag = int(opts.get('lag', 0))
     discretise_method = opts.get('discretise_method', 'none')
     debug = opts.get('debug', False)
 
     # Work out the number of samples and dimensions for each variable, before
     #  we collapse all dimensions down:
-    var1_samples = var1.shape[0]
     if len(var1.shape) > 1:
         # var1 is is multidimensional
         var1_dimensions = var1.shape[1]
     else:
         # var1 is unidimensional
         var1_dimensions = 1
-    var2_samples = var2.shape[0]
     if len(var2.shape) > 1:
         # var2 is is multidimensional
         var2_dimensions = var2.shape[1]
@@ -310,7 +316,7 @@ def jidt_discrete(self, var1, var2, opts=None):
                     jarLocation))
     calcClass = (jp.JPackage('infodynamics.measures.discrete').
                  MutualInformationCalculatorDiscrete)
-    calc = calcClass(max_base, time_diff)
+    calc = calcClass(max_base, lag)
     calc.setDebug(debug)
     calc.initialise()
     # Unfortunately no faster way to pass numpy arrays in than this list conversion
