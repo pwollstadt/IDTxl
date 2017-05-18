@@ -9,8 +9,10 @@ import itertools as it
 import numpy as np
 from idtxl.multivariate_te import Multivariate_te
 from idtxl.data import Data
+from test_estimators_cmi import jpype_missing
 
 
+@jpype_missing
 def test_multivariate_te_init():
     """Test instance creation for Multivariate_te class."""
     # Test error on missing estimator
@@ -122,6 +124,7 @@ def test_multivariate_te_init():
                          options=analysis_opts)
 
 
+@jpype_missing
 def test_multivariate_te_one_realisation_per_replication():
     """Test boundary case of one realisation per replication."""
     # Create a data set where one pattern fits into the time series exactly
@@ -152,6 +155,7 @@ def test_multivariate_te_one_realisation_per_replication():
             dat.data[target, -1, :]).all()
 
 
+@jpype_missing
 def test_faes_method():
     """Check if the Faes method is working."""
     analysis_opts = {'cmi_calc_name': 'jidt_kraskov',
@@ -170,6 +174,7 @@ def test_faes_method():
                 'Did not add correct additional conditioning vars.')
 
 
+@jpype_missing
 def test_add_conditional_manually():
     """Adda variable that is not in the data set."""
     analysis_opts = {'cmi_calc_name': 'jidt_kraskov',
@@ -186,6 +191,7 @@ def test_add_conditional_manually():
         nw_1._initialise(dat, sources, target)
 
 
+@jpype_missing
 def test_check_source_set():
     """Test the method _check_source_set.
 
@@ -237,6 +243,7 @@ def test_check_source_set():
         nw_0._check_source_set(-3, dat.n_processes)
 
 
+@jpype_missing
 def test_define_candidates():
     """Test candidate definition from a list of procs and a list of samples."""
     analysis_opts = {'cmi_calc_name': 'jidt_kraskov'}
@@ -254,6 +261,7 @@ def test_define_candidates():
     assert (1, 3) in candidates, 'Sample missing from candidates: (1, 3).'
 
 
+@jpype_missing
 def test_analyse_network():
     """Test method for full network analysis."""
     n_processes = 5  # the MuTE network has 5 nodes

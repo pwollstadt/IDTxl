@@ -6,8 +6,10 @@ import random as rn
 import numpy as np
 from idtxl.data import Data
 from idtxl.active_information_storage import Active_information_storage
+from test_estimators_cmi import jpype_missing, opencl_missing
 
 
+@jpype_missing
 def test_single_source_storage_gaussian():
     n = 1000
     proc_1 = [rn.normalvariate(0, 1) for r in range(n)]  # correlated src
@@ -31,6 +33,8 @@ def test_single_source_storage_gaussian():
                                      'memoryless data.')
 
 
+@jpype_missing
+@opencl_missing
 def test_compare_jidt_open_cl_estimator():
     """Compare results from OpenCl and JIDT estimators for AIS calculation."""
     dat = Data()

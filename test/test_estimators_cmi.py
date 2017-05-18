@@ -12,7 +12,25 @@ import numpy as np
 import pytest
 from idtxl.set_estimator import Estimator_cmi
 
+package_missing = False
+try:
+    import jpype
+except ImportError as err:
+    package_missing = True
+jpype_missing = pytest.mark.skipif(
+    package_missing,
+    reason="Jpype is missing, JIDT estimators are not available")
+package_missing = False
+try:
+    import pyopencl
+except ImportError as err:
+    package_missing = True
+opencl_missing = pytest.mark.skipif(
+    package_missing,
+    reason="OpenCl is missing, GPU/OpenCl estimators are not available")
 
+
+@jpype_missing
 def test_cmi_estimator_jidt_kraskov():
     """Test CMI estimation on two sets of Gaussian random data.
 
@@ -67,6 +85,7 @@ def test_cmi_estimator_jidt_kraskov():
                                     'Gaussians failed (error larger 0.07).')
 
 
+@opencl_missing
 def test_cmi_estimator_ocl():
     """Test CMI estimation on two sets of Gaussian random data.
 
@@ -136,6 +155,7 @@ def test_cmi_estimator_ocl():
                                    'data.')
 
 
+@opencl_missing
 def test_cmi_no_c_estimator_ocl():
     """Tests CMI estimation without a conditional variable.
 
@@ -172,6 +192,8 @@ def test_cmi_no_c_estimator_ocl():
                                    'data.')
 
 
+@opencl_missing
+@jpype_missing
 def test_compare_opencl_jidt_implementation():
     """Compare results from OpenCl and JIDT implementation."""
     n = 4000
@@ -202,6 +224,7 @@ def test_compare_opencl_jidt_implementation():
     print('result jidt: {0}, result opencl: {1}'.format(res_jidt, res_opencl))
 
 
+@jpype_missing
 def test_cmi_estimator_jidt_discrete():
     """Test CMI estimation on sets of discrete random data"""
     opts = {'num_discrete_bins': 2,
@@ -267,6 +290,8 @@ def test_cmi_estimator_jidt_discrete():
     assert (res_4a == 1), ('CMI calculation for XOR 1 failed.')
     assert (res_4b == 1), ('CMI calculation for XOR 1 failed.')
 
+
+@jpype_missing
 def test_cmi_estimator_jidt_discrete_discretisation():
     """Test CMI estimation discretisation methods and error handling."""
     opts = {'num_discrete_bins': 2,

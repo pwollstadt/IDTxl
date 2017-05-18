@@ -11,8 +11,9 @@ import random as rn
 import numpy as np
 import math
 from idtxl.set_estimator import Estimator_te
+from test_estimators_cmi import jpype_missing
 
-
+@jpype_missing
 def test_jidt_kraskov_input():
     """Test handling of wrong inputs to the JIDT Kraskov TE-estimator."""
     te_est = Estimator_te('jidt_kraskov')
@@ -31,6 +32,7 @@ def test_jidt_kraskov_input():
     te_est.estimate(source=source, target=target, opts=analysis_opts)
 
 
+@jpype_missing
 def test_jidt_discrete_input():
     """Test handling of wrong inputs to the JIDT discrete TE-estimator."""
     calculator_name = 'jidt_discrete'
@@ -91,6 +93,7 @@ def test_jidt_discrete_input():
     te_est.estimate(source=source, target=target, opts=analysis_opts)
 
 
+@jpype_missing
 def test_te_corr_gaussian():
     """Test TE estimation on correlated Gaussians.
 

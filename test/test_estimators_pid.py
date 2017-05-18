@@ -9,6 +9,28 @@ import numpy as np
 import pytest
 from idtxl.set_estimator import Estimator_pid
 
+package_missing = False
+try:
+    import gurobipy
+    import cvxopt
+except ImportError:
+    package_missing = True
+optimization_not_available = pytest.mark.skipif(
+    package_missing,
+    reason="at least optimization package is missing (gurobi and cvxopt)")
+
+no_float128 = False
+try:
+    np.float128()
+except AttributeError as err:
+    if "'module' object has no attribute 'float128'" == err.args[0]:
+        no_float128 = True
+    else:
+        raise
+float128_not_available = pytest.mark.skipif(
+    no_float128,
+    reason="type float128 not available on current architecture")
+
 
 ALPH_X = 2
 ALPH_Y = 2
@@ -37,6 +59,8 @@ pid_sydney = Estimator_pid('pid_sydney')
 pid_tartu = Estimator_pid('pid_tartu')
 
 
+@float128_not_available
+@optimization_not_available
 def test_pid_and():
     """Test PID estimator on logical AND."""
     Z = np.logical_and(X, Y).astype(int)
@@ -48,6 +72,8 @@ def test_pid_and():
                                                      'Tartu estimator.')
 
 
+@float128_not_available
+@optimization_not_available
 def test_pid_xor():
     """Test PID estimator on logical XOR."""
     Z = np.logical_xor(X, Y).astype(int)
@@ -57,6 +83,8 @@ def test_pid_xor():
     assert np.isclose(1, est_tartu['syn_s1_s2']), 'Synergy is not 1.'
 
 
+@float128_not_available
+@optimization_not_available
 def test_pip_source_copy():
     """Test PID estimator on copied source."""
     Z = X
@@ -76,6 +104,8 @@ def test_pip_source_copy():
                                                    'Tartu estimator.')
 
 
+@float128_not_available
+@optimization_not_available
 def test_xor_long():
     """Test PID estimation with Sydney estimator on XOR with higher N."""
     # logical AND
@@ -158,6 +188,8 @@ def _estimate(Z):
     return est_sydney, est_tartu
 
 
+@float128_not_available
+@optimization_not_available
 def test_int_types():
     """Test PID estimator on different integer types."""
     Z = np.logical_xor(X, Y).astype(np.int32)

@@ -12,6 +12,7 @@ import numpy as np
 # from idtxl.multivariate_te import Multivariate_te
 from idtxl.network_comparison import Network_comparison
 from idtxl.data import Data
+from test_estimators_cmi import jpype_missing
 
 # # Generate example data: the following was ran once to generate example data,
 # # which is now in the data sub-folder of the test-folder.
@@ -57,6 +58,7 @@ from idtxl.data import Data
 # idtxl_io.save_pickle(res_4, path + 'mute_res_4')
 
 
+@jpype_missing
 def test_network_comparison_use_cases():
     """Run all intended use cases, within/between, dependent/independent."""
     dat = Data()
@@ -133,6 +135,7 @@ def test_network_comparison_use_cases():
                          data_set_b=np.array((dat, dat, dat)))
 
 
+@jpype_missing
 def test_assertions():
     """Test if input checks raise errors."""
     dat = Data()
@@ -218,6 +221,7 @@ def test_assertions():
         comp.compare_within(res_0, res_99, dat2, dat2)
 
 
+@jpype_missing
 def test_create_union_network():
     """Test creation of union of multiple networks."""
     dat1 = Data()
@@ -271,6 +275,7 @@ def test_create_union_network():
         comp._create_union(res_0, res_1)
 
 
+@jpype_missing
 def test_get_permuted_replications():
     """Test if permutation of replications works."""
     # Load previously generated example data
@@ -334,6 +339,7 @@ def test_get_permuted_replications():
         comp._get_permuted_replications(data_a=dat1, data_b=dat2, target=1)
 
 
+@jpype_missing
 def test_calculate_cmi():
     """Test if the CMI is estimated correctly."""
     dat = Data()
@@ -365,10 +371,12 @@ def test_calculate_cmi():
     cmi_expected = np.log(1 / (1 - cov ** 2))
     print('correlated Gaussians: TE result {0:.4f} bits; expected to be '
           '{1:0.4f} bit for the copy'.format(cmi[1][0], cmi_expected))
-    np.testing.assert_almost_equal(cmi[1][0], cmi_expected, decimal=1,
+    np.testing.assert_almost_equal(
+                   cmi[1][0], cmi_expected, decimal=1,
                    err_msg='when calculating cmi for correlated Gaussians.')
 
 
+@jpype_missing
 def test_calculate_mean():
     """Test if mean over CMI estimates is calculated correctly."""
     dat = Data()
@@ -395,6 +403,7 @@ def test_calculate_mean():
                                                'target {0}'.format(t))
 
 
+@jpype_missing
 def test_p_value_union():
     """Test if the p-value is calculated correctly."""
     dat = Data()

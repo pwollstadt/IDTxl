@@ -2,8 +2,10 @@ import pytest
 import random as rn
 import numpy as np
 from idtxl.set_estimator import Estimator_ais
+from test_estimators_cmi import jpype_missing
 
 
+@jpype_missing
 def test_jidt_kraskov_input():
     """Test handling of wrong inputs to the JIDT Kraskov TE-estimator."""
     ais_est = Estimator_ais('jidt_kraskov')
@@ -21,6 +23,7 @@ def test_jidt_kraskov_input():
     ais_est.estimate(process=process, opts=analysis_opts)
 
 
+@jpype_missing
 def test_ais_gaussian():
     """Test multivariate TE estimation on correlated Gaussians.
 
@@ -54,6 +57,7 @@ def test_ais_gaussian():
                                '{0}.'.format(ais))
 
 
+@jpype_missing
 def test_ais_local_values():
     """Test local AIS estimation."""
     n = 1000

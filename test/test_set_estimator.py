@@ -14,8 +14,10 @@ import numpy as np
 from idtxl.set_estimator import Estimator_te
 from idtxl.set_estimator import Estimator_cmi
 from idtxl.set_estimator import Estimator_mi
+from test_estimators_cmi import jpype_missing, opencl_missing
 
 
+@jpype_missing
 def test_estimators_correlated_gauss_data():
     """Test estimators on correlated Gauss data."""
     estimator_name = 'jidt_kraskov'
@@ -50,6 +52,7 @@ def test_estimators_correlated_gauss_data():
                 'The estimator was not set correctly')
 
 
+@jpype_missing
 def test_estimators_uncorrelated_random_data():
     """Test estimators on uncorrelated Gauss data."""
     estimator_name = 'jidt_kraskov'
@@ -76,6 +79,8 @@ def test_estimators_uncorrelated_random_data():
                 'The estimator was not set correctly')
 
 
+@jpype_missing
+@opencl_missing
 def test_estimator_change():
     """Test dynamic changing of estimators at runtime."""
     estimator_name_1 = 'jidt_kraskov'

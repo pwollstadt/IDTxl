@@ -10,8 +10,10 @@ import pytest
 import random as rn
 import numpy as np
 from idtxl.set_estimator import Estimator_mi
+from test_estimators_cmi import jpype_missing
 
 
+@jpype_missing
 def test_mi_corr_gaussian():
     """Test MI estimation on correlated Gaussians.
 
@@ -56,6 +58,7 @@ def test_mi_corr_gaussian():
                             err_msg='MI is not close to expected result.')
 
 
+@jpype_missing
 def test_lagged_mi_corr_gaussian():
     """Test MI estimation on correlated Gaussians.
 
@@ -101,6 +104,7 @@ def test_lagged_mi_corr_gaussian():
                             err_msg='MI is not close to expected result.')
 
 
+@jpype_missing
 def test_jidt_kraskov_input():
     """Test handling of wrong inputs to the JIDT Kraskov MI-estimator."""
     source_1 = np.empty((100, 1))
@@ -116,6 +120,7 @@ def test_jidt_kraskov_input():
     mi_est.estimate(var1=source_1, var2=source_2, opts={})
 
 
+@jpype_missing
 def test_mi_estimator_jidt_discrete():
     """Test MI estimation on two sets of discrete data."""
     n = 1000
@@ -141,6 +146,7 @@ def test_mi_estimator_jidt_discrete():
     assert (res_2 == 0), ('MI calculation for no correlation failed.')
 
 
+@jpype_missing
 def test_mi_local_values():
     """Test local MI estimation."""
     n = 1000
@@ -168,6 +174,7 @@ def test_mi_local_values():
         'Average local MI is not equal to estimated average MI.')
 
 
+@jpype_missing
 def test_mi_estimator_jidt_discrete_discretisation():
     """Test MI estimation discretisation methods and error handling."""
     opts = {'num_discrete_bins': 2,
