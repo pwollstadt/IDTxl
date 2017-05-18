@@ -144,7 +144,7 @@ def jidt_kraskov(self, source, target, opts):
         return calc.computeAverageLocalOfObservations()
 
 
-def jidt_discrete(self, source, target, opts=None):
+def jidt_discrete(self, source, target, opts):
     """Calculate TE with JIDT's implementation for discrete variables.
 
     Calculate the transfer entropy between two time series processes.
@@ -174,24 +174,24 @@ def jidt_discrete(self, source, target, opts=None):
             time series realisations of the second random variable.
             Can be multidimensional (i.e. multivariate) where dimensions of the
             array are realisations x variable dimension
-        opts : dict [optional]
+        opts : dict
             sets estimation parameters:
 
-            - 'num_discrete_bins' - number of discrete bins/levels or the base
-               of each dimension of the discrete variables (default=2 for
-               binary). If this is set, then parameters 'alph_source',
-               'alph_target' and 'alphc' are all set to this value
-            - 'alph_source' - number of discrete bins/levels for source
-              (default=2 for binary, or the value set for 'num_discrete_bins')
-            - 'alph_target' - number of discrete bins/levels for target
-              (default=2 for binary, or the value set for 'num_discrete_bins')
             - 'discretise_method' - if and how to discretise incoming
               continuous variables to discrete values.
               'max_ent' means to use a maximum entropy binning
               'equal' means to use equal size bins
               'none' means variables are already discrete (default='none')
+            - 'num_discrete_bins' - number of discrete bins for discretisation
+               if requested (default=2 for binary). If this is set, parameters
+               'alph_source', 'alph_target' and 'alphc' are all set to
+               'num_discrete_bins'
+            - 'alph_source' - number of discrete bins/levels for source
+              (default=2 for binary, or the value set for 'num_discrete_bins')
+            - 'alph_target' - number of discrete bins/levels for target
+              (default=2 for binary, or the value set for 'num_discrete_bins')
             - 'history_target' - number of samples in the target's past to
-              consider (mandatory to provide)
+              consider (mandatory)
             - 'history_source' - number of samples in the source's past to
               consider (default=same as the target history)
             - 'tau_source' - source's embedding delay (default=1)
@@ -204,20 +204,30 @@ def jidt_discrete(self, source, target, opts=None):
         float
             transfer entropy
     """
-    # Parse parameters:
-    if opts is None:
-        opts = {}
+    if type(opts) is not dict:
+        raise TypeError('Opts should be a dictionary.')
 
+    # Get alphabet sizes and check if discretisation is requested
+    discretise_method = opts.get('discretise_method', 'none')
     alph_source = int(opts.get('alph_source', 2))
     alph_target = int(opts.get('alph_target', 2))
-    try:
-        num_discrete_bins = int(opts['num_discrete_bins'])
-        alph_source = num_discrete_bins
-        alph_target = num_discrete_bins
-    except KeyError:
-        # Do nothing, we don't need the parameter if it is not here
-        pass
-    discretise_method = opts.get('discretise_method', 'none')
+
+    if (discretise_method == 'none'):
+        if alph_source < np.unique(source).shape[0]:
+            raise RuntimeError('The source''s alphabet size does not match the'
+                               ' no. unique elements in the source array.')
+        if alph_target < np.unique(target).shape[0]:
+            raise RuntimeError('The target''s alphabet size does not match the'
+                               ' no. unique elements in the target array.')
+    else:  # get the number of bins if discretisation was requested
+        try:
+            num_discrete_bins = int(opts['num_discrete_bins'])
+            alph_source = num_discrete_bins
+            alph_target = num_discrete_bins
+        except KeyError:
+            pass  # Do nothing and use the default for alph_* set above
+
+    # Get embedding and delay parameters.
     try:
         history_target = opts['history_target']
     except KeyError:
@@ -253,7 +263,8 @@ def jidt_discrete(self, source, target, opts=None):
     elif (discretise_method == 'max_ent'):
         source = utils.discretise_max_ent(source, alph_source)
         target = utils.discretise_max_ent(target, alph_target)
-    # Else don't discretise at all, assume it is already done
+    else:
+        pass  # don't discretise at all, assume data to be discrete
 
     # Then collapse any mulitvariates into univariate arrays:
     source = utils.combine_discrete_dimensions(source, alph_source)
@@ -265,7 +276,7 @@ def jidt_discrete(self, source, target, opts=None):
         jp.startJVM(jp.getDefaultJVMPath(), '-ea', ('-Djava.class.path=' +
                     jarLocation))
     calcClass = (jp.JPackage('infodynamics.measures.discrete').
-             TransferEntropyCalculatorDiscrete)
+                 TransferEntropyCalculatorDiscrete)
     calc = calcClass(int(max(math.pow(alph_source, source_dimensions),
                              math.pow(alph_target, target_dimensions))),
                      history_target, tau_target,
@@ -275,5 +286,5 @@ def jidt_discrete(self, source, target, opts=None):
     calc.initialise()
     # Unfortunately no faster way to pass numpy arrays in than this list conversion
     calc.addObservations(jp.JArray(jp.JInt, 1)(source.tolist()),
-                     jp.JArray(jp.JInt, 1)(target.tolist()))
+                         jp.JArray(jp.JInt, 1)(target.tolist()))
     return calc.computeAverageLocalOfObservations()
