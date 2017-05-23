@@ -73,6 +73,16 @@ class Active_information_storage(Single_process_analysis):
     """
 
     def __init__(self, max_lag, options, tau=1):
+        # Check user input
+        if type(max_lag) is not int or max_lag < 0:
+            raise RuntimeError('max_lag has to be an integer >= 0.')
+        if type(tau) is not int or tau <= 0:
+            raise RuntimeError('tau has to be an integer > 0.')
+        if tau >= max_lag:
+            raise RuntimeError('tau ({0}) has to be smaller than max_lag '
+                               '({1}).'.format(tau, max_lag))
+
+        # Set user-specified estimation parameters
         self.max_lag = max_lag
         self.tau = tau
         self.pvalue = None
@@ -129,8 +139,8 @@ class Active_information_storage(Single_process_analysis):
         if (type(processes) is list) and (type(processes[0]) is int):
             pass
         else:
-            ValueError('Processes were not specified correctly: {0}.'.format(
-                                                                    processes))
+            raise ValueError('Processes were not specified correctly: '
+                             '{0}.'.format(processes))
 
         # Perform AIS estimation for each target individually.
         results = {}
@@ -201,6 +211,15 @@ class Active_information_storage(Single_process_analysis):
 
     def _initialise(self, data, process):
         """Check input and set everything to initial values."""
+        # Check user input
+        if type(process) is not int or process < 0:
+            raise RuntimeError('The index of the process ({0}) has to be an '
+                               'int >= 0.'.format(process))
+        if process > data.n_processes:
+            raise RuntimeError('Trying to analyse process with index {0}, '
+                               'which greater than the number of processes in '
+                               'the data ({1}).'.format(process,
+                                                        data.n_processes))
         self.process = process
 
         # Check provided search depths for source and target

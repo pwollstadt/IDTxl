@@ -2,11 +2,70 @@
 
 This module provides unit tests for the AIS analysis class.
 """
+import pytest
 import random as rn
 import numpy as np
 from idtxl.data import Data
 from idtxl.active_information_storage import Active_information_storage
 from test_estimators_cmi import jpype_missing, opencl_missing
+
+
+@jpype_missing
+def test_active_information_storage_init():
+    """Test instance creation for Active_information_storage class."""
+    # Test error on missing estimator
+    with pytest.raises(KeyError):
+        Active_information_storage(max_lag=5, options={})
+
+    # Test tau larger than maximum lag
+    analysis_opts = {'cmi_calc_name': 'jidt_kraskov'}
+    with pytest.raises(RuntimeError):
+        Active_information_storage(max_lag=5, options=analysis_opts, tau=10)
+    # Test negative tau and maximum lag
+    with pytest.raises(RuntimeError):
+        Active_information_storage(max_lag=5, options=analysis_opts, tau=-10)
+    with pytest.raises(RuntimeError):
+        Active_information_storage(max_lag=-5, options=analysis_opts, tau=1)
+
+    # Invalid: process is not an int
+    dat = Data()
+    dat.generate_mute_data(10, 3)
+    ais = Active_information_storage(max_lag=5,
+                                     tau=1,
+                                     options=analysis_opts)
+    with pytest.raises(RuntimeError):  # no int
+        ais.analyse_single_process(data=dat, process=1.5)
+    with pytest.raises(RuntimeError):  # negative
+        ais.analyse_single_process(data=dat, process=-1)
+    with pytest.raises(RuntimeError):  # not in data
+        ais.analyse_single_process(data=dat, process=10)
+    with pytest.raises(RuntimeError):  # wrong type
+        ais.analyse_single_process(data=dat, process={})
+
+    # Force conditionals
+    analysis_opts['add_conditionals'] = [(0, 1), (1, 3)]
+    ais = Active_information_storage(max_lag=5,
+                                     tau=1,
+                                     options=analysis_opts)
+
+
+def test_analyse_network():
+    """Test AIS estimation for the whole network."""
+    dat = Data()
+    dat.generate_mute_data(10, 3)
+    ais = Active_information_storage(max_lag=5,
+                                     tau=1,
+                                     options={'cmi_calc_name': 'jidt_kraskov'})
+    # Test analysis of 'all' processes
+    r = ais.analyse_network(data=dat)
+    k = list(r.keys())
+    assert all(np.array(k) == np.arange(dat.n_processes)), (
+                'Network analysis did not run on all targets.')
+    # Test check for correct definition of processes
+    with pytest.raises(ValueError):  # no list
+        ais.analyse_network(data=dat, processes={})
+    with pytest.raises(ValueError):  # no list of ints
+        ais.analyse_network(data=dat, processes=[1.5, 0.7])
 
 
 @jpype_missing
@@ -83,5 +142,7 @@ def test_compare_jidt_open_cl_estimator():
 
 
 if __name__ == '__main__':
-    test_single_source_storage_gaussian()
-    test_compare_jidt_open_cl_estimator()
+    test_analyse_network()
+    test_active_information_storage_init()
+    # test_single_source_storage_gaussian()
+    # test_compare_jidt_open_cl_estimator()

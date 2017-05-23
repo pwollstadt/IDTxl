@@ -42,21 +42,34 @@ class Network_inference(Network_analysis):
 
     def __init__(self, max_lag_sources, min_lag_sources, options,
                  max_lag_target=None, tau_sources=1, tau_target=1):
+        # Check user input. Allow for unembedded sources (max_lag_sources=0)
+        if not max_lag_target:
+            max_lag_target = max_lag_sources
+        if type(min_lag_sources) is not int or min_lag_sources < 0:
+            raise RuntimeError('min_lag_sources has to be an integer >= 0.')
+        if type(max_lag_sources) is not int or max_lag_sources < 0:
+            raise RuntimeError('max_lag_sources has to be an integer >= 0.')
+        if type(max_lag_target) is not int or max_lag_target <= 0:
+            raise RuntimeError('max_lag_target must be an integer > 0.')
+        if type(tau_sources) is not int or tau_sources <= 0:
+            raise RuntimeError('tau_sources must be an integer > 0.')
+        if type(tau_target) is not int or tau_target <= 0:
+            raise RuntimeError('tau_sources must be an integer > 0.')
+        if min_lag_sources > max_lag_sources:
+            raise RuntimeError('min_lag_sources ({0}) must be smaller or equal'
+                               ' to max_lag_sources ({1}).'.format(
+                                   min_lag_sources, max_lag_sources))
+        if tau_sources > max_lag_sources:
+            raise RuntimeError('tau_sources ({0}) has to be smaller than '
+                               'max_lag_sources ({1}).'.format(
+                                   tau_sources, max_lag_sources))
+        if tau_target > max_lag_target:
+            raise RuntimeError('tau_target ({0}) has to be smaller than '
+                               'max_lag_target ({1}).'.format(
+                                   tau_target, max_lag_target))
 
         # Set user-specified estimation parameters
-        if max_lag_target is None:
-            self.max_lag_target = max_lag_sources
-        else:
-            self.max_lag_target = max_lag_target
-        if tau_sources >= max_lag_sources:
-            raise RuntimeError('Tau has to be smaller than the max lag for '
-                               'non-uniform embedding of sources.')
-        if tau_target >= max_lag_target:
-            raise RuntimeError('Tau has to be smaller than the max lag for '
-                               'non-uniform embedding of sources.')
-        if (max_lag_sources < 0 or max_lag_target < 0 or tau_sources < 0 or
-                tau_target < 0):
-            raise RuntimeError('Tau and max lag have to be positive integers.')
+        self.max_lag_target = max_lag_target
         self.max_lag_sources = max_lag_sources
         self.min_lag_sources = min_lag_sources
         self.tau_sources = tau_sources
@@ -83,24 +96,6 @@ class Network_inference(Network_analysis):
         # current_value.
         max_lag = max(self.max_lag_sources, self.max_lag_target)
 
-        assert self.min_lag_sources > 0, 'min_lag_sources must be greater 0.'
-        assert self.max_lag_sources > 0, 'max_lag_sources must be greater 0.'
-        assert self.max_lag_target > 0, 'max_lag_target must be greater 0.'
-        assert self.tau_sources > 0, 'tau_sources must be greater 0.'
-        assert self.tau_target > 0, 'tau_sources must be greater 0.'
-        assert type(self.min_lag_sources) is int, ('min_lag_sources must be an'
-                                                   ' integer.')
-        assert type(self.max_lag_sources) is int, ('max_lag_sources must be an'
-                                                   ' integer.')
-        assert type(self.max_lag_target) is int, ('max_lag_target must be an '
-                                                  'integer.')
-        assert type(self.tau_sources) is int, ('tau_sources must be an '
-                                               'integer.')
-        assert type(self.tau_target) is int, ('tau_sources must be an '
-                                              'integer.')
-        assert(self.min_lag_sources <= self.max_lag_sources), (
-            'min_lag_sources ({0}) must be smaller or equal to max_lag_sources'
-            ' ({1}).'.format(self.min_lag_sources, self.max_lag_sources))
         assert(data.n_samples >= max_lag + 1), (
             'Not enough samples in data ({0}) to allow for the chosen maximum '
             'lag ({1})'.format(data.n_samples, max_lag))
@@ -144,12 +139,13 @@ class Network_inference(Network_analysis):
 
     def _check_target(self, target, n_processes):
         """Set and check the target provided by the user."""
-        assert type(target) is int, 'The target has to be an int'
+        if type(target) is not int or target < 0:
+            raise RuntimeError('The index of the target process ({0}) has to '
+                               'be an int >= 0.'.format(target))
         if target > n_processes:
-            raise RuntimeError('Trying to analyse target {0} that is not in '
-                               'the number of processes in the data ({1}).'
-                               .format(target, n_processes))
-        assert target >= 0, 'Can not add negative values as target.'
+            raise RuntimeError('Trying to analyse target with index {0}, '
+                               'which greater than the number of processes in '
+                               'the data ({1}).'.format(target, n_processes))
         self.target = target
 
     def _check_source_set(self, sources, n_processes):
@@ -162,19 +158,20 @@ class Network_inference(Network_analysis):
         elif type(sources) is list:
             assert type(sources[0]) is int, 'Source list has to contain ints.'
         else:
-            raise TypeError('Sources have to be passes as a single int, list of '
-	                    'ints or "all".')
+            raise TypeError('Sources have to be passes as a single int, list '
+                            'of ints or "all".')
 
         if self.target in sources:
             raise RuntimeError('The target ({0}) should not be in the list '
                                'of sources ({1}).'.format(self.target,
                                                           sources))
         if max(sources) > n_processes:
-            raise RuntimeError('The list of sources {0} contains indices greater '
-	                       'than the number of processes {1} in the data.'.format(
-			               sources, n_processes))
+            raise RuntimeError('The list of sources {0} contains indices '
+                               'greater than the number of processes {1} in '
+                               'the data.'.format(sources, n_processes))
         if min(sources) < 0:
-            raise RuntimeError('Sources can not have negative indices {0}.'.format(sources))
+            raise RuntimeError('The source list ({0}) can not contain negative'
+                               ' indices.'.format(sources))
 
         self.source_set = sources
         if VERBOSE:
@@ -198,7 +195,6 @@ class Network_inference(Network_analysis):
             idx = (self.current_value[0], self.current_value[1] - 1)
             realisations = data.get_realisations(self.current_value, [idx])[0]
             self._append_selected_vars([idx], realisations)
-
 
     def _include_source_candidates(self, data):
         """Test candidates in the source's past."""
