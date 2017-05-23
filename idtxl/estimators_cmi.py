@@ -486,13 +486,13 @@ def jidt_discrete(self, var1, var2, conditional, opts=None):
 def jidt_gaussian(self, var1, var2, conditional=None, opts=None):
     """Calculate conditional mutual infor with JIDT's Gaussian implementation.
 
-    Computes the differential conditional mutual information of two 
-    multivariate sets of observations, conditioned on another, assuming that 
-    the probability distribution function for these observations is a 
+    Computes the differential conditional mutual information of two
+    multivariate sets of observations, conditioned on another, assuming that
+    the probability distribution function for these observations is a
     multivariate Gaussian distribution.
-    Call JIDT via jpype and use ConditionalMutualInfoCalculatorMultiVariateGaussian 
-    estimator.
-    If no conditional is given (is None), the function returns the mutual 
+    Call JIDT via jpype and use
+    ConditionalMutualInfoCalculatorMultiVariateGaussian estimator.
+    If no conditional is given (is None), the function returns the mutual
     information between var1 and var2.
 
     References:
@@ -515,7 +515,7 @@ def jidt_gaussian(self, var1, var2, conditional=None, opts=None):
             realisations of the random variable for conditioning, if no
             conditional is provided, return MI between var1 and var2
         opts : dict [optional]
-            sets estimation parameters:
+            no options required by this estimator
 
     Returns:
         float
@@ -528,13 +528,6 @@ def jidt_gaussian(self, var1, var2, conditional=None, opts=None):
         CMI estimator does add noise to the data as a default. To make analysis
         runs replicable set noise_level to 0.
     """
-    if opts is None:
-        opts = {}
-    elif type(opts) is not dict:
-        raise TypeError('Opts should be a dictionary.')
-
-    # Get defaults for estimator options
-
     # Start JAVA virtual machine.
     jarLocation = resource_filename(__name__, 'infodynamics.jar')
     if not jp.isJVMStarted():
