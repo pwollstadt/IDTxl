@@ -23,7 +23,8 @@ def is_parallel(estimator_name):
     """Check if estimator can estimate CMI for multiple chunks in parallel."""
     parallel_estimators = {'opencl_kraskov': True,
                            'jidt_kraskov': False,
-                           'jidt_discrete': False}
+                           'jidt_discrete': False,
+                           'jidt_gaussian': False}
     try:
         return parallel_estimators[estimator_name]
     except KeyError:
@@ -323,3 +324,63 @@ def jidt_discrete(self, var1, var2, opts=None):
     calc.addObservations(jp.JArray(jp.JInt, 1)(var1.tolist()),
                          jp.JArray(jp.JInt, 1)(var2.tolist()))
     return calc.computeAverageLocalOfObservations()
+
+
+def jidt_gaussian(self, var1, var2, opts=None):
+    """Calculate mutual information with JIDT's Gaussian implementation.
+
+    Calculate the mutual information between two variables. Call JIDT via jpype
+    and use the Gaussian estimator. References:
+
+    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
+    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
+
+    This function is ment to be imported into the set_estimator module and used
+    as a method in the Estimator_mi class.
+
+    Args:
+        self : instance of Estimator_mi
+            function is supposed to be used as part of the Estimator_mi class
+        var1 : numpy array
+            realisations of the first random variable, where dimensions are
+            realisations x variable dimension
+        var2 : numpy array
+            realisations of the second random variable
+        opts : dict [optional]
+            sets estimation parameters:
+
+            - 'local_values' - return local TE instead of average TE
+              (default=False)
+
+    Returns:
+        float
+            mutual information
+
+    Note:
+        Some technical details: JIDT normalises over realisations, IDTxl
+        normalises over raw data once, outside the MI calculator to save
+        computation time. The Theiler window ignores trial boundaries. The
+        MI estimator does add noise to the data as a default. To make analysis
+        runs replicable set noise_level to 0.
+    """
+    if opts is None:
+        opts = {}
+    elif type(opts) is not dict:
+        raise TypeError('Opts should be a dictionary.')
+
+    # Get defaults for estimator options
+    local_values = opts.get('local_values', False)
+
+    jarLocation = resource_filename(__name__, 'infodynamics.jar')
+    if not jp.isJVMStarted():
+        jp.startJVM(jp.getDefaultJVMPath(), '-ea', ('-Djava.class.path=' +
+                    jarLocation))
+    calcClass = (jp.JPackage('infodynamics.measures.continuous.gaussian').
+                 MutualInfoCalculatorMultiVariateGaussian)
+    calc = calcClass()
+    calc.initialise(var1.shape[1], var2.shape[1])
+    calc.setObservations(var1, var2)
+    if local_values:
+        return np.array(calc.computeLocalOfPreviousObservations())
+    else:
+        return calc.computeAverageLocalOfObservations()

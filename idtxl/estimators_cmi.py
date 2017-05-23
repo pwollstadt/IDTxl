@@ -27,7 +27,8 @@ def is_parallel(estimator_name):
     # dictionary and set the value to True.
     parallel_estimators = {'opencl_kraskov': True,
                            'jidt_kraskov': False,
-                           'jidt_discrete': False}
+                           'jidt_discrete': False,
+                           'jidt_gaussian': False}
     try:
         return parallel_estimators[estimator_name]
     except KeyError:
@@ -314,6 +315,7 @@ def jidt_kraskov(self, var1, var2, conditional=None, opts=None):
     calc.setObservations(var1, var2, conditional)
     return calc.computeAverageLocalOfObservations()
 
+
 def jidt_discrete(self, var1, var2, conditional, opts=None):
     """Calculate CMI with JIDT's implementation for discrete variables.
 
@@ -456,7 +458,7 @@ def jidt_discrete(self, var1, var2, conditional, opts=None):
     if (alphc > 0):
         # We have a non-trivial conditional, so make a proper conditional MI calculation
         calcClass = (jp.JPackage('infodynamics.measures.discrete').
-                 ConditionalMutualInformationCalculatorDiscrete)
+                     ConditionalMutualInformationCalculatorDiscrete)
         calc = calcClass(int(math.pow(alph1, var1_dimensions)),
                          int(math.pow(alph2, var2_dimensions)),
                          int(math.pow(alphc, varc_dimensions)))
@@ -464,18 +466,95 @@ def jidt_discrete(self, var1, var2, conditional, opts=None):
         calc.initialise()
         # Unfortunately no faster way to pass numpy arrays in than this list conversion
         calc.addObservations(jp.JArray(jp.JInt, 1)(var1.tolist()),
-                         jp.JArray(jp.JInt, 1)(var2.tolist()),
-                         jp.JArray(jp.JInt, 1)(conditional.tolist()))
+                             jp.JArray(jp.JInt, 1)(var2.tolist()),
+                             jp.JArray(jp.JInt, 1)(conditional.tolist()))
         return calc.computeAverageLocalOfObservations()
     else:
         # We have no conditional, so make an MI calculation
         calcClass = (jp.JPackage('infodynamics.measures.discrete').
-                 MutualInformationCalculatorDiscrete)
+                     MutualInformationCalculatorDiscrete)
         calc = calcClass(int(max(math.pow(alph1, var1_dimensions),
                                  math.pow(alph2, var2_dimensions))), 0)
         calc.setDebug(debug)
         calc.initialise()
         # Unfortunately no faster way to pass numpy arrays in than this list conversion
         calc.addObservations(jp.JArray(jp.JInt, 1)(var1.tolist()),
-                         jp.JArray(jp.JInt, 1)(var2.tolist()))
+                             jp.JArray(jp.JInt, 1)(var2.tolist()))
         return calc.computeAverageLocalOfObservations()
+
+
+def jidt_gaussian(self, var1, var2, conditional=None, opts=None):
+    """Calculate conditional mutual infor with JIDT's Gaussian implementation.
+
+    Computes the differential conditional mutual information of two 
+    multivariate sets of observations, conditioned on another, assuming that 
+    the probability distribution function for these observations is a 
+    multivariate Gaussian distribution.
+    Call JIDT via jpype and use ConditionalMutualInfoCalculatorMultiVariateGaussian 
+    estimator.
+    If no conditional is given (is None), the function returns the mutual 
+    information between var1 and var2.
+
+    References:
+
+    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
+    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
+
+    This function is ment to be imported into the set_estimator module and used
+    as a method in the Estimator_cmi class.
+
+    Args:
+        self : instance of Estimator_cmi
+            function is supposed to be used as part of the Estimator_cmi class
+        var1 : numpy array
+            realisations of the first random variable, where dimensions are
+            realisations x variable dimension
+        var2 : numpy array
+            realisations of the second random variable
+        conditional : numpy array [optional]
+            realisations of the random variable for conditioning, if no
+            conditional is provided, return MI between var1 and var2
+        opts : dict [optional]
+            sets estimation parameters:
+
+    Returns:
+        float
+            conditional mutual information
+
+    Note:
+        Some technical details: JIDT normalises over realisations, IDTxl
+        normalises over raw data once, outside the CMI calculator to save
+        computation time. The Theiler window ignores trial boundaries. The
+        CMI estimator does add noise to the data as a default. To make analysis
+        runs replicable set noise_level to 0.
+    """
+    if opts is None:
+        opts = {}
+    elif type(opts) is not dict:
+        raise TypeError('Opts should be a dictionary.')
+
+    # Get defaults for estimator options
+
+    # Start JAVA virtual machine.
+    jarLocation = resource_filename(__name__, 'infodynamics.jar')
+    if not jp.isJVMStarted():
+        jp.startJVM(jp.getDefaultJVMPath(), '-ea', ('-Djava.class.path=' +
+                    jarLocation))
+
+    calcClass = (jp.JPackage('infodynamics.measures.continuous.gaussian').
+                 ConditionalMutualInfoCalculatorMultiVariateGaussian)
+    calc = calcClass()
+    # calc.setDebug(debug)
+
+    if conditional is None:
+        cond_dim = 0
+    else:
+        cond_dim = conditional.shape[1]
+        assert(conditional.size != 0), 'Conditional Array is empty.'
+    assert(var1.shape[0] == var2.shape[0]), ('Unequal number of observations ('
+                                             'var1: {0}, var2: {1}).'.format(
+                                                         var1.shape[0],
+                                                         var2.shape[0]))
+    calc.initialise(var1.shape[1], var2.shape[1], cond_dim)
+    calc.setObservations(var1, var2, conditional)
+    return calc.computeAverageLocalOfObservations()
