@@ -1,3 +1,7 @@
+"""Test Active Information Storag(AIS) estimators.
+
+This module provides unit tests for AIS estimators.
+"""
 import pytest
 import random as rn
 import numpy as np
@@ -24,7 +28,7 @@ def test_jidt_kraskov_input():
 
 
 @jpype_missing
-def test_ais_gaussian():
+def test_ais_estimator_kraskov():
     """Test multivariate TE estimation on correlated Gaussians.
 
     Run the multivariate TE algorithm on two sets of random Gaussian data with
@@ -75,7 +79,41 @@ def test_ais_local_values():
                                analysis_opts)
     assert ais_res.shape[0] == n, 'Local AIS estimator did not return an array'
 
+
+@jpype_missing
+def test_ais_estimator_jidt_gaussian():
+    """Test Gaussian AIS estimation on normally-distributed time series.
+    """
+    # Set length of time series
+    n = 1000
+    # Set tolerance for assert
+    assert_tolerance = 0.01
+    # Generate random normally-distributed time series
+    source = [rn.normalvariate(0, 1) for r in range(n)]
+    # Cast everything to numpy so the idtxl estimator understands it.
+    source = np.array(source)
+    # Call JIDT to perform estimation
+    opts = {
+        'normalise': False,
+        'theiler_t': 0,
+        'noise_level': 1e-8,
+        'local_values': False,
+        'tau': 1,
+        'history': 1,
+        }
+    est = Estimator_ais('jidt_gaussian')
+    res = est.estimate(process=source, opts=opts)
+    # Compute theoretical value for comparison
+    theoretical_res = 0
+    print('AIS result: {0:.4f} nats; expected to be '
+          '{1:.4f} nats.'.format(res, theoretical_res))
+    assert (np.abs(res - theoretical_res) < assert_tolerance),\
+        ('Test for Gaussians AIS estimator on Gaussian data failed'
+         '(error larger than {1:.4f}).'.format(assert_tolerance))
+
+
 if __name__ == '__main__':
     test_jidt_kraskov_input()
     test_ais_local_values()
-    test_ais_gaussian()
+    test_ais_estimator_kraskov
+    test_ais_estimator_jidt_gaussian()

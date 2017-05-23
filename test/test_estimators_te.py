@@ -13,6 +13,7 @@ import math
 from idtxl.set_estimator import Estimator_te
 from test_estimators_cmi import jpype_missing
 
+
 @jpype_missing
 def test_jidt_kraskov_input():
     """Test handling of wrong inputs to the JIDT Kraskov TE-estimator."""
@@ -137,6 +138,7 @@ def test_te_corr_gaussian():
                             err_msg='TE is not close to expected result.')
 
 
+@jpype_missing
 def test_te_estimator_jidt_discrete():
     """Test TE estimation on sets of discrete random data."""
     opts = {'num_discrete_bins': 2,
@@ -221,6 +223,7 @@ def test_te_estimator_jidt_discrete():
                                          'failed.')
 
 
+@jpype_missing
 def test_te_local_values():
     """Test local TE estimation."""
     n = 1000
@@ -253,9 +256,59 @@ def test_te_local_values():
         'Average local TE is not equal to estimated average TE.')
 
 
+@jpype_missing
+def test_te_estimator_jidt_gaussian():
+    """Test Gaussian TE estimation on correlated Gaussians.
+
+    Generate two sets of random Gaussian data with a given covariance.
+    The second data set is shifted by one sample creating a source-target delay
+    of one sample. The resulting TE is compared to the analytical result.
+    """
+    # Set length of time series and correlation coefficient
+    n = 1000
+    cov = 0.4
+    # Allowing loose tolerance, because of effective
+    # non-zero correlation due to the finite length of the time series
+    assert_tolerance_1 = 0.01
+    # Generate random normally-distributed source time series
+    source = [rn.normalvariate(0, 1) for r in range(n)]
+    # Generate correlated and shifted target time series
+    target = [0] + [sum(pair) for pair in zip(
+        [cov * y for y in source[0:n - 1]],
+        [(1 - cov) * y for y in
+            [rn.normalvariate(0, 1) for r in range(n - 1)]])]
+    # Compute effective correlation from finite time series
+    corr_effective = np.corrcoef(source[:-1], target[1:])[1, 0]
+    # Compute theoretical value for MI using the effective correlation
+    theoretical_res = - 0.5 * np.log(1 - corr_effective ** 2)
+    # Cast everything to numpy so the idtxl estimator understands it.
+    source = np.array(source)
+    target = np.array(target)
+    # Call JIDT to perform estimation
+    opts = {
+        'normalise': False,
+        'theiler_t': 0,
+        'noise_level': 1e-8,
+        'local_values': False,
+        'tau_target': 1,
+        'tau_source': 1,
+        'source_target_delay': 1,
+        'history_target': 1,
+        'history_source': 1,
+        }
+    est = Estimator_te('jidt_gaussian')
+    res_1 = est.estimate(source=source, target=target, opts=opts)
+    print('TE result: {0:.4f} nats; expected to be '
+          '{1:.4f} nats.'.format(res_1, theoretical_res))
+    assert (np.abs(res_1 - theoretical_res) < assert_tolerance_1),\
+        ('TE test for Gaussians estimator failed'
+         '(error larger than {1:.4f}).'.format(assert_tolerance_1))
+
+
 if __name__ == '__main__':
     test_jidt_discrete_input()
     test_jidt_kraskov_input()
     test_te_local_values()
     test_te_estimator_jidt_discrete()
     test_te_corr_gaussian()
+    test_te_estimator_jidt_gaussian()

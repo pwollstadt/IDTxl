@@ -217,7 +217,49 @@ def test_mi_estimator_jidt_discrete_discretisation():
     with pytest.raises(AssertionError):
         est.estimate(var1=source_2, var2=target, opts=opts)
 
-# TODO: add assertions for the right values
+
+def test_mi_estimator_jidt_gaussian():
+    """Test theoretical Gaussian estimation on random Gaussian time series.
+
+    source1 is a normally-distributed time series.
+    target is independent from source1.
+
+    The following MI value is estimated:
+        1)  I(source1, target)
+
+    The expected MI value is the theoretical value:
+    I(source1, target) = - 1/2 * log(1 - corr ^ 2)
+    """
+    # Set length of time series and correlation coefficient
+    n = 1000
+    cov = 0.9
+    # Set tolerance for assert
+    assert_tolerance = 0.001
+    # Generate random normally-distributed source time series
+    source = [rn.normalvariate(0, 1) for r in range(n)]
+    # Generate correlated target time series
+    target = [sum(pair) for pair in zip(
+        [cov * y for y in source[0:n]],
+        [(1 - cov) * y for y in
+            [rn.normalvariate(0, 1) for r in range(n)]])]
+    # Compute effective correlation from finite time series
+    corr_effective = np.corrcoef(source, target)[1, 0]
+    # Compute theoretical value for MI using the effective correlation
+    theoretical_res = - 0.5 * np.log(1 - corr_effective ** 2)
+    # Cast everything to numpy so the idtxl estimator understands it.
+    source = np.expand_dims(np.array(source), axis=1)
+    target = np.expand_dims(np.array(target), axis=1)
+    # Call JIDT to perform estimation
+    opts = {}
+    estimator_name = 'jidt_gaussian'
+    est = Estimator_mi(estimator_name)
+    res = est.estimate(var1=source, var2=target, opts=opts)
+    print('MI result: {0:.4f} bits'.format(res))
+    print('Expected theoretical result:'
+          '{0:.4f} bits'.format(theoretical_res))
+    assert np.abs(res - theoretical_res) < assert_tolerance,\
+        ('MI calculation for Gaussian failed.')
+
 
 
 if __name__ == '__main__':
@@ -227,3 +269,7 @@ if __name__ == '__main__':
     test_mi_local_values()
     test_mi_estimator_jidt_discrete()
     test_mi_estimator_jidt_discrete_discretisation()
+    test_mi_estimator_jidt_gaussian()
+
+
+# TODO: add assertions for the right values

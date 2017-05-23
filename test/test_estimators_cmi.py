@@ -334,7 +334,67 @@ def test_cmi_estimator_jidt_discrete_discretisation():
     with pytest.raises(AssertionError):
         est.estimate(var1=source_2, var2=target, conditional=None, opts=opts)
 
-# TODO: add assertions for the right values
+
+@jpype_missing
+def test_cmi_estimator_jidt_gaussian():
+    """Test theoretical Gaussian estimation on random Gaussian time series.
+
+    source1 and source2 are independent and normally-distributed time series.
+    target is correlated to source1.
+    target is independent from source2.
+
+    The two following CMI values are estimated:
+        1)  I(source1, target | source2)
+        2)  I(source1, target | source1)
+
+    The two following results are expected:
+        1)  I(source1, target | source2) = I(source1, target)
+        2)  I(source1, target | source1) = 0
+
+    The expected MI value in the first case is the theoretical value:
+    I(source1, target) = - 1/2 * log(1 - corr ^ 2)
+    """
+    # Set length of time series and correlation coefficient
+    n = 1000
+    cov = 0.4
+    # Allowing loose tolerance in the second case, because of effective
+    # non-zero correlation due to the finite length of the time series
+    assert_tolerance_1 = 0.1
+    assert_tolerance_2 = 0.001
+    # Generate random normally-distributed source_1 and source_2 time series
+    source_1 = [rn.normalvariate(0, 1) for r in range(n)]
+    source_2 = [rn.normalvariate(0, 1) for r in range(n)]
+    # Generate correlated target time series
+    target = [sum(pair) for pair in zip(
+        [cov * y for y in source_1],
+        [(1 - cov) * y for y in [rn.normalvariate(0, 1) for r in range(n)]])]
+    # Compute effective correlation from finite time series
+    corr_effective = np.corrcoef(source_1, target)[1, 0]
+    # Compute theoretical value for MI using the effective correlation
+    theoretical_res = - 0.5 * np.log(1 - corr_effective ** 2)
+    # Cast everything to numpy so the idtxl estimator understands it.
+    source_1 = np.expand_dims(np.array(source_1), axis=1)
+    source_2 = np.expand_dims(np.array(source_2), axis=1)
+    target = np.expand_dims(np.array(target), axis=1)
+    # Call JIDT to perform estimation
+    opts = {}
+    calculator_name = 'jidt_gaussian'
+    est = Estimator_cmi(calculator_name)
+    res_1 = est.estimate(var1=source_1, var2=target,
+                         conditional=source_2, opts=opts)
+    res_2 = est.estimate(var1=source_1, var2=target,
+                         conditional=source_1, opts=opts)
+    print('Case 1: CMI result {0:.4f} nats; expected to be close to '
+          '{1:.4f} nats.'.format(res_1, theoretical_res))
+    print('Case 2: CMI result {0:.4f} nats; expected to be close to '
+          '0 nats.'.format(res_2))
+    assert (np.abs(res_1 - theoretical_res) < assert_tolerance_1),\
+        ('CMI calculation for correlated Gaussians failed'
+         '(error larger than {1:.4f}).'.format(assert_tolerance_1))
+    assert (np.abs(res_2 - 0) < assert_tolerance_2),\
+        ('CMI calculation for uncorrelated Gaussians failed'
+         '(error larger than {1:.4f}).'.format(assert_tolerance_2))
+
 
 if __name__ == '__main__':
     test_cmi_estimator_jidt_discrete_discretisation()
@@ -343,3 +403,6 @@ if __name__ == '__main__':
     test_cmi_estimator_ocl()
     test_cmi_no_c_estimator_ocl()
     test_cmi_estimator_jidt_discrete()
+    test_cmi_estimator_jidt_gaussian()
+
+# TODO: add assertions for the right values
