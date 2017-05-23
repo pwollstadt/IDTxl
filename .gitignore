@@ -28,7 +28,15 @@ test/htmlcov
 ######################
 *.stats
 
-# TeX aux files      # 
+# TeX aux files      #
 ######################
 *.aux
 *.out
+
+# Testing output     #
+######################
+# https://stackoverflow.com/questions/4250063/how-to-gitignore-all-files-folder-in-a-folder-but-not-the-folder-itself
+# exclude everything
+test/output/*
+# exception to the rule
+test/output/.gitkeep

@@ -1,3 +1,4 @@
+import os
 import time
 import numpy as np
 from idtxl.multivariate_te import Multivariate_te
@@ -22,5 +23,6 @@ res = network_analysis.analyse_network(dat)
 runtime = time.time() - start_time
 print("---- {0} minutes".format(runtime / 60))
 
-np.save('/home/patriciaw/Dropbox/BIC/#idtxl/test/test', res)
-np.save('/home/patriciaw/Dropbox/BIC/#idtxl/test/test_time', runtime)
+path = os.path.dirname(__file__) + 'output/'
+np.save(path + 'test', res)
+np.save(path + 'test_time', runtime)

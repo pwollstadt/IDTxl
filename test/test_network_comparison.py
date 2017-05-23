@@ -50,7 +50,7 @@ from test_estimators_cmi import jpype_missing
 #                        analysis_opts)
 # res_4 = nw_4.analyse_network(dat,  targets=[1, 2], sources='all')
 #
-# path = '/home/patriciaw/repos/IDTxl/test/data/'
+# path = os.path.dirname(__file__) + 'data/'
 # idtxl_io.save_pickle(res_0, path + 'mute_res_0')
 # idtxl_io.save_pickle(res_1, path + 'mute_res_1')
 # idtxl_io.save_pickle(res_2, path + 'mute_res_2')
@@ -76,7 +76,7 @@ def test_network_comparison_use_cases():
     res_4 = np.load(os.path.join(os.path.dirname(__file__),
                     'data/mute_res_4.pkl'))
 
-#    path = '/home/patriciaw/repos/IDTxl/test/data/'
+#    path = os.path.dirname(__file__) + 'data/'
 #    res_0 = idtxl_io.load_pickle(path + 'mute_res_0')
 #    res_1 = idtxl_io.load_pickle(path + 'mute_res_1')
 #    res_2 = idtxl_io.load_pickle(path + 'mute_res_2')

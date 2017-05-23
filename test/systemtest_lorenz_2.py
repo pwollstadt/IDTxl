@@ -25,7 +25,6 @@ res_2 = lorenz_analysis.analyse_single_target(dat, 1)
 runtime = time.time() - start_time
 print("---- {0} minutes".format(runtime / 60))
 
-np.savez('/home/patriciaw/Dropbox/BIC/#idtxl/test/test_lorenz',
-         res_1, res_2)
-np.save('/home/patriciaw/Dropbox/BIC/#idtxl/test/test_lorenz_time',
-        runtime)
+path = os.path.dirname(__file__) + 'output/'
+np.savez(path + 'test_lorenz', res_1, res_2)
+np.save(path + 'test_lorenz_time', runtime)
