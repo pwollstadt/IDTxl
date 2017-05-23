@@ -4,14 +4,11 @@ The Information Dynamics Toolkit xl (IDTxl) in Python. IDTxl is a comprehensive 
 
 IDTxl provides estimators for the following information theoretic measures:
 
+- multivariate transfer entropy (mTE)
 - mutual information (MI)
 - bivariate transfer entropy (bTE)
-- multivariate transfer entropy (mTE)
-- Granger causality (GC)
 - active information storage (AIS)
 - partial information decomposition (PID)
-
-IDTxl uses GPU-accelerated estimators as well as parallel processing and is designed for the application on high-performance-computing clusters.
 
 ## Contributors
 
@@ -20,7 +17,14 @@ IDTxl uses GPU-accelerated estimators as well as parallel processing and is desi
 - [Joseph T. Lizier](http://lizier.me/joseph/), Complex Systems Research Group, The University of Sydney, Sydney, Australia
 - Connor Finn, Complex Systems Research Group, The University of Sydney, Sydney, Australia
 - Mario Martínez Zarzuela, Department of Signal Theory and Communications and Telematics Engineering, University of Valladolid, Valladolid, Spain
+- Michael Lindner, Center for Integrative Neuroscience and Neurodynamics, University of Reading, Reading, UK
 
+## Acknowledgements
+
+This project has been supported by funding through:
+
+- Universities Australia - Deutscher Akademischer Austauschdienst (German Academic Exchange Service) UA-DAAD Australia-Germany Joint Research Co-operation grant "Measuring neural information synthesis and its impairment", Wibral, Lizier, Priesemann, Wollstadt, Finn, 2016-17
+- Australian Research Council Discovery Early Career Researcher Award (DECRA) "Relating function of complex networks to structure using information theory", Lizier, 2016-19
 
 ## References
 + Multivariate transfer entropy: *Lizier & Rubinov, 2012, Preprint, Technical Report 25/2012,

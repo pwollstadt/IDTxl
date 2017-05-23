@@ -4,14 +4,11 @@ The **I**nformation **D**ynamics **T**oolkit **xl** (IDTxl) in Python. IDTxl is 
 
 IDTxl provides estimators for the following information theoretic measures:
 
+- multivariate transfer entropy (mTE)
 - mutual information (MI)
 - bivariate transfer entropy (bTE)
-- multivariate transfer entropy (mTE)
-- Granger causality (GC)
 - active information storage (AIS)
 - partial information decomposition (PID)
-
-IDTxl uses GPU-accelerated estimators as well as parallel processing and is designed for the application on high-performance-computing clusters.
 
 To **get started** have a look at the [wiki](https://github.com/pwollstadt/IDTxl/wiki) and the [documentation](http://pwollstadt.github.io/IDTxl/).
 
