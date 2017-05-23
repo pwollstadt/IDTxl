@@ -300,9 +300,9 @@ def test_te_estimator_jidt_gaussian():
     res_1 = est.estimate(source=source, target=target, opts=opts)
     print('TE result: {0:.4f} nats; expected to be '
           '{1:.4f} nats.'.format(res_1, theoretical_res))
-    assert (np.abs(res_1 - theoretical_res) < assert_tolerance_1),\
-        ('TE test for Gaussians estimator failed'
-         '(error larger than {1:.4f}).'.format(assert_tolerance_1))
+    assert (np.abs(res_1 - theoretical_res) < assert_tolerance_1), (
+                'TE test for Gaussians estimator failed'
+                '(error larger than {1:.4f}).'.format(assert_tolerance_1))
 
 
 if __name__ == '__main__':

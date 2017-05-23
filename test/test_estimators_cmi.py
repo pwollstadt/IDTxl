@@ -344,10 +344,12 @@ def test_cmi_estimator_jidt_gaussian():
     target is independent from source2.
 
     The two following CMI values are estimated:
+
         1)  I(source1, target | source2)
         2)  I(source1, target | source1)
 
     The two following results are expected:
+
         1)  I(source1, target | source2) = I(source1, target)
         2)  I(source1, target | source1) = 0
 
@@ -388,12 +390,12 @@ def test_cmi_estimator_jidt_gaussian():
           '{1:.4f} nats.'.format(res_1, theoretical_res))
     print('Case 2: CMI result {0:.4f} nats; expected to be close to '
           '0 nats.'.format(res_2))
-    assert (np.abs(res_1 - theoretical_res) < assert_tolerance_1),\
-        ('CMI calculation for correlated Gaussians failed'
-         '(error larger than {1:.4f}).'.format(assert_tolerance_1))
-    assert (np.abs(res_2 - 0) < assert_tolerance_2),\
-        ('CMI calculation for uncorrelated Gaussians failed'
-         '(error larger than {1:.4f}).'.format(assert_tolerance_2))
+    assert (np.abs(res_1 - theoretical_res) < assert_tolerance_1), (
+                'CMI calculation for correlated Gaussians failed'
+                '(error larger than {1:.4f}).'.format(assert_tolerance_1))
+    assert (np.abs(res_2 - 0) < assert_tolerance_2), (
+                'CMI calculation for uncorrelated Gaussians failed'
+                '(error larger than {1:.4f}).'.format(assert_tolerance_2))
 
 
 if __name__ == '__main__':

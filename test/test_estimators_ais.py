@@ -107,9 +107,9 @@ def test_ais_estimator_jidt_gaussian():
     theoretical_res = 0
     print('AIS result: {0:.4f} nats; expected to be '
           '{1:.4f} nats.'.format(res, theoretical_res))
-    assert (np.abs(res - theoretical_res) < assert_tolerance),\
-        ('Test for Gaussians AIS estimator on Gaussian data failed'
-         '(error larger than {1:.4f}).'.format(assert_tolerance))
+    assert (np.abs(res - theoretical_res) < assert_tolerance), (
+                'Test for Gaussians AIS estimator on Gaussian data failed'
+                '(error larger than {1:.4f}).'.format(assert_tolerance))
 
 
 if __name__ == '__main__':

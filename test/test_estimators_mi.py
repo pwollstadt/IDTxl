@@ -257,9 +257,8 @@ def test_mi_estimator_jidt_gaussian():
     print('MI result: {0:.4f} bits'.format(res))
     print('Expected theoretical result:'
           '{0:.4f} bits'.format(theoretical_res))
-    assert np.abs(res - theoretical_res) < assert_tolerance,\
-        ('MI calculation for Gaussian failed.')
-
+    assert np.abs(res - theoretical_res) < assert_tolerance, (
+                        'MI calculation for Gaussian failed.')
 
 
 if __name__ == '__main__':
