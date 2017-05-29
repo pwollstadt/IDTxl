@@ -158,8 +158,7 @@ def omnibus_test(analysis_setup, data):
     te_orig = analysis_setup._cmi_calculator.estimate(
                             var1=cond_source_realisations,
                             var2=analysis_setup._current_value_realisations,
-                            conditional=cond_target_realisations,
-                            opts=analysis_setup.options)
+                            conditional=cond_target_realisations)
 
     # Create the surrogate distribution by permuting the conditional sources.
     if VERBOSE:
@@ -191,7 +190,6 @@ def omnibus_test(analysis_setup, data):
 
     surr_distribution = analysis_setup._cmi_calculator.estimate_mult(
                             n_chunks=n_permutations,
-                            options=analysis_setup.options,
                             re_use=['var2', 'conditional'],
                             var1=surr_cond_real,
                             var2=analysis_setup._current_value_realisations,
@@ -320,7 +318,6 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
 
     individual_te = analysis_setup._cmi_calculator.estimate_mult(
                             n_chunks=len(analysis_setup.selected_vars_sources),
-                            options=opts,
                             re_use=['var2'],
                             var1=candidate_realisations,
                             var2=analysis_setup._current_value_realisations,
@@ -482,13 +479,11 @@ def mi_against_surrogates(analysis_setup, data):
 
     surr_dist = analysis_setup._cmi_calculator.estimate_mult(
                             n_chunks=n_perm,
-                            options=analysis_setup.options,
                             re_use=['var2', 'conditional'],
                             var1=surr_realisations,
                             var2=analysis_setup._selected_vars_realisations,
                             conditional=None)
     orig_mi = analysis_setup._cmi_calculator.estimate(
-                            opts=analysis_setup.options,
                             var1=analysis_setup._current_value_realisations,
                             var2=analysis_setup._selected_vars_realisations,
                             conditional=None
@@ -796,7 +791,6 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
                                                  analysis_setup.options)
         surr_table[idx_c, :] = analysis_setup._cmi_calculator.estimate_mult(
                     n_chunks=n_perm,
-                    options=analysis_setup.options,
                     re_use=['var2', 'conditional'],
                     var1=surr_candidate_realisations,  # too long
                     var2=current_value_realisations,

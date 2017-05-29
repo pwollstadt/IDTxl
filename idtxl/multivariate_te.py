@@ -13,7 +13,8 @@ Note:
 import numpy as np
 from . import stats
 from .network_inference import Network_inference
-from .set_estimator import Estimator_cmi
+# from .set_estimator import Estimator_cmi
+from . import estimator
 
 VERBOSE = True
 
@@ -110,7 +111,9 @@ class Multivariate_te(Network_inference):
             self.calculator_name = options['cmi_calc_name']
         except KeyError:
             raise KeyError('Calculator name was not specified!')
-        self._cmi_calculator = Estimator_cmi(self.calculator_name)
+        # self._cmi_calculator = Estimator_cmi(self.calculator_name)
+        Est = getattr(estimator, self.calculator_name.capitalize())
+        self._cmi_calculator = Est(options)
         super().__init__(max_lag_sources, min_lag_sources, options,
                          max_lag_target, tau_sources, tau_target)
 
@@ -335,7 +338,6 @@ class Multivariate_te(Network_inference):
             # Calculate the (C)MI for each candidate and the target.
             temp_te = self._cmi_calculator.estimate_mult(
                                 n_chunks=len(candidate_set),
-                                options=self.options,
                                 re_use=['var2', 'conditional'],
                                 var1=cand_real,
                                 var2=self._current_value_realisations,
@@ -423,7 +425,6 @@ class Multivariate_te(Network_inference):
                             conditional_realisations.shape))
             temp_te = self._cmi_calculator.estimate_mult(
                                 n_chunks=len(self.selected_vars_sources),
-                                options=self.options,
                                 re_use=['var2'],
                                 var1=candidate_realisations,
                                 var2=self._current_value_realisations,
