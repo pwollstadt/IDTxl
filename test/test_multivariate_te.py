@@ -23,7 +23,7 @@ def test_multivariate_te_init():
                         options={})
 
     # Test setting of min and max lags
-    analysis_opts = {'cmi_calc_name': 'jidt_kraskov'}
+    analysis_opts = {'cmi_calc_name': 'Jidt_kraskov_cmi'}
     dat = Data()
     dat.generate_mute_data(100, 5)
 
@@ -153,7 +153,7 @@ def test_multivariate_te_one_realisation_per_replication():
     # once, this way, we get one realisation per replication for each variable.
     # This is easyer to assert/verify later. We also test data.get_realisations
     # this way.
-    analysis_opts = {'cmi_calc_name': 'jidt_kraskov'}
+    analysis_opts = {'cmi_calc_name': 'Jidt_kraskov_cmi'}
     max_lag_target = 5
     max_lag_sources = max_lag_target
     min_lag_sources = 4
@@ -180,7 +180,7 @@ def test_multivariate_te_one_realisation_per_replication():
 @jpype_missing
 def test_faes_method():
     """Check if the Faes method is working."""
-    analysis_opts = {'cmi_calc_name': 'jidt_kraskov',
+    analysis_opts = {'cmi_calc_name': 'Jidt_kraskov_cmi',
                      'add_conditionals': 'faes'}
     nw_1 = Multivariate_te(max_lag_sources=5,
                            min_lag_sources=3,
@@ -199,7 +199,7 @@ def test_faes_method():
 @jpype_missing
 def test_add_conditional_manually():
     """Adda variable that is not in the data set."""
-    analysis_opts = {'cmi_calc_name': 'jidt_kraskov',
+    analysis_opts = {'cmi_calc_name': 'Jidt_kraskov_cmi',
                      'add_conditionals': (8, 0)}
     nw_1 = Multivariate_te(max_lag_sources=5,
                            min_lag_sources=3,
@@ -225,7 +225,7 @@ def test_check_source_set():
     max_lag_sources = 7
     min_lag_sources = 5
     max_lag_target = 5
-    analysis_opts = {'cmi_calc_name': 'jidt_kraskov'}
+    analysis_opts = {'cmi_calc_name': 'Jidt_kraskov_cmi'}
     nw_0 = Multivariate_te(max_lag_sources, min_lag_sources, analysis_opts,
                            max_lag_target)
     # Add list of sources.
@@ -268,7 +268,7 @@ def test_check_source_set():
 @jpype_missing
 def test_define_candidates():
     """Test candidate definition from a list of procs and a list of samples."""
-    analysis_opts = {'cmi_calc_name': 'jidt_kraskov'}
+    analysis_opts = {'cmi_calc_name': 'Jidt_kraskov_cmi'}
     target = 1
     tau_target = 3
     max_lag_target = 10
@@ -291,7 +291,7 @@ def test_analyse_network():
     dat.generate_mute_data(10, 5)
     nw_0 = Multivariate_te(max_lag_sources=5,
                            min_lag_sources=4,
-                           options={'cmi_calc_name': 'jidt_kraskov'},
+                           options={'cmi_calc_name': 'Jidt_kraskov_cmi'},
                            max_lag_target=5)
 
     # Test all to all analysis
