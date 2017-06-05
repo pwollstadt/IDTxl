@@ -1,9 +1,77 @@
 """Provide estimator base class for information theoretic measures."""
+import sys
+import imp
+import os
+import importlib
+import inspect
+from pprint import pprint
 from abc import ABCMeta, abstractmethod
 import numpy as np
 
+MODULE_EXTENSIONS = ('.py')  # ('.py', '.pyc', '.pyo')
+ESTIMATOR_PREFIX = ('estimators_')
 
-# TODO use Estimator_mi = getattr(estimator, 'JidtKraskov') to
+
+def _package_contents():
+    # Return list of IDTxl modules containing estimators.
+    file, pathname, description = imp.find_module(__package__)
+    if file:
+        raise ImportError('Not a package: %r', __package__)
+    return [os.path.splitext(module)[0]
+            for module in os.listdir(pathname)
+            if (module.endswith(MODULE_EXTENSIONS) and
+                module.startswith(ESTIMATOR_PREFIX))]
+
+
+def list_estimators():
+    """List all estimators available in IDTxl."""
+    module_list = _package_contents()
+    for m in module_list:
+        module = importlib.import_module('.' + m, __package__)
+        class_list = inspect.getmembers(module, inspect.isclass)
+        if class_list:
+            pprint(class_list)
+
+
+def find_estimator(est):
+    """Return estimator class.
+
+    Return an estimator class. If input is a class, check if it implements
+    methods 'estimate' and 'is_parallel' necessary for network analysis
+    (see abstract class 'Estimator' for documentation). If input is a string,
+    search for class with that name in IDTxl and return it.
+
+    Args:
+        est : int | Class
+            name of an estimator class implemented in IDTxl or custom estimator
+            class
+
+    Returns
+        Class
+            Estimator class
+    """
+    if inspect.isclass(est):
+        assert hasattr(est, 'estimate'), ('Estimator classes have to implement'
+                                          ' estimate to be used for network '
+                                          ' analysis.')
+        assert hasattr(est, 'is_parallel'), ('Estimator classes have to '
+                                             'implement is_parallel to be used'
+                                             ' for network analysis.')
+        return est
+    elif type(est) is str:
+        module_list = _package_contents()
+        estimator = None
+        for m in module_list:
+            try:
+                module = importlib.import_module('.' + m, __package__)
+                return getattr(module, est)
+            except AttributeError:
+                pass
+        if not estimator:
+            raise RuntimeError('Estimator {0} not found.'.format(est))
+    else:
+        raise TypeError('Please provide an estimator class or the name of an '
+                        'estimator as string.')
 
 
 class Estimator(metaclass=ABCMeta):
@@ -60,7 +128,7 @@ class Estimator(metaclass=ABCMeta):
 
         # If the estimator supports parallel estimation, pass the variables
         # and number of chunks on to the estimator.
-        if self.is_parallel:
+        if self.is_parallel():
             for k in re_use:  # multiply data for re-use
                 if data[k] is not None:
                     data[k] = np.tile(data[k], (n_chunks, 1))
