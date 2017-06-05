@@ -13,7 +13,7 @@ def save(dat, file_path):
 
     Save different data types to disk. Supported types are:
 
-    - dictionaries with results, e.g., from Multivariate_te
+    - dictionaries with results, e.g., from MultivariateTE
     - numpy array
     - instance of IDTXL Data object
 
@@ -81,7 +81,7 @@ def load(file_path):
 
     Load different data types to disk. Supported types are:
 
-    - dictionaries with results, e.g., from Multivariate_te
+    - dictionaries with results, e.g., from MultivariateTE
     - numpy array
     - instance of IDTXL Data object
 

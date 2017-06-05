@@ -12,14 +12,14 @@ Note:
 """
 import numpy as np
 from . import stats
-from .network_inference import Network_inference
+from .network_inference import NetworkInference
 # from .set_estimator import Estimator_cmi
 from . import estimator
 
 VERBOSE = True
 
 
-class Multivariate_te(Network_inference):
+class MultivariateTE(NetworkInference):
     """Set up a network analysis using multivariate transfer entropy.
 
     Set parameters necessary for network inference using transfer entropy (TE).
@@ -136,8 +136,8 @@ class Multivariate_te(Network_inference):
             >>>     'n_perm_omnibus': 500,
             >>>     'n_perm_max_seq': 500,
             >>>     }
-            >>> network_analysis = Multivariate_te(max_lag, min_lag,
-            >>>                                    analysis_opts)
+            >>> network_analysis = MultivariateTE(max_lag, min_lag,
+            >>>                                   analysis_opts)
             >>> res = network_analysis.analyse_network(dat)
 
         Note:
@@ -235,8 +235,8 @@ class Multivariate_te(Network_inference):
             >>>     }
             >>> target = 0
             >>> sources = [1, 2, 3]
-            >>> network_analysis = Multivariate_te(max_lag, min_lag,
-            >>>                                    analysis_opts)
+            >>> network_analysis = MultivariateTE(max_lag, min_lag,
+            >>>                                   analysis_opts)
             >>> res = network_analysis.analyse_single_target(dat, target,
             >>>                                              sources)
 

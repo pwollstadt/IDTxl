@@ -123,7 +123,7 @@ def omnibus_test(analysis_setup, data):
     distribution.
 
     Args:
-        analysis_setup : Multivariate_te instance
+        analysis_setup : MultivariateTE instance
             information on the current analysis
         data : Data instance
             raw data
@@ -211,7 +211,7 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
     values obtained from surrogates of all remanining candidates.
 
     Args:
-        analysis_setup : Multivariate_te instance
+        analysis_setup : MultivariateTE instance
             information on the current analysis
         data : Data instance
             raw data
@@ -263,7 +263,7 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
     calculation of surrogates for this statistic.
 
     Args:
-        analysis_setup : Multivariate_te instance
+        analysis_setup : MultivariateTE instance
             information on the current analysis
         data : Data instance
             raw data
@@ -369,7 +369,7 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
     values obtained from surrogates of all remanining candidates.
 
     Args:
-        analysis_setup : Multivariate_te instance
+        analysis_setup : MultivariateTE instance
             information on the current analysis
         data : Data instance
             raw data
@@ -414,7 +414,7 @@ def mi_against_surrogates(analysis_setup, data):
     data.
 
     Args:
-        analysis_setup : Multivariate_te instance
+        analysis_setup : MultivariateTE instance
             information on the current analysis, should have an Attribute
             'options', a dict with fields
 
@@ -732,7 +732,7 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
     the analysis setup.
 
     Args:
-        analysis_setup : Multivariate_te instance
+        analysis_setup : MultivariateTE instance
             information on the current analysis
         data : Data instance
             raw data

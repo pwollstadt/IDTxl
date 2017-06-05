@@ -7,7 +7,7 @@ Created on Mon Apr  4 10:41:33 2016
 import os
 import random as rn
 import numpy as np
-from idtxl.multivariate_te import Multivariate_te
+from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
 
 
@@ -53,8 +53,8 @@ def test_multivariate_te_corr_gaussian(estimator=None):
         'n_perm_omnibus': 21,
         'n_perm_max_seq': 21,
         }
-    random_analysis = Multivariate_te(max_lag_sources=5, min_lag_sources=1,
-                                      max_lag_target=5, options=analysis_opts)
+    random_analysis = MultivariateTE(max_lag_sources=5, min_lag_sources=1,
+                                     max_lag_target=5, options=analysis_opts)
     # res = random_analysis.analyse_network(dat)  # full network
     # utils.print_dict(res)
     res_1 = random_analysis.analyse_single_target(dat, 1)  # coupled direction
@@ -101,7 +101,7 @@ def test_multivariate_te_lagged_copies():
         'n_perm_omnibus': 500,
         'n_perm_max_seq': 500,
         }
-    random_analysis = Multivariate_te(max_lag_sources=5, options=analysis_opts)
+    random_analysis = MultivariateTE(max_lag_sources=5, options=analysis_opts)
     # Assert that there are no significant conditionals in either direction
     # other than the mandatory single sample in the target's past (which
     # ensures that we calculate a proper TE at any time in the algorithm).
@@ -145,7 +145,7 @@ def test_multivariate_te_random():
         'n_perm_omnibus': 500,
         'n_perm_max_seq': 500,
         }
-    random_analysis = Multivariate_te(max_lag_sources=5, options=analysis_opts)
+    random_analysis = MultivariateTE(max_lag_sources=5, options=analysis_opts)
     # Assert that there are no significant conditionals in either direction
     # other than the mandatory single sample in the target's past (which
     # ensures that we calculate a proper TE at any time in the algorithm).
@@ -192,19 +192,19 @@ def test_multivariate_te_lorenz_2():
         'n_perm_max_seq': 21,  # this should be equal to the min stats b/c we
                                # reuse the surrogate table from the min stats
         }
-    lorenz_analysis = Multivariate_te(max_lag_sources=47, min_lag_sources=42,
-                                      max_lag_target=20, tau_target=2,
-                                      options=analysis_opts)
+    lorenz_analysis = MultivariateTE(max_lag_sources=47, min_lag_sources=42,
+                                     max_lag_target=20, tau_target=2,
+                                     options=analysis_opts)
     # FOR DEBUGGING: add the whole history for k = 20, tau = 2 to the
     # estimation, this makes things faster, b/c these don't have to be
     # tested again.
     analysis_opts['add_conditionals'] = [(1, 44), (1, 42), (1, 40), (1, 38),
                                          (1, 36), (1, 34), (1, 32), (1, 30),
                                          (1, 28)]
-    lorenz_analysis = Multivariate_te(max_lag_sources=60, min_lag_sources=31,
-                                      tau_sources=2,
-                                      max_lag_target=0, tau_target=1,
-                                      options=analysis_opts)
+    lorenz_analysis = MultivariateTE(max_lag_sources=60, min_lag_sources=31,
+                                     tau_sources=2,
+                                     max_lag_target=0, tau_target=1,
+                                     options=analysis_opts)
     # res = lorenz_analysis.analyse_network(dat)
     # res_0 = lorenz_analysis.analyse_single_target(dat, 0)  # no coupling
     # print(res_0)
@@ -238,17 +238,18 @@ def test_multivariate_te_mute():
                                # reuse the surrogate table from the min stats
         }
 
-    network_analysis = Multivariate_te(max_lag_sources=3, min_lag_sources=1,
-                                       max_lag_target=3, options=analysis_opts)
+    network_analysis = MultivariateTE(max_lag_sources=3, min_lag_sources=1,
+                                      max_lag_target=3, options=analysis_opts)
     res = network_analysis.analyse_network(dat, targets=[1, 2])
+
 
 def test_multivariate_te_multiple_runs():
     """Test TE estimation using multiple runs on the GPU.
 
-    Test if data is correctly split over multiple runs, if the problem size exceeds
-    the GPU global memory and thus requires multiple runs. Using a number of
-    permutations of 7000 requires two runs on a GPU with global memory of about
-    6 GB.
+    Test if data is correctly split over multiple runs, if the problem size
+    exceeds the GPU global memory and thus requires multiple runs. Using a
+    number of permutations of 7000 requires two runs on a GPU with global
+    memory of about 6 GB.
     """
     dat = Data()
     dat.generate_mute_data(n_samples=1000, n_replications=10)
@@ -261,9 +262,10 @@ def test_multivariate_te_multiple_runs():
                                # reuse the surrogate table from the min stats
         }
 
-    network_analysis = Multivariate_te(max_lag_sources=3, min_lag_sources=1,
-                                       max_lag_target=3, options=analysis_opts)
+    network_analysis = MultivariateTE(max_lag_sources=3, min_lag_sources=1,
+                                      max_lag_target=3, options=analysis_opts)
     res = network_analysis.analyse_network(dat, targets=[1, 2])
+
 
 if __name__ == '__main__':
     # test_multivariate_te_mute()

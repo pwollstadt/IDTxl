@@ -7,14 +7,13 @@ Note:
 
 @author: patricia
 """
-from .single_process_analysis import Single_process_analysis
+from .single_process_analysis import SingleProcessAnalysis
 from .set_estimator import Estimator_pid
-from . import stats
 
 VERBOSE = True
 
 
-class Partial_information_decomposition(Single_process_analysis):
+class PartialInformationDecomposition(SingleProcessAnalysis):
     """Set up network analysis using partial information decomposition.
 
     Set parameters necessary to infer partial information decomposition (PID)

@@ -5,12 +5,12 @@ from scipy.special import binom
 from .set_estimator import Estimator_cmi
 from . import stats
 from . import idtxl_utils as utils
-from .network_analysis import Network_analysis
+from .network_analysis import NetworkAnalysis
 
 VERBOSE = True
 
 
-class Network_comparison(Network_analysis):
+class NetworkComparison(NetworkAnalysis):
     """Set up network comparison between two experimental conditions.
 
     The class provides methods for the comparison of networks inferred from

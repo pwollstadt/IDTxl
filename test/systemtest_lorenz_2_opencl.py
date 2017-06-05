@@ -1,7 +1,7 @@
 import os
 import time
 import numpy as np
-from idtxl.multivariate_te import Multivariate_te
+from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
 
 start_time = time.time()
@@ -17,7 +17,7 @@ analysis_opts = {
         'n_perm_omnibus': 500,
         'n_perm_max_seq': 500,
         }
-lorenz_analysis = Multivariate_te(max_lag_sources=50, min_lag_sources=40,
+lorenz_analysis = MultivariateTE(max_lag_sources=50, min_lag_sources=40,
                                   max_lag_target=30, tau_sources=1,
                                   tau_target=3, options=analysis_opts)
 res_1 = lorenz_analysis.analyse_single_target(dat, 0)
