@@ -1,6 +1,6 @@
-"""Test Network_analysis.
+"""Test NetworkAnalysis.
 
-This module provides unit tests for the Network_analysis class.
+This module provides unit tests for the NetworkAnalysis class.
 
 Created on Tue Aug 02 04:47:01 2016
 
@@ -8,10 +8,10 @@ Created on Tue Aug 02 04:47:01 2016
 """
 import pytest
 import numpy as np
-from idtxl.network_analysis import Network_analysis
+from idtxl.network_analysis import NetworkAnalysis
 
 def test_separate_realisations():
-    n = Network_analysis()
+    n = NetworkAnalysis()
     r_1 = np.ones((10, 1))
     r_2 = np.ones((10, 1)) * 2
     r_3 = np.ones((10, 1)) * 3
@@ -35,7 +35,7 @@ def test_separate_realisations():
 
 
 def test_idx_to_lag():
-    n = Network_analysis()
+    n = NetworkAnalysis()
     n.current_value = (0, 5)
     idx_list = [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (1, 5)]
     reference_list = [(1, 5), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0)]
@@ -49,7 +49,7 @@ def test_idx_to_lag():
 
 
 def test_lag_to_idx():
-    n = Network_analysis()
+    n = NetworkAnalysis()
     n.current_value = (0, 5)
     lag_list = [(1, 5), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0)]
     reference_list = [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (1, 5)]

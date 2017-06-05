@@ -5,12 +5,12 @@ Created on Mon Mar  7 18:13:27 2016
 @author: patricia
 """
 import numpy as np
-from .network_analysis import Network_analysis
+from .network_analysis import NetworkAnalysis
 
 VERBOSE = True
 
 
-class Network_inference(Network_analysis):
+class NetworkInference(NetworkAnalysis):
     """Provide an analysis setup for multivariate network inference.
 
     Hold variables that are relevant for multivariate network inference.
@@ -115,7 +115,7 @@ class Network_inference(Network_analysis):
         # surrogates.check_permutations(self, data)
 
         # Reset all attributes to inital values if the instance of
-        # Multivariate_te has been used before.
+        # MultivariateTE has been used before.
         if self.selected_vars_full:
             self.selected_vars_full = []
             self._selected_vars_realisations = None

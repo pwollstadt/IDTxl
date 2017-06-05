@@ -3,9 +3,9 @@
 @author: patricia
 """
 import numpy as np
-from .network_analysis import Network_analysis
+from .network_analysis import NetworkAnalysis
 
 
-class Single_process_analysis(Network_analysis):
+class SingleProcessAnalysis(NetworkAnalysis):
     def __init__(self):
         super().__init__()

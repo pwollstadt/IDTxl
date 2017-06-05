@@ -4,7 +4,7 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from .multivariate_te import Multivariate_te
+from .multivariate_te import MultivariateTE
 
 VERBOSE = False
 
@@ -78,7 +78,7 @@ def generate_source_graph(res, sign_sources=True):
         samples = np.arange(res['current_value'][1] - res['min_lag_sources'],
                             res['current_value'][1] - res['max_lag_sources'],
                             -res['tau_sources'])
-        define_candidates = Multivariate_te._define_candidates
+        define_candidates = MultivariateTE._define_candidates
         nodes = define_candidates(_, procs, samples)
         graph.add_nodes_from(nodes)
 

@@ -9,7 +9,7 @@ import os
 import random as rn
 import pytest
 import numpy as np
-# from idtxl.multivariate_te import Multivariate_te
+# from idtxl.multivariate_te import MultivariateTE
 from idtxl.network_comparison import Network_comparison
 from idtxl.data import Data
 from test_estimators_cmi import jpype_missing
@@ -30,23 +30,23 @@ from test_estimators_cmi import jpype_missing
 # max_lag_sources = 5
 # min_lag_sources = 1
 # # network inference for individual data sets
-# nw_0 = Multivariate_te(max_lag_sources, min_lag_sources, max_lag_target,
+# nw_0 = MultivariateTE(max_lag_sources, min_lag_sources, max_lag_target,
 #                     analysis_opts)
 # res_0 = nw_0.analyse_network(dat, targets=[0, 1], sources='all')
 #
-# nw_1 = Multivariate_te(max_lag_sources, min_lag_sources, max_lag_target,
+# nw_1 = MultivariateTE(max_lag_sources, min_lag_sources, max_lag_target,
 #                        analysis_opts)
 # res_1 = nw_1.analyse_network(dat,  targets=[1, 2], sources='all')
 #
-# nw_2 = Multivariate_te(max_lag_sources, min_lag_sources, max_lag_target,
+# nw_2 = MultivariateTE(max_lag_sources, min_lag_sources, max_lag_target,
 #                        analysis_opts)
 # res_2 = nw_2.analyse_network(dat,  targets=[0, 2], sources='all')
 #
-# nw_3 = Multivariate_te(max_lag_sources, min_lag_sources, max_lag_target,
+# nw_3 = MultivariateTE(max_lag_sources, min_lag_sources, max_lag_target,
 #                        analysis_opts)
 # res_3 = nw_3.analyse_network(dat,  targets=[0, 1, 2], sources='all')
 #
-# nw_4 = Multivariate_te(max_lag_sources, min_lag_sources, max_lag_target,
+# nw_4 = MultivariateTE(max_lag_sources, min_lag_sources, max_lag_target,
 #                        analysis_opts)
 # res_4 = nw_4.analyse_network(dat,  targets=[1, 2], sources='all')
 #

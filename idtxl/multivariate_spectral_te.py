@@ -7,13 +7,13 @@ Note:
 """
 import numpy as np
 from . import stats
-from .network_analysis import Network_analysis
+from .network_analysis import NetworkAnalysis
 from .set_estimator import Estimator_cmi
 
 VERBOSE = True
 
 
-class Multivariate_spectral_te(Network_analysis):
+class MultivariateSpectralTE(NetworkAnalysis):
     """Set up a network analysis using multivariate spectral transfer entropy.
 
     Set parameters necessary for inference of spectral components of
@@ -74,8 +74,8 @@ class Multivariate_spectral_te(Network_analysis):
             >>>     'n_perm_omnibus': 500,
             >>>     'n_perm_max_seq': 500,
             >>>     }
-            >>> network_analysis = Multivariate_te(max_lag, min_lag,
-            >>>                                    analysis_opts)
+            >>> network_analysis = MultivariateTE(max_lag, min_lag,
+            >>>                                   analysis_opts)
             >>> res = network_analysis.analyse_network(dat)
             >>>
             >>> spectral_opts = {
@@ -114,7 +114,7 @@ class Multivariate_spectral_te(Network_analysis):
 
                 for each target
         """
-        # TODO see Multivariate_te.analyse_network()
+        # TODO see MultivariateTE.analyse_network()
         return 1
 
     def analyse_single_target(self, res_target, data, sources='all'):
@@ -150,8 +150,8 @@ class Multivariate_spectral_te(Network_analysis):
             >>>     }
             >>> target = 0
             >>> sources = [1, 2, 3]
-            >>> network_analysis = Multivariate_te(max_lag, min_lag,
-            >>>                                    analysis_opts)
+            >>> network_analysis = MultivariateTE(max_lag, min_lag,
+            >>>                                   analysis_opts)
             >>> res = network_analysis.analyse_single_target(dat, target,
             >>>                                              sources)
             >>>

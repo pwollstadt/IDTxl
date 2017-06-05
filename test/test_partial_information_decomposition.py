@@ -5,7 +5,7 @@
 import pytest
 import numpy as np
 from idtxl.partial_information_decomposition import (
-                                        Partial_information_decomposition)
+                                        PartialInformationDecomposition)
 from idtxl.data import Data
 from test_estimators_pid import optimization_not_available
 
@@ -15,12 +15,12 @@ def test_pid_user_input():
     """Test if user input is handled correctly."""
     # Test missing calculator name
     with pytest.raises(KeyError):
-        Partial_information_decomposition(options=dict())
+        PartialInformationDecomposition(options=dict())
 
     # Test wrong calculator name
     with pytest.raises(AttributeError):
         analysis_opts = {'pid_calc_name': 'pid_test'}
-        Partial_information_decomposition(options=analysis_opts)
+        PartialInformationDecomposition(options=analysis_opts)
 
     n = 20
     alph = 2
@@ -32,7 +32,7 @@ def test_pid_user_input():
     # Test two-tailed significance test
     analysis_opts = {'pid_calc_name': 'pid_tartu',
                      'tail': 'two'}
-    pid = Partial_information_decomposition(options=analysis_opts)
+    pid = PartialInformationDecomposition(options=analysis_opts)
 
     with pytest.raises(RuntimeError):  # Test incorrect number of sources
         pid.analyse_single_target(data=dat, target=2, sources=[1, 2, 3],
@@ -67,7 +67,7 @@ def test_network_analysis():
     # Run Tartu estimator
     analysis_opts = {'pid_calc_name': 'pid_tartu',
                      'tail': 'two'}
-    pid = Partial_information_decomposition(options=analysis_opts)
+    pid = PartialInformationDecomposition(options=analysis_opts)
     est_tartu = pid.analyse_network(data=dat, targets=[0, 2],
                                     sources=[[1, 2], [0, 1]],
                                     lags=[[0, 0], [0, 0]])
@@ -89,7 +89,7 @@ def test_analyse_single_target():
     # Run Tartu estimator
     analysis_opts = {'pid_calc_name': 'pid_tartu',
                      'tail': 'two'}
-    pid = Partial_information_decomposition(options=analysis_opts)
+    pid = PartialInformationDecomposition(options=analysis_opts)
     est_tartu = pid.analyse_single_target(data=dat, target=2, sources=[0, 1],
                                           lags=[0, 0])
     assert 0.9 < est_tartu['syn_s1_s2'] <= 1.1, (

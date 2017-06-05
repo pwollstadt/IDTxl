@@ -5,7 +5,7 @@
 import time as tm
 import numpy as np
 from idtxl.partial_information_decomposition import (
-                                        Partial_information_decomposition)
+                                        PartialInformationDecomposition)
 from idtxl.data import Data
 import idtxl.idtxl_utils as utils
 
@@ -22,7 +22,7 @@ def test_pid_xor_data():
 
     # Run Tartu estimator
     analysis_opts = {'pid_calc_name': 'pid_tartu'}
-    pid = Partial_information_decomposition(options=analysis_opts)
+    pid = PartialInformationDecomposition(options=analysis_opts)
     tic = tm.time()
     est_tartu = pid.analyse_single_target(data=dat, target=2, sources=[0, 1],
                                           lags=[0, 0])
@@ -39,7 +39,7 @@ def test_pid_xor_data():
         'num_reps': 63,
         'max_iters': 1000,
         'pid_calc_name': 'pid_sydney'}
-    pid = Partial_information_decomposition(options=analysis_opts)
+    pid = PartialInformationDecomposition(options=analysis_opts)
     tic = tm.time()
     est_sydney = pid.analyse_single_target(data=dat, target=2, sources=[0, 1],
                                            lags=[0, 0])

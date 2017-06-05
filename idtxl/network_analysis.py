@@ -10,7 +10,7 @@ import numpy as np
 from . import idtxl_utils as utils
 
 
-class Network_analysis():
+class NetworkAnalysis():
     """Provide an analysis setup for network inference or comparison.
 
     The class provides routines to check user input and set defaults.

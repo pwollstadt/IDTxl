@@ -1,7 +1,7 @@
 import os
 import time
 import numpy as np
-from idtxl.multivariate_te import Multivariate_te
+from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
 
 start_time = time.time()
@@ -15,7 +15,7 @@ analysis_opts = {
         'n_perm_max_seq': 500,
         }
 
-network_analysis = Multivariate_te(
+network_analysis = MultivariateTE(
         max_lag_sources=5,
         min_lag_sources=1,
         options=analysis_opts)

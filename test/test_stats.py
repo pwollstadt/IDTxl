@@ -7,7 +7,7 @@ Created on Fri Mar 25 13:46:09 2016
 import pytest
 import numpy as np
 from idtxl import stats
-from idtxl.multivariate_te import Multivariate_te
+from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
 
 
@@ -33,15 +33,17 @@ def test_max_statistic_sequential():
         'n_perm_omnibus': 21,
         'n_perm_max_seq': 21,
         }
-    setup = Multivariate_te(max_lag_sources=5, min_lag_sources=1,
-                            max_lag_target=5, options=opts)
+    setup = MultivariateTE(max_lag_sources=5, min_lag_sources=1,
+                           max_lag_target=5, options=opts)
     setup.current_value = (0, 4)
     setup.selected_vars_sources = [(1, 1), (1, 2)]
     setup.selected_vars_full = [(0, 1), (1, 1), (1, 2)]
-    setup._selected_vars_realisations = np.random.rand(dat.n_realisations(setup.current_value),
-                                                       len(setup.selected_vars_full))
-    setup._current_value_realisations = np.random.rand(dat.n_realisations(setup.current_value),
-                                                       1)
+    setup._selected_vars_realisations = np.random.rand(
+                                    dat.n_realisations(setup.current_value),
+                                    len(setup.selected_vars_full))
+    setup._current_value_realisations = np.random.rand(
+                                    dat.n_realisations(setup.current_value),
+                                    1)
     [sign, p, te] = stats.max_statistic_sequential(analysis_setup=setup,
                                                    data=dat, opts=opts)
 
@@ -51,7 +53,7 @@ def test_network_fdr():
     target_0 = {
         'selected_vars_sources': [(1, 1), (1, 2), (1, 3), (2, 1), (2, 0)],
         'selected_vars_full': [(0, 1), (0, 2), (0, 3), (1, 1), (1, 2), (1, 3),
-                             (2, 1), (2, 0)],
+                               (2, 1), (2, 0)],
         'omnibus_pval': 0.0001,
         'omnibus_sign': True,
         'selected_sources_pval': np.array([0.001, 0.0014, 0.01, 0.045, 0.047]),
@@ -177,8 +179,8 @@ def test_data_type():
     surr = stats._generate_spectral_surrogates(data=dat,
                                                scale=1,
                                                n_perm=20)
-    assert issubclass(type(surr[0, 0, 0]), np.integer), ('Realisations type is '
-                                                         'not an int.')
+    assert issubclass(type(surr[0, 0, 0]), np.integer), ('Realisations type is'
+                                                         ' not an int.')
 
     d_float = np.random.randn(3, 50)
     dat.set_data(d_float, dim_order='ps')

@@ -1,6 +1,6 @@
 """Unit tests for IDTxl graph visualisation."""
 import idtxl.visualise_graph as vis
-from idtxl.multivariate_te import Multivariate_te
+from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
 
 
@@ -22,8 +22,8 @@ def test_visualise_multivariate_te():
         'n_perm_omnibus': 50,
         'n_perm_max_seq': 50,
         }
-    network_analysis = Multivariate_te(max_lag, min_lag,
-                                       analysis_opts)
+    network_analysis = MultivariateTE(max_lag, min_lag,
+                                      analysis_opts)
     res = network_analysis.analyse_network(dat, targets=[0, 1, 2])
     vis.plot_network(res)
 
@@ -40,8 +40,8 @@ def test_plot_selected_vars():
         'n_perm_omnibus': 50,
         'n_perm_max_seq': 50,
         }
-    network_analysis = Multivariate_te(max_lag, min_lag,
-                                       analysis_opts)
+    network_analysis = MultivariateTE(max_lag, min_lag,
+                                      analysis_opts)
     res = network_analysis.analyse_single_target(dat, target=2)
     vis.plot_selected_vars(res)
 

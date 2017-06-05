@@ -12,13 +12,13 @@ Note:
 import numpy as np
 import itertools as it
 from . import stats
-from .network_inference import Network_inference
+from .network_inference import NetworkInference
 from .set_estimator import Estimator_cmi
 
 VERBOSE = True
 
 
-class Bivariate_te(Network_inference):
+class BivariateTE(NetworkInference):
     """Set up a network analysis using bivariate transfer entropy.
 
     Set parameters necessary for network inference using transfer entropy (TE).
