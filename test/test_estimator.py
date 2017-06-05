@@ -8,8 +8,10 @@ Created on Fri Sep 30 14:39:06 2016
 
 @author: patricia
 """
+import inspect
 import pytest
-from idtxl.estimator import Estimator
+from idtxl.estimator import Estimator, find_estimator
+from idtxl.multivariate_te import Multivariate_te
 
 
 class EstimatorTestEstimate(Estimator):
@@ -39,5 +41,24 @@ def test_base_class_implementation():
         EstimatorTestIsParallel()
 
 
+def test_find_estimator():
+    """Test dynamic loading of classes."""
+
+    # Test if a class is returned.
+    e = find_estimator('JidtKraskovMI')
+    assert inspect.isclass(e)
+    f = find_estimator(e)
+    assert inspect.isclass(f)
+
+    # Try loading non-existent estimator
+    with pytest.raises(RuntimeError):
+        find_estimator('test')
+
+    # Try using a class without an estimate method
+    with pytest.raises(AssertionError):
+        find_estimator(Multivariate_te)
+
+
 if __name__ == '__main__':
+    test_find_estimator()
     test_base_class_implementation()
