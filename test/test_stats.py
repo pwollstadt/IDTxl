@@ -27,7 +27,7 @@ def test_max_statistic_sequential():
     dat = Data()
     dat.generate_mute_data(104, 10)
     opts = {
-        'cmi_calc_name': 'jidt_kraskov',
+        'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 21,
         'n_perm_min_stat': 21,
         'n_perm_omnibus': 21,

@@ -11,7 +11,7 @@ Note:
 import numpy as np
 from . import stats
 from .single_process_analysis import SingleProcessAnalysis
-from .set_estimator import Estimator_cmi
+from .estimator import find_estimator
 
 VERBOSE = True
 
@@ -55,8 +55,8 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         current_value : tuple
             index of the current value in AIS estimation, (idx process,
             idx sample)
-        calculator_name : string
-            calculator used for CMI/MI estimation
+        estimator_name : string
+            estimator used for CMI/MI estimation
         max_lag : int
             maximum temporal search depth for candidates in the processes' past
             (default=same as max_lag_sources)
@@ -91,11 +91,10 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         self.options = options
         self._min_stats_surr_table = None
         try:
-            self.calculator_name = options['cmi_calc_name']
+            EstimatorClass = find_estimator(options['cmi_estimator'])
         except KeyError:
-            raise KeyError('Calculator name was not specified!')
-        print('\n\nSetting calculator to: {0}'.format(self.calculator_name))
-        self._cmi_calculator = Estimator_cmi(self.calculator_name)
+            raise KeyError('Please provide an estimator class or name!')
+        self._cmi_estimator = EstimatorClass(options)
         super().__init__()
 
     def analyse_network(self, data, processes='all'):
@@ -302,7 +301,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             cand_real = cand_real.T.reshape(cand_real.size, 1)
 
             # Calculate the (C)MI for each candidate and the target.
-            temp_te = self._cmi_calculator.estimate_mult(
+            temp_te = self._cmi_estimator.estimate_mult(
                                 n_chunks=len(candidate_set),
                                 options=self.options,
                                 re_use=['var2', 'conditional'],
@@ -385,7 +384,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 i_1 = i_2
                 i_2 += data.n_realisations(self.current_value)
 
-            temp_te = self._cmi_calculator.estimate_mult(
+            temp_te = self._cmi_estimator.estimate_mult(
                                     n_chunks=len(self.selected_vars_sources),
                                     options=self.options,
                                     re_use=re_use,

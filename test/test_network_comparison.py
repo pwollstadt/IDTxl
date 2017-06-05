@@ -10,9 +10,9 @@ import random as rn
 import pytest
 import numpy as np
 # from idtxl.multivariate_te import MultivariateTE
-from idtxl.network_comparison import Network_comparison
+from idtxl.network_comparison import NetworkComparison
 from idtxl.data import Data
-from test_estimators_cmi import jpype_missing
+from test_estimators_jidt import jpype_missing
 
 # # Generate example data: the following was ran once to generate example data,
 # # which is now in the data sub-folder of the test-folder.
@@ -20,7 +20,7 @@ from test_estimators_cmi import jpype_missing
 # dat.generate_mute_data(100, 5)
 # # analysis settings
 # analysis_opts = {
-#     'cmi_calc_name': 'jidt_kraskov',
+#     'cmi_estimator': 'JidtKraskovCMI',
 #     'n_perm_max_stat': 50,
 #     'n_perm_min_stat': 50,
 #     'n_perm_omnibus': 200,
@@ -85,7 +85,7 @@ def test_network_comparison_use_cases():
 
     # comparison options
     comparison_opts = {
-            'cmi_calc_name': 'jidt_kraskov',
+            'cmi_estimator': 'JidtKraskovCMI',
             'n_perm_max_stat': 50,
             'n_perm_min_stat': 50,
             'n_perm_omnibus': 200,
@@ -97,24 +97,24 @@ def test_network_comparison_use_cases():
 
     print('\n\nTEST 0 - independent within')
     comparison_opts['stats_type'] = 'independent'
-    comp = Network_comparison(comparison_opts)
+    comp = NetworkComparison(comparison_opts)
     comp.compare_within(res_0, res_1, dat, dat)
 
     print('\n\nTEST 1 - dependent within')
     comparison_opts['stats_type'] = 'dependent'
-    comp = Network_comparison(comparison_opts)
+    comp = NetworkComparison(comparison_opts)
     comp.compare_within(res_0, res_1, dat, dat)
 
     print('\n\nTEST 2 - independent between')
     comparison_opts['stats_type'] = 'independent'
-    comp = Network_comparison(comparison_opts)
+    comp = NetworkComparison(comparison_opts)
     comp.compare_between(network_set_a=np.array((res_0, res_1)),
                          network_set_b=np.array((res_2, res_3)),
                          data_set_a=np.array((dat, dat)),
                          data_set_b=np.array((dat, dat)))
 
     print('\n\nTEST 3 - dependent between')
-    comp = Network_comparison(comparison_opts)
+    comp = NetworkComparison(comparison_opts)
     comparison_opts['stats_type'] = 'dependent'
     comp.compare_between(network_set_a=np.array((res_0, res_1)),
                          network_set_b=np.array((res_2, res_3)),
@@ -123,12 +123,12 @@ def test_network_comparison_use_cases():
 
     print('\n\nTEST 4 - independent within unbalanced')
     comparison_opts['stats_type'] = 'independent'
-    comp = Network_comparison(comparison_opts)
+    comp = NetworkComparison(comparison_opts)
     comp.compare_within(res_0, res_1, dat, dat)
 
     print('\n\nTEST 5 - independent between unbalanced')
     comparison_opts['stats_type'] = 'independent'
-    comp = Network_comparison(comparison_opts)
+    comp = NetworkComparison(comparison_opts)
     comp.compare_between(network_set_a=np.array((res_0, res_1)),
                          network_set_b=np.array((res_2, res_3, res_4)),
                          data_set_a=np.array((dat, dat)),
@@ -153,7 +153,7 @@ def test_assertions():
 
     # comparison options
     comparison_opts = {
-            'cmi_calc_name': 'jidt_kraskov',
+            'cmi_estimator': 'JidtKraskovCMI',
             'n_perm_max_stat': 50,
             'n_perm_min_stat': 50,
             'n_perm_omnibus': 200,
@@ -166,7 +166,7 @@ def test_assertions():
     comparison_opts['alpha_comp'] = 0.001
     comparison_opts['stats_type'] = 'independent'
     with pytest.raises(RuntimeError):
-        comp = Network_comparison(comparison_opts)
+        comp = NetworkComparison(comparison_opts)
 
     # data sets have unequal no. replications
     dat2 = Data()
@@ -174,7 +174,7 @@ def test_assertions():
     comparison_opts['stats_type'] = 'dependent'
     comparison_opts['alpha_comp'] = 0.05
     comparison_opts['n_perm_comp'] = 1000
-    comp = Network_comparison(comparison_opts)
+    comp = NetworkComparison(comparison_opts)
     with pytest.raises(AssertionError):
         comp.compare_within(res_0, res_1, dat, dat2)
 
@@ -184,14 +184,14 @@ def test_assertions():
     comparison_opts['stats_type'] = 'dependent'
     comparison_opts['alpha_comp'] = 0.05
     comparison_opts['n_perm_comp'] = 21
-    comp = Network_comparison(comparison_opts)
+    comp = NetworkComparison(comparison_opts)
     with pytest.raises(RuntimeError):
         comp.compare_within(res_0, res_1, dat, dat2)
 
     # no. replications/subjects too small for dependent-samples test
     comparison_opts['stats_type'] = 'dependent'
     comparison_opts['n_perm_comp'] = 1000
-    comp = Network_comparison(comparison_opts)
+    comp = NetworkComparison(comparison_opts)
     with pytest.raises(RuntimeError):   # between
         comp.compare_between(network_set_a=np.array((res_0, res_1)),
                              network_set_b=np.array((res_2, res_3)),
@@ -202,7 +202,7 @@ def test_assertions():
 
     # no. replications/subjects too small for independent-samples test
     comparison_opts['stats_type'] = 'independent'
-    comp = Network_comparison(comparison_opts)
+    comp = NetworkComparison(comparison_opts)
     with pytest.raises(RuntimeError):   # between
         comp.compare_between(network_set_a=np.array((res_0, res_1)),
                              network_set_b=np.array((res_2, res_3)),
@@ -216,7 +216,7 @@ def test_assertions():
     res_99[99] = res_99[1]
     comparison_opts['alpha_comp'] = 0.05
     comparison_opts['n_perm_comp'] = 21
-    comp = Network_comparison(comparison_opts)
+    comp = NetworkComparison(comparison_opts)
     with pytest.raises(IndexError):
         comp.compare_within(res_0, res_99, dat2, dat2)
 
@@ -237,7 +237,7 @@ def test_create_union_network():
 
     # comparison options
     comparison_opts = {
-            'cmi_calc_name': 'jidt_kraskov',
+            'cmi_estimator': 'JidtKraskovCMI',
             'n_perm_max_stat': 50,
             'n_perm_min_stat': 50,
             'n_perm_omnibus': 200,
@@ -247,7 +247,7 @@ def test_create_union_network():
             'alpha_comp': 0.2,
             'stats_type': 'independent'
             }
-    comp = Network_comparison(comparison_opts)
+    comp = NetworkComparison(comparison_opts)
 
     src_1 = [(0, 2), (0, 1)]
     src_2 = [(0, 4), (0, 5)]
@@ -285,7 +285,7 @@ def test_get_permuted_replications():
                     'data/mute_res_1.pkl'))
 
     comparison_opts = {
-            'cmi_calc_name': 'jidt_kraskov',
+            'cmi_estimator': 'JidtKraskovCMI',
             'n_perm_max_stat': 50,
             'n_perm_min_stat': 50,
             'n_perm_omnibus': 200,
@@ -295,7 +295,7 @@ def test_get_permuted_replications():
             'alpha_comp': 0.2,
             'stats_type': 'dependent'
             }
-    comp = Network_comparison(comparison_opts)
+    comp = NetworkComparison(comparison_opts)
     comp._create_union(res_0, res_1)
 
     # Check permutation for dependent samples test: Replace realisations by
@@ -321,7 +321,7 @@ def test_get_permuted_replications():
     # Check permutations for independent samples test: Check the sum over
     # realisations.
     comparison_opts['stats_type'] = 'independent'
-    comp = Network_comparison(comparison_opts)
+    comp = NetworkComparison(comparison_opts)
     comp._create_union(res_0, res_1)
     [cond_a_perm,
      cv_a_perm,
@@ -354,7 +354,7 @@ def test_calculate_cmi():
     res_0 = np.load(os.path.join(os.path.dirname(__file__),
                     'data/mute_res_0.pkl'))
     comparison_opts = {
-        'cmi_calc_name': 'jidt_kraskov',
+        'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 50,
         'n_perm_min_stat': 50,
         'n_perm_omnibus': 200,
@@ -364,7 +364,7 @@ def test_calculate_cmi():
         'alpha_comp': 0.2,
         'stats_type': 'dependent'
         }
-    comp = Network_comparison(comparison_opts)
+    comp = NetworkComparison(comparison_opts)
     comp._create_union(res_0)
     comp.union[1]['selected_vars_sources'] = [(0, 4)]
     cmi = comp._calculate_cmi(dat)
@@ -384,7 +384,7 @@ def test_calculate_mean():
     res_0 = np.load(os.path.join(os.path.dirname(__file__),
                     'data/mute_res_0.pkl'))
     comparison_opts = {
-        'cmi_calc_name': 'jidt_kraskov',
+        'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 50,
         'n_perm_min_stat': 50,
         'n_perm_omnibus': 200,
@@ -394,7 +394,7 @@ def test_calculate_mean():
         'alpha_comp': 0.2,
         'stats_type': 'dependent'
         }
-    comp = Network_comparison(comparison_opts)
+    comp = NetworkComparison(comparison_opts)
     comp._create_union(res_0)
     cmi = comp._calculate_cmi(dat)
     cmi_mean = comp._calculate_mean([cmi, cmi])
@@ -413,7 +413,7 @@ def test_p_value_union():
     res_1 = np.load(os.path.join(os.path.dirname(__file__),
                     'data/mute_res_1.pkl'))
     comparison_opts = {
-        'cmi_calc_name': 'jidt_kraskov',
+        'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 50,
         'n_perm_min_stat': 50,
         'n_perm_omnibus': 200,
@@ -423,7 +423,7 @@ def test_p_value_union():
         'alpha_comp': 0.2,
         'stats_type': 'independent'
         }
-    comp = Network_comparison(comparison_opts)
+    comp = NetworkComparison(comparison_opts)
     comp.compare_within(res_0, res_1, dat, dat)
 
     # Replace the surrogate CMI by all zeros for source 0 and all ones for

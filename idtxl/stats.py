@@ -155,7 +155,7 @@ def omnibus_test(analysis_setup, data):
                                 ._selected_vars_sources_realisations)
     cond_target_realisations = (analysis_setup
                                 ._selected_vars_target_realisations)
-    te_orig = analysis_setup._cmi_calculator.estimate(
+    te_orig = analysis_setup._cmi_estimator.estimate(
                             var1=cond_source_realisations,
                             var2=analysis_setup._current_value_realisations,
                             conditional=cond_target_realisations)
@@ -188,7 +188,7 @@ def omnibus_test(analysis_setup, data):
                                      n_permutations,
                                      analysis_setup.options)
 
-    surr_distribution = analysis_setup._cmi_calculator.estimate_mult(
+    surr_distribution = analysis_setup._cmi_estimator.estimate_mult(
                             n_chunks=n_permutations,
                             re_use=['var2', 'conditional'],
                             var1=surr_cond_real,
@@ -316,7 +316,7 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
         i_1 = i_2
         i_2 += data.n_realisations(analysis_setup.current_value)
 
-    individual_te = analysis_setup._cmi_calculator.estimate_mult(
+    individual_te = analysis_setup._cmi_estimator.estimate_mult(
                             n_chunks=len(analysis_setup.selected_vars_sources),
                             re_use=['var2'],
                             var1=candidate_realisations,
@@ -477,13 +477,13 @@ def mi_against_surrogates(analysis_setup, data):
                                         n_perm,
                                         analysis_setup.options)
 
-    surr_dist = analysis_setup._cmi_calculator.estimate_mult(
+    surr_dist = analysis_setup._cmi_estimator.estimate_mult(
                             n_chunks=n_perm,
                             re_use=['var2', 'conditional'],
                             var1=surr_realisations,
                             var2=analysis_setup._selected_vars_realisations,
                             conditional=None)
-    orig_mi = analysis_setup._cmi_calculator.estimate(
+    orig_mi = analysis_setup._cmi_estimator.estimate(
                             var1=analysis_setup._current_value_realisations,
                             var2=analysis_setup._selected_vars_realisations,
                             conditional=None
@@ -544,7 +544,7 @@ def unq_against_surrogates(analysis_setup, data):
     source_2_realisations = data.get_realisations(
                                         analysis_setup.current_value,
                                         [analysis_setup.sources[1]])[0]
-    orig_pid = analysis_setup._pid_calculator.estimate(
+    orig_pid = analysis_setup._pid_estimator.estimate(
                             opts=analysis_setup.options,
                             s1=source_1_realisations,
                             s2=source_2_realisations,
@@ -569,7 +569,7 @@ def unq_against_surrogates(analysis_setup, data):
     for p in range(n_perm):
         if VERBOSE:
             print('\tperm {0} of {1}'.format(p, n_perm))
-        pid_est = analysis_setup._pid_calculator.estimate(
+        pid_est = analysis_setup._pid_estimator.estimate(
                                 opts=analysis_setup.options,
                                 s1=surr_realisations[i_1:i_2, :],
                                 s2=source_2_realisations,
@@ -595,7 +595,7 @@ def unq_against_surrogates(analysis_setup, data):
     for p in range(n_perm):
         if VERBOSE:
             print('\tperm {0} of {1}'.format(p, n_perm))
-        pid_est = analysis_setup._pid_calculator.estimate(
+        pid_est = analysis_setup._pid_estimator.estimate(
                                 opts=analysis_setup.options,
                                 s1=source_1_realisations,
                                 s2=surr_realisations[i_1:i_2, :],
@@ -662,7 +662,7 @@ def syn_shd_against_surrogates(analysis_setup, data):
     source_2_realisations = data.get_realisations(
                                         analysis_setup.current_value,
                                         [analysis_setup.sources[1]])[0]
-    orig_pid = analysis_setup._pid_calculator.estimate(
+    orig_pid = analysis_setup._pid_estimator.estimate(
                             opts=analysis_setup.options,
                             s1=source_1_realisations,
                             s2=source_2_realisations,
@@ -688,7 +688,7 @@ def syn_shd_against_surrogates(analysis_setup, data):
     for p in range(n_perm):
         if VERBOSE:
             print('\tperm {0} of {1}'.format(p, n_perm))
-        pid_est = analysis_setup._pid_calculator.estimate(
+        pid_est = analysis_setup._pid_estimator.estimate(
                                 opts=analysis_setup.options,
                                 s1=source_1_realisations,
                                 s2=source_2_realisations,
@@ -789,7 +789,7 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
                                                  [candidate],
                                                  n_perm,
                                                  analysis_setup.options)
-        surr_table[idx_c, :] = analysis_setup._cmi_calculator.estimate_mult(
+        surr_table[idx_c, :] = analysis_setup._cmi_estimator.estimate_mult(
                     n_chunks=n_perm,
                     re_use=['var2', 'conditional'],
                     var1=surr_candidate_realisations,  # too long

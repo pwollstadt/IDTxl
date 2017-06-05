@@ -11,7 +11,7 @@ Created on Fri Sep 30 14:39:06 2016
 import inspect
 import pytest
 from idtxl.estimator import Estimator, find_estimator
-from idtxl.multivariate_te import Multivariate_te
+from idtxl.multivariate_te import MultivariateTE
 
 
 class EstimatorTestEstimate(Estimator):
@@ -56,7 +56,7 @@ def test_find_estimator():
 
     # Try using a class without an estimate method
     with pytest.raises(AssertionError):
-        find_estimator(Multivariate_te)
+        find_estimator(MultivariateTE)
 
 
 if __name__ == '__main__':

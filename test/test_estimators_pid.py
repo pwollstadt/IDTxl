@@ -7,7 +7,7 @@ Created on Mon Apr 11 21:51:56 2016
 import time as tm
 import numpy as np
 import pytest
-from idtxl.set_estimator import Estimator_pid
+from idtxl.estimators_pid import SydneyPID, TartuPID
 
 package_missing = False
 try:
@@ -36,6 +36,14 @@ ALPH_X = 2
 ALPH_Y = 2
 ALPH_Z = 2
 
+ANALYSIS_OPTS = {
+        'alph_s1': ALPH_X,
+        'alph_s2': ALPH_Y,
+        'alph_t': ALPH_Z,
+        'max_unsuc_swaps_row_parm': 60,
+        'num_reps': 63,
+        'max_iters': 1000}
+
 X = np.asarray([0, 0, 1, 1])
 # X = np.squeeze(nm.repmat(X, 1, 100000))
 Y = np.asarray([0, 1, 0, 1])
@@ -45,18 +53,6 @@ Y = np.asarray([0, 1, 0, 1])
 # n = 10000000
 # X = np.random.randint(0, ALPH_X, n)
 # Y = np.random.randint(0, ALPH_Y, n)
-
-
-analysis_opts = {
-    'alph_s1': ALPH_X,
-    'alph_s2': ALPH_Y,
-    'alph_t': ALPH_Z,
-    'max_unsuc_swaps_row_parm': 60,
-    'num_reps': 63,
-    'max_iters': 1000
-}
-pid_sydney = Estimator_pid('pid_sydney')
-pid_tartu = Estimator_pid('pid_tartu')
 
 
 @float128_not_available
@@ -126,12 +122,14 @@ def test_xor_long():
           'iterations: {1}'.format(n, analysis_opts['max_iters']))
 
     # Sydney estimator
+    pid_sydney = SydneyPID(analysis_opts)
+    pid_tartu = TartuPID(analysis_opts)
     tic = tm.time()
-    est_sydney = pid_sydney.estimate(s1, s2, target, analysis_opts)
+    est_sydney = pid_sydney.estimate(s1, s2, target)
     t_sydney = tm.time() - tic
     # Tartu estimator
     tic = tm.time()
-    est_tartu = pid_tartu.estimate(s1, s2, target, analysis_opts)
+    est_tartu = pid_tartu.estimate(s1, s2, target)
     t_tartu = tm.time() - tic
 
     print('\nLogical XOR - N = 1000')
@@ -160,13 +158,16 @@ def test_xor_long():
 
 def _estimate(Z):
     """Estimate PID for a given target."""
+
     # Sydney estimator
+    pid_sydney = SydneyPID(ANALYSIS_OPTS)
+    pid_tartu = TartuPID(ANALYSIS_OPTS)
     tic = tm.time()
-    est_sydney = pid_sydney.estimate(X, Y, Z, analysis_opts)
+    est_sydney = pid_sydney.estimate(X, Y, Z, ANALYSIS_OPTS)
     t_sydney = tm.time() - tic
     # Tartu estimator
     tic = tm.time()
-    est_tartu = pid_tartu.estimate(X, Y, Z, analysis_opts)
+    est_tartu = pid_tartu.estimate(X, Y, Z, ANALYSIS_OPTS)
     t_tartu = tm.time() - tic
 
     print('\nCopied source')
