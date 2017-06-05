@@ -6,33 +6,34 @@ import pytest
 import random as rn
 import numpy as np
 from idtxl.data import Data
-from idtxl.active_information_storage import Active_information_storage
-from test_estimators_cmi import jpype_missing, opencl_missing
+from idtxl.active_information_storage import ActiveInformationStorage
+from test_estimators_jidt import jpype_missing
+from test_estimators_opencl import opencl_missing
 
 
 @jpype_missing
-def test_active_information_storage_init():
-    """Test instance creation for Active_information_storage class."""
+def test_ActiveInformationStorage_init():
+    """Test instance creation for ActiveInformationStorage class."""
     # Test error on missing estimator
     with pytest.raises(KeyError):
-        Active_information_storage(max_lag=5, options={})
+        ActiveInformationStorage(max_lag=5, options={})
 
     # Test tau larger than maximum lag
-    analysis_opts = {'cmi_calc_name': 'jidt_kraskov'}
+    analysis_opts = {'cmi_estimator': 'JidtKraskovCMI'}
     with pytest.raises(RuntimeError):
-        Active_information_storage(max_lag=5, options=analysis_opts, tau=10)
+        ActiveInformationStorage(max_lag=5, options=analysis_opts, tau=10)
     # Test negative tau and maximum lag
     with pytest.raises(RuntimeError):
-        Active_information_storage(max_lag=5, options=analysis_opts, tau=-10)
+        ActiveInformationStorage(max_lag=5, options=analysis_opts, tau=-10)
     with pytest.raises(RuntimeError):
-        Active_information_storage(max_lag=-5, options=analysis_opts, tau=1)
+        ActiveInformationStorage(max_lag=-5, options=analysis_opts, tau=1)
 
     # Invalid: process is not an int
     dat = Data()
     dat.generate_mute_data(10, 3)
-    ais = Active_information_storage(max_lag=5,
-                                     tau=1,
-                                     options=analysis_opts)
+    ais = ActiveInformationStorage(max_lag=5,
+                                   tau=1,
+                                   options=analysis_opts)
     with pytest.raises(RuntimeError):  # no int
         ais.analyse_single_process(data=dat, process=1.5)
     with pytest.raises(RuntimeError):  # negative
@@ -44,18 +45,18 @@ def test_active_information_storage_init():
 
     # Force conditionals
     analysis_opts['add_conditionals'] = [(0, 1), (1, 3)]
-    ais = Active_information_storage(max_lag=5,
-                                     tau=1,
-                                     options=analysis_opts)
+    ais = ActiveInformationStorage(max_lag=5,
+                                   tau=1,
+                                   options=analysis_opts)
 
 
 def test_analyse_network():
     """Test AIS estimation for the whole network."""
     dat = Data()
     dat.generate_mute_data(10, 3)
-    ais = Active_information_storage(max_lag=5,
-                                     tau=1,
-                                     options={'cmi_calc_name': 'jidt_kraskov'})
+    ais = ActiveInformationStorage(max_lag=5,
+                                   tau=1,
+                                   options={'cmi_estimator': 'JidtKraskovCMI'})
     # Test analysis of 'all' processes
     r = ais.analyse_network(data=dat)
     k = list(r.keys())
@@ -77,14 +78,14 @@ def test_single_source_storage_gaussian():
     dat = Data(np.array([proc_1, proc_2]), dim_order='ps')
     max_lag = 5
     analysis_opts = {
-        'cmi_calc_name': 'jidt_kraskov',
+        'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_mi': 22,
         'alpha_mi': 0.05,
         'tail_mi': 'one',
         }
     processes = [1]
-    network_analysis = Active_information_storage(max_lag, analysis_opts,
-                                                  tau=1)
+    network_analysis = ActiveInformationStorage(max_lag, analysis_opts,
+                                                tau=1)
     res = network_analysis.analyse_network(dat, processes)
     print('AIS for random normal data without memory (expected is NaN): '
           '{0}'.format(res[1]['ais']))
@@ -100,18 +101,18 @@ def test_compare_jidt_open_cl_estimator():
     dat.generate_mute_data(100, 2)
     max_lag = 5
     analysis_opts = {
-        'cmi_calc_name': 'opencl_kraskov',
+        'cmi_estimator': 'OpenCLKraskovCMI',
         'n_perm_mi': 22,
         'alpha_mi': 0.05,
         'tail_mi': 'one',
         }
     processes = [2, 3]
-    network_analysis = Active_information_storage(max_lag, analysis_opts,
-                                                  tau=1)
+    network_analysis = ActiveInformationStorage(max_lag, analysis_opts,
+                                                tau=1)
     res_opencl = network_analysis.analyse_network(dat, processes)
-    analysis_opts['cmi_calc_name'] = 'jidt_kraskov'
-    network_analysis = Active_information_storage(max_lag, analysis_opts,
-                                                  tau=1)
+    analysis_opts['cmi_estimator'] = 'JidtKraskovCMI'
+    network_analysis = ActiveInformationStorage(max_lag, analysis_opts,
+                                                tau=1)
     res_jidt = network_analysis.analyse_network(dat, processes)
     # Note that I require equality up to three digits. Results become more
     # exact for bigger data sizes, but this takes too long for a unit test.
@@ -143,6 +144,6 @@ def test_compare_jidt_open_cl_estimator():
 
 if __name__ == '__main__':
     test_analyse_network()
-    test_active_information_storage_init()
+    test_ActiveInformationStorage_init()
     # test_single_source_storage_gaussian()
     # test_compare_jidt_open_cl_estimator()

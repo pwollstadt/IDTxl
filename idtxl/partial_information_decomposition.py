@@ -8,7 +8,7 @@ Note:
 @author: patricia
 """
 from .single_process_analysis import SingleProcessAnalysis
-from .set_estimator import Estimator_pid
+from .estimator import find_estimator
 
 VERBOSE = True
 
@@ -36,12 +36,10 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
 
     def __init__(self, options):
         try:
-            self.calculator_name = options['pid_calc_name']
+            EstimatorClass = find_estimator(options['pid_estimator'])
         except KeyError:
-            raise KeyError('Calculator name was not specified!')
-        if VERBOSE:
-            print('\nSetting calculator to: {0}'.format(self.calculator_name))
-        self._pid_calculator = Estimator_pid(self.calculator_name)
+            raise KeyError('Estimator was not specified!')
+        self._pid_estimator = EstimatorClass(options)
         self.options = options
         super().__init__()
 
@@ -217,8 +215,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         source_2_realisations = data.get_realisations(
                                             self.current_value,
                                             [self.sources[1]])[0]
-        orig_pid = self._pid_calculator.estimate(
-                                opts=self.options,
+        orig_pid = self._pid_estimator.estimate(
                                 s1=source_1_realisations,
                                 s2=source_2_realisations,
                                 t=target_realisations)

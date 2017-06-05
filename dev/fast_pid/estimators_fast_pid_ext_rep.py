@@ -53,7 +53,7 @@ the unique information from sources 1 and 2.
     except KeyError:
         print('"max_iters" is missing from the cfg dictionary.')
         raise
-    
+
     # -- DEFINE PARAMETERS -- #
 
     num_samples = len(t)
@@ -108,7 +108,7 @@ the unique information from sources 1 and 2.
 #    # KLDs should initially rise and then fall when close to the minimum
 #    joint_s1_s2_prob_alt = joint_s1_s2_prob.copy()
 #    joint_t_s1_s2_prob_alt = joint_t_s1_s2_prob.copy()
-    
+
     # -- VIRTUALISED SWAPS -- #
 
     # Calculate the initial cmi's and store them
@@ -127,7 +127,7 @@ the unique information from sources 1 and 2.
     # is fishy
     #
     jointmi_s1s2_t = _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t)
-    
+
     if cond_mut_info1 > jointmi_s1s2_t:
         raise ValueError('joint MI {0} smaller than cMI {1}'
                          ''.format(jointmi_s1s2_t, cond_mut_info1))
@@ -281,7 +281,7 @@ def _cmi_prob(s2cond_prob, joint_t_s2cond_prob,
             for sym_t in range(0, alph_t):
 
                 # print(sym_s1, '\t', sym_s2cond, '\t', sym_t, '\t', joint_t_s2cond_prob[sym_t, sym_s2cond], '\t', joint_s1_s2cond_prob[sym_s1, sym_s2cond], '\t', joint_t_s1_s2cond_prob[sym_t,sym_s1, sym_s2cond], '\t', s2cond_prob[sym_s2cond])
-                
+
                 if ( s2cond_prob[sym_s2cond]
                      * joint_t_s2cond_prob[sym_t, sym_s2cond]
                      * joint_s1_s2cond_prob[sym_s1, sym_s2cond]
@@ -306,7 +306,7 @@ def _cmi_prob(s2cond_prob, joint_t_s2cond_prob,
 
 def _mi_prob(s1_prob, s2_prob, joint_s1_s2_prob):
     """
-    MI calculator in the prob domain
+    MI estimator in the prob domain
     """
     total = np.zeros(1).astype('float128')
 
@@ -316,7 +316,7 @@ def _mi_prob(s1_prob, s2_prob, joint_s1_s2_prob):
         for sym_s2 in range(0, alph_s2):
 
 #            print(sym_s1, '\t', sym_s2, '\t', s1_prob[sym_s1], '\t', s2_prob[sym_s2], '\t', joint_s1_s2_prob[sym_s1, sym_s2])
-            
+
             if ( s1_prob[sym_s1] * s2_prob[sym_s2]
                  * joint_s1_s2_prob[sym_s1, sym_s2] > 0 ):
 
@@ -325,7 +325,7 @@ def _mi_prob(s1_prob, s2_prob, joint_s1_s2_prob):
                     - np.log(s1_prob[sym_s1])
                     - np.log(s2_prob[sym_s2])
                     ) / np.log(2)
-                
+
                 weighted_contrib = (
                     joint_s1_s2_prob[sym_s1, sym_s2]
                     * local_contrib)
@@ -338,11 +338,11 @@ def _mi_prob(s1_prob, s2_prob, joint_s1_s2_prob):
 
 def _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t):
     """
-    Joint MI calculator in the samples domain
+    Joint MI estimator in the samples domain
     """
 
     [s12, alph_s12] = _join_variables(s1, s2, alph_s1, alph_s2)
-    
+
     t_count = np.zeros(alph_t, dtype=np.int)
     s12_count = np.zeros(alph_s12, dtype=np.int)
     joint_t_s12_count = np.zeros((alph_t, alph_s12), dtype=np.int)
@@ -366,13 +366,13 @@ def _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t):
 def _join_variables(a, b, alph_a, alph_b):
 
     alph_new = alph_a * alph_b
-    
+
     if alph_b < alph_a:
         a, b = b, a
         alph_a, alph_b = alph_b, alph_a
-    
+
     ab = alph_b * a + b
-    
+
     return ab, alph_new
 
 

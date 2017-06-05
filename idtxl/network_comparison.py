@@ -2,7 +2,7 @@
 import copy as cp
 import numpy as np
 from scipy.special import binom
-from .set_estimator import Estimator_cmi
+from .estimator import find_estimator
 from . import stats
 from . import idtxl_utils as utils
 from .network_analysis import NetworkAnalysis
@@ -72,9 +72,10 @@ class NetworkComparison(NetworkAnalysis):
             raise KeyError('You have to provide a "stats_type": "dependent" '
                            'or "independent".')
         try:
-            self._cmi_calculator = Estimator_cmi(options['cmi_calc_name'])
+            EstimatorClass = find_estimator(options['cmi_estimator'])
         except KeyError:
-            raise KeyError('No CMI calculator was specified!')
+            raise KeyError('Please provide an estimator class or name!')
+        self._cmi_estimator = EstimatorClass(options)
         self.n_permutations = options.get('n_perm_comp', 10)
         self.alpha = options.get('alpha_comp', 0.05)
         self.tail = options.get('tail', 'two')
@@ -440,11 +441,10 @@ class NetworkComparison(NetworkAnalysis):
                                                              idx_cond_full,
                                                              idx_source,
                                                              cond_full_real)
-                cmi_temp.append(self._cmi_calculator.estimate(
+                cmi_temp.append(self._cmi_estimator.estimate(
                                                         cur_val_real,
                                                         source_real,
-                                                        cond_real,
-                                                        self.options))
+                                                        cond_real))
 
             cmi[t] = np.array(cmi_temp)
 
@@ -495,20 +495,18 @@ class NetworkComparison(NetworkAnalysis):
                                                              idx_cond_full,
                                                              idx_source,
                                                              cond_full_perm_a)
-                cmi_temp_a.append(self._cmi_calculator.estimate(
+                cmi_temp_a.append(self._cmi_estimator.estimate(
                                                         cur_val_perm_a,
                                                         source_real_a,
-                                                        temp_cond_real_a,
-                                                        self.options))
+                                                        temp_cond_real_a))
                 [temp_cond_real_b, source_real_b] = utils.separate_arrays(
                                                              idx_cond_full,
                                                              idx_source,
                                                              cond_full_perm_b)
-                cmi_temp_b.append(self._cmi_calculator.estimate(
+                cmi_temp_b.append(self._cmi_estimator.estimate(
                                                         cur_val_perm_b,
                                                         source_real_b,
-                                                        temp_cond_real_b,
-                                                        self.options))
+                                                        temp_cond_real_b))
             cmi_a[t] = np.array(cmi_temp_a)
             cmi_b[t] = np.array(cmi_temp_b)
 

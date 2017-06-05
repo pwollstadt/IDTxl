@@ -232,7 +232,7 @@ def _cmi_prob(s2cond_prob, joint_t_s2cond_prob, joint_s1_s2cond_prob,
     return total
 
 def _mi_prob(s1_prob, s2_prob, joint_s1_s2_prob):
-    """ MI calculator in the prob domain."""
+    """ MI estimator in the prob domain."""
     total = np.zeros(1).astype('float128')
 
     [alph_s1, alph_s2] = np.shape(joint_s1_s2_prob)
@@ -258,7 +258,7 @@ def _mi_prob(s1_prob, s2_prob, joint_s1_s2_prob):
     return total
 
 def _joint_mi(s1, s2, t, alph_s1, alph_s2, alph_t):
-    """ Joint MI calculator in the samples domain."""
+    """ Joint MI estimator in the samples domain."""
     [s12, alph_s12] = _join_variables(s1, s2, alph_s1, alph_s2)
 
     t_count = np.zeros(alph_t, dtype=np.int)

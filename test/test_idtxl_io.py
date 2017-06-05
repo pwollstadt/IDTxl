@@ -2,7 +2,7 @@
 import os
 from idtxl import idtxl_io as io
 from idtxl.data import Data
-from idtxl.active_information_storage import Active_information_storage
+from idtxl.active_information_storage import ActiveInformationStorage
 
 
 # def test_save_te_results():

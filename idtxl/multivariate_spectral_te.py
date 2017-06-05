@@ -8,7 +8,7 @@ Note:
 import numpy as np
 from . import stats
 from .network_analysis import NetworkAnalysis
-from .set_estimator import Estimator_cmi
+from .estimator import find_estimator
 
 VERBOSE = True
 
@@ -46,10 +46,10 @@ class MultivariateSpectralTE(NetworkAnalysis):
         # estimated quantity may be different from CMI in other inference
         # algorithms. (Everything else can be done in the parent class.)
         try:
-            self.calculator_name = options['cmi_calc_name']
+            EstimatorClass = find_estimator(options['cmi_estimator'])
         except KeyError:
-            raise KeyError('Calculator name was not specified!')
-        self._cmi_calculator = Estimator_cmi(self.calculator_name)
+            raise KeyError('Estimator was not specified!')
+        self._cmi_estimator = EstimatorClass(options)
         self.n_permutations = options.get('n_perm_spec', 200)
         self.alpha = options.get('alpha_spec', 0.05)
         self.tail = options.get('tail', 'two')

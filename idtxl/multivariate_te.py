@@ -13,8 +13,7 @@ Note:
 import numpy as np
 from . import stats
 from .network_inference import NetworkInference
-# from .set_estimator import Estimator_cmi
-from . import estimator
+from .estimator import find_estimator
 
 VERBOSE = True
 
@@ -68,8 +67,8 @@ class MultivariateTE(NetworkInference):
         current_value : tuple
             index of the current value in TE estimation, (idx process,
             idx sample)
-        calculator_name : string
-            calculator used for TE estimation
+        estimator_name : string | class
+            estimator used for TE estimation
         max_lag_target : int
             maximum temporal search depth for candidates in the target's past
             (default=same as max_lag_sources)
@@ -108,12 +107,10 @@ class MultivariateTE(NetworkInference):
         # estimated quantity may be different from CMI in other inference
         # algorithms. (Everything else can be done in the parent class.)
         try:
-            self.calculator_name = options['cmi_calc_name']
+            EstimatorClass = find_estimator(options['cmi_estimator'])
         except KeyError:
-            raise KeyError('Calculator name was not specified!')
-        # self._cmi_calculator = Estimator_cmi(self.calculator_name)
-        Est = getattr(estimator, self.calculator_name.capitalize())
-        self._cmi_calculator = Est(options)
+            raise KeyError('Please provide an estimator class or name!')
+        self._cmi_estimator = EstimatorClass(options)
         super().__init__(max_lag_sources, min_lag_sources, options,
                          max_lag_target, tau_sources, tau_target)
 
@@ -336,7 +333,7 @@ class MultivariateTE(NetworkInference):
             cand_real = cand_real.T.reshape(cand_real.size, 1)
 
             # Calculate the (C)MI for each candidate and the target.
-            temp_te = self._cmi_calculator.estimate_mult(
+            temp_te = self._cmi_estimator.estimate_mult(
                                 n_chunks=len(candidate_set),
                                 re_use=['var2', 'conditional'],
                                 var1=cand_real,
@@ -423,7 +420,7 @@ class MultivariateTE(NetworkInference):
                             candidate_realisations.shape,
                             self._current_value_realisations.shape,
                             conditional_realisations.shape))
-            temp_te = self._cmi_calculator.estimate_mult(
+            temp_te = self._cmi_estimator.estimate_mult(
                                 n_chunks=len(self.selected_vars_sources),
                                 re_use=['var2'],
                                 var1=candidate_realisations,
