@@ -526,6 +526,7 @@ def test_local_values():
 
 @jpype_missing
 def test_discrete_ais():
+    """Test results for discrete AIS estimation against other estimators."""
 
     opts = {'discretise_method': 'none',
             'alph': 2,
@@ -555,7 +556,154 @@ def test_discrete_ais():
     _assert_result(mi_g, 0, 'JidtGaussianAIS', 'MI (no memory)')
 
 
+def test_invalid_opts_input():
+    """Test handling of wrong inputs for options dictionary."""
+
+    # Wrong input type for opts dict.
+    with pytest.raises(TypeError): JidtDiscreteMI(opts=1)
+    with pytest.raises(TypeError): JidtDiscreteCMI(opts=1)
+    with pytest.raises(TypeError): JidtDiscreteAIS(opts=1)
+    with pytest.raises(TypeError): JidtDiscreteTE(opts=1)
+    with pytest.raises(TypeError): JidtGaussianMI(opts=1)
+    with pytest.raises(TypeError): JidtGaussianCMI(opts=1)
+    with pytest.raises(TypeError): JidtGaussianAIS(opts=1)
+    with pytest.raises(TypeError): JidtGaussianTE(opts=1)
+    with pytest.raises(TypeError): JidtKraskovMI(opts=1)
+    with pytest.raises(TypeError): JidtKraskovCMI(opts=1)
+    with pytest.raises(TypeError): JidtKraskovAIS(opts=1)
+    with pytest.raises(TypeError): JidtKraskovTE(opts=1)
+
+    # Test if opts dict is initialised correctly.
+    e = JidtDiscreteMI()
+    assert type(e.opts) is dict, 'Did not initialise options as dictionary.'
+    e = JidtDiscreteCMI()
+    assert type(e.opts) is dict, 'Did not initialise options as dictionary.'
+    e = JidtGaussianMI()
+    assert type(e.opts) is dict, 'Did not initialise options as dictionary.'
+    e = JidtGaussianCMI()
+    assert type(e.opts) is dict, 'Did not initialise options as dictionary.'
+    e = JidtKraskovMI()
+    assert type(e.opts) is dict, 'Did not initialise options as dictionary.'
+    e = JidtKraskovCMI()
+    assert type(e.opts) is dict, 'Did not initialise options as dictionary.'
+
+    # History parameter missing for AIS and TE estimation.
+    with pytest.raises(RuntimeError): JidtDiscreteAIS(opts={})
+    with pytest.raises(RuntimeError): JidtDiscreteTE(opts={})
+    with pytest.raises(RuntimeError): JidtGaussianAIS(opts={})
+    with pytest.raises(RuntimeError): JidtGaussianTE(opts={})
+    with pytest.raises(RuntimeError): JidtKraskovAIS(opts={})
+    with pytest.raises(RuntimeError): JidtKraskovTE(opts={})
+
+
+def test_invalid_history_parameters():
+    """Ensure invalid history parameters raise a RuntimeError."""
+
+    # TE: Target tau > target history
+    opts = {'history_target': 1, 'tau_target': 4}
+    with pytest.raises(RuntimeError): JidtDiscreteTE(opts=opts)
+    with pytest.raises(RuntimeError): JidtGaussianTE(opts=opts)
+    with pytest.raises(RuntimeError): JidtKraskovTE(opts=opts)
+
+    # TE: Source tau > Source history
+    opts = {'history_target': 1, 'history_source': 1, 'tau_source': 4}
+    with pytest.raises(RuntimeError): JidtDiscreteTE(opts=opts)
+    with pytest.raises(RuntimeError): JidtGaussianTE(opts=opts)
+    with pytest.raises(RuntimeError): JidtKraskovTE(opts=opts)
+
+    # TE: Parameters are not integers
+    opts = {'history_target': 4, 'history_source': 4,
+            'tau_source': 2, 'tau_target': 2.5}
+    with pytest.raises(AssertionError): JidtDiscreteTE(opts=opts)
+    with pytest.raises(AssertionError): JidtGaussianTE(opts=opts)
+    with pytest.raises(AssertionError): JidtKraskovTE(opts=opts)
+    opts['tau_source'] = 2.5
+    opts['tau_target'] = 2
+    with pytest.raises(AssertionError): JidtDiscreteTE(opts=opts)
+    with pytest.raises(AssertionError): JidtGaussianTE(opts=opts)
+    with pytest.raises(AssertionError): JidtKraskovTE(opts=opts)
+    opts['history_source'] = 2.5
+    opts['tau_source'] = 2
+    with pytest.raises(AssertionError): JidtDiscreteTE(opts=opts)
+    with pytest.raises(AssertionError): JidtGaussianTE(opts=opts)
+    with pytest.raises(AssertionError): JidtKraskovTE(opts=opts)
+    opts['history_target'] = 2.5
+    opts['history_source'] = 4
+    with pytest.raises(AssertionError): JidtDiscreteTE(opts=opts)
+    with pytest.raises(AssertionError): JidtGaussianTE(opts=opts)
+    with pytest.raises(AssertionError): JidtKraskovTE(opts=opts)
+
+    # AIS: Tau > history (tau not available for discrete AIS estimator)
+    opts = {'history': 1, 'tau': 4}
+    with pytest.raises(RuntimeError): JidtGaussianAIS(opts=opts)
+    with pytest.raises(RuntimeError): JidtKraskovAIS(opts=opts)
+
+    # AIS: Parameters are not integers.
+    opts = {'history': 4, 'tau': 2.5}
+    with pytest.raises(AssertionError): JidtGaussianAIS(opts=opts)
+    with pytest.raises(AssertionError): JidtKraskovAIS(opts=opts)
+    opts = {'history': 4.5, 'tau': 2}
+    with pytest.raises(AssertionError): JidtDiscreteAIS(opts=opts)
+    with pytest.raises(AssertionError): JidtGaussianAIS(opts=opts)
+    with pytest.raises(AssertionError): JidtKraskovAIS(opts=opts)
+
+
+# def test_discretisation():
+#     """Test discretisation for continuous data."""
+#     n = 1000
+#     source = np.random.randn(n)
+#     target = np.random.randn(n)
+
+#     opts = {'discretise_method': 'equal', 'num_discrete_bins': 4, 'history': 1,
+#             'history_target': 1}
+#     est = JidtDiscreteAIS(opts)
+#     est = JidtDiscreteTE(opts)
+#     est = JidtDiscreteCMI(opts)
+#     est = JidtDiscreteMI(opts)
+#     opts['discretise_method'] = 'max_ent'
+#     est = JidtDiscreteAIS(opts)
+#     est = JidtDiscreteTE(opts)
+#     est = JidtDiscreteCMI(opts)
+#     est = JidtDiscreteMI(opts)
+
+
+def test_lagged_mi():
+    """Test estimation of lagged MI."""
+    n = 10000
+    cov = 0.4
+    source = [rn.normalvariate(0, 1) for r in range(n)]
+    target = [0] + [sum(pair) for pair in zip(
+                        [cov * y for y in source[0:n - 1]],
+                        [(1 - cov) * y for y in
+                            [rn.normalvariate(0, 1) for r in range(n - 1)]])]
+    source = np.array(source)
+    target = np.array(target)
+    opts = {'discretise_method': 'equal', 'num_discrete_bins': 4, 'history': 1,
+            'history_target': 1, 'lag': 1, 'source_target_delay': 1}
+
+    est_te_k = JidtKraskovTE(opts)
+    te_k = est_te_k.estimate(source, target)
+    est_te_d = JidtDiscreteTE(opts)
+    te_d = est_te_d.estimate(source, target)
+    est_d = JidtDiscreteMI(opts)
+    mi_d = est_d.estimate(source, target)
+    est_k = JidtKraskovMI(opts)
+    mi_k = est_k.estimate(source, target)
+    est_g = JidtGaussianMI(opts)
+    mi_g = est_g.estimate(source, target)
+    _compare_result(mi_d, te_d, 'JidtDiscreteMI', 'JidtDiscreteTE',
+                    'lagged MI', tol=0.05)
+    _compare_result(mi_k, te_k, 'JidtKraskovMI', 'JidtKraskovTE',
+                    'lagged MI', tol=0.05)
+    _compare_result(mi_g, te_k, 'JidtGaussianMI', 'JidtKraskovTE',
+                    'lagged MI', tol=0.05)
+
+
 if __name__ == '__main__':
+    test_lagged_mi()
+    # test_discretisation()
+    test_invalid_history_parameters()
+    test_invalid_opts_input()
     test_discrete_ais()
     test_local_values()
     test_te_gauss_data()

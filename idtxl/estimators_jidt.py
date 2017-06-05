@@ -93,6 +93,21 @@ class JidtEstimator(Estimator):
         self.opts.setdefault('tau_source', 1)
         self.opts.setdefault('source_target_delay', 1)
 
+        if self.opts['tau_target'] > self.opts['history_target']:
+            raise RuntimeError('Target tau has to be smaller than the target '
+                               'history.')
+        if self.opts['tau_source'] > self.opts['history_source']:
+            raise RuntimeError('Target tau has to be smaller than the target '
+                               'history.')
+        assert type(self.opts['tau_target']) is int, (
+            'Target tau has to be an integer.')
+        assert type(self.opts['tau_source']) is int, (
+            'Source tau has to be an integer.')
+        assert type(self.opts['history_target']) is int, (
+            'Target history has to be an integer.')
+        assert type(self.opts['history_source']) is int, (
+            'Source history has to be an integer.')
+
     def _ensure_one_dim_input(self, var):
         """Make sure input arrays have one dimension.
 
@@ -188,11 +203,11 @@ class JidtKraskov(JidtEstimator):
 
         # Set default estimator options.
         super().__init__(opts)
-        opts.setdefault('kraskov_k', str(4))
-        opts.setdefault('normalise', 'false')
-        opts.setdefault('theiler_t', str(0))
-        opts.setdefault('noise_level', 1e-8)
-        opts.setdefault('num_threads', 'USE_ALL')
+        self.opts.setdefault('kraskov_k', str(4))
+        self.opts.setdefault('normalise', 'false')
+        self.opts.setdefault('theiler_t', str(0))
+        self.opts.setdefault('noise_level', 1e-8)
+        self.opts.setdefault('num_threads', 'USE_ALL')
 
         # Set properties of JIDT's calculator object.
         self.calc = CalcClass()
@@ -245,9 +260,8 @@ class JidtDiscrete(JidtEstimator):
     """
 
     def __init__(self, opts):
-        opts = self._check_opts(opts)
-        opts.setdefault('discretise_method', 'none')
         super().__init__(opts)
+        self.opts.setdefault('discretise_method', 'none')
 
     def _discretise_vars(self, var1, var2, conditional=None):
         # Discretise variables if requested. Otherwise assert data are discrete
@@ -484,17 +498,16 @@ class JidtDiscreteCMI(JidtDiscrete):
         # number of bins for discretisation if provided, otherwise assume
         # binary variables.
         super().__init__(opts)
-        if opts['discretise_method'] != 'none':
-            try:
-                num_discrete_bins = int(opts['num_discrete_bins'])
-                opts['alph1'] = num_discrete_bins
-                opts['alph2'] = num_discrete_bins
-                opts['alphc'] = num_discrete_bins
-            except KeyError:
-                pass  # Do nothing and use the default for alph_* set below
-        opts.setdefault('alph1', int(2))
-        opts.setdefault('alph2', int(2))
-        opts.setdefault('alphc', int(2))
+        try:
+            num_discrete_bins = int(self.opts['num_discrete_bins'])
+            self.opts['alph1'] = num_discrete_bins
+            self.opts['alph2'] = num_discrete_bins
+            self.opts['alphc'] = num_discrete_bins
+        except KeyError:
+            pass  # Do nothing and use the default for alph_* set below
+        self.opts.setdefault('alph1', int(2))
+        self.opts.setdefault('alph2', int(2))
+        self.opts.setdefault('alphc', int(2))
 
         # Start JAVA virtual machine and create JAVA object. Add JAVA object to
         # instance, the discrete estimator requires the variable dimensions
@@ -609,16 +622,15 @@ class JidtDiscreteMI(JidtDiscrete):
         # number of bins for discretisation if provided, otherwise assume
         # binary variables.
         super().__init__(opts)
-        opts.setdefault('lag', int(0))
-        if opts['discretise_method'] != 'none':
-            try:
-                num_discrete_bins = int(opts['num_discrete_bins'])
-                opts['alph1'] = num_discrete_bins
-                opts['alph2'] = num_discrete_bins
-            except KeyError:
-                pass  # Do nothing and use the default for alph_* set below
-        opts.setdefault('alph1', int(2))
-        opts.setdefault('alph2', int(2))
+        self.opts.setdefault('lag', int(0))
+        try:
+            num_discrete_bins = int(self.opts['num_discrete_bins'])
+            self.opts['alph1'] = num_discrete_bins
+            self.opts['alph2'] = num_discrete_bins
+        except KeyError:
+            pass  # Do nothing and use the default for alph_* set below
+        self.opts.setdefault('alph1', int(2))
+        self.opts.setdefault('alph2', int(2))
 
         # Start JAVA virtual machine and create JAVA object. Add JAVA object to
         # instance, the discrete estimator requires the variable dimensions
@@ -821,14 +833,19 @@ class JidtKraskovAIS(JidtKraskov):
         runs replicable set noise_level to 0.
     """
 
-    def __init__(self, opts=None):
-
+    def __init__(self, opts):
         # Check for history for AIS estimation.
+        if type(opts) is not dict:
+            raise TypeError('Opts should be a dictionary.')
         try:
             opts['history']
         except KeyError:
             raise RuntimeError('No history was provided for AIS estimation.')
         opts.setdefault('tau', 1)
+        assert type(opts['history']) is int, ('History has to be an integer.')
+        assert type(opts['tau']) is int, ('Tau has to be an integer.')
+        if opts['tau'] > opts['history']:
+            raise RuntimeError('Tau has to be smaller than the history.')
 
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
@@ -900,26 +917,25 @@ class JidtDiscreteAIS(JidtDiscrete):
     def __init__(self, opts):
         if type(opts) is not dict:
             raise TypeError('Opts should be a dictionary.')
-        super().__init__(opts)
-
         try:
-            self.opts['history']
+            opts['history']
         except KeyError:
             raise RuntimeError('No history was provided for AIS estimation.')
+        assert type(opts['history']) is int, ('History has to be an integer.')
 
         # Get alphabet sizes and check if discretisation is requested
-        if opts['discretise_method'] != 'none':
-            try:
-                num_discrete_bins = int(opts['num_discrete_bins'])
-                opts['alph'] = num_discrete_bins
-            except KeyError:
-                pass  # Do nothing and use the default for alph_* set below
-        self.opts.setdefault('alph', int(2))
+        try:
+            num_discrete_bins = int(opts['num_discrete_bins'])
+            opts['alph'] = num_discrete_bins
+        except KeyError:
+            pass  # Do nothing and use the default for alph_* set below
+        opts.setdefault('alph', int(2))
 
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
         self.CalcClass = (jp.JPackage('infodynamics.measures.discrete').
                           ActiveInformationCalculatorDiscrete)
+        super().__init__(opts)
 
     def estimate(self, process):
         """Estimate active information storage.
@@ -1021,13 +1037,18 @@ class JidtGaussianAIS(JidtGaussian):
     """
 
     def __init__(self, opts):
-
         # Check for history for AIS estimation.
+        if type(opts) is not dict:
+            raise TypeError('Opts should be a dictionary.')
         try:
             opts['history']
         except KeyError:
             raise RuntimeError('No history was provided for AIS estimation.')
         opts.setdefault('tau', 1)
+        assert type(opts['history']) is int, ('History has to be an integer.')
+        assert type(opts['tau']) is int, ('Tau has to be an integer.')
+        if opts['tau'] > opts['history']:
+            raise RuntimeError('Tau has to be smaller than the history.')
 
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
@@ -1096,17 +1117,16 @@ class JidtGaussianMI(JidtGaussian):
     """
 
     def __init__(self, opts=None):
-        opts = self._check_opts(opts)
-        opts.setdefault('lag', int(0))
-
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
         CalcClass = (jp.JPackage('infodynamics.measures.continuous.gaussian').
                      MutualInfoCalculatorMultiVariateGaussian)
         super().__init__(CalcClass, opts)
 
-        # Add lag between input variables.
-        self.calc.setProperty('PROP_TIME_DIFF', str(self.opts['lag']))
+        # Add lag between input variables. Setting the lag in JIDT didn't work,
+        # shift variables when calling the estimate method instead.
+        self.opts.setdefault('lag', int(0))
+        # self.calc.setProperty('PROP_TIME_DIFF', str(self.opts['lag']))
 
     def estimate(self, var1, var2):
         """Estimate mutual information.
@@ -1126,6 +1146,11 @@ class JidtGaussianMI(JidtGaussian):
         """
         var1 = self._ensure_two_dim_input(var1)
         var2 = self._ensure_two_dim_input(var2)
+
+        # Shift variables to calculate a lagged MI.
+        if self.opts['lag'] > 0:
+            var1 = var1[:-self.opts['lag'], :]
+            var2 = var2[self.opts['lag']:, :]
 
         self.calc.initialise(var1.shape[1], var2.shape[1])
         self.calc.setObservations(var1, var2)
@@ -1290,14 +1315,13 @@ class JidtKraskovTE(JidtKraskov):
     """
 
     def __init__(self, opts):
-        if type(opts) is not dict:
-            raise TypeError('Opts should be a dictionary.')
-
         # Start JAVA virtual machine.
         self._start_jvm()
         CalcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
                      TransferEntropyCalculatorKraskov)
         super().__init__(CalcClass, opts)
+
+        # Get embedding and delay parameters.
         self._set_te_defaults()
 
     def estimate(self, source, target):
@@ -1363,8 +1387,6 @@ class JidtDiscreteTE(JidtDiscrete):
             - 'num_discrete_bins' - number of discrete bins/levels or the base
               of each dimension of the discrete variables (default=2). If set,
               this parameter overwrites/sets 'alph1' and 'alph2'
-            - 'history' - number of samples in the target's past used as
-              embedding
             - 'alph1' - number of discrete bins/levels for source
               (default=2, or the value set for 'num_discrete_bins')
             - 'alph2' - number of discrete bins/levels for target
@@ -1380,25 +1402,23 @@ class JidtDiscreteTE(JidtDiscrete):
     """
 
     def __init__(self, opts):
-        if type(opts) is not dict:
-            raise TypeError('Opts should be a dictionary.')
         super().__init__(opts)
-
-        # Get alphabet sizes and check if discretisation is requested. Try to
-        # overwrite alphabet sizes with number of bins.
-        if opts['discretise_method'] != 'none':
-            try:
-                num_discrete_bins = int(opts['num_discrete_bins'])
-                opts['alph1'] = num_discrete_bins
-                opts['alph2'] = num_discrete_bins
-            except KeyError:
-                # do nothing and set alphabet sizes to default below
-                pass
-        self.opts.setdefault('alph1', int(2))
-        self.opts.setdefault('alph2', int(2))
 
         # Get embedding and delay parameters.
         self._set_te_defaults()
+
+        # Get alphabet sizes and check if discretisation is requested. Try to
+        # overwrite alphabet sizes with number of bins.
+        try:
+            num_discrete_bins = int(opts['num_discrete_bins'])
+            opts['alph1'] = num_discrete_bins
+            opts['alph2'] = num_discrete_bins
+        except KeyError:
+            # do nothing and set alphabet sizes to default below
+            pass
+        self.opts.setdefault('alph1', int(2))
+        self.opts.setdefault('alph2', int(2))
+
 
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
@@ -1512,14 +1532,13 @@ class JidtGaussianTE(JidtGaussian):
     """
 
     def __init__(self, opts):
-        if type(opts) is not dict:
-            raise TypeError('Opts should be a dictionary.')
-
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
         CalcClass = (jp.JPackage('infodynamics.measures.continuous.gaussian').
                      TransferEntropyCalculatorGaussian)
         super().__init__(CalcClass, opts)
+
+        # Get embedding and delay parameters.
         self._set_te_defaults()
 
     def estimate(self, source, target):
