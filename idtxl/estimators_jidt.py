@@ -93,12 +93,6 @@ class JidtEstimator(Estimator):
         self.opts.setdefault('tau_source', 1)
         self.opts.setdefault('source_target_delay', 1)
 
-        if self.opts['tau_target'] > self.opts['history_target']:
-            raise RuntimeError('Target tau has to be smaller than the target '
-                               'history.')
-        if self.opts['tau_source'] > self.opts['history_source']:
-            raise RuntimeError('Target tau has to be smaller than the target '
-                               'history.')
         assert type(self.opts['tau_target']) is int, (
             'Target tau has to be an integer.')
         assert type(self.opts['tau_source']) is int, (
@@ -147,10 +141,6 @@ class JidtEstimator(Estimator):
 
     def is_parallel(self):
         return False
-
-    def estimate(self, **kwargs):
-        # abstract method implemented by child classes
-        pass
 
 
 class JidtKraskov(JidtEstimator):
@@ -209,14 +199,14 @@ class JidtKraskov(JidtEstimator):
         self.opts.setdefault('noise_level', 1e-8)
         self.opts.setdefault('num_threads', 'USE_ALL')
 
-        # Set properties of JIDT's calculator object.
+        # Set properties of JIDT's estimator object.
         self.calc = CalcClass()
         self.calc.setProperty('PROP_KRASKOV_ALG_NUM', str(1))
         self.calc.setProperty('NORMALISE', str(self.opts['normalise']).lower())
         self.calc.setProperty('k', str(self.opts['kraskov_k']))
         self.calc.setProperty('DYN_CORR_EXCL', str(self.opts['theiler_t']))
-        self.calc.setProperty('NOISE_LEVEL_TO_ADD', str(
-            self.opts['noise_level']))
+        self.calc.setProperty('NOISE_LEVEL_TO_ADD',
+                              str(self.opts['noise_level']))
         self.calc.setProperty('NUM_THREADS', str(self.opts['num_threads']))
         # self.calc.setDebug(opts['debug'])
 
@@ -243,8 +233,6 @@ class JidtDiscrete(JidtEstimator):
     these estimators see documentation for the child classes.
 
     Args:
-        CalcClass : JAVA class
-            JAVA class returned by jpype.JPackage
         opts : dict [optional]
             set estimator parameters:
 
@@ -257,6 +245,13 @@ class JidtDiscrete(JidtEstimator):
               continuous variables to discrete values, can be 'max_ent' for
               maximum entropy binning, 'equal' for equal size bins, and 'none'
               if no binning is required (default='none')
+
+    Note:
+        Discrete JIDT estimators require the data's alphabet size for
+        instantiation. Hence, opposed to the Kraskov and Gaussian estimators,
+        the JAVA class is added to the object instance, while for Kraskov/
+        Gaussian estimators an instance of that class is added (because for the
+        latter, objects can be instantiated independent of data properties).
     """
 
     def __init__(self, opts):
@@ -309,7 +304,7 @@ class JidtDiscrete(JidtEstimator):
             return var1, var2
 
 
-class JidtGaussian(JidtKraskov):
+class JidtGaussian(JidtEstimator):
     """Abstract class for implementation of JIDT Gaussian-estimators.
 
     Abstract class for implementation of JIDT Gaussian-estimators, child
@@ -342,18 +337,12 @@ class JidtGaussian(JidtKraskov):
               (default='false')
             - 'local_values' - return local TE instead of average TE
               (default=False)
-            - 'kraskov_k' - no. nearest neighbours for KNN search (default=4)
-            - 'normalise' - z-standardise data (default=False)
-            - 'theiler_t' - no. next temporal neighbours ignored in KNN and
-              range searches (default='0')
-            - 'noise_level' - random noise added to the data (default='1e-8')
-            - 'num_threads' - number of threads used for estimation
-              (default='USE_ALL', not that this uses *all* available threads
-              on the current machine)
     """
 
     def __init__(self, CalcClass, opts):
-        super().__init__(CalcClass, opts)
+        super().__init__(opts)
+        self.calc = CalcClass()
+        # self.calc.setDebug(opts['debug'])
 
 
 class JidtKraskovCMI(JidtKraskov):
@@ -390,7 +379,7 @@ class JidtKraskovCMI(JidtKraskov):
 
     Note:
         Some technical details: JIDT normalises over realisations, IDTxl
-        normalises over raw data once, outside the CMI calculator to save
+        normalises over raw data once, outside the CMI estimator to save
         computation time. The Theiler window ignores trial boundaries. The
         CMI estimator does add noise to the data as a default. To make analysis
         runs replicable set noise_level to 0.
@@ -423,7 +412,7 @@ class JidtKraskovCMI(JidtKraskov):
                 samples if 'local_values'=True
         """
         # Return MI if no conditional was provided.
-        if not conditional:
+        if conditional is None:
             est_mi = JidtKraskovMI(self.opts)
             return est_mi.estimate(var1, var2)
         else:
@@ -442,16 +431,8 @@ class JidtKraskovCMI(JidtKraskov):
             'Unequal number of observations (var1: {0}, cond: {1}).'.format(
                 var1.shape[0], cond.shape[0]))
 
-        # Add noise
-        var1_noise = var1 + np.random.normal(scale=self.opts['noise_level'],
-                                             size=var1.shape)
-        var2_noise = var2 + np.random.normal(scale=self.opts['noise_level'],
-                                             size=var2.shape)
-        cond_noise = cond + np.random.normal(scale=self.opts['noise_level'],
-                                             size=cond.shape)
-
         self.calc.initialise(var1.shape[1], var2.shape[1], cond.shape[1])
-        self.calc.setObservations(var1_noise, var2_noise, cond_noise)
+        self.calc.setObservations(var1, var2, cond)
         if self.opts['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
         else:
@@ -670,7 +651,7 @@ class JidtDiscreteMI(JidtDiscrete):
         var1 = utils.combine_discrete_dimensions(var1, self.opts['alph1'])
         var2 = utils.combine_discrete_dimensions(var2, self.opts['alph2'])
 
-        # Initialise calculator
+        # Initialise estimator
         max_base = int(max(np.power(self.opts['alph1'], var1_dim),
                            np.power(self.opts['alph2'], var2_dim)))
         calc = self.CalcClass(max_base, self.opts['lag'])
@@ -722,7 +703,7 @@ class JidtKraskovMI(JidtKraskov):
 
     Note:
         Some technical details: JIDT normalises over realisations, IDTxl
-        normalises over raw data once, outside the MI calculator to save
+        normalises over raw data once, outside the MI estimator to save
         computation time. The Theiler window ignores trial boundaries. The
         MI estimator does add noise to the data as a default. To make analysis
         runs replicable set noise_level to 0.
@@ -763,15 +744,8 @@ class JidtKraskovMI(JidtKraskov):
             var1 = var1[:-self.opts['lag'], :]
             var2 = var2[self.opts['lag']:, :]
 
-        # Add noise. Create a new variable to create a deep copy and not change
-        # the variable in the caller's scope.
-        var1_noise = var1 + np.random.normal(scale=self.opts['noise_level'],
-                                             size=var1.shape)
-        var2_noise = var2 + np.random.normal(scale=self.opts['noise_level'],
-                                             size=var2.shape)
-
         self.calc.initialise(var1.shape[1], var2.shape[1])
-        self.calc.setObservations(var1_noise, var2_noise)
+        self.calc.setObservations(var1, var2)
 
         if self.opts['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
@@ -827,7 +801,7 @@ class JidtKraskovAIS(JidtKraskov):
 
     Note:
         Some technical details: JIDT normalises over realisations, IDTxl
-        normalises over raw data once, outside the AIS calculator to save
+        normalises over raw data once, outside the AIS estimator to save
         computation time. The Theiler window ignores trial boundaries. The
         AIS estimator does add noise to the data as a default. To make analysis
         runs replicable set noise_level to 0.
@@ -844,8 +818,6 @@ class JidtKraskovAIS(JidtKraskov):
         opts.setdefault('tau', 1)
         assert type(opts['history']) is int, ('History has to be an integer.')
         assert type(opts['tau']) is int, ('Tau has to be an integer.')
-        if opts['tau'] > opts['history']:
-            raise RuntimeError('Tau has to be smaller than the history.')
 
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
@@ -1030,7 +1002,7 @@ class JidtGaussianAIS(JidtGaussian):
 
     Note:
         Some technical details: JIDT normalises over realisations, IDTxl
-        normalises over raw data once, outside the AIS calculator to save
+        normalises over raw data once, outside the AIS estimator to save
         computation time. The Theiler window ignores trial boundaries. The
         AIS estimator does add noise to the data as a default. To make analysis
         runs replicable set noise_level to 0.
@@ -1047,8 +1019,6 @@ class JidtGaussianAIS(JidtGaussian):
         opts.setdefault('tau', 1)
         assert type(opts['history']) is int, ('History has to be an integer.')
         assert type(opts['tau']) is int, ('Tau has to be an integer.')
-        if opts['tau'] > opts['history']:
-            raise RuntimeError('Tau has to be smaller than the history.')
 
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
@@ -1110,7 +1080,7 @@ class JidtGaussianMI(JidtGaussian):
 
     Note:
         Some technical details: JIDT normalises over realisations, IDTxl
-        normalises over raw data once, outside the MI calculator to save
+        normalises over raw data once, outside the MI estimator to save
         computation time. The Theiler window ignores trial boundaries. The
         MI estimator does add noise to the data as a default. To make analysis
         runs replicable set noise_level to 0.
@@ -1197,7 +1167,7 @@ class JidtGaussianCMI(JidtGaussian):
 
     Note:
         Some technical details: JIDT normalises over realisations, IDTxl
-        normalises over raw data once, outside the CMI calculator to save
+        normalises over raw data once, outside the CMI estimator to save
         computation time. The Theiler window ignores trial boundaries. The
         CMI estimator does add noise to the data as a default. To make analysis
         runs replicable set noise_level to 0.
@@ -1230,7 +1200,7 @@ class JidtGaussianCMI(JidtGaussian):
                 samples if 'local_values'=True
         """
         # Return MI if no conditioning variable was provided.
-        if not conditional:
+        if conditional is None:
             est_mi = JidtGaussianMI(self.opts)
             return est_mi.estimate(var1, var2)
         else:
@@ -1308,7 +1278,7 @@ class JidtKraskovTE(JidtKraskov):
 
     Note:
         Some technical details: JIDT normalises over realisations, IDTxl
-        normalises over raw data once, outside the CMI calculator to save
+        normalises over raw data once, outside the CMI estimator to save
         computation time. The Theiler window ignores trial boundaries. The
         CMI estimator does add noise to the data as a default. To make analysis
         runs replicable set noise_level to 0.
@@ -1419,7 +1389,6 @@ class JidtDiscreteTE(JidtDiscrete):
         self.opts.setdefault('alph1', int(2))
         self.opts.setdefault('alph2', int(2))
 
-
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
         self.CalcClass = (jp.JPackage('infodynamics.measures.discrete').
@@ -1492,12 +1461,6 @@ class JidtGaussianTE(JidtGaussian):
     studying the dynamics of complex systems. Front. Robot. AI, 1(11).
 
     Args:
-        self : instance of Estimator_cmi
-            function is supposed to be used as part of the Estimator_cmi class
-        source : numpy array
-            realisations of the source variable
-        target : numpy array
-            realisations of the target variable
         opts : dict
             sets estimation parameters:
 
@@ -1525,7 +1488,7 @@ class JidtGaussianTE(JidtGaussian):
 
     Note:
         Some technical details: JIDT normalises over realisations, IDTxl
-        normalises over raw data once, outside the CMI calculator to save
+        normalises over raw data once, outside the CMI estimator to save
         computation time. The Theiler window ignores trial boundaries. The
         CMI estimator does add noise to the data as a default. To make analysis
         runs replicable set noise_level to 0.
