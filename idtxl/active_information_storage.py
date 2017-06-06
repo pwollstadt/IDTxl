@@ -303,7 +303,6 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             # Calculate the (C)MI for each candidate and the target.
             temp_te = self._cmi_estimator.estimate_mult(
                                 n_chunks=len(candidate_set),
-                                options=self.options,
                                 re_use=['var2', 'conditional'],
                                 var1=cand_real,
                                 var2=self._current_value_realisations,
@@ -386,7 +385,6 @@ class ActiveInformationStorage(SingleProcessAnalysis):
 
             temp_te = self._cmi_estimator.estimate_mult(
                                     n_chunks=len(self.selected_vars_sources),
-                                    options=self.options,
                                     re_use=re_use,
                                     var1=candidate_realisations,
                                     var2=self._current_value_realisations,
