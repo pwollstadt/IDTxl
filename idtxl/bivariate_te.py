@@ -13,7 +13,7 @@ import numpy as np
 import itertools as it
 from . import stats
 from .network_inference import NetworkInference
-from .set_estimator import Estimator_cmi
+from .estimator import find_estimator
 
 VERBOSE = True
 
@@ -67,8 +67,8 @@ class BivariateTE(NetworkInference):
         current_value : tuple
             index of the current value in TE estimation, (idx process,
             idx sample)
-        calculator_name : string
-            calculator used for TE estimation
+        estimator_name : string
+            estimator used for TE estimation
         max_lag_target : int
             maximum temporal search depth for candidates in the target's past
             (default=same as max_lag_sources)
@@ -107,10 +107,10 @@ class BivariateTE(NetworkInference):
         # estimated quantity may be different from CMI in other inference
         # algorithms. (Everything else can be done in the parent class.)
         try:
-            self.calculator_name = options['cmi_calc_name']
+            EstimatorClass = find_estimator(options['cmi_estimator'])
         except KeyError:
-            raise KeyError('Calculator name was not specified!')
-        self._cmi_calculator = Estimator_cmi(self.calculator_name)
+            raise KeyError('Please provide an estimator class or name!')
+        self._cmi_estimator = EstimatorClass(options)
         super().__init__(max_lag_sources, min_lag_sources, options,
                          max_lag_target, tau_sources, tau_target)
 
@@ -262,10 +262,7 @@ class BivariateTE(NetworkInference):
         print('\n---------------------------- (2) include source candidates')
         self._include_source_candidates(data)
         print('\n---------------------------- (3) omnibus test')
-        [s, p, te] = stats.omnibus_test(self, data, self.options)
-        self.te_omnibus = te
-        self.sign_omnibus = s
-        self.pvalue_omnibus = p
+        self._test_final_conditional(data)
 
         # Clean up and return results.
         if VERBOSE:
@@ -275,6 +272,14 @@ class BivariateTE(NetworkInference):
                     self._idx_to_lag(self.selected_vars_target)))
         self._clean_up()
         results = {
+            'target': self.target,
+            'sources_tested': self.source_set,
+            'max_lag_sources': self.max_lag_sources,
+            'min_lag_sources': self.min_lag_sources,
+            'max_lag_target': self.max_lag_target,
+            'tau_sources': self.tau_sources,
+            'tau_target': self.tau_target,
+            'options': self.options,
             'current_value': self.current_value,
             'selected_vars_full': self._idx_to_lag(self.selected_vars_full),
             'selected_vars_sources': self._idx_to_lag(
@@ -284,11 +289,11 @@ class BivariateTE(NetworkInference):
             'omnibus_te': self.te_omnibus,
             'omnibus_pval': self.pvalue_omnibus,
             'omnibus_sign': self.sign_omnibus,
-            'cond_sources_pval': self.pvalues_sign_sources,
-            'cond_sources_te': self.te_sign_sources}
+            'selected_sources_pval': self.pvalues_sign_sources,
+            'selected_sources_te': self.te_sign_sources}
         return results
 
-    def _include_candidates(self, candidate_set, data):
+    def _include_source_candidates(self, data):
         """Inlcude informative candidates into the conditioning set.
 
         Loop over each candidate in the candidate set and test if it has
@@ -299,9 +304,6 @@ class BivariateTE(NetworkInference):
         conditional set.
 
         Args:
-            candidate_set : list of tuples
-                candidate set to be tested, where each entry is a tuple
-                (process index, sample index)
             data : Data instance
                 raw data
             options : dict [optional]
@@ -313,10 +315,19 @@ class BivariateTE(NetworkInference):
             selected_vars_realisations : numpy array
                 realisations of the conditional set
         """
+        # Define candidate set and get realisations.
+        procs = self.source_set
+        samples = np.arange(self.current_value[1] - self.min_lag_sources,
+                            self.current_value[1] - self.max_lag_sources,
+                            -self.tau_sources)
+        candidate_set = self._define_candidates(procs, samples)
         self._append_selected_vars(
                 candidate_set,
                 data.get_realisations(self.current_value, candidate_set)[0])
+
+        # Perform one round of sequential max statistics.
         [s, p, te] = stats.max_statistic_sequential(self, data, self.options)
+
         # Remove non-significant sources from the candidate set. Loop
         # backwards over the candidates to remove them iteratively.
         for i in range(s.shape[0] - 1, -1, -1):
@@ -344,3 +355,17 @@ class BivariateTE(NetworkInference):
         for idx in it.product(processes, samples):
             candidate_set.append(idx)
         return candidate_set
+
+    def _test_final_conditional(self, data):  # TODO test this!
+        """Perform statistical test on the final conditional set."""
+        if not self.selected_vars_sources:
+            print('---------------------------- no sources found')
+            self.te_omnibus = None
+            self.sign_omnibus = False
+            self.pvalue_omnibus = None
+        else:
+            print(self._idx_to_lag(self.selected_vars_full))
+            [s, p, te] = stats.omnibus_test(self, data)
+            self.te_omnibus = te
+            self.sign_omnibus = s
+            self.pvalue_omnibus = p
