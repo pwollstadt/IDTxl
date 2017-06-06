@@ -55,7 +55,7 @@ def test_find_estimator():
         find_estimator('test')
 
     # Try using a class without an estimate method
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         find_estimator(MultivariateTE)
 
 

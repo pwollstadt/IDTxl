@@ -51,12 +51,11 @@ def find_estimator(est):
             Estimator class
     """
     if inspect.isclass(est):
-        assert hasattr(est, 'estimate'), ('Estimator classes have to implement'
-                                          ' estimate to be used for network '
-                                          ' analysis.')
-        assert hasattr(est, 'is_parallel'), ('Estimator classes have to '
-                                             'implement is_parallel to be used'
-                                             ' for network analysis.')
+        # Test if provided class implements the Estimator class. This
+        # constraint may be relaxed in the future.
+        if not np.issubclass_(est, Estimator):
+            raise RuntimeError('Provided class should implement abstract class'
+                               ' Estimator.')
         return est
     elif type(est) is str:
         module_list = _package_contents()
@@ -112,8 +111,6 @@ class Estimator(metaclass=ABCMeta):
             self : instance of Estimator_cmi
             n_chunks : int [optional]
                 number of data chunks (default=1)
-            options : dict [optional]
-                sets estimation parameters (default=None)
             re_use : list of keys [optional}
                 realisatins to be re-used (default=None)
             data: dict of numpy arrays
