@@ -147,6 +147,7 @@ def omnibus_test(analysis_setup, data):
     print('no. target sources: {0}, no. sources: {1}'.format(
                                     len(analysis_setup.selected_vars_target),
                                     len(analysis_setup.selected_vars_sources)))
+    assert analysis_setup.selected_vars_sources, 'No sources to test.'
 
     # Create temporary variables b/c realisations for sources and targets are
     # created on the fly, which is costly, so we want to re-use them after
@@ -289,9 +290,11 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
     except KeyError:
         try:  # use the same n_perm as for min_stats if surr table is reused
             n_permutations = analysis_setup._min_stats_surr_table.shape[1]
-        except TypeError:  # is surr table is None, use default
+        except AttributeError:  # is surr table is None, use default
             n_permutations = 500
     alpha = opts.get('alpha_max_seq', 0.05)
+
+    assert analysis_setup.selected_vars_sources, 'No sources to test.'
 
     # Calculate TE for each candidate in the conditional source set and sort
     # TE values.
