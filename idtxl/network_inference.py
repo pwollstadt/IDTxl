@@ -6,6 +6,7 @@ Created on Mon Mar  7 18:13:27 2016
 """
 import numpy as np
 from .network_analysis import NetworkAnalysis
+from . import stats
 
 VERBOSE = True
 
@@ -206,6 +207,76 @@ class NetworkInference(NetworkAnalysis):
         # TODO include non-selected target candidates as further candidates,
         # they may get selected due to synergies
         self._include_candidates(candidates, data)
+
+    def _include_candidates(self, candidate_set, data):
+        """Inlcude informative candidates into the conditioning set.
+
+        Loop over each candidate in the candidate set and test if it has
+        significant mutual information with the current value, conditional
+        on all samples that were informative in previous rounds and are already
+        in the conditioning set. If this conditional mutual information is
+        significant using maximum statistics, add the current candidate to the
+        conditional set.
+
+        Args:
+            candidate_set : list of tuples
+                candidate set to be tested, where each entry is a tuple
+                (process index, sample index)
+            data : Data instance
+                raw data
+            options : dict [optional]
+                parameters for estimation and statistical testing
+
+        Returns:
+            list of tuples
+                indices of the conditional set created from the candidate set
+            selected_vars_realisations : numpy array
+                realisations of the conditional set
+        """
+        success = False
+        while candidate_set:
+            # Get realisations for all candidates.
+            cand_real = data.get_realisations(self.current_value,
+                                              candidate_set)[0]
+            cand_real = cand_real.T.reshape(cand_real.size, 1)
+
+            # Calculate the (C)MI for each candidate and the target.
+            temp_te = self._cmi_estimator.estimate_mult(
+                                n_chunks=len(candidate_set),
+                                re_use=['var2', 'conditional'],
+                                var1=cand_real,
+                                var2=self._current_value_realisations,
+                                conditional=self._selected_vars_realisations)
+
+            # Test max CMI for significance with maximum statistics.
+            te_max_candidate = max(temp_te)
+            max_candidate = candidate_set[np.argmax(temp_te)]
+            if VERBOSE:
+                print('testing {0} from candidate set {1}'.format(
+                                    self._idx_to_lag([max_candidate])[0],
+                                    self._idx_to_lag(candidate_set)), end='')
+            significant = stats.max_statistic(self, data, candidate_set,
+                                              te_max_candidate,
+                                              self.options)[0]
+
+            # If the max is significant keep it and test the next candidate. If
+            # it is not significant break. There will be no further significant
+            # sources b/c they all have lesser TE.
+            if significant:
+                if VERBOSE:
+                    print(' -- significant')
+                success = True
+                candidate_set.pop(np.argmax(temp_te))
+                self._append_selected_vars(
+                        [max_candidate],
+                        data.get_realisations(self.current_value,
+                                              [max_candidate])[0])
+            else:
+                if VERBOSE:
+                    print(' -- not significant')
+                break
+
+        return success
 
     def _force_conditionals(self, cond, data):
         """Enforce a given conditioning set."""
