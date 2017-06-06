@@ -13,11 +13,11 @@ from test_estimators_pid import optimization_not_available
 @optimization_not_available
 def test_pid_user_input():
     """Test if user input is handled correctly."""
-    # Test missing calculator name
+    # Test missing estimator name
     with pytest.raises(KeyError):
         PartialInformationDecomposition(options=dict())
 
-    # Test wrong calculator name
+    # Test wrong estimator name
     with pytest.raises(AttributeError):
         analysis_opts = {'pid_calc_name': 'pid_test'}
         PartialInformationDecomposition(options=analysis_opts)

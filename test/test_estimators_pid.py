@@ -163,11 +163,11 @@ def _estimate(Z):
     pid_sydney = SydneyPID(ANALYSIS_OPTS)
     pid_tartu = TartuPID(ANALYSIS_OPTS)
     tic = tm.time()
-    est_sydney = pid_sydney.estimate(X, Y, Z, ANALYSIS_OPTS)
+    est_sydney = pid_sydney.estimate(X, Y, Z)
     t_sydney = tm.time() - tic
     # Tartu estimator
     tic = tm.time()
-    est_tartu = pid_tartu.estimate(X, Y, Z, ANALYSIS_OPTS)
+    est_tartu = pid_tartu.estimate(X, Y, Z)
     t_tartu = tm.time() - tic
 
     print('\nCopied source')

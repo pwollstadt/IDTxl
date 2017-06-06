@@ -21,7 +21,7 @@ def test_pid_xor_data():
     dat = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
     # Run Tartu estimator
-    analysis_opts = {'pid_calc_name': 'pid_tartu'}
+    analysis_opts = {'pid_estimator': 'TartuPID'}
     pid = PartialInformationDecomposition(options=analysis_opts)
     tic = tm.time()
     est_tartu = pid.analyse_single_target(data=dat, target=2, sources=[0, 1],
@@ -38,7 +38,7 @@ def test_pid_xor_data():
         'max_unsuc_swaps_row_parm': 60,
         'num_reps': 63,
         'max_iters': 1000,
-        'pid_calc_name': 'pid_sydney'}
+        'pid_estimator': 'SydneyPID'}
     pid = PartialInformationDecomposition(options=analysis_opts)
     tic = tm.time()
     est_sydney = pid.analyse_single_target(data=dat, target=2, sources=[0, 1],
