@@ -14,26 +14,60 @@ VERBOSE = False
 def knn_search(pointset, n_dim, knn_k, theiler_t, n_chunks=1, gpuid=0):
     """Interface with OpenCL knn search from Python/IDTxl.
 
-    Function checks input for correct dimensionality and transposes point sets
-    if necessary. Function also checks the maximum available memory on the GPU
-    device and splits chunks over multiple calls to the GPU (runs).
+    Perform k nearest neighbour search on GPU using OpenCl.
+
+    Check input for correct dimensionality and memory layout (C-contiguous).
+    Check the maximum available memory on the GPU device and split chunks over
+    multiple calls to the GPU (runs).
+
+    Args:
+        pointset : numpy array
+            search space of (multidimensional) points, search is performed for
+            each point in pointset, assumed to be two-dimensional, where the
+            first dimension is assumed to represent points and the second
+            diemsion is assumed to represent dimensions
+        n_dim : int
+            dimensionality of single point
+        knn_k : int
+            number of nearest neighbour
+        theiler_t : int
+            dynamic correlation exclusion, or Theiler window, minimum time-
+            separation nearest neighbour are supposed to have in order to
+            exclude temporally correlated points
+        n_chunks : int [optional]
+            number of separate search spaces within pointsets that are searched
+            in parallel by the GPU
+        gpuid : int [optional]
+            device ID if multiple GPUs are available on the current platform
+
+    Returns:
+        numpy array
+            indices of k nearest neighbour for each point in pointset
+        numpy array
+            distances to k nearest neighbours for each point in pointset
     """
     # check for a data layout in memory as expected by the low level functions
     # ndim * [n_points * n_chunks]
-    if n_dim != pointset.shape[0]:
-        assert n_dim == pointset.shape[1], ('Given dimension does not match '
-                                            'data.')
-        pointset = pointset.transpose().copy()
-        if VERBOSE:
-            print('search GPU: fixed shape of input data')
-    if pointset.flags['C_CONTIGUOUS'] is not True:
+    # if n_dim != pointset.shape[0]:
+    #     assert n_dim == pointset.shape[1], ('Given dimension does not match '
+    #                                         'data.')
+    #     pointset = pointset.transpose().copy()
+    #     if VERBOSE:
+    #         print('search GPU: fixed shape of input data')
+    if not pointset.flags['C_CONTIGUOUS']:
         pointset = np.ascontiguousarray(pointset)
         if VERBOSE:
             print('search GPU: fixed memory layout of input data')
-
+    if n_dim != pointset.shape[1]:
+        raise RuntimeError('Provided dimension ({0}) and actual dimension of '
+                           'the data ({1}) do not match.'.format(
+                               n_dim, pointset.shape[1]))
     # Allocate memory for GPU search output.
-    indexes = np.zeros((knn_k, pointset.shape[1]), dtype=np.int32)
-    distances = np.zeros((knn_k, pointset.shape[1]), dtype=np.float32)
+    # indexes = np.zeros((knn_k, pointset.shape[1]), dtype=np.int32)
+    # distances = np.zeros((knn_k, pointset.shape[1]), dtype=np.float32)
+    n_points = pointset.shape[0]
+    indexes = np.zeros((knn_k, n_points), dtype=np.int32)
+    distances = np.zeros((knn_k, n_points), dtype=np.float32)
 
     # Calculate the maximum number of chunks that fit into the GPU's global
     # memory given the current chunk size. Calculate the number of necessary
@@ -41,37 +75,70 @@ def knn_search(pointset, n_dim, knn_k, theiler_t, n_chunks=1, gpuid=0):
     # GPU and the actual number of chunks.
     max_chunks_per_run = _get_max_chunks_per_run(gpuid, n_chunks, pointset,
                                                  distances, indexes)
-    max_chunks_per_run = min(max_chunks_per_run, n_chunks)  # check if chunks fit into GPU in one run
-    n_runs = np.ceil(n_chunks / max_chunks_per_run).astype(int)
-
-    chunksize = int(pointset.shape[1] / n_chunks)
+    chunks_per_run = min(max_chunks_per_run, n_chunks)
+    n_runs = np.ceil(n_chunks / chunks_per_run).astype(int)
+    chunksize = int(n_points / n_chunks)
+    # print('{0} runs with {1} chunks, sig. length: {2}'.format(n_runs,
+    #                                                           chunks_per_run,
+    #                                                           n_points))
     i_1 = 0
-    i_2 = max_chunks_per_run * chunksize
-    pointdim = pointset.shape[0]
-    n_points = pointset[:, i_1:i_2].shape[1]
+    i_2 = chunks_per_run * chunksize
     for r in range(n_runs):
         # print('run: {0}, index 1: {1}, index 2: {2}'.format(r, i_1, i_2))
-        # print('no. points: {0}, no. chunks: {1}, pointset shape: {2}'.format(n_points, n_chunks, pointset[:, i_1:i_2].shape))
-        success = clFindKnn(indexes[:, i_1:i_2], distances[:, i_1:i_2],
-                            pointset[:, i_1:i_2].astype('float32'),
-                            pointset[:, i_1:i_2].astype('float32'),
-                            int(knn_k), int(theiler_t), int(n_chunks),
-                            int(pointdim), int(n_points), int(gpuid))
+        # print('no. points: {0}, no. chunks: {1}, pointset shape: {2}'
+        #       .format(n_points, n_chunks, pointset[:, i_1:i_2].shape))
+
+        ind_temp = np.zeros((knn_k, chunks_per_run * chunksize),
+                            dtype=np.int32)
+        dist_temp = np.zeros((knn_k, chunks_per_run * chunksize),
+                             dtype=np.float32)
+        ps_temp = pointset[i_1:i_2, :].astype('float32')
+        success = clFindKnn(ind_temp, dist_temp,
+                            pointset[i_1:i_2, :].astype('float32'),
+                            pointset[i_1:i_2, :].astype('float32'), int(knn_k),
+                            int(theiler_t), int(chunks_per_run), int(n_dim),
+                            int(chunks_per_run * chunksize), int(gpuid))
+        indexes[:, i_1:i_2] = ind_temp
+        distances[:, i_1:i_2] = dist_temp
         if not success:
             print("Error in OpenCL knn search!")
             return 1
         i_1 = i_2
-        i_2 = min(i_2 + max_chunks_per_run * chunksize, pointset.shape[1])
-
+        # i_2 = min(i_2 + chunks_per_run * chunksize, pointset.shape[1])
+        i_2 = min(i_2 + chunks_per_run * chunksize, n_points)
     return (indexes, distances)
 
 
 def range_search(pointset, n_dim, radius, theiler_t, n_chunks=1, gpuid=0):
     """Interface with OpenCL range search from Python/IDTxl.
 
-    Function checks input for correct dimensionality and transposes point sets
-    if necessary. Function also checks the maximum available memory on the GPU
-    device and splits chunks over multiple calls to the GPU (runs).
+    Perform range search on GPU using OpenCl.
+
+    Check input for correct dimensionality and transpose point sets if
+    necessary. Check the maximum available memory on the GPU device and split
+    chunks over multiple calls to the GPU (runs).
+
+    Args:
+        pointset : numpy array
+            search space of (multidimensional) points, search is performed for
+            each point in pointset
+        n_dim : int
+            dimensionality of single point
+        radius : numpy array of ints
+            search radius for each point in pointset
+        theiler_t : int
+            dynamic correlation exclusion, or Theiler window, minimum time-
+            separation nearest neighbour are supposed to have in order to
+            exclude temporally correlated points
+        n_chunks : int [optional]
+            number of separate search spaces within pointsets that are searched
+            in parallel by the GPU
+        gpuid : int [optional]
+            device ID if multiple GPUs are available on the current platform
+
+    Returns:
+        numpy array
+            number of neighbours within range for each point in pointset
     """
     # check for a data layout in memory as expected by the low level functions
     # ndim * [n_points * n_chunks]
@@ -93,14 +160,14 @@ def range_search(pointset, n_dim, radius, theiler_t, n_chunks=1, gpuid=0):
     # memory given the current chunk size. Calculate the number of necessary
     # runs (calls to the GPU) given the max. number of chunks that fit onto the
     # GPU and the actual number of chunks.
-    max_chunks_per_run = _get_max_chunks_per_run(gpuid, n_chunks, pointset,
+    chunks_per_run = _get_max_chunks_per_run(gpuid, n_chunks, pointset,
                                                  pointcount, radius)
-    max_chunks_per_run = min(max_chunks_per_run, n_chunks)  # check if chunks fit into GPU in one run
-    n_runs = np.ceil(n_chunks / max_chunks_per_run).astype(int)
+    chunks_per_run = min(chunks_per_run, n_chunks)
+    n_runs = np.ceil(n_chunks / chunks_per_run).astype(int)
 
     chunksize = int(pointset.shape[1] / n_chunks)
     i_1 = 0
-    i_2 = max_chunks_per_run * chunksize
+    i_2 = chunks_per_run * chunksize
     pointdim = pointset.shape[0]
     n_points = pointset[:, i_1:i_2].shape[1]
     for r in range(n_runs):
@@ -113,17 +180,22 @@ def range_search(pointset, n_dim, radius, theiler_t, n_chunks=1, gpuid=0):
             print("Error in OpenCL knn search!")
             return 1
         i_1 = i_2
-        i_2 = min(i_2 + max_chunks_per_run * chunksize, pointset.shape[1])
+        i_2 = min(i_2 + chunks_per_run * chunksize, pointset.shape[1])
 
     return pointcount
+
 
 def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, thelier,
               nchunks, pointdim, signallength, gpuid):
 
-    triallength = int(signallength / nchunks)
-#    print 'Values:', pointdim, triallength, signallength, kth, thelier
+    assert h_pointset.flags['C_CONTIGUOUS'], 'Pointset is not C-contiguous.'
+    assert h_query.flags['C_CONTIGUOUS'], 'Queryset is not C-contiguous.'
 
-    '''for platform in cl.get_platforms():
+
+    triallength = int(signallength / nchunks)
+    # print 'Values:', pointdim, triallength, signallength, kth, thelier
+    '''
+    for platform in cl.get_platforms():
         for device in platform.get_devices():
             print("===============================================================")
             print("Platform name:", platform.name)
@@ -137,7 +209,8 @@ def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, thelier,
             print("Device max clock speed:", device.max_clock_frequency, 'MHz')
             print("Device compute units:", device.max_compute_units)
             print("Device max work group size:", device.max_work_group_size)
-            print("Device max work item sizes:", device.max_work_item_sizes)'''
+            print("Device max work item sizes:", device.max_work_item_sizes)
+    '''
 
     # Set up OpenCL
     my_gpu_devices, context, queue = _get_device(gpuid)
@@ -218,17 +291,15 @@ def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, thelier,
 
     return 1
 
-'''
- * Range search being radius a vector of length number points in queryset/pointset
-'''
 
 def clFindRSAll(h_bf_npointsrange, h_pointset, h_query, h_vecradius, thelier,
                 nchunks, pointdim, signallength, gpuid):
-
+    """Perform range search on the GPU."""
     triallength = int(signallength / nchunks)
     # print 'Values:', pointdim, triallength, signallength, kth, thelier
 
-    '''for platform in cl.get_platforms():
+    '''
+    for platform in cl.get_platforms():
         for device in platform.get_devices():
             print("===============================================================")
             print("Platform name:", platform.name)
@@ -242,7 +313,8 @@ def clFindRSAll(h_bf_npointsrange, h_pointset, h_query, h_vecradius, thelier,
             print("Device max clock speed:", device.max_clock_frequency, 'MHz')
             print("Device compute units:", device.max_compute_units)
             print("Device max work group size:", device.max_work_group_size)
-            print("Device max work item sizes:", device.max_work_item_sizes)'''
+            print("Device max work item sizes:", device.max_work_item_sizes)
+    '''
 
     # Set up OpenCL
     my_gpu_devices, context, queue = _get_device(gpuid)
@@ -373,14 +445,14 @@ def _get_max_chunks_per_run(gpuid, n_chunks, pointset, ar1, ar2): # TODO make th
     # not exceed (total_mem * 0.90), this is also used inside the PyOpenCl code
     # from Mario and colleagues.
     my_gpu_devices = _get_device(gpuid)[0]
-    chunksize = int(pointset.shape[1] / n_chunks)
+    chunksize = int(pointset.shape[0] / n_chunks)
     total_mem = int(my_gpu_devices[gpuid].global_mem_size / 1024 / 1024)
     if len(ar2.shape) == 2:
-        mem_per_chunk = int(np.ceil((2 * pointset[:, :chunksize].nbytes +
+        mem_per_chunk = int(np.ceil((2 * pointset[:chunksize, :].nbytes +
                                      ar1[:, :chunksize].nbytes +
                                      ar2[:, :chunksize].nbytes) / 1024 / 1024))
     else:  # when testing this for range searches, the 2nd array is only one-dimensional TODO make this more elegant
-        mem_per_chunk = int(np.ceil((2 * pointset[:, :chunksize].nbytes +
+        mem_per_chunk = int(np.ceil((2 * pointset[:chunksize, :].nbytes +
                                      ar1[:chunksize].nbytes +
                                      ar2[:chunksize].nbytes) / 1024 / 1024))
     if VERBOSE:

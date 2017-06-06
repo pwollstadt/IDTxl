@@ -39,7 +39,7 @@ def range_search(pointset, queryset, radius, theiler_t, n_chunks=1, gpuid=0):
 
 def get_cudaFindKnnSetGPU():
     """Extract CUDA knn function from the shared library."""
-    dll = ctypes.CDLL('./gpuKnnLibrary.so', mode=ctypes.RTLD_GLOBAL)
+    dll = CDLL('./gpuKnnLibrary.so', mode=RTLD_GLOBAL)
     func = dll.cudaFindKnnSetGPU
     func.argtypes = [POINTER(c_int32), POINTER(c_float), POINTER(c_float),
                      POINTER(c_float), c_int, c_int, c_int, c_int, c_int,
@@ -56,6 +56,9 @@ def cudaFindKnnSetGPU(indexes, distances, pointset, queryset, knn_k, theiler_t,
 
     Do type conversions necessary for calling C/CUDA code from Python.
     """
+    assert pointset.flags['C_CONTIGUOUS'], 'Pointset is not C-contiguous.'
+    assert queryset.flags['C_CONTIGUOUS'], 'Queryset is not C-contiguous.'
+
     indexes_p = indexes.ctypes.data_as(POINTER(c_int32))
     distances_p = distances.ctypes.data_as(POINTER(c_float))
     pointset_p = pointset.ctypes.data_as(POINTER(c_float))
@@ -78,7 +81,7 @@ def get_cudaFindRSAllSetGPU():
     Extract cudaFindRSAllSetGPU function pointer in the shared object
     gpuKnnLibrary.so.
     """
-    dll = ctypes.CDLL('./gpuKnnLibrary.so', mode=ctypes.RTLD_GLOBAL)
+    dll = CDLL('./gpuKnnLibrary.so', mode=RTLD_GLOBAL)
     func = dll.cudaFindRSAllSetGPU
     func.argtypes = [POINTER(c_int32), POINTER(c_float), POINTER(c_float),
                      POINTER(c_float), c_int, c_int, c_int, c_int, c_int]
