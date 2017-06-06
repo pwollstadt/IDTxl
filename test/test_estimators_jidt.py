@@ -599,18 +599,6 @@ def test_invalid_opts_input():
 def test_invalid_history_parameters():
     """Ensure invalid history parameters raise a RuntimeError."""
 
-    # TE: Target tau > target history
-    opts = {'history_target': 1, 'tau_target': 4}
-    with pytest.raises(RuntimeError): JidtDiscreteTE(opts=opts)
-    with pytest.raises(RuntimeError): JidtGaussianTE(opts=opts)
-    with pytest.raises(RuntimeError): JidtKraskovTE(opts=opts)
-
-    # TE: Source tau > Source history
-    opts = {'history_target': 1, 'history_source': 1, 'tau_source': 4}
-    with pytest.raises(RuntimeError): JidtDiscreteTE(opts=opts)
-    with pytest.raises(RuntimeError): JidtGaussianTE(opts=opts)
-    with pytest.raises(RuntimeError): JidtKraskovTE(opts=opts)
-
     # TE: Parameters are not integers
     opts = {'history_target': 4, 'history_source': 4,
             'tau_source': 2, 'tau_target': 2.5}
@@ -632,11 +620,6 @@ def test_invalid_history_parameters():
     with pytest.raises(AssertionError): JidtDiscreteTE(opts=opts)
     with pytest.raises(AssertionError): JidtGaussianTE(opts=opts)
     with pytest.raises(AssertionError): JidtKraskovTE(opts=opts)
-
-    # AIS: Tau > history (tau not available for discrete AIS estimator)
-    opts = {'history': 1, 'tau': 4}
-    with pytest.raises(RuntimeError): JidtGaussianAIS(opts=opts)
-    with pytest.raises(RuntimeError): JidtKraskovAIS(opts=opts)
 
     # AIS: Parameters are not integers.
     opts = {'history': 4, 'tau': 2.5}
