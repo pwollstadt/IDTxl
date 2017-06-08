@@ -95,7 +95,7 @@ def test_multivariate_te_lagged_copies():
     dat = Data()
     dat.set_data(np.vstack((d_0, d_1)), 'psr')
     analysis_opts = {
-        'cmi_calc_name': 'jidt_kraskov',
+        'cmi_estimator':  'JidtKraskovCMI',
         'n_perm_max_stat': 21,
         'n_perm_min_stat': 21,
         'n_perm_omnibus': 500,
@@ -139,7 +139,7 @@ def test_multivariate_te_random():
     dat = Data()
     dat.set_data(d, 'psr')
     analysis_opts = {
-        'cmi_calc_name': 'jidt_kraskov',
+        'cmi_estimator':  'JidtKraskovCMI',
         'n_perm_max_stat': 200,
         'n_perm_min_stat': 200,
         'n_perm_omnibus': 500,
@@ -185,7 +185,7 @@ def test_multivariate_te_lorenz_2():
     dat = Data()
     dat.set_data(d, 'psr')
     analysis_opts = {
-        'cmi_calc_name': 'jidt_kraskov',
+        'cmi_estimator':  'JidtKraskovCMI',
         'n_perm_max_stat': 21,  # 200
         'n_perm_min_stat': 21,  # 200
         'n_perm_omnibus': 21,
@@ -230,7 +230,7 @@ def test_multivariate_te_mute():
     dat = Data()
     dat.generate_mute_data(n_samples=1000, n_replications=10)
     analysis_opts = {
-        'cmi_calc_name': 'jidt_kraskov',
+        'cmi_estimator':  'JidtKraskovCMI',
         'n_perm_max_stat': 21,
         'n_perm_min_stat': 21,
         'n_perm_omnibus': 21,

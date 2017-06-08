@@ -127,7 +127,7 @@ class BivariateTE(NetworkInference):
             >>> max_lag = 5
             >>> min_lag = 4
             >>> analysis_opts = {
-            >>>     'cmi_calc_name': 'jidt_kraskov',
+            >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
             >>>     'n_perm_min_stat': 200,
             >>>     'n_perm_omnibus': 500,
@@ -223,7 +223,7 @@ class BivariateTE(NetworkInference):
             >>> max_lag = 5
             >>> min_lag = 4
             >>> analysis_opts = {
-            >>>     'cmi_calc_name': 'jidt_kraskov',
+            >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
             >>>     'n_perm_min_stat': 200,
             >>>     'n_perm_omnibus': 500,

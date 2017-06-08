@@ -16,7 +16,7 @@ def test_visualise_multivariate_te():
     max_lag = 5
     min_lag = 4
     analysis_opts = {
-        'cmi_calc_name': 'jidt_kraskov',
+        'cmi_estimator':  'JidtKraskovCMI',
         'n_perm_max_stat': 25,
         'n_perm_min_stat': 25,
         'n_perm_omnibus': 50,
@@ -34,7 +34,7 @@ def test_plot_selected_vars():
     max_lag = 5
     min_lag = 4
     analysis_opts = {
-        'cmi_calc_name': 'jidt_kraskov',
+        'cmi_estimator':  'JidtKraskovCMI',
         'n_perm_max_stat': 25,
         'n_perm_min_stat': 25,
         'n_perm_omnibus': 50,
