@@ -109,7 +109,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             >>> dat.generate_mute_data(100, 5)
             >>> max_lag = 5
             >>> analysis_opts = {
-            >>>     'cmi_calc_name': 'jidt_kraskov',
+            >>>     'cmi_estimator': 'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
             >>>     'n_perm_min_stat': 200,
             >>>     }

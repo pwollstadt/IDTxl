@@ -30,7 +30,7 @@ def test_single_source_storage_jidt():
     dat.generate_mute_data(1000, 5)
     max_lag = 5
     analysis_opts = {
-        'cmi_calc_name': 'jidt_kraskov',
+        'cmi_estimator':  'JidtKraskovCMI',
         'n_perm_mi': 22,
         'alpha_mi': 0.05,
         'tail_mi': 'one',

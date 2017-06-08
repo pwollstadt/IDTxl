@@ -11,7 +11,7 @@ d = np.load(os.path.join(os.path.dirname(__file__),
 dat = Data()
 dat.set_data(d[:, :, 0:100], 'psr')
 analysis_opts = {
-        'cmi_calc_name': 'jidt_kraskov',
+        'cmi_estimator':  'JidtKraskovCMI',
         'n_perm_max_stat': 200,
         'n_perm_min_stat': 200,
         'n_perm_omnibus': 500,

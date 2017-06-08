@@ -8,7 +8,7 @@ start_time = time.time()
 dat = Data()  # initialise an empty data object
 dat.generate_mute_data(n_samples=1000, n_replications=10)
 analysis_opts = {
-        'cmi_calc_name': 'jidt_kraskov',
+        'cmi_estimator':  'JidtKraskovCMI',
         'n_perm_max_stat': 200,
         'n_perm_min_stat': 200,
         'n_perm_omnibus': 500,

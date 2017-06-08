@@ -68,7 +68,7 @@ class MultivariateSpectralTE(NetworkAnalysis):
             >>> max_lag = 5
             >>> min_lag = 4
             >>> analysis_opts = {
-            >>>     'cmi_calc_name': 'jidt_kraskov',
+            >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
             >>>     'n_perm_min_stat': 200,
             >>>     'n_perm_omnibus': 500,
@@ -79,7 +79,7 @@ class MultivariateSpectralTE(NetworkAnalysis):
             >>> res = network_analysis.analyse_network(dat)
             >>>
             >>> spectral_opts = {
-            >>>     'cmi_calc_name': 'jidt_kraskov',
+            >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_spec': 200,
             >>>     'alpha_spec': 0.05
             >>>     }
@@ -142,7 +142,7 @@ class MultivariateSpectralTE(NetworkAnalysis):
             >>> max_lag = 5
             >>> min_lag = 4
             >>> analysis_opts = {
-            >>>     'cmi_calc_name': 'jidt_kraskov',
+            >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
             >>>     'n_perm_min_stat': 200,
             >>>     'n_perm_omnibus': 500,
@@ -156,7 +156,7 @@ class MultivariateSpectralTE(NetworkAnalysis):
             >>>                                              sources)
             >>>
             >>> spectral_opts = {
-            >>>     'cmi_calc_name': 'jidt_kraskov',
+            >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_spec': 200,
             >>>     'alpha_spec': 0.05
             >>>     }
