@@ -809,7 +809,7 @@ class Data():
         (AR) processes with model orders 2 and les and the following
         (non-linear) couplings:
 
-        0 -> 1, u = 2
+        0 -> 1, u = 2 (non-linear)
         0 -> 2, u = 3
         0 -> 3, u = 2 (non-linear)
         3 -> 4, u = 1
