@@ -1,5 +1,4 @@
 """Export and plot results as networkx objects."""
-import itertools as it
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,38 +8,40 @@ from .multivariate_te import MultivariateTE
 VERBOSE = False
 
 
-def generate_network_graph(res):
-    """Generate graph object for the full network.
+def generate_network_graph(res, fdr=True, find_u='max_te'):
+    """Generate graph object for an inferred network.
 
-    Generate a graph object from the network of (multivariate)
-    interactions (e.g., multivariate TE), using the networkx
-    class for directed graphs (DiGraph).
+    Generate a weighted, directed graph object from the network of inferred
+    (multivariate) interactions (e.g., multivariate TE), using the networkx
+    class for directed graphs (DiGraph). The graph is weighted by the
+    reconstructed source-target delays.
+
+    Source-target delays are determined by the lag of the variable in a
+    sources' past that has the highest information transfer into the target
+    process. There are two ways of idendifying the variable with maximum
+    information transfer:
+
+        a) use the variable with the highest absolute TE value (highest
+           information transfer)
+        b) use the variable with the smallest p-value (highest statistical
+           significance)
 
     Args:
         res : dict
             output of multivariate_te.analyse_network()
+        fdr : bool
+            print FDR-corrected results (default=True)
+        find_u : str
+            use TE value ('max_te') or p-value ('max_p') to determine the
+            variable with maximum information transfer into the target in order
+            to determine the source-target delay (default='max_te')
 
     Returns:
         instance of a directed graph class from the networkx
         package (DiGraph)
     """
-    graph = nx.DiGraph()
-    # add all targets as vertices
-    graph.add_nodes_from(list(res.keys()))
-    # Add edges as significant sources.
-    for n in res.keys():
-        s = np.array(res[n]['selected_vars_sources'],
-                     dtype=[('sources', np.int), ('lags', np.int)])
-        s = np.unique(s['sources'])
-        if s.size > 0:
-            edges = [x for x in it.product(s, [n])]
-            graph.add_nodes_from(s)
-            graph.add_edges_from(edges)
-            if VERBOSE:
-                print(edges)
-                print(n)
-                print(s)
-    return graph
+    adj_matrix = _get_adj_matrix(res, fdr, find_u)
+    return nx.from_numpy_matrix(adj_matrix, create_using=nx.DiGraph())
 
 
 def generate_source_graph(res, sign_sources=True):
@@ -79,11 +80,13 @@ def generate_source_graph(res, sign_sources=True):
                             res['current_value'][1] - res['max_lag_sources'],
                             -res['tau_sources'])
         define_candidates = MultivariateTE._define_candidates
-        nodes = define_candidates(_, procs, samples)
+        nodes = define_candidates([], procs, samples)
         graph.add_nodes_from(nodes)
 
     for v in range(len(res['selected_vars_full'])):
-        graph.add_edge(res['selected_vars_full'][v], target)  # here, I could also add additional info
+        # Here, one could add additional info in the future, networkx graphs
+        # support attributes for graphs, nodes, and edges.
+        graph.add_edge(res['selected_vars_full'][v], target)
     if VERBOSE:
         print(graph.node)
         print(graph.edge)
@@ -91,7 +94,7 @@ def generate_source_graph(res, sign_sources=True):
     return graph
 
 
-def plot_network(res):
+def plot_network(res, fdr=True, find_u='max_te'):
     """Plot network of multivariate TE between processes.
 
     Plot graph of the network of (multivariate) interactions between
@@ -107,23 +110,24 @@ def plot_network(res):
         instance of a directed graph class from the networkx
         package (DiGraph)
     """
-    try:
-        res = res['fdr']
-    except KeyError:
-        print('plotting non-corrected network!')
-
-    graph = generate_network_graph(res)
+    graph = generate_network_graph(res, fdr, find_u)
     print(graph.node)
     f, (ax1, ax2) = plt.subplots(1, 2)
     adj_matrix = nx.to_numpy_matrix(graph)
     cmap = sns.light_palette('cadetblue', n_colors=2, as_cmap=True)
-    sns.heatmap(adj_matrix, cmap=cmap, cbar=False, ax=ax1,
+    sns.heatmap(adj_matrix > 0, cmap=cmap, cbar=False, ax=ax1,
                 square=True, linewidths=1, xticklabels=graph.nodes(),
                 yticklabels=graph.nodes())
     ax1.xaxis.tick_top()
     plt.setp(ax1.yaxis.get_majorticklabels(), rotation=0)
-    nx.draw_circular(graph, with_labels=True, node_size=300, alpha=1.0, ax=ax2,
-                     node_color='cadetblue', hold=True, font_weight='bold')
+    nx.draw_circular(graph, with_labels=True, node_size=500, alpha=1.0, ax=ax2,
+                     node_color='cadetblue', hold=True, font_size=14,
+                     font_weight='bold')
+    pos = nx.circular_layout(graph)
+    edge_labels = nx.get_edge_attributes(graph, 'weight')
+    print(edge_labels)
+    nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels,
+                                 font_size=13, font_weight='bold')
     plt.show()
     return graph
 
@@ -214,9 +218,136 @@ def plot_mute_graph():
     plt.figure()
     nx.draw(graph, pos=pos, with_labels=True, node_size=900, alpha=1.0,
             node_color='cadetblue', font_weight='bold',
-            edge_color=['k', 'k', 'r', 'k', 'k'], hold=True)
+            edge_color=['r', 'k', 'r', 'k', 'k'], hold=True)
     nx.draw_networkx_edge_labels(graph, pos=pos)
     plt.text(2, 0.1, 'non-linear interaction in red')
     plt.show()
     # see here for an example on how to plot edge labels:
     # http://stackoverflow.com/questions/10104700/how-to-set-networkx-edge-labels-offset-to-avoid-label-overlap
+
+
+def print_res_to_console(res, fdr=True, find_u='max_te'):
+    """Print results of network inference to console.
+
+    Print results of network inference to console. Output looks like this:
+
+        0 -> 1, u = 2
+        0 -> 2, u = 3
+        0 -> 3, u = 2
+        3 -> 4, u = 1
+        4 -> 3, u = 1
+
+    indicating significant information transfer source -> target with a source-
+    target delay u. The network can either be plotted from FDR-
+
+    Source-target delays are determined by the lag of the variable in a
+    sources' past that has the highest information transfer into the target
+    process. There are two ways of idendifying the variable with maximum
+    information transfer:
+
+        a) use the variable with the highest absolute TE value (highest
+           information transfer)
+        b) use the variable with the smallest p-value (highest statistical
+           significance)
+
+    Args:
+        res : dict
+            output of network inference algorithm, e.g., MultivariateTE
+        fdr : bool
+            print FDR-corrected results (default=True)
+        find_u : str
+            use TE value ('max_te') or p-value ('max_p') to determine the
+            variable with maximum information transfer into the target in order
+            to determine the source-target delay (default='max_te')
+
+    Returns:
+        numpy array
+            adjacency matrix describing multivariate TE between all network
+            nodes, entries in the matrix denote source-target-delays
+    """
+    # Generate adjacency matrix from results.
+    adj_matrix = _get_adj_matrix(res, fdr, find_u)
+    n = adj_matrix.shape[0]
+
+    # Print link to console.
+    link_found = False
+    for s in range(n):
+        for t in range(n):
+            if adj_matrix[s, t]:
+                print('\t{0} -> {1}, u: {2}'.format(s, t, adj_matrix[s, t]))
+                link_found = True
+    if not link_found:
+        print('No significant links in network.')
+
+    return adj_matrix
+
+
+def _get_adj_matrix(res, fdr=True, find_u='max_te'):
+    """Return adjacency matrix as numpy array.
+
+    Return results of network inference as directed adjacency matrix. Output is
+    a 2D numpy-array where non-zero entries indicate a significant link and the
+    integer denotes the source-target delay between nodes.
+
+    Source-target delays are determined by the lag of the variable in a
+    sources' past that has the highest information transfer into the target
+    process. There are two ways of idendifying the variable with maximum
+    information transfer:
+
+        a) use the variable with the highest absolute TE value (highest
+           information transfer)
+        b) use the variable with the smallest p-value (highest statistical
+           significance)
+
+    Args:
+        res : dict
+            output of network inference algorithm, e.g., MultivariateTE
+        fdr : bool
+            print FDR-corrected results (default=True)
+        find_u : str
+            use TE value ('max_te') or p-value ('max_p') to determine the
+            variable with maximum information transfer into the target in order
+            to determine the source-target delay (default='max_te')
+
+    Returns:
+        numpy array
+            adjacency matrix describing multivariate TE between all network
+            nodes, entries in the matrix denote source-target-delays
+    """
+    # Check if FDR-corrected or uncorrected results are requested.
+    if fdr:
+        try:
+            r = res['fdr']
+        except KeyError:
+            raise RuntimeError('No FDR-corrected results found.')
+    else:
+        r = res.copy()
+        try:
+            del r['fdr']
+        except KeyError:
+            pass
+
+    targets = list(r.keys())
+    adj_matrix = np.zeros((max(targets) + 1, max(targets) + 1)).astype(int)
+
+    for t in targets:
+        all_vars_sources = np.array([x[0] for x in
+                                     r[t]['selected_vars_sources']])
+        all_vars_lags = np.array([x[1] for x in r[t]['selected_vars_sources']])
+        sources = np.unique(all_vars_sources)
+        pval = r[t]['selected_sources_pval']
+        te = r[t]['selected_sources_te']
+        u = np.empty(sources.shape[0])
+
+        for s in sources:
+            # Find u as the variable with either the smalles p-value or highest
+            # TE-value.
+            if find_u == 'max_p':
+                u_ind = np.argmin(pval[all_vars_sources == s])
+            elif find_u == 'max_te':
+                u_ind = np.argmax(te[all_vars_sources == s])
+            u = all_vars_lags[all_vars_sources == s][u_ind]
+
+            adj_matrix[s, t] = u
+
+    return adj_matrix
