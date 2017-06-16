@@ -234,7 +234,7 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
         opts : dict [optional]
             parameters for statistical testing, can contain:
 
-            - 'n_perm_max_stat' - number of permutations (default=500)
+            - 'n_perm_max_stat' - number of permutations (default=200)
             - 'alpha_max_stat' - critical alpha level (default=0.05)
 
     Returns:
@@ -247,7 +247,7 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
     """
     if opts is None:
         opts = {}
-    n_perm = opts.get('n_perm_max_stat', 21)
+    n_perm = opts.get('n_perm_max_stat', 200)
     alpha = opts.get('alpha_max_stat', 0.05)
     assert(candidate_set), 'The candidate set is empty.'
 
