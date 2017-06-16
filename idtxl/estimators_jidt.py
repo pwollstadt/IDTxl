@@ -13,7 +13,6 @@ except ImportError as err:
                             'JAVA/JIDT-powered CMI estimation.')
 
 # TODO check IDTxl nomenclature (variable > process, estimate vs. calculate)
-# TODO check which JIDT estimators accept the debug property and add it
 
 
 class JidtEstimator(Estimator):
@@ -331,7 +330,7 @@ class JidtDiscrete(JidtEstimator):
                 under the null hypothesis of no relationship between var1 and
                 var2 (in the context of conditional)
         """
-        return common_estimate_surrogates_analytic(self, **data)
+        return common_estimate_surrogates_analytic(self, n_perm, **data)
 
 class JidtGaussian(JidtEstimator):
     """Abstract class for implementation of JIDT Gaussian-estimators.
@@ -594,18 +593,18 @@ class JidtDiscreteCMI(JidtDiscrete):
         # collapsing them into univariate arrays later.
         var1 = self._ensure_two_dim_input(var1)
         var2 = self._ensure_two_dim_input(var2)
-        cond = self._ensure_two_dim_input(conditional)
+        conditional = self._ensure_two_dim_input(conditional)
         var1_dim = var1.shape[1]
         var2_dim = var2.shape[1]
         cond_dim = conditional.shape[1]
 
         # Discretise if requested.
-        var1, var2, conditional = self._discretise_vars(var1, var2, cond)
+        var1, var2, conditional = self._discretise_vars(var1, var2, conditional)
 
         # Then collapse any mulitvariates into univariate arrays:
         var1 = utils.combine_discrete_dimensions(var1, self.opts['alph1'])
         var2 = utils.combine_discrete_dimensions(var2, self.opts['alph2'])
-        cond = utils.combine_discrete_dimensions(cond, self.opts['alphc'])
+        conditional = utils.combine_discrete_dimensions(conditional, self.opts['alphc'])
 
         # We have a non-trivial conditional, so make a proper conditional MI
         # calculation
@@ -618,12 +617,12 @@ class JidtDiscreteCMI(JidtDiscrete):
         # conversion
         calc.addObservations(jp.JArray(jp.JInt, 1)(var1.tolist()),
                              jp.JArray(jp.JInt, 1)(var2.tolist()),
-                             jp.JArray(jp.JInt, 1)(cond.tolist()))
+                             jp.JArray(jp.JInt, 1)(conditional.tolist()))
         if self.opts['local_values']:
             result = np.array(calc.computeLocalFromPreviousObservations(
                 jp.JArray(jp.JInt, 1)(var1.tolist()),
                 jp.JArray(jp.JInt, 1)(var2.tolist()),
-                jp.JArray(jp.JInt, 1)(cond.tolist())
+                jp.JArray(jp.JInt, 1)(conditional.tolist())
                 ))
         else:
             result = calc.computeAverageLocalOfObservations()
