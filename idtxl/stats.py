@@ -183,13 +183,24 @@ def omnibus_test(analysis_setup, data):
         i_1 = i_2
         i_2 += data.n_realisations(analysis_setup.current_value)
         '''
-    surr_cond_real = _get_surrogates(data,
+    if (analysis_setup._cmi_estimator.is_analytic_null_estimator()
+        and (analysis_setup.options.get('permute_in_time', False) or
+            not _sufficient_replications(data, n_perm))):
+        # Generate the surrogates analytically
+        surr_distribution = analysis_setup._cmi_estimator. \
+            estimate_surrogates_analytic(
+                n_perm=n_permutations,
+                var1=cond_source_realisations,
+                var2=analysis_setup._current_value_realisations,
+                conditional=cond_target_realisations)
+    else:
+        surr_cond_real = _get_surrogates(data,
                                      analysis_setup.current_value,
                                      analysis_setup.selected_vars_sources,
                                      n_permutations,
                                      analysis_setup.options)
 
-    surr_distribution = analysis_setup._cmi_estimator.estimate_mult(
+        surr_distribution = analysis_setup._cmi_estimator.estimate_mult(
                             n_chunks=n_permutations,
                             re_use=['var2', 'conditional'],
                             var1=surr_cond_real,
@@ -409,7 +420,7 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
 
 
 def mi_against_surrogates(analysis_setup, data):
-    """Test estimaed mutual information for significance against surrogate data.
+    """Test estimated mutual information for significance against surrogate data.
 
     Shuffle realisations of the current value (point to be predicted) and re-
     calculate mutual information (MI) for shuffled data. The actual estimated
@@ -474,13 +485,24 @@ def mi_against_surrogates(analysis_setup, data):
                                             analysis_setup.current_value,
                                             [analysis_setup.current_value])
         '''
-    surr_realisations = _get_surrogates(data,
+    if (analysis_setup._cmi_estimator.is_analytic_null_estimator()
+        and (analysis_setup.options.get('permute_in_time', False) or
+            not _sufficient_replications(data, n_perm))):
+        # Generate the surrogates analytically
+        surr_dist = analysis_setup._cmi_estimator. \
+            estimate_surrogates_analytic(
+                n_perm=n_perm,
+                var1=analysis_setup._current_value_realisations,
+                var2=analysis_setup._selected_vars_realisations,
+                conditional=None)
+    else:
+        surr_realisations = _get_surrogates(data,
                                         analysis_setup.current_value,
                                         [analysis_setup.current_value],
                                         n_perm,
                                         analysis_setup.options)
 
-    surr_dist = analysis_setup._cmi_estimator.estimate_mult(
+        surr_dist = analysis_setup._cmi_estimator.estimate_mult(
                             n_chunks=n_perm,
                             re_use=['var2', 'conditional'],
                             var1=surr_realisations,
@@ -728,9 +750,9 @@ def check_n_perm(n_perm, alpha):
 
 
 def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
-    """Create a table of surrogate transfer entropy values.
+    """Create a table of surrogate MI/CMI/TE values.
 
-    Calculate transfer entropy between surrogates for each source in the test
+    Calculate MI/CMI/TE between surrogates for each source in the test
     set and the target in the analysis setup using the current conditional in
     the analysis setup.
 
@@ -746,7 +768,7 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
 
     Returns:
         numpy array
-            surrogate TE values, dimensions: (length test set, number of
+            surrogate MI/CMI/TE values, dimensions: (length test set, number of
             surrogates)
     """
     # Check if n_replications is high enough to allow for the requested number
@@ -758,7 +780,7 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
     # Create surrogate table.
     if VERBOSE:
         print('\ncreate surrogates table with {0} permutations'.format(n_perm))
-    surr_table = np.zeros((len(idx_test_set), n_perm))  # surrogate TE values
+    surr_table = np.zeros((len(idx_test_set), n_perm))  # surrogate MI/CMI/TE values
     current_value_realisations = analysis_setup._current_value_realisations
     idx_c = 0
     for candidate in idx_test_set:
@@ -786,13 +808,25 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
             i_1 = i_2
             i_2 += data.n_realisations(analysis_setup.current_value)
         '''
-        surr_candidate_realisations = _get_surrogates(
+        if (analysis_setup._cmi_estimator.is_analytic_null_estimator()
+            and (analysis_setup.options.get('permute_in_time', False) or
+                not _sufficient_replications(data, n_perm))):
+            # Generate the surrogates analytically
+            surr_table[idx_c, :] = analysis_setup._cmi_estimator. \
+                estimate_surrogates_analytic(
+                    n_perm=n_perm,
+                    var1=data.get_realisations(
+                            analysis_setup.current_value, [candidate])[0],
+                    var2=current_value_realisations,
+                    conditional=analysis_setup._selected_vars_realisations)
+        else:
+            surr_candidate_realisations = _get_surrogates(
                                                  data,
                                                  analysis_setup.current_value,
                                                  [candidate],
                                                  n_perm,
                                                  analysis_setup.options)
-        surr_table[idx_c, :] = analysis_setup._cmi_estimator.estimate_mult(
+            surr_table[idx_c, :] = analysis_setup._cmi_estimator.estimate_mult(
                     n_chunks=n_perm,
                     re_use=['var2', 'conditional'],
                     var1=surr_candidate_realisations,  # too long

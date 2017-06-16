@@ -86,6 +86,14 @@ class Estimator(metaclass=ABCMeta):
     def is_parallel(self):
         pass
 
+    @abstractmethod
+    def is_analytic_null_estimator(self):
+        """Indicates that the estimator implements
+        estimate_surrogates_analytic(self, n_perm, **data)
+        where data is formatted as per estimate_mult for this estimator.
+        """
+        pass
+
     def estimate_mult(self, n_chunks=1, re_use=None, **data):
         """Estimate measure for multiple data sets (chunks).
 
