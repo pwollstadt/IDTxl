@@ -5,9 +5,12 @@ Tests are based on unit tests by Pedro Mediano
 https://github.com/pmediano/jidt/tree/master/java/source/infodynamics/
 measures/continuous/kraskov/cuda
 """
+import pytest
 import numpy as np
 from idtxl.estimators_opencl import OpenCLKraskovMI, OpenCLKraskovCMI
-from test_estimators_opencl import opencl_missing
+
+# Skip test module if pyopencl is not installed
+pytest.importorskip('pyopencl')
 
 opts = {'theiler_t': 0,
         'knn_k': 1,
@@ -18,7 +21,6 @@ EST_MI = OpenCLKraskovMI(opts)
 EST_CMI = OpenCLKraskovCMI(opts)
 
 
-@opencl_missing
 def test_knn_one_dim():
     """Test kNN search in 1D."""
 
@@ -42,7 +44,6 @@ def test_knn_one_dim():
     assert np.isclose(dist2[3], 0.1), 'Distance 3 not correct.'
 
 
-@opencl_missing
 def test_knn_two_dim():
     """Test kNN search in 2D."""
     pointset1 = np.array([
