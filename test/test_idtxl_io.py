@@ -10,17 +10,16 @@ def test_save_te_results():
     # Generate some example output
     dat = Data()
     dat.generate_mute_data(100, 2)
-    max_lag = 5
     analysis_opts = {
-        'cmi_calc_name': 'opencl_kraskov',
+        'cmi_estimator': 'OpenCLKraskovCMI',
         'n_perm_mi': 22,
         'alpha_mi': 0.05,
         'tail_mi': 'one',
         }
     processes = [2, 3]
-    network_analysis = Active_information_storage(max_lag,
-                                                  analysis_opts,
-                                                  tau=1)
+    network_analysis = ActiveInformationStorage(max_lag=5,
+                                                tau=1,
+                                                options=analysis_opts)
     res_ais = network_analysis.analyse_network(dat, processes)
 
     cwd = os.getcwd()
