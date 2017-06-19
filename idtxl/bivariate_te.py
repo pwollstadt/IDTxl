@@ -38,7 +38,7 @@ class BivariateTE(NetworkInference):
             - 'alpha_*' - critical alpha level for statistical significance,
               where * can be 'max_stats',  'min_stats', and 'omnibus'
               (default=0.05)
-            - 'cmi_calc_name' - estimator to be used for CMI calculation
+            - 'cmi_estimator' - estimator to be used for CMI calculation
               (For estimator options see the respective documentation.)
             - 'add_conditionals' - force the estimator to add these
               conditionals when estimating TE; can either be a list of

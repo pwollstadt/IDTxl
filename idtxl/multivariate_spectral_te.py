@@ -24,12 +24,12 @@ class MultivariateSpectralTE(NetworkAnalysis):
         options : dict
             parameters for estimator use and statistics:
 
-            - 'cmi_calc_name' - estimator to be used for CMI calculation
+            - 'cmi_estimator' - estimator to be used for CMI calculation
               (For estimator options see the respective documentation.)
             - 'n_perm_spec' - number of permutations (default=200)
             - 'alpha_spec' - critical alpha level for statistical significance
               (default=0.05)
-            - 'cmi_calc_name' - estimator to be used for CMI calculation
+            - 'cmi_estimator' - estimator to be used for CMI calculation
               (For estimator options see the respective documentation.)
             - 'permute_in_time' - force surrogate creation by shuffling
               realisations in time instead of shuffling replications; see

@@ -35,7 +35,7 @@ class NetworkComparison(NetworkAnalysis):
 
             - 'stats_type' - 'dependent' or 'independent' for dependent or
               independent units of observation
-            - 'cmi_calc_name' - estimator to be used for CMI calculation
+            - 'cmi_estimator' - estimator to be used for CMI calculation
               (For estimator options see the respective documentation.)
             - 'tail' - test tail, 'one' for one-sided test, 'two' for two-sided
               test (default='two')

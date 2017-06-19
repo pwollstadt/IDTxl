@@ -41,7 +41,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
               'min_stat', 'mi' (default=500)
             - 'alpha_*' - critical alpha level for statistical significance,
               where * can be 'max_stat', 'min_stat', 'mi' (default=0.05)
-            - 'cmi_calc_name' - estimator to be used for CMI calculation. Note
+            - 'cmi_estimator' - estimator to be used for CMI calculation. Note
               that this estimator is also used to estimate MI later on.
               (For estimator options see the respective documentation.)
             - 'add_conditionals' - force the estimator to add these

@@ -30,7 +30,7 @@ def test_multivariate_te_corr_gaussian(estimator=None):
         This produces strange small values for non-coupled sources.  TODO
     """
     if estimator is None:
-        estimator = 'jidt_kraskov'
+        estimator = 'JidtKraskovCMI'
 
     n = 1000
     cov = 0.4
@@ -47,7 +47,7 @@ def test_multivariate_te_corr_gaussian(estimator=None):
     dat = Data(normalise=True)
     dat.set_data(np.vstack((source_1[1:].T, target[:-1].T)), 'ps')
     analysis_opts = {
-        'cmi_calc_name': estimator,
+        'cmi_estimator': estimator,
         'n_perm_max_stat': 21,
         'n_perm_min_stat': 21,
         'n_perm_omnibus': 21,
@@ -240,7 +240,7 @@ def test_multivariate_te_mute():
 
     network_analysis = MultivariateTE(max_lag_sources=3, min_lag_sources=1,
                                       max_lag_target=3, options=analysis_opts)
-    res = network_analysis.analyse_network(dat, targets=[1, 2])
+    network_analysis.analyse_network(dat, targets=[1, 2])
 
 
 def test_multivariate_te_multiple_runs():
@@ -254,7 +254,7 @@ def test_multivariate_te_multiple_runs():
     dat = Data()
     dat.generate_mute_data(n_samples=1000, n_replications=10)
     analysis_opts = {
-        'cmi_calc_name': 'opencl_kraskov',
+        'cmi_estimator': 'OpenCLKraskovCMI',
         'n_perm_max_stat': 7000,
         'n_perm_min_stat': 7000,
         'n_perm_omnibus': 21,
@@ -264,7 +264,7 @@ def test_multivariate_te_multiple_runs():
 
     network_analysis = MultivariateTE(max_lag_sources=3, min_lag_sources=1,
                                       max_lag_target=3, options=analysis_opts)
-    res = network_analysis.analyse_network(dat, targets=[1, 2])
+    network_analysis.analyse_network(dat, targets=[1, 2])
 
 
 if __name__ == '__main__':
@@ -273,4 +273,4 @@ if __name__ == '__main__':
     test_multivariate_te_random()
     # test_multivariate_te_multiple_runs()
     test_multivariate_te_corr_gaussian()
-    test_multivariate_te_corr_gaussian('opencl_kraskov')
+    test_multivariate_te_corr_gaussian('OpenCLKraskovCMI')
