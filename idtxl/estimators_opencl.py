@@ -84,8 +84,11 @@ class OpenCLKraskov(Estimator):
     def _get_device(self, gpuid):
         """Return GPU devices, context, and queue."""
         all_platforms = cl.get_platforms()
-        platform = next(p for p in all_platforms
-                        if p.get_devices(device_type=cl.device_type.GPU) != [])
+        platform = next((p for p in all_platforms if
+                         p.get_devices(device_type=cl.device_type.GPU) != []),
+                        None)
+        if platform is None:
+            raise RuntimeError('No OpenCL GPU device found.')
         my_gpu_devices = platform.get_devices(device_type=cl.device_type.GPU)
         context = cl.Context(devices=my_gpu_devices)
         queue = cl.CommandQueue(context, my_gpu_devices[gpuid])
