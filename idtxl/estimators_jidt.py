@@ -205,7 +205,7 @@ class JidtKraskov(JidtEstimator):
         self.calc.setProperty('NOISE_LEVEL_TO_ADD',
                               str(self.opts['noise_level']))
         self.calc.setProperty('NUM_THREADS', str(self.opts['num_threads']))
-        self.calc.setDebug(opts['debug'])
+        self.calc.setDebug(self.opts['debug'])
 
     def is_analytic_null_estimator(self):
         return False
@@ -369,7 +369,7 @@ class JidtGaussian(JidtEstimator):
     def __init__(self, CalcClass, opts):
         super().__init__(opts)
         self.calc = CalcClass()
-        self.calc.setDebug(opts['debug'])
+        self.calc.setDebug(self.opts['debug'])
 
     def is_analytic_null_estimator(self):
         return True
@@ -1553,6 +1553,11 @@ class JidtDiscreteTE(JidtDiscrete):
             return (result, calc)
         else:
             return result
+
+    def get_analytic_distribution(self, source, target):
+        # Make one estimate to prepare the calculator:
+        (est, jidt_calc) = self.estimate(source, target, True)
+        return jidt_calc.computeSignificance()
 
 
 class JidtGaussianTE(JidtGaussian):
