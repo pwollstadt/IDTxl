@@ -11,15 +11,15 @@ d = np.load(os.path.join(os.path.dirname(__file__),
 dat = Data()
 dat.set_data(d[:, :, 0:100], 'psr')
 analysis_opts = {
-        'cmi_calc_name': 'opencl_kraskov',
+        'cmi_estimator': 'OpenCLKraskovCMI',
         'n_perm_max_stat': 200,
         'n_perm_min_stat': 200,
         'n_perm_omnibus': 500,
         'n_perm_max_seq': 500,
         }
 lorenz_analysis = MultivariateTE(max_lag_sources=50, min_lag_sources=40,
-                                  max_lag_target=30, tau_sources=1,
-                                  tau_target=3, options=analysis_opts)
+                                 max_lag_target=30, tau_sources=1,
+                                 tau_target=3, options=analysis_opts)
 res_1 = lorenz_analysis.analyse_single_target(dat, 0)
 res_2 = lorenz_analysis.analyse_single_target(dat, 1)
 runtime = time.time() - start_time
