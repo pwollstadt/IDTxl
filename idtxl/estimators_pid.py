@@ -482,7 +482,7 @@ class SydneyPID(Estimator):
 
     def is_analytic_null_estimator(self):
         return False
-    
+
     def estimate(self, s1, s2, t):
         """
         Args:
@@ -565,7 +565,7 @@ class SydneyPID(Estimator):
         joint_s1_s2_prob = np.divide(joint_s1_s2_count,
                                      num_samples).astype('float128')
         joint_t_s1_s2_prob = np.divide(joint_t_s1_s2_count,
-                                     num_samples).astype('float128')
+                                       num_samples).astype('float128')
         max_prob = np.max(joint_t_s1_s2_prob[np.nonzero(joint_t_s1_s2_prob)])
 
     #    # make copies of the variable probabilities for independent second
@@ -945,7 +945,7 @@ class TartuPID(Estimator):
 
     def is_analytic_null_estimator(self):
         return False
-    
+
     def estimate(self, s1, s2, t):
         """
         Args:
