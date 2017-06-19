@@ -36,8 +36,13 @@ class BivariateTE(NetworkInference):
             - 'n_perm_*' - number of permutations, where * can be 'max_stat',
             - 'min_stat', 'omnibus', and 'max_seq' (default=500)
             - 'alpha_*' - critical alpha level for statistical significance,
-              where * can be 'max_stats',  'min_stats', and 'omnibus'
+              where * can be 'max_stats',  'min_stats', 'omnibus', and 'fdr'
               (default=0.05)
+            - 'fdr_correction' - perform correction for false discovery rate
+              at the network level (default=True)
+            - 'correct_by_target' - if true p-values are corrected on the
+              target level and on the single-link level otherwise
+              (default=True)
             - 'cmi_estimator' - estimator to be used for CMI calculation
               (For estimator options see the respective documentation.)
             - 'add_conditionals' - force the estimator to add these
@@ -189,7 +194,9 @@ class BivariateTE(NetworkInference):
             r['target'] = targets[t]
             r['sources'] = sources[t]
             results[targets[t]] = r
-        results['fdr'] = stats.network_fdr(results)
+
+        if self.options['fdr_correction']:
+            results['fdr'] = stats.network_fdr(self, results)
         return results
 
     def analyse_single_target(self, data, target, sources='all'):
@@ -326,7 +333,7 @@ class BivariateTE(NetworkInference):
                 data.get_realisations(self.current_value, candidate_set)[0])
 
         # Perform one round of sequential max statistics.
-        [s, p, te] = stats.max_statistic_sequential(self, data, self.options)
+        [s, p, te] = stats.max_statistic_sequential(self, data)
 
         # Remove non-significant sources from the candidate set. Loop
         # backwards over the candidates to remove them iteratively.

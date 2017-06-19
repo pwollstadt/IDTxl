@@ -36,10 +36,13 @@ class MultivariateTE(NetworkInference):
             - 'n_perm_*' - number of permutations, where * can be 'max_stat',
               'min_stat', 'omnibus', and 'max_seq' (default=500)
             - 'alpha_*' - critical alpha level for statistical significance,
-              where * can be 'max_stats',  'min_stats', 'omnibus', and
-              'max_seq' (default=0.05)
+              where * can be 'max_stats',  'min_stats', 'omnibus', 'max_seq',
+              and 'fdr' (default=0.05)
             - 'fdr_correction' - perform correction for false discovery rate
-              at the network level
+              at the network level (default=True)
+            - 'correct_by_target' - if true p-values are corrected on the
+              target level and on the single-link level otherwise
+              (default=True)
             - 'cmi_estimator' - estimator to be used for CMI calculation
               (For estimator options see the respective documentation.)
             - 'add_conditionals' - force the estimator to add these
@@ -192,8 +195,8 @@ class MultivariateTE(NetworkInference):
             results[targets[t]] = self.analyse_single_target(data,
                                                              targets[t],
                                                              sources[t])
-        if self.opts['fdr_correction']:
-            results['fdr'] = stats.network_fdr(results)
+        if self.options['fdr_correction']:
+            results['fdr'] = stats.network_fdr(self, results)
         return results
 
     def analyse_single_target(self, data, target, sources='all'):
@@ -371,8 +374,7 @@ class MultivariateTE(NetworkInference):
             [significant, p, surr_table] = stats.min_statistic(
                                               self, data,
                                               self.selected_vars_sources,
-                                              te_min_candidate,
-                                              self.options)
+                                              te_min_candidate)
 
             # Remove the minimum it is not significant and test the next min.
             # candidate. If the minimum is significant, break, all other
@@ -403,8 +405,7 @@ class MultivariateTE(NetworkInference):
             self.pvalue_omnibus = p
             # Test individual links if the omnibus test is significant.
             if self.sign_omnibus:
-                [s, p, te] = stats.max_statistic_sequential(self, data,
-                                                            self.options)
+                [s, p, te] = stats.max_statistic_sequential(self, data)
                 # Remove non-significant sources from the candidate set. Loop
                 # backwards over the candidates to remove them iteratively.
                 for i in range(s.shape[0] - 1, -1, -1):

@@ -11,7 +11,7 @@ from . import idtxl_utils as utils
 VERBOSE = True
 
 
-def network_fdr(results, alpha=0.05, correct_by_target=True):
+def network_fdr(analysis_setup, results):
     """Perform FDR-correction on results of network inference.
 
     Perform correction of the false discovery rate (FDR) after network
@@ -25,19 +25,29 @@ def network_fdr(results, alpha=0.05, correct_by_target=True):
     rate. Neuroimage, 15(4), 870-878.
 
     Args:
+        analysis_setup : MultivariateTE instance
+            information on the current analysis, can have an optional attribute
+            'opts', a dictionary with parameters for statistical testing:
+
+            - 'alpha_fdr' - critical alpha level (default=0.05)
+            - 'correct_by_target' - if true p-values are corrected on the
+              target level and on the single-link level otherwise
+              (default=True)
+
         results : dict
             network inference results where each dict entry represents results
             for one target node
-        alpha : float [optional]
-            critical alpha value for statistical significance (default=0.05)
-        correct_by_target : bool
-            if true p-values are corrected on the target level and on the
-            single-link level otherwise (default=True)
 
     Returns:
         dict
             input results structure pruned of non-significant links.
     """
+    # Set defaults and get parameters from options dictionary
+    analysis_setup.options.setdefault('alpha_fdr', 0.05)
+    alpha = analysis_setup.options['alpha_fdr']
+    analysis_setup.options.setdefault('fdr_correct_by_target', True)
+    correct_by_target = analysis_setup.options['fdr_correct_by_target']
+
     # Make a copy that can be changed and returned after testing.
     res = cp.copy(results)
 
@@ -124,16 +134,16 @@ def omnibus_test(analysis_setup, data):
 
     Args:
         analysis_setup : MultivariateTE instance
-            information on the current analysis
-        data : Data instance
-            raw data
-        opts : dict [optional]
-            parameters for statistical testing, can contain
+            information on the current analysis, can have an optional attribute
+            'opts', a dictionary with parameters for statistical testing:
 
             - 'n_perm_omnibus' - number of permutations (default=500)
             - 'alpha_omnibus' - critical alpha level (default=0.05)
             - 'perm_range' - permutation range if permutation over samples is
               used to create surrogates (default='max')
+
+        data : Data instance
+            raw data
 
     Returns:
         bool
@@ -141,9 +151,11 @@ def omnibus_test(analysis_setup, data):
         float
             the test's p-value
     """
-    opts = analysis_setup.options
-    n_permutations = opts.get('n_perm_omnibus', 21)
-    alpha = opts.get('alpha_omnibus', 0.05)
+    # Set defaults and get parameters from options dictionary
+    analysis_setup.options.setdefault('n_perm_omnibus', 500)
+    n_permutations = analysis_setup.options['n_perm_omnibus']
+    analysis_setup.options.setdefault('alpha_omnibus', 0.05)
+    alpha = analysis_setup.options['alpha_omnibus']
     print('no. target sources: {0}, no. sources: {1}'.format(
                                     len(analysis_setup.selected_vars_target),
                                     len(analysis_setup.selected_vars_sources)))
@@ -183,22 +195,22 @@ def omnibus_test(analysis_setup, data):
         i_1 = i_2
         i_2 += data.n_realisations(analysis_setup.current_value)
         '''
-    if (analysis_setup._cmi_estimator.is_analytic_null_estimator()
-        and (analysis_setup.options.get('permute_in_time', False) or
-            not _sufficient_replications(data, n_perm))):
+    if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
+        (analysis_setup.options.get('permute_in_time', False) or
+         not _sufficient_replications(data, n_permutations))):
         # Generate the surrogates analytically
-        surr_distribution = analysis_setup._cmi_estimator. \
-            estimate_surrogates_analytic(
-                n_perm=n_permutations,
-                var1=cond_source_realisations,
-                var2=analysis_setup._current_value_realisations,
-                conditional=cond_target_realisations)
+        surr_distribution = (analysis_setup._cmi_estimator.
+                             estimate_surrogates_analytic(
+                               n_perm=n_permutations,
+                               var1=cond_source_realisations,
+                               var2=analysis_setup._current_value_realisations,
+                               conditional=cond_target_realisations))
     else:
         surr_cond_real = _get_surrogates(data,
-                                     analysis_setup.current_value,
-                                     analysis_setup.selected_vars_sources,
-                                     n_permutations,
-                                     analysis_setup.options)
+                                         analysis_setup.current_value,
+                                         analysis_setup.selected_vars_sources,
+                                         n_permutations,
+                                         analysis_setup.options)
 
         surr_distribution = analysis_setup._cmi_estimator.estimate_mult(
                             n_chunks=n_permutations,
@@ -215,8 +227,7 @@ def omnibus_test(analysis_setup, data):
     return significance, pvalue, te_orig
 
 
-def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
-                  opts=None):
+def max_statistic(analysis_setup, data, candidate_set, te_max_candidate):
     """Perform maximum statistics for one candidate source.
 
     Test if a transfer entropy value is significantly bigger than the maximum
@@ -224,18 +235,18 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
 
     Args:
         analysis_setup : MultivariateTE instance
-            information on the current analysis
+            information on the current analysis, can have an optional attribute
+            'opts', a dictionary with parameters for statistical testing:
+
+            - 'n_perm_max_stat' - number of permutations (default=200)
+            - 'alpha_max_stat' - critical alpha level (default=0.05)
+
         data : Data instance
             raw data
         candidate_set : list of tuples
             list of indices of remaning candidates
         te_max_candidate : float
             transfer entropy value to be tested
-        opts : dict [optional]
-            parameters for statistical testing, can contain:
-
-            - 'n_perm_max_stat' - number of permutations (default=200)
-            - 'alpha_max_stat' - critical alpha level (default=0.05)
 
     Returns:
         bool
@@ -245,10 +256,11 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
         numpy array
             surrogate table
     """
-    if opts is None:
-        opts = {}
-    n_perm = opts.get('n_perm_max_stat', 200)
-    alpha = opts.get('alpha_max_stat', 0.05)
+    # Set defaults and get parameters from options dictionary
+    analysis_setup.options.setdefault('n_perm_max_stat', 200)
+    n_perm = analysis_setup.options['n_perm_max_stat']
+    analysis_setup.options.setdefault('alpha_max_stat', 0.05)
+    alpha = analysis_setup.options['alpha_max_stat']
     assert(candidate_set), 'The candidate set is empty.'
 
     surr_table = _create_surrogate_table(analysis_setup, data, candidate_set,
@@ -259,7 +271,7 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
     return significance, pvalue, surr_table
 
 
-def max_statistic_sequential(analysis_setup, data, opts=None):
+def max_statistic_sequential(analysis_setup, data):
     """Perform sequential maximum statistics for a set of candidate sources.
 
     Test if sorted transfer entropy (TE) values are significantly bigger than
@@ -276,15 +288,15 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
 
     Args:
         analysis_setup : MultivariateTE instance
-            information on the current analysis
-        data : Data instance
-            raw data
-        opts : dict [optional]
-            parameters for statistical testing, can contain:
+            information on the current analysis, can have an optional attribute
+            'opts', a dictionary with parameters for statistical testing:
 
             - 'n_perm_max_seq' - number of permutations
               (default='n_perm_min_stat'|500)
             - 'alpha_max_seq' - critical alpha level (default=0.05)
+
+        data : Data instance
+            raw data
 
     Returns:
         numpy array, bool
@@ -294,16 +306,16 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
         numpy array, float
             TE values for individual sources
     """
-    if opts is None:
-        opts = {}
     try:
-        n_permutations = opts['n_perm_max_seq']
+        n_permutations = analysis_setup.options['n_perm_max_seq']
     except KeyError:
         try:  # use the same n_perm as for min_stats if surr table is reused
             n_permutations = analysis_setup._min_stats_surr_table.shape[1]
         except AttributeError:  # is surr table is None, use default
-            n_permutations = 500
-    alpha = opts.get('alpha_max_seq', 0.05)
+            analysis_setup.options['n_perm_max_seq'] = 500
+            n_permutations = analysis_setup.options['n_perm_max_seq']
+    analysis_setup.options.setdefault('alpha_max_seq', 0.05)
+    alpha = analysis_setup.options['alpha_max_seq']
 
     assert analysis_setup.selected_vars_sources, 'No sources to test.'
 
@@ -375,8 +387,7 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
 
 
 # TODO opts is part of analysis setup, see mi_stats below
-def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
-                  opts=None):
+def min_statistic(analysis_setup, data, candidate_set, te_min_candidate):
     """Perform minimum statistics for one candidate source.
 
     Test if a transfer entropy value is significantly bigger than the minimum
@@ -384,18 +395,18 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
 
     Args:
         analysis_setup : MultivariateTE instance
-            information on the current analysis
+            information on the current analysis, can have an optional attribute
+            'opts', a dictionary with parameters for statistical testing:
+
+            - 'n_perm_min_stat' - number of permutations (default=500)
+            - 'alpha_min_stat' - critical alpha level (default=0.05)
+
         data : Data instance
             raw data
         candidate_set : list of tuples
             list of indices of remaning candidates
         te_min_candidate : float
             transfer entropy value to be tested
-        opts : dict [optional]
-            parameters for statistical testing, can contain:
-
-            - 'n_perm_min_stat' - number of permutations (default=500)
-            - 'alpha_min_stat' - critical alpha level (default=0.05)
 
     Returns:
         bool
@@ -405,10 +416,12 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
         numpy array
             surrogate table
     """
-    if opts is None:
-        opts = {}
-    n_perm = opts.get('n_perm_min_stat', 21)
-    alpha = opts.get('alpha_min_stat', 0.05)
+    # Set defaults and get parameters from options dictionary
+    analysis_setup.options.setdefault('n_perm_min_stat', 500)
+    n_perm = analysis_setup.options['n_perm_min_stat']
+    analysis_setup.options.setdefault('alpha_min_stat', 0.05)
+    alpha = analysis_setup.options['alpha_min_stat']
+
     assert(candidate_set), 'The candidate set is empty.'
 
     surr_table = _create_surrogate_table(analysis_setup, data, candidate_set,
@@ -429,8 +442,8 @@ def mi_against_surrogates(analysis_setup, data):
 
     Args:
         analysis_setup : MultivariateTE instance
-            information on the current analysis, should have an Attribute
-            'options', a dict with fields
+            information on the current analysis, can have an optional attribute
+            'opts', a dictionary with parameters for statistical testing:
 
             - 'n_perm_mi' - number of permutations (default=500)
             - 'alpha_mi' - critical alpha level (default=0.05)
@@ -450,13 +463,12 @@ def mi_against_surrogates(analysis_setup, data):
         float
             p_value for estimated MI value
     """
-    assert hasattr(analysis_setup, 'options'), ('The analysis setup should '
-                                                'have an options attribute '
-                                                'with parameters for '
-                                                'statistical testing.')
-    n_perm = analysis_setup.options.get('n_perm_mi', 500)
-    alpha = analysis_setup.options.get('alpha_mi', 0.05)
-    tail = analysis_setup.options.get('tail_mi', 'one')
+    analysis_setup.options.setdefault('n_perm_mi', 500)
+    n_perm = analysis_setup.options['n_perm_mi']
+    analysis_setup.options.setdefault('alpha_mi', 0.05)
+    alpha = analysis_setup.options['alpha_mi']
+    analysis_setup.options.setdefault('tail_mi', 'one')
+    tail = analysis_setup.options['tail_mi']
     '''
     surr_realisations = np.empty(
                         (data.n_realisations(analysis_setup.current_value) *
@@ -485,22 +497,22 @@ def mi_against_surrogates(analysis_setup, data):
                                             analysis_setup.current_value,
                                             [analysis_setup.current_value])
         '''
-    if (analysis_setup._cmi_estimator.is_analytic_null_estimator()
-        and (analysis_setup.options.get('permute_in_time', False) or
-            not _sufficient_replications(data, n_perm))):
+    if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
+        (analysis_setup.options.get('permute_in_time', False) or
+         not _sufficient_replications(data, n_perm))):
         # Generate the surrogates analytically
-        surr_dist = analysis_setup._cmi_estimator. \
+        surr_dist = (analysis_setup._cmi_estimator.
             estimate_surrogates_analytic(
                 n_perm=n_perm,
                 var1=analysis_setup._current_value_realisations,
                 var2=analysis_setup._selected_vars_realisations,
-                conditional=None)
+                conditional=None))
     else:
         surr_realisations = _get_surrogates(data,
-                                        analysis_setup.current_value,
-                                        [analysis_setup.current_value],
-                                        n_perm,
-                                        analysis_setup.options)
+                                            analysis_setup.current_value,
+                                            [analysis_setup.current_value],
+                                            n_perm,
+                                            analysis_setup.options)
 
         surr_dist = analysis_setup._cmi_estimator.estimate_mult(
                             n_chunks=n_perm,
@@ -553,11 +565,13 @@ def unq_against_surrogates(analysis_setup, data):
         float
             p-value of the unique information in source 2
     """
-
     # Get analysis options and defaults.
-    n_perm = analysis_setup.options.get('n_perm', 21)  # TODO set to default
-    alpha = analysis_setup.options.get('alpha', 0.05)
-    tail = analysis_setup.options.get('tail', 'one')
+    analysis_setup.options.setdefault('n_perm', 500)
+    n_perm = analysis_setup.options['n_perm']
+    analysis_setup.options.setdefault('alpha', 0.05)
+    alpha = analysis_setup.options['alpha']
+    analysis_setup.options.setdefault('tail', 'one')
+    tail = analysis_setup.options['tail']
 
     # Get realisations and estimate PID for orginal data
     target_realisations = data.get_realisations(
@@ -673,9 +687,12 @@ def syn_shd_against_surrogates(analysis_setup, data):
             p-value of the synergistic information
     """
     # Get analysis options and defaults.
-    n_perm = analysis_setup.options.get('n_perm', 21)  # TODO set to default
-    alpha = analysis_setup.options.get('alpha', 0.05)
-    tail = analysis_setup.options.get('tail', 'one')
+    analysis_setup.options.setdefault('n_perm', 500)
+    n_perm = analysis_setup.options['n_perm']
+    analysis_setup.options.setdefault('alpha', 0.05)
+    alpha = analysis_setup.options['alpha']
+    analysis_setup.options.setdefault('tail', 'one')
+    tail = analysis_setup.options['tail']
 
     # Get realisations and estimate PID for original data
     target_realisations = data.get_realisations(
@@ -808,17 +825,17 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
             i_1 = i_2
             i_2 += data.n_realisations(analysis_setup.current_value)
         '''
-        if (analysis_setup._cmi_estimator.is_analytic_null_estimator()
-            and (analysis_setup.options.get('permute_in_time', False) or
-                not _sufficient_replications(data, n_perm))):
+        if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
+            (analysis_setup.options.get('permute_in_time', False) or
+             not _sufficient_replications(data, n_perm))):
             # Generate the surrogates analytically
-            surr_table[idx_c, :] = analysis_setup._cmi_estimator. \
-                estimate_surrogates_analytic(
+            surr_table[idx_c, :] = (analysis_setup._cmi_estimator.
+                  estimate_surrogates_analytic(
                     n_perm=n_perm,
                     var1=data.get_realisations(
                             analysis_setup.current_value, [candidate])[0],
                     var2=current_value_realisations,
-                    conditional=analysis_setup._selected_vars_realisations)
+                    conditional=analysis_setup._selected_vars_realisations))
         else:
             surr_candidate_realisations = _get_surrogates(
                                                  data,
