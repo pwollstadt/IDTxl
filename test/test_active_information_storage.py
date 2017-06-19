@@ -59,11 +59,14 @@ def test_ActiveInformationStorage_init():
 
 def test_analyse_network():
     """Test AIS estimation for the whole network."""
+    opts = {
+        'cmi_estimator': 'JidtKraskovCMI',
+        'n_perm_max_stat': 21}
     dat = Data()
     dat.generate_mute_data(10, 3)
     ais = ActiveInformationStorage(max_lag=5,
                                    tau=1,
-                                   options={'cmi_estimator': 'JidtKraskovCMI'})
+                                   options=opts)
     # Test analysis of 'all' processes
     r = ais.analyse_network(data=dat)
     k = list(r.keys())
@@ -86,9 +89,10 @@ def test_single_source_storage_gaussian():
     max_lag = 5
     analysis_opts = {
         'cmi_estimator': 'JidtKraskovCMI',
-        'n_perm_mi': 22,
+        'n_perm_mi': 50,
         'alpha_mi': 0.05,
         'tail_mi': 'one',
+        'n_perm_max_stat': 21
         }
     processes = [1]
     network_analysis = ActiveInformationStorage(max_lag, analysis_opts,
@@ -112,6 +116,7 @@ def test_compare_jidt_open_cl_estimator():
         'n_perm_mi': 22,
         'alpha_mi': 0.05,
         'tail_mi': 'one',
+        'n_perm_max_stat': 21
         }
     processes = [2, 3]
     network_analysis = ActiveInformationStorage(max_lag, analysis_opts,
