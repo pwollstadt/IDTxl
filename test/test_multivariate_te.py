@@ -153,7 +153,7 @@ def test_multivariate_te_one_realisation_per_replication():
     # once, this way, we get one realisation per replication for each variable.
     # This is easyer to assert/verify later. We also test data.get_realisations
     # this way.
-    analysis_opts = {'cmi_estimator': 'JidtKraskovCMI'}
+    analysis_opts = {'cmi_estimator': 'JidtKraskovCMI', 'n_perm_max_stat': 21}
     max_lag_target = 5
     max_lag_sources = max_lag_target
     min_lag_sources = 4
@@ -289,9 +289,10 @@ def test_analyse_network():
     n_processes = 5  # the MuTE network has 5 nodes
     dat = Data()
     dat.generate_mute_data(10, 5)
+    opts = {'cmi_estimator': 'JidtKraskovCMI', 'n_perm_max_stat': 21}
     nw_0 = MultivariateTE(max_lag_sources=5,
                           min_lag_sources=4,
-                          options={'cmi_estimator': 'JidtKraskovCMI'},
+                          options=opts,
                           max_lag_target=5)
 
     # Test all to all analysis
