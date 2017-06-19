@@ -29,6 +29,9 @@ class NetworkInference(NetworkAnalysis):
     the data.
 
     Attributes:
+        options : dict
+            options for estimation of information theoretic measures and
+            statistical testing, see child classes for documentation
         target : int
             target process of analysis
         current_value : tuple
@@ -69,6 +72,10 @@ class NetworkInference(NetworkAnalysis):
                                'max_lag_target ({1}).'.format(
                                    tau_target, max_lag_target))
 
+        # Set default options
+        self.options = options
+        self.options.setdefault('fdr_correction', True)
+
         # Set user-specified estimation parameters
         self.max_lag_target = max_lag_target
         self.max_lag_sources = max_lag_sources
@@ -83,7 +90,6 @@ class NetworkInference(NetworkAnalysis):
         self.sign_sign_sources = None
         self.pvalue_omnibus = None
         self.pvalues_sign_sources = None
-        self.options = options
         self._min_stats_surr_table = None
         super().__init__()
 
@@ -256,8 +262,7 @@ class NetworkInference(NetworkAnalysis):
                                     self._idx_to_lag([max_candidate])[0],
                                     self._idx_to_lag(candidate_set)), end='')
             significant = stats.max_statistic(self, data, candidate_set,
-                                              te_max_candidate,
-                                              self.options)[0]
+                                              te_max_candidate)[0]
 
             # If the max is significant keep it and test the next candidate. If
             # it is not significant break. There will be no further significant

@@ -316,8 +316,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                                     self._idx_to_lag([max_candidate])[0],
                                     self._idx_to_lag(candidate_set)), end='')
             significant = stats.max_statistic(self, data, candidate_set,
-                                              te_max_candidate,
-                                              self.options)[0]
+                                              te_max_candidate)[0]
 
             # If the max is significant keep it and test the next candidate. If
             # it is not significant break. There will be no further significant
@@ -401,8 +400,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             [significant, p, surr_table] = stats.min_statistic(
                                               self, data,
                                               self.selected_vars_sources,
-                                              te_min_candidate,
-                                              self.options)
+                                              te_min_candidate)
 
             # Remove the minimum it is not significant and test the next min.
             # candidate. If the minimum is significant, break, all other

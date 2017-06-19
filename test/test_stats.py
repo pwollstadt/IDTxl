@@ -45,7 +45,7 @@ def test_max_statistic_sequential():
                                     dat.n_realisations(setup.current_value),
                                     1)
     [sign, p, te] = stats.max_statistic_sequential(analysis_setup=setup,
-                                                   data=dat, opts=opts)
+                                                   data=dat)
 
 
 def test_network_fdr():
@@ -82,7 +82,13 @@ def test_network_fdr():
     }
 
     for correct_by_target in [True, False]:
-        res_pruned = stats.network_fdr(res, 0.05, correct_by_target)
+        opts = {
+            'cmi_estimator': 'JidtKraskovCMI',
+            'alpha_fdr': 0.05,
+            'correct_by_target': correct_by_target}
+        analysis_setup = MultivariateTE(max_lag_sources=3, min_lag_sources=1,
+                                        max_lag_target=3, options=opts)
+        res_pruned = stats.network_fdr(analysis_setup, res)
         assert (not res_pruned[2]['selected_vars_sources']), ('Target ')
 
         for k in res_pruned.keys():
