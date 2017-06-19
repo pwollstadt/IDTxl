@@ -480,6 +480,9 @@ class SydneyPID(Estimator):
     def is_parallel():
         return False
 
+    def is_analytic_null_estimator(self):
+        return False
+    
     def estimate(self, s1, s2, t):
         """
         Args:
@@ -940,6 +943,9 @@ class TartuPID(Estimator):
     def is_parallel():
         return False
 
+    def is_analytic_null_estimator(self):
+        return False
+    
     def estimate(self, s1, s2, t):
         """
         Args:

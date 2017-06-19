@@ -1,6 +1,7 @@
 """Provide JIDT estimators."""
 from pkg_resources import resource_filename
 import numpy as np
+from abc import abstractmethod
 from idtxl.estimator import Estimator
 from . import idtxl_exceptions as ex
 from . import idtxl_utils as utils
@@ -12,7 +13,6 @@ except ImportError as err:
                             'JAVA/JIDT-powered CMI estimation.')
 
 # TODO check IDTxl nomenclature (variable > process, estimate vs. calculate)
-# TODO check which JIDT estimators accept the debug property and add it
 
 
 class JidtEstimator(Estimator):
@@ -45,9 +45,8 @@ class JidtEstimator(Estimator):
         opts : dict [optional]
             set estimator parameters:
 
-            - 'debug' - return debug information when calling JIDT. Note that
-               this is supposed to be a string 'false', 'true' not a boolean
-              (default='false')
+            - 'debug' - return debug information when calling JIDT.
+              (Boolean, default=False)
             - 'local_values' - return local TE instead of average TE
               (default=False)
 
@@ -57,7 +56,7 @@ class JidtEstimator(Estimator):
         """Set default estimator options."""
         opts = self._check_opts(opts)
         opts.setdefault('local_values', False)
-        opts.setdefault('debug', 'false')
+        opts.setdefault('debug', False)
         self.opts = opts
 
     def _start_jvm(self):
@@ -142,7 +141,6 @@ class JidtEstimator(Estimator):
     def is_parallel(self):
         return False
 
-
 class JidtKraskov(JidtEstimator):
     """Abstract class for implementation of JIDT Kraskov-estimators.
 
@@ -174,9 +172,8 @@ class JidtKraskov(JidtEstimator):
         opts : dict [optional]
             set estimator parameters:
 
-            - 'debug' - return debug information when calling JIDT. Note that
-               this is supposed to be a string 'false', 'true' not a boolean
-              (default='false')
+            - 'debug' - return debug information when calling JIDT.
+              (boolean, default=False)
             - 'local_values' - return local TE instead of average TE
               (default=False)
             - 'kraskov_k' - no. nearest neighbours for KNN search (default=4)
@@ -208,8 +205,10 @@ class JidtKraskov(JidtEstimator):
         self.calc.setProperty('NOISE_LEVEL_TO_ADD',
                               str(self.opts['noise_level']))
         self.calc.setProperty('NUM_THREADS', str(self.opts['num_threads']))
-        # self.calc.setDebug(opts['debug'])
+        self.calc.setDebug(self.opts['debug'])
 
+    def is_analytic_null_estimator(self):
+        return False
 
 class JidtDiscrete(JidtEstimator):
     """Abstract class for implementation of discrete JIDT-estimators.
@@ -236,9 +235,8 @@ class JidtDiscrete(JidtEstimator):
         opts : dict [optional]
             set estimator parameters:
 
-            - 'debug' - return debug information when calling JIDT. Note that
-               this is supposed to be a string 'false', 'true' not a boolean
-              (default='false')
+            - 'debug' - return debug information when calling JIDT.
+              (Boolean, default=False)
             - 'local_values' - return local TE instead of average TE
               (default=False)
             - 'discretise_method' - if and how to discretise incoming
@@ -264,13 +262,13 @@ class JidtDiscrete(JidtEstimator):
         if self.opts['discretise_method'] == 'equal':
             var1 = utils.discretise(var1, self.opts['alph1'])
             var2 = utils.discretise(var2, self.opts['alph2'])
-            if conditional:
+            if not (conditional is None):
                 conditional = utils.discretise(conditional, self.opts['alphc'])
 
         elif self.opts['discretise_method'] == 'max_ent':
             var1 = utils.discretise_max_ent(var1, self.opts['alph1'])
             var2 = utils.discretise_max_ent(var2, self.opts['alph2'])
-            if conditional:
+            if not (conditional is None):
                 conditional = utils.discretise_max_ent(conditional,
                                                        self.opts['alphc'])
 
@@ -287,7 +285,7 @@ class JidtDiscrete(JidtEstimator):
                                                     ' than the alphabet size.')
             assert max(var2) < self.opts['alph2'], ('Maximum of var2 is larger'
                                                     ' than the alphabet size.')
-            if conditional:
+            if not (conditional is None):
                 assert min(conditional) >= 0, ('Minimum of conditional is '
                                                'smaller than 0.')
                 assert issubclass(conditional.dtype.type, np.integer), (
@@ -298,11 +296,41 @@ class JidtDiscrete(JidtEstimator):
         else:
             raise ValueError('Unkown discretisation method.')
 
-        if conditional:
+        if not (conditional is None):
             return var1, var2, conditional
         else:
             return var1, var2
 
+    def is_analytic_null_estimator(self):
+        return True
+    
+    @abstractmethod
+    def get_analytic_distribution(self, **data):
+        """Returns a JIDT AnalyticNullDistribution object; required so that
+        our estimate_surrogates_analytic method can use the
+        common_estimate_surrogates_analytic() method
+        """
+        pass
+    
+    def estimate_surrogates_analytic(self, n_perm=200, **data):
+        """Estimate the surrogate distribution analytically.
+        This method must be implemented because this class'
+        is_analytic_null_estimator() method returns true
+        
+        Args:
+            n_perms : number of permutations (default 200)
+            data : array of numpy arrays
+                realisations of random variables required for the calculation
+                (varies between estimators, e.g. 2 variables for MI, 3 for CMI).
+                Formatted as per estimate_mult for this estimator.
+
+        Returns:
+            float | numpy array
+                n_perm surrogates of the average MI/CMI/TE over all samples
+                under the null hypothesis of no relationship between var1 and
+                var2 (in the context of conditional)
+        """
+        return common_estimate_surrogates_analytic(self, n_perm, **data)
 
 class JidtGaussian(JidtEstimator):
     """Abstract class for implementation of JIDT Gaussian-estimators.
@@ -332,9 +360,8 @@ class JidtGaussian(JidtEstimator):
         opts : dict [optional]
             set estimator parameters:
 
-            - 'debug' - return debug information when calling JIDT. Note that
-               this is supposed to be a string 'false', 'true' not a boolean
-              (default='false')
+            - 'debug' - return debug information when calling JIDT.
+              (boolean, default=False)
             - 'local_values' - return local TE instead of average TE
               (default=False)
     """
@@ -342,8 +369,39 @@ class JidtGaussian(JidtEstimator):
     def __init__(self, CalcClass, opts):
         super().__init__(opts)
         self.calc = CalcClass()
-        # self.calc.setDebug(opts['debug'])
+        self.calc.setDebug(self.opts['debug'])
 
+    def is_analytic_null_estimator(self):
+        return True
+
+    def get_analytic_distribution(self, **data):
+        """Returns a JIDT AnalyticNullDistribution object; required so that
+        our estimate_surrogates_analytic method can use the
+        common_estimate_surrogates_analytic() method
+        """
+        # Make one estimate to prepare the calculator:
+        self.estimate(**data)
+        return self.calc.computeSignificance()
+
+    def estimate_surrogates_analytic(self, n_perm=200, **data):
+        """Estimate the surrogate distribution analytically.
+        This method must be implemented because this class'
+        is_analytic_null_estimator() method returns true
+        
+        Args:
+            n_perms : number of permutations (default 200)
+            data : array of numpy arrays
+                realisations of random variables required for the calculation
+                (varies between estimators, e.g. 2 variables for MI, 3 for CMI).
+                Formatted as per estimate_mult for this estimator.
+
+        Returns:
+            float | numpy array
+                n_perm surrogates of the average MI/CMI/TE over all samples
+                under the null hypothesis of no relationship between var1 and
+                var2 (in the context of conditional)
+        """
+        return common_estimate_surrogates_analytic(self, n_perm, **data)
 
 class JidtKraskovCMI(JidtKraskov):
     """Calculate conditional mutual inform with JIDT's Kraskov implementation.
@@ -363,9 +421,8 @@ class JidtKraskovCMI(JidtKraskov):
         opts : dict [optional]
             set estimator parameters:
 
-            - 'debug' - return debug information when calling JIDT. Note that
-               this is supposed to be a string 'false', 'true' not a boolean
-              (default='false')
+            - 'debug' - return debug information when calling JIDT.
+              (Boolean, default=False)
             - 'local_values' - return local TE instead of average TE
               (default=False)
             - 'kraskov_k' - no. nearest neighbours for KNN search (default=4)
@@ -454,9 +511,8 @@ class JidtDiscreteCMI(JidtDiscrete):
         opts : dict [optional]
             sets estimation parameters:
 
-            - 'debug' - return debug information when calling JIDT. Note that
-               this is supposed to be a string 'false', 'true' not a boolean
-              (default='false')
+            - 'debug' - return debug information when calling JIDT.
+              (Boolean, default='false')
             - 'local_values' - return local TE instead of average TE
               (default=False)
             - 'discretise_method' - if and how to discretise incoming
@@ -497,7 +553,7 @@ class JidtDiscreteCMI(JidtDiscrete):
         self.CalcClass = (jp.JPackage('infodynamics.measures.discrete').
                           ConditionalMutualInformationCalculatorDiscrete)
 
-    def estimate(self, var1, var2, conditional=None):
+    def estimate(self, var1, var2, conditional=None, return_calc=False):
         """Estimate conditional mutual information.
 
         Args:
@@ -511,16 +567,25 @@ class JidtDiscreteCMI(JidtDiscrete):
             conditional : numpy array [optional]
                 realisations of the conditioning variable (similar to var), if
                 no conditional is provided, return MI between var1 and var2
+            return_calc : boolean
+                return the calculator used here as well as the numeric
+                calculated value(s)
 
         Returns:
             float | numpy array
                 average CMI over all samples or local CMI for individual
                 samples if 'local_values'=True
+            Java object
+                JIDT calculator that was used here. Only returned if
+                return_calc was set.
+                
         """
         # Calculate an MI if no conditional was provided
-        if (not conditional) or (self.opts['alphc'] == 0):
+        if (conditional is None) or (self.opts['alphc'] == 0):
             est = JidtDiscreteMI(self.opts)
-            return est.estimate(var1, var2)
+            # Return value will be just the estimate if return_calc is False,
+            #  or estimate plus the JIDT MI calculator if return_calc is True:
+            return est.estimate(var1, var2, return_calc)
         else:
             assert(conditional.size != 0), 'Conditional Array is empty.'
 
@@ -528,18 +593,18 @@ class JidtDiscreteCMI(JidtDiscrete):
         # collapsing them into univariate arrays later.
         var1 = self._ensure_two_dim_input(var1)
         var2 = self._ensure_two_dim_input(var2)
-        cond = self._ensure_two_dim_input(conditional)
+        conditional = self._ensure_two_dim_input(conditional)
         var1_dim = var1.shape[1]
         var2_dim = var2.shape[1]
         cond_dim = conditional.shape[1]
 
         # Discretise if requested.
-        var1, var2, conditional = self._discretise_vars(var1, var2, cond)
+        var1, var2, conditional = self._discretise_vars(var1, var2, conditional)
 
         # Then collapse any mulitvariates into univariate arrays:
         var1 = utils.combine_discrete_dimensions(var1, self.opts['alph1'])
         var2 = utils.combine_discrete_dimensions(var2, self.opts['alph2'])
-        cond = utils.combine_discrete_dimensions(cond, self.opts['alphc'])
+        conditional = utils.combine_discrete_dimensions(conditional, self.opts['alphc'])
 
         # We have a non-trivial conditional, so make a proper conditional MI
         # calculation
@@ -552,15 +617,24 @@ class JidtDiscreteCMI(JidtDiscrete):
         # conversion
         calc.addObservations(jp.JArray(jp.JInt, 1)(var1.tolist()),
                              jp.JArray(jp.JInt, 1)(var2.tolist()),
-                             jp.JArray(jp.JInt, 1)(cond.tolist()))
+                             jp.JArray(jp.JInt, 1)(conditional.tolist()))
         if self.opts['local_values']:
-            return np.array(calc.computeLocalFromPreviousObservations(
+            result = np.array(calc.computeLocalFromPreviousObservations(
                 jp.JArray(jp.JInt, 1)(var1.tolist()),
                 jp.JArray(jp.JInt, 1)(var2.tolist()),
-                jp.JArray(jp.JInt, 1)(cond.tolist())
+                jp.JArray(jp.JInt, 1)(conditional.tolist())
                 ))
         else:
-            return calc.computeAverageLocalOfObservations()
+            result = calc.computeAverageLocalOfObservations()
+        if return_calc:
+            return (result, calc)
+        else:
+            return result
+
+    def get_analytic_distribution(self, var1, var2, conditional=None):
+        # Make one estimate to prepare the calculator:
+        (est, jidt_calc) = self.estimate(var1, var2, conditional, True)
+        return jidt_calc.computeSignificance()
 
 
 class JidtDiscreteMI(JidtDiscrete):
@@ -578,9 +652,8 @@ class JidtDiscreteMI(JidtDiscrete):
         opts : dict [optional]
             sets estimation parameters:
 
-            - 'debug' - return debug information when calling JIDT. Note that
-               this is supposed to be a string 'false', 'true' not a boolean
-              (default='false')
+            - 'debug' - return debug information when calling JIDT.
+              (Boolean, default=False)
             - 'local_values' - return local TE instead of average TE
               (default=False)
             - 'discretise_method' - if and how to discretise incoming
@@ -620,7 +693,7 @@ class JidtDiscreteMI(JidtDiscrete):
         self.CalcClass = (jp.JPackage('infodynamics.measures.discrete').
                           MutualInformationCalculatorDiscrete)
 
-    def estimate(self, var1, var2):
+    def estimate(self, var1, var2, return_calc=False):
         """Estimate mutual information.
 
         Args:
@@ -631,11 +704,17 @@ class JidtDiscreteMI(JidtDiscrete):
                 float (requires discretisation) or int
             var2 : numpy array
                 realisations of the second variable (similar to var1)
+            return_calc : boolean
+                return the calculator used here as well as the numeric
+                calculated value(s)
 
         Returns:
             float | numpy array
                 average MI over all samples or local MI for individual
                 samples if 'local_values'=True
+            Java object
+                JIDT calculator that was used here. Only returned if
+                return_calc was set.
         """
         # Check and remember the no. dimensions for each variable before
         # collapsing them into univariate arrays later.
@@ -655,6 +734,7 @@ class JidtDiscreteMI(JidtDiscrete):
         max_base = int(max(np.power(self.opts['alph1'], var1_dim),
                            np.power(self.opts['alph2'], var2_dim)))
         calc = self.CalcClass(max_base, self.opts['lag'])
+        calc.setDebug(self.opts['debug'])
         calc.initialise()
 
         # Unfortunately no faster way to pass numpy arrays in than this list
@@ -662,11 +742,20 @@ class JidtDiscreteMI(JidtDiscrete):
         calc.addObservations(jp.JArray(jp.JInt, 1)(var1.tolist()),
                              jp.JArray(jp.JInt, 1)(var2.tolist()))
         if self.opts['local_values']:
-            return np.array(calc.computeLocalFromPreviousObservations(
+            result = np.array(calc.computeLocalFromPreviousObservations(
                 jp.JArray(jp.JInt, 1)(var1.tolist()),
                 jp.JArray(jp.JInt, 1)(var2.tolist())))
         else:
-            return calc.computeAverageLocalOfObservations()
+            result = calc.computeAverageLocalOfObservations()
+        if return_calc:
+            return (result, calc)
+        else:
+            return result
+
+    def get_analytic_distribution(self, var1, var2):
+        # Make one estimate to prepare the calculator:
+        (est, jidt_calc) = self.estimate(var1, var2, True)
+        return jidt_calc.computeSignificance()
 
 
 class JidtKraskovMI(JidtKraskov):
@@ -685,9 +774,8 @@ class JidtKraskovMI(JidtKraskov):
         opts : dict [optional]
             sets estimation parameters:
 
-            - 'debug' - return debug information when calling JIDT. Note that
-               this is supposed to be a string 'false', 'true' not a boolean
-              (default='false')
+            - 'debug' - return debug information when calling JIDT.
+              (Boolean, default=False)
             - 'local_values' - return local TE instead of average TE
               (default=False)
             - 'kraskov_k' - no. nearest neighbours for KNN search (default=4)
@@ -782,9 +870,8 @@ class JidtKraskovAIS(JidtKraskov):
         opts : dict
             sets estimation parameters:
 
-            - 'debug' - return debug information when calling JIDT. Note that
-               this is supposed to be a string 'false', 'true' not a boolean
-              (default='false')
+            - 'debug' - return debug information when calling JIDT.
+              (Boolean, default=False)
             - 'local_values' - return local TE instead of average TE
               (default=False)
             - 'kraskov_k' - no. nearest neighbours for KNN search (default=4)
@@ -868,9 +955,8 @@ class JidtDiscreteAIS(JidtDiscrete):
         opts : dict
             set estimator parameters:
 
-            - 'debug' - return debug information when calling JIDT. Note that
-               this is supposed to be a string 'false', 'true' not a boolean
-              (default='false')
+            - 'debug' - return debug information when calling JIDT.
+              (Boolean, default=False)
             - 'local_values' - return local TE instead of average TE
               (default=False)
             - 'discretise_method' - if and how to discretise incoming
@@ -909,7 +995,7 @@ class JidtDiscreteAIS(JidtDiscrete):
                           ActiveInformationCalculatorDiscrete)
         super().__init__(opts)
 
-    def estimate(self, process):
+    def estimate(self, process, return_calc=False):
         """Estimate active information storage.
 
         Args:
@@ -918,11 +1004,17 @@ class JidtDiscreteAIS(JidtDiscrete):
                 array dimensions represent [realisations x variable dimension]
                 or a 1D array representing [realisations], array type can be
                 float (requires discretisation) or int
+            return_calc : boolean
+                return the calculator used here as well as the numeric
+                calculated value(s)
 
         Returns:
             float | numpy array
                 average AIS over all samples or local AIS for individual
                 samples if 'local_values'=True
+            Java object
+                JIDT calculator that was used here. Only returned if
+                return_calc was set.
         """
         process = self._ensure_one_dim_input(process)
 
@@ -951,10 +1043,20 @@ class JidtDiscreteAIS(JidtDiscrete):
         # conversion
         calc.addObservations(jp.JArray(jp.JInt, 1)(process.tolist()))
         if self.opts['local_values']:
-            return np.array(calc.computeLocalFromPreviousObservations(
+            result = np.array(calc.computeLocalFromPreviousObservations(
                                     jp.JArray(jp.JInt, 1)(process.tolist())))
         else:
-            return calc.computeAverageLocalOfObservations()
+            result = calc.computeAverageLocalOfObservations()
+        if return_calc:
+            return (result, calc)
+        else:
+            return result
+        
+
+    def get_analytic_distribution(self, process):
+        # Make one estimate to prepare the calculator:
+        (est, jidt_calc) = self.estimate(process, True)
+        return jidt_calc.computeSignificance()
 
 
 class JidtGaussianAIS(JidtGaussian):
@@ -983,9 +1085,8 @@ class JidtGaussianAIS(JidtGaussian):
         opts : dict
             sets estimation parameters:
 
-            - 'debug' - return debug information when calling JIDT. Note that
-               this is supposed to be a string 'false', 'true' not a boolean
-              (default='false')
+            - 'debug' - return debug information when calling JIDT.
+              (Boolean, default=False)
             - 'local_values' - return local TE instead of average TE
               (default=False)
             - 'kraskov_k' - no. nearest neighbours for KNN search (default=4)
@@ -1062,9 +1163,8 @@ class JidtGaussianMI(JidtGaussian):
         opts : dict [optional]
             sets estimation parameters:
 
-            - 'debug' - return debug information when calling JIDT. Note that
-               this is supposed to be a string 'false', 'true' not a boolean
-              (default='false')
+            - 'debug' - return debug information when calling JIDT.
+              (Boolean, default=False)
             - 'local_values' - return local TE instead of average TE
               (default=False)
             - 'kraskov_k' - no. nearest neighbours for KNN search (default=4)
@@ -1151,9 +1251,8 @@ class JidtGaussianCMI(JidtGaussian):
         opts : dict [optional]
             sets estimation parameters:
 
-            - 'debug' - return debug information when calling JIDT. Note that
-               this is supposed to be a string 'false', 'true' not a boolean
-              (default='false')
+            - 'debug' - return debug information when calling JIDT.
+              (Boolean, default=False)
             - 'local_values' - return local TE instead of average TE
               (default=False)
             - 'kraskov_k' - no. nearest neighbours for KNN search (default=4)
@@ -1179,6 +1278,7 @@ class JidtGaussianCMI(JidtGaussian):
         CalcClass = (jp.JPackage('infodynamics.measures.continuous.gaussian').
                      ConditionalMutualInfoCalculatorMultiVariateGaussian)
         super().__init__(CalcClass, opts)
+        self.est_mi = None
 
     def estimate(self, var1, var2, conditional=None):
         """Estimate conditional mutual information.
@@ -1201,8 +1301,9 @@ class JidtGaussianCMI(JidtGaussian):
         """
         # Return MI if no conditioning variable was provided.
         if conditional is None:
-            est_mi = JidtGaussianMI(self.opts)
-            return est_mi.estimate(var1, var2)
+            if (self.est_mi is None):
+                self.est_mi = JidtGaussianMI(self.opts)
+            return self.est_mi.estimate(var1, var2)
         else:
             assert(conditional.size != 0), 'Conditional Array is empty.'
 
@@ -1223,6 +1324,14 @@ class JidtGaussianCMI(JidtGaussian):
             return np.array(self.calc.computeLocalOfPreviousObservations())
         else:
             return self.calc.computeAverageLocalOfObservations()
+
+    def get_analytic_distribution(self, var1, var2, conditional=None):
+        # Make one estimate to prepare the calculator:
+        self.estimate(var1, var2, conditional)
+        if (conditional is None):
+            return self.est_mi.calc.computeSignificance()
+        else:
+            return self.calc.computeSignificance()
 
 
 class JidtKraskovTE(JidtKraskov):
@@ -1254,9 +1363,8 @@ class JidtKraskovTE(JidtKraskov):
         opts : dict
             sets estimation parameters:
 
-            - 'debug' - return debug information when calling JIDT. Note that
-               this is supposed to be a string 'false', 'true' not a boolean
-              (default='false')
+            - 'debug' - return debug information when calling JIDT.
+              (Boolean, default=False)
             - 'local_values' - return local TE instead of average TE
               (default=False)
             - 'kraskov_k' - no. nearest neighbours for KNN search (default=4)
@@ -1345,9 +1453,8 @@ class JidtDiscreteTE(JidtDiscrete):
         opts : dict
             sets estimation parameters:
 
-            - 'debug' - return debug information when calling JIDT. Note that
-               this is supposed to be a string 'false', 'true' not a boolean
-              (default='false')
+            - 'debug' - return debug information when calling JIDT.
+              (Boolean, default=False)
             - 'local_values' - return local TE instead of average TE
               (default=False)
             - 'discretise_method' - if and how to discretise incoming
@@ -1394,7 +1501,7 @@ class JidtDiscreteTE(JidtDiscrete):
         self.CalcClass = (jp.JPackage('infodynamics.measures.discrete').
                           TransferEntropyCalculatorDiscrete)
 
-    def estimate(self, source, target):
+    def estimate(self, source, target, return_calc=False):
         """Estimate transfer entropy from a source to a target variable.
 
         Args:
@@ -1403,13 +1510,19 @@ class JidtDiscreteTE(JidtDiscrete):
                 array dimensions represent [realisations x variable dimension]
                 or a 1D array representing [realisations], array type can be
                 float (requires discretisation) or int
-            var2 : numpy array
+            target : numpy array
                 realisations of target variable (similar to var1)
+            return_calc : boolean
+                return the calculator used here as well as the numeric
+                calculated value(s)
 
         Returns:
             float | numpy array
                 average TE over all samples or local TE for individual
                 samples if 'local_values'=True
+            Java object
+                JIDT calculator that was used here. Only returned if
+                return_calc was set.
         """
         source = self._ensure_one_dim_input(source)
         target = self._ensure_one_dim_input(target)
@@ -1431,11 +1544,20 @@ class JidtDiscreteTE(JidtDiscrete):
         calc.addObservations(jp.JArray(jp.JInt, 1)(source.tolist()),
                              jp.JArray(jp.JInt, 1)(target.tolist()))
         if self.opts['local_values']:
-            return np.array(calc.computeLocalFromPreviousObservations(
+            result = np.array(calc.computeLocalFromPreviousObservations(
                 jp.JArray(jp.JInt, 1)(source.tolist()),
                 jp.JArray(jp.JInt, 1)(target.tolist())))
         else:
-            return calc.computeAverageLocalOfObservations()
+            result = calc.computeAverageLocalOfObservations()
+        if return_calc:
+            return (result, calc)
+        else:
+            return result
+
+    def get_analytic_distribution(self, source, target):
+        # Make one estimate to prepare the calculator:
+        (est, jidt_calc) = self.estimate(source, target, True)
+        return jidt_calc.computeSignificance()
 
 
 class JidtGaussianTE(JidtGaussian):
@@ -1464,9 +1586,8 @@ class JidtGaussianTE(JidtGaussian):
         opts : dict
             sets estimation parameters:
 
-            - 'debug' - return debug information when calling JIDT. Note that
-               this is supposed to be a string 'false', 'true' not a boolean
-              (default='false')
+            - 'debug' - return debug information when calling JIDT.
+              (Boolean, default=False)
             - 'local_values' - return local TE instead of average TE
               (default=False)
             - 'kraskov_k' - no. nearest neighbours for KNN search (default=4)
@@ -1532,3 +1653,34 @@ class JidtGaussianTE(JidtGaussian):
             return np.array(self.calc.computeLocalOfPreviousObservations())
         else:
             return self.calc.computeAverageLocalOfObservations()
+
+def common_estimate_surrogates_analytic(estimator, n_perm=200, **data):
+    """Estimate the surrogate distribution analytically for a JidtEstimator
+    which is_analytic_null_estimator(), by sampling estimates at random
+    p-values in the analytic distribution.
+    
+    Args:
+        estimator : a JidtEstimator object, which returns True to a call to
+            its is_analytic_null_estimator() method
+        n_perms : number of permutations (default 200)
+        data : array of numpy arrays
+            realisations of random variables required for the calculation
+            (varies between estimators, e.g. 2 variables for MI, 3 for CMI)
+
+    Returns:
+        float | numpy array
+            n_perm surrogates of the average MI/CMI/TE over all samples
+            under the null hypothesis of no relationship between var1 and
+            var2 (in the context of conditional)
+    """
+    # Compute the statistical significance of the estimate to get an
+    #  AnalyticMeasurementDistribution object:
+    analytic_distribution = estimator.get_analytic_distribution(**data)
+    # Then compute surrogates at n_perm random p-values
+    surrogate_estimates = np.empty(n_perm)
+    for perm in range(n_perm):
+        surrogate_estimates[perm] = \
+            analytic_distribution.computeEstimateForGivenPValue(
+                np.random.random())
+    return surrogate_estimates
+
