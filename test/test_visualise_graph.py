@@ -4,6 +4,8 @@ Created on Thu Jun  8 07:58:02 2017
 
 @author: patricia
 """
+import pytest
+pytest.importorskip('networkx')  # Skip test module if networkx is missing
 from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
 from idtxl.visualise_graph import print_res_to_console
@@ -25,4 +27,3 @@ def test_console_output():
 
 if __name__ == '__main__':
     test_console_output()
-
