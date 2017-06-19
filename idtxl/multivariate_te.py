@@ -38,7 +38,9 @@ class MultivariateTE(NetworkInference):
             - 'alpha_*' - critical alpha level for statistical significance,
               where * can be 'max_stats',  'min_stats', 'omnibus', and
               'max_seq' (default=0.05)
-            - 'cmi_calc_name' - estimator to be used for CMI calculation
+            - 'fdr_correction' - perform correction for false discovery rate
+              at the network level
+            - 'cmi_estimator' - estimator to be used for CMI calculation
               (For estimator options see the respective documentation.)
             - 'add_conditionals' - force the estimator to add these
               conditionals when estimating TE; can either be a list of
@@ -190,7 +192,8 @@ class MultivariateTE(NetworkInference):
             results[targets[t]] = self.analyse_single_target(data,
                                                              targets[t],
                                                              sources[t])
-        results['fdr'] = stats.network_fdr(results)
+        if self.opts['fdr_correction']:
+            results['fdr'] = stats.network_fdr(results)
         return results
 
     def analyse_single_target(self, data, target, sources='all'):
