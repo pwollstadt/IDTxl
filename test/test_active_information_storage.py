@@ -8,8 +8,15 @@ import numpy as np
 from idtxl.data import Data
 from idtxl.active_information_storage import ActiveInformationStorage
 from test_estimators_jidt import jpype_missing
-from test_estimators_opencl import opencl_missing
 
+package_missing = False
+try:
+    import pyopencl
+except ImportError as err:
+    package_missing = True
+opencl_missing = pytest.mark.skipif(
+    package_missing,
+    reason="Jpype is missing, JIDT estimators are not available")
 
 @jpype_missing
 def test_ActiveInformationStorage_init():
