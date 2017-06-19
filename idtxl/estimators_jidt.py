@@ -141,6 +141,7 @@ class JidtEstimator(Estimator):
     def is_parallel(self):
         return False
 
+
 class JidtKraskov(JidtEstimator):
     """Abstract class for implementation of JIDT Kraskov-estimators.
 
@@ -209,6 +210,7 @@ class JidtKraskov(JidtEstimator):
 
     def is_analytic_null_estimator(self):
         return False
+
 
 class JidtDiscrete(JidtEstimator):
     """Abstract class for implementation of discrete JIDT-estimators.
@@ -303,26 +305,40 @@ class JidtDiscrete(JidtEstimator):
 
     def is_analytic_null_estimator(self):
         return True
-    
+
     @abstractmethod
     def get_analytic_distribution(self, **data):
-        """Returns a JIDT AnalyticNullDistribution object; required so that
-        our estimate_surrogates_analytic method can use the
-        common_estimate_surrogates_analytic() method
+        """Return a JIDT AnalyticNullDistribution object.
+
+        Required so that our estimate_surrogates_analytic method can use the
+        common_estimate_surrogates_analytic() method, where data is formatted
+        as per the estimate method for this estimator.
+
+        Args:
+            data : dict of numpy arrays
+                realisations of random variables required for the calculation
+                (varies between estimators, e.g. 2 variables for MI, 3 for
+                CMI). Formatted as per the estimate method for this estimator.
+
+        Returns:
+            Java object
+                JIDT calculator that was used here
         """
         pass
-    
+
     def estimate_surrogates_analytic(self, n_perm=200, **data):
-        """Estimate the surrogate distribution analytically.
+        """Return estimate of the analytical surrogate distribution.
+
         This method must be implemented because this class'
-        is_analytic_null_estimator() method returns true
-        
+        is_analytic_null_estimator() method returns true.
+
         Args:
-            n_perms : number of permutations (default 200)
-            data : array of numpy arrays
+            n_perms : int [optional]
+                number of permutations (default=200)
+            data : dict of numpy arrays
                 realisations of random variables required for the calculation
-                (varies between estimators, e.g. 2 variables for MI, 3 for CMI).
-                Formatted as per estimate_mult for this estimator.
+                (varies between estimators, e.g. 2 variables for MI, 3 for
+                CMI). Formatted as per the estimate method for this estimator.
 
         Returns:
             float | numpy array
@@ -331,6 +347,7 @@ class JidtDiscrete(JidtEstimator):
                 var2 (in the context of conditional)
         """
         return common_estimate_surrogates_analytic(self, n_perm, **data)
+
 
 class JidtGaussian(JidtEstimator):
     """Abstract class for implementation of JIDT Gaussian-estimators.
@@ -375,9 +392,21 @@ class JidtGaussian(JidtEstimator):
         return True
 
     def get_analytic_distribution(self, **data):
-        """Returns a JIDT AnalyticNullDistribution object; required so that
-        our estimate_surrogates_analytic method can use the
-        common_estimate_surrogates_analytic() method
+        """Return a JIDT AnalyticNullDistribution object.
+
+        Required so that our estimate_surrogates_analytic method can use the
+        common_estimate_surrogates_analytic() method, where data is formatted
+        as per the estimate method for this estimator.
+
+        Args:
+            data : dict of numpy arrays
+                realisations of random variables required for the calculation
+                (varies between estimators, e.g. 2 variables for MI, 3 for
+                CMI). Formatted as per the estimate method for this estimator.
+
+        Returns:
+            Java object
+                JIDT calculator that was used here
         """
         # Make one estimate to prepare the calculator:
         self.estimate(**data)
@@ -387,13 +416,13 @@ class JidtGaussian(JidtEstimator):
         """Estimate the surrogate distribution analytically.
         This method must be implemented because this class'
         is_analytic_null_estimator() method returns true
-        
+
         Args:
             n_perms : number of permutations (default 200)
             data : array of numpy arrays
                 realisations of random variables required for the calculation
-                (varies between estimators, e.g. 2 variables for MI, 3 for CMI).
-                Formatted as per estimate_mult for this estimator.
+                (varies between estimators, e.g. 2 variables for MI, 3 for
+                CMI). Formatted as per estimate_mult for this estimator.
 
         Returns:
             float | numpy array
@@ -402,6 +431,7 @@ class JidtGaussian(JidtEstimator):
                 var2 (in the context of conditional)
         """
         return common_estimate_surrogates_analytic(self, n_perm, **data)
+
 
 class JidtKraskovCMI(JidtKraskov):
     """Calculate conditional mutual inform with JIDT's Kraskov implementation.
@@ -578,7 +608,7 @@ class JidtDiscreteCMI(JidtDiscrete):
             Java object
                 JIDT calculator that was used here. Only returned if
                 return_calc was set.
-                
+
         """
         # Calculate an MI if no conditional was provided
         if (conditional is None) or (self.opts['alphc'] == 0):
@@ -599,12 +629,14 @@ class JidtDiscreteCMI(JidtDiscrete):
         cond_dim = conditional.shape[1]
 
         # Discretise if requested.
-        var1, var2, conditional = self._discretise_vars(var1, var2, conditional)
+        var1, var2, conditional = self._discretise_vars(var1, var2,
+                                                        conditional)
 
         # Then collapse any mulitvariates into univariate arrays:
         var1 = utils.combine_discrete_dimensions(var1, self.opts['alph1'])
         var2 = utils.combine_discrete_dimensions(var2, self.opts['alph2'])
-        conditional = utils.combine_discrete_dimensions(conditional, self.opts['alphc'])
+        conditional = utils.combine_discrete_dimensions(conditional,
+                                                        self.opts['alphc'])
 
         # We have a non-trivial conditional, so make a proper conditional MI
         # calculation
@@ -632,6 +664,28 @@ class JidtDiscreteCMI(JidtDiscrete):
             return result
 
     def get_analytic_distribution(self, var1, var2, conditional=None):
+        """Return a JIDT AnalyticNullDistribution object.
+
+        Required so that our estimate_surrogates_analytic method can use the
+        common_estimate_surrogates_analytic() method, where data is formatted
+        as per the estimate method for this estimator.
+
+        Args:
+            var1 : numpy array
+                realisations of first variable, either a 2D numpy array where
+                array dimensions represent [realisations x variable dimension]
+                or a 1D array representing [realisations], array type can be
+                float (requires discretisation) or int
+            var2 : numpy array
+                realisations of the second variable (similar to var1)
+            conditional : numpy array [optional]
+                realisations of the conditioning variable (similar to var), if
+                no conditional is provided, return MI between var1 and var2
+
+        Returns:
+            Java object
+                JIDT calculator that was used here
+        """
         # Make one estimate to prepare the calculator:
         (est, jidt_calc) = self.estimate(var1, var2, conditional, True)
         return jidt_calc.computeSignificance()
@@ -753,6 +807,25 @@ class JidtDiscreteMI(JidtDiscrete):
             return result
 
     def get_analytic_distribution(self, var1, var2):
+        """Return a JIDT AnalyticNullDistribution object.
+
+        Required so that our estimate_surrogates_analytic method can use the
+        common_estimate_surrogates_analytic() method, where data is formatted
+        as per the estimate method for this estimator.
+
+        Args:
+            var1 : numpy array
+                realisations of first variable, either a 2D numpy array where
+                array dimensions represent [realisations x variable dimension]
+                or a 1D array representing [realisations], array type can be
+                float (requires discretisation) or int
+            var2 : numpy array
+                realisations of the second variable (similar to var1)
+
+        Returns:
+            Java object
+                JIDT calculator that was used here
+        """
         # Make one estimate to prepare the calculator:
         (est, jidt_calc) = self.estimate(var1, var2, True)
         return jidt_calc.computeSignificance()
@@ -1000,10 +1073,10 @@ class JidtDiscreteAIS(JidtDiscrete):
 
         Args:
             process : numpy array
-                realisations of first variable, either a 2D numpy array where
-                array dimensions represent [realisations x variable dimension]
-                or a 1D array representing [realisations], array type can be
-                float (requires discretisation) or int
+                realisations as either a 2D numpy array where array dimensions
+                represent [realisations x variable dimension] or a 1D array
+                representing [realisations], array type can be float (requires
+                discretisation) or int
             return_calc : boolean
                 return the calculator used here as well as the numeric
                 calculated value(s)
@@ -1051,9 +1124,25 @@ class JidtDiscreteAIS(JidtDiscrete):
             return (result, calc)
         else:
             return result
-        
 
     def get_analytic_distribution(self, process):
+        """Return a JIDT AnalyticNullDistribution object.
+
+        Required so that our estimate_surrogates_analytic method can use the
+        common_estimate_surrogates_analytic() method, where data is formatted
+        as per the estimate method for this estimator.
+
+        Args:
+            process : numpy array
+                realisations as either a 2D numpy array where array dimensions
+                represent [realisations x variable dimension] or a 1D array
+                representing [realisations], array type can be float (requires
+                discretisation) or int
+
+        Returns:
+            Java object
+                JIDT calculator that was used here
+        """
         # Make one estimate to prepare the calculator:
         (est, jidt_calc) = self.estimate(process, True)
         return jidt_calc.computeSignificance()
@@ -1326,6 +1415,27 @@ class JidtGaussianCMI(JidtGaussian):
             return self.calc.computeAverageLocalOfObservations()
 
     def get_analytic_distribution(self, var1, var2, conditional=None):
+        """Return a JIDT AnalyticNullDistribution object.
+
+        Required so that our estimate_surrogates_analytic method can use the
+        common_estimate_surrogates_analytic() method, where data is formatted
+        as per the estimate method for this estimator.
+
+        Args:
+            var1 : numpy array
+                realisations of first variable, either a 2D numpy array where
+                array dimensions represent [realisations x variable dimension]
+                or a 1D array representing [realisations]
+            var2 : numpy array
+                realisations of the second variable (similar to var1)
+            conditional : numpy array [optional]
+                realisations of the conditioning variable (similar to var), if
+                no conditional is provided, return MI between var1 and var2
+
+        Returns:
+            Java object
+                JIDT calculator that was used here
+        """
         # Make one estimate to prepare the calculator:
         self.estimate(var1, var2, conditional)
         if (conditional is None):
@@ -1555,6 +1665,25 @@ class JidtDiscreteTE(JidtDiscrete):
             return result
 
     def get_analytic_distribution(self, source, target):
+        """Return a JIDT AnalyticNullDistribution object.
+
+        Required so that our estimate_surrogates_analytic method can use the
+        common_estimate_surrogates_analytic() method, where data is formatted
+        as per the estimate method for this estimator.
+
+        Args:
+            source : numpy array
+                realisations of source variable, either a 2D numpy array where
+                array dimensions represent [realisations x variable dimension]
+                or a 1D array representing [realisations], array type can be
+                float (requires discretisation) or int
+            target : numpy array
+                realisations of target variable (similar to var1)
+
+        Returns:
+            Java object
+                JIDT calculator that was used here
+        """
         # Make one estimate to prepare the calculator:
         (est, jidt_calc) = self.estimate(source, target, True)
         return jidt_calc.computeSignificance()
@@ -1654,11 +1783,12 @@ class JidtGaussianTE(JidtGaussian):
         else:
             return self.calc.computeAverageLocalOfObservations()
 
+
 def common_estimate_surrogates_analytic(estimator, n_perm=200, **data):
     """Estimate the surrogate distribution analytically for a JidtEstimator
     which is_analytic_null_estimator(), by sampling estimates at random
     p-values in the analytic distribution.
-    
+
     Args:
         estimator : a JidtEstimator object, which returns True to a call to
             its is_analytic_null_estimator() method
@@ -1683,4 +1813,3 @@ def common_estimate_surrogates_analytic(estimator, n_perm=200, **data):
             analytic_distribution.computeEstimateForGivenPValue(
                 np.random.random())
     return surrogate_estimates
-

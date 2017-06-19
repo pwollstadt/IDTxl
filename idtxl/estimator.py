@@ -80,17 +80,50 @@ class Estimator(metaclass=ABCMeta):
 
     @abstractmethod
     def estimate(self, **vars):
+        """Estimate measure for a single data set.
+
+        The number of variables in data depends on the measure to be estimated,
+        e.g., 2 for mutual information and 3 for a conditional mutual
+        information.
+
+        Each entry in data should be a numpy array with realisations, where the
+        first axis is assumed to represent realisations over samples and
+        replications, while the second axis represents the variable dimension
+        ([(samples * replications) x variable dimension]).
+
+        Args:
+            self : instance of Estimator class
+            data: dict of numpy arrays
+                realisations of random variables
+
+        Returns:
+            float
+                estimated value
+        """
         pass
 
     @abstractmethod
     def is_parallel(self):
+        """Indicate if estimator supports parallel estimation over chunks.
+
+        Return true if the supports parallel estimation over chunks, where a
+        chunk is one independent data set.
+
+        Returns:
+            bool
+        """
         pass
 
     @abstractmethod
     def is_analytic_null_estimator(self):
-        """Indicates that the estimator implements
-        estimate_surrogates_analytic(self, n_perm, **data)
-        where data is formatted as per estimate_mult for this estimator.
+        """Indicate if estimator supports analytic surrogates.
+
+        Return true if the estimator implements
+        estimate_surrogates_analytic(self, n_perm, **data) where data is
+        formatted as per the estimate method for this estimator.
+
+        Returns:
+            bool
         """
         pass
 
@@ -102,7 +135,13 @@ class Estimator(metaclass=ABCMeta):
         Otherwise, iterate over individual chunks.
 
         The number of variables in data depends on the measure to be estimated,
-        e.g., 2 for mutual information and 3 for TE.
+        e.g., 2 for mutual information and 3 for a conditional mutual
+        information.
+
+        Each entry in data should be a numpy array with realisations, where the
+        first axis is assumed to represent realisations over samples and
+        replications and chunks, while the second axis represents the variable
+        dimension ([(samples * replications) * chunks x variable dimension]).
 
         Each entry in data should be a numpy array with realisations, where the
         first axis is assumed to represent realisations (over chunks), while
@@ -116,16 +155,17 @@ class Estimator(metaclass=ABCMeta):
         data for re-use.
 
         Args:
-            self : instance of Estimator_cmi
+            self : instance of Estimator class
             n_chunks : int [optional]
                 number of data chunks (default=1)
             re_use : list of keys [optional}
                 realisatins to be re-used (default=None)
             data: dict of numpy arrays
-                realisations of random random variables
+                realisations of random variables
 
         Returns:
-            numpy array of estimated values for each data set/chunk
+            numpy array
+                estimated values for each chunk
         """
         assert n_chunks > 0, 'n_chunks must be positive.'
         if re_use is None:

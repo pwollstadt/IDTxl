@@ -80,7 +80,7 @@ class OpenCLKraskov(Estimator):
 
     def is_analytic_null_estimator(self):
         return False
-    
+
     def _get_device(self, gpuid):
         """Return GPU devices, context, and queue."""
         all_platforms = cl.get_platforms()
@@ -442,11 +442,3 @@ class OpenCLKraskovCMI(OpenCLKraskov):
                     d_npointsrange_z)
         else:
             return cmi_array
-
-
-
-
-
-
-
-
