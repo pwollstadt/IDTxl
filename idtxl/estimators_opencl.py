@@ -171,6 +171,81 @@ class OpenCLKraskovMI(OpenCLKraskov):
         var1dim = var1.shape[1]
         var2dim = var2.shape[1]
         pointdim = var1dim + var2dim
+        kraskov_k = self.opts['kraskov_k']
+
+        mem_data = self.sizeof_float * chunklength * pointdim
+        mem_dist = self.sizeof_float * chunklength * kraskov_k
+        mem_ncnt = 2 * self.sizeof_int * chunklength
+        mem_chunk = mem_data + mem_dist + mem_ncnt
+
+        if 'max_mem' in self.opts:
+            max_mem = self.opts['max_mem']
+        else:
+            max_mem = 0.9 * self.devices[self.opts['gpuid']].global_mem_size
+
+        if mem_chunk > max_mem:
+            raise RuntimeError('Size of single chunk exceeds GPU global memory.')
+
+        max_chunks_per_run = np.floor(max_mem/mem_chunk).astype(int)
+        chunks_per_run = min(max_chunks_per_run, n_chunks)
+
+        mi_array = np.array([])
+        if self.opts['debug']:
+            distances = np.array([])
+            count_var1 = np.array([])
+            count_var2 = np.array([])
+
+        for r in range(0, n_chunks, chunks_per_run):
+            startidx = r*chunklength
+            stopidx  = min(r+chunks_per_run, n_chunks)*chunklength
+            subset1 = var1[startidx:stopidx,:]
+            subset2 = var2[startidx:stopidx,:]
+            res = self._estimate_single_run(subset1, subset2, chunks_per_run)
+            if self.opts['debug']:
+                mi_array   = np.concatenate((mi_array,   res[0]))
+                distances  = np.concatenate((distances,  res[1]))
+                count_var1 = np.concatenate((count_var1, res[2]))
+                count_var2 = np.concatenate((count_var2, res[3]))
+            else:
+                mi_array = np.concatenate((mi_array, res))
+
+        if self.opts['debug']:
+            return mi_array, distances, count_var1, count_var2
+        else:
+            return mi_array
+
+
+    def _estimate_single_run(self, var1, var2, n_chunks=1):
+        """Estimate mutual information in a single GPU run.
+
+        This method should not be called directly, only inside estimate()
+        after memory bounds have been checked.
+
+        Args:
+            var1 : numpy array
+                realisations of first variable, a 2D numpy array where array
+                dimensions represent [(realisations * n_chunks) x variable
+                dimension], array type should be int32
+            var2 : numpy array
+                realisations of the second variable (similar to var1)
+            n_chunks : int
+                number of data chunks, no. data points has to be the same for
+                each chunk
+
+        Returns:
+            float | numpy array
+                average MI over all samples or local MI for individual
+                samples if 'local_values'=True
+        """
+
+        # Prepare data and add noise
+        assert var1.shape[0] == var2.shape[0]
+        assert var1.shape[0] % n_chunks == 0
+        signallength = var1.shape[0]
+        chunklength = signallength // n_chunks
+        var1dim = var1.shape[1]
+        var2dim = var2.shape[1]
+        pointdim = var1dim + var2dim
         pointset = np.hstack((var1, var2)).T.copy()
         pointset += np.random.normal(scale=self.opts['noise_level'],
                                      size=pointset.shape)
