@@ -293,7 +293,7 @@ class OpenCLKraskovMI(OpenCLKraskov):
                         d_pointset, d_distances, np.int32(pointdim),
                         np.int32(chunklength), np.int32(signallength),
                         np.int32(kraskov_k), theiler_t, localmem)
-        distances = np.zeros(signallength, dtype=np.float32)
+        distances = np.zeros(signallength * kraskov_k, dtype=np.float32)
         cl.enqueue_copy(self.queue, distances, d_distances)
         self.queue.finish()
 
