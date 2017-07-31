@@ -93,7 +93,7 @@ class OpenCLKraskov(Estimator):
         context = cl.Context(devices=my_gpu_devices)
         queue = cl.CommandQueue(context, my_gpu_devices[gpuid])
         if VERBOSE:
-            print(("Selected Device: ", my_gpu_devices[gpuid].name))
+            print("Selected Device: ", my_gpu_devices[gpuid].name)
         return my_gpu_devices, context, queue
 
     def _get_kernels(self):
