@@ -117,7 +117,6 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             r = self.analyse_single_process(options, data, processes[t])
             r['process'] = processes[t]
             results[processes[t]] = r
-            # TODO FDR correct this
         return results
 
     def analyse_single_process(self, options, data, process):

@@ -138,8 +138,7 @@ class MultivariateTE(NetworkInference):
                                                'sources have to have the same '
                                                'same length')
 
-        # Perform TE estimation for each target individually. FDR-correct
-        # overall results.
+        # Perform TE estimation for each target individually
         results = {}
         for t in range(len(targets)):
             if VERBOSE:
@@ -215,7 +214,7 @@ class MultivariateTE(NetworkInference):
                   (default=500)
                 - 'alpha_*' : float - critical alpha level for statistical
                   significance, where * can be 'max_stats',  'min_stats',
-                  'omnibus', 'max_seq', and 'fdr' (default=0.05)
+                  'omnibus', and 'max_seq' (default=0.05)
                 - 'cmi_estimator' : str - estimator to be used for CMI
                   calculation (for estimator options see the documentation in
                   the estimators_* modules)
