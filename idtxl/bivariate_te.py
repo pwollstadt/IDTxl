@@ -139,8 +139,7 @@ class BivariateTE(NetworkInference):
                                                'sources have to have the same '
                                                'same length')
 
-        # Perform TE estimation for each target individually. FDR-correct
-        # overall results.
+        # Perform TE estimation for each target individually
         results = {}
         for t in range(len(targets)):
             if VERBOSE:
