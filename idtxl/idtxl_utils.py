@@ -1,5 +1,6 @@
 """Provide IDTxl utility functions."""
 import pprint
+import copy as cp
 import numpy as np
 
 VERBOSE = True
@@ -287,3 +288,24 @@ def combine_discrete_dimensions(a, numBins):
                 raise ArithmeticError('Combination of numBins and number of dimensions of a leads to overflow in making unidimensional array')
         combined_values[t] = int(combined_value)
     return combined_values
+
+
+def combine_results(*results):
+    """Combine partial results into single results dictionary.
+
+    Combine a list of partial network inference results into a single results
+    dictionary (e.g., results from analysis parallelized over target nodes).
+
+    Args:
+        results : list of dicts
+            network inference results from .analyse_network methods, where each
+            dict entry represents results for one target node
+
+    Returns:
+        dict
+            combined results dict
+    """
+    res = {}
+    for r in results:
+        res.update(r)
+    return cp.deepcopy(res)

@@ -78,15 +78,16 @@ def test_network_fdr():
         'selected_sources_pval': None,
         'selected_sources_te': np.array([])
         }
-    res = {
+    res_1 = {
         0: target_0,
         1: target_1,
+    }
+    res_2 = {
         2: target_2
     }
 
     for correct_by_target in [True, False]:
         opts = {
-            'cmi_estimator': 'JidtKraskovCMI',
             'alpha_fdr': 0.05,
             'max_lag_sources': 3,
             'min_lag_sources': 1,
@@ -96,7 +97,7 @@ def test_network_fdr():
         dat.generate_mute_data(n_samples=100, n_replications=3)
         analysis_setup = MultivariateTE()
         analysis_setup._initialise(opts, data=dat, sources=[1, 2], target=0)
-        res_pruned = stats.network_fdr(analysis_setup, res)
+        res_pruned = stats.network_fdr(opts, res_1, res_2)
         assert (not res_pruned[2]['selected_vars_sources']), ('Target ')
 
         for k in res_pruned.keys():
@@ -220,14 +221,14 @@ def test_data_type():
 
 
 if __name__ == '__main__':
-    test_data_type()
+    # test_data_type()
     test_network_fdr()
-    test_find_pvalue()
-    test_find_table_max()
-    test_find_table_min()
-    test_sort_table_max()
-    test_sort_table_min()
-    test_omnibus_test()
-    test_max_statistic()
-    test_min_statistic()
-    test_max_statistic_sequential()
+    # test_find_pvalue()
+    # test_find_table_max()
+    # test_find_table_min()
+    # test_sort_table_max()
+    # test_sort_table_min()
+    # test_omnibus_test()
+    # test_max_statistic()
+    # test_min_statistic()
+    # test_max_statistic_sequential()
