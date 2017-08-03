@@ -905,12 +905,12 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
     check_n_perm(distribution.shape[0], alpha)
 
     if tail == 'one':
-        pvalue = sum(distribution > statistic) / distribution.shape[0]
+        pvalue = sum(distribution >= statistic) / distribution.shape[0]
     elif tail == 'one_smaller':
-        pvalue = sum(distribution < statistic) / distribution.shape[0]
+        pvalue = sum(distribution <= statistic) / distribution.shape[0]
     elif tail == 'two':
-        p_bigger = sum(distribution > statistic) / distribution.shape[0]
-        p_smaller = sum(distribution < statistic) / distribution.shape[0]
+        p_bigger = sum(distribution >= statistic) / distribution.shape[0]
+        p_smaller = sum(distribution <= statistic) / distribution.shape[0]
         pvalue = min(p_bigger, p_smaller)
         alpha = alpha / 2
     else:
