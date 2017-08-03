@@ -156,6 +156,8 @@ def omnibus_test(analysis_setup, data):
     n_permutations = analysis_setup.options['n_perm_omnibus']
     analysis_setup.options.setdefault('alpha_omnibus', 0.05)
     alpha = analysis_setup.options['alpha_omnibus']
+    analysis_setup.options.setdefault('permute_in_time', False)
+    permute_in_time = analysis_setup.options['permute_in_time']
     print('no. target sources: {0}, no. sources: {1}'.format(
                                     len(analysis_setup.selected_vars_target),
                                     len(analysis_setup.selected_vars_sources)))
@@ -196,7 +198,7 @@ def omnibus_test(analysis_setup, data):
         i_2 += data.n_realisations(analysis_setup.current_value)
         '''
     if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
-        (analysis_setup.options.get('permute_in_time', False) or
+        (permute_in_time or
          not _sufficient_replications(data, n_permutations))):
         # Generate the surrogates analytically
         surr_distribution = (analysis_setup._cmi_estimator.
@@ -311,6 +313,7 @@ def max_statistic_sequential(analysis_setup, data):
     except KeyError:
         try:  # use the same n_perm as for min_stats if surr table is reused
             n_permutations = analysis_setup._min_stats_surr_table.shape[1]
+            analysis_setup.options['n_perm_max_seq'] = n_permutations
         except AttributeError:  # is surr table is None, use default
             analysis_setup.options['n_perm_max_seq'] = 500
             n_permutations = analysis_setup.options['n_perm_max_seq']
@@ -469,6 +472,8 @@ def mi_against_surrogates(analysis_setup, data):
     alpha = analysis_setup.options['alpha_mi']
     analysis_setup.options.setdefault('tail_mi', 'one')
     tail = analysis_setup.options['tail_mi']
+    analysis_setup.options.setdefault('permute_in_time', False)
+    permute_in_time = analysis_setup.options['permute_in_time']
     '''
     surr_realisations = np.empty(
                         (data.n_realisations(analysis_setup.current_value) *
@@ -498,7 +503,7 @@ def mi_against_surrogates(analysis_setup, data):
                                             [analysis_setup.current_value])
         '''
     if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
-        (analysis_setup.options.get('permute_in_time', False) or
+        (permute_in_time or
          not _sufficient_replications(data, n_perm))):
         # Generate the surrogates analytically
         surr_dist = (analysis_setup._cmi_estimator.
@@ -794,6 +799,9 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
     # permute_over_replications = _permute_over_replications(data, n_perm)
     # perm_range = analysis_setup.options.get('perm_range', 'max')
 
+    analysis_setup.options.setdefault('permute_in_time', False)
+    permute_in_time = analysis_setup.options['permute_in_time']
+
     # Create surrogate table.
     if VERBOSE:
         print('\ncreate surrogates table with {0} permutations'.format(n_perm))
@@ -826,7 +834,7 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
             i_2 += data.n_realisations(analysis_setup.current_value)
         '''
         if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
-            (analysis_setup.options.get('permute_in_time', False) or
+            (permute_in_time or
              not _sufficient_replications(data, n_perm))):
             # Generate the surrogates analytically
             surr_table[idx_c, :] = (analysis_setup._cmi_estimator.
@@ -939,7 +947,7 @@ def _sufficient_replications(data, n_perm):
 
 
 def _get_surrogates(data, current_value, idx_list, n_perm,
-                    perm_opts=None):
+                    perm_opts=None):  # TODO make opts mandatory, the parent function should set the defaults
     """Return surrogate data for statistical testing.
 
     Calls surrogate generation methods of the data instance. The method for
@@ -995,7 +1003,7 @@ def _get_surrogates(data, current_value, idx_list, n_perm,
             i_1 = i_2
             i_2 += n_realisations
     # permute samples
-    else:
+    else:  # TODO set defaults for surrogate creation in time
         for perm in range(n_perm):
             surrogates[i_1:i_2, ] = data.permute_samples(current_value,
                                                          idx_list,
@@ -1005,7 +1013,7 @@ def _get_surrogates(data, current_value, idx_list, n_perm,
     return surrogates
 
 
-def _generate_spectral_surrogates(data, scale, n_perm, perm_opts=None):
+def _generate_spectral_surrogates(data, scale, n_perm, perm_opts=None):  # TODO opts mandatory
     """Generate surrogate data for statistical testing of spectral TE.
 
     The method for surrogate generation depends on whether sufficient

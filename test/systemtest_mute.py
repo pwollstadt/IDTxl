@@ -9,17 +9,16 @@ dat = Data()  # initialise an empty data object
 dat.generate_mute_data(n_samples=1000, n_replications=10)
 analysis_opts = {
         'cmi_estimator':  'JidtKraskovCMI',
-        'n_perm_max_stat': 200,
+        'n_perm_max_stat': 50,
         'n_perm_min_stat': 200,
         'n_perm_omnibus': 500,
         'n_perm_max_seq': 500,
+        'max_lag_sources': 5,
+        'min_lag_sources':1
         }
 
-network_analysis = MultivariateTE(
-        max_lag_sources=5,
-        min_lag_sources=1,
-        options=analysis_opts)
-res = network_analysis.analyse_network(dat)
+network_analysis = MultivariateTE()
+res = network_analysis.analyse_network(analysis_opts, dat)
 runtime = time.time() - start_time
 print("---- {0} minutes".format(runtime / 60))
 

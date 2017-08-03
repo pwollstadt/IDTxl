@@ -13,7 +13,6 @@ import numpy as np
 import itertools as it
 from . import stats
 from .network_inference import NetworkInference
-from .estimator import find_estimator
 
 VERBOSE = True
 
@@ -22,45 +21,10 @@ class BivariateTE(NetworkInference):
     """Set up a network analysis using bivariate transfer entropy.
 
     Set parameters necessary for network inference using transfer entropy (TE).
-    To perform network inference call analyse_network() on an instance of the
-    data class.
-
-    Args:
-        max_lag_sources : int
-            maximum temporal search depth for candidates in the sources' past
-        min_lag_sources : int
-            minimum temporal search depth for candidates in the sources' past
-        options : dict
-            parameters for estimator use and statistics:
-
-            - 'n_perm_*' - number of permutations, where * can be 'max_stat',
-            - 'min_stat', 'omnibus', and 'max_seq' (default=500)
-            - 'alpha_*' - critical alpha level for statistical significance,
-              where * can be 'max_stats',  'min_stats', 'omnibus', and 'fdr'
-              (default=0.05)
-            - 'fdr_correction' - perform correction for false discovery rate
-              at the network level (default=True)
-            - 'correct_by_target' - if true p-values are corrected on the
-              target level and on the single-link level otherwise
-              (default=True)
-            - 'cmi_estimator' - estimator to be used for CMI calculation
-              (For estimator options see the respective documentation.)
-            - 'add_conditionals' - force the estimator to add these
-              conditionals when estimating TE; can either be a list of
-              variables, where each variable is described as (idx process, lag
-              wrt to current value) or can be a string: 'faes' for Faes-Method
-            - 'permute_in_time' - force surrogate creation by shuffling
-              realisations in time instead of shuffling replications; see
-              documentation of Data.permute_samples() for further options
-              (default=False)
-
-        max_lag_target : int [optional]
-            maximum temporal search depth for candidates in the target's past
-            (default=same as max_lag_sources)
-        tau_sources : int [optinal]
-            spacing between candidates in the sources' past (default=1)
-        tau_target : int [optinal]
-            spacing between candidates in the target's past (default=1)
+    To perform network inference call analyse_network()
+    on the whole network or a set of nodes or call analyse_single_target() to
+    estimate TE for a single target. See docstrings of the two functions
+    for more information.
 
     Attributes:
         selected_vars_full : list of tuples
@@ -106,24 +70,18 @@ class BivariateTE(NetworkInference):
     # TODO right now 'options' holds all optional params (stats AND estimator).
     # We could split this up by adding the stats options to the analyse_*
     # methods?
-    def __init__(self, max_lag_sources, min_lag_sources, options,
-                 max_lag_target=None, tau_sources=1, tau_target=1):
-        # Set estimator in the child class for network inference because the
-        # estimated quantity may be different from CMI in other inference
-        # algorithms. (Everything else can be done in the parent class.)
-        try:
-            EstimatorClass = find_estimator(options['cmi_estimator'])
-        except KeyError:
-            raise KeyError('Please provide an estimator class or name!')
-        self._cmi_estimator = EstimatorClass(options)
-        super().__init__(max_lag_sources, min_lag_sources, options,
-                         max_lag_target, tau_sources, tau_target)
+    def __init__(self):
+        super().__init__()
 
-    def analyse_network(self, data, targets='all', sources='all'):
+    def analyse_network(self, options, data, targets='all', sources='all'):
         """Find bivariate transfer entropy between all nodes in the network.
 
         Estimate bivariate transfer entropy (TE) between all nodes in the
         network or between selected sources and targets.
+
+        Note:
+            For a detailed description and references see the documentation of
+            the analyse_single_target() method of this class.
 
         Example:
 
@@ -137,37 +95,34 @@ class BivariateTE(NetworkInference):
             >>>     'n_perm_min_stat': 200,
             >>>     'n_perm_omnibus': 500,
             >>>     'n_perm_max_seq': 500,
+            >>>     'max_lag': 5,
+            >>>     'min_lag': 4
             >>>     }
-            >>> network_analysis = Bivariate_te(max_lag, min_lag,
-            >>>                                 analysis_opts)
-            >>> res = network_analysis.analyse_network(dat)
-
-        Note:
-            For more details on the estimation of bivariate transfer entropy
-            see documentation of class method 'analyse_single_target'.
+            >>> network_analysis = Bivariate_te()
+            >>> res = network_analysis.analyse_network(analysis_opts, dat)
 
         Args:
+            options : dict
+                parameters for estimation and statistical testing, see
+                documentation of analyse_single_target() for details
             data : Data instance
                 raw data for analysis
-            targets : list of int | 'all' [optinal]
+            targets : list of int | 'all' [optional]
                 index of target processes (default='all')
             sources : list of int | list of list | 'all'  [optional]
                 indices of source processes for each target (default='all');
-                if 'all', all sources are tested for each target;
-                if list of int, sources specified in the list are tested for
-                each target;
+                if 'all', all network nodes excluding the target node are
+                considered as potential sources and tested;
+                if list of int, the source specified by each int is tested as
+                a potential source for the target with the same index or a
+                single target;
                 if list of list, sources specified in each inner list are
-                tested for the corresponding target
+                tested for the target with the same index
 
         Returns:
             dict
-                results consisting of
-
-                - conditional sets (full, from sources, from target),
-                - results for omnibus test (joint influence of source cands.),
-                - pvalues for each significant source candidate
-
-                for each target
+                results for each target, see documentation of
+                analyse_single_target()
         """
         if targets == 'all':
             targets = [t for t in range(data.n_processes)]
@@ -190,16 +145,14 @@ class BivariateTE(NetworkInference):
         for t in range(len(targets)):
             if VERBOSE:
                 print('####### analysing target {0} of {1}'.format(t, targets))
-            r = self.analyse_single_target(data, targets[t], sources[t])
+            r = self.analyse_single_target(options, data,
+                                           targets[t], sources[t])
             r['target'] = targets[t]
             r['sources'] = sources[t]
             results[targets[t]] = r
-
-        if self.options['fdr_correction']:
-            results['fdr'] = stats.network_fdr(self, results)
         return results
 
-    def analyse_single_target(self, data, target, sources='all'):
+    def analyse_single_target(self, options, data, target, sources='all'):
         """Find bivariate transfer entropy between sources and a target.
 
         Find bivariate transfer entropy (TE) between all potential source
@@ -227,41 +180,78 @@ class BivariateTE(NetworkInference):
 
             >>> dat = Data()
             >>> dat.generate_mute_data(100, 5)
-            >>> max_lag = 5
-            >>> min_lag = 4
+            >>>
             >>> analysis_opts = {
             >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
             >>>     'n_perm_min_stat': 200,
             >>>     'n_perm_omnibus': 500,
             >>>     'n_perm_max_seq': 500,
+            >>>     'max_lag': 5,
+            >>>     'min_lag': 4
             >>>     }
             >>> target = 0
             >>> sources = [1, 2, 3]
-            >>> network_analysis = Bivariate_te(max_lag, min_lag,
-            >>>                                 analysis_opts)
-            >>> res = network_analysis.analyse_single_target(dat, target,
+            >>> network_analysis = Bivariate_te()
+            >>> res = network_analysis.analyse_single_target(analysis_opts,
+            >>>                                              dat, target,
             >>>                                              sources)
 
         Args:
+            options : dict
+                parameters for estimation and statistical testing:
+
+                - max_lag_sources : int - maximum temporal search depth for
+                  candidates in the sources' past in samples
+                - min_lag_sources : int - minimum temporal search depth for
+                  candidates in the sources' past in samples
+                - max_lag_target : int [optional] - maximum temporal search
+                  depth for candidates in the target's past in samples
+                  (default=same as max_lag_sources)
+                - tau_sources : int [optional] - spacing between candidates in
+                  the sources' past in samples (default=1)
+                - tau_target : int [optional] - spacing between candidates in
+                  the target's past in samples (default=1)
+                - 'n_perm_*' : int - number of permutations, where * can be
+                  'max_stat', 'min_stat', 'omnibus', and 'max_seq'
+                  (default=500)
+                - 'alpha_*' float - critical alpha level for statistical
+                  significance, where * can be 'max_stats',  'min_stats', and
+                  'omnibus' (default=0.05)
+                - 'cmi_estimator' : str - estimator to be used for CMI
+                  calculation (for estimator options see the documentation in
+                  the estimators_* modules)
+                - 'add_conditionals' : list of tuples - force the estimator to
+                  add these conditionals when estimating TE; can either be a
+                  list of variables, where each variable is described as (idx
+                  process, lag wrt to current value) or can be a string: 'faes'
+                  for Faes-Method (see references)
+                - 'permute_in_time' : bool - force surrogate creation by
+                  shuffling realisations in time instead of shuffling
+                  replications; see documentation of Data.permute_samples() for
+                  further options (default=False)
+
             data : Data instance
                 raw data for analysis
             target : int
                 index of target process
             sources : list of int | int | 'all' [optional]
                 single index or list of indices of source processes
-                (default='all'), if 'all', all possible sources for the given
-                target are tested
+                (default='all'), if 'all', all network nodes excluding the
+                target node are considered as potential sources
 
         Returns:
             dict
-                results consisting of
-                conditional sets (full, from sources, from target),
-                results for omnibus test (joint influence of source cands.),
-                pvalues for each significant source candidate
+                results consisting of sets of selected variables as (full set,
+                variables from the sources' past, variables from the target's
+                past), pvalues and TE for each selected variable, the current
+                value for this analysis, results for omnibus test (joint
+                influence of all selected source variables on the target,
+                omnibus TE, p-value, and significance); NOTE that all variables
+                are listed as tuples (process, lag wrt. current value)
         """
         # Check input and clean up object if it was used before.
-        self._initialise(data, sources, target)
+        self._initialise(options, data, sources, target)
 
         # Main algorithm.
         print('\n---------------------------- (1) include target candidates')
@@ -281,11 +271,6 @@ class BivariateTE(NetworkInference):
         results = {
             'target': self.target,
             'sources_tested': self.source_set,
-            'max_lag_sources': self.max_lag_sources,
-            'min_lag_sources': self.min_lag_sources,
-            'max_lag_target': self.max_lag_target,
-            'tau_sources': self.tau_sources,
-            'tau_target': self.tau_target,
             'options': self.options,
             'current_value': self.current_value,
             'selected_vars_full': self._idx_to_lag(self.selected_vars_full),
@@ -293,11 +278,11 @@ class BivariateTE(NetworkInference):
                                                 self.selected_vars_sources),
             'selected_vars_target': self._idx_to_lag(
                                                 self.selected_vars_target),
+            'selected_sources_pval': self.pvalues_sign_sources,
+            'selected_sources_te': self.te_sign_sources,
             'omnibus_te': self.te_omnibus,
             'omnibus_pval': self.pvalue_omnibus,
-            'omnibus_sign': self.sign_omnibus,
-            'selected_sources_pval': self.pvalues_sign_sources,
-            'selected_sources_te': self.te_sign_sources}
+            'omnibus_sign': self.sign_omnibus}
         return results
 
     def _include_source_candidates(self, data):
@@ -324,9 +309,10 @@ class BivariateTE(NetworkInference):
         """
         # Define candidate set and get realisations.
         procs = self.source_set
-        samples = np.arange(self.current_value[1] - self.min_lag_sources,
-                            self.current_value[1] - self.max_lag_sources,
-                            -self.tau_sources)
+        samples = np.arange(
+                self.current_value[1] - self.options['min_lag_sources'],
+                self.current_value[1] - self.options['max_lag_sources'],
+                -self.options['tau_sources'])
         candidate_set = self._define_candidates(procs, samples)
         self._append_selected_vars(
                 candidate_set,

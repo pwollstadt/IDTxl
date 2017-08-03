@@ -6,6 +6,7 @@ Created on Mon Mar  7 18:13:27 2016
 """
 import numpy as np
 from .network_analysis import NetworkAnalysis
+from .estimator import find_estimator
 from . import stats
 
 VERBOSE = True
@@ -44,44 +45,7 @@ class NetworkInference(NetworkAnalysis):
             indices of the set of conditionals coming from source processes
     """
 
-    def __init__(self, max_lag_sources, min_lag_sources, options,
-                 max_lag_target=None, tau_sources=1, tau_target=1):
-        # Check user input. Allow for unembedded sources (max_lag_sources=0)
-        if not max_lag_target:
-            max_lag_target = max_lag_sources
-        if type(min_lag_sources) is not int or min_lag_sources < 0:
-            raise RuntimeError('min_lag_sources has to be an integer >= 0.')
-        if type(max_lag_sources) is not int or max_lag_sources < 0:
-            raise RuntimeError('max_lag_sources has to be an integer >= 0.')
-        if type(max_lag_target) is not int or max_lag_target <= 0:
-            raise RuntimeError('max_lag_target must be an integer > 0.')
-        if type(tau_sources) is not int or tau_sources <= 0:
-            raise RuntimeError('tau_sources must be an integer > 0.')
-        if type(tau_target) is not int or tau_target <= 0:
-            raise RuntimeError('tau_sources must be an integer > 0.')
-        if min_lag_sources > max_lag_sources:
-            raise RuntimeError('min_lag_sources ({0}) must be smaller or equal'
-                               ' to max_lag_sources ({1}).'.format(
-                                   min_lag_sources, max_lag_sources))
-        if tau_sources > max_lag_sources:
-            raise RuntimeError('tau_sources ({0}) has to be smaller than '
-                               'max_lag_sources ({1}).'.format(
-                                   tau_sources, max_lag_sources))
-        if tau_target > max_lag_target:
-            raise RuntimeError('tau_target ({0}) has to be smaller than '
-                               'max_lag_target ({1}).'.format(
-                                   tau_target, max_lag_target))
-
-        # Set default options
-        self.options = options
-        self.options.setdefault('fdr_correction', True)
-
-        # Set user-specified estimation parameters
-        self.max_lag_target = max_lag_target
-        self.max_lag_sources = max_lag_sources
-        self.min_lag_sources = min_lag_sources
-        self.tau_sources = tau_sources
-        self.tau_target = tau_target
+    def __init__(self):
 
         # Create class attributes for estimation
         self.te_omnibus = None
@@ -93,15 +57,71 @@ class NetworkInference(NetworkAnalysis):
         self._min_stats_surr_table = None
         super().__init__()
 
-    def _initialise(self, data, sources, target):
-        """Check input and set everything to initial values."""
+    def _initialise(self, options, data, sources, target):
+        """Check input, set initial and default values for analysis options."""
+
+        # Set CMI estimator.
+        try:
+            EstimatorClass = find_estimator(options['cmi_estimator'])
+        except KeyError:
+            raise RuntimeError('Please provide an estimator class or name!')
+        self._cmi_estimator = EstimatorClass(options)
+
+        # Check lags and taus for multivariate embedding.
+        if 'max_lag_sources' not in options:
+            raise RuntimeError('The maximum lag for source embedding '
+                               '(''max_lag_sources'') needs to be specified.')
+        if 'min_lag_sources' not in options:
+            raise RuntimeError('The maximum lag for source embedding '
+                               '(''max_lag_sources'') needs to be specified.')
+
+        options.setdefault('tau_target', 1)
+        options.setdefault('tau_sources', 1)
+        options.setdefault('max_lag_target', options['max_lag_sources'])
+
+        if (type(options['min_lag_sources']) is not int or
+                options['min_lag_sources'] < 0):
+            raise RuntimeError('min_lag_sources has to be an integer >= 0.')
+        if (type(options['max_lag_sources']) is not int or
+                options['max_lag_sources'] < 0):
+            raise RuntimeError('max_lag_sources has to be an integer >= 0.')
+        if (type(options['max_lag_target']) is not int or
+                options['max_lag_target'] <= 0):
+            raise RuntimeError('max_lag_target must be an integer > 0.')
+        if (type(options['tau_sources']) is not int or
+                options['tau_sources'] <= 0):
+            raise RuntimeError('tau_sources must be an integer > 0.')
+        if (type(options['tau_target']) is not int or
+                options['tau_target'] <= 0):
+            raise RuntimeError('tau_sources must be an integer > 0.')
+        if options['min_lag_sources'] > options['max_lag_sources']:
+            raise RuntimeError('min_lag_sources ({0}) must be smaller or equal'
+                               ' to max_lag_sources ({1}).'.format(
+                                   options['min_lag_sources'],
+                                   options['max_lag_sources']))
+        if options['tau_sources'] > options['max_lag_sources']:
+            raise RuntimeError('tau_sources ({0}) has to be smaller than '
+                               'max_lag_sources ({1}).'.format(
+                                   options['tau_sources'],
+                                   options['max_lag_sources']))
+        if options['tau_target'] > options['max_lag_target']:
+            raise RuntimeError('tau_target ({0}) has to be smaller than '
+                               'max_lag_target ({1}).'.format(
+                                   options['tau_target'],
+                                   options['max_lag_target']))
+
+        # Set default options
+        options.setdefault('add_conditionals', None)
+        self.options = options
+
         # Check the provided target and sources.
         self._check_target(target, data.n_processes)
         self._check_source_set(sources, data.n_processes)
 
         # Check provided search depths (lags) for source and target, set the
         # current_value.
-        max_lag = max(self.max_lag_sources, self.max_lag_target)
+        max_lag = max(self.options['max_lag_sources'],
+                      self.options['max_lag_target'])
 
         assert(data.n_samples >= max_lag + 1), (
             'Not enough samples in data ({0}) to allow for the chosen maximum '
@@ -138,11 +158,8 @@ class NetworkInference(NetworkAnalysis):
         # Check if the user provided a list of candidates that must go into
         # the conditioning set. These will be added and used for TE estimation,
         # but never tested for significance.
-        try:
-            cond = self.options['add_conditionals']
-            self._force_conditionals(cond, data)
-        except KeyError:
-            pass
+        if self.options['add_conditionals'] is not None:
+            self._force_conditionals(self.options['add_conditionals'], data)
 
     def _check_target(self, target, n_processes):
         """Set and check the target provided by the user."""
@@ -188,9 +205,10 @@ class NetworkInference(NetworkAnalysis):
         """Test candidates from the target's past."""
         procs = [self.target]
         # Make samples
-        samples = np.arange(self.current_value[1] - 1,
-                            self.current_value[1] - self.max_lag_target - 1,
-                            -self.tau_target).tolist()
+        samples = np.arange(
+                    self.current_value[1] - 1,
+                    self.current_value[1] - self.options['max_lag_target'] - 1,
+                    -self.options['tau_target']).tolist()
         candidates = self._define_candidates(procs, samples)
         sources_found = self._include_candidates(candidates, data)
 
@@ -206,9 +224,10 @@ class NetworkInference(NetworkAnalysis):
     def _include_source_candidates(self, data):
         """Test candidates in the source's past."""
         procs = self.source_set
-        samples = np.arange(self.current_value[1] - self.min_lag_sources,
-                            self.current_value[1] - self.max_lag_sources,
-                            -self.tau_sources)
+        samples = np.arange(
+                    self.current_value[1] - self.options['min_lag_sources'],
+                    self.current_value[1] - self.options['max_lag_sources'],
+                    -self.options['tau_sources'])
         candidates = self._define_candidates(procs, samples)
         # TODO include non-selected target candidates as further candidates,
         # they may get selected due to synergies
