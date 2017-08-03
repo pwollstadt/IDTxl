@@ -32,9 +32,12 @@ def test_max_statistic_sequential():
         'n_perm_min_stat': 21,
         'n_perm_omnibus': 21,
         'n_perm_max_seq': 21,
+        'max_lag_sources': 5,
+        'min_lag_sources': 1,
+        'max_lag_target': 5
         }
-    setup = MultivariateTE(max_lag_sources=5, min_lag_sources=1,
-                           max_lag_target=5, options=opts)
+    setup = MultivariateTE()
+    setup._initialise(opts, dat, sources=[0, 1], target=2)
     setup.current_value = (0, 4)
     setup.selected_vars_sources = [(1, 1), (1, 2)]
     setup.selected_vars_full = [(0, 1), (1, 1), (1, 2)]
@@ -85,9 +88,14 @@ def test_network_fdr():
         opts = {
             'cmi_estimator': 'JidtKraskovCMI',
             'alpha_fdr': 0.05,
+            'max_lag_sources': 3,
+            'min_lag_sources': 1,
+            'max_lag_target': 3,
             'correct_by_target': correct_by_target}
-        analysis_setup = MultivariateTE(max_lag_sources=3, min_lag_sources=1,
-                                        max_lag_target=3, options=opts)
+        dat = Data()
+        dat.generate_mute_data(n_samples=100, n_replications=3)
+        analysis_setup = MultivariateTE()
+        analysis_setup._initialise(opts, data=dat, sources=[1, 2], target=0)
         res_pruned = stats.network_fdr(analysis_setup, res)
         assert (not res_pruned[2]['selected_vars_sources']), ('Target ')
 

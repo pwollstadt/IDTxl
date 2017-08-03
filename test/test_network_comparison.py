@@ -90,46 +90,47 @@ def test_network_comparison_use_cases():
             'n_perm_min_stat': 50,
             'n_perm_omnibus': 200,
             'n_perm_max_seq': 50,
+            'alpha_comp': 0.26,
+            'n_perm_comp': 4,
+            'tail': 'two'
             }
-    comparison_opts['n_perm_comp'] = 6
-    comparison_opts['alpha_comp'] = 0.2
-    comparison_opts['tail'] = 'two'
+
+    comp = NetworkComparison()
 
     print('\n\nTEST 0 - independent within')
     comparison_opts['stats_type'] = 'independent'
-    comp = NetworkComparison(comparison_opts)
-    comp.compare_within(res_0, res_1, dat, dat)
+    comp.compare_within(comparison_opts, res_0, res_1, dat, dat)
 
     print('\n\nTEST 1 - dependent within')
     comparison_opts['stats_type'] = 'dependent'
-    comp = NetworkComparison(comparison_opts)
-    comp.compare_within(res_0, res_1, dat, dat)
+    comp.compare_within(comparison_opts, res_0, res_1, dat, dat)
 
     print('\n\nTEST 2 - independent between')
     comparison_opts['stats_type'] = 'independent'
-    comp = NetworkComparison(comparison_opts)
-    comp.compare_between(network_set_a=np.array((res_0, res_1)),
+    comp.compare_between(comparison_opts,
+                         network_set_a=np.array((res_0, res_1)),
                          network_set_b=np.array((res_2, res_3)),
                          data_set_a=np.array((dat, dat)),
                          data_set_b=np.array((dat, dat)))
 
     print('\n\nTEST 3 - dependent between')
-    comp = NetworkComparison(comparison_opts)
     comparison_opts['stats_type'] = 'dependent'
-    comp.compare_between(network_set_a=np.array((res_0, res_1)),
+    comp.compare_between(comparison_opts,
+                         network_set_a=np.array((res_0, res_1)),
                          network_set_b=np.array((res_2, res_3)),
                          data_set_a=np.array((dat, dat)),
                          data_set_b=np.array((dat, dat)))
 
     print('\n\nTEST 4 - independent within unbalanced')
     comparison_opts['stats_type'] = 'independent'
-    comp = NetworkComparison(comparison_opts)
-    comp.compare_within(res_0, res_1, dat, dat)
+    comp = NetworkComparison()
+    comp.compare_within(comparison_opts, res_0, res_1, dat, dat)
 
     print('\n\nTEST 5 - independent between unbalanced')
     comparison_opts['stats_type'] = 'independent'
-    comp = NetworkComparison(comparison_opts)
-    comp.compare_between(network_set_a=np.array((res_0, res_1)),
+    comp = NetworkComparison()
+    comp.compare_between(comparison_opts,
+                         network_set_a=np.array((res_0, res_1)),
                          network_set_b=np.array((res_2, res_3, res_4)),
                          data_set_a=np.array((dat, dat)),
                          data_set_b=np.array((dat, dat, dat)))
@@ -165,8 +166,9 @@ def test_assertions():
     comparison_opts['n_perm_comp'] = 6
     comparison_opts['alpha_comp'] = 0.001
     comparison_opts['stats_type'] = 'independent'
+    comp = NetworkComparison()
     with pytest.raises(RuntimeError):
-        comp = NetworkComparison(comparison_opts)
+        comp._initialise(comparison_opts)
 
     # data sets have unequal no. replications
     dat2 = Data()
@@ -174,9 +176,9 @@ def test_assertions():
     comparison_opts['stats_type'] = 'dependent'
     comparison_opts['alpha_comp'] = 0.05
     comparison_opts['n_perm_comp'] = 1000
-    comp = NetworkComparison(comparison_opts)
+    comp = NetworkComparison()
     with pytest.raises(AssertionError):
-        comp.compare_within(res_0, res_1, dat, dat2)
+        comp.compare_within(comparison_opts, res_0, res_1, dat, dat2)
 
     # data sets have unequal no. realisations
     dat2 = Data()
@@ -184,41 +186,43 @@ def test_assertions():
     comparison_opts['stats_type'] = 'dependent'
     comparison_opts['alpha_comp'] = 0.05
     comparison_opts['n_perm_comp'] = 21
-    comp = NetworkComparison(comparison_opts)
+    comp = NetworkComparison()
     with pytest.raises(RuntimeError):
-        comp.compare_within(res_0, res_1, dat, dat2)
+        comp.compare_within(comparison_opts, res_0, res_1, dat, dat2)
 
     # no. replications/subjects too small for dependent-samples test
     comparison_opts['stats_type'] = 'dependent'
     comparison_opts['n_perm_comp'] = 1000
-    comp = NetworkComparison(comparison_opts)
+    comp = NetworkComparison()
     with pytest.raises(RuntimeError):   # between
-        comp.compare_between(network_set_a=np.array((res_0, res_1)),
+        comp.compare_between(comparison_opts,
+                             network_set_a=np.array((res_0, res_1)),
                              network_set_b=np.array((res_2, res_3)),
                              data_set_a=np.array((dat, dat)),
                              data_set_b=np.array((dat, dat)))
     with pytest.raises(RuntimeError):   # within
-        comp.compare_within(res_0, res_1, dat2, dat2)
+        comp.compare_within(comparison_opts, res_0, res_1, dat2, dat2)
 
     # no. replications/subjects too small for independent-samples test
     comparison_opts['stats_type'] = 'independent'
-    comp = NetworkComparison(comparison_opts)
+    comp = NetworkComparison()
     with pytest.raises(RuntimeError):   # between
-        comp.compare_between(network_set_a=np.array((res_0, res_1)),
+        comp.compare_between(comparison_opts,
+                             network_set_a=np.array((res_0, res_1)),
                              network_set_b=np.array((res_2, res_3)),
                              data_set_a=np.array((dat, dat)),
                              data_set_b=np.array((dat, dat)))
     with pytest.raises(RuntimeError):   # within
-        comp.compare_within(res_0, res_1, dat2, dat2)
+        comp.compare_within(comparison_opts, res_0, res_1, dat2, dat2)
 
     # add target to network that is not in the data object
     res_99 = res_0
     res_99[99] = res_99[1]
     comparison_opts['alpha_comp'] = 0.05
     comparison_opts['n_perm_comp'] = 21
-    comp = NetworkComparison(comparison_opts)
+    comp = NetworkComparison()
     with pytest.raises(IndexError):
-        comp.compare_within(res_0, res_99, dat2, dat2)
+        comp.compare_within(comparison_opts, res_0, res_99, dat2, dat2)
 
 
 @jpype_missing
@@ -247,7 +251,8 @@ def test_create_union_network():
             'alpha_comp': 0.2,
             'stats_type': 'independent'
             }
-    comp = NetworkComparison(comparison_opts)
+    comp = NetworkComparison()
+    comp._initialise(comparison_opts)
 
     src_1 = [(0, 2), (0, 1)]
     src_2 = [(0, 4), (0, 5)]
@@ -295,7 +300,8 @@ def test_get_permuted_replications():
             'alpha_comp': 0.2,
             'stats_type': 'dependent'
             }
-    comp = NetworkComparison(comparison_opts)
+    comp = NetworkComparison()
+    comp._initialise(comparison_opts)
     comp._create_union(res_0, res_1)
 
     # Check permutation for dependent samples test: Replace realisations by
@@ -321,7 +327,8 @@ def test_get_permuted_replications():
     # Check permutations for independent samples test: Check the sum over
     # realisations.
     comparison_opts['stats_type'] = 'independent'
-    comp = NetworkComparison(comparison_opts)
+    comp = NetworkComparison()
+    comp._initialise(comparison_opts)
     comp._create_union(res_0, res_1)
     [cond_a_perm,
      cv_a_perm,
@@ -364,7 +371,8 @@ def test_calculate_cmi():
         'alpha_comp': 0.2,
         'stats_type': 'dependent'
         }
-    comp = NetworkComparison(comparison_opts)
+    comp = NetworkComparison()
+    comp._initialise(comparison_opts)
     comp._create_union(res_0)
     comp.union[1]['selected_vars_sources'] = [(0, 4)]
     cmi = comp._calculate_cmi(dat)
@@ -394,7 +402,8 @@ def test_calculate_mean():
         'alpha_comp': 0.2,
         'stats_type': 'dependent'
         }
-    comp = NetworkComparison(comparison_opts)
+    comp = NetworkComparison()
+    comp._initialise(comparison_opts)
     comp._create_union(res_0)
     cmi = comp._calculate_cmi(dat)
     cmi_mean = comp._calculate_mean([cmi, cmi])
@@ -421,29 +430,34 @@ def test_p_value_union():
         'tail': 'one',
         'n_perm_comp': 6,
         'alpha_comp': 0.2,
+        'tail_comp': 'one',
         'stats_type': 'independent'
         }
-    comp = NetworkComparison(comparison_opts)
-    comp.compare_within(res_0, res_1, dat, dat)
+    comp = NetworkComparison()
+    res_comp = comp.compare_within(comparison_opts, res_0, res_1, dat, dat)
 
     # Replace the surrogate CMI by all zeros for source 0 and all ones for
     # source 1. Set the CMI difference to 0.5 for both sources. Check if this
     # results in one significant and one non-significant result with the
     # correct p-values.
+    comp._initialise(comparison_opts)
+    comp._create_union(res_0, res_1)
+    comp._calculate_cmi_diff_within(dat, dat)
+    comp._create_surrogate_distribution_within(dat, dat)
     target = 1
-    for p in range(comp.n_permutations):
+    for p in range(comparison_opts['n_perm_comp']):
         comp.cmi_surr[p][target] = np.array([0, 1])
     comp.cmi_diff[target] = np.array([0.5, 0.5])
     [p, s] = comp._p_value_union()
     assert (s[target] == np.array([True, False])).all(), (
                                     'The significance was not determined '
-                                    'correctly: {0}'.fomat(s[target]))
+                                    'correctly: {0}'.format(s[target]))
     p_1 = 1 / comparison_opts['n_perm_comp']
     p_2 = 1.0
     print(p[target])
     assert (p[target] == np.array([p_1, p_2])).all(), (
                                 'The p-value was not calculated correctly: {0}'
-                                .fomat(p[target]))
+                                .format(p[target]))
 
 if __name__ == '__main__':
     test_network_comparison_use_cases()

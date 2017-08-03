@@ -396,7 +396,7 @@ class Data():
         Args:
             process : int
                 process for which to return data slice
-            perm_opts : dict [optinal]
+            perm_opts : dict [optional]
                 options specifying the allowed permutations:
 
                 - perm_type : str [optional]
@@ -519,7 +519,7 @@ class Data():
                 index of the current_value in the data
             idx_list : list of tuples
                 indices of variables
-            perm_opts : dict [optinal]
+            perm_opts : dict [optional]
                 options specifying the allowed permutations:
 
                 - perm_type : str [optional]
@@ -612,7 +612,7 @@ class Data():
         Args:
             n_samples : int
                 length of the permutation
-            perm_opts : dict [optinal]
+            perm_opts : dict [optional]
                 options specifying the allowed permutations:
 
                 - perm_type : str [optional]

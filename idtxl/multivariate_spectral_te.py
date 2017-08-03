@@ -95,7 +95,7 @@ class MultivariateSpectralTE(NetworkAnalysis):
                 results from multivariate network inference, e.g., using TE
             data : Data instance
                 raw data from which the network was inferred
-            targets : list of int | 'all' [optinal]
+            targets : list of int | 'all' [optional]
                 index of target processes (default='all')
             sources : list of int | list of list | 'all' [optional]
                 indices of source processes for each target (default='all');

@@ -24,24 +24,9 @@ class NetworkComparison(NetworkAnalysis):
     | __between__ subjects |dependent   |patients (A) vs. matched controls (B)|
     |                      |independent |male (A) vs. female (B) participants |
 
-    The stats_type is determined through an option passed to the class
-    constructor, whether the analysis is performed withing or between subjects
-    is determined through the use of the class method for comparison:
-    'compare_within' or 'compare_between'.
-
-    Args:
-        options : dict
-            options for statistical comparison of networks
-
-            - 'stats_type' - 'dependent' or 'independent' for dependent or
-              independent units of observation
-            - 'cmi_estimator' - estimator to be used for CMI calculation
-              (For estimator options see the respective documentation.)
-            - 'tail' - test tail, 'one' for one-sided test, 'two' for two-sided
-              test (default='two')
-            - 'n_perm_comp' - number of permutations (default=500)
-            - 'alpha_comp' - critical alpha level for statistical significance
-            (default=0.05)
+    There are two methods for within and between comparisons: compare_within()
+    and compare_between(). The stats_type is passed as an analysis option, see
+    the documentation of the two classes for details.
 
     Attributes:
         union : dict
@@ -65,31 +50,32 @@ class NetworkComparison(NetworkAnalysis):
             test tail ('one' or 'two')
     """
 
-    def __init__(self, options):
-        try:
-            self.stats_type = options['stats_type']
-        except KeyError:
-            raise KeyError('You have to provide a "stats_type": "dependent" '
-                           'or "independent".')
-        try:
-            EstimatorClass = find_estimator(options['cmi_estimator'])
-        except KeyError:
-            raise KeyError('Please provide an estimator class or name!')
-        self._cmi_estimator = EstimatorClass(options)
-        self.n_permutations = options.get('n_perm_comp', 10)
-        self.alpha = options.get('alpha_comp', 0.05)
-        self.tail = options.get('tail', 'two')
-        self.options = options
-        stats.check_n_perm(self.n_permutations, self.alpha)
+    def __init__(self):
+        super().__init__()
 
-    def compare_within(self, network_a, network_b, data_a, data_b):
+    def compare_within(self, options, network_a, network_b, data_a, data_b):
         """Compare networks inferred under two conditions within one subject.
 
         Compare two networks inferred from data recorded under two different
         experimental conditions within one subject (units of observations are
         replications of one experimental condition within one subject).
 
-        Arguments:
+        Args:
+            options : dict
+                parameters for estimation and statistical testing
+
+                - 'stats_type' str - 'dependent' or 'independent' for
+                  dependent or independent units of observation
+                - 'cmi_estimator' str - estimator to be used for CMI
+                  calculation (for estimator options see the documentation in
+                  the estimators_* modules)
+                - 'tail_comp' str [optional] - test tail, 'one' for one-sided
+                  test, 'two' for two-sided test (default='two')
+                - 'n_perm_comp' int [optional] - number of permutations
+                  (default=500)
+                - 'alpha_comp' float - critical alpha level for statistical
+                  significance (default=0.05)
+
             network_a : dict
                 results from network inference, condition a
             network_b : dict
@@ -112,6 +98,7 @@ class NetworkComparison(NetworkAnalysis):
                 statistical significance ('sign')
         """
         # Check input and analysis parameters.
+        self._initialise(options)
         self._check_n_replications(data_a, data_b)
         self._check_equal_realisations(data_a, data_b)
 
@@ -125,24 +112,21 @@ class NetworkComparison(NetworkAnalysis):
         print('\n-------------------------- (4) determine p-value')
         [pvalue, sign] = self._p_value_union()
 
-        self._clean_up()  # remove temp. attributes, Convert lags to indices
-
+        self._union_indices_to_lags()
         results = {
-            'alpha': self.alpha,
-            'n_permutations': self.n_permutations,
-            'stats_type': self.stats_type,
-            'tail': self.tail,
             'cmi_diff': self.cmi_diff,
             'cmi_surr': self.cmi_surr,
-            'options': self.options,
             'union_network': self.union,
             'pval': pvalue,
-            'sign': sign
+            'sign': sign,
+            'options': self.options
             }
+
+        self._clean_up()  # remove attributes
         return results
 
-    def compare_between(self, network_set_a, network_set_b, data_set_a,
-                        data_set_b):
+    def compare_between(self, options, network_set_a, network_set_b,
+                        data_set_a, data_set_b):
         """Compare networks inferred under two conditions between subjects.
 
         Compare two sets of networks inferred from two sets of data recorded
@@ -150,7 +134,10 @@ class NetworkComparison(NetworkAnalysis):
         data have been recorded from subjects assigned to one of two
         experimental conditions (units of observations are subjects).
 
-        Arguments:
+        Args:
+            options : dict
+                parameters for estimation and statistical testing, see
+                documentation of compare_within() for details
             network_set_a : numpy array of dicts
                 results from network inference for multiple subjects observed
                 under condition a
@@ -175,13 +162,14 @@ class NetworkComparison(NetworkAnalysis):
                 statistical significance ('sign')
         """
         # Check input and analysis parameters.
-        network_all = np.hstack((network_set_a, network_set_b))
-        data_all = np.hstack((data_set_a, data_set_b))
+        self._initialise(options)
         self._check_n_subjects(data_set_a, data_set_b)
+        data_all = np.hstack((data_set_a, data_set_b))
         self._check_equal_realisations(*data_all)
 
         # Main comparison.
         print('\n-------------------------- (1) create union of networks')
+        network_all = np.hstack((network_set_a, network_set_b))
         self._create_union(*network_all)
         print('\n-------------------------- (2) calculate original TE values')
         self._calculate_cmi_diff_between(data_set_a, data_set_b)
@@ -190,20 +178,17 @@ class NetworkComparison(NetworkAnalysis):
         print('\n-------------------------- (4) determine p-value')
         [pvalue, sign] = self._p_value_union()
 
-        self._clean_up()  # remove temp. attributes, Convert lags to indices
-
+        self._union_indices_to_lags()
         results = {
-            'alpha': self.alpha,
-            'n_permutations': self.n_permutations,
-            'stats_type': self.stats_type,
-            'tail': self.tail,
             'cmi_diff': self.cmi_diff,
             'cmi_surr': self.cmi_surr,
-            'options': self.options,
             'union_network': self.union,
             'pval': pvalue,
-            'sign': sign
+            'sign': sign,
+            'options': self.options
             }
+
+        self._clean_up()  # remove attributes
         return results
 
     def _check_n_replications(self, data_a, data_b):
@@ -211,44 +196,45 @@ class NetworkComparison(NetworkAnalysis):
         assert data_a.n_replications == data_b.n_replications, (
                             'Unequal no. replications in the two data sets.')
         n_replications = data_a.n_replications
-        if self.stats_type == 'dependent':
-            if 2**n_replications < self.n_permutations:
+        if self.options['stats_type'] == 'dependent':
+            if 2**n_replications < self.options['n_perm_comp']:
                 raise RuntimeError('The number of replications {0} in the data'
-                                   ' are not sufficient to enable the '
+                                   ' is not sufficient to allow for the '
                                    'requested no. permutations {1}'.format(
-                                                       n_replications,
-                                                       self.n_permutations))
-        elif self.stats_type == 'independent':
-            if binom(2*n_replications, n_replications) < self.n_permutations:
+                                            n_replications,
+                                            self.options['n_perm_comp']))
+        elif self.options['stats_type'] == 'independent':
+            if (binom(2*n_replications, n_replications) <
+                self.options['n_perm_comp']):
                 raise RuntimeError('The number of replications {0} in the data'
-                                   ' are not sufficient to enable the '
+                                   ' is not sufficient to allow for the '
                                    'requested no. permutations {1}'.format(
-                                                       n_replications,
-                                                       self.n_permutations))
+                                                n_replications,
+                                                self.options['n_perm_comp']))
         else:
             raise RuntimeError('Unknown ''stats_type''!')
 
     def _check_n_subjects(self, data_set_a, data_set_b):
         """Check if no. subjects is sufficient request no. permutations."""
-        if self.stats_type == 'dependent':
+        if self.options['stats_type'] == 'dependent':
             assert len(data_set_a) == len(data_set_b), (
                     'The number of data sets is not equal between conditions.')
             n_data_sets = len(data_set_a)
-            if 2**n_data_sets < self.n_permutations:
+            if 2**n_data_sets < self.options['n_perm_comp']:
                 raise RuntimeError('The number of data sets per condition {0} '
                                    'is not sufficient to enable the '
                                    'requested no. permutations {1}'.format(
-                                                       n_data_sets,
-                                                       self.n_permutations))
-        elif self.stats_type == 'independent':
+                                                n_data_sets,
+                                                self.options['n_perm_comp']))
+        elif self.options['stats_type'] == 'independent':
             max_len = max(len(data_set_a), len(data_set_b))
             total_len = len(data_set_a) + len(data_set_b)
-            if binom(total_len, max_len) < self.n_permutations:
+            if binom(total_len, max_len) < self.options['n_perm_comp']:
                 raise RuntimeError('The total number of data sets {0} is not '
                                    'sufficient to enable the requested no. '
                                    'permutations {1}'.format(
-                                                       total_len,
-                                                       self.n_permutations))
+                                                total_len,
+                                                self.options['n_perm_comp']))
         else:
             raise RuntimeError('Unknown ''stats_type''!')
 
@@ -579,7 +565,7 @@ class NetworkComparison(NetworkAnalysis):
                 second set of raw data
         """
         self.cmi_surr = []
-        for p in range(self.n_permutations):
+        for p in range(self.options['n_perm_comp']):
             [cmi_a, cmi_b] = self._calculate_cmi_permuted(data_a, data_b)
             self.cmi_surr.append(self._calculate_diff(cmi_a, cmi_b))
 
@@ -620,7 +606,7 @@ class NetworkComparison(NetworkAnalysis):
                 second set of raw data
         """
         self.cmi_surr = []
-        for p in range(self.n_permutations):
+        for p in range(self.options['n_perm_comp']):
             self.cmi_surr.append(self._calculate_diff_of_mean(data_set_a,
                                                               data_set_b,
                                                               permute=True))
@@ -634,21 +620,21 @@ class NetworkComparison(NetworkAnalysis):
             n_sources = self.cmi_surr[0][t].shape[0]
             if n_sources == 0:
                 continue
-            surr_temp = np.zeros((self.n_permutations, n_sources))
+            surr_temp = np.zeros((self.options['n_perm_comp'], n_sources))
             significance[t] = np.zeros(n_sources, dtype=bool)
             pvalue[t] = np.empty(n_sources)
-            for p in range(self.n_permutations):
+            for p in range(self.options['n_perm_comp']):
                 surr_temp[p, :] = self.cmi_surr[p][t]
             for s in range(n_sources):
                 [sig, p] = stats._find_pvalue(statistic=self.cmi_diff[t][s],
                                               distribution=surr_temp[:, s],
-                                              alpha=self.alpha,
-                                              tail=self.tail)
+                                              alpha=self.options['alpha_comp'],
+                                              tail=self.options['tail_comp'])
                 significance[t][s] = sig
                 pvalue[t][s] = p
         return pvalue, significance
 
-    def _clean_up(self):
+    def _union_indices_to_lags(self):
         """Clean up bevor returning."""
         # convert time indices to lags for selected variables
         for t in self.union['targets']:
@@ -710,7 +696,7 @@ class NetworkComparison(NetworkAnalysis):
 
         # Swap or permute realisations of the conditioning set depending on the
         # stats type.
-        if self.stats_type == 'dependent':
+        if self.options['stats_type'] == 'dependent':
             swap = np.repeat(np.random.randint(2, size=n_repl).astype(bool),
                              n_per_repl)
             cond_a_perm[swap, :] = cond_b_real[swap, :]
@@ -718,7 +704,7 @@ class NetworkComparison(NetworkAnalysis):
             cur_val_a_perm[swap, :] = cur_val_b_real[swap, :]
             cur_val_b_perm[swap, :] = cur_val_a_real[swap, :]
 
-        elif self.stats_type == 'independent':
+        elif self.options['stats_type'] == 'independent':
             # Pool replications from both data sets and draw two samples of
             # size n_repl.
             resample_a = np.random.choice(2 * n_repl, n_repl, replace=False)
@@ -759,5 +745,37 @@ class NetworkComparison(NetworkAnalysis):
                 i_1 = i_0 + n_per_repl
         else:
             raise ValueError('Unkown "stats_type": {0}, should be "dependent" '
-                             'or "independent".'.format(self.stats_type))
+                             'or "independent".'.format(
+                                                self.options['stats_type']))
         return cond_a_perm, cur_val_a_perm, cond_b_perm, cur_val_b_perm
+
+    def _initialise(self, options):
+        """Check input and set analysis options to initial values."""
+
+        # Check if the type of comparison was specified.
+        try:
+            options['stats_type']
+        except KeyError:
+            raise KeyError('You have to provide a "stats_type": "dependent" '
+                           'or "independent".')
+
+        # Add CMI estimator to class.
+        try:
+            EstimatorClass = find_estimator(options['cmi_estimator'])
+        except KeyError:
+            raise KeyError('Please provide an estimator class or name!')
+        self._cmi_estimator = EstimatorClass(options)
+
+        # Set defaults for statistical tests.
+        options.setdefault('n_perm_comp', 10)
+        options.setdefault('alpha_comp', 0.05)
+        options.setdefault('tail_comp', 'two')
+        stats.check_n_perm(options['n_perm_comp'], options['alpha_comp'])
+        self.options = options
+
+    def _clean_up(self):
+        """Remove all attributes to make instance re-usable."""
+        del self.options
+        del self.union
+        del self.cmi_diff
+        del self.cmi_surr
