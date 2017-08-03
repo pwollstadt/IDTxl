@@ -11,13 +11,17 @@ from . import idtxl_utils as utils
 VERBOSE = True
 
 
-def network_fdr(analysis_setup, results):
+def network_fdr(analysis_options, *results):
     """Perform FDR-correction on results of network inference.
 
     Perform correction of the false discovery rate (FDR) after network
     analysis. FDR correction can either be applied at the target level
     (by correcting omnibus p-values) or at the single-link level (by correcting
     p-values of individual links between single samples and the target).
+
+    Input can be a list of partial results to combine results from parallel
+    analysis.
+
     Reference for FDR correction:
 
     Genovese, C.R., Lazar, N.A., & Nichols, T. (2002). Thresholding of
@@ -25,9 +29,8 @@ def network_fdr(analysis_setup, results):
     rate. Neuroimage, 15(4), 870-878.
 
     Args:
-        analysis_setup : MultivariateTE instance
-            information on the current analysis, can have an optional attribute
-            'opts', a dictionary with parameters for statistical testing:
+        analysis_options : dict
+            parameters for statistical testing with entries:
 
             - 'alpha_fdr' : float [optional] - critical alpha level
               (default=0.05)
@@ -35,43 +38,44 @@ def network_fdr(analysis_setup, results):
               corrected on the target level and on the single-link level
               otherwise (default=True)
 
-        results : dict
-            network inference results where each dict entry represents results
-            for one target node
+        results : list of dicts
+            network inference results from .analyse_network methods, where each
+            dict entry represents results for one target node
 
     Returns:
         dict
             input results structure pruned of non-significant links.
     """
     # Set defaults and get parameters from options dictionary
-    analysis_setup.options.setdefault('alpha_fdr', 0.05)
-    alpha = analysis_setup.options['alpha_fdr']
-    analysis_setup.options.setdefault('fdr_correct_by_target', True)
-    correct_by_target = analysis_setup.options['fdr_correct_by_target']
+    analysis_options.setdefault('alpha_fdr', 0.05)
+    alpha = analysis_options['alpha_fdr']
+    analysis_options.setdefault('correct_by_target', True)
+    correct_by_target = analysis_options['correct_by_target']
+    # TODO add updated analysis options to the results structure
 
-    # Make a copy that can be changed and returned after testing.
-    res = cp.copy(results)
+    # Combine results into single results dict (this creates a copy).
+    res = utils.combine_results(*results)
 
-    # Get candidates and their test results from the results dictionary, i.e.,
-    # collect results over targets.
+    # Collect significant source variables for all targets. Either correct
+    # p-value of whole target (all candidates), or correct p-value of
+    # individual source variables. Use targets with significant input only
+    # (determined by the omnibus test).
     pval = np.arange(0)
     target_idx = np.arange(0).astype(int)
     cands = []
-    if correct_by_target:  # correct p-value of whole target (all candidates)
+    if correct_by_target:  # whole target
         for target in res.keys():
-            if not res[target]['omnibus_sign']:  # skip if not significant
-                continue
-            pval = np.append(pval, res[target]['omnibus_pval'])
-            target_idx = np.append(target_idx, target)
-    else:   # correct p-value of single candidates
+            if res[target]['omnibus_sign']:
+                pval = np.append(pval, res[target]['omnibus_pval'])
+                target_idx = np.append(target_idx, target)
+    else:  # individual variables
         for target in res.keys():
-            if not res[target]['omnibus_sign']:  # skip if not significant
-                continue
-            n_sign = res[target]['selected_sources_pval'].size
-            pval = np.append(pval, res[target]['selected_sources_pval'])
-            target_idx = np.append(target_idx,
-                                   np.ones(n_sign) * target).astype(int)
-            cands = cands + res[target]['selected_vars_sources']
+            if res[target]['omnibus_sign']:
+                n_sign = res[target]['selected_sources_pval'].size
+                pval = np.append(pval, res[target]['selected_sources_pval'])
+                target_idx = np.append(target_idx,
+                                       np.ones(n_sign) * target).astype(int)
+                cands = cands + res[target]['selected_vars_sources']
 
     if pval.size == 0:
         print('No links in final results. Return ...')
@@ -99,9 +103,7 @@ def network_fdr(analysis_setup, results):
     # Go over list of all candidates and remove them from the results dict.
     sign = sign[sort_idx]
     for s in range(sign.shape[0]):
-        if sign[s]:
-            continue
-        else:  # remove non-significant candidate and it's p-value from results
+        if not sign[s]:
             if correct_by_target:
                 t = target_idx[s]
                 res[t]['selected_vars_full'] = res[t]['selected_vars_target']
