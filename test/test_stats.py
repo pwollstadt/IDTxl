@@ -88,6 +88,7 @@ def test_network_fdr():
 
     for correct_by_target in [True, False]:
         opts = {
+            'cmi_estimator': 'JidtKraskovCMI',
             'alpha_fdr': 0.05,
             'max_lag_sources': 3,
             'min_lag_sources': 1,
