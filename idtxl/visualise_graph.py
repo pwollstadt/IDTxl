@@ -226,7 +226,7 @@ def plot_mute_graph():
     # http://stackoverflow.com/questions/10104700/how-to-set-networkx-edge-labels-offset-to-avoid-label-overlap
 
 
-def print_res_to_console(res, fdr=True, find_u='max_te'):
+def print_res_to_console(data, res, fdr=True, find_u='max_te'):
     """Print results of network inference to console.
 
     Print results of network inference to console. Output looks like this:
@@ -251,6 +251,8 @@ def print_res_to_console(res, fdr=True, find_u='max_te'):
            significance)
 
     Args:
+        data : Data() instance
+            raw data
         res : dict
             output of network inference algorithm, e.g., MultivariateTE
         fdr : bool
@@ -266,13 +268,13 @@ def print_res_to_console(res, fdr=True, find_u='max_te'):
             nodes, entries in the matrix denote source-target-delays
     """
     # Generate adjacency matrix from results.
-    adj_matrix = _get_adj_matrix(res, fdr, find_u)
-    n = adj_matrix.shape[0]
+    n_nodes = data.n_processes
+    adj_matrix = _get_adj_matrix(res, n_nodes, fdr, find_u)
 
     # Print link to console.
     link_found = False
-    for s in range(n):
-        for t in range(n):
+    for s in range(n_nodes):
+        for t in range(n_nodes):
             if adj_matrix[s, t]:
                 print('\t{0} -> {1}, u: {2}'.format(s, t, adj_matrix[s, t]))
                 link_found = True
@@ -282,7 +284,7 @@ def print_res_to_console(res, fdr=True, find_u='max_te'):
     return adj_matrix
 
 
-def _get_adj_matrix(res, fdr=True, find_u='max_te'):
+def _get_adj_matrix(res, n_nodes, fdr=True, find_u='max_te'):
     """Return adjacency matrix as numpy array.
 
     Return results of network inference as directed adjacency matrix. Output is
@@ -302,6 +304,8 @@ def _get_adj_matrix(res, fdr=True, find_u='max_te'):
     Args:
         res : dict
             output of network inference algorithm, e.g., MultivariateTE
+        n_nodes : int
+            number of nodes in the network
         fdr : bool
             print FDR-corrected results (default=True)
         find_u : str
@@ -328,7 +332,7 @@ def _get_adj_matrix(res, fdr=True, find_u='max_te'):
             pass
 
     targets = list(r.keys())
-    adj_matrix = np.zeros((max(targets) + 1, max(targets) + 1)).astype(int)
+    adj_matrix = np.zeros((n_nodes + 1, n_nodes + 1)).astype(int)
 
     for t in targets:
         all_vars_sources = np.array([x[0] for x in
