@@ -361,7 +361,7 @@ class Data():
         """
         return self._get_data_slice(process, shuffle=True)
 
-    def slice_permute_samples(self, process, perm_opts=None):
+    def slice_permute_samples(self, process, perm_opts):
         """Return slice of data with permuted samples (repl. stays intact).
 
         Create surrogate data by permuting data in a slice over samples (time)
@@ -396,13 +396,13 @@ class Data():
         Args:
             process : int
                 process for which to return data slice
-            perm_opts : dict [optional]
+            perm_opts : dict
                 options specifying the allowed permutations:
 
-                - perm_type : str [optional]
+                - perm_type : str
                   permutation type, can be
 
-                    - 'circular' (default): shifts time series by a random
+                    - 'circular': shifts time series by a random
                       number of samples
                     - 'block': swaps blocks of samples,
                     - 'local': swaps samples within a given range, or
@@ -481,7 +481,7 @@ class Data():
             raise TypeError('idx needs to be a list of tuples.')
         return self.get_realisations(current_value, idx_list, shuffle=True)
 
-    def permute_samples(self, current_value, idx_list, perm_opts=None):
+    def permute_samples(self, current_value, idx_list, perm_opts):
         """Return realisations with permuted samples (repl. stays intact).
 
         Create surrogate data by permuting realisations over samples (time)
@@ -519,13 +519,13 @@ class Data():
                 index of the current_value in the data
             idx_list : list of tuples
                 indices of variables
-            perm_opts : dict [optional]
+            perm_opts : dict
                 options specifying the allowed permutations:
 
-                - perm_type : str [optional]
+                - perm_type : str
                   permutation type, can be
 
-                    - 'random' (default): swaps samples at random,
+                    - 'random': swaps samples at random,
                     - 'circular': shifts time series by a random
                       number of samples
                     - 'block': swaps blocks of samples,
@@ -537,16 +537,17 @@ class Data():
                     - if perm_type == 'circular':
                       'max_shift': int
                           the maximum number of samples for shifting
-                          (default=n/2)
+                          (e.g., number of samples / 2)
                     - if perm_type == 'block':
                       'block_size' : int
-                          no. samples per block (default=n/10)
+                          no. samples per block (e.g., number of samples / 10)
                       'perm_range' : int
-                          range in which blocks can be swapped (default=max)
+                          range in which blocks can be swapped (e.g., number
+                          of samples / block_size)
                     - if perm_type == 'local':
                       'perm_range' : int
                           range in samples over which realisations can be
-                          permuted (default=n/10)
+                          permuted (e.g., number of samples / 10)
 
         Returns:
             numpy array
@@ -563,8 +564,6 @@ class Data():
             replications is too small to allow a sufficient number of
             permutations for the generation of surrogate data.
         """
-        if perm_opts is None:
-            perm_opts = dict()
         [realisations, replication_idx] = self.get_realisations(current_value,
                                                                 idx_list)
         n_samples = sum(replication_idx == 0)
@@ -579,67 +578,22 @@ class Data():
             perm_idx[mask] = perm
         return realisations_perm, perm_idx
 
-    def _get_permutation_samples(self, n_samples, perm_opts=None):
+    def _get_permutation_samples(self, n_samples, perm_opts):
         """Generate permutation of n samples.
 
-        Generate a permutation of n samples under various, optional
-        restrictions:
-
-        original data:
-            rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3 ...
-            sample: 1 2 3 4 5 6 7 8  1 2 3 4 5 6 7 8  1 2 3 4 5 6 7 8 ...
-
-        circular shift (default) by 2, 6, and 4 samples:
-            rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3  ...
-            sample: 7 8 1 2 3 4 5 6  3 4 5 6 7 8 1 2  5 6 7 8 1 2 3 4  ...
-
-        permute blocks of 3 samples:
-            rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3 ...
-            sample: 4 5 6 7 8 1 2 3  1 2 3 7 8 4 5 6  7 8 4 5 6 1 2 3 ...
-
-        permute data locally within a range of 4 samples:
-            rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3 ...
-            sample: 1 2 4 3 8 5 6 7  4 1 2 3 5 7 8 6  3 1 2 4 8 5 6 7 ...
-
-        random permutation:
-            rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3  ...
-            sample: 4 2 5 7 1 3 2 6  4 2 5 7 1 3 2 6  4 2 5 7 1 3 2 6  ...
-
-        Permuting samples is the fall-back option for surrogate creation if the
-        number of replications is too small to allow for a sufficient number of
-        permutations for the generation of surrogate data.
+        Generate a permutation of n samples under various, possible
+        restrictions. Permuting samples is the fall-back option for surrogate
+        creation if the number of replications is too small to allow for a
+        sufficient number of permutations for the generation of surrogate data.
+        For a detailed descriptions of permutation strategies see the
+        documentation of permute_samples().
 
         Args:
             n_samples : int
                 length of the permutation
-            perm_opts : dict [optional]
-                options specifying the allowed permutations:
-
-                - perm_type : str [optional]
-                  permutation type, can be
-
-                    - 'random': swaps samples at random (default),
-                    - 'circular': shifts time series by a random
-                      number of samples
-                    - 'block': swaps blocks of samples, or
-                    - 'local': swaps samples within a given range
-
-                - additional options depending on the perm_type (n is the
-                  number of samples):
-
-                    - if perm_type == 'circular':
-                      'max_shift': int
-                          the maximum number of samples for shifting
-                          (default=n/2)
-                    - if perm_type == 'block':
-                      'block_size' : int
-                          no. samples per block (default=n/10)
-                      'perm_range' : int
-                          range in which blocks can be swapped (default=max)
-                    - if perm_type == 'local':
-                      'perm_range' : int
-                          range in samples over which realisations can be
-                          permuted (default=n/10)
+            perm_opts : dict
+                options specifying the allowed permutations, see documentation
+                of permute_samples()
 
         Returns:
             numpy array
@@ -647,9 +601,7 @@ class Data():
             numpy Array
                 permuted indices of samples
         """
-        if perm_opts is None:
-            perm_opts = dict()
-        perm_type = perm_opts.get('perm_type', 'random')
+        perm_type = perm_opts['perm_type']
 
         # Get the permutaion 'mask' for one replication (the same mask is then
         # applied to each replication).
@@ -657,25 +609,24 @@ class Data():
             perm = np.random.permutation(n_samples)
 
         elif perm_type == 'circular':
-            max_shift = perm_opts.get('max_shift', int(round(n_samples / 2)))
+            max_shift = perm_opts['max_shift']
+            if type(max_shift) is not int:
+                raise TypeError(' ''max_shift'' has to be an int.')
             perm = self._circular_shift(n_samples, max_shift)[0]
 
         elif perm_type == 'block':
-            block_size = perm_opts.get('block_size',
-                                       int(round(n_samples / 10)))
-            perm_range = perm_opts.get('perm_range',
-                                       int(np.ceil(n_samples / block_size)))
+            block_size = perm_opts['block_size']
+            perm_range = perm_opts['perm_range']
+            if type(block_size) is not int:
+                raise TypeError(' ''block_size'' has to be an int.')
+            if type(perm_range) is not int:
+                raise TypeError(' ''perm_range'' has to be an int.')
             perm = self._swap_blocks(n_samples, block_size, perm_range)
 
         elif perm_type == 'local':
-            perm_range = perm_opts.get('perm_range',
-                                       int(round(n_samples / 10)))
-            if type(perm_range) is str:
-                if perm_range != 'max':
-                    raise ValueError('Got {0} as input for perm_range. For '
-                                     'permutation strategy ''local'' either an'
-                                     ' int or ''max'' has to be provided.'
-                                     .format(perm_range))
+            perm_range = perm_opts['perm_range']
+            if type(perm_range) is not int:
+                raise TypeError(' ''perm_range'' has to be an int.')
             perm = self._swap_local(n_samples, perm_range)
 
         else:
