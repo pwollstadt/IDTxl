@@ -184,15 +184,18 @@ def test_data_type():
     assert dat.data_type is orig_type, 'Data type did not change.'
     assert issubclass(type(dat.data[0, 0, 0]), np.integer), ('Data type is not'
                                                              ' an int.')
+    opts = {'permute_in_time': True, 'perm_type': 'random'}
     surr = stats._get_surrogates(data=dat,
                                  current_value=(0, 5),
                                  idx_list=[(1, 3), (2, 4)],
-                                 n_perm=20)
+                                 n_perm=20,
+                                 perm_opts=opts)
     assert issubclass(type(surr[0, 0]), np.integer), ('Realisations type is '
                                                       'not an int.')
     surr = stats._generate_spectral_surrogates(data=dat,
                                                scale=1,
-                                               n_perm=20)
+                                               n_perm=20,
+                                               perm_opts=opts)
     assert issubclass(type(surr[0, 0, 0]), np.integer), ('Realisations type is'
                                                          ' not an int.')
 
@@ -204,12 +207,14 @@ def test_data_type():
     surr = stats._get_surrogates(data=dat,
                                  current_value=(0, 5),
                                  idx_list=[(1, 3), (2, 4)],
-                                 n_perm=20)
+                                 n_perm=20,
+                                 perm_opts=opts)
     assert issubclass(type(surr[0, 0]), np.float), ('Realisations type is not '
                                                     'a float.')
     surr = stats._generate_spectral_surrogates(data=dat,
                                                scale=1,
-                                               n_perm=20)
+                                               n_perm=20,
+                                               perm_opts=opts)
     assert issubclass(type(surr[0, 0, 0]), np.float), ('Realisations type is '
                                                        'not a float.')
 

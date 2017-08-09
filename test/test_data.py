@@ -157,39 +157,22 @@ def test_permute_replications():
         assert (np.unique(perm[i:i + rem, 0]) == samples[0:rem]).all(), (
                         'The remainder did not contain the same realisations.')
 
-    # Test assertions that perm_range is not too low or too high.
-    perm_opts = {
-        'perm_type': 'local',
-        'perm_range': 1
-    }
-    with pytest.raises(AssertionError):
-        data.permute_samples(current_value=current_value,
-                             idx_list=l,
-                             perm_opts=perm_opts)
-    perm_opts['perm_range'] = np.inf
-    with pytest.raises(AssertionError):
-        data.permute_samples(current_value=current_value,
-                             idx_list=l,
-                             perm_opts=perm_opts)
-    # Test ValueError if a string other than 'max' is given for perm_range.
-    perm_opts['perm_range'] = 'foo'
-    with pytest.raises(ValueError):
-        data.permute_samples(current_value=current_value,
-                             idx_list=l,
-                             perm_opts=perm_opts)
-
 
 def test_permute_samples():
     """Test surrogate creation by permuting samples."""
     n = 20
     dat = Data(np.arange(n), 's', normalise=False)
 
+    # Test random permutation
+    opts = {'perm_type': 'random'}
     perm = dat.permute_samples(current_value=(0, 0),
                                idx_list=[(0, 0)],
-                               perm_opts=None)[0]
+                               perm_opts=opts)[0]
     assert (sorted(np.squeeze(perm)) == np.arange(n)).all(), (
                             'Permutation did not contain the correct values.')
-    opts = {'perm_type': 'circular'}
+
+    # Test circular shifting
+    opts = {'perm_type': 'circular', 'max_shift': 4}
     perm = dat.permute_samples(current_value=(0, 0),
                                idx_list=[(0, 0)],
                                perm_opts=opts)[0]
@@ -197,7 +180,10 @@ def test_permute_samples():
     assert (np.squeeze(np.vstack((perm[idx_start:], perm[:idx_start]))) ==
             np.arange(n)).all(), ('Circular shifting went wrong.')
 
-    opts = {'perm_type': 'block'}
+    # Test shifting of data blocks
+    block_size = round(n / 10)
+    opts = {'perm_type': 'block', 'block_size': block_size,
+            'perm_range': round(n / block_size)}
     perm = dat.permute_samples(current_value=(0, 0),
                                idx_list=[(0, 0)],
                                perm_opts=opts)[0]
@@ -205,7 +191,10 @@ def test_permute_samples():
     for b in range(0, n, block_size):
         assert perm[b + 1] - perm[b] == 1, 'Block permutation went wrong.'
 
-    opts = {'perm_type': 'block', 'block_size': 3}
+    # Test shifting of data blocks with n % block_size != 0
+    block_size = 3
+    opts = {'perm_type': 'block', 'block_size': block_size,
+            'perm_range': round(n / block_size)}
     perm = dat.permute_samples(current_value=(0, 0),
                                idx_list=[(0, 0)],
                                perm_opts=opts)[0]
@@ -216,13 +205,54 @@ def test_permute_samples():
     perm = dat.permute_samples(current_value=(0, 0),
                                idx_list=[(0, 0)],
                                perm_opts=opts)[0]
-    opts = {'perm_type': 'local'}
+
+    # Test local shifting
+    perm_range = int(round(n / 10))
+    opts = {'perm_type': 'local', 'perm_range': perm_range}
     perm = dat.permute_samples(current_value=(0, 0),
                                idx_list=[(0, 0)],
                                perm_opts=opts)[0]
-    perm_range = int(round(n / 10))
     for b in range(0, n, perm_range):
-        assert abs(perm[b + 1] - perm[b]) == 1, 'Block permutation went wrong.'
+        assert abs(perm[b + 1] - perm[b]) == 1, 'Local shifting went wrong.'
+
+    # Test assertions that perm_range is not too low or too high.
+    current_value = (0, 3)
+    l = [(0, 0), (0, 1), (0, 2)]
+    perm_opts = {'perm_type': 'local', 'perm_range': 1}
+    # Test Assertion if perm_range too small
+    with pytest.raises(AssertionError):
+        dat.permute_samples(current_value=current_value,
+                            idx_list=l,
+                            perm_opts=perm_opts)
+
+    # Test TypeError if opts are no integers
+    perm_opts['perm_range'] = np.inf
+    with pytest.raises(TypeError):
+        dat.permute_samples(current_value=current_value,
+                            idx_list=l,
+                            perm_opts=perm_opts)
+    perm_opts['perm_range'] = 'foo'
+    with pytest.raises(TypeError):
+        dat.permute_samples(current_value=current_value,
+                            idx_list=l,
+                            perm_opts=perm_opts)
+    perm_opts['perm_type'] = 'block'
+    perm_opts['block_size'] = 3
+    with pytest.raises(TypeError):
+        dat.permute_samples(current_value=current_value,
+                            idx_list=l,
+                            perm_opts=perm_opts)
+    perm_opts['block_size'] = 3.5
+    with pytest.raises(TypeError):
+        dat.permute_samples(current_value=current_value,
+                            idx_list=l,
+                            perm_opts=perm_opts)
+    perm_opts['perm_type'] = 'circular'
+    perm_opts['max_shift'] = 3.5
+    with pytest.raises(TypeError):
+        dat.permute_samples(current_value=current_value,
+                            idx_list=l,
+                            perm_opts=perm_opts)
 
 
 def test_get_data_slice():
@@ -327,10 +357,11 @@ def test_data_type():
     sl = dat._get_data_slice(0)[0]
     assert issubclass(type(sl[0, 0]), np.integer), ('Data slice type is not an'
                                                     ' int.')
-    sl_perm = dat.slice_permute_samples(0)[0]
+    opts = {'perm_type': 'random'}
+    sl_perm = dat.slice_permute_samples(0, opts)[0]
     assert issubclass(type(sl_perm[0, 0]), np.integer), ('Permuted data slice '
                                                          'type is not an int.')
-    samples = dat.permute_samples((0, 5), [(1, 1), (1, 3)])[0]
+    samples = dat.permute_samples((0, 5), [(1, 1), (1, 3)], opts)[0]
     assert issubclass(type(samples[0, 0]), np.integer), ('Permuted samples '
                                                          'type is not an int.')
 

@@ -427,10 +427,9 @@ def test_p_value_union():
         'n_perm_min_stat': 50,
         'n_perm_omnibus': 200,
         'n_perm_max_seq': 50,
-        'tail': 'one',
         'n_perm_comp': 6,
         'alpha_comp': 0.2,
-        'tail_comp': 'one',
+        'tail_comp': 'one_bigger',
         'stats_type': 'independent'
         }
     comp = NetworkComparison()
