@@ -62,12 +62,15 @@ def network_fdr(analysis_options, *results):
     # (determined by the omnibus test).
     pval = np.arange(0)
     target_idx = np.arange(0).astype(int)
+    n_perm = np.arange(0).astype(int)
     cands = []
     if correct_by_target:  # whole target
         for target in res.keys():
             if res[target]['omnibus_sign']:
                 pval = np.append(pval, res[target]['omnibus_pval'])
                 target_idx = np.append(target_idx, target)
+                n_perm = np.append(n_perm,
+                                   res[target]['options']['n_perm_max_seq'])
     else:  # individual variables
         for target in res.keys():
             if res[target]['omnibus_sign']:
@@ -76,6 +79,8 @@ def network_fdr(analysis_options, *results):
                 target_idx = np.append(target_idx,
                                        np.ones(n_sign) * target).astype(int)
                 cands = cands + res[target]['selected_vars_sources']
+                n_perm = np.append(n_perm,
+                                   res[target]['options']['n_perm_max_seq'])
 
     if pval.size == 0:
         print('No links in final results. Return ...')
@@ -93,6 +98,14 @@ def network_fdr(analysis_options, *results):
     else:
         thresh = ((np.arange(1, n + 1) / n) * alpha /
                   (np.log(n) + np.e))  # aprx. harmonic sum with Euler's number
+
+    # If the number of permutations for calculating p-values for individual
+    # variables is too low, return without performing any correction.
+    if (1 / min(n_perm)) > thresh:
+        print('WARNING: Number of permutations (''n_perm_max_seq'') for at '
+              'least one target is too low to allow for FDR correction '
+              '(threshold {0}).'.format(thresh))
+        return None
 
     # Compare data to threshold.
     sign = pval <= thresh
