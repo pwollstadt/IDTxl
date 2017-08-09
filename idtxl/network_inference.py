@@ -54,7 +54,6 @@ class NetworkInference(NetworkAnalysis):
         self.sign_sign_sources = None
         self.pvalue_omnibus = None
         self.pvalues_sign_sources = None
-        self._min_stats_surr_table = None
         super().__init__()
 
     def _initialise(self, options, data, sources, target):
@@ -316,3 +315,15 @@ class NetworkInference(NetworkAnalysis):
         self._append_selected_vars(cond,
                                    data.get_realisations(self.current_value,
                                                          cond)[0])
+
+    def _reset(self):
+        """Reset instance after analysis."""
+        self.__init__()
+        del self.options
+        del self.source_set
+        del self.pvalues_sign_sources
+        del self.te_sign_sources
+        del self.te_omnibus
+        del self.pvalue_omnibus
+        del self.sign_omnibus
+        del self._cmi_estimator

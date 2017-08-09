@@ -24,6 +24,7 @@ class NetworkAnalysis():
         self.selected_vars_target = []
         self._current_value_realisations = None
         self._selected_vars_realisations = None
+        self._min_stats_surr_table = None
 
     @property
     def current_value(self):
@@ -303,11 +304,3 @@ class NetworkAnalysis():
         else:
             self.selected_vars_sources.pop(
                                         self.selected_vars_sources.index(idx))
-
-    def _clean_up(self):
-        """Remove temporary data (realisations) at the end of the analysis."""
-        self._current_value_realisations = None
-        self._selected_vars_sources_realisations = None
-        self._selected_vars_target_realisations = None
-        self._current_value_realisations = None
-        self._min_stats_surr_table = None
