@@ -267,7 +267,6 @@ class MultivariateTE(NetworkInference):
                     self._idx_to_lag(self.selected_vars_sources)))
             print('final target samples: {0}'.format(
                     self._idx_to_lag(self.selected_vars_target)))
-        self._clean_up()  # remove realisations and min_stats surrogate table
         results = {
             'target': self.target,
             'sources_tested': self.source_set,
@@ -284,6 +283,7 @@ class MultivariateTE(NetworkInference):
             'omnibus_pval': self.pvalue_omnibus,
             'omnibus_sign': self.sign_omnibus
             }
+        self._reset()  # remove attributes
         return results
 
     def _prune_candidates(self, data):

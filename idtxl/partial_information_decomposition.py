@@ -179,6 +179,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         results['target'] = self.target
         results['source_1'] = self._idx_to_lag([self.sources[0]])
         results['source_2'] = self._idx_to_lag([self.sources[1]])
+        self._reset()
         return results
 
     def _initialise(self, options, data, target, sources):
@@ -269,3 +270,10 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         # TODO make mi_against_surrogates in stats more generic, such that
         # it becomes an arbitrary permutation test where one arguemnt gets
         # shuffled and then all arguents are passed to the provided estimator
+
+    def _reset(self):
+        """Reset instance after analysis."""
+        self.__init__()
+        del self.results
+        del self.options
+        del self._pid_estimator

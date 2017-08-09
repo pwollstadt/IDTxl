@@ -122,7 +122,7 @@ class NetworkComparison(NetworkAnalysis):
             'options': self.options
             }
 
-        self._clean_up()  # remove attributes
+        self._reset()  # remove attributes
         return results
 
     def compare_between(self, options, network_set_a, network_set_b,
@@ -188,7 +188,7 @@ class NetworkComparison(NetworkAnalysis):
             'options': self.options
             }
 
-        self._clean_up()  # remove attributes
+        self._reset()  # remove attributes
         return results
 
     def _check_n_replications(self, data_a, data_b):
@@ -773,9 +773,11 @@ class NetworkComparison(NetworkAnalysis):
         stats.check_n_perm(options['n_perm_comp'], options['alpha_comp'])
         self.options = options
 
-    def _clean_up(self):
-        """Remove all attributes to make instance re-usable."""
+    def _reset(self):
+        """Reset instance after analysis."""
+        self.__init__()
         del self.options
         del self.union
         del self.cmi_diff
         del self.cmi_surr
+        del self._cmi_estimator

@@ -193,7 +193,6 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         if VERBOSE:
             print('final conditional samples: {0}'.format(
                     self._idx_to_lag(self.selected_vars_full)))
-        self._clean_up()  # remove realisations and min_stats surrogate table
         results = {
             'current_value': self.current_value,
             'selected_vars': self._idx_to_lag(self.selected_vars_full),
@@ -201,6 +200,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             'ais_pval': self.pvalue,
             'ais_sign': self.sign,
             'options': self.options}
+        self._reset()  # remove realisations and min_stats surrogate table
         return results
 
     def _initialise(self, options, data, process):
@@ -227,9 +227,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         self._cmi_estimator = EstimatorClass(options)
 
         # Initialise class attributes.
-        self.pvalue = None
-        self.sign = False
-        self.ais = None
+
         self.options = options
         self._min_stats_surr_table = None
 
@@ -466,3 +464,12 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         self._append_selected_vars(cond,
                                    data.get_realisations(self.current_value,
                                                          cond)[0])
+
+    def _reset(self):
+        """Reset instance after analysis."""
+        self.__init__()
+        del self.pvalue
+        del self.sign
+        del self.ais
+        del self.options
+        del self._cmi_estimator
