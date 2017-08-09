@@ -370,12 +370,14 @@ class MultivariateTE(NetworkInference):
 
     def _test_final_conditional(self, data):  # TODO test this!
         """Perform statistical test on the final conditional set."""
+        self.te_omnibus = None
+        self.sign_omnibus = False
+        self.pvalue_omnibus = None
+        self.pvalues_sign_sources = None
+        self.te_sign_sources = None
+
         if not self.selected_vars_sources:
             print('---------------------------- no sources found')
-            self.te_omnibus = None
-            self.sign_omnibus = False
-            self.pvalue_omnibus = None
-            return
         else:
             print(self._idx_to_lag(self.selected_vars_full))
             [s, p, te] = stats.omnibus_test(self, data)
