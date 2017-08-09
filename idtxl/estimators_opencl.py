@@ -183,8 +183,13 @@ class OpenCLKraskovMI(OpenCLKraskov):
         else:
             max_mem = 0.9 * self.devices[self.opts['gpuid']].global_mem_size
 
+        if self.opts['debug']:
+            print('Memory per chunk: {0} MB, GPU global memory: {1} MB'.format(
+                    mem_chunk / 1024 / 1024, max_mem / 1024 / 1024))
+
         if mem_chunk > max_mem:
-            raise RuntimeError('Size of single chunk exceeds GPU global memory.')
+            raise RuntimeError('Size of single chunk exceeds GPU global '
+                               'memory.')
 
         max_chunks_per_run = np.floor(max_mem/mem_chunk).astype(int)
         chunks_per_run = min(max_chunks_per_run, n_chunks)
@@ -197,13 +202,13 @@ class OpenCLKraskovMI(OpenCLKraskov):
 
         for r in range(0, n_chunks, chunks_per_run):
             startidx = r*chunklength
-            stopidx  = min(r+chunks_per_run, n_chunks)*chunklength
-            subset1 = var1[startidx:stopidx,:]
-            subset2 = var2[startidx:stopidx,:]
+            stopidx = min(r+chunks_per_run, n_chunks)*chunklength
+            subset1 = var1[startidx:stopidx, :]
+            subset2 = var2[startidx:stopidx, :]
             res = self._estimate_single_run(subset1, subset2, chunks_per_run)
             if self.opts['debug']:
-                mi_array   = np.concatenate((mi_array,   res[0]))
-                distances  = np.concatenate((distances,  res[1]))
+                mi_array = np.concatenate((mi_array,   res[0]))
+                distances = np.concatenate((distances,  res[1]))
                 count_var1 = np.concatenate((count_var1, res[2]))
                 count_var2 = np.concatenate((count_var2, res[3]))
             else:
@@ -213,7 +218,6 @@ class OpenCLKraskovMI(OpenCLKraskov):
             return mi_array, distances, count_var1, count_var2
         else:
             return mi_array
-
 
     def _estimate_single_run(self, var1, var2, n_chunks=1):
         """Estimate mutual information in a single GPU run.
@@ -424,8 +428,13 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         else:
             max_mem = 0.9 * self.devices[self.opts['gpuid']].global_mem_size
 
+        if self.opts['debug']:
+            print('Memory per chunk: {0} MB, GPU global memory: {1} MB'.format(
+                    mem_chunk / 1024 / 1024, max_mem / 1024 / 1024))
+
         if mem_chunk > max_mem:
-            raise RuntimeError('Size of single chunk exceeds GPU global memory.')
+            raise RuntimeError('Size of single chunk exceeds GPU global '
+                               'memory.')
 
         max_chunks_per_run = np.floor(max_mem/mem_chunk).astype(int)
         chunks_per_run = min(max_chunks_per_run, n_chunks)
@@ -439,14 +448,15 @@ class OpenCLKraskovCMI(OpenCLKraskov):
 
         for r in range(0, n_chunks, chunks_per_run):
             startidx = r*chunklength
-            stopidx  = min(r+chunks_per_run, n_chunks)*chunklength
-            subset1 = var1[startidx:stopidx,:]
-            subset2 = var2[startidx:stopidx,:]
-            subset3 = conditional[startidx:stopidx,:]
-            res = self._estimate_single_run(subset1, subset2, subset3, chunks_per_run)
+            stopidx = min(r+chunks_per_run, n_chunks)*chunklength
+            subset1 = var1[startidx:stopidx, :]
+            subset2 = var2[startidx:stopidx, :]
+            subset3 = conditional[startidx:stopidx, :]
+            res = self._estimate_single_run(subset1, subset2, subset3,
+                                            chunks_per_run)
             if self.opts['debug']:
-                cmi_array  = np.concatenate((cmi_array,  res[0]))
-                distances  = np.concatenate((distances,  res[1]))
+                cmi_array = np.concatenate((cmi_array,  res[0]))
+                distances = np.concatenate((distances,  res[1]))
                 count_var1 = np.concatenate((count_var1, res[2]))
                 count_var2 = np.concatenate((count_var2, res[3]))
                 count_cond = np.concatenate((count_cond, res[4]))
