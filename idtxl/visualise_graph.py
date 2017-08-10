@@ -2,13 +2,12 @@
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
 from .multivariate_te import MultivariateTE
 
 VERBOSE = False
 
 
-def generate_network_graph(res, fdr=True, find_u='max_te'):
+def generate_network_graph(res, n_nodes, fdr=True, find_u='max_te'):
     """Generate graph object for an inferred network.
 
     Generate a weighted, directed graph object from the network of inferred
@@ -29,6 +28,8 @@ def generate_network_graph(res, fdr=True, find_u='max_te'):
     Args:
         res : dict
             output of multivariate_te.analyse_network()
+        n_nodes : int
+            number of nodes in the network
         fdr : bool
             print FDR-corrected results (default=True)
         find_u : str
@@ -40,7 +41,7 @@ def generate_network_graph(res, fdr=True, find_u='max_te'):
         instance of a directed graph class from the networkx
         package (DiGraph)
     """
-    adj_matrix = _get_adj_matrix(res, fdr, find_u)
+    adj_matrix = _get_adj_matrix(res, n_nodes, fdr, find_u)
     return nx.from_numpy_matrix(adj_matrix, create_using=nx.DiGraph())
 
 
@@ -94,7 +95,7 @@ def generate_source_graph(res, sign_sources=True):
     return graph
 
 
-def plot_network(res, fdr=True, find_u='max_te'):
+def plot_network(res, n_nodes, fdr=True, find_u='max_te'):
     """Plot network of multivariate TE between processes.
 
     Plot graph of the network of (multivariate) interactions between
@@ -105,29 +106,47 @@ def plot_network(res, fdr=True, find_u='max_te'):
     Args:
         res : dict
             output of multivariate_te.analyse_network()
+        n_nodes : int
+            number of nodes in the network
+        fdr : bool
+            print FDR-corrected results (default=True)
+        find_u : str
+            use TE value ('max_te') or p-value ('max_p') to determine the
+            variable with maximum information transfer into the target in order
+            to determine the source-target delay (default='max_te')
 
     Returns:
         instance of a directed graph class from the networkx
         package (DiGraph)
     """
-    graph = generate_network_graph(res, fdr, find_u)
-    print(graph.node)
-    f, (ax1, ax2) = plt.subplots(1, 2)
+    graph = generate_network_graph(res, n_nodes, fdr, find_u)
     adj_matrix = nx.to_numpy_matrix(graph)
-    cmap = sns.light_palette('cadetblue', n_colors=2, as_cmap=True)
-    sns.heatmap(adj_matrix > 0, cmap=cmap, cbar=False, ax=ax1,
-                square=True, linewidths=1, xticklabels=graph.nodes(),
-                yticklabels=graph.nodes())
-    ax1.xaxis.tick_top()
-    plt.setp(ax1.yaxis.get_majorticklabels(), rotation=0)
-    nx.draw_circular(graph, with_labels=True, node_size=500, alpha=1.0, ax=ax2,
-                     node_color='cadetblue', hold=True, font_size=14,
+    max_u = np.max(adj_matrix)
+    print(graph.node)
+
+    plt.figure(figsize=(10, 5))
+    # Plot graph.
+    ax1 = plt.subplot(121)
+    nx.draw_circular(graph, with_labels=True, node_size=600, alpha=1.0, ax=ax1,
+                     node_color='Gainsboro', hold=True, font_size=14,
                      font_weight='bold')
     pos = nx.circular_layout(graph)
     edge_labels = nx.get_edge_attributes(graph, 'weight')
     print(edge_labels)
     nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels,
-                                 font_size=13, font_weight='bold')
+                                 font_size=13)  # font_weight='bold'
+
+    # Plot adjacency matrix.
+    ax2 = plt.subplot(122)
+    plt.imshow(adj_matrix, cmap="gray_r", interpolation="none")
+    # Make colorbar match the image in size:
+    # https://stackoverflow.com/a/26720422
+    cbar = plt.colorbar(fraction=0.046, pad=0.04,
+                        ticks=np.arange(0, max_u + 1).astype(int))
+    cbar.set_label('delay [samples]', rotation=90)
+    plt.xticks(np.arange(adj_matrix.shape[1]))
+    plt.yticks(np.arange(adj_matrix.shape[0]))
+    ax2.xaxis.tick_top()
     plt.show()
     return graph
 
