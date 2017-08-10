@@ -14,8 +14,6 @@ import numpy as np
 from . import stats
 from .network_inference import NetworkInference
 
-VERBOSE = True
-
 
 class MultivariateTE(NetworkInference):
     """Set up a network analysis using multivariate transfer entropy.
@@ -139,9 +137,10 @@ class MultivariateTE(NetworkInference):
                                                'same length')
 
         # Perform TE estimation for each target individually
+        options.setdefault('verbose', True)
         results = {}
         for t in range(len(targets)):
-            if VERBOSE:
+            if options['verbose']:
                 print('####### analysing target with index {0} from list {1}'
                       .format(t, targets))
             results[targets[t]] = self.analyse_single_target(options,
@@ -261,7 +260,7 @@ class MultivariateTE(NetworkInference):
         self._test_final_conditional(data)
 
         # Clean up and return results.
-        if VERBOSE:
+        if self.options['verbose']:
             print('final source samples: {0}'.format(
                     self._idx_to_lag(self.selected_vars_sources)))
             print('final target samples: {0}'.format(
@@ -345,7 +344,7 @@ class MultivariateTE(NetworkInference):
             # Test min TE for significance with minimum statistics.
             te_min_candidate = min(temp_te)
             min_candidate = self.selected_vars_sources[np.argmin(temp_te)]
-            if VERBOSE:
+            if self.options['verbose']:
                 print('testing {0} from candidate set {1}'.format(
                                 self._idx_to_lag([min_candidate])[0],
                                 self._idx_to_lag(self.selected_vars_sources)),
@@ -359,11 +358,11 @@ class MultivariateTE(NetworkInference):
             # candidate. If the minimum is significant, break, all other
             # sources will be significant as well (b/c they have higher TE).
             if not significant:
-                if VERBOSE:
+                if self.options['verbose']:
                     print(' -- not significant')
                 self._remove_selected_var(min_candidate)
             else:
-                if VERBOSE:
+                if self.options['verbose']:
                     print(' -- significant')
                 self._min_stats_surr_table = surr_table
                 break

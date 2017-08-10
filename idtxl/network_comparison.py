@@ -7,8 +7,6 @@ from . import stats
 from . import idtxl_utils as utils
 from .network_analysis import NetworkAnalysis
 
-VERBOSE = True
-
 
 class NetworkComparison(NetworkAnalysis):
     """Set up network comparison between two experimental conditions.
@@ -767,6 +765,7 @@ class NetworkComparison(NetworkAnalysis):
         self._cmi_estimator = EstimatorClass(options)
 
         # Set defaults for statistical tests.
+        options.setdefault('verbose', True)
         options.setdefault('n_perm_comp', 10)
         options.setdefault('alpha_comp', 0.05)
         options.setdefault('tail_comp', 'two')

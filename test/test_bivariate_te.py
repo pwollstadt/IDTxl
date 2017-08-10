@@ -208,6 +208,7 @@ def test_check_source_set():
     dat = Data()
     dat.generate_mute_data(100, 5)
     nw_0 = BivariateTE()
+    nw_0.options = {'verbose': True}
     # Add list of sources.
     sources = [1, 2, 3]
     nw_0._check_source_set(sources, dat.n_processes)
@@ -215,7 +216,6 @@ def test_check_source_set():
 
     # Assert that initialisation fails if the target is also in the source list
     sources = [0, 1, 2, 3]
-    nw_0 = BivariateTE()
     nw_0.target = 0
     with pytest.raises(RuntimeError):
         nw_0._check_source_set(sources=[0, 1, 2, 3],

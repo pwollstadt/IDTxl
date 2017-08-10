@@ -11,8 +11,6 @@ import numpy as np
 from .single_process_analysis import SingleProcessAnalysis
 from .estimator import find_estimator
 
-VERBOSE = True
-
 
 class PartialInformationDecomposition(SingleProcessAnalysis):
     """Set up partial information decomposition for individual processes.
@@ -97,6 +95,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
                 results for each process, see documentation of
                 analyse_single_target()
         """
+        options.setdefault('verbose', True)
         options.setdefault('lags', np.array([[1, 1]] * len(targets)))
         if not len(targets) == len(sources) == len(options['lags']):
             raise RuntimeError('Lists of targets, sources, and lags must have'
@@ -104,7 +103,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         list_of_lags = options['lags']
         results = {}
         for t in range(len(targets)):
-            if VERBOSE:
+            if options['verbose']:
                 print('\n####### analysing target with index {0} from list {1}'
                       .format(t, targets))
             options['lags'] = list_of_lags[t]
@@ -193,6 +192,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         self._pid_estimator = EstimatorClass(options)
 
         options.setdefault('lags', [1, 1])
+        options.setdefault('verbose', True)
         self.options = options
 
         # Check if provided lags are correct and work with the number of
@@ -250,7 +250,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
                                 s2=source_2_realisations,
                                 t=target_realisations)
 
-        if VERBOSE:
+        if self.options['verbose']:
             print('\nunq information s1: {0:.8f}, s2: {1:.8f}'.format(
                                                            orig_pid['unq_s1'],
                                                            orig_pid['unq_s2']))

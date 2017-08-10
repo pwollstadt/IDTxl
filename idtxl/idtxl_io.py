@@ -5,8 +5,6 @@ import copy as cp
 import numpy as np
 from .data import Data
 
-VERBOSE = True
-
 
 def save(dat, file_path):
     """Save IDTxl data to disk.
@@ -50,7 +48,7 @@ def save(dat, file_path):
         # JSON does not recognize numpy arrays and data types, they have to be
         # converted before dumping them.
         dat_json = _remove_numpy(dat)
-        if VERBOSE:
+        if self.options['verbose']:
             print('writing file {0}'.format(file_path))
         with open(file_path, 'w') as outfile:
             json.dump(obj=dat_json, fp=outfile, sort_keys=True)
@@ -69,7 +67,7 @@ def _remove_numpy(dat):
     """
     dat_json = cp.copy(dat)
     for k in dat_json.keys():
-        if VERBOSE:
+        if self.options['verbose']:
             print('{0}, type: {1}'.format(dat_json[k], type(dat_json[k])))
         if type(dat_json[k]) is np.ndarray:
             dat_json[k] = dat_json[k].tolist()
