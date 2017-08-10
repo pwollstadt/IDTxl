@@ -4,8 +4,9 @@ Created on Thu Apr  7 12:16:23 2016
 
 @author: patricia
 """
-from idtxl import idtxl_utils as utils
+import pytest
 import numpy as np
+from idtxl import idtxl_utils as utils
 
 
 def test_swap_chars():
@@ -80,6 +81,7 @@ def check_all_bools_true(bool_array):
             return False
     return True
 
+
 def check_all_bools_true_2d(bool_array):
     for ind1 in range(bool_array.shape[0]):
         for ind2 in range(bool_array.shape[1]):
@@ -88,8 +90,25 @@ def check_all_bools_true_2d(bool_array):
     return True
 
 
+def test_combine_results():
+    r1 = {0: {'a': 1, 'b': 2}}
+    r2 = {0: {'a': 1, 'b': 2}, 1: {'c': 5, 'd': 6}}
+    r3 = {2: {'a': 1, 'b': 2}, 1: {'c': 5, 'd': 6}}
+
+    with pytest.raises(RuntimeError):
+    	utils.combine_results(r1, r2)
+    
+    r = utils.combine_results(r1, r3)
+    assert 0 in r.keys(), 'Key 0 missing from combined dict.'
+    assert 1 in r.keys(), 'Key 1 missing from combined dict.'
+    assert 2 in r.keys(), 'Key 2 missing from combined dict.'
+
+
+
 if __name__ == '__main__':
-    test_swap_chars()
-    test_combine_discrete_dimensions()
-    test_discretise()
-    test_discretise_max_ent()
+    # test_swap_chars()
+    # test_combine_discrete_dimensions()
+    # test_discretise()
+    # test_discretise_max_ent()
+    test_combine_results()
+    
