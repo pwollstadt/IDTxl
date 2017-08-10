@@ -24,21 +24,20 @@ EST_CMI = OpenCLKraskovCMI(opts)
 
 def test_knn_one_dim():
     """Test kNN search in 1D."""
-
     pointset1 = np.expand_dims(np.array([-1, -1.2, 1, 1.1]), axis=1)
     pointset2 = np.expand_dims(np.array([99, 99, 99, 99]), axis=1)  # dummy
 
     # Call MI estimator
-    mi, dist1, npoints_x, d_np_y = EST_MI.estimate(pointset1, pointset2,
-                                                   n_chunks=1)
+    mi, dist1, npoints_x, npoints_y = EST_MI.estimate(pointset1, pointset2,
+                                                      n_chunks=1)
     assert np.isclose(dist1[0], 0.2), 'Distance 0 not correct.'
     assert np.isclose(dist1[1], 0.2), 'Distance 1 not correct.'
     assert np.isclose(dist1[2], 0.1), 'Distance 2 not correct.'
     assert np.isclose(dist1[3], 0.1), 'Distance 3 not correct.'
 
     # Call CMI estimator
-    cmi, dist2, npoints_x, d_np_y = EST_CMI.estimate(pointset1, pointset2,
-                                                     n_chunks=1)
+    cmi, dist2, npoints_x, npoints_y = EST_CMI.estimate(pointset1, pointset2,
+                                                        n_chunks=1)
     assert np.isclose(dist2[0], 0.2), 'Distance 0 not correct.'
     assert np.isclose(dist2[1], 0.2), 'Distance 1 not correct.'
     assert np.isclose(dist2[2], 0.1), 'Distance 2 not correct.'
@@ -55,16 +54,16 @@ def test_knn_two_dim():
     pointset2 = np.ones(pointset1.shape) * 99
 
     # Call MI estimator
-    mi, dist1, npoints_x, d_np_y = EST_MI.estimate(pointset1, pointset2,
-                                                   n_chunks=1)
+    mi, dist1, npoints_x, npoints_y = EST_MI.estimate(pointset1, pointset2,
+                                                      n_chunks=1)
     assert np.isclose(dist1[0], 1.5), 'Distances 0 not correct.'
     assert np.isclose(dist1[1], 0.6), 'Distances 1 not correct.'
     assert np.isclose(dist1[2], 0.6), 'Distances 2 not correct.'
     assert np.isclose(dist1[3], 0.9), 'Distances 3 not correct.'
 
     # Call CMI estimator
-    cmi, dist2, npoints_x, d_np_y = EST_CMI.estimate(pointset1, pointset2,
-                                                     n_chunks=1)
+    cmi, dist2, npoints_x, npoints_y = EST_CMI.estimate(pointset1, pointset2,
+                                                        n_chunks=1)
     assert np.isclose(dist2[0], 1.5), 'Distances 0 not correct.'
     assert np.isclose(dist2[1], 0.6), 'Distances 1 not correct.'
     assert np.isclose(dist2[2], 0.6), 'Distances 2 not correct.'
@@ -73,23 +72,22 @@ def test_knn_two_dim():
 
 def test_one_dim_longer_sequence():
     """Test kNN search in 1D."""
-
     pointset1 = np.expand_dims(
                     np.array([-1, -1.2, 1, 1.1, 10, 11, 10.5, -100, -50, 666]),
                     axis=1)
     pointset2 = np.ones(pointset1.shape) * 9999
 
     # Call MI estimator
-    mi, dist1, npoints_x, d_np_y = EST_MI.estimate(pointset1, pointset2,
-                                                   n_chunks=1)
+    mi, dist1, npoints_x, npoints_y = EST_MI.estimate(pointset1, pointset2,
+                                                      n_chunks=1)
     assert np.isclose(dist1[0], 0.2), 'Distance 0 not correct.'
     assert np.isclose(dist1[1], 0.2), 'Distance 1 not correct.'
     assert np.isclose(dist1[2], 0.1), 'Distance 2 not correct.'
     assert np.isclose(dist1[3], 0.1), 'Distance 3 not correct.'
 
     # Call CMI estimator
-    cmi, dist2, npoints_x, d_np_y = EST_CMI.estimate(pointset1, pointset2,
-                                                     n_chunks=1)
+    cmi, dist2, npoints_x, npoints_y = EST_CMI.estimate(pointset1, pointset2,
+                                                        n_chunks=1)
     assert np.isclose(dist2[0], 0.2), 'Distance 0 not correct.'
     assert np.isclose(dist2[1], 0.2), 'Distance 1 not correct.'
     assert np.isclose(dist2[2], 0.1), 'Distance 2 not correct.'
@@ -103,7 +101,6 @@ def test_two_dim_longer_sequence():
         The expected results differ from the C++ unit tests because we use the
         maximum norm when searching for neighbours.
     """
-
     # This is the same sequence as in the previous test case, padded with a
     # bunch of points very far away.
     pointset1 = np.expand_dims(
@@ -113,16 +110,16 @@ def test_two_dim_longer_sequence():
     pointset2 = np.ones(pointset1.shape) * 9999
 
     # Call MI estimator
-    mi, dist1, npoints_x, d_np_y = EST_MI.estimate(pointset1, pointset2,
-                                                   n_chunks=1)
+    mi, dist1, npoints_x, npoints_y = EST_MI.estimate(pointset1, pointset2,
+                                                      n_chunks=1)
     assert np.isclose(dist1[0], 1.5), 'Distances 0 not correct.'
     assert np.isclose(dist1[1], 0.6), 'Distances 1 not correct.'
     assert np.isclose(dist1[2], 0.6), 'Distances 2 not correct.'
     assert np.isclose(dist1[3], 0.9), 'Distances 3 not correct.'
 
     # Call CMI estimator
-    cmi, dist2, npoints_x, d_np_y = EST_CMI.estimate(pointset1, pointset2,
-                                                     n_chunks=1)
+    cmi, dist2, npoints_x, npoints_y = EST_CMI.estimate(pointset1, pointset2,
+                                                        n_chunks=1)
     assert np.isclose(dist2[0], 1.5), 'Distances 0 not correct.'
     assert np.isclose(dist2[1], 0.6), 'Distances 1 not correct.'
     assert np.isclose(dist2[2], 0.6), 'Distances 2 not correct.'
@@ -130,18 +127,18 @@ def test_two_dim_longer_sequence():
 
 
 def test_random_data():
-    """Smoke kNN test with big random dataset"""
+    """Smoke kNN test with big random dataset."""
     n_points = 1000
     n_dims = 5
     pointset1 = np.random.randn(n_points, n_dims).astype('float32')
     pointset2 = pointset1
 
     # Call MI estimator
-    mi, dist1, npoints_x, d_np_y = EST_MI.estimate(pointset1, pointset2,
-                                                   n_chunks=1)
+    mi, dist1, npoints_x, npoints_y = EST_MI.estimate(pointset1, pointset2,
+                                                      n_chunks=1)
     # Call CMI estimator
-    cmi, dist2, npoints_x, d_np_y = EST_CMI.estimate(pointset1, pointset2,
-                                                     n_chunks=1)
+    cmi, dist2, npoints_x, npoints_y = EST_CMI.estimate(pointset1, pointset2,
+                                                        n_chunks=1)
     assert np.all(np.isclose(dist1, dist2)), ('High- and low-level calls '
                                               'returned different distances.')
 
@@ -154,8 +151,8 @@ def test_two_chunks():
     pointset2 = np.ones(pointset1.shape) * 9999
 
     # Call MI estimator
-    mi, dist1, npoints_x, d_np_y = EST_MI.estimate(pointset1, pointset2,
-                                                   n_chunks=n_chunks)
+    mi, dist1, npoints_x, npoints_y = EST_MI.estimate(pointset1, pointset2,
+                                                      n_chunks=n_chunks)
     assert np.isclose(dist1[0], 1), 'Distance 0 not correct.'
     assert np.isclose(dist1[1], 1), 'Distance 1 not correct.'
     assert np.isclose(dist1[2], 2), 'Distance 2 not correct.'
@@ -166,8 +163,8 @@ def test_two_chunks():
     assert np.isclose(dist1[7], 20), 'Distance 7 not correct.'
 
     # Call CMI estimator
-    cmi, dist2, npoints_x, d_np_y = EST_CMI.estimate(pointset1, pointset2,
-                                                     n_chunks=n_chunks)
+    cmi, dist2, npoints_x, npoints_y = EST_CMI.estimate(pointset1, pointset2,
+                                                        n_chunks=n_chunks)
     assert np.isclose(dist2[0], 1), 'Distance 0 not correct.'
     assert np.isclose(dist2[1], 1), 'Distance 1 not correct.'
     assert np.isclose(dist2[2], 2), 'Distance 2 not correct.'
@@ -186,8 +183,8 @@ def test_three_chunks():
     pointset2 = np.ones(pointset1.shape) * 9999
 
     # Call MI estimator
-    mi, dist1, npoints_x, d_np_y = EST_MI.estimate(pointset1, pointset2,
-                                                   n_chunks=n_chunks)
+    mi, dist1, npoints_x, npoints_y = EST_MI.estimate(pointset1, pointset2,
+                                                      n_chunks=n_chunks)
     assert np.isclose(dist1[0], 1), 'Distance 0 is not correct.'
     assert np.isclose(dist1[1], 1), 'Distance 1 is not correct.'
     assert np.isclose(dist1[2], 2), 'Distance 2 is not correct.'
@@ -202,8 +199,8 @@ def test_three_chunks():
     assert np.isclose(dist1[11], 200), 'Distance 11 is not correct.'
 
     # Call CMI estimator
-    cmi, dist2, npoints_x, d_np_y = EST_CMI.estimate(pointset1, pointset2,
-                                                     n_chunks=n_chunks)
+    cmi, dist2, npoints_x, npoints_y = EST_CMI.estimate(pointset1, pointset2,
+                                                        n_chunks=n_chunks)
     assert np.isclose(dist2[0], 1), 'Distance 0 is not correct.'
     assert np.isclose(dist2[1], 1), 'Distance 1 is not correct.'
     assert np.isclose(dist2[2], 2), 'Distance 2 is not correct.'
@@ -233,8 +230,8 @@ def test_two_chunks_two_dim():
     #                                  o  o  |
 
     # Call MI estimator
-    mi, dist1, npoints_x, d_np_y = EST_MI.estimate(pointset1, pointset2,
-                                                   n_chunks=n_chunks)
+    mi, dist1, npoints_x, npoints_y = EST_MI.estimate(pointset1, pointset2,
+                                                      n_chunks=n_chunks)
 
     assert np.isclose(dist1[0], 0.1), 'Distance 0 not correct.'
     assert np.isclose(dist1[1], 0.1), 'Distance 1 not correct.'
@@ -246,8 +243,8 @@ def test_two_chunks_two_dim():
     assert np.isclose(dist1[7], 0.2), 'Distance 7 not correct.'
 
     # Call CMI estimator
-    cmi, dist2, npoints_x, d_np_y = EST_CMI.estimate(pointset1, pointset2,
-                                                     n_chunks=n_chunks)
+    cmi, dist2, npoints_x, npoints_y = EST_CMI.estimate(pointset1, pointset2,
+                                                        n_chunks=n_chunks)
     assert np.isclose(dist2[0], 0.1), 'Distance 0 not correct.'
     assert np.isclose(dist2[1], 0.1), 'Distance 1 not correct.'
     assert np.isclose(dist2[2], 0.2), 'Distance 2 not correct.'
@@ -275,8 +272,8 @@ def test_two_chunks_odd_dim():
     #                                  o  o  |
 
     # Call MI estimator
-    mi, dist1, npoints_x, d_np_y = EST_MI.estimate(pointset1, pointset2,
-                                                   n_chunks=n_chunks)
+    mi, dist1, npoints_x, npoints_y = EST_MI.estimate(pointset1, pointset2,
+                                                      n_chunks=n_chunks)
     assert np.isclose(dist1[0], 0.1), 'Distance 0 ist not correct.'
     assert np.isclose(dist1[1], 0.1), 'Distance 1 ist not correct.'
     assert np.isclose(dist1[2], 0.2), 'Distance 2 ist not correct.'
@@ -287,8 +284,8 @@ def test_two_chunks_odd_dim():
     assert np.isclose(dist1[7], 0.2), 'Distance 7 ist not correct.'
 
     # Call CMI estimator
-    cmi, dist2, npoints_x, d_np_y = EST_CMI.estimate(pointset1, pointset2,
-                                                     n_chunks=n_chunks)
+    cmi, dist2, npoints_x, npoints_y = EST_CMI.estimate(pointset1, pointset2,
+                                                        n_chunks=n_chunks)
     assert np.isclose(dist2[0], 0.1), 'Distance 0 ist not correct.'
     assert np.isclose(dist2[1], 0.1), 'Distance 1 ist not correct.'
     assert np.isclose(dist2[2], 0.2), 'Distance 2 ist not correct.'
@@ -301,19 +298,21 @@ def test_two_chunks_odd_dim():
 
 def test_multiple_runs_two_dim():
     """Test kNN with two chunks of 2D data in the same call."""
+    opts = {
+        'theiler_t': 0,
+        'knn_k': 1,
+        'gpu_id': 0,
+        'debug': True,
+        'max_mem': 5 * 1024 * 1024}
+    EST_MI = OpenCLKraskovMI(opts)
+    EST_CMI = OpenCLKraskovCMI(opts)
+
     n_chunks = 50000
-    n_points = 8
-    n_dim = 2
-    padding_dim = 10
-    padding_points = 10000
     pointset1 = np.array([[1, 1.1, -1, -1.2, 1, 1.1, -1, -1.2],
                           [1, 1, -1, -1, 1, 1, -1, -1]]).T.copy()
-    pointset1 = np.hstack((pointset1, np.ones((n_points, padding_dim)) * 999))
-    pointset1 = np.vstack((pointset1, np.ones((padding_points - n_points,
-                                               n_dim + padding_dim)) * 999))
     pointset1 = np.tile(pointset1, (n_chunks // 2, 1))
-    print(pointset1.shape)
     pointset2 = np.ones(pointset1.shape) * 9999
+    pointset3 = np.ones(pointset1.shape) * 9999
 
     # Points:       X    Y                   y
     #               1    1                   |  o o
@@ -323,9 +322,10 @@ def test_multiple_runs_two_dim():
     #                                  o  o  |
 
     # Call MI estimator
-    mi, dist1, npoints_x, d_np_y = EST_MI.estimate(pointset1, pointset2,
-                                                   n_chunks=n_chunks)
+    mi, dist1, npoints_x, npoints_y = EST_MI.estimate(pointset1, pointset2,
+                                                      n_chunks=n_chunks)
 
+    print(dist1[0:8])
     assert np.isclose(dist1[0], 0.1), 'Distance 0 not correct.'
     assert np.isclose(dist1[1], 0.1), 'Distance 1 not correct.'
     assert np.isclose(dist1[2], 0.2), 'Distance 2 not correct.'
@@ -336,8 +336,11 @@ def test_multiple_runs_two_dim():
     assert np.isclose(dist1[7], 0.2), 'Distance 7 not correct.'
 
     # Call CMI estimator
-    cmi, dist2, npoints_x, d_np_y = EST_CMI.estimate(pointset1, pointset2,
-                                                     n_chunks=n_chunks)
+    cmi, dist2, npoints_x, npoints_y, npoints_c = EST_CMI.estimate(
+                                                        pointset1,
+                                                        pointset2,
+                                                        pointset3,
+                                                        n_chunks=n_chunks)
     assert np.isclose(dist2[0], 0.1), 'Distance 0 not correct.'
     assert np.isclose(dist2[1], 0.1), 'Distance 1 not correct.'
     assert np.isclose(dist2[2], 0.2), 'Distance 2 not correct.'
@@ -350,12 +353,12 @@ def test_multiple_runs_two_dim():
 
 if __name__ == '__main__':
     test_multiple_runs_two_dim()
-    # test_knn_one_dim()
-    # test_knn_two_dim()
-    # test_two_chunks_odd_dim()
-    # test_two_chunks_two_dim()
-    # test_two_chunks()
-    # test_three_chunks()
-    # test_random_data()
-    # test_one_dim_longer_sequence
-    # test_two_dim_longer_sequence()
+    test_knn_one_dim()
+    test_knn_two_dim()
+    test_two_chunks_odd_dim()
+    test_two_chunks_two_dim()
+    test_two_chunks()
+    test_three_chunks()
+    test_random_data()
+    test_one_dim_longer_sequence
+    test_two_dim_longer_sequence()
