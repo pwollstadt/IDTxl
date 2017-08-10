@@ -60,7 +60,8 @@ def test_network_fdr():
         'omnibus_pval': 0.0001,
         'omnibus_sign': True,
         'selected_sources_pval': np.array([0.001, 0.0014, 0.01, 0.045, 0.047]),
-        'selected_sources_te': np.array([1.1, 1.0, 0.8, 0.7, 0.63])
+        'selected_sources_te': np.array([1.1, 1.0, 0.8, 0.7, 0.63]),
+        'options': {'n_perm_max_seq': 1000}
         }
     target_1 = {
         'selected_vars_sources': [(1, 2), (2, 1), (2, 2)],
@@ -68,7 +69,8 @@ def test_network_fdr():
         'omnibus_pval': 0.031,
         'omnibus_sign': True,
         'selected_sources_pval': np.array([0.00001, 0.00014, 0.01]),
-        'selected_sources_te': np.array([1.8, 1.75, 0.75])
+        'selected_sources_te': np.array([1.8, 1.75, 0.75]),
+        'options': {'n_perm_max_seq': 1000}
         }
     target_2 = {
         'selected_vars_sources': [],
@@ -76,7 +78,8 @@ def test_network_fdr():
         'omnibus_pval': 0.41,
         'omnibus_sign': False,
         'selected_sources_pval': None,
-        'selected_sources_te': np.array([])
+        'selected_sources_te': np.array([]),
+        'options': {'n_perm_max_seq': 1000}
         }
     res_1 = {
         0: target_0,
@@ -109,6 +112,12 @@ def test_network_fdr():
                         len(res_pruned[k]['selected_sources_pval'])), (
                                 'Source list and list of p-values should have '
                                 'the same length.')
+
+    # Test None result for insufficient no. permutations
+    res_1[0]['options']['n_perm_max_seq'] = 2
+    res_pruned = stats.network_fdr(opts, res_1, res_2)
+    assert res_pruned is None, ('Res. should be None is no. permutations too '
+                                'low.')
 
 
 def test_find_pvalue():

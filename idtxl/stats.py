@@ -101,10 +101,11 @@ def network_fdr(analysis_options, *results):
 
     # If the number of permutations for calculating p-values for individual
     # variables is too low, return without performing any correction.
-    if (1 / min(n_perm)) > thresh:
+    if (1 / min(n_perm)) > thresh[0]:
         print('WARNING: Number of permutations (''n_perm_max_seq'') for at '
               'least one target is too low to allow for FDR correction '
-              '(threshold {0}).'.format(thresh))
+              '(threshold: {0:.4f}, min. possible p-value: {1}).'.format(
+                                                  thresh[0], 1 / min(n_perm)))
         return None
 
     # Compare data to threshold.
