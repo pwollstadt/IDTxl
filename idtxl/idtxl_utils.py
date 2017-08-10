@@ -295,6 +295,8 @@ def combine_results(*results):
 
     Combine a list of partial network inference results into a single results
     dictionary (e.g., results from analysis parallelized over target nodes).
+    Raise an error if duplicate keys, i.e., duplicate targets, occur in 
+    partial results.
 
     Args:
         results : list of dicts
@@ -307,5 +309,9 @@ def combine_results(*results):
     """
     res = {}
     for r in results:
+        for k in r:
+            if k in res:
+                raise RuntimeError('Duplicate keys.')
         res.update(r)
     return cp.deepcopy(res)
+
