@@ -15,7 +15,8 @@ pytest.importorskip('pyopencl')
 opts = {'theiler_t': 0,
         'knn_k': 1,
         'gpu_id': 0,
-        'debug': True}
+        'debug': True,
+        'verbose': True}
 
 EST_MI = OpenCLKraskovMI(opts)
 EST_CMI = OpenCLKraskovCMI(opts)

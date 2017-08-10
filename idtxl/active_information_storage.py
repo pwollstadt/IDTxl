@@ -13,8 +13,6 @@ from . import stats
 from .single_process_analysis import SingleProcessAnalysis
 from .estimator import find_estimator
 
-VERBOSE = True
-
 # TODO use target instead of process to define the process that is analyzed.
 # This would reuse an attribute set in the parent class.
 
@@ -109,9 +107,10 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                              '{0}.'.format(processes))
 
         # Perform AIS estimation for each target individually.
+        options.setdefault('verbose', True)
         results = {}
         for t in range(len(processes)):
-            if VERBOSE:
+            if options['verbose']:
                 print('\n####### analysing process {0} of {1}'.format(
                                                 processes[t], processes))
             r = self.analyse_single_process(options, data, processes[t])
@@ -189,7 +188,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         self._test_final_conditional(data)
 
         # Clean up and return results.
-        if VERBOSE:
+        if self.options['verbose']:
             print('final conditional samples: {0}'.format(
                     self._idx_to_lag(self.selected_vars_full)))
         results = {
@@ -206,6 +205,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         """Check input, set initial and default values for analysis options."""
 
         # Check analysis options and set defaults.
+        options.setdefault('verbose', True)
         options.setdefault('add_conditionals', None)
         options.setdefault('tau', 1)
 
@@ -329,7 +329,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             # Test max CMI for significance with maximum statistics.
             te_max_candidate = max(temp_te)
             max_candidate = candidate_set[np.argmax(temp_te)]
-            if VERBOSE:
+            if self.options['verbose']:
                 print('testing candidate {0} from candidate set {1}'.format(
                                     self._idx_to_lag([max_candidate])[0],
                                     self._idx_to_lag(candidate_set)), end='')
@@ -340,7 +340,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             # it is not significant break. There will be no further significant
             # sources b/c they all have lesser TE.
             if significant:
-                if VERBOSE:
+                if self.options['verbose']:
                     print(' -- significant')
                 success = True
                 # Remove candidate from candidate set and add it to the
@@ -351,7 +351,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                         data.get_realisations(self.current_value,
                                               [max_candidate])[0])
             else:
-                if VERBOSE:
+                if self.options['verbose']:
                     print(' -- not significant')
                 break
 
@@ -410,7 +410,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             # Test min TE for significance with minimum statistics.
             te_min_candidate = min(temp_te)
             min_candidate = self.selected_vars_sources[np.argmin(temp_te)]
-            if VERBOSE:
+            if self.options['verbose']:
                 print('testing candidate {0} from candidate set {1}'.format(
                                 self._idx_to_lag([min_candidate])[0],
                                 self._idx_to_lag(self.selected_vars_sources)),
@@ -424,11 +424,11 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             # candidate. If the minimum is significant, break, all other
             # sources will be significant as well (b/c they have higher TE).
             if not significant:
-                if VERBOSE:
+                if self.options['verbose']:
                     print(' -- not significant')
                 self._remove_selected_var(min_candidate)
             else:
-                if VERBOSE:
+                if self.options['verbose']:
                     print(' -- significant')
                 self._min_stats_surr_table = surr_table
                 break

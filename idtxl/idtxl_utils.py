@@ -3,8 +3,6 @@ import pprint
 import copy as cp
 import numpy as np
 
-VERBOSE = True
-
 
 def swap_chars(s, i_1, i_2):
     """Swap to characters in a string.
@@ -295,7 +293,7 @@ def combine_results(*results):
 
     Combine a list of partial network inference results into a single results
     dictionary (e.g., results from analysis parallelized over target nodes).
-    Raise an error if duplicate keys, i.e., duplicate targets, occur in 
+    Raise an error if duplicate keys, i.e., duplicate targets, occur in
     partial results.
 
     Args:

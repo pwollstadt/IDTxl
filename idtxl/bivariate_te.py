@@ -14,8 +14,6 @@ import itertools as it
 from . import stats
 from .network_inference import NetworkInference
 
-VERBOSE = True
-
 
 class BivariateTE(NetworkInference):
     """Set up a network analysis using bivariate transfer entropy.
@@ -140,9 +138,10 @@ class BivariateTE(NetworkInference):
                                                'same length')
 
         # Perform TE estimation for each target individually
+        options.setdefault('verbose', True)
         results = {}
         for t in range(len(targets)):
-            if VERBOSE:
+            if options['verbose']:
                 print('####### analysing target {0} of {1}'.format(t, targets))
             r = self.analyse_single_target(options, data,
                                            targets[t], sources[t])
@@ -261,7 +260,7 @@ class BivariateTE(NetworkInference):
         self._test_final_conditional(data)
 
         # Clean up and return results.
-        if VERBOSE:
+        if self.options['verbose']:
             print('final source samples: {0}'.format(
                     self._idx_to_lag(self.selected_vars_sources)))
             print('final target samples: {0}'.format(

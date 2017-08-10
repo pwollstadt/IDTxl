@@ -18,8 +18,6 @@ except ImportError as err:
                             ' from https://pypi.python.org/pypi/JPype1 to use '
                             'JAVA/JIDT-powered CMI estimation.')
 
-VERBOSE = False
-
 # TODO add support for multivariate estimation for Tartu and Sydney estimator
 
 
@@ -110,6 +108,7 @@ def pid_frankfurt(self, s1, s2, t, opts):
     t_cp = t.copy()
 
     # get estimation parameters
+    opts.setdefault('verbose', False)
     try:
         jarpath = opts['jarpath']
     except TypeError:
@@ -597,7 +596,7 @@ class SydneyPID(Estimator):
             raise ValueError('joint MI {0} smaller than cMI {1}'
                              ''.format(jointmi_s1s2_t, cond_mut_info1))
         else:
-            if VERBOSE:
+            if self.opts['verbose']:
                 print('Passed sanity check on jMI and cMI')
 
         # Declare reps array of repeated doubling to half the prob_inc
@@ -613,7 +612,7 @@ class SydneyPID(Estimator):
         # integers another idea would be to decrement by something slightly
         # smaller than 2
     #    num_reps = num_reps + np.int32(np.floor(np.log(max_joint_nonzero_count)/np.log(2)))
-        if VERBOSE:
+        if self.opts['verbose']:
             print('num_reps: {0}'.format(self.opts['num_reps']))
         reps = np.array(np.power(2, range(0, self.opts['num_reps'])))
 
@@ -719,7 +718,7 @@ class SydneyPID(Estimator):
         mi_target_s2 = self._mi_prob(t_prob, s2_prob, joint_t_s2_prob)
         jointmi_s1s2_target = self._joint_mi(s1, s2, t, alph_s1, alph_s2,
                                              alph_t)
-        if VERBOSE:
+        if self.opts['verbose']:
             print('jointmi_s1s2_target: {0}'.format(jointmi_s1s2_target))
 
         # PID terms

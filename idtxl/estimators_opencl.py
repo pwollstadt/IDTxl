@@ -10,8 +10,6 @@ except ImportError as err:
                             ' it using pip or the package manager to use '
                             'OpenCL-powered CMI estimation.')
 
-VERBOSE = True
-
 
 class OpenCLKraskov(Estimator):
     """Abstract class for implementation of OpenCL estimators.
@@ -64,6 +62,7 @@ class OpenCLKraskov(Estimator):
         opts.setdefault('noise_level', np.float32(1e-8))
         opts.setdefault('local_values', False)
         opts.setdefault('debug', False)
+        opts.setdefault('verbose', True)
         self.opts = opts
         self.sizeof_float = int(np.dtype(np.float32).itemsize)
         self.sizeof_int = int(np.dtype(np.int32).itemsize)
@@ -92,7 +91,7 @@ class OpenCLKraskov(Estimator):
         my_gpu_devices = platform.get_devices(device_type=cl.device_type.GPU)
         context = cl.Context(devices=my_gpu_devices)
         queue = cl.CommandQueue(context, my_gpu_devices[gpuid])
-        if VERBOSE:
+        if self.opts['verbose']:
             print(("Selected Device: ", my_gpu_devices[gpuid].name))
         return my_gpu_devices, context, queue
 

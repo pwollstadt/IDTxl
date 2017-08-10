@@ -209,6 +209,7 @@ def test_check_source_set():
     dat = Data()
     dat.generate_mute_data(100, 5)
     nw_0 = MultivariateTE()
+    nw_0.options = {'verbose': True}
     # Add list of sources.
     sources = [1, 2, 3]
     nw_0._check_source_set(sources, dat.n_processes)
@@ -346,10 +347,10 @@ def test_indices_to_lags():
 
 if __name__ == '__main__':
     test_analyse_network()
-    # test_check_source_set()
-    # test_multivariate_te_init()  # test init function of the Class
-    # test_multivariate_te_one_realisation_per_replication()
-    # test_faes_method()
-    # test_add_conditional_manually()
-    # test_check_source_set()
-    # test_define_candidates()
+    test_check_source_set()
+    test_multivariate_te_init()  # test init function of the Class
+    test_multivariate_te_one_realisation_per_replication()
+    test_faes_method()
+    test_add_conditional_manually()
+    test_check_source_set()
+    test_define_candidates()

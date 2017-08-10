@@ -7,7 +7,7 @@ Created on Mon Mar  7 18:13:27 2016
 import numpy as np
 from . import idtxl_utils as utils
 
-VERBOSE = True
+VERBOSE = False
 
 
 class Data():

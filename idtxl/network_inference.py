@@ -9,8 +9,6 @@ from .network_analysis import NetworkAnalysis
 from .estimator import find_estimator
 from . import stats
 
-VERBOSE = True
-
 
 class NetworkInference(NetworkAnalysis):
     """Provide an analysis setup for multivariate network inference.
@@ -111,6 +109,7 @@ class NetworkInference(NetworkAnalysis):
 
         # Set default options
         options.setdefault('add_conditionals', None)
+        options.setdefault('verbose', True)
         self.options = options
 
         # Check the provided target and sources.
@@ -197,7 +196,7 @@ class NetworkInference(NetworkAnalysis):
                                ' indices.'.format(sources))
 
         self.source_set = sources
-        if VERBOSE:
+        if self.options['verbose']:
             print('Testing sources {0}'.format(self.source_set))
 
     def _include_target_candidates(self, data):
@@ -275,7 +274,7 @@ class NetworkInference(NetworkAnalysis):
             # Test max CMI for significance with maximum statistics.
             te_max_candidate = max(temp_te)
             max_candidate = candidate_set[np.argmax(temp_te)]
-            if VERBOSE:
+            if self.options['verbose']:
                 print('testing {0} from candidate set {1}'.format(
                                     self._idx_to_lag([max_candidate])[0],
                                     self._idx_to_lag(candidate_set)), end='')
@@ -286,7 +285,7 @@ class NetworkInference(NetworkAnalysis):
             # it is not significant break. There will be no further significant
             # sources b/c they all have lesser TE.
             if significant:
-                if VERBOSE:
+                if self.options['verbose']:
                     print(' -- significant')
                 success = True
                 candidate_set.pop(np.argmax(temp_te))
@@ -295,7 +294,7 @@ class NetworkInference(NetworkAnalysis):
                         data.get_realisations(self.current_value,
                                               [max_candidate])[0])
             else:
-                if VERBOSE:
+                if self.options['verbose']:
                     print(' -- not significant')
                 break
 
