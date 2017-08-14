@@ -35,9 +35,12 @@ def test_knn_one_dim():
     assert np.isclose(dist1[2], 0.1), 'Distance 2 not correct.'
     assert np.isclose(dist1[3], 0.1), 'Distance 3 not correct.'
 
-    # Call CMI estimator
-    cmi, dist2, npoints_x, npoints_y = EST_CMI.estimate(pointset1, pointset2,
-                                                        n_chunks=1)
+    # Call CMI estimator with pointset2 as conditional (otherwise the MI
+    # estimator is called internally and the CMI estimator is never tested).
+    cmi, dist2, npoints_x, npoints_y, npoints_c = EST_CMI.estimate(pointset1,
+                                                                   pointset2,
+                                                                   pointset2,
+                                                                   n_chunks=1)
     assert np.isclose(dist2[0], 0.2), 'Distance 0 not correct.'
     assert np.isclose(dist2[1], 0.2), 'Distance 1 not correct.'
     assert np.isclose(dist2[2], 0.1), 'Distance 2 not correct.'
@@ -61,9 +64,12 @@ def test_knn_two_dim():
     assert np.isclose(dist1[2], 0.6), 'Distances 2 not correct.'
     assert np.isclose(dist1[3], 0.9), 'Distances 3 not correct.'
 
-    # Call CMI estimator
-    cmi, dist2, npoints_x, npoints_y = EST_CMI.estimate(pointset1, pointset2,
-                                                        n_chunks=1)
+    # Call CMI estimator with pointset2 as conditional (otherwise the MI
+    # estimator is called internally and the CMI estimator is never tested).
+    cmi, dist2, npoints_x, npoints_y, npoints_c = EST_CMI.estimate(pointset1,
+                                                                   pointset2,
+                                                                   pointset2,
+                                                                   n_chunks=1)
     assert np.isclose(dist2[0], 1.5), 'Distances 0 not correct.'
     assert np.isclose(dist2[1], 0.6), 'Distances 1 not correct.'
     assert np.isclose(dist2[2], 0.6), 'Distances 2 not correct.'
@@ -85,9 +91,12 @@ def test_one_dim_longer_sequence():
     assert np.isclose(dist1[2], 0.1), 'Distance 2 not correct.'
     assert np.isclose(dist1[3], 0.1), 'Distance 3 not correct.'
 
-    # Call CMI estimator
-    cmi, dist2, npoints_x, npoints_y = EST_CMI.estimate(pointset1, pointset2,
-                                                        n_chunks=1)
+    # Call CMI estimator with pointset2 as conditional (otherwise the MI
+    # estimator is called internally and the CMI estimator is never tested).
+    cmi, dist2, npoints_x, npoints_y, npoints_c = EST_CMI.estimate(pointset1,
+                                                                   pointset2,
+                                                                   pointset2,
+                                                                   n_chunks=1)
     assert np.isclose(dist2[0], 0.2), 'Distance 0 not correct.'
     assert np.isclose(dist2[1], 0.2), 'Distance 1 not correct.'
     assert np.isclose(dist2[2], 0.1), 'Distance 2 not correct.'
@@ -117,9 +126,12 @@ def test_two_dim_longer_sequence():
     assert np.isclose(dist1[2], 0.6), 'Distances 2 not correct.'
     assert np.isclose(dist1[3], 0.9), 'Distances 3 not correct.'
 
-    # Call CMI estimator
-    cmi, dist2, npoints_x, npoints_y = EST_CMI.estimate(pointset1, pointset2,
-                                                        n_chunks=1)
+    # Call CMI estimator with pointset2 as conditional (otherwise the MI
+    # estimator is called internally and the CMI estimator is never tested).
+    cmi, dist2, npoints_x, npoints_y, npoints_c = EST_CMI.estimate(pointset1,
+                                                                   pointset2,
+                                                                   pointset2,
+                                                                   n_chunks=1)
     assert np.isclose(dist2[0], 1.5), 'Distances 0 not correct.'
     assert np.isclose(dist2[1], 0.6), 'Distances 1 not correct.'
     assert np.isclose(dist2[2], 0.6), 'Distances 2 not correct.'
@@ -136,9 +148,12 @@ def test_random_data():
     # Call MI estimator
     mi, dist1, npoints_x, npoints_y = EST_MI.estimate(pointset1, pointset2,
                                                       n_chunks=1)
-    # Call CMI estimator
-    cmi, dist2, npoints_x, npoints_y = EST_CMI.estimate(pointset1, pointset2,
-                                                        n_chunks=1)
+    # Call CMI estimator with pointset2 as conditional (otherwise the MI
+    # estimator is called internally and the CMI estimator is never tested).
+    cmi, dist2, npoints_x, npoints_y, npoints_c = EST_CMI.estimate(pointset1,
+                                                                   pointset2,
+                                                                   pointset2,
+                                                                   n_chunks=1)
     assert np.all(np.isclose(dist1, dist2)), ('High- and low-level calls '
                                               'returned different distances.')
 
@@ -162,9 +177,12 @@ def test_two_chunks():
     assert np.isclose(dist1[6], 10), 'Distance 6 not correct.'
     assert np.isclose(dist1[7], 20), 'Distance 7 not correct.'
 
-    # Call CMI estimator
-    cmi, dist2, npoints_x, npoints_y = EST_CMI.estimate(pointset1, pointset2,
-                                                        n_chunks=n_chunks)
+    # Call CMI estimator with pointset2 as conditional (otherwise the MI
+    # estimator is called internally and the CMI estimator is never tested).
+    cmi, dist2, npoints_x, npoints_y, npoints_c = EST_CMI.estimate(pointset1,
+                                                                   pointset2,
+                                                                   pointset2,
+                                                                   n_chunks=1)
     assert np.isclose(dist2[0], 1), 'Distance 0 not correct.'
     assert np.isclose(dist2[1], 1), 'Distance 1 not correct.'
     assert np.isclose(dist2[2], 2), 'Distance 2 not correct.'
@@ -198,9 +216,12 @@ def test_three_chunks():
     assert np.isclose(dist1[10], 100), 'Distance 10 is not correct.'
     assert np.isclose(dist1[11], 200), 'Distance 11 is not correct.'
 
-    # Call CMI estimator
-    cmi, dist2, npoints_x, npoints_y = EST_CMI.estimate(pointset1, pointset2,
-                                                        n_chunks=n_chunks)
+    # Call CMI estimator with pointset2 as conditional (otherwise the MI
+    # estimator is called internally and the CMI estimator is never tested).
+    cmi, dist2, npoints_x, npoints_y, npoints_c = EST_CMI.estimate(pointset1,
+                                                                   pointset2,
+                                                                   pointset2,
+                                                                   n_chunks=1)
     assert np.isclose(dist2[0], 1), 'Distance 0 is not correct.'
     assert np.isclose(dist2[1], 1), 'Distance 1 is not correct.'
     assert np.isclose(dist2[2], 2), 'Distance 2 is not correct.'
@@ -242,9 +263,12 @@ def test_two_chunks_two_dim():
     assert np.isclose(dist1[6], 0.2), 'Distance 6 not correct.'
     assert np.isclose(dist1[7], 0.2), 'Distance 7 not correct.'
 
-    # Call CMI estimator
-    cmi, dist2, npoints_x, npoints_y = EST_CMI.estimate(pointset1, pointset2,
-                                                        n_chunks=n_chunks)
+    # Call CMI estimator with pointset2 as conditional (otherwise the MI
+    # estimator is called internally and the CMI estimator is never tested).
+    cmi, dist2, npoints_x, npoints_y, npoints_c = EST_CMI.estimate(pointset1,
+                                                                   pointset2,
+                                                                   pointset2,
+                                                                   n_chunks)
     assert np.isclose(dist2[0], 0.1), 'Distance 0 not correct.'
     assert np.isclose(dist2[1], 0.1), 'Distance 1 not correct.'
     assert np.isclose(dist2[2], 0.2), 'Distance 2 not correct.'
@@ -283,9 +307,13 @@ def test_two_chunks_odd_dim():
     assert np.isclose(dist1[6], 0.2), 'Distance 6 ist not correct.'
     assert np.isclose(dist1[7], 0.2), 'Distance 7 ist not correct.'
 
-    # Call CMI estimator
-    cmi, dist2, npoints_x, npoints_y = EST_CMI.estimate(pointset1, pointset2,
-                                                        n_chunks=n_chunks)
+    # Call CMI estimator with pointset2 as conditional (otherwise the MI
+    # estimator is called internally and the CMI estimator is never tested).
+    cmi, dist2, npoints_x, npoints_y, npoints_c = EST_CMI.estimate(pointset1,
+                                                                   pointset2,
+                                                                   pointset2,
+                                                                   n_chunks)
+    print(dist2[0:8])
     assert np.isclose(dist2[0], 0.1), 'Distance 0 ist not correct.'
     assert np.isclose(dist2[1], 0.1), 'Distance 1 ist not correct.'
     assert np.isclose(dist2[2], 0.2), 'Distance 2 ist not correct.'
@@ -335,7 +363,8 @@ def test_multiple_runs_two_dim():
     assert np.isclose(dist1[6], 0.2), 'Distance 6 not correct.'
     assert np.isclose(dist1[7], 0.2), 'Distance 7 not correct.'
 
-    # Call CMI estimator
+    # Call CMI estimator with pointset2 as conditional (otherwise the MI
+    # estimator is called internally and the CMI estimator is never tested).
     cmi, dist2, npoints_x, npoints_y, npoints_c = EST_CMI.estimate(
                                                         pointset1,
                                                         pointset2,
