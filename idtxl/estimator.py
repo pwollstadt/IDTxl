@@ -74,6 +74,24 @@ def find_estimator(est):
 
 
 class Estimator(metaclass=ABCMeta):
+    """Abstract class for implementation of IDTxl estimators.
+
+    Abstract class for implementation of IDTxl estimators. Child classes
+    implement various estimators for information-theoretic measures, e.g.,
+    mutual information (MI), conditional mutual information (CMI),
+    active information storage (AIS), or transfer entropy (TE).
+
+    Estimator classes implement a method 'estimate()' for the estimation from
+    single or multiple data sets in parallel. Whether 'estimate()' provides
+    parallel computing capabilities is indicated by the 'is_parallel()'
+    method. The 'estimate_mult()' method of this abstract class provides a
+    common interface to parallel and serial methods (see docstring for
+    details).
+
+    The method 'is_analytic_null_estimator()' indicates whether the implemented
+    estimator supports the generation of analytic surrogates (see docstring for
+    details).
+    """
 
     def __init__(self, settings=None):
         pass
