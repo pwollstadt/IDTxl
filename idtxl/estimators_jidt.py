@@ -138,6 +138,23 @@ class JidtEstimator(Estimator):
             raise TypeError('Input arrays must be 1D or 2D')
         return var
 
+    def _check_number_of_points(self, n_points):
+        """Sanity check for number of points going into the estimator."""
+        if (n_points - 1) <= int(self.settings['kraskov_k']):
+            raise RuntimeError('Insufficient number of points ({0}) for the '
+                               'requested number of nearest neighbours '
+                               '(kraskov_k: {1}).'.format(
+                                        n_points, self.settings['kraskov_k']))
+        if (n_points - 1) <= (int(self.settings['kraskov_k']) +
+                              int(self.settings['theiler_t'])):
+            raise RuntimeError('Insufficient number of points ({0}) for the '
+                               'requested number of nearest neighbours '
+                               '(kraskov_k: {1}) and Theiler-correction '
+                               '(theiler_t: {2}).'.format(
+                                                n_points,
+                                                self.settings['kraskov_k'],
+                                                self.settings['theiler_t']))
+
     def is_parallel(self):
         return False
 
@@ -512,13 +529,15 @@ class JidtKraskovCMI(JidtKraskov):
         var1 = self._ensure_two_dim_input(var1)
         var2 = self._ensure_two_dim_input(var2)
         cond = self._ensure_two_dim_input(conditional)
-
         assert(var1.shape[0] == var2.shape[0]), (
             'Unequal number of observations (var1: {0}, var2: {1}).'.format(
                 var1.shape[0], var2.shape[0]))
         assert(var1.shape[0] == cond.shape[0]), (
             'Unequal number of observations (var1: {0}, cond: {1}).'.format(
                 var1.shape[0], cond.shape[0]))
+
+        # Check if number of points is sufficient for estimation.
+        self._check_number_of_points(var1.shape[0])
 
         self.calc.initialise(var1.shape[1], var2.shape[1], cond.shape[1])
         self.calc.setObservations(var1, var2, cond)
@@ -907,6 +926,9 @@ class JidtKraskovMI(JidtKraskov):
             var1 = var1[:-self.settings['lag'], :]
             var2 = var2[self.settings['lag']:, :]
 
+        # Check if number of points is sufficient for estimation.
+        self._check_number_of_points(var1.shape[0])
+
         self.calc.initialise(var1.shape[1], var2.shape[1])
         self.calc.setObservations(var1, var2)
 
@@ -1003,6 +1025,9 @@ class JidtKraskovAIS(JidtKraskov):
                 samples if 'local_values'=True
         """
         process = self._ensure_one_dim_input(process)
+
+        # Check if number of points is sufficient for estimation.
+        self._check_number_of_points(process.shape[0])
 
         self.calc.initialise(self.settings['history'], self.settings['tau'])
         self.calc.setObservations(process)
@@ -1236,6 +1261,7 @@ class JidtGaussianAIS(JidtGaussian):
                 samples if 'local_values'=True
         """
         process = self._ensure_one_dim_input(process)
+
         self.calc.initialise(self.settings['history'], self.settings['tau'])
         self.calc.setObservations(process)
         if self.settings['local_values']:
@@ -1536,6 +1562,10 @@ class JidtKraskovTE(JidtKraskov):
         source = self._ensure_one_dim_input(source)
         target = self._ensure_one_dim_input(target)
 
+        # Check if number of points is sufficient for estimation.
+        self._check_number_of_points(source.shape[0] -
+                                     self.settings['source_target_delay'])
+
         self.calc.initialise(self.settings['history_target'],
                              self.settings['tau_target'],
                              self.settings['history_source'],
@@ -1777,6 +1807,7 @@ class JidtGaussianTE(JidtGaussian):
         """
         source = self._ensure_one_dim_input(source)
         target = self._ensure_one_dim_input(target)
+
         self.calc.initialise(self.settings['history_target'],
                              self.settings['tau_target'],
                              self.settings['history_source'],
