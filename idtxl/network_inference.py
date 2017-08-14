@@ -28,8 +28,8 @@ class NetworkInference(NetworkAnalysis):
     the data.
 
     Attributes:
-        options : dict
-            options for estimation of information theoretic measures and
+        settings : dict
+            settings for estimation of information theoretic measures and
             statistical testing, see child classes for documentation
         target : int
             target process of analysis
@@ -44,7 +44,6 @@ class NetworkInference(NetworkAnalysis):
     """
 
     def __init__(self):
-
         # Create class attributes for estimation
         self.te_omnibus = None
         self.te_sign_sources = None
@@ -54,63 +53,62 @@ class NetworkInference(NetworkAnalysis):
         self.pvalues_sign_sources = None
         super().__init__()
 
-    def _initialise(self, options, data, sources, target):
-        """Check input, set initial and default values for analysis options."""
-
+    def _initialise(self, settings, data, sources, target):
+        """Check input, set initial or default values for analysis settings."""
         # Set CMI estimator.
         try:
-            EstimatorClass = find_estimator(options['cmi_estimator'])
+            EstimatorClass = find_estimator(settings['cmi_estimator'])
         except KeyError:
             raise RuntimeError('Please provide an estimator class or name!')
-        self._cmi_estimator = EstimatorClass(options)
+        self._cmi_estimator = EstimatorClass(settings)
 
         # Check lags and taus for multivariate embedding.
-        if 'max_lag_sources' not in options:
+        if 'max_lag_sources' not in settings:
             raise RuntimeError('The maximum lag for source embedding '
                                '(''max_lag_sources'') needs to be specified.')
-        if 'min_lag_sources' not in options:
+        if 'min_lag_sources' not in settings:
             raise RuntimeError('The maximum lag for source embedding '
                                '(''max_lag_sources'') needs to be specified.')
 
-        options.setdefault('tau_target', 1)
-        options.setdefault('tau_sources', 1)
-        options.setdefault('max_lag_target', options['max_lag_sources'])
+        settings.setdefault('tau_target', 1)
+        settings.setdefault('tau_sources', 1)
+        settings.setdefault('max_lag_target', settings['max_lag_sources'])
 
-        if (type(options['min_lag_sources']) is not int or
-                options['min_lag_sources'] < 0):
+        if (type(settings['min_lag_sources']) is not int or
+                settings['min_lag_sources'] < 0):
             raise RuntimeError('min_lag_sources has to be an integer >= 0.')
-        if (type(options['max_lag_sources']) is not int or
-                options['max_lag_sources'] < 0):
+        if (type(settings['max_lag_sources']) is not int or
+                settings['max_lag_sources'] < 0):
             raise RuntimeError('max_lag_sources has to be an integer >= 0.')
-        if (type(options['max_lag_target']) is not int or
-                options['max_lag_target'] <= 0):
+        if (type(settings['max_lag_target']) is not int or
+                settings['max_lag_target'] <= 0):
             raise RuntimeError('max_lag_target must be an integer > 0.')
-        if (type(options['tau_sources']) is not int or
-                options['tau_sources'] <= 0):
+        if (type(settings['tau_sources']) is not int or
+                settings['tau_sources'] <= 0):
             raise RuntimeError('tau_sources must be an integer > 0.')
-        if (type(options['tau_target']) is not int or
-                options['tau_target'] <= 0):
+        if (type(settings['tau_target']) is not int or
+                settings['tau_target'] <= 0):
             raise RuntimeError('tau_sources must be an integer > 0.')
-        if options['min_lag_sources'] > options['max_lag_sources']:
+        if settings['min_lag_sources'] > settings['max_lag_sources']:
             raise RuntimeError('min_lag_sources ({0}) must be smaller or equal'
                                ' to max_lag_sources ({1}).'.format(
-                                   options['min_lag_sources'],
-                                   options['max_lag_sources']))
-        if options['tau_sources'] > options['max_lag_sources']:
+                                   settings['min_lag_sources'],
+                                   settings['max_lag_sources']))
+        if settings['tau_sources'] > settings['max_lag_sources']:
             raise RuntimeError('tau_sources ({0}) has to be smaller than '
                                'max_lag_sources ({1}).'.format(
-                                   options['tau_sources'],
-                                   options['max_lag_sources']))
-        if options['tau_target'] > options['max_lag_target']:
+                                   settings['tau_sources'],
+                                   settings['max_lag_sources']))
+        if settings['tau_target'] > settings['max_lag_target']:
             raise RuntimeError('tau_target ({0}) has to be smaller than '
                                'max_lag_target ({1}).'.format(
-                                   options['tau_target'],
-                                   options['max_lag_target']))
+                                   settings['tau_target'],
+                                   settings['max_lag_target']))
 
-        # Set default options
-        options.setdefault('add_conditionals', None)
-        options.setdefault('verbose', True)
-        self.options = options
+        # Set default settings
+        settings.setdefault('add_conditionals', None)
+        settings.setdefault('verbose', True)
+        self.settings = settings
 
         # Check the provided target and sources.
         self._check_target(target, data.n_processes)
@@ -118,8 +116,8 @@ class NetworkInference(NetworkAnalysis):
 
         # Check provided search depths (lags) for source and target, set the
         # current_value.
-        max_lag = max(self.options['max_lag_sources'],
-                      self.options['max_lag_target'])
+        max_lag = max(self.settings['max_lag_sources'],
+                      self.settings['max_lag_target'])
 
         assert(data.n_samples >= max_lag + 1), (
             'Not enough samples in data ({0}) to allow for the chosen maximum '
@@ -156,8 +154,8 @@ class NetworkInference(NetworkAnalysis):
         # Check if the user provided a list of candidates that must go into
         # the conditioning set. These will be added and used for TE estimation,
         # but never tested for significance.
-        if self.options['add_conditionals'] is not None:
-            self._force_conditionals(self.options['add_conditionals'], data)
+        if self.settings['add_conditionals'] is not None:
+            self._force_conditionals(self.settings['add_conditionals'], data)
 
     def _check_target(self, target, n_processes):
         """Set and check the target provided by the user."""
@@ -196,7 +194,7 @@ class NetworkInference(NetworkAnalysis):
                                ' indices.'.format(sources))
 
         self.source_set = sources
-        if self.options['verbose']:
+        if self.settings['verbose']:
             print('Testing sources {0}'.format(self.source_set))
 
     def _include_target_candidates(self, data):
@@ -204,9 +202,9 @@ class NetworkInference(NetworkAnalysis):
         procs = [self.target]
         # Make samples
         samples = np.arange(
-                    self.current_value[1] - 1,
-                    self.current_value[1] - self.options['max_lag_target'] - 1,
-                    -self.options['tau_target']).tolist()
+                self.current_value[1] - 1,
+                self.current_value[1] - self.settings['max_lag_target'] - 1,
+                -self.settings['tau_target']).tolist()
         candidates = self._define_candidates(procs, samples)
         sources_found = self._include_candidates(candidates, data)
 
@@ -223,9 +221,9 @@ class NetworkInference(NetworkAnalysis):
         """Test candidates in the source's past."""
         procs = self.source_set
         samples = np.arange(
-                    self.current_value[1] - self.options['min_lag_sources'],
-                    self.current_value[1] - self.options['max_lag_sources'],
-                    -self.options['tau_sources'])
+                    self.current_value[1] - self.settings['min_lag_sources'],
+                    self.current_value[1] - self.settings['max_lag_sources'],
+                    -self.settings['tau_sources'])
         candidates = self._define_candidates(procs, samples)
         # TODO include non-selected target candidates as further candidates,
         # they may get selected due to synergies
@@ -247,7 +245,7 @@ class NetworkInference(NetworkAnalysis):
                 (process index, sample index)
             data : Data instance
                 raw data
-            options : dict [optional]
+            settings : dict [optional]
                 parameters for estimation and statistical testing
 
         Returns:
@@ -274,7 +272,7 @@ class NetworkInference(NetworkAnalysis):
             # Test max CMI for significance with maximum statistics.
             te_max_candidate = max(temp_te)
             max_candidate = candidate_set[np.argmax(temp_te)]
-            if self.options['verbose']:
+            if self.settings['verbose']:
                 print('testing {0} from candidate set {1}'.format(
                                     self._idx_to_lag([max_candidate])[0],
                                     self._idx_to_lag(candidate_set)), end='')
@@ -285,7 +283,7 @@ class NetworkInference(NetworkAnalysis):
             # it is not significant break. There will be no further significant
             # sources b/c they all have lesser TE.
             if significant:
-                if self.options['verbose']:
+                if self.settings['verbose']:
                     print(' -- significant')
                 success = True
                 candidate_set.pop(np.argmax(temp_te))
@@ -294,7 +292,7 @@ class NetworkInference(NetworkAnalysis):
                         data.get_realisations(self.current_value,
                                               [max_candidate])[0])
             else:
-                if self.options['verbose']:
+                if self.settings['verbose']:
                     print(' -- not significant')
                 break
 
@@ -318,7 +316,7 @@ class NetworkInference(NetworkAnalysis):
     def _reset(self):
         """Reset instance after analysis."""
         self.__init__()
-        del self.options
+        del self.settings
         del self.source_set
         del self.pvalues_sign_sources
         del self.te_sign_sources

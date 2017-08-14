@@ -46,18 +46,20 @@ def test_multivariate_te_corr_gaussian(estimator=None):
 
     dat = Data(normalise=True)
     dat.set_data(np.vstack((source_1[1:].T, target[:-1].T)), 'ps')
-    analysis_opts = {
+    settings = {
         'cmi_estimator': estimator,
+        'max_lag_sources': 5,
+        'min_lag_sources': 1,
+        'max_lag_target': 5,
         'n_perm_max_stat': 21,
         'n_perm_min_stat': 21,
         'n_perm_omnibus': 21,
         'n_perm_max_seq': 21,
         }
-    random_analysis = MultivariateTE(max_lag_sources=5, min_lag_sources=1,
-                                     max_lag_target=5, options=analysis_opts)
+    random_analysis = MultivariateTE()
     # res = random_analysis.analyse_network(dat)  # full network
     # utils.print_dict(res)
-    res_1 = random_analysis.analyse_single_target(dat, 1)  # coupled direction
+    res_1 = random_analysis.analyse_single_target(settings, dat, 1)  # coupled direction
     # Assert that there are significant conditionals from the source for target
     # 1. For 500 repetitions I got mean errors of 0.02097686 and 0.01454073 for
     # examples 1 and 2 respectively. The maximum errors were 0.093841 and
@@ -94,19 +96,20 @@ def test_multivariate_te_lagged_copies():
 
     dat = Data()
     dat.set_data(np.vstack((d_0, d_1)), 'psr')
-    analysis_opts = {
+    settings = {
         'cmi_estimator':  'JidtKraskovCMI',
+        'max_lag_sources': 5,
         'n_perm_max_stat': 21,
         'n_perm_min_stat': 21,
         'n_perm_omnibus': 500,
         'n_perm_max_seq': 500,
         }
-    random_analysis = MultivariateTE(max_lag_sources=5, options=analysis_opts)
+    random_analysis = MultivariateTE()
     # Assert that there are no significant conditionals in either direction
     # other than the mandatory single sample in the target's past (which
     # ensures that we calculate a proper TE at any time in the algorithm).
     for target in range(2):
-        res = random_analysis.analyse_single_target(dat, target)
+        res = random_analysis.analyse_single_target(settings, dat, target)
         assert (len(res['conditional_full']) == 1), ('Conditional contains '
                                                      'more/less than 1 '
                                                      'variables.')
@@ -138,19 +141,20 @@ def test_multivariate_te_random():
     d = np.random.rand(2, 1000, 20)
     dat = Data()
     dat.set_data(d, 'psr')
-    analysis_opts = {
+    settings = {
         'cmi_estimator':  'JidtKraskovCMI',
+        'max_lag_sources': 5,
         'n_perm_max_stat': 200,
         'n_perm_min_stat': 200,
         'n_perm_omnibus': 500,
         'n_perm_max_seq': 500,
         }
-    random_analysis = MultivariateTE(max_lag_sources=5, options=analysis_opts)
+    random_analysis = MultivariateTE()
     # Assert that there are no significant conditionals in either direction
     # other than the mandatory single sample in the target's past (which
     # ensures that we calculate a proper TE at any time in the algorithm).
     for target in range(2):
-        res = random_analysis.analyse_single_target(dat, target)
+        res = random_analysis.analyse_single_target(settings, dat, target)
         assert (len(res['conditional_full']) == 1), ('Conditional contains '
                                                      'more/less than 1 '
                                                      'variables.')
@@ -184,31 +188,36 @@ def test_multivariate_te_lorenz_2():
                 'data/lorenz_2_exampledata.npy'))
     dat = Data()
     dat.set_data(d, 'psr')
-    analysis_opts = {
+    settings = {
         'cmi_estimator':  'JidtKraskovCMI',
+        'max_lag_sources': 47,
+        'min_lag_sources': 42,
+        'max_lag_target': 20,
+        'tau_target': 2,
         'n_perm_max_stat': 21,  # 200
         'n_perm_min_stat': 21,  # 200
         'n_perm_omnibus': 21,
         'n_perm_max_seq': 21,  # this should be equal to the min stats b/c we
                                # reuse the surrogate table from the min stats
         }
-    lorenz_analysis = MultivariateTE(max_lag_sources=47, min_lag_sources=42,
-                                     max_lag_target=20, tau_target=2,
-                                     options=analysis_opts)
+    lorenz_analysis = MultivariateTE()
     # FOR DEBUGGING: add the whole history for k = 20, tau = 2 to the
     # estimation, this makes things faster, b/c these don't have to be
     # tested again.
-    analysis_opts['add_conditionals'] = [(1, 44), (1, 42), (1, 40), (1, 38),
-                                         (1, 36), (1, 34), (1, 32), (1, 30),
-                                         (1, 28)]
-    lorenz_analysis = MultivariateTE(max_lag_sources=60, min_lag_sources=31,
-                                     tau_sources=2,
-                                     max_lag_target=0, tau_target=1,
-                                     options=analysis_opts)
-    # res = lorenz_analysis.analyse_network(dat)
-    # res_0 = lorenz_analysis.analyse_single_target(dat, 0)  # no coupling
+    settings['add_conditionals'] = [(1, 44), (1, 42), (1, 40), (1, 38),
+                                    (1, 36), (1, 34), (1, 32), (1, 30),
+                                    (1, 28)]
+    # res = lorenz_analysis.analyse_network(settings, dat)
+    # res_0 = lorenz_analysis.analyse_single_target(settings, dat, 0)  # no coupling
     # print(res_0)
-    res_1 = lorenz_analysis.analyse_single_target(dat, 1)  # coupling
+
+    settings['max_lag_sources'] = 60
+    settings['min_lag_sources'] = 31
+    settings['tau_sources'] = 2
+    settings['max_lag_target'] = 0
+    settings['tau_target'] = 1
+
+    res_1 = lorenz_analysis.analyse_single_target(settings, dat, 1)  # coupling
     print(res_1)
 
 
@@ -229,18 +238,19 @@ def test_multivariate_te_mute():
     """
     dat = Data()
     dat.generate_mute_data(n_samples=1000, n_replications=10)
-    analysis_opts = {
+    settings = {
         'cmi_estimator':  'JidtKraskovCMI',
+        'max_lag_sources': 3,
+        'min_lag_sources': 1,
+        'max_lag_target': 3,
         'n_perm_max_stat': 21,
         'n_perm_min_stat': 21,
         'n_perm_omnibus': 21,
-        'n_perm_max_seq': 21,  # this should be equal to the min stats b/c we
+        'n_perm_max_seq': 21}  # this should be equal to the min stats b/c we
                                # reuse the surrogate table from the min stats
-        }
 
-    network_analysis = MultivariateTE(max_lag_sources=3, min_lag_sources=1,
-                                      max_lag_target=3, options=analysis_opts)
-    network_analysis.analyse_network(dat, targets=[1, 2])
+    network_analysis = MultivariateTE()
+    network_analysis.analyse_network(dat, settings, targets=[1, 2])
 
 
 def test_multivariate_te_multiple_runs():
@@ -253,18 +263,19 @@ def test_multivariate_te_multiple_runs():
     """
     dat = Data()
     dat.generate_mute_data(n_samples=1000, n_replications=10)
-    analysis_opts = {
+    settings = {
         'cmi_estimator': 'OpenCLKraskovCMI',
+        'max_lag_sources': 3,
+        'min_lag_sources': 1,
+        'max_lag_target': 3,
         'n_perm_max_stat': 7000,
         'n_perm_min_stat': 7000,
         'n_perm_omnibus': 21,
-        'n_perm_max_seq': 21,  # this should be equal to the min stats b/c we
+        'n_perm_max_seq': 21}  # this should be equal to the min stats b/c we
                                # reuse the surrogate table from the min stats
-        }
 
-    network_analysis = MultivariateTE(max_lag_sources=3, min_lag_sources=1,
-                                      max_lag_target=3, options=analysis_opts)
-    network_analysis.analyse_network(dat, targets=[1, 2])
+    network_analysis = MultivariateTE()
+    network_analysis.analyse_network(dat, settings, targets=[1, 2])
 
 
 if __name__ == '__main__':

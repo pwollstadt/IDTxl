@@ -21,39 +21,36 @@ class MultivariateSpectralTE(NetworkAnalysis):
     analyse_network() on an instance of the data class.
 
     Args:
-        options : dict
+        settings : dict
             parameters for estimator use and statistics:
 
             - 'cmi_estimator' - estimator to be used for CMI calculation
-              (For estimator options see the respective documentation.)
+              (For estimator settings see the respective documentation.)
             - 'n_perm_spec' - number of permutations (default=200)
             - 'alpha_spec' - critical alpha level for statistical significance
               (default=0.05)
             - 'cmi_estimator' - estimator to be used for CMI calculation
-              (For estimator options see the respective documentation.)
+              (For estimator settings see the respective documentation.)
             - 'permute_in_time' - force surrogate creation by shuffling
               realisations in time instead of shuffling replications; see
-              documentation of Data.permute_samples() for further options
+              documentation of Data.permute_samples() for further settings
               (default=False)
 
     """
 
-    # TODO right now 'options' holds all optional params (stats AND estimator).
-    # We could split this up by adding the stats options to the analyse_*
-    # methods?
-    def __init__(self, options):
+    def __init__(self, settings):
         # Set estimator in the child class for network inference because the
         # estimated quantity may be different from CMI in other inference
         # algorithms. (Everything else can be done in the parent class.)
         try:
-            EstimatorClass = find_estimator(options['cmi_estimator'])
+            EstimatorClass = find_estimator(settings['cmi_estimator'])
         except KeyError:
             raise KeyError('Estimator was not specified!')
-        self._cmi_estimator = EstimatorClass(options)
-        self.n_permutations = options.get('n_perm_spec', 200)
-        self.alpha = options.get('alpha_spec', 0.05)
-        self.tail = options.get('tail', 'two')
-        self.cmi_opts = options
+        self._cmi_estimator = EstimatorClass(settings)
+        self.n_permutations = settings.get('n_perm_spec', 200)
+        self.alpha = settings.get('alpha_spec', 0.05)
+        self.tail = settings.get('tail', 'two')
+        self.cmi_settings = settings
 
     def analyse_network(self, res_network, data, targets='all', sources='all'):
         """Find multivariate spectral transfer entropy between all nodes.
@@ -67,7 +64,7 @@ class MultivariateSpectralTE(NetworkAnalysis):
             >>> dat.generate_mute_data(100, 5)
             >>> max_lag = 5
             >>> min_lag = 4
-            >>> analysis_opts = {
+            >>> settings = {
             >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
             >>>     'n_perm_min_stat': 200,
@@ -75,16 +72,17 @@ class MultivariateSpectralTE(NetworkAnalysis):
             >>>     'n_perm_max_seq': 500,
             >>>     }
             >>> network_analysis = MultivariateTE(max_lag, min_lag,
-            >>>                                   analysis_opts)
+            >>>                                   settings)
             >>> res = network_analysis.analyse_network(dat)
             >>>
-            >>> spectral_opts = {
+            >>> spectral_settings = {
             >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_spec': 200,
             >>>     'alpha_spec': 0.05
             >>>     }
-            >>> spectral_analysis = Multivariate_spectral_te(spectral_opts)
-            >>> res_spec = spectral_analysis.analyse_network(res)
+            >>> spectral_analysis = Multivariate_spectral_te()
+            >>> res_spec = spectral_analysis.analyse_network(spectral_settings,
+            >>>                                              res)
 
         Note:
             For more details on the estimation of multivariate transfer entropy
@@ -141,7 +139,7 @@ class MultivariateSpectralTE(NetworkAnalysis):
             >>> dat.generate_mute_data(100, 5)
             >>> max_lag = 5
             >>> min_lag = 4
-            >>> analysis_opts = {
+            >>> settings = {
             >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
             >>>     'n_perm_min_stat': 200,
@@ -150,18 +148,18 @@ class MultivariateSpectralTE(NetworkAnalysis):
             >>>     }
             >>> target = 0
             >>> sources = [1, 2, 3]
-            >>> network_analysis = MultivariateTE(max_lag, min_lag,
-            >>>                                   analysis_opts)
+            >>> network_analysis = MultivariateTE(max_lag, min_lag, settings)
             >>> res = network_analysis.analyse_single_target(dat, target,
             >>>                                              sources)
             >>>
-            >>> spectral_opts = {
+            >>> spectral_settings = {
             >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_spec': 200,
             >>>     'alpha_spec': 0.05
             >>>     }
-            >>> spectral_analysis = Multivariate_spectral_te(spectral_opts)
-            >>> res_spec = spectral_analysis.analyse_single_target(res, dat)
+            >>> spectral_analysis = Multivariate_spectral_te()
+            >>> res_spec = spectral_analysis.analyse_single_target(
+            >>>                                     spectral_settingsres, dat)
 
             Note:
             For more details on the estimation of multivariate transfer entropy
@@ -201,5 +199,4 @@ class MultivariateSpectralTE(NetworkAnalysis):
             # dat.slice_permute_replications
             # new method in module stats:
             # stats._generate_spectral_surrogates
-
-        return 1
+            return 1

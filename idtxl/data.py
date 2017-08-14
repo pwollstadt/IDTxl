@@ -361,13 +361,13 @@ class Data():
         """
         return self._get_data_slice(process, shuffle=True)
 
-    def slice_permute_samples(self, process, perm_opts):
+    def slice_permute_samples(self, process, perm_settings):
         """Return slice of data with permuted samples (repl. stays intact).
 
         Create surrogate data by permuting data in a slice over samples (time)
         while keeping the order of replications intact. Return slice for the
         entry specified by 'process'. Realisations are permuted according to
-        the options specified in perm_opts:
+        the settings specified in perm_settings:
 
         original data:
             rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3 ...
@@ -396,8 +396,8 @@ class Data():
         Args:
             process : int
                 process for which to return data slice
-            perm_opts : dict
-                options specifying the allowed permutations:
+            perm_settings : dict
+                settings specifying the allowed permutations:
 
                 - perm_type : str
                   permutation type, can be
@@ -408,7 +408,7 @@ class Data():
                     - 'local': swaps samples within a given range, or
                     - 'random': swaps samples at random,
 
-                - additional options depending on the perm_type (n is the
+                - additional settings depending on the perm_type (n is the
                   number of samples):
 
                     - if perm_type == 'circular':
@@ -439,7 +439,7 @@ class Data():
         """
         dat_slice = self._get_data_slice(process, shuffle=True)[0]
         dat_slice_perm = np.empty(dat_slice.shape).astype(self.data_type)
-        perm = self._get_permutation_samples(dat_slice.shape[0], perm_opts)
+        perm = self._get_permutation_samples(dat_slice.shape[0], perm_settings)
         for r in range(self.n_replications):
             dat_slice_perm[:, r] = dat_slice[perm, r]
         return dat_slice_perm, perm
@@ -481,14 +481,14 @@ class Data():
             raise TypeError('idx needs to be a list of tuples.')
         return self.get_realisations(current_value, idx_list, shuffle=True)
 
-    def permute_samples(self, current_value, idx_list, perm_opts):
+    def permute_samples(self, current_value, idx_list, perm_settings):
         """Return realisations with permuted samples (repl. stays intact).
 
         Create surrogate data by permuting realisations over samples (time)
         while keeping the order of replications intact. Return realisations for
         all indices in the list, where an index is expected to have the form
         (process index, sample index). Realisations are permuted according to
-        the options specified in perm_opts:
+        the settings specified in perm_settings:
 
         original data:
             rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3 ...
@@ -519,8 +519,8 @@ class Data():
                 index of the current_value in the data
             idx_list : list of tuples
                 indices of variables
-            perm_opts : dict
-                options specifying the allowed permutations:
+            perm_settings : dict
+                settings specifying the allowed permutations:
 
                 - perm_type : str
                   permutation type, can be
@@ -531,7 +531,7 @@ class Data():
                     - 'block': swaps blocks of samples,
                     - 'local': swaps samples within a given range, or
 
-                - additional options depending on the perm_type (n is the
+                - additional settings depending on the perm_type (n is the
                   number of samples):
 
                     - if perm_type == 'circular':
@@ -567,7 +567,7 @@ class Data():
         [realisations, replication_idx] = self.get_realisations(current_value,
                                                                 idx_list)
         n_samples = sum(replication_idx == 0)
-        perm = self._get_permutation_samples(n_samples, perm_opts)
+        perm = self._get_permutation_samples(n_samples, perm_settings)
         # Apply the permutation to data from each replication.
         realisations_perm = np.empty(realisations.shape).astype(self.data_type)
         perm_idx = np.empty(realisations_perm.shape[0])
@@ -578,7 +578,7 @@ class Data():
             perm_idx[mask] = perm
         return realisations_perm, perm_idx
 
-    def _get_permutation_samples(self, n_samples, perm_opts):
+    def _get_permutation_samples(self, n_samples, perm_settings):
         """Generate permutation of n samples.
 
         Generate a permutation of n samples under various, possible
@@ -591,8 +591,8 @@ class Data():
         Args:
             n_samples : int
                 length of the permutation
-            perm_opts : dict
-                options specifying the allowed permutations, see documentation
+            perm_settings : dict
+                settings specifying the allowed permutations, see documentation
                 of permute_samples()
 
         Returns:
@@ -601,7 +601,7 @@ class Data():
             numpy Array
                 permuted indices of samples
         """
-        perm_type = perm_opts['perm_type']
+        perm_type = perm_settings['perm_type']
 
         # Get the permutaion 'mask' for one replication (the same mask is then
         # applied to each replication).
@@ -609,14 +609,14 @@ class Data():
             perm = np.random.permutation(n_samples)
 
         elif perm_type == 'circular':
-            max_shift = perm_opts['max_shift']
+            max_shift = perm_settings['max_shift']
             if type(max_shift) is not int:
                 raise TypeError(' ''max_shift'' has to be an int.')
             perm = self._circular_shift(n_samples, max_shift)[0]
 
         elif perm_type == 'block':
-            block_size = perm_opts['block_size']
-            perm_range = perm_opts['perm_range']
+            block_size = perm_settings['block_size']
+            perm_range = perm_settings['perm_range']
             if type(block_size) is not int:
                 raise TypeError(' ''block_size'' has to be an int.')
             if type(perm_range) is not int:
@@ -624,7 +624,7 @@ class Data():
             perm = self._swap_blocks(n_samples, block_size, perm_range)
 
         elif perm_type == 'local':
-            perm_range = perm_opts['perm_range']
+            perm_range = perm_settings['perm_range']
             if type(perm_range) is not int:
                 raise TypeError(' ''perm_range'' has to be an int.')
             perm = self._swap_local(n_samples, perm_range)

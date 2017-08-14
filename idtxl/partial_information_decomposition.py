@@ -23,7 +23,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
     docstrings of the two functions for more information.
 
     Args:
-        options : dict
+        settings : dict
             parameters for estimator use and statistics:
 
             - 'n_perm' - number of permutations for statistical testing
@@ -33,13 +33,13 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             - 'tail' - 'one' or 'two' for one- or two-sided statistical
               testing (default='one')
             - 'pid_calc_name' - estimator to be used for PID calculation
-              (for estimator options see the respective documentation)
+              (for estimator settings see the respective documentation)
     """
 
     def __init__(self):
         super().__init__()
 
-    def analyse_network(self, options, data, targets, sources):
+    def analyse_network(self, settings, data, targets, sources):
         """Estimate partial information decomposition for network nodes.
 
         Estimate partial information decomposition (PID) for multiple nodes in
@@ -57,7 +57,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             >>> y = np.random.randint(0, alph, n)
             >>> z = np.logical_xor(x, y).astype(int)
             >>> dat = Data(np.vstack((x, y, z)), 'ps', normalise=False)
-            >>> analysis_opts = {
+            >>> settings = {
             >>>     'alpha': 0.1,
             >>>     'alph_s1': alph,
             >>>     'alph_s2': alph,
@@ -70,11 +70,11 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             >>> sources = [[1, 2], [0, 2], [0, 1]]
             >>> lags = [[1, 1], [3, 2], [0, 0]]
             >>> pid_analysis = PartialInformationDecomposition()
-            >>> res = pid_analysis.analyse_network(analysis_opts, dat, targets,
+            >>> res = pid_analysis.analyse_network(settings, dat, targets,
             >>>                                    sources)
 
         Args:
-            options : dict
+            settings : dict
                 parameters for estimation and statistical testing, see
                 documentation of analyse_single_target() for details, can
                 contain
@@ -95,24 +95,24 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
                 results for each process, see documentation of
                 analyse_single_target()
         """
-        options.setdefault('verbose', True)
-        options.setdefault('lags', np.array([[1, 1]] * len(targets)))
-        if not len(targets) == len(sources) == len(options['lags']):
+        settings.setdefault('verbose', True)
+        settings.setdefault('lags', np.array([[1, 1]] * len(targets)))
+        if not len(targets) == len(sources) == len(settings['lags']):
             raise RuntimeError('Lists of targets, sources, and lags must have'
                                'the same lengths.')
-        list_of_lags = options['lags']
+        list_of_lags = settings['lags']
         results = {}
         for t in range(len(targets)):
-            if options['verbose']:
+            if settings['verbose']:
                 print('\n####### analysing target with index {0} from list {1}'
                       .format(t, targets))
-            options['lags'] = list_of_lags[t]
-            r = self.analyse_single_target(options, data, targets[t],
+            settings['lags'] = list_of_lags[t]
+            r = self.analyse_single_target(settings, data, targets[t],
                                            sources[t])
             results[targets[t]] = r
         return results
 
-    def analyse_single_target(self, options, data, target, sources):
+    def analyse_single_target(self, settings, data, target, sources):
         """Estimate partial information decomposition for a network node.
 
         Estimate partial information decomposition (PID) for a target node in
@@ -128,7 +128,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             >>> y = np.random.randint(0, alph, n)
             >>> z = np.logical_xor(x, y).astype(int)
             >>> dat = Data(np.vstack((x, y, z)), 'ps', normalise=False)
-            >>> analysis_opts = {
+            >>> settings = {
             >>>     'alpha': 0.1,
             >>>     'alph_s1': alph,
             >>>     'alph_s2': alph,
@@ -139,18 +139,18 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             >>>     'pid_calc_name': 'SydneyPID',
             >>>     'lags': [2, 3]}
             >>> pid_analysis = PartialInformationDecomposition()
-            >>> res = pid_analysis.analyse_single_target(options=analysis_opts,
+            >>> res = pid_analysis.analyse_single_target(settings=settings,
             >>>                                          data=dat,
             >>>                                          target=0,
             >>>                                          sources=[1, 2])
 
         Args:
-            options : dict
+            settings : dict
                 parameters for estimator use and statistics:
 
                 - lags : list of ints [optional] - lags in samples between
                   sources and target (default=[1, 1])
-                - for estimator options see the documentation in the
+                - for estimator settings see the documentation in the
                   estimators_pid modules
 
             data : Data instance
@@ -164,49 +164,48 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             dict
                 unique, shared and synergistic information from both sources,
                 statistical significance and p-values, indices of source
-                variables, and options used for estimation
+                variables, and settings used for estimation
         """
         # Check input and initialise values for analysis.
-        self._initialise(options, data, target, sources)
+        self._initialise(settings, data, target, sources)
 
         # Estimate PID and significance.
         self._calculate_pid(data)
 
         # Add analyis info.
         results = self.results
-        results['options'] = self.options
+        results['settings'] = self.settings
         results['target'] = self.target
         results['source_1'] = self._idx_to_lag([self.sources[0]])
         results['source_2'] = self._idx_to_lag([self.sources[1]])
         self._reset()
         return results
 
-    def _initialise(self, options, data, target, sources):
-        """Check input, set initial and default values for analysis options."""
-
+    def _initialise(self, settings, data, target, sources):
+        """Check input, set initial or default values for analysis settings."""
         # Check requested PID estimator.
         try:
-            EstimatorClass = find_estimator(options['pid_estimator'])
+            EstimatorClass = find_estimator(settings['pid_estimator'])
         except KeyError:
             raise RuntimeError('Estimator was not specified!')
-        self._pid_estimator = EstimatorClass(options)
+        self._pid_estimator = EstimatorClass(settings)
 
-        options.setdefault('lags', [1, 1])
-        options.setdefault('verbose', True)
-        self.options = options
+        settings.setdefault('lags', [1, 1])
+        settings.setdefault('verbose', True)
+        self.settings = settings
 
         # Check if provided lags are correct and work with the number of
         # samples in the data.
-        if len(self.options['lags']) != 2:
+        if len(self.settings['lags']) != 2:
             raise RuntimeError('List of lags must have length 2.')
-        if self.options['lags'][0] >= data.n_samples:
+        if self.settings['lags'][0] >= data.n_samples:
             raise RuntimeError('Lag 1 ({0}) is larger than the number of '
                                'samples in the data set ({1}).'.format(
-                                    self.options['lags'][0], data.n_samples))
-        if self.options['lags'][1] >= data.n_samples:
+                                    self.settings['lags'][0], data.n_samples))
+        if self.settings['lags'][1] >= data.n_samples:
             raise RuntimeError('Lag 2 ({0}) is larger than the number of '
                                'samples in the data set ({1}).'.format(
-                                    self.options['lags'][1], data.n_samples))
+                                    self.settings['lags'][1], data.n_samples))
 
         # Check if target and sources are provided correctly.
         if type(target) is not int:
@@ -217,12 +216,12 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             raise RuntimeError('The target ({0}) should not be in the list '
                                'of sources ({1}).'.format(target, sources))
 
-        self.current_value = (target, max(self.options['lags']))
+        self.current_value = (target, max(self.settings['lags']))
         self.target = target
         # TODO works for single vars only, change to multivariate?
         self.sources = self._lag_to_idx([
-                                        (sources[0], self.options['lags'][0]),
-                                        (sources[1], self.options['lags'][1])])
+                                    (sources[0], self.settings['lags'][0]),
+                                    (sources[1], self.settings['lags'][1])])
 
     def _calculate_pid(self, data):
 
@@ -250,7 +249,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
                                 s2=source_2_realisations,
                                 t=target_realisations)
 
-        if self.options['verbose']:
+        if self.settings['verbose']:
             print('\nunq information s1: {0:.8f}, s2: {1:.8f}'.format(
                                                            orig_pid['unq_s1'],
                                                            orig_pid['unq_s2']))
@@ -275,5 +274,5 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         """Reset instance after analysis."""
         self.__init__()
         del self.results
-        del self.options
+        del self.settings
         del self._pid_estimator

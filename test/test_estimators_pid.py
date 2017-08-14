@@ -36,7 +36,7 @@ ALPH_X = 2
 ALPH_Y = 2
 ALPH_Z = 2
 
-ANALYSIS_OPTS = {
+SETTINGS = {
         'alph_s1': ALPH_X,
         'alph_s2': ALPH_Y,
         'alph_t': ALPH_Z,
@@ -110,7 +110,7 @@ def test_xor_long():
     s1 = np.random.randint(0, alph, n)
     s2 = np.random.randint(0, alph, n)
     target = np.logical_xor(s1, s2).astype(int)
-    analysis_opts = {
+    settings = {
         'alph_s1': 2,
         'alph_s2': 2,
         'alph_t': 2,
@@ -119,11 +119,11 @@ def test_xor_long():
         'max_iters': 10000
     }
     print('\n\nTesting PID estimator on binary XOR, pointset size: {0}, '
-          'iterations: {1}'.format(n, analysis_opts['max_iters']))
+          'iterations: {1}'.format(n, settings['max_iters']))
 
     # Sydney estimator
-    pid_sydney = SydneyPID(analysis_opts)
-    pid_tartu = TartuPID(analysis_opts)
+    pid_sydney = SydneyPID(settings)
+    pid_tartu = TartuPID(settings)
     tic = tm.time()
     est_sydney = pid_sydney.estimate(s1, s2, target)
     t_sydney = tm.time() - tic
@@ -160,8 +160,8 @@ def _estimate(Z):
     """Estimate PID for a given target."""
 
     # Sydney estimator
-    pid_sydney = SydneyPID(ANALYSIS_OPTS)
-    pid_tartu = TartuPID(ANALYSIS_OPTS)
+    pid_sydney = SydneyPID(SETTINGS)
+    pid_tartu = TartuPID(SETTINGS)
     tic = tm.time()
     est_sydney = pid_sydney.estimate(X, Y, Z)
     t_sydney = tm.time() - tic

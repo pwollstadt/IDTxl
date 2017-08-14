@@ -64,13 +64,13 @@ def test_mi_correlated_gaussians():
     expected_mi, source, source_uncorr, target = _get_gauss_data()
 
     # Run OpenCL estimator.
-    opts = {'debug': True}
-    ocl_est = OpenCLKraskovMI(opts=opts)
+    settings = {'debug': True}
+    ocl_est = OpenCLKraskovMI(settings=settings)
     mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(source, target)
 
     mi_ocl = mi_ocl[0]
     # Run JIDT estimator.
-    jidt_est = JidtKraskovMI(opts={})
+    jidt_est = JidtKraskovMI(settings={})
     mi_jidt = jidt_est.estimate(source, target)
 
     cov_effective = np.cov(np.squeeze(source), np.squeeze(target))[1, 0]
@@ -95,13 +95,13 @@ def test_cmi_no_cond_correlated_gaussians():
     expected_mi, source, source_uncorr, target = _get_gauss_data()
 
     # Run OpenCL estimator.
-    opts = {'debug': True}
-    ocl_est = OpenCLKraskovCMI(opts=opts)
+    settings = {'debug': True}
+    ocl_est = OpenCLKraskovCMI(settings=settings)
     mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(source, target)
 
     mi_ocl = mi_ocl[0]
     # Run JIDT estimator.
-    jidt_est = JidtKraskovCMI(opts={})
+    jidt_est = JidtKraskovCMI(settings={})
     mi_jidt = jidt_est.estimate(source, target)
 
     cov_effective = np.cov(np.squeeze(source), np.squeeze(target))[1, 0]
@@ -126,15 +126,15 @@ def test_cmi_correlated_gaussians():
     expected_mi, source, source_uncorr, target = _get_gauss_data()
 
     # Run OpenCL estimator.
-    opts = {'debug': True}
-    ocl_est = OpenCLKraskovCMI(opts=opts)
+    settings = {'debug': True}
+    ocl_est = OpenCLKraskovCMI(settings=settings)
     (mi_ocl, dist, n_range_var1,
      n_range_var2, n_range_cond) = ocl_est.estimate(source, target,
                                                     source_uncorr)
 
     mi_ocl = mi_ocl[0]
     # Run JIDT estimator.
-    jidt_est = JidtKraskovCMI(opts={})
+    jidt_est = JidtKraskovCMI(settings={})
     mi_jidt = jidt_est.estimate(source, target, source_uncorr)
 
     cov_effective = np.cov(np.squeeze(source), np.squeeze(target))[1, 0]
@@ -161,14 +161,14 @@ def test_mi_correlated_gaussians_two_chunks():
 
     # Run OpenCL estimator.
     n_chunks = 2
-    opts = {'debug': True}
-    ocl_est = OpenCLKraskovMI(opts=opts)
+    settings = {'debug': True}
+    ocl_est = OpenCLKraskovMI(settings=settings)
     mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(
                                                             source, target,
                                                             n_chunks=n_chunks)
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovMI(opts={})
+    jidt_est = JidtKraskovMI(settings={})
     mi_jidt = jidt_est.estimate(source[0:int(n_points/2), :],
                                 target[0:int(n_points/2), :])
 
@@ -202,13 +202,13 @@ def test_mi_uncorrelated_gaussians():
     var2 = np.random.randn(n_obs, 1)
 
     # Run OpenCL estimator.
-    opts = {'debug': True}
-    ocl_est = OpenCLKraskovMI(opts=opts)
+    settings = {'debug': True}
+    ocl_est = OpenCLKraskovMI(settings=settings)
     mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(var1, var2)
     mi_ocl = mi_ocl[0]
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovMI(opts={})
+    jidt_est = JidtKraskovMI(settings={})
     mi_jidt = jidt_est.estimate(var1, var2)
 
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
@@ -234,14 +234,14 @@ def test_cmi_uncorrelated_gaussians():
     var3 = np.random.randn(n_obs, 1)
 
     # Run OpenCL estimator.
-    opts = {'debug': True}
-    ocl_est = OpenCLKraskovCMI(opts=opts)
+    settings = {'debug': True}
+    ocl_est = OpenCLKraskovCMI(settings=settings)
     (mi_ocl, dist, n_range_var1,
      n_range_var2, n_range_var3) = ocl_est.estimate(var1, var2, var3)
     mi_ocl = mi_ocl[0]
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovCMI(opts={})
+    jidt_est = JidtKraskovCMI(settings={})
     mi_jidt = jidt_est.estimate(var1, var2, var3)
 
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
@@ -267,13 +267,13 @@ def test_mi_uncorrelated_gaussians_three_dims():
     var2 = np.random.randn(n_obs, dim)
 
     # Run OpenCL estimator.
-    opts = {'debug': True}
-    ocl_est = OpenCLKraskovMI(opts=opts)
+    settings = {'debug': True}
+    ocl_est = OpenCLKraskovMI(settings=settings)
     mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(var1, var2)
     mi_ocl = mi_ocl[0]
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovMI(opts={})
+    jidt_est = JidtKraskovMI(settings={})
     mi_jidt = jidt_est.estimate(var1, var2)
 
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
@@ -300,13 +300,13 @@ def test_cmi_uncorrelated_gaussians_three_dims():
     var3 = np.random.randn(n_obs, dim)
 
     # Run OpenCL estimator.
-    opts = {'debug': True}
-    ocl_est = OpenCLKraskovCMI(opts=opts)
+    settings = {'debug': True}
+    ocl_est = OpenCLKraskovCMI(settings=settings)
     mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(var1, var2)
     mi_ocl = mi_ocl[0]
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovCMI(opts={})
+    jidt_est = JidtKraskovCMI(settings={})
     mi_jidt = jidt_est.estimate(var1, var2)
 
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
@@ -351,13 +351,13 @@ def test_cmi_uncorrelated_gaussians_unequal_dims():
     var3 = np.random.randn(n_obs, 7)
 
     # Run OpenCL estimator.
-    opts = {'debug': True}
-    ocl_est = OpenCLKraskovCMI(opts=opts)
+    settings = {'debug': True}
+    ocl_est = OpenCLKraskovCMI(settings=settings)
     mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(var1, var2)
     mi_ocl = mi_ocl[0]
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovCMI(opts={})
+    jidt_est = JidtKraskovCMI(settings={})
     mi_jidt = jidt_est.estimate(var1, var2)
 
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
@@ -401,11 +401,11 @@ def test_local_values():
     chunklength = int(source.shape[0] / n_chunks)
 
     # Estimate local values
-    opts = {'local_values': True}
-    est_cmi = OpenCLKraskovCMI(opts=opts)
+    settings = {'local_values': True}
+    est_cmi = OpenCLKraskovCMI(settings=settings)
     mi = est_cmi.estimate(source, target, source_uncorr, n_chunks=n_chunks)
 
-    est_mi = OpenCLKraskovMI(opts=opts)
+    est_mi = OpenCLKraskovMI(settings=settings)
     cmi = est_mi.estimate(source, target, n_chunks=n_chunks)
 
     mi_ch1 = np.mean(mi[0:chunklength])
@@ -414,11 +414,11 @@ def test_local_values():
     cmi_ch2 = np.mean(cmi[chunklength:])
 
     # Estimate non-local values for comparison
-    opts = {'local_values': False}
-    est_cmi = OpenCLKraskovCMI(opts=opts)
+    settings = {'local_values': False}
+    est_cmi = OpenCLKraskovCMI(settings=settings)
     mi = est_cmi.estimate(source, target, source_uncorr, n_chunks=n_chunks)
 
-    est_mi = OpenCLKraskovMI(opts=opts)
+    est_mi = OpenCLKraskovMI(settings=settings)
     cmi = est_mi.estimate(source, target, n_chunks=n_chunks)
 
     # Report results

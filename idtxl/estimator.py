@@ -75,7 +75,7 @@ def find_estimator(est):
 
 class Estimator(metaclass=ABCMeta):
 
-    def __init__(self, opts=None):
+    def __init__(self, settings=None):
         pass
 
     @abstractmethod

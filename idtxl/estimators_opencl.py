@@ -34,7 +34,7 @@ class OpenCLKraskov(Estimator):
     estimators see documentation for the child classes.
 
     Args:
-        opts : dict [optional]
+        settings : dict [optional]
             set estimator parameters:
 
             - 'gpuid' - device ID used for estimation (if more than one device
@@ -48,28 +48,27 @@ class OpenCLKraskov(Estimator):
               range searches and KNN distances (default=False)
     """
 
-    def __init__(self, opts=None):
+    def __init__(self, settings=None):
+        # Get defaults for estimator settings
+        if settings is None:
+            settings = {}
+        elif type(settings) is not dict:
+            raise TypeError('settings should be a dictionary.')
 
-        # Get defaults for estimator options
-        if opts is None:
-            opts = {}
-        elif type(opts) is not dict:
-            raise TypeError('Opts should be a dictionary.')
-
-        opts.setdefault('gpuid', int(0))
-        opts.setdefault('kraskov_k', int(4))
-        opts.setdefault('theiler_t', int(0))
-        opts.setdefault('noise_level', np.float32(1e-8))
-        opts.setdefault('local_values', False)
-        opts.setdefault('debug', False)
-        opts.setdefault('verbose', True)
-        self.opts = opts
+        settings.setdefault('gpuid', int(0))
+        settings.setdefault('kraskov_k', int(4))
+        settings.setdefault('theiler_t', int(0))
+        settings.setdefault('noise_level', np.float32(1e-8))
+        settings.setdefault('local_values', False)
+        settings.setdefault('debug', False)
+        settings.setdefault('verbose', True)
+        self.settings = settings
         self.sizeof_float = int(np.dtype(np.float32).itemsize)
         self.sizeof_int = int(np.dtype(np.int32).itemsize)
 
         # Get kernel and devices.
         self.devices, self.context, self.queue = self._get_device(
-                                                            self.opts['gpuid'])
+                                                        self.settings['gpuid'])
         self.kernel_location = resource_filename(__name__,
                                                  'gpuKnnKernelNoIdx.cl')
         self.kNN_kernel, self.RS_kernel = self._get_kernels()
@@ -91,7 +90,7 @@ class OpenCLKraskov(Estimator):
         my_gpu_devices = platform.get_devices(device_type=cl.device_type.GPU)
         context = cl.Context(devices=my_gpu_devices)
         queue = cl.CommandQueue(context, my_gpu_devices[gpuid])
-        if self.opts['verbose']:
+        if self.settings['verbose']:
             print("Selected Device: ", my_gpu_devices[gpuid].name)
         return my_gpu_devices, context, queue
 
@@ -121,7 +120,7 @@ class OpenCLKraskovMI(OpenCLKraskov):
     information. Physical review E, 69(6), 066138.
 
     Args:
-        opts : dict [optional]
+        settings : dict [optional]
             set estimator parameters:
 
             - 'gpuid' - device ID used for estimation (if more than one device
@@ -137,11 +136,10 @@ class OpenCLKraskovMI(OpenCLKraskov):
               between processes (default=0)
     """
 
-    def __init__(self, opts=None):
-
-        # Set default estimator options.
-        super().__init__(opts)
-        self.opts.setdefault('lag', 0)
+    def __init__(self, settings=None):
+        # Set default estimator settings.
+        super().__init__(settings)
+        self.settings.setdefault('lag', 0)
 
     def estimate(self, var1, var2, n_chunks=1):
         """Estimate mutual information.
@@ -162,7 +160,6 @@ class OpenCLKraskovMI(OpenCLKraskov):
                 average MI over all samples or local MI for individual
                 samples if 'local_values'=True
         """
-
         # Prepare data and add noise
         assert var1.shape[0] == var2.shape[0]
         assert var1.shape[0] % n_chunks == 0
@@ -171,22 +168,23 @@ class OpenCLKraskovMI(OpenCLKraskov):
         var1dim = var1.shape[1]
         var2dim = var2.shape[1]
         pointdim = var1dim + var2dim
-        kraskov_k = self.opts['kraskov_k']
+        kraskov_k = self.settings['kraskov_k']
 
         mem_data = self.sizeof_float * chunklength * pointdim
         mem_dist = self.sizeof_float * chunklength * kraskov_k
         mem_ncnt = 2 * self.sizeof_int * chunklength
         mem_chunk = mem_data + mem_dist + mem_ncnt
 
-        if 'max_mem' in self.opts:
-            max_mem = self.opts['max_mem']
+        if 'max_mem' in self.settings:
+            max_mem = self.settings['max_mem']
         else:
-            max_mem = 0.9 * self.devices[self.opts['gpuid']].global_mem_size
+            max_mem = 0.9 * self.devices[
+                                    self.settings['gpuid']].global_mem_size
 
         max_chunks_per_run = np.floor(max_mem/mem_chunk).astype(int)
         chunks_per_run = min(max_chunks_per_run, n_chunks)
 
-        if self.opts['debug']:
+        if self.settings['debug']:
             print('Memory per chunk: {0:.5f} MB, GPU global memory: {1} MB, '
                   'chunks per run: {2}.'.format(mem_chunk / 1024 / 1024,
                                                 max_mem / 1024 / 1024,
@@ -197,7 +195,7 @@ class OpenCLKraskovMI(OpenCLKraskov):
                                'memory.')
 
         mi_array = np.array([])
-        if self.opts['debug']:
+        if self.settings['debug']:
             distances = np.array([])
             count_var1 = np.array([])
             count_var2 = np.array([])
@@ -210,7 +208,7 @@ class OpenCLKraskovMI(OpenCLKraskov):
             n_chunks_current_run = subset1.shape[0] // chunklength
             res = self._estimate_single_run(subset1, subset2,
                                             n_chunks_current_run)
-            if self.opts['debug']:
+            if self.settings['debug']:
                 mi_array = np.concatenate((mi_array,   res[0]))
                 distances = np.concatenate((distances,  res[1]))
                 count_var1 = np.concatenate((count_var1, res[2]))
@@ -218,7 +216,7 @@ class OpenCLKraskovMI(OpenCLKraskov):
             else:
                 mi_array = np.concatenate((mi_array, res))
 
-        if self.opts['debug']:
+        if self.settings['debug']:
             return mi_array, distances, count_var1, count_var2
         else:
             return mi_array
@@ -245,9 +243,8 @@ class OpenCLKraskovMI(OpenCLKraskov):
                 average MI over all samples or local MI for individual
                 samples if 'local_values'=True
         """
-
         # Prepare data and add noise
-        if self.opts['debug']:
+        if self.settings['debug']:
             print('var1 shape: {0}, {1}, n_chunks: {2}'.format(
                              var1.shape[0], var1.shape[1], n_chunks))
         assert var1.shape[0] == var2.shape[0]
@@ -258,22 +255,24 @@ class OpenCLKraskovMI(OpenCLKraskov):
         var2dim = var2.shape[1]
         pointdim = var1dim + var2dim
         pointset = np.hstack((var1, var2)).T.copy()
-        pointset += np.random.normal(scale=self.opts['noise_level'],
+        pointset += np.random.normal(scale=self.settings['noise_level'],
                                      size=pointset.shape)
         if not pointset.dtype == np.float32:
             pointset = pointset.astype(np.float32)
 
         # Set OpenCL kernel launch parameters
-        if chunklength < self.devices[self.opts['gpuid']].max_work_group_size:
+        if chunklength < self.devices[
+                                self.settings['gpuid']].max_work_group_size:
             workitems_x = 8
-        elif self.devices[self.opts['gpuid']].max_work_group_size < 256:
-            workitems_x = self.devices[self.opts['gpuid']].max_work_group_size
+        elif self.devices[self.settings['gpuid']].max_work_group_size < 256:
+            workitems_x = self.devices[
+                                self.settings['gpuid']].max_work_group_size
         else:
             workitems_x = 256
         NDRange_x = workitems_x * (int((signallength-1)/workitems_x) + 1)
 
         # Allocate and copy memory to device
-        kraskov_k = self.opts['kraskov_k']
+        kraskov_k = self.settings['kraskov_k']
         d_pointset = cl.Buffer(
                         self.context,
                         cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR,
@@ -297,7 +296,7 @@ class OpenCLKraskovMI(OpenCLKraskov):
                                      self.sizeof_int * signallength)
 
         # Neighbour search
-        theiler_t = np.int32(self.opts['theiler_t'])
+        theiler_t = np.int32(self.settings['theiler_t'])
         localmem = cl.LocalMemory(self.sizeof_float * kraskov_k * workitems_x)
         self.kNN_kernel(self.queue, (NDRange_x,), (workitems_x,), d_pointset,
                         d_pointset, d_distances, np.int32(pointdim),
@@ -328,7 +327,7 @@ class OpenCLKraskovMI(OpenCLKraskov):
         d_npointsrange_y.release()
 
         # Calculate and sum digammas
-        if self.opts['local_values']:
+        if self.settings['local_values']:
             mi_array = -np.inf * np.ones(chunklength * n_chunks,
                                          dtype=np.float64)
             i1 = 0
@@ -349,7 +348,7 @@ class OpenCLKraskovMI(OpenCLKraskov):
                        digamma(count_var2[c*chunklength:(c+1)*chunklength]+1)))
                 mi_array[c] = mi
 
-        if self.opts['debug']:
+        if self.settings['debug']:
             return mi_array, distances, count_var1, count_var2
         else:
             return mi_array
@@ -366,7 +365,7 @@ class OpenCLKraskovCMI(OpenCLKraskov):
     information. Physical review E, 69(6), 066138.
 
     Args:
-        opts : dict [optional]
+        settings : dict [optional]
             set estimator parameters:
 
             - 'gpuid' - device ID used for estimation (if more than one device
@@ -380,8 +379,8 @@ class OpenCLKraskovCMI(OpenCLKraskov):
               range searches and KNN distances (default=False)
     """
 
-    def __init__(self, opts=None):
-        super().__init__(opts)
+    def __init__(self, settings=None):
+        super().__init__(settings)
 
     def estimate(self, var1, var2, conditional=None, n_chunks=1):
         """Estimate conditional mutual information.
@@ -407,10 +406,9 @@ class OpenCLKraskovCMI(OpenCLKraskov):
                 average CMI over all samples or local CMI for individual
                 samples if 'local_values'=True
         """
-
         # Return MI if no conditional is provided
         if conditional is None:
-            est_mi = OpenCLKraskovMI(self.opts)
+            est_mi = OpenCLKraskovMI(self.settings)
             return est_mi.estimate(var1, var2, n_chunks)
 
         # Prepare data and add noise
@@ -423,22 +421,23 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         var2dim = var2.shape[1]
         conddim = conditional.shape[1]
         pointdim = var1dim + var2dim + conddim
-        kraskov_k = self.opts['kraskov_k']
+        kraskov_k = self.settings['kraskov_k']
 
         mem_data = self.sizeof_float * chunklength * pointdim
         mem_dist = self.sizeof_float * chunklength * kraskov_k
         mem_ncnt = 2 * self.sizeof_int * chunklength
         mem_chunk = mem_data + mem_dist + mem_ncnt
 
-        if 'max_mem' in self.opts:
-            max_mem = self.opts['max_mem']
+        if 'max_mem' in self.settings:
+            max_mem = self.settings['max_mem']
         else:
-            max_mem = 0.9 * self.devices[self.opts['gpuid']].global_mem_size
+            max_mem = 0.9 * self.devices[
+                                    self.settings['gpuid']].global_mem_size
 
         max_chunks_per_run = np.floor(max_mem/mem_chunk).astype(int)
         chunks_per_run = min(max_chunks_per_run, n_chunks)
 
-        if self.opts['debug']:
+        if self.settings['debug']:
             print('Memory per chunk: {0:.5f} MB, GPU global memory: {1} MB, '
                   'chunks per run: {2}.'.format(mem_chunk / 1024 / 1024,
                                                 max_mem / 1024 / 1024,
@@ -448,7 +447,7 @@ class OpenCLKraskovCMI(OpenCLKraskov):
                                'memory.')
 
         cmi_array = np.array([])
-        if self.opts['debug']:
+        if self.settings['debug']:
             distances = np.array([])
             count_var1 = np.array([])
             count_var2 = np.array([])
@@ -463,7 +462,7 @@ class OpenCLKraskovCMI(OpenCLKraskov):
             n_chunks_current_run = subset1.shape[0] // chunklength
             res = self._estimate_single_run(subset1, subset2, subset3,
                                             n_chunks_current_run)
-            if self.opts['debug']:
+            if self.settings['debug']:
                 cmi_array = np.concatenate((cmi_array,  res[0]))
                 distances = np.concatenate((distances,  res[1]))
                 count_var1 = np.concatenate((count_var1, res[2]))
@@ -472,7 +471,7 @@ class OpenCLKraskovCMI(OpenCLKraskov):
             else:
                 cmi_array = np.concatenate((cmi_array, res))
 
-        if self.opts['debug']:
+        if self.settings['debug']:
             return cmi_array, distances, count_var1, count_var2, count_cond
         else:
             return cmi_array
@@ -506,7 +505,7 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         """
         # Return MI if no conditional is provided
         if conditional is None:
-            est_mi = OpenCLKraskovMI(self.opts)
+            est_mi = OpenCLKraskovMI(self.settings)
             return est_mi.estimate(var1, var2, n_chunks)
 
         # Prepare data and add noise
@@ -520,22 +519,24 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         conddim = conditional.shape[1]
         pointdim = var1dim + var2dim + conddim
         pointset = np.hstack((var1, conditional, var2)).T.copy()
-        pointset += np.random.normal(scale=self.opts['noise_level'],
+        pointset += np.random.normal(scale=self.settings['noise_level'],
                                      size=pointset.shape)
         if not pointset.dtype == np.float32:
             pointset = pointset.astype(np.float32)
 
         # Set OpenCL kernel launch parameters
-        if chunklength < self.devices[self.opts['gpuid']].max_work_group_size:
+        if chunklength < self.devices[
+                                self.settings['gpuid']].max_work_group_size:
             workitems_x = 8
-        elif self.devices[self.opts['gpuid']].max_work_group_size < 256:
-            workitems_x = self.devices[self.opts['gpuid']].max_work_group_size
+        elif self.devices[self.settings['gpuid']].max_work_group_size < 256:
+            workitems_x = self.devices[
+                                self.settings['gpuid']].max_work_group_size
         else:
             workitems_x = 256
         NDRange_x = workitems_x * (int((signallength-1)/workitems_x) + 1)
 
         # Allocate and copy memory to device
-        kraskov_k = self.opts['kraskov_k']
+        kraskov_k = self.settings['kraskov_k']
         d_pointset = cl.Buffer(
                         self.context,
                         cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR,
@@ -562,7 +563,7 @@ class OpenCLKraskovCMI(OpenCLKraskov):
                                      self.sizeof_int * signallength)
 
         # Neighbour search in full space
-        theiler_t = np.int32(self.opts['theiler_t'])
+        theiler_t = np.int32(self.settings['theiler_t'])
         localmem = cl.LocalMemory(self.sizeof_float * kraskov_k * workitems_x)
         self.kNN_kernel(self.queue, (NDRange_x,), (workitems_x,), d_pointset,
                         d_pointset, d_distances, np.int32(pointdim),
@@ -601,7 +602,7 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         d_npointsrange_z.release()
 
         # Calculate and sum digammas
-        if self.opts['local_values']:
+        if self.settings['local_values']:
             cmi_array = -np.inf * np.ones(n_chunks * chunklength,
                                           dtype=np.float64)
             i1 = 0
@@ -624,7 +625,7 @@ class OpenCLKraskovCMI(OpenCLKraskov):
                         digamma(count_tgt[c*chunklength:(c+1)*chunklength]+1)))
                 cmi_array[c] = cmi
 
-        if self.opts['debug']:
+        if self.settings['debug']:
             return (cmi_array, distances, count_src, count_tgt, count_cnd)
         else:
             return cmi_array
