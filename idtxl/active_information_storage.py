@@ -18,36 +18,30 @@ from .estimator import find_estimator
 
 
 class ActiveInformationStorage(SingleProcessAnalysis):
-    """Set up analysis of active information storage in individual processes.
+    """Estimate active information storage in individual processes.
 
-    Set parameters necessary for active information storage (AIS) in individual
-    processes of the network. To perform AIS estimation call analyse_network()
-    on the whole network or a set of nodes or call analyse_single_process() to
-    estimate AIS for a single process. See docstrings of the two functions
-    for more information.
+    Estimate active information storage (AIS) in individual processes of the
+    network. To perform AIS estimation call analyse_network() on the whole
+    network or a set of nodes or call analyse_single_process() to estimate
+    AIS for a single process. See docstrings of the two functions for more
+    information.
 
     Attributes:
-        selected_vars_full : list of tuples
-            samples in the past state, (idx process, idx sample)
+        process_set : list
+            list with indices of analyzed processes
+        settings : dict
+            analysis settings
         current_value : tuple
             index of the current value in AIS estimation, (idx process,
             idx sample)
-        estimator_name : string
-            estimator used for CMI/MI estimation
-        max_lag : int
-            maximum temporal search depth for candidates in the processes' past
-            (default=same as max_lag_sources)
-        tau : int [optional]
-            spacing between samples analyzed for information contribution
-            (default=1)
+        selected_vars_full : list of tuples
+            samples in the past state, (idx process, idx sample)
         ais : float
             raw AIS value
         sign : bool
             true if AIS is significant
         pvalue: float
             p-value of AIS
-        process_set : list
-            list with indices of analyzed processes
     """
 
     def __init__(self):
@@ -287,7 +281,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         self._include_candidates(candidates, data)
 
     def _include_candidates(self, candidate_set, data):
-        """Inlcude informative candidates into the conditioning set.
+        """Include informative candidates into the conditioning set.
 
         Loop over each candidate in the candidate set and test if it has
         significant mutual information with the current value, conditional
@@ -304,10 +298,8 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 raw data
 
         Returns:
-            list of tuples
-                indices of the conditional set created from the candidate set
-            selected_vars_realisations : numpy array
-                realisations of the conditional set
+            bool
+                True if a significant variable was found in the process's past.
         """
         success = False
         while candidate_set:
@@ -366,9 +358,6 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         Args:
             data : Data instance
                 raw data
-            settings : dict [optional]
-                parameters for estimation and statistical testing
-
         """
         # FOR LATER we don't need to test the last included in the first round
         while self.selected_vars_sources:

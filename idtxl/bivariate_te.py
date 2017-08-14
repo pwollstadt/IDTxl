@@ -16,37 +16,30 @@ from .network_inference import NetworkInference
 
 
 class BivariateTE(NetworkInference):
-    """Set up a network analysis using bivariate transfer entropy.
+    """Perform network inference using bivariate transfer entropy.
 
-    Set parameters necessary for network inference using transfer entropy (TE).
-    To perform network inference call analyse_network()
-    on the whole network or a set of nodes or call analyse_single_target() to
-    estimate TE for a single target. See docstrings of the two functions
-    for more information.
+    Perform network inference using bivariate transfer entropy (TE). To
+    perform network inference call analyse_network() on the whole network or a
+    set of nodes or call analyse_single_target() to estimate TE for a single
+    target. See docstrings of the two functions for more information.
 
     Attributes:
+        source_set : list
+            indices of source processes tested for their influence on the
+            target
+        target : list
+            index of target process
+        settings : dict
+            analysis settings
+        current_value : tuple
+            index of the current value in TE estimation, (idx process,
+            idx sample)
         selected_vars_full : list of tuples
             samples in the full conditional set, (idx process, idx sample)
         selected_vars_sources : list of tuples
             source samples in the conditional set, (idx process, idx sample)
         selected_vars_target : list of tuples
             target samples in the conditional set, (idx process, idx sample)
-        current_value : tuple
-            index of the current value in TE estimation, (idx process,
-            idx sample)
-        estimator_name : string
-            estimator used for TE estimation
-        max_lag_target : int
-            maximum temporal search depth for candidates in the target's past
-            (default=same as max_lag_sources)
-        max_lag_sources : int
-            maximum temporal search depth for candidates in the sources' past
-        min_lag_sources : int
-            minimum temporal search depth for candidates in the sources' past
-        tau_sources : int
-            spacing between candidates in the sources' past
-        tau_target : int
-            spacing between candidates in the target's past
         pvalue_omnibus : float
             p-value of the omnibus test
         pvalues_sign_sources : numpy array
@@ -57,12 +50,6 @@ class BivariateTE(NetworkInference):
             raw TE values from individual sources to the target
         sign_ominbus : bool
             statistical significance of the over-all TE
-        source_set : list
-            list with indices of source processes
-        target : list
-            index of target process
-        settings : dict
-            dictionary with the analysis settings
     """
 
     def __init__(self):
@@ -293,12 +280,6 @@ class BivariateTE(NetworkInference):
         Args:
             data : Data instance
                 raw data
-
-        Returns:
-            list of tuples
-                indices of the conditional set created from the candidate set
-            selected_vars_realisations : numpy array
-                realisations of the conditional set
         """
         # Define candidate set and get realisations.
         procs = self.source_set

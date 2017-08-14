@@ -11,21 +11,10 @@ from . import stats
 
 
 class NetworkInference(NetworkAnalysis):
-    """Provide an analysis setup for multivariate network inference.
+    """Parent class for network inference algorithms.
 
-    Hold variables that are relevant for multivariate network inference.
-    The class holds
-
-    (1) analysis parameters
-    (2) 'analysis pattern', i.e., indices of random variables used for
-    network inference (e.g. current value and conditional in transfer entropy
-    estimation)
-    (3) temporary data for analysis, i.e., realisations of the variables
-
-    The class provides routines to check user input and set defaults. The
-    'analysis pattern' is represented by tuples or list of tuples (process
-    index, sample index), where a tuple indicates where to find realisations in
-    the data.
+    Hold variables that are relevant for network inference using for example
+    bivariate and multivariate transfer entropy.
 
     Attributes:
         settings : dict
@@ -48,7 +37,6 @@ class NetworkInference(NetworkAnalysis):
         self.te_omnibus = None
         self.te_sign_sources = None
         self.sign_omnibus = False
-        self.sign_sign_sources = None
         self.pvalue_omnibus = None
         self.pvalues_sign_sources = None
         super().__init__()
@@ -145,7 +133,6 @@ class NetworkInference(NetworkAnalysis):
             self.selected_vars_sources = []
             self.selected_vars_target = []
             self.te_omnibus = None
-            self.sign_sign_sources = None
             self.pvalue_omnibus = None
             self.pvalues_sign_sources = None
             self.te_sign_sources = None
@@ -245,14 +232,10 @@ class NetworkInference(NetworkAnalysis):
                 (process index, sample index)
             data : Data instance
                 raw data
-            settings : dict [optional]
-                parameters for estimation and statistical testing
 
         Returns:
-            list of tuples
-                indices of the conditional set created from the candidate set
-            selected_vars_realisations : numpy array
-                realisations of the conditional set
+            bool
+                True if a candidate with significant MI was found
         """
         success = False
         while candidate_set:
