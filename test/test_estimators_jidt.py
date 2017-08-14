@@ -598,7 +598,7 @@ def test_invalid_history_parameters():
 
     # TE: Parameters are not integers
     settings = {'history_target': 4, 'history_source': 4,
-            'tau_source': 2, 'tau_target': 2.5}
+                'tau_source': 2, 'tau_target': 2.5}
     with pytest.raises(AssertionError): JidtDiscreteTE(settings=settings)
     with pytest.raises(AssertionError): JidtGaussianTE(settings=settings)
     with pytest.raises(AssertionError): JidtKraskovTE(settings=settings)
@@ -684,7 +684,44 @@ def test_lagged_mi():
                     'lagged MI', tol=0.05)
 
 
+def test_insufficient_no_points():
+    """Test if estimation aborts for too few data points."""
+    expected_mi, source1, source2, target = _get_gauss_data(n=4)
+
+    settings = {
+        'kraskov_k': 4,
+        'theiler_t': 0,
+        'history': 1,
+        'history_target': 1,
+        'lag': 1,
+        'source_target_delay': 1}
+
+    # Test first settings combination with k==N
+    est = JidtKraskovTE(settings)
+    with pytest.raises(RuntimeError): est.estimate(source1, target)
+    est = JidtKraskovMI(settings)
+    with pytest.raises(RuntimeError): est.estimate(source1, target)
+    est = JidtKraskovCMI(settings)
+    with pytest.raises(RuntimeError): est.estimate(source1, target, target)
+    est = JidtKraskovAIS(settings)
+    with pytest.raises(RuntimeError): est.estimate(source1)
+
+    # Test a second combination with a Theiler-correction != 0
+    settings['theiler_t'] = 1
+    settings['kraskov_k'] = 2
+
+    est = JidtKraskovTE(settings)
+    with pytest.raises(RuntimeError): est.estimate(source1, target)
+    est = JidtKraskovMI(settings)
+    with pytest.raises(RuntimeError): est.estimate(source1, target)
+    est = JidtKraskovCMI(settings)
+    with pytest.raises(RuntimeError): est.estimate(source1, target, target)
+    est = JidtKraskovAIS(settings)
+    with pytest.raises(RuntimeError): est.estimate(source1)
+
+
 if __name__ == '__main__':
+    test_insufficient_no_points()
     test_lagged_mi()
     # test_discretisation()
     test_invalid_history_parameters()

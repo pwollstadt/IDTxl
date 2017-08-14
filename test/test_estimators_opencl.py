@@ -440,6 +440,32 @@ def test_local_values():
     assert np.isclose(cmi_ch1, cmi[0], atol=0.05)
     assert np.isclose(cmi_ch2, cmi[1], atol=0.05)
 
+def test_insufficient_no_points():
+    """Test if estimation aborts for too few data points."""
+    expected_mi, source1, source2, target = _get_gauss_data(n=4)
+
+    settings = {
+        'kraskov_k': 4,
+        'theiler_t': 0,
+        'history': 1,
+        'history_target': 1,
+        'lag': 1,
+        'source_target_delay': 1}
+
+    # Test first settings combination with k==N
+    est = OpenCLKraskovMI(settings)
+    with pytest.raises(RuntimeError): est.estimate(source1, target)
+    est = OpenCLKraskovCMI(settings)
+    with pytest.raises(RuntimeError): est.estimate(source1, target, target)
+
+    # Test a second combination with a Theiler-correction != 0
+    settings['theiler_t'] = 1
+    settings['kraskov_k'] = 2
+    est = OpenCLKraskovMI(settings)
+    with pytest.raises(RuntimeError): est.estimate(source1, target)
+    est = OpenCLKraskovCMI(settings)
+    with pytest.raises(RuntimeError): est.estimate(source1, target, target)
+
 
 if __name__ == '__main__':
     test_local_values()

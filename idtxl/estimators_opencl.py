@@ -109,6 +109,23 @@ class OpenCLKraskov(Estimator):
                                          np.int32, None])
         return (kNN_kernel, RS_kernel)
 
+    def _check_number_of_points(self, n_points):
+        """Sanity check for number of points going into the estimator."""
+        if (n_points - 1) <= int(self.settings['kraskov_k']):
+            raise RuntimeError('Insufficient number of points ({0}) for the '
+                               'requested number of nearest neighbours '
+                               '(kraskov_k: {1}).'.format(
+                                        n_points, self.settings['kraskov_k']))
+        if (n_points - 1) <= (int(self.settings['kraskov_k']) +
+                              int(self.settings['theiler_t'])):
+            raise RuntimeError('Insufficient number of points ({0}) for the '
+                               'requested number of nearest neighbours '
+                               '(kraskov_k: {1}) and Theiler-correction '
+                               '(theiler_t: {2}).'.format(
+                                                n_points,
+                                                self.settings['kraskov_k'],
+                                                self.settings['theiler_t']))
+
 
 class OpenCLKraskovMI(OpenCLKraskov):
     """Calculate mutual information with OpenCL Kraskov implementation.
@@ -163,6 +180,7 @@ class OpenCLKraskovMI(OpenCLKraskov):
         # Prepare data and add noise
         assert var1.shape[0] == var2.shape[0]
         assert var1.shape[0] % n_chunks == 0
+        self._check_number_of_points(var1.shape[0])
         signallength = var1.shape[0]
         chunklength = signallength // n_chunks
         var1dim = var1.shape[1]
@@ -249,6 +267,7 @@ class OpenCLKraskovMI(OpenCLKraskov):
                              var1.shape[0], var1.shape[1], n_chunks))
         assert var1.shape[0] == var2.shape[0]
         assert var1.shape[0] % n_chunks == 0
+        self._check_number_of_points(var1.shape[0])
         signallength = var1.shape[0]
         chunklength = signallength // n_chunks
         var1dim = var1.shape[1]
@@ -415,6 +434,7 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         assert var1.shape[0] == var2.shape[0]
         assert var1.shape[0] == conditional.shape[0]
         assert var1.shape[0] % n_chunks == 0
+        self._check_number_of_points(var1.shape[0])
         signallength = var1.shape[0]
         chunklength = signallength // n_chunks
         var1dim = var1.shape[1]
