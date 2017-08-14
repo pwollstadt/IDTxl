@@ -13,27 +13,24 @@ from .estimator import find_estimator
 
 
 class PartialInformationDecomposition(SingleProcessAnalysis):
-    """Set up partial information decomposition for individual processes.
+    """Perform partial information decomposition for individual processes.
 
-    Set parameters necessary to infer partial information decomposition (PID)
-    for two source and one target process. Estimate unique, shared, and
+    Perform partial information decomposition (PID) for two source processes
+    and one target process in the network. Estimate unique, shared, and
     synergistic information in the two sources about the target. Call
     analyse_network() on the whole network or a set of nodes or call
     analyse_single_target() to estimate PID for a single process. See
     docstrings of the two functions for more information.
 
-    Args:
+    Attributes:
+        target : int
+            index of target process
+        sources : array type
+            pair of indices of source processes
         settings : dict
-            parameters for estimator use and statistics:
-
-            - 'n_perm' - number of permutations for statistical testing
-              (default=500)
-            - 'alpha' - critical alpha level for statistical significance
-              (default=0.05)
-            - 'tail' - 'one' or 'two' for one- or two-sided statistical
-              testing (default='one')
-            - 'pid_calc_name' - estimator to be used for PID calculation
-              (for estimator settings see the respective documentation)
+            analysis settings
+        results : dict
+            estimated PID
     """
 
     def __init__(self):
