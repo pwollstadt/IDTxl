@@ -26,6 +26,16 @@ class ActiveInformationStorage(SingleProcessAnalysis):
     AIS for a single process. See docstrings of the two functions for more
     information.
 
+    References:
+
+        - Lizier, J. T., Prokopenko, M., & Zomaya, A. Y. (2012). Local measures
+          of information storage in complex distributed computation. Inform
+          Sci, 208, 39–54. http://doi.org/10.1016/j.ins.2012.04.016
+        - Wibral, M., Lizier, J. T., Vögler, S., Priesemann, V., & Galuske, R.
+          (2014). Local active information storage as a tool to understand
+          distributed neural information processing. Front Neuroinf, 8, 1.
+          http://doi.org/10.3389/fninf.2014.00001
+
     Attributes:
         process_set : list
             list with indices of analyzed processes
@@ -54,8 +64,8 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         the network.
 
         Note:
-            For a detailed description and references see the documentation of
-            the analyse_single_process() method of this class.
+            For a detailed description see the documentation of the
+            analyse_single_process() method of this class and the references.
 
         Example:
 
@@ -116,9 +126,8 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         """Estimate active information storage for a single process.
 
         Estimate active information storage for one process in the network.
-        Uses non-uniform embedding found through information maximisation (see
-        Faes, 2011, and Lizier, ???). This is
-        done in three steps (see Lizier and Faes for details):
+        Uses non-uniform embedding found through information maximisation. This
+        is done in three steps (see Lizier and Faes for details):
 
         (1) find all relevant samples in the processes' own past, by
             iteratively adding candidate samples that have significant

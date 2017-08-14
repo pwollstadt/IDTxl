@@ -23,6 +23,23 @@ class MultivariateTE(NetworkInference):
     set of nodes or call analyse_single_target() to estimate TE for a single
     target. See docstrings of the two functions for more information.
 
+    References:
+
+        - Schreiber, T. (2000). Measuring Information Transfer. Phys Rev Lett,
+          85(2), 461–464. http://doi.org/10.1103/PhysRevLett.85.461
+        - Vicente, R., Wibral, M., Lindner, M., & Pipa, G. (2011). Transfer
+          entropy-a model-free measure of effective connectivity for the
+          neurosciences. J Comp Neurosci, 30(1), 45–67.
+          http://doi.org/10.1007/s10827-010-0262-3
+        - Lizier, J. T., & Rubinov, M. (2012). Multivariate construction of
+          effective computational networks from observational data. Max Planck
+          Institute: Preprint. Retrieved from
+          http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf
+        - Faes, L., Nollo, G., & Porta, A. (2011). Information-based detection
+          of nonlinear Granger causality in multivariate processes via a
+          nonuniform embedding technique. Phys Rev E, 83, 1–15.
+          http://doi.org/10.1103/PhysRevE.83.051112
+
     Attributes:
         source_set : list
             indices of source processes tested for their influence on the
@@ -62,8 +79,8 @@ class MultivariateTE(NetworkInference):
         network or between selected sources and targets.
 
         Note:
-            For a detailed description and references see the documentation of
-            the analyse_single_target() method of this class.
+            For a detailed description see the documentation of the
+            analyse_single_target() method of this class and the references.
 
         Example:
 

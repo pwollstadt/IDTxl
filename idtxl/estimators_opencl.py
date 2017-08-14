@@ -17,10 +17,17 @@ class OpenCLKraskov(Estimator):
     Abstract class for implementation of OpenCL estimators, child classes
     implement estimators for mutual information (MI) and conditional mutual
     information (CMI) using the Kraskov-Grassberger-Stoegbauer estimator for
-    continuous data. References:
+    continuous data.
 
-    Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating mutual
-    information. Physical review E, 69(6), 066138.
+    References:
+
+        - Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating
+          mutual information. Phys Rev E, 69(6), 066138.
+        - Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012).
+          Local measures of information storage in complex distributed
+          computation. Inform Sci, 208, 39-54.
+        - Schreiber, T. (2000). Measuring information transfer. Phys Rev Lett,
+          85(2), 461.
 
     Estimators can be used to perform multiple, independent searches in
     parallel. Each of these parallel searches is called a 'chunk'. To search
@@ -131,10 +138,7 @@ class OpenCLKraskovMI(OpenCLKraskov):
     """Calculate mutual information with OpenCL Kraskov implementation.
 
     Calculate the mutual information (MI) between two variables using OpenCL
-    GPU-code. References:
-
-    Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating mutual
-    information. Physical review E, 69(6), 066138.
+    GPU-code. See parent class for references.
 
     Args:
         settings : dict [optional]
@@ -378,10 +382,8 @@ class OpenCLKraskovCMI(OpenCLKraskov):
 
     Calculate the conditional mutual information (CMI) between three variables
     using OpenCL GPU-code. If no conditional is given (is None), the function
-    returns the mutual information between var1 and var2. References:
-
-    Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating mutual
-    information. Physical review E, 69(6), 066138.
+    returns the mutual information between var1 and var2. See parent class for
+    references.
 
     Args:
         settings : dict [optional]
