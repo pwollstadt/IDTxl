@@ -26,7 +26,7 @@ def test_min_statistic():
 def test_max_statistic_sequential():
     dat = Data()
     dat.generate_mute_data(104, 10)
-    opts = {
+    settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 21,
         'n_perm_min_stat': 21,
@@ -37,7 +37,7 @@ def test_max_statistic_sequential():
         'max_lag_target': 5
         }
     setup = MultivariateTE()
-    setup._initialise(opts, dat, sources=[0, 1], target=2)
+    setup._initialise(settings, dat, sources=[0, 1], target=2)
     setup.current_value = (0, 4)
     setup.selected_vars_sources = [(1, 1), (1, 2)]
     setup.selected_vars_full = [(0, 1), (1, 1), (1, 2)]
@@ -52,7 +52,6 @@ def test_max_statistic_sequential():
 
 
 def test_network_fdr():
-
     target_0 = {
         'selected_vars_sources': [(1, 1), (1, 2), (1, 3), (2, 1), (2, 0)],
         'selected_vars_full': [(0, 1), (0, 2), (0, 3), (1, 1), (1, 2), (1, 3),
@@ -61,7 +60,7 @@ def test_network_fdr():
         'omnibus_sign': True,
         'selected_sources_pval': np.array([0.001, 0.0014, 0.01, 0.045, 0.047]),
         'selected_sources_te': np.array([1.1, 1.0, 0.8, 0.7, 0.63]),
-        'options': {'n_perm_max_seq': 1000}
+        'settings': {'n_perm_max_seq': 1000}
         }
     target_1 = {
         'selected_vars_sources': [(1, 2), (2, 1), (2, 2)],
@@ -70,7 +69,7 @@ def test_network_fdr():
         'omnibus_sign': True,
         'selected_sources_pval': np.array([0.00001, 0.00014, 0.01]),
         'selected_sources_te': np.array([1.8, 1.75, 0.75]),
-        'options': {'n_perm_max_seq': 1000}
+        'settings': {'n_perm_max_seq': 1000}
         }
     target_2 = {
         'selected_vars_sources': [],
@@ -79,7 +78,7 @@ def test_network_fdr():
         'omnibus_sign': False,
         'selected_sources_pval': None,
         'selected_sources_te': np.array([]),
-        'options': {'n_perm_max_seq': 1000}
+        'settings': {'n_perm_max_seq': 1000}
         }
     res_1 = {
         0: target_0,
@@ -90,7 +89,7 @@ def test_network_fdr():
     }
 
     for correct_by_target in [True, False]:
-        opts = {
+        settings = {
             'cmi_estimator': 'JidtKraskovCMI',
             'alpha_fdr': 0.05,
             'max_lag_sources': 3,
@@ -100,8 +99,9 @@ def test_network_fdr():
         dat = Data()
         dat.generate_mute_data(n_samples=100, n_replications=3)
         analysis_setup = MultivariateTE()
-        analysis_setup._initialise(opts, data=dat, sources=[1, 2], target=0)
-        res_pruned = stats.network_fdr(opts, res_1, res_2)
+        analysis_setup._initialise(settings=settings, data=dat,
+                                   sources=[1, 2], target=0)
+        res_pruned = stats.network_fdr(settings, res_1, res_2)
         assert (not res_pruned[2]['selected_vars_sources']), ('Target ')
 
         for k in res_pruned.keys():
@@ -114,8 +114,8 @@ def test_network_fdr():
                                 'the same length.')
 
     # Test None result for insufficient no. permutations
-    res_1[0]['options']['n_perm_max_seq'] = 2
-    res_pruned = stats.network_fdr(opts, res_1, res_2)
+    res_1[0]['settings']['n_perm_max_seq'] = 2
+    res_pruned = stats.network_fdr(settings, res_1, res_2)
     assert res_pruned is None, ('Res. should be None is no. permutations too '
                                 'low.')
 
@@ -195,18 +195,18 @@ def test_data_type():
     assert dat.data_type is orig_type, 'Data type did not change.'
     assert issubclass(type(dat.data[0, 0, 0]), np.integer), ('Data type is not'
                                                              ' an int.')
-    opts = {'permute_in_time': True, 'perm_type': 'random'}
+    settings = {'permute_in_time': True, 'perm_type': 'random'}
     surr = stats._get_surrogates(data=dat,
                                  current_value=(0, 5),
                                  idx_list=[(1, 3), (2, 4)],
                                  n_perm=20,
-                                 perm_opts=opts)
+                                 perm_settings=settings)
     assert issubclass(type(surr[0, 0]), np.integer), ('Realisations type is '
                                                       'not an int.')
     surr = stats._generate_spectral_surrogates(data=dat,
                                                scale=1,
                                                n_perm=20,
-                                               perm_opts=opts)
+                                               perm_settings=settings)
     assert issubclass(type(surr[0, 0, 0]), np.integer), ('Realisations type is'
                                                          ' not an int.')
 
@@ -219,13 +219,13 @@ def test_data_type():
                                  current_value=(0, 5),
                                  idx_list=[(1, 3), (2, 4)],
                                  n_perm=20,
-                                 perm_opts=opts)
+                                 perm_settings=settings)
     assert issubclass(type(surr[0, 0]), np.float), ('Realisations type is not '
                                                     'a float.')
     surr = stats._generate_spectral_surrogates(data=dat,
                                                scale=1,
                                                n_perm=20,
-                                               perm_opts=opts)
+                                               perm_settings=settings)
     assert issubclass(type(surr[0, 0, 0]), np.float), ('Realisations type is '
                                                        'not a float.')
 

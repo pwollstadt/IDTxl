@@ -21,15 +21,15 @@ def test_pid_xor_data():
     dat = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
     # Run Tartu estimator
-    analysis_opts = {'pid_estimator': 'TartuPID'}
-    pid = PartialInformationDecomposition(options=analysis_opts)
+    settings = {'pid_estimator': 'TartuPID'}
+    pid = PartialInformationDecomposition()
     tic = tm.time()
-    est_tartu = pid.analyse_single_target(data=dat, target=2, sources=[0, 1],
-                                          lags=[0, 0])
+    est_tartu = pid.analyse_single_target(settings, data=dat, target=2,
+                                          sources=[0, 1], lags=[0, 0])
     t_tartu = tm.time() - tic
 
     # Run Sydney estimator
-    analysis_opts = {
+    settings = {
         'n_perm': 11,
         'alpha': 0.1,
         'alph_s1': alph,
@@ -39,10 +39,10 @@ def test_pid_xor_data():
         'num_reps': 63,
         'max_iters': 1000,
         'pid_estimator': 'SydneyPID'}
-    pid = PartialInformationDecomposition(options=analysis_opts)
+    pid = PartialInformationDecomposition()
     tic = tm.time()
-    est_sydney = pid.analyse_single_target(data=dat, target=2, sources=[0, 1],
-                                           lags=[0, 0])
+    est_sydney = pid.analyse_single_target(settings, data=dat, target=2,
+                                           sources=[0, 1], lags=[0, 0])
     t_sydney = tm.time() - tic
 
     print('\nResults Tartu estimator:')

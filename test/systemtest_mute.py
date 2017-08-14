@@ -7,7 +7,7 @@ from idtxl.data import Data
 start_time = time.time()
 dat = Data()  # initialise an empty data object
 dat.generate_mute_data(n_samples=1000, n_replications=10)
-analysis_opts = {
+settings = {
         'cmi_estimator':  'JidtKraskovCMI',
         'n_perm_max_stat': 500,
         'n_perm_min_stat': 200,
@@ -18,7 +18,7 @@ analysis_opts = {
         }
 
 network_analysis = MultivariateTE()
-res = network_analysis.analyse_network(analysis_opts, dat)
+res = network_analysis.analyse_network(settings, dat)
 runtime = time.time() - start_time
 print("---- {0} minutes".format(runtime / 60))
 

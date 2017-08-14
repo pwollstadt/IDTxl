@@ -53,7 +53,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
     def __init__(self):
         super().__init__()
 
-    def analyse_network(self, options, data, processes='all'):
+    def analyse_network(self, settings, data, processes='all'):
         """Estimate active information storage for multiple network processes.
 
         Estimate active information storage for all or a subset of processes in
@@ -68,7 +68,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             >>> dat = Data()
             >>> dat.generate_mute_data(100, 5)
             >>> max_lag = 5
-            >>> analysis_opts = {
+            >>> settings = {
             >>>     'cmi_estimator': 'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
             >>>     'n_perm_min_stat': 200,
@@ -77,11 +77,11 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             >>>     }
             >>> processes = [1, 2, 3]
             >>> network_analysis = ActiveInformationStorage()
-            >>> res = network_analysis.analyse_network(analysis_opts, dat,
+            >>> res = network_analysis.analyse_network(settings, dat,
             >>>                                        processes)
 
         Args:
-            options : dict
+            settings : dict
                 parameters for estimation and statistical testing, see
                 documentation of analyse_single_process() for details
             data : Data instance
@@ -107,18 +107,18 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                              '{0}.'.format(processes))
 
         # Perform AIS estimation for each target individually.
-        options.setdefault('verbose', True)
+        settings.setdefault('verbose', True)
         results = {}
         for t in range(len(processes)):
-            if options['verbose']:
+            if settings['verbose']:
                 print('\n####### analysing process {0} of {1}'.format(
                                                 processes[t], processes))
-            r = self.analyse_single_process(options, data, processes[t])
+            r = self.analyse_single_process(settings, data, processes[t])
             r['process'] = processes[t]
             results[processes[t]] = r
         return results
 
-    def analyse_single_process(self, options, data, process):
+    def analyse_single_process(self, settings, data, process):
         """Estimate active information storage for a single process.
 
         Estimate active information storage for one process in the network.
@@ -138,7 +138,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             test for statistical significance using a permutation test
 
         Args:
-            options : dict
+            settings : dict
                 parameters for estimator use and statistics:
 
                 - max_lag : int - maximum temporal search depth for candidates
@@ -151,7 +151,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                   statistical significance, where * can be 'max_stat',
                   'min_stat', 'mi' (default=0.05)
                 - 'cmi_estimator' str - estimator to be used for CMI and MI
-                  calculation (for estimator options see the documentation in
+                  calculation (for estimator settings see the documentation in
                   the estimators_* modules)
                 - 'add_conditionals' : list of tuples - force the estimator to
                   add these conditionals when estimating TE; can either be a
@@ -161,7 +161,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 - 'permute_in_time' : bool - force surrogate creation by
                   shuffling realisations in time instead of shuffling
                   replications; see documentation of Data.permute_samples() for
-                  further options (default=False)
+                  further settings (default=False)
 
             data : Data instance
                 raw data for analysis
@@ -177,7 +177,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 as tuples (process, lag wrt. current value)
         """
         # Check input and clean up object if it was used before.
-        self._initialise(options, data, process)
+        self._initialise(settings, data, process)
 
         # Main algorithm.
         print('\n---------------------------- (1) include candidates')
@@ -188,7 +188,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         self._test_final_conditional(data)
 
         # Clean up and return results.
-        if self.options['verbose']:
+        if self.settings['verbose']:
             print('final conditional samples: {0}'.format(
                     self._idx_to_lag(self.selected_vars_full)))
         results = {
@@ -197,37 +197,37 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             'ais': self.ais,
             'ais_pval': self.pvalue,
             'ais_sign': self.sign,
-            'options': self.options}
+            'settings': self.settings}
         self._reset()  # remove realisations and min_stats surrogate table
         return results
 
-    def _initialise(self, options, data, process):
-        """Check input, set initial and default values for analysis options."""
+    def _initialise(self, settings, data, process):
+        """Check input, set initial or default values for analysis settings."""
+        # Check analysis settings and set defaults.
+        settings.setdefault('verbose', True)
+        settings.setdefault('add_conditionals', None)
+        settings.setdefault('tau', 1)
 
-        # Check analysis options and set defaults.
-        options.setdefault('verbose', True)
-        options.setdefault('add_conditionals', None)
-        options.setdefault('tau', 1)
-
-        if type(options['max_lag']) is not int or options['max_lag'] < 0:
+        if type(settings['max_lag']) is not int or settings['max_lag'] < 0:
             raise RuntimeError('max_lag has to be an integer >= 0.')
-        if type(options['tau']) is not int or options['tau'] <= 0:
+        if type(settings['tau']) is not int or settings['tau'] <= 0:
             raise RuntimeError('tau has to be an integer > 0.')
-        if options['tau'] >= options['max_lag']:
+        if settings['tau'] >= settings['max_lag']:
             raise RuntimeError('tau ({0}) has to be smaller than max_lag ({1})'
-                               '.'.format(options['tau'], options['max_lag']))
-        self.options = options
+                               '.'.format(settings['tau'],
+                                          settings['max_lag']))
+        self.settings = settings
 
         # Set CMI estimator.
         try:
-            EstimatorClass = find_estimator(options['cmi_estimator'])
+            EstimatorClass = find_estimator(settings['cmi_estimator'])
         except KeyError:
             raise RuntimeError('Please provide an estimator class or name!')
-        self._cmi_estimator = EstimatorClass(options)
+        self._cmi_estimator = EstimatorClass(settings)
 
         # Initialise class attributes.
 
-        self.options = options
+        self.settings = settings
         self._min_stats_surr_table = None
 
         # Check process to be analysed.
@@ -242,10 +242,10 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         self.process = process
 
         # Check provided search depths for source and target
-        assert(data.n_samples >= self.options['max_lag'] + 1), (
+        assert(data.n_samples >= self.settings['max_lag'] + 1), (
             'Not enough samples in data ({0}) to allow for the chosen maximum '
-            'lag ({1})'.format(data.n_samples, self.options['max_lag']))
-        self.current_value = (process, self.options['max_lag'])
+            'lag ({1})'.format(data.n_samples, self.settings['max_lag']))
+        self.current_value = (process, self.settings['max_lag'])
         [cv_realisation, repl_idx] = data.get_realisations(
                                              current_value=self.current_value,
                                              idx_list=[self.current_value])
@@ -273,16 +273,16 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         # Check if the user provided a list of candidates that must go into
         # the conditioning set. These will be added and used for TE estimation,
         # but never tested for significance.
-        if self.options['add_conditionals'] is not None:
-            self._force_conditionals(self.options['add_conditionals'], data)
+        if self.settings['add_conditionals'] is not None:
+            self._force_conditionals(self.settings['add_conditionals'], data)
 
     def _include_process_candidates(self, data):
         """Test candidates in the process's past."""
         process = [self.process]
         samples = np.arange(
                     self.current_value[1] - 1,
-                    self.current_value[1] - self.options['max_lag'] - 1,
-                    -self.options['tau'])
+                    self.current_value[1] - self.settings['max_lag'] - 1,
+                    -self.settings['tau'])
         candidates = self._define_candidates(process, samples)
         self._include_candidates(candidates, data)
 
@@ -302,8 +302,6 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 (process index, sample index)
             data : Data instance
                 raw data
-            options : dict [optional]
-                parameters for estimation and statistical testing
 
         Returns:
             list of tuples
@@ -329,7 +327,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             # Test max CMI for significance with maximum statistics.
             te_max_candidate = max(temp_te)
             max_candidate = candidate_set[np.argmax(temp_te)]
-            if self.options['verbose']:
+            if self.settings['verbose']:
                 print('testing candidate {0} from candidate set {1}'.format(
                                     self._idx_to_lag([max_candidate])[0],
                                     self._idx_to_lag(candidate_set)), end='')
@@ -340,7 +338,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             # it is not significant break. There will be no further significant
             # sources b/c they all have lesser TE.
             if significant:
-                if self.options['verbose']:
+                if self.settings['verbose']:
                     print(' -- significant')
                 success = True
                 # Remove candidate from candidate set and add it to the
@@ -351,7 +349,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                         data.get_realisations(self.current_value,
                                               [max_candidate])[0])
             else:
-                if self.options['verbose']:
+                if self.settings['verbose']:
                     print(' -- not significant')
                 break
 
@@ -368,7 +366,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         Args:
             data : Data instance
                 raw data
-            options : dict [optional]
+            settings : dict [optional]
                 parameters for estimation and statistical testing
 
         """
@@ -410,7 +408,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             # Test min TE for significance with minimum statistics.
             te_min_candidate = min(temp_te)
             min_candidate = self.selected_vars_sources[np.argmin(temp_te)]
-            if self.options['verbose']:
+            if self.settings['verbose']:
                 print('testing candidate {0} from candidate set {1}'.format(
                                 self._idx_to_lag([min_candidate])[0],
                                 self._idx_to_lag(self.selected_vars_sources)),
@@ -424,11 +422,11 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             # candidate. If the minimum is significant, break, all other
             # sources will be significant as well (b/c they have higher TE).
             if not significant:
-                if self.options['verbose']:
+                if self.settings['verbose']:
                     print(' -- not significant')
                 self._remove_selected_var(min_candidate)
             else:
-                if self.options['verbose']:
+                if self.settings['verbose']:
                     print(' -- significant')
                 self._min_stats_surr_table = surr_table
                 break
@@ -470,5 +468,5 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         del self.pvalue
         del self.sign
         del self.ais
-        del self.options
+        del self.settings
         del self._cmi_estimator

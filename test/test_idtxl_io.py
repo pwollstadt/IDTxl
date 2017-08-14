@@ -12,7 +12,7 @@ from test_estimators_jidt import jpype_missing
 #     # Generate some example output
 #     dat = Data()
 #     dat.generate_mute_data(100, 2)
-#     analysis_opts = {
+#     settings = {
 #         'cmi_estimator': 'JidtKraskovCMI',
 #         'n_perm_mi': 22,
 #         'alpha_mi': 0.05,
@@ -21,7 +21,7 @@ from test_estimators_jidt import jpype_missing
 #     processes = [2, 3]
 #     network_analysis = ActiveInformationStorage(max_lag=5,
 #                                                 tau=1,
-#                                                 options=analysis_opts)
+#                                                 options=settings)
 #     res_ais = network_analysis.analyse_network(dat, processes)
 
 #     cwd = os.getcwd()

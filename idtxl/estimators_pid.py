@@ -21,7 +21,7 @@ except ImportError as err:
 # TODO add support for multivariate estimation for Tartu and Sydney estimator
 
 
-def pid_frankfurt(self, s1, s2, t, opts):
+def pid_frankfurt(self, s1, s2, t, settings):
     """Estimate partial information decomposition of discrete variables.
 
     The pid estimator returns estimates of shared information, unique
@@ -75,7 +75,7 @@ def pid_frankfurt(self, s1, s2, t, opts):
             other source variable)
         t : numpy array
             1D array containing realizations of a discrete random variable
-        opts : dict
+        settings : dict
             estimation parameters
 
             - 'alphabetsize' - no. values in each variable s1, s2, t
@@ -90,7 +90,7 @@ def pid_frankfurt(self, s1, s2, t, opts):
             distribution Q
         dict
             additional information about iterative optimization,
-            contains: final permutation Q; opts dictionary; array with
+            contains: final permutation Q; settings dictionary; array with
             I(target:s1|s2) for each iteration; array with delta
             I(target:s1|s2) for each iteration; I(target:s1,s2) for each
             iteration
@@ -101,41 +101,41 @@ def pid_frankfurt(self, s1, s2, t, opts):
         directly form a new joint variable
         mi_var1var2_var3 --> I(var3:(var1,var2))
     """
-    _check_input(s1, s2, t, opts)
+    _check_input(s1, s2, t, settings)
     # make deep copies of input arrays to avoid side effects
     s1_cp = s1.copy()
     s2_cp = s2.copy()
     t_cp = t.copy()
 
     # get estimation parameters
-    opts.setdefault('verbose', False)
+    settings.setdefault('verbose', False)
     try:
-        jarpath = opts['jarpath']
+        jarpath = settings['jarpath']
     except TypeError:
-        print('The opts argument should be a dictionary.')
+        print('The settings argument should be a dictionary.')
         raise
     except KeyError:
-        print('"jarpath" is missing from the opts dictionary.')
-        raise
-    try:
-        alph_s1 = opts['alph_s1']
-    except KeyError:
-        print('"alphabetsize" is missing from the opts dictionary.')
+        print('"jarpath" is missing from the settings dictionary.')
         raise
     try:
-        alph_s2 = opts['alph_s2']
+        alph_s1 = settings['alph_s1']
     except KeyError:
-        print('"alphabetsize" is missing from the opts dictionary.')
+        print('"alphabetsize" is missing from the settings dictionary.')
         raise
     try:
-        alph_t = opts['alph_t']
+        alph_s2 = settings['alph_s2']
     except KeyError:
-        print('"alphabetsize" is missing from the opts dictionary.')
+        print('"alphabetsize" is missing from the settings dictionary.')
         raise
     try:
-        iterations = opts['iterations']
+        alph_t = settings['alph_t']
     except KeyError:
-        print('"iterations" is missing from the opts dictionary.')
+        print('"alphabetsize" is missing from the settings dictionary.')
+        raise
+    try:
+        iterations = settings['iterations']
+    except KeyError:
+        print('"iterations" is missing from the settings dictionary.')
         raise
 
     if not jp.isJVMStarted():
@@ -255,7 +255,7 @@ def pid_frankfurt(self, s1, s2, t, opts):
         'unsuc_swaps': unsuccessful,
         'cmi_q_target_s1_cond_s2_all': cmi_q_target_s1_cond_s2_all,
         'cmi_q_target_s1_cond_s2_delta': cmi_q_target_s1_cond_s2_delta,
-        'opts': opts
+        'settings': settings
     }
     return estimate, optimization
 
@@ -410,7 +410,7 @@ class SydneyPID(Estimator):
     probability mass increment the virtualised swapping utilises.
 
     Args:
-        opts : dict
+        settings : dict
             estimation parameters
 
             - 'alph_s1' - alphabet size of s1
@@ -439,42 +439,42 @@ class SydneyPID(Estimator):
               always hit the soft limit defined above (parameter may be removed
               in the future).
     """
-    def __init__(self, opts):
+    def __init__(self, settings):
         try:
-            opts['alph_s1']
+            settings['alph_s1']
         except KeyError:
-            print('"alph_s1" is missing from the opts dictionary.')
+            print('"alph_s1" is missing from the settings dictionary.')
             raise
         try:
-            opts['alph_s2']
+            settings['alph_s2']
         except KeyError:
-            print('"alph_s2" is missing from the opts dictionary.')
+            print('"alph_s2" is missing from the settings dictionary.')
             raise
         try:
-            opts['alph_t']
+            settings['alph_t']
         except KeyError:
-            print('"alph_t" is missing from the opts dictionary.')
+            print('"alph_t" is missing from the settings dictionary.')
             raise
         try:
-            opts['max_unsuc_swaps_row_parm']
+            settings['max_unsuc_swaps_row_parm']
         except KeyError:
-            print('"max_unsuc_swaps_row_parm" is missing from the opts '
+            print('"max_unsuc_swaps_row_parm" is missing from the settings '
                   'dictionary.')
             raise
         try:
-            opts['num_reps']
+            settings['num_reps']
         except KeyError:
-            print('"num_reps" is missing from the opts dictionary.')
+            print('"num_reps" is missing from the settings dictionary.')
             raise
-        if opts['num_reps'] > 63:
+        if settings['num_reps'] > 63:
             raise ValueError('Number of reps must be 63 or less to prevent '
                              'integer overflow.')
         try:
-            opts['max_iters']
+            settings['max_iters']
         except KeyError:
-            print('"max_iters" is missing from the opts dictionary.')
+            print('"max_iters" is missing from the settings dictionary.')
             raise
-        self.opts = opts
+        self.settings = settings
 
     def is_parallel():
         return False
@@ -497,7 +497,7 @@ class SydneyPID(Estimator):
                 estimated decomposition, contains the joint distribution,
                 unique, shared, and synergistic information
         """
-        s1, s2, t, self.opts = _check_input(s1, s2, t, self.opts)
+        s1, s2, t, self.settings = _check_input(s1, s2, t, self.settings)
 
         # Check if float128 is supported by the architecture
         try:
@@ -513,10 +513,10 @@ class SydneyPID(Estimator):
         # -- DEFINE PARAMETERS -- #
 
         num_samples = len(t)
-        alph_t = self.opts['alph_t']
-        alph_s1 = self.opts['alph_s1']
-        alph_s2 = self.opts['alph_s2']
-        max_unsuc_swaps_row_parm = self.opts['max_unsuc_swaps_row_parm']
+        alph_t = self.settings['alph_t']
+        alph_s1 = self.settings['alph_s1']
+        alph_s2 = self.settings['alph_s2']
+        max_unsuc_swaps_row_parm = self.settings['max_unsuc_swaps_row_parm']
         # Max swaps = number of possible swaps * control parameter
         num_pos_swaps = alph_t * alph_s1 * (alph_s1-1) * alph_s2 * (alph_s2-1)
         max_unsuc_swaps_row = np.floor(num_pos_swaps *
@@ -596,7 +596,7 @@ class SydneyPID(Estimator):
             raise ValueError('joint MI {0} smaller than cMI {1}'
                              ''.format(jointmi_s1s2_t, cond_mut_info1))
         else:
-            if self.opts['verbose']:
+            if self.settings['verbose']:
                 print('Passed sanity check on jMI and cMI')
 
         # Declare reps array of repeated doubling to half the prob_inc
@@ -612,9 +612,9 @@ class SydneyPID(Estimator):
         # integers another idea would be to decrement by something slightly
         # smaller than 2
     #    num_reps = num_reps + np.int32(np.floor(np.log(max_joint_nonzero_count)/np.log(2)))
-        if self.opts['verbose']:
-            print('num_reps: {0}'.format(self.opts['num_reps']))
-        reps = np.array(np.power(2, range(0, self.opts['num_reps'])))
+        if self.settings['verbose']:
+            print('num_reps: {0}'.format(self.settings['num_reps']))
+        reps = np.array(np.power(2, range(0, self.settings['num_reps'])))
 
         # Replication loop
         for rep in reps:
@@ -624,7 +624,7 @@ class SydneyPID(Estimator):
             # Want to store number of succesive unsuccessful swaps
             unsuccessful_swaps_row = 0
             # SWAP LOOP
-            for attempt_swap in range(0, self.opts['max_iters']):
+            for attempt_swap in range(0, self.settings['max_iters']):
                 # Pick a random candidate from the targets
                 t_cand = np.random.randint(0, alph_t)
                 s1_cand = np.random.randint(0, alph_s1)
@@ -718,7 +718,7 @@ class SydneyPID(Estimator):
         mi_target_s2 = self._mi_prob(t_prob, s2_prob, joint_t_s2_prob)
         jointmi_s1s2_target = self._joint_mi(s1, s2, t, alph_s1, alph_s2,
                                              alph_t)
-        if self.opts['verbose']:
+        if self.settings['verbose']:
             print('jointmi_s1s2_target: {0}'.format(jointmi_s1s2_target))
 
         # PID terms
@@ -894,7 +894,7 @@ class TartuPID(Estimator):
     both the unique information from sources 1 and 2.
 
     Args:
-        opts : dict
+        settings : dict
             estimation parameters (with default parameters)
 
             - 'get_sorted_pdf' -False
@@ -911,33 +911,33 @@ class TartuPID(Estimator):
             - 'verbose' - False
     """
 
-    def __init__(self, opts):
+    def __init__(self, settings):
         # get estimation parameters
-        # get_sorted_pdf = opts.get('sorted_pdf', False)
-        # true_pdf = opts.get('true_pdf', None)
-        # true_result = opts.get('true_result', None)
-        # true_CI = opts.get('true_CI', None)
-        # true_SI = opts.get('true_SI', None)
-        # feas_eps = opts.get('feas_eps', 1.e-10)
-        # kkt_eps = opts.get('kkt_eps', 1.e-5)
-        # feas_eps_2 = opts.get('feas_eps_2', 1.e-6)
-        # kkt_eps_2 = opts.get('kkt_eps_2', .01)
-        # kkt_search_eps = opts.get('kkt_search_eps', .5)
-        # max_zero_probability = opts.get('max_zero_probability', 1.e-5)
-        # verbose = opts.get('verbose', False)
-        opts.setdefault('sorted_pdf', False)
-        opts.setdefault('true_pdf', None)
-        opts.setdefault('true_result', None)
-        opts.setdefault('true_CI', None)
-        opts.setdefault('true_SI', None)
-        opts.setdefault('feas_eps', 1.e-10)
-        opts.setdefault('kkt_eps', 1.e-5)
-        opts.setdefault('feas_eps_2', 1.e-6)
-        opts.setdefault('kkt_eps_2', .01)
-        opts.setdefault('kkt_search_eps', .5)
-        opts.setdefault('max_zero_probability', 1.e-5)
-        opts.setdefault('verbose', False)
-        self.opts = opts
+        # get_sorted_pdf = settings.get('sorted_pdf', False)
+        # true_pdf = settings.get('true_pdf', None)
+        # true_result = settings.get('true_result', None)
+        # true_CI = settings.get('true_CI', None)
+        # true_SI = settings.get('true_SI', None)
+        # feas_eps = settings.get('feas_eps', 1.e-10)
+        # kkt_eps = settings.get('kkt_eps', 1.e-5)
+        # feas_eps_2 = settings.get('feas_eps_2', 1.e-6)
+        # kkt_eps_2 = settings.get('kkt_eps_2', .01)
+        # kkt_search_eps = settings.get('kkt_search_eps', .5)
+        # max_zero_probability = settings.get('max_zero_probability', 1.e-5)
+        # verbose = settings.get('verbose', False)
+        settings.setdefault('sorted_pdf', False)
+        settings.setdefault('true_pdf', None)
+        settings.setdefault('true_result', None)
+        settings.setdefault('true_CI', None)
+        settings.setdefault('true_SI', None)
+        settings.setdefault('feas_eps', 1.e-10)
+        settings.setdefault('kkt_eps', 1.e-5)
+        settings.setdefault('feas_eps_2', 1.e-6)
+        settings.setdefault('kkt_eps_2', .01)
+        settings.setdefault('kkt_search_eps', .5)
+        settings.setdefault('max_zero_probability', 1.e-5)
+        settings.setdefault('verbose', False)
+        self.settings = settings
 
     def is_parallel():
         return False
@@ -961,7 +961,7 @@ class TartuPID(Estimator):
                 estimated decomposition, contains the optimised PDF, shared,
                 and synergistic information
         """
-        s1, s2, t, self.opts = _check_input(s1, s2, t, self.opts)
+        s1, s2, t, self.settings = _check_input(s1, s2, t, self.settings)
         counts = dict()
         n_samples = s1.shape[0]
 
@@ -978,17 +978,17 @@ class TartuPID(Estimator):
             pdf[xyz] = c / float(n_samples)
 
         retval = synergy_tartu.solve_PDF(pdf,
-                                         self.opts['true_pdf'],
-                                         self.opts['true_result'],
-                                         self.opts['true_CI'],
-                                         self.opts['true_SI'],
-                                         self.opts['feas_eps'],
-                                         self.opts['kkt_eps'],
-                                         self.opts['feas_eps_2'],
-                                         self.opts['kkt_eps_2'],
-                                         self.opts['kkt_search_eps'],
-                                         self.opts['max_zero_probability'],
-                                         self.opts['verbose'])
+                                         self.settings['true_pdf'],
+                                         self.settings['true_result'],
+                                         self.settings['true_CI'],
+                                         self.settings['true_SI'],
+                                         self.settings['feas_eps'],
+                                         self.settings['kkt_eps'],
+                                         self.settings['feas_eps_2'],
+                                         self.settings['kkt_eps_2'],
+                                         self.settings['kkt_search_eps'],
+                                         self.settings['max_zero_probability'],
+                                         self.settings['verbose'])
         optpdf, feas, kkt, CI, SI, UI_s1, UI_s2 = retval
         res = {
             'kkt': kkt,
@@ -999,12 +999,12 @@ class TartuPID(Estimator):
             'unq_s1': UI_s1,
             'unq_s2': UI_s2,
         }
-        if self.opts['sorted_pdf']:
+        if self.settings['sorted_pdf']:
             res['sorted_pdf'] = synergy_tartu.sorted_pdf(pdf)
         return res
 
 
-def _check_input(s1, s2, t, opts):
+def _check_input(s1, s2, t, settings):
     """Check input to PID estimators."""
 #    if s1.ndim != 1 or s2.ndim != 1 or t.ndim != 1:
 #        raise ValueError('Inputs s1, s2, target have to be vectors'
@@ -1034,7 +1034,7 @@ def _check_input(s1, s2, t, opts):
                 alph_col = len(np.unique(s1[:, col]))
                 s1_joint, alph_new = _join_variables(s1_joint, s1[:, col],
                                                      alph_new, alph_col)
-            opts['alph_s1'] = alph_new
+            settings['alph_s1'] = alph_new
         else:
             raise ValueError('Input source 1 s1 has to be a 1D or 2D numpy '
                              'array.')
@@ -1049,7 +1049,7 @@ def _check_input(s1, s2, t, opts):
                 alph_col = len(np.unique(s2[:, col]))
                 s2_joint, alph_new = _join_variables(s2_joint, s2[:, col],
                                                      alph_new, alph_col)
-            opts['alph_s2'] = alph_new
+            settings['alph_s2'] = alph_new
         else:
             raise ValueError('Input source 2 s2 has to be a 1D or 2D numpy '
                              'array.')
@@ -1061,8 +1061,8 @@ def _check_input(s1, s2, t, opts):
                              '(t.shape[1]=1).')
 
     # Check types of remaining inputs.
-    if type(opts) != dict:
-        raise TypeError('The opts argument should be a dictionary.')
+    if type(settings) != dict:
+        raise TypeError('The settings argument should be a dictionary.')
 
     if not issubclass(s1.dtype.type, np.integer):
         raise TypeError('Input s1 (source 1) must be an integer numpy array.')
@@ -1071,4 +1071,4 @@ def _check_input(s1, s2, t, opts):
     if not issubclass(t.dtype.type, np.integer):
         raise TypeError('Input t (target) must be an integer numpy array.')
 
-    return s1, s2, t, opts
+    return s1, s2, t, settings

@@ -5,6 +5,8 @@ import copy as cp
 import numpy as np
 from .data import Data
 
+VERBOSE = False
+
 
 def save(dat, file_path):
     """Save IDTxl data to disk.
@@ -48,7 +50,7 @@ def save(dat, file_path):
         # JSON does not recognize numpy arrays and data types, they have to be
         # converted before dumping them.
         dat_json = _remove_numpy(dat)
-        if self.options['verbose']:
+        if VERBOSE:
             print('writing file {0}'.format(file_path))
         with open(file_path, 'w') as outfile:
             json.dump(obj=dat_json, fp=outfile, sort_keys=True)
@@ -67,7 +69,7 @@ def _remove_numpy(dat):
     """
     dat_json = cp.copy(dat)
     for k in dat_json.keys():
-        if self.options['verbose']:
+        if VERBOSE:
             print('{0}, type: {1}'.format(dat_json[k], type(dat_json[k])))
         if type(dat_json[k]) is np.ndarray:
             dat_json[k] = dat_json[k].tolist()
@@ -125,6 +127,7 @@ def load(file_path):
         d.normalise = f['normalised']
         return d
 
+
 def save_pickle(obj, name):
     """Save objects using Python's pickle module.
 
@@ -134,6 +137,7 @@ def save_pickle(obj, name):
     """
     with open(name + '.pkl', 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
 
 def load_pickle(name):
     """Load objects that have been saved using Python's pickle module."""

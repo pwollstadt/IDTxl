@@ -11,7 +11,6 @@ import idtxl.idtxl_utils as utils
 
 
 def test_data_properties():
-
     n = 10
     d = Data(np.arange(n), 's', normalise=False)
     real_time = d.n_realisations_samples()
@@ -137,13 +136,13 @@ def test_permute_replications():
                            np.arange(n))).astype(int),
                 'rs',
                 normalise=False)
-    perm_opts = {
+    perm_settings = {
         'perm_type': 'local',
         'perm_range': rng
     }
     [perm, perm_idx] = data.permute_samples(current_value=current_value,
                                             idx_list=l,
-                                            perm_opts=perm_opts)
+                                            perm_settings=perm_settings)
     samples = np.arange(rng)
     i = 0
     n_per_repl = int(data.n_realisations(current_value) / data.n_replications)
@@ -164,95 +163,95 @@ def test_permute_samples():
     dat = Data(np.arange(n), 's', normalise=False)
 
     # Test random permutation
-    opts = {'perm_type': 'random'}
+    settings = {'perm_type': 'random'}
     perm = dat.permute_samples(current_value=(0, 0),
                                idx_list=[(0, 0)],
-                               perm_opts=opts)[0]
+                               perm_settings=settings)[0]
     assert (sorted(np.squeeze(perm)) == np.arange(n)).all(), (
                             'Permutation did not contain the correct values.')
 
     # Test circular shifting
-    opts = {'perm_type': 'circular', 'max_shift': 4}
+    settings = {'perm_type': 'circular', 'max_shift': 4}
     perm = dat.permute_samples(current_value=(0, 0),
                                idx_list=[(0, 0)],
-                               perm_opts=opts)[0]
+                               perm_settings=settings)[0]
     idx_start = np.where(np.squeeze(perm) == 0)[0][0]
     assert (np.squeeze(np.vstack((perm[idx_start:], perm[:idx_start]))) ==
             np.arange(n)).all(), ('Circular shifting went wrong.')
 
     # Test shifting of data blocks
     block_size = round(n / 10)
-    opts = {'perm_type': 'block', 'block_size': block_size,
-            'perm_range': round(n / block_size)}
+    settings = {'perm_type': 'block', 'block_size': block_size,
+                'perm_range': round(n / block_size)}
     perm = dat.permute_samples(current_value=(0, 0),
                                idx_list=[(0, 0)],
-                               perm_opts=opts)[0]
+                               perm_settings=settings)[0]
     block_size = int(round(n / 10))
     for b in range(0, n, block_size):
         assert perm[b + 1] - perm[b] == 1, 'Block permutation went wrong.'
 
     # Test shifting of data blocks with n % block_size != 0
     block_size = 3
-    opts = {'perm_type': 'block', 'block_size': block_size,
-            'perm_range': round(n / block_size)}
+    settings = {'perm_type': 'block', 'block_size': block_size,
+                'perm_range': round(n / block_size)}
     perm = dat.permute_samples(current_value=(0, 0),
                                idx_list=[(0, 0)],
-                               perm_opts=opts)[0]
-    for b in range(0, n, opts['block_size']):
+                               perm_settings=settings)[0]
+    for b in range(0, n, settings['block_size']):
         assert perm[b + 1] - perm[b] == 1, 'Block permutation went wrong.'
 
-    opts = {'perm_type': 'block', 'block_size': 3, 'perm_range': 2}
+    settings = {'perm_type': 'block', 'block_size': 3, 'perm_range': 2}
     perm = dat.permute_samples(current_value=(0, 0),
                                idx_list=[(0, 0)],
-                               perm_opts=opts)[0]
+                               perm_settings=settings)[0]
 
     # Test local shifting
     perm_range = int(round(n / 10))
-    opts = {'perm_type': 'local', 'perm_range': perm_range}
+    settings = {'perm_type': 'local', 'perm_range': perm_range}
     perm = dat.permute_samples(current_value=(0, 0),
                                idx_list=[(0, 0)],
-                               perm_opts=opts)[0]
+                               perm_settings=settings)[0]
     for b in range(0, n, perm_range):
         assert abs(perm[b + 1] - perm[b]) == 1, 'Local shifting went wrong.'
 
     # Test assertions that perm_range is not too low or too high.
     current_value = (0, 3)
     l = [(0, 0), (0, 1), (0, 2)]
-    perm_opts = {'perm_type': 'local', 'perm_range': 1}
+    perm_settings = {'perm_type': 'local', 'perm_range': 1}
     # Test Assertion if perm_range too small
     with pytest.raises(AssertionError):
         dat.permute_samples(current_value=current_value,
                             idx_list=l,
-                            perm_opts=perm_opts)
+                            perm_settings=perm_settings)
 
-    # Test TypeError if opts are no integers
-    perm_opts['perm_range'] = np.inf
+    # Test TypeError if settings are no integers
+    perm_settings['perm_range'] = np.inf
     with pytest.raises(TypeError):
         dat.permute_samples(current_value=current_value,
                             idx_list=l,
-                            perm_opts=perm_opts)
-    perm_opts['perm_range'] = 'foo'
+                            perm_settings=perm_settings)
+    perm_settings['perm_range'] = 'foo'
     with pytest.raises(TypeError):
         dat.permute_samples(current_value=current_value,
                             idx_list=l,
-                            perm_opts=perm_opts)
-    perm_opts['perm_type'] = 'block'
-    perm_opts['block_size'] = 3
+                            perm_settings=perm_settings)
+    perm_settings['perm_type'] = 'block'
+    perm_settings['block_size'] = 3
     with pytest.raises(TypeError):
         dat.permute_samples(current_value=current_value,
                             idx_list=l,
-                            perm_opts=perm_opts)
-    perm_opts['block_size'] = 3.5
+                            perm_settings=perm_settings)
+    perm_settings['block_size'] = 3.5
     with pytest.raises(TypeError):
         dat.permute_samples(current_value=current_value,
                             idx_list=l,
-                            perm_opts=perm_opts)
-    perm_opts['perm_type'] = 'circular'
-    perm_opts['max_shift'] = 3.5
+                            perm_settings=perm_settings)
+    perm_settings['perm_type'] = 'circular'
+    perm_settings['max_shift'] = 3.5
     with pytest.raises(TypeError):
         dat.permute_samples(current_value=current_value,
                             idx_list=l,
-                            perm_opts=perm_opts)
+                            perm_settings=perm_settings)
 
 
 def test_get_data_slice():
@@ -357,11 +356,11 @@ def test_data_type():
     sl = dat._get_data_slice(0)[0]
     assert issubclass(type(sl[0, 0]), np.integer), ('Data slice type is not an'
                                                     ' int.')
-    opts = {'perm_type': 'random'}
-    sl_perm = dat.slice_permute_samples(0, opts)[0]
+    settings = {'perm_type': 'random'}
+    sl_perm = dat.slice_permute_samples(0, settings)[0]
     assert issubclass(type(sl_perm[0, 0]), np.integer), ('Permuted data slice '
                                                          'type is not an int.')
-    samples = dat.permute_samples((0, 5), [(1, 1), (1, 3)], opts)[0]
+    samples = dat.permute_samples((0, 5), [(1, 1), (1, 3)], settings)[0]
     assert issubclass(type(samples[0, 0]), np.integer), ('Permuted samples '
                                                          'type is not an int.')
 

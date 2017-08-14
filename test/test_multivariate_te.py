@@ -16,7 +16,7 @@ from test_estimators_jidt import jpype_missing
 def test_multivariate_te_init():
     """Test instance creation for MultivariateTE class."""
     # Test error on missing estimator
-    opts = {
+    settings = {
         'n_perm_max_stat': 21,
         'n_perm_omnibus': 30,
         'max_lag_sources': 7,
@@ -24,109 +24,110 @@ def test_multivariate_te_init():
         'max_lag_target': 5}
     nw = MultivariateTE()
     with pytest.raises(RuntimeError):
-        nw.analyse_single_target(options=opts, data=Data(), target=1)
+        nw.analyse_single_target(settings=settings, data=Data(), target=1)
 
     # Test setting of min and max lags
-    opts['cmi_estimator'] = 'JidtKraskovCMI'
+    settings['cmi_estimator'] = 'JidtKraskovCMI'
     dat = Data()
     dat.generate_mute_data(n_samples=10, n_replications=5)
 
     # Valid: max lag sources bigger than max lag target
-    nw.analyse_single_target(options=opts, data=dat, target=1)
+    nw.analyse_single_target(settings=settings, data=dat, target=1)
 
     # Valid: max lag sources smaller than max lag target
-    opts['max_lag_sources'] = 3
-    nw.analyse_single_target(options=opts, data=dat, target=1)
+    settings['max_lag_sources'] = 3
+    nw.analyse_single_target(settings=settings, data=dat, target=1)
 
     # Invalid: min lag sources bigger than max lag
-    opts['min_lag_sources'] = 8
-    opts['max_lag_sources'] = 7
-    opts['max_lag_target'] = 5
+    settings['min_lag_sources'] = 8
+    settings['max_lag_sources'] = 7
+    settings['max_lag_target'] = 5
     with pytest.raises(RuntimeError):
-        nw.analyse_single_target(options=opts, data=dat, target=1)
+        nw.analyse_single_target(settings=settings, data=dat, target=1)
 
     # Invalid: taus bigger than lags
-    opts['min_lag_sources'] = 2
-    opts['max_lag_sources'] = 4
-    opts['max_lag_target'] = 5
-    opts['tau_sources'] = 10
+    settings['min_lag_sources'] = 2
+    settings['max_lag_sources'] = 4
+    settings['max_lag_target'] = 5
+    settings['tau_sources'] = 10
     with pytest.raises(RuntimeError):
-        nw.analyse_single_target(options=opts, data=dat, target=1)
-    opts['tau_sources'] = 1
-    opts['tau_target'] = 10
+        nw.analyse_single_target(settings=settings, data=dat, target=1)
+    settings['tau_sources'] = 1
+    settings['tau_target'] = 10
     with pytest.raises(RuntimeError):
-        nw.analyse_single_target(options=opts, data=dat, target=1)
+        nw.analyse_single_target(settings=settings, data=dat, target=1)
 
     # Invalid: negative lags or taus
-    opts['min_lag_sources'] = 1
-    opts['max_lag_target'] = 5
-    opts['max_lag_sources'] = -7
-    opts['tau_target'] = 1
+    settings['min_lag_sources'] = 1
+    settings['max_lag_target'] = 5
+    settings['max_lag_sources'] = -7
+    settings['tau_target'] = 1
     with pytest.raises(RuntimeError):
-        nw.analyse_single_target(options=opts, data=dat, target=1)
-    opts['max_lag_sources'] = 7
-    opts['min_lag_sources'] = -4
+        nw.analyse_single_target(settings=settings, data=dat, target=1)
+    settings['max_lag_sources'] = 7
+    settings['min_lag_sources'] = -4
     with pytest.raises(RuntimeError):
-        nw.analyse_single_target(options=opts, data=dat, target=1)
-    opts['min_lag_sources'] = 4
-    opts['max_lag_target'] = -1
+        nw.analyse_single_target(settings=settings, data=dat, target=1)
+    settings['min_lag_sources'] = 4
+    settings['max_lag_target'] = -1
     with pytest.raises(RuntimeError):
-        nw.analyse_single_target(options=opts, data=dat, target=1)
-    opts['max_lag_target'] = 5
-    opts['tau_sources'] = -1
+        nw.analyse_single_target(settings=settings, data=dat, target=1)
+    settings['max_lag_target'] = 5
+    settings['tau_sources'] = -1
     with pytest.raises(RuntimeError):
-        nw.analyse_single_target(options=opts, data=dat, target=1)
-    opts['tau_sources'] = 1
-    opts['tau_target'] = -1
+        nw.analyse_single_target(settings=settings, data=dat, target=1)
+    settings['tau_sources'] = 1
+    settings['tau_target'] = -1
     with pytest.raises(RuntimeError):
-        nw.analyse_single_target(options=opts, data=dat, target=1)
+        nw.analyse_single_target(settings=settings, data=dat, target=1)
 
     # Invalid: lags or taus are no integers
-    opts['tau_target'] = 1
-    opts['min_lag_sources'] = 1.5
+    settings['tau_target'] = 1
+    settings['min_lag_sources'] = 1.5
     with pytest.raises(RuntimeError):
-        nw.analyse_single_target(options=opts, data=dat, target=1)
-    opts['min_lag_sources'] = 1
-    opts['max_lag_sources'] = 1.5
+        nw.analyse_single_target(settings=settings, data=dat, target=1)
+    settings['min_lag_sources'] = 1
+    settings['max_lag_sources'] = 1.5
     with pytest.raises(RuntimeError):
-        nw.analyse_single_target(options=opts, data=dat, target=1)
-    opts['max_lag_sources'] = 7
-    opts['tau_sources'] = 1.5
+        nw.analyse_single_target(settings=settings, data=dat, target=1)
+    settings['max_lag_sources'] = 7
+    settings['tau_sources'] = 1.5
     with pytest.raises(RuntimeError):
-        nw.analyse_single_target(options=opts, data=dat, target=1)
-    opts['tau_sources'] = 1
-    opts['tau_target'] = 1.5
+        nw.analyse_single_target(settings=settings, data=dat, target=1)
+    settings['tau_sources'] = 1
+    settings['tau_target'] = 1.5
     with pytest.raises(RuntimeError):
-        nw.analyse_single_target(options=opts, data=dat, target=1)
-    opts['tau_target'] = 1
+        nw.analyse_single_target(settings=settings, data=dat, target=1)
+    settings['tau_target'] = 1
 
     # Invalid: sources or target is no int
     with pytest.raises(RuntimeError):  # no int
-        nw.analyse_single_target(options=opts, data=dat, target=1.5)
+        nw.analyse_single_target(settings=settings, data=dat, target=1.5)
     with pytest.raises(RuntimeError):  # negative
-        nw.analyse_single_target(options=opts, data=dat, target=-1)
+        nw.analyse_single_target(settings=settings, data=dat, target=-1)
     with pytest.raises(RuntimeError):  # not in data
-        nw.analyse_single_target(options=opts, data=dat, target=10)
+        nw.analyse_single_target(settings=settings, data=dat, target=10)
     with pytest.raises(RuntimeError):  # wrong type
-        nw.analyse_single_target(options=opts, data=dat, target={})
+        nw.analyse_single_target(settings=settings, data=dat, target={})
     with pytest.raises(RuntimeError):  # negative
-        nw.analyse_single_target(options=opts, data=dat, target=0,
+        nw.analyse_single_target(settings=settings, data=dat, target=0,
                                  sources=-1)
     with pytest.raises(RuntimeError):   # negative
-        nw.analyse_single_target(options=opts, data=dat, target=0,
+        nw.analyse_single_target(settings=settings, data=dat, target=0,
                                  sources=[-1])
     with pytest.raises(RuntimeError):  # not in data
-        nw.analyse_single_target(options=opts, data=dat, target=0, sources=20)
+        nw.analyse_single_target(settings=settings, data=dat, target=0,
+                                 sources=20)
     with pytest.raises(RuntimeError):  # not in data
-        nw.analyse_single_target(options=opts, data=dat, target=0,
+        nw.analyse_single_target(settings=settings, data=dat, target=0,
                                  sources=[20])
 
     # Force conditionals
-    opts['add_conditionals'] = [(0, 1), (1, 3)]
-    nw.analyse_single_target(options=opts, data=dat, target=0)
-    opts['add_conditionals'] = (8, 0)
+    settings['add_conditionals'] = [(0, 1), (1, 3)]
+    nw.analyse_single_target(settings=settings, data=dat, target=0)
+    settings['add_conditionals'] = (8, 0)
     with pytest.raises(IndexError):
-        nw.analyse_single_target(options=opts, data=dat, target=0)
+        nw.analyse_single_target(settings=settings, data=dat, target=0)
 
 
 @jpype_missing
@@ -136,7 +137,7 @@ def test_multivariate_te_one_realisation_per_replication():
     # once, this way, we get one realisation per replication for each variable.
     # This is easyer to assert/verify later. We also test data.get_realisations
     # this way.
-    analysis_opts = {
+    settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 21,
         'max_lag_target': 5,
@@ -146,19 +147,19 @@ def test_multivariate_te_one_realisation_per_replication():
     dat = Data(normalise=False)
     n_repl = 10
     n_procs = 2
-    n_points = n_procs * (analysis_opts['max_lag_sources'] + 1) * n_repl
+    n_points = n_procs * (settings['max_lag_sources'] + 1) * n_repl
     dat.set_data(np.arange(n_points).reshape(
                                         n_procs,
-                                        analysis_opts['max_lag_sources'] + 1,
+                                        settings['max_lag_sources'] + 1,
                                         n_repl), 'psr')
     nw_0 = MultivariateTE()
-    nw_0._initialise(analysis_opts, dat, 'all', target)
+    nw_0._initialise(settings, dat, 'all', target)
     assert (not nw_0.selected_vars_full)
     assert (not nw_0.selected_vars_sources)
     assert (not nw_0.selected_vars_target)
     assert ((nw_0._replication_index == np.arange(n_repl)).all())
     assert (nw_0._current_value == (target, max(
-           analysis_opts['max_lag_sources'], analysis_opts['max_lag_target'])))
+           settings['max_lag_sources'], settings['max_lag_target'])))
     assert (nw_0._current_value_realisations[:, 0] ==
             dat.data[target, -1, :]).all()
 
@@ -166,17 +167,17 @@ def test_multivariate_te_one_realisation_per_replication():
 @jpype_missing
 def test_faes_method():
     """Check if the Faes method is working."""
-    analysis_opts = {'cmi_estimator': 'JidtKraskovCMI',
-                     'add_conditionals': 'faes',
-                     'max_lag_sources': 5,
-                     'min_lag_sources': 3,
-                     'max_lag_target': 7}
+    settings = {'cmi_estimator': 'JidtKraskovCMI',
+                'add_conditionals': 'faes',
+                'max_lag_sources': 5,
+                'min_lag_sources': 3,
+                'max_lag_target': 7}
     nw_1 = MultivariateTE()
     dat = Data()
     dat.generate_mute_data()
     sources = [1, 2, 3]
     target = 0
-    nw_1._initialise(analysis_opts, dat, sources, target)
+    nw_1._initialise(settings, dat, sources, target)
     assert (nw_1._selected_vars_sources ==
             [i for i in it.product(sources, [nw_1.current_value[1]])]), (
                 'Did not add correct additional conditioning vars.')
@@ -185,18 +186,18 @@ def test_faes_method():
 @jpype_missing
 def test_add_conditional_manually():
     """Adda variable that is not in the data set."""
-    analysis_opts = {'cmi_estimator': 'JidtKraskovCMI',
-                     'add_conditionals': (8, 0),
-                     'max_lag_sources': 5,
-                     'min_lag_sources': 3,
-                     'max_lag_target': 7}
+    settings = {'cmi_estimator': 'JidtKraskovCMI',
+                'add_conditionals': (8, 0),
+                'max_lag_sources': 5,
+                'min_lag_sources': 3,
+                'max_lag_target': 7}
     nw_1 = MultivariateTE()
     dat = Data()
     dat.generate_mute_data()
     sources = [1, 2, 3]
     target = 0
     with pytest.raises(IndexError):
-        nw_1._initialise(analysis_opts, dat, sources, target)
+        nw_1._initialise(settings, dat, sources, target)
 
 
 @jpype_missing
@@ -209,7 +210,7 @@ def test_check_source_set():
     dat = Data()
     dat.generate_mute_data(100, 5)
     nw_0 = MultivariateTE()
-    nw_0.options = {'verbose': True}
+    nw_0.settings = {'verbose': True}
     # Add list of sources.
     sources = [1, 2, 3]
     nw_0._check_source_set(sources, dat.n_processes)
@@ -262,7 +263,7 @@ def test_analyse_network():
     n_processes = 5  # the MuTE network has 5 nodes
     dat = Data()
     dat.generate_mute_data(10, 5)
-    opts = {
+    settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 21,
         'n_perm_max_seq': 21,
@@ -273,7 +274,7 @@ def test_analyse_network():
     nw_0 = MultivariateTE()
 
     # Test all to all analysis
-    r = nw_0.analyse_network(opts, dat, targets='all', sources='all')
+    r = nw_0.analyse_network(settings, dat, targets='all', sources='all')
     try:
         del r['fdr']
     except:
@@ -289,7 +290,7 @@ def test_analyse_network():
                     '{0}'. format(t))
     # Test analysis for subset of targets
     target_list = [1, 2, 3]
-    r = nw_0.analyse_network(opts, dat, targets=target_list, sources='all')
+    r = nw_0.analyse_network(settings, dat, targets=target_list, sources='all')
     try:
         del r['fdr']
     except:
@@ -306,7 +307,7 @@ def test_analyse_network():
     # Test analysis for subset of sources
     source_list = [1, 2, 3]
     target_list = [0, 4]
-    r = nw_0.analyse_network(opts, dat, targets=target_list,
+    r = nw_0.analyse_network(settings, dat, targets=target_list,
                              sources=source_list)
     try:
         del r['fdr']

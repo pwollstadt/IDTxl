@@ -122,22 +122,22 @@ def test_mi_gauss_data():
     expected_mi, source1, source2, target = _get_gauss_data()
 
     # Test Kraskov
-    mi_estimator = JidtKraskovMI(opts={})
+    mi_estimator = JidtKraskovMI(settings={})
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
     _assert_result(mi_cor, expected_mi, 'JidtKraskovMI', 'CMI (no cond.)')
     _assert_result(mi_uncor, 0, 'JidtKraskovMI', 'CMI (uncorr., no cond.)')
 
     # Test Gaussian
-    mi_estimator = JidtGaussianMI(opts={})
+    mi_estimator = JidtGaussianMI(settings={})
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
     _assert_result(mi_cor, expected_mi, 'JidtGaussianMI', 'CMI (no cond.)')
     _assert_result(mi_uncor, 0, 'JidtGaussianMI', 'CMI (uncorr., no cond.)')
 
     # Test Discrete
-    opts = {'discretise_method': 'equal', 'num_discrete_bins': 5}
-    mi_estimator = JidtDiscreteMI(opts=opts)
+    settings = {'discretise_method': 'equal', 'num_discrete_bins': 5}
+    mi_estimator = JidtDiscreteMI(settings=settings)
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
     _assert_result(mi_cor, expected_mi, 'JidtDiscreteMI', 'CMI (no cond.)')
@@ -159,22 +159,22 @@ def test_cmi_gauss_data_no_cond():
     expected_mi, source1, source2, target = _get_gauss_data()
 
     # Test Kraskov
-    mi_estimator = JidtKraskovCMI(opts={})
+    mi_estimator = JidtKraskovCMI(settings={})
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
     _assert_result(mi_cor, expected_mi, 'JidtKraskovCMI', 'CMI (no cond.)')
     _assert_result(mi_uncor, 0, 'JidtKraskovCMI', 'CMI (uncorr., no cond.)')
 
     # Test Gaussian
-    mi_estimator = JidtGaussianCMI(opts={})
+    mi_estimator = JidtGaussianCMI(settings={})
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
     _assert_result(mi_cor, expected_mi, 'JidtGaussianCMI', 'CMI (no cond.)')
     _assert_result(mi_uncor, 0, 'JidtGaussianCMI', 'CMI (uncorr., no cond.)')
 
     # Test Discrete
-    opts = {'discretise_method': 'equal', 'num_discrete_bins': 5}
-    mi_estimator = JidtDiscreteCMI(opts=opts)
+    settings = {'discretise_method': 'equal', 'num_discrete_bins': 5}
+    mi_estimator = JidtDiscreteCMI(settings=settings)
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
     _assert_result(mi_cor, expected_mi, 'JidtDiscreteCMI', 'CMI (no cond.)')
@@ -196,22 +196,22 @@ def test_cmi_gauss_data():
     expected_mi, source1, source2, target = _get_gauss_data()
 
     # Test Kraskov
-    mi_estimator = JidtKraskovCMI(opts={})
+    mi_estimator = JidtKraskovCMI(settings={})
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
     _assert_result(mi_cor, expected_mi, 'JidtKraskovCMI', 'CMI (corr.)')
     _assert_result(mi_uncor, 0, 'JidtKraskovCMI', 'CMI (uncorr.)')
 
     # Test Gaussian
-    mi_estimator = JidtGaussianCMI(opts={})
+    mi_estimator = JidtGaussianCMI(settings={})
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
     _assert_result(mi_cor, expected_mi, 'JidtGaussianCMI', 'CMI (corr.)')
     _assert_result(mi_uncor, 0, 'JidtGaussianCMI', 'CMI (uncorr.)')
 
     # Test Discrete
-    opts = {'discretise_method': 'equal', 'num_discrete_bins': 5}
-    mi_estimator = JidtDiscreteCMI(opts=opts)
+    settings = {'discretise_method': 'equal', 'num_discrete_bins': 5}
+    mi_estimator = JidtDiscreteCMI(settings=settings)
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
     _assert_result(mi_cor, expected_mi, 'JidtDiscreteCMI', 'CMI (corr.)')
@@ -235,25 +235,25 @@ def test_te_gauss_data():
     source1 = source1[1:]
     source2 = source2[1:]
     target = target[:-1]
-    opts = {'discretise_method': 'equal',
-            'num_discrete_bins': 4,
-            'history_target': 1}
+    settings = {'discretise_method': 'equal',
+                'num_discrete_bins': 4,
+                'history_target': 1}
     # Test Kraskov
-    mi_estimator = JidtKraskovTE(opts=opts)
+    mi_estimator = JidtKraskovTE(settings=settings)
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
     _assert_result(mi_cor, expected_mi, 'JidtKraskovTE', 'TE (corr.)')
     _assert_result(mi_uncor, 0, 'JidtKraskovTE', 'TE (uncorr.)')
 
     # Test Gaussian
-    mi_estimator = JidtGaussianTE(opts=opts)
+    mi_estimator = JidtGaussianTE(settings=settings)
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
     _assert_result(mi_cor, expected_mi, 'JidtGaussianTE', 'TE (corr.)')
     _assert_result(mi_uncor, 0, 'JidtGaussianTE', 'TE (uncorr.)')
 
     # Test Discrete
-    mi_estimator = JidtDiscreteTE(opts=opts)
+    mi_estimator = JidtDiscreteTE(settings=settings)
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
     _assert_result(mi_cor, expected_mi, 'JidtDiscreteTE', 'TE (corr.)')
@@ -274,25 +274,25 @@ def test_ais_gauss_data():
     """
     source1, source2 = _get_ar_data()
 
-    opts = {'discretise_method': 'equal',
-            'num_discrete_bins': 4,
-            'history': 2}
+    settings = {'discretise_method': 'equal',
+                'num_discrete_bins': 4,
+                'history': 2}
 
     # Test Kraskov
-    mi_estimator = JidtKraskovAIS(opts=opts)
+    mi_estimator = JidtKraskovAIS(settings=settings)
     mi_cor_k = mi_estimator.estimate(source1)
     mi_uncor = mi_estimator.estimate(source2)
     _assert_result(mi_uncor, 0, 'JidtKraskovAIS', 'AIS (uncorr.)')
 
     # Test Gaussian
-    mi_estimator = JidtGaussianAIS(opts=opts)
+    mi_estimator = JidtGaussianAIS(settings=settings)
     mi_cor_g = mi_estimator.estimate(source1)
     mi_uncor = mi_estimator.estimate(source2)
     _assert_result(mi_uncor, 0, 'JidtGaussianAIS', 'AIS (uncorr.)')
 
     # TODO is this a meaningful test?
     # # Test Discrete
-    # mi_estimator = JidtDiscreteAIS(opts=opts)
+    # mi_estimator = JidtDiscreteAIS(settings=settings)
     # mi_cor_d = mi_estimator.estimate(source1)
     # mi_uncor = mi_estimator.estimate(source2)
     # _assert_result(mi_uncor, 0, 'JidtDiscreteAIS', 'AIS (uncorr.)', tol=0.5)
@@ -307,7 +307,6 @@ def test_ais_gauss_data():
 @jpype_missing
 def test_one_two_dim_input_kraskov():
     """Test one- and two-dimensional input for Kraskov estimators."""
-
     expected_mi, src_one, s, target_one = _get_gauss_data(expand=False)
     src_two = np.expand_dims(src_one, axis=1)
     target_two = np.expand_dims(target_one, axis=1)
@@ -315,7 +314,7 @@ def test_one_two_dim_input_kraskov():
     ar_src_two = np.expand_dims(ar_src_one, axis=1)
 
     # MI
-    mi_estimator = JidtKraskovMI(opts={})
+    mi_estimator = JidtKraskovMI(settings={})
     mi_cor_one = mi_estimator.estimate(src_one, target_one)
     _assert_result(mi_cor_one, expected_mi, 'JidtKraskovMI', 'MI')
     mi_cor_two = mi_estimator.estimate(src_two, target_two)
@@ -323,7 +322,7 @@ def test_one_two_dim_input_kraskov():
     _compare_result(mi_cor_one, mi_cor_two,
                     'JidtKraskovMI one dim', 'JidtKraskovMI two dim', 'MI')
     # CMI
-    cmi_estimator = JidtKraskovCMI(opts={})
+    cmi_estimator = JidtKraskovCMI(settings={})
     mi_cor_one = cmi_estimator.estimate(src_one, target_one)
     _assert_result(mi_cor_one, expected_mi, 'JidtKraskovCMI', 'CMI')
     mi_cor_two = cmi_estimator.estimate(src_two, target_two)
@@ -331,7 +330,7 @@ def test_one_two_dim_input_kraskov():
     _compare_result(mi_cor_one, mi_cor_two,
                     'JidtKraskovMI one dim', 'JidtKraskovMI two dim', 'CMI')
     # TE
-    te_estimator = JidtKraskovTE(opts={'history_target': 1})
+    te_estimator = JidtKraskovTE(settings={'history_target': 1})
     mi_cor_one = te_estimator.estimate(src_one[1:], target_one[:-1])
     _assert_result(mi_cor_one, expected_mi, 'JidtKraskovTE', 'TE')
     mi_cor_two = te_estimator.estimate(src_one[1:], target_one[:-1])
@@ -339,7 +338,7 @@ def test_one_two_dim_input_kraskov():
     _compare_result(mi_cor_one, mi_cor_two,
                     'JidtKraskovMI one dim', 'JidtKraskovMI two dim', 'TE')
     # AIS
-    ais_estimator = JidtKraskovAIS(opts={'history': 2})
+    ais_estimator = JidtKraskovAIS(settings={'history': 2})
     mi_cor_one = ais_estimator.estimate(ar_src_one)
     mi_cor_two = ais_estimator.estimate(ar_src_two)
     _compare_result(mi_cor_one, mi_cor_two,
@@ -350,7 +349,6 @@ def test_one_two_dim_input_kraskov():
 @jpype_missing
 def test_one_two_dim_input_gaussian():
     """Test one- and two-dimensional input for Gaussian estimators."""
-
     expected_mi, src_one, s, target_one = _get_gauss_data(expand=False)
     src_two = np.expand_dims(src_one, axis=1)
     target_two = np.expand_dims(target_one, axis=1)
@@ -358,7 +356,7 @@ def test_one_two_dim_input_gaussian():
     ar_src_two = np.expand_dims(ar_src_one, axis=1)
 
     # MI
-    mi_estimator = JidtGaussianMI(opts={})
+    mi_estimator = JidtGaussianMI(settings={})
     mi_cor_one = mi_estimator.estimate(src_one, target_one)
     _assert_result(mi_cor_one, expected_mi, 'JidtGaussianMI', 'MI')
     mi_cor_two = mi_estimator.estimate(src_two, target_two)
@@ -366,7 +364,7 @@ def test_one_two_dim_input_gaussian():
     _compare_result(mi_cor_one, mi_cor_two,
                     'JidtGaussianMI one dim', 'JidtGaussianMI two dim', 'MI')
     # CMI
-    cmi_estimator = JidtGaussianCMI(opts={})
+    cmi_estimator = JidtGaussianCMI(settings={})
     mi_cor_one = cmi_estimator.estimate(src_one, target_one)
     _assert_result(mi_cor_one, expected_mi, 'JidtGaussianCMI', 'CMI')
     mi_cor_two = cmi_estimator.estimate(src_two, target_two)
@@ -374,7 +372,7 @@ def test_one_two_dim_input_gaussian():
     _compare_result(mi_cor_one, mi_cor_two,
                     'JidtGaussianMI one dim', 'JidtGaussianMI two dim', 'CMI')
     # TE
-    te_estimator = JidtGaussianTE(opts={'history_target': 1})
+    te_estimator = JidtGaussianTE(settings={'history_target': 1})
     mi_cor_one = te_estimator.estimate(src_one[1:], target_one[:-1])
     _assert_result(mi_cor_one, expected_mi, 'JidtGaussianTE', 'TE')
     mi_cor_two = te_estimator.estimate(src_one[1:], target_one[:-1])
@@ -382,7 +380,7 @@ def test_one_two_dim_input_gaussian():
     _compare_result(mi_cor_one, mi_cor_two,
                     'JidtGaussianMI one dim', 'JidtGaussianMI two dim', 'TE')
     # AIS
-    ais_estimator = JidtGaussianAIS(opts={'history': 2})
+    ais_estimator = JidtGaussianAIS(settings={'history': 2})
     mi_cor_one = ais_estimator.estimate(ar_src_one)
     mi_cor_two = ais_estimator.estimate(ar_src_two)
     _compare_result(mi_cor_one, mi_cor_two,
@@ -393,19 +391,18 @@ def test_one_two_dim_input_gaussian():
 @jpype_missing
 def test_one_two_dim_input_discrete():
     """Test one- and two-dimensional input for discrete estimators."""
-
     expected_mi, src_one, s, target_one = _get_gauss_data(expand=False)
     src_two = np.expand_dims(src_one, axis=1)
     target_two = np.expand_dims(target_one, axis=1)
     ar_src_one, s = _get_ar_data(expand=False)
     ar_src_two = np.expand_dims(ar_src_one, axis=1)
 
-    opts = {'discretise_method': 'equal',
-            'num_discrete_bins': 4,
-            'history_target': 1,
-            'history': 2}
+    settings = {'discretise_method': 'equal',
+                'num_discrete_bins': 4,
+                'history_target': 1,
+                'history': 2}
     # MI
-    mi_estimator = JidtDiscreteMI(opts=opts)
+    mi_estimator = JidtDiscreteMI(settings=settings)
     mi_cor_one = mi_estimator.estimate(src_one, target_one)
     _assert_result(mi_cor_one, expected_mi, 'JidtDiscreteMI', 'MI')
     mi_cor_two = mi_estimator.estimate(src_two, target_two)
@@ -413,7 +410,7 @@ def test_one_two_dim_input_discrete():
     _compare_result(mi_cor_one, mi_cor_two,
                     'JidtDiscreteMI one dim', 'JidtDiscreteMI two dim', 'MI')
     # CMI
-    cmi_estimator = JidtDiscreteCMI(opts=opts)
+    cmi_estimator = JidtDiscreteCMI(settings=settings)
     mi_cor_one = cmi_estimator.estimate(src_one, target_one)
     _assert_result(mi_cor_one, expected_mi, 'JidtDiscreteCMI', 'CMI')
     mi_cor_two = cmi_estimator.estimate(src_two, target_two)
@@ -421,7 +418,7 @@ def test_one_two_dim_input_discrete():
     _compare_result(mi_cor_one, mi_cor_two,
                     'JidtDiscreteMI one dim', 'JidtDiscreteMI two dim', 'CMI')
     # TE
-    te_estimator = JidtDiscreteTE(opts=opts)
+    te_estimator = JidtDiscreteTE(settings=settings)
     mi_cor_one = te_estimator.estimate(src_one[1:], target_one[:-1])
     _assert_result(mi_cor_one, expected_mi, 'JidtDiscreteTE', 'TE')
     mi_cor_two = te_estimator.estimate(src_one[1:], target_one[:-1])
@@ -429,7 +426,7 @@ def test_one_two_dim_input_discrete():
     _compare_result(mi_cor_one, mi_cor_two,
                     'JidtDiscreteMI one dim', 'JidtDiscreteMI two dim', 'TE')
     # AIS
-    ais_estimator = JidtDiscreteAIS(opts=opts)
+    ais_estimator = JidtDiscreteAIS(settings=settings)
     mi_cor_one = ais_estimator.estimate(ar_src_one)
     mi_cor_two = ais_estimator.estimate(ar_src_two)
     _compare_result(mi_cor_one, mi_cor_two,
@@ -443,73 +440,73 @@ def test_local_values():
     expected_mi, source, s, target = _get_gauss_data(expand=False)
     ar_proc, s = _get_ar_data(expand=False)
 
-    opts = {'discretise_method': 'equal',
-            'num_discrete_bins': 4,
-            'history_target': 1,
-            'history': 2,
-            'local_values': True}
+    settings = {'discretise_method': 'equal',
+                'num_discrete_bins': 4,
+                'history_target': 1,
+                'history': 2,
+                'local_values': True}
 
     # MI - Discrete
-    mi_estimator = JidtDiscreteMI(opts=opts)
+    mi_estimator = JidtDiscreteMI(settings=settings)
     mi = mi_estimator.estimate(source, target)
     _assert_result(np.mean(mi), expected_mi, 'JidtDiscreteMI', 'MI')
     assert type(mi) is np.ndarray, 'Local values are not a numpy array.'
 
     # MI - Gaussian
-    mi_estimator = JidtGaussianMI(opts=opts)
+    mi_estimator = JidtGaussianMI(settings=settings)
     mi = mi_estimator.estimate(source, target)
     _assert_result(np.mean(mi), expected_mi, 'JidtGaussianMI', 'MI')
     assert type(mi) is np.ndarray, 'Local values are not a numpy array.'
 
     # MI - Kraskov
-    mi_estimator = JidtKraskovMI(opts=opts)
+    mi_estimator = JidtKraskovMI(settings=settings)
     mi = mi_estimator.estimate(source, target)
     _assert_result(np.mean(mi), expected_mi, 'JidtKraskovMI', 'MI')
     assert type(mi) is np.ndarray, 'Local values are not a numpy array.'
 
     # CMI - Discrete
-    cmi_estimator = JidtDiscreteCMI(opts=opts)
+    cmi_estimator = JidtDiscreteCMI(settings=settings)
     mi = cmi_estimator.estimate(source, target)
     _assert_result(np.mean(mi), expected_mi, 'JidtDiscreteCMI', 'CMI')
     assert type(mi) is np.ndarray, 'Local values are not a numpy array.'
 
     # MI - Gaussian
-    mi_estimator = JidtGaussianCMI(opts=opts)
+    mi_estimator = JidtGaussianCMI(settings=settings)
     mi = mi_estimator.estimate(source, target)
     _assert_result(np.mean(mi), expected_mi, 'JidtGaussianCMI', 'MI')
     assert type(mi) is np.ndarray, 'Local values are not a numpy array.'
 
     # MI - Kraskov
-    mi_estimator = JidtKraskovCMI(opts=opts)
+    mi_estimator = JidtKraskovCMI(settings=settings)
     mi = mi_estimator.estimate(source, target)
     _assert_result(np.mean(mi), expected_mi, 'JidtKraskovCMI', 'MI')
     assert type(mi) is np.ndarray, 'Local values are not a numpy array.'
 
     # TE - Discrete
-    te_estimator = JidtDiscreteTE(opts=opts)
+    te_estimator = JidtDiscreteTE(settings=settings)
     mi = te_estimator.estimate(source[1:], target[:-1])
     _assert_result(np.mean(mi), expected_mi, 'JidtDiscreteTE', 'TE')
     assert type(mi) is np.ndarray, 'Local values are not a numpy array.'
 
     # TE - Gaussian
-    mi_estimator = JidtGaussianTE(opts=opts)
+    mi_estimator = JidtGaussianTE(settings=settings)
     mi = mi_estimator.estimate(source[1:], target[:-1])
     _assert_result(np.mean(mi), expected_mi, 'JidtGaussianTE', 'MI')
     assert type(mi) is np.ndarray, 'Local values are not a numpy array.'
 
     # TE - Kraskov
-    mi_estimator = JidtKraskovTE(opts=opts)
+    mi_estimator = JidtKraskovTE(settings=settings)
     mi = mi_estimator.estimate(source[1:], target[:-1])
     _assert_result(np.mean(mi), expected_mi, 'JidtKraskovTE', 'MI')
     assert type(mi) is np.ndarray, 'Local values are not a numpy array.'
 
     # AIS - Kraskov
-    ais_estimator = JidtKraskovAIS(opts=opts)
+    ais_estimator = JidtKraskovAIS(settings=settings)
     mi_k = ais_estimator.estimate(ar_proc)
     assert type(mi_k) is np.ndarray, 'Local values are not a numpy array.'
 
     # AIS - Discrete
-    ais_estimator = JidtDiscreteAIS(opts=opts)
+    ais_estimator = JidtDiscreteAIS(settings=settings)
     mi_d = ais_estimator.estimate(ar_proc)
     assert type(mi_d) is np.ndarray, 'Local values are not a numpy array.'
     # TODO should we compare these?
@@ -517,7 +514,7 @@ def test_local_values():
     #                 'JidtKraskovAIS', 'JidtDiscreteAIS', 'AIS (AR process)')
 
     # AIS - Gaussian
-    ais_estimator = JidtGaussianAIS(opts=opts)
+    ais_estimator = JidtGaussianAIS(settings=settings)
     mi_g = ais_estimator.estimate(ar_proc)
     assert type(mi_g) is np.ndarray, 'Local values are not a numpy array.'
     _compare_result(np.mean(mi_k), np.mean(mi_g),
@@ -528,27 +525,27 @@ def test_local_values():
 def test_discrete_ais():
     """Test results for discrete AIS estimation against other estimators."""
 
-    opts = {'discretise_method': 'none',
-            'alph': 2,
-            'history': 2,
-            'local_values': False}
+    settings = {'discretise_method': 'none',
+                'alph': 2,
+                'history': 2,
+                'local_values': False}
 
     proc1, proc2 = _get_mem_binary_data()
 
     # Compare discrete to Gaussian estimator
-    ais_estimator = JidtDiscreteAIS(opts=opts)
+    ais_estimator = JidtDiscreteAIS(settings=settings)
     mi_d = ais_estimator.estimate(proc1)
 
-    ais_estimator = JidtGaussianAIS(opts=opts)
+    ais_estimator = JidtGaussianAIS(settings=settings)
     mi_g = ais_estimator.estimate(proc1.astype(np.float))
     _compare_result(np.mean(mi_d), np.mean(mi_g), 'JidtDiscreteAIS',
                     'JidtGaussianAIS', 'AIS (AR process)', tol=0.07)
 
     # Compare discrete to Gaussian estimator on memoryless data
-    ais_estimator = JidtDiscreteAIS(opts=opts)
+    ais_estimator = JidtDiscreteAIS(settings=settings)
     mi_d = ais_estimator.estimate(proc2)
 
-    ais_estimator = JidtGaussianAIS(opts=opts)
+    ais_estimator = JidtGaussianAIS(settings=settings)
     mi_g = ais_estimator.estimate(proc2.astype(np.float))
     _compare_result(np.mean(mi_d), np.mean(mi_g), 'JidtDiscreteAIS',
                     'JidtGaussianAIS', 'AIS (AR process, no mem.)', tol=0.05)
@@ -556,79 +553,79 @@ def test_discrete_ais():
     _assert_result(mi_g, 0, 'JidtGaussianAIS', 'MI (no memory)')
 
 
-def test_invalid_opts_input():
-    """Test handling of wrong inputs for options dictionary."""
+def test_invalid_settings_input():
+    """Test handling of wrong inputs for settings dictionary."""
 
-    # Wrong input type for opts dict.
-    with pytest.raises(TypeError): JidtDiscreteMI(opts=1)
-    with pytest.raises(TypeError): JidtDiscreteCMI(opts=1)
-    with pytest.raises(TypeError): JidtDiscreteAIS(opts=1)
-    with pytest.raises(TypeError): JidtDiscreteTE(opts=1)
-    with pytest.raises(TypeError): JidtGaussianMI(opts=1)
-    with pytest.raises(TypeError): JidtGaussianCMI(opts=1)
-    with pytest.raises(TypeError): JidtGaussianAIS(opts=1)
-    with pytest.raises(TypeError): JidtGaussianTE(opts=1)
-    with pytest.raises(TypeError): JidtKraskovMI(opts=1)
-    with pytest.raises(TypeError): JidtKraskovCMI(opts=1)
-    with pytest.raises(TypeError): JidtKraskovAIS(opts=1)
-    with pytest.raises(TypeError): JidtKraskovTE(opts=1)
+    # Wrong input type for settings dict.
+    with pytest.raises(TypeError): JidtDiscreteMI(settings=1)
+    with pytest.raises(TypeError): JidtDiscreteCMI(settings=1)
+    with pytest.raises(TypeError): JidtDiscreteAIS(settings=1)
+    with pytest.raises(TypeError): JidtDiscreteTE(settings=1)
+    with pytest.raises(TypeError): JidtGaussianMI(settings=1)
+    with pytest.raises(TypeError): JidtGaussianCMI(settings=1)
+    with pytest.raises(TypeError): JidtGaussianAIS(settings=1)
+    with pytest.raises(TypeError): JidtGaussianTE(settings=1)
+    with pytest.raises(TypeError): JidtKraskovMI(settings=1)
+    with pytest.raises(TypeError): JidtKraskovCMI(settings=1)
+    with pytest.raises(TypeError): JidtKraskovAIS(settings=1)
+    with pytest.raises(TypeError): JidtKraskovTE(settings=1)
 
-    # Test if opts dict is initialised correctly.
+    # Test if settings dict is initialised correctly.
     e = JidtDiscreteMI()
-    assert type(e.opts) is dict, 'Did not initialise options as dictionary.'
+    assert type(e.settings) is dict, 'Did not initialise settings as dictionary.'
     e = JidtDiscreteCMI()
-    assert type(e.opts) is dict, 'Did not initialise options as dictionary.'
+    assert type(e.settings) is dict, 'Did not initialise settings as dictionary.'
     e = JidtGaussianMI()
-    assert type(e.opts) is dict, 'Did not initialise options as dictionary.'
+    assert type(e.settings) is dict, 'Did not initialise settings as dictionary.'
     e = JidtGaussianCMI()
-    assert type(e.opts) is dict, 'Did not initialise options as dictionary.'
+    assert type(e.settings) is dict, 'Did not initialise settings as dictionary.'
     e = JidtKraskovMI()
-    assert type(e.opts) is dict, 'Did not initialise options as dictionary.'
+    assert type(e.settings) is dict, 'Did not initialise settings as dictionary.'
     e = JidtKraskovCMI()
-    assert type(e.opts) is dict, 'Did not initialise options as dictionary.'
+    assert type(e.settings) is dict, 'Did not initialise settings as dictionary.'
 
     # History parameter missing for AIS and TE estimation.
-    with pytest.raises(RuntimeError): JidtDiscreteAIS(opts={})
-    with pytest.raises(RuntimeError): JidtDiscreteTE(opts={})
-    with pytest.raises(RuntimeError): JidtGaussianAIS(opts={})
-    with pytest.raises(RuntimeError): JidtGaussianTE(opts={})
-    with pytest.raises(RuntimeError): JidtKraskovAIS(opts={})
-    with pytest.raises(RuntimeError): JidtKraskovTE(opts={})
+    with pytest.raises(RuntimeError): JidtDiscreteAIS(settings={})
+    with pytest.raises(RuntimeError): JidtDiscreteTE(settings={})
+    with pytest.raises(RuntimeError): JidtGaussianAIS(settings={})
+    with pytest.raises(RuntimeError): JidtGaussianTE(settings={})
+    with pytest.raises(RuntimeError): JidtKraskovAIS(settings={})
+    with pytest.raises(RuntimeError): JidtKraskovTE(settings={})
 
 
 def test_invalid_history_parameters():
     """Ensure invalid history parameters raise a RuntimeError."""
 
     # TE: Parameters are not integers
-    opts = {'history_target': 4, 'history_source': 4,
+    settings = {'history_target': 4, 'history_source': 4,
             'tau_source': 2, 'tau_target': 2.5}
-    with pytest.raises(AssertionError): JidtDiscreteTE(opts=opts)
-    with pytest.raises(AssertionError): JidtGaussianTE(opts=opts)
-    with pytest.raises(AssertionError): JidtKraskovTE(opts=opts)
-    opts['tau_source'] = 2.5
-    opts['tau_target'] = 2
-    with pytest.raises(AssertionError): JidtDiscreteTE(opts=opts)
-    with pytest.raises(AssertionError): JidtGaussianTE(opts=opts)
-    with pytest.raises(AssertionError): JidtKraskovTE(opts=opts)
-    opts['history_source'] = 2.5
-    opts['tau_source'] = 2
-    with pytest.raises(AssertionError): JidtDiscreteTE(opts=opts)
-    with pytest.raises(AssertionError): JidtGaussianTE(opts=opts)
-    with pytest.raises(AssertionError): JidtKraskovTE(opts=opts)
-    opts['history_target'] = 2.5
-    opts['history_source'] = 4
-    with pytest.raises(AssertionError): JidtDiscreteTE(opts=opts)
-    with pytest.raises(AssertionError): JidtGaussianTE(opts=opts)
-    with pytest.raises(AssertionError): JidtKraskovTE(opts=opts)
+    with pytest.raises(AssertionError): JidtDiscreteTE(settings=settings)
+    with pytest.raises(AssertionError): JidtGaussianTE(settings=settings)
+    with pytest.raises(AssertionError): JidtKraskovTE(settings=settings)
+    settings['tau_source'] = 2.5
+    settings['tau_target'] = 2
+    with pytest.raises(AssertionError): JidtDiscreteTE(settings=settings)
+    with pytest.raises(AssertionError): JidtGaussianTE(settings=settings)
+    with pytest.raises(AssertionError): JidtKraskovTE(settings=settings)
+    settings['history_source'] = 2.5
+    settings['tau_source'] = 2
+    with pytest.raises(AssertionError): JidtDiscreteTE(settings=settings)
+    with pytest.raises(AssertionError): JidtGaussianTE(settings=settings)
+    with pytest.raises(AssertionError): JidtKraskovTE(settings=settings)
+    settings['history_target'] = 2.5
+    settings['history_source'] = 4
+    with pytest.raises(AssertionError): JidtDiscreteTE(settings=settings)
+    with pytest.raises(AssertionError): JidtGaussianTE(settings=settings)
+    with pytest.raises(AssertionError): JidtKraskovTE(settings=settings)
 
     # AIS: Parameters are not integers.
-    opts = {'history': 4, 'tau': 2.5}
-    with pytest.raises(AssertionError): JidtGaussianAIS(opts=opts)
-    with pytest.raises(AssertionError): JidtKraskovAIS(opts=opts)
-    opts = {'history': 4.5, 'tau': 2}
-    with pytest.raises(AssertionError): JidtDiscreteAIS(opts=opts)
-    with pytest.raises(AssertionError): JidtGaussianAIS(opts=opts)
-    with pytest.raises(AssertionError): JidtKraskovAIS(opts=opts)
+    settings = {'history': 4, 'tau': 2.5}
+    with pytest.raises(AssertionError): JidtGaussianAIS(settings=settings)
+    with pytest.raises(AssertionError): JidtKraskovAIS(settings=settings)
+    settings = {'history': 4.5, 'tau': 2}
+    with pytest.raises(AssertionError): JidtDiscreteAIS(settings=settings)
+    with pytest.raises(AssertionError): JidtGaussianAIS(settings=settings)
+    with pytest.raises(AssertionError): JidtKraskovAIS(settings=settings)
 
 
 # def test_discretisation():
@@ -637,17 +634,17 @@ def test_invalid_history_parameters():
 #     source = np.random.randn(n)
 #     target = np.random.randn(n)
 
-#     opts = {'discretise_method': 'equal', 'num_discrete_bins': 4, 'history': 1,
+#     settings = {'discretise_method': 'equal', 'num_discrete_bins': 4, 'history': 1,
 #             'history_target': 1}
-#     est = JidtDiscreteAIS(opts)
-#     est = JidtDiscreteTE(opts)
-#     est = JidtDiscreteCMI(opts)
-#     est = JidtDiscreteMI(opts)
-#     opts['discretise_method'] = 'max_ent'
-#     est = JidtDiscreteAIS(opts)
-#     est = JidtDiscreteTE(opts)
-#     est = JidtDiscreteCMI(opts)
-#     est = JidtDiscreteMI(opts)
+#     est = JidtDiscreteAIS(settings)
+#     est = JidtDiscreteTE(settings)
+#     est = JidtDiscreteCMI(settings)
+#     est = JidtDiscreteMI(settings)
+#     settings['discretise_method'] = 'max_ent'
+#     est = JidtDiscreteAIS(settings)
+#     est = JidtDiscreteTE(settings)
+#     est = JidtDiscreteCMI(settings)
+#     est = JidtDiscreteMI(settings)
 
 
 def test_lagged_mi():
@@ -661,18 +658,23 @@ def test_lagged_mi():
                             [rn.normalvariate(0, 1) for r in range(n - 1)]])]
     source = np.array(source)
     target = np.array(target)
-    opts = {'discretise_method': 'equal', 'num_discrete_bins': 4, 'history': 1,
-            'history_target': 1, 'lag': 1, 'source_target_delay': 1}
+    settings = {
+        'discretise_method': 'equal',
+        'num_discrete_bins': 4,
+        'history': 1,
+        'history_target': 1,
+        'lag': 1,
+        'source_target_delay': 1}
 
-    est_te_k = JidtKraskovTE(opts)
+    est_te_k = JidtKraskovTE(settings)
     te_k = est_te_k.estimate(source, target)
-    est_te_d = JidtDiscreteTE(opts)
+    est_te_d = JidtDiscreteTE(settings)
     te_d = est_te_d.estimate(source, target)
-    est_d = JidtDiscreteMI(opts)
+    est_d = JidtDiscreteMI(settings)
     mi_d = est_d.estimate(source, target)
-    est_k = JidtKraskovMI(opts)
+    est_k = JidtKraskovMI(settings)
     mi_k = est_k.estimate(source, target)
-    est_g = JidtGaussianMI(opts)
+    est_g = JidtGaussianMI(settings)
     mi_g = est_g.estimate(source, target)
     _compare_result(mi_d, te_d, 'JidtDiscreteMI', 'JidtDiscreteTE',
                     'lagged MI', tol=0.05)
@@ -686,7 +688,7 @@ if __name__ == '__main__':
     test_lagged_mi()
     # test_discretisation()
     test_invalid_history_parameters()
-    test_invalid_opts_input()
+    test_invalid_settings_input()
     test_discrete_ais()
     test_local_values()
     test_te_gauss_data()

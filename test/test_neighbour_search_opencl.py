@@ -12,14 +12,14 @@ from idtxl.estimators_opencl import OpenCLKraskovMI, OpenCLKraskovCMI
 # Skip test module if pyopencl is not installed
 pytest.importorskip('pyopencl')
 
-opts = {'theiler_t': 0,
-        'knn_k': 1,
-        'gpu_id': 0,
-        'debug': True,
-        'verbose': True}
+settings = {'theiler_t': 0,
+            'knn_k': 1,
+            'gpu_id': 0,
+            'debug': True,
+            'verbose': True}
 
-EST_MI = OpenCLKraskovMI(opts)
-EST_CMI = OpenCLKraskovCMI(opts)
+EST_MI = OpenCLKraskovMI(settings)
+EST_CMI = OpenCLKraskovCMI(settings)
 
 
 def test_knn_one_dim():
@@ -326,14 +326,14 @@ def test_two_chunks_odd_dim():
 
 def test_multiple_runs_two_dim():
     """Test kNN with two chunks of 2D data in the same call."""
-    opts = {
+    settings = {
         'theiler_t': 0,
         'knn_k': 1,
         'gpu_id': 0,
         'debug': True,
         'max_mem': 5 * 1024 * 1024}
-    EST_MI = OpenCLKraskovMI(opts)
-    EST_CMI = OpenCLKraskovCMI(opts)
+    EST_MI = OpenCLKraskovMI(settings)
+    EST_CMI = OpenCLKraskovCMI(settings)
 
     n_chunks = 50000
     pointset1 = np.array([[1, 1.1, -1, -1.2, 1, 1.1, -1, -1.2],

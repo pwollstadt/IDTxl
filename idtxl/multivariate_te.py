@@ -61,17 +61,14 @@ class MultivariateTE(NetworkInference):
             list with indices of source processes
         target : list
             index of target process
-        options : dict
-            dictionary with the analysis options
+        settings : dict
+            dictionary with the analysis settings
     """
 
-    # TODO right now 'options' holds all optional params (stats AND estimator).
-    # We could split this up by adding the stats options to the analyse_*
-    # methods?
     def __init__(self):
         super().__init__()
 
-    def analyse_network(self, options, data, targets='all', sources='all'):
+    def analyse_network(self, settings, data, targets='all', sources='all'):
         """Find multivariate transfer entropy between all nodes in the network.
 
         Estimate multivariate transfer entropy (TE) between all nodes in the
@@ -85,7 +82,7 @@ class MultivariateTE(NetworkInference):
 
             >>> dat = Data()
             >>> dat.generate_mute_data(100, 5)
-            >>> analysis_opts = {
+            >>> settings = {
             >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
             >>>     'n_perm_min_stat': 200,
@@ -95,10 +92,10 @@ class MultivariateTE(NetworkInference):
             >>>     'min_lag_sources': 2
             >>>     }
             >>> network_analysis = MultivariateTE()
-            >>> res = network_analysis.analyse_network(analysis_opts, dat)
+            >>> res = network_analysis.analyse_network(settings, dat)
 
         Args:
-            options : dict
+            settings : dict
                 parameters for estimation and statistical testing, see
                 documentation of analyse_single_target() for details
             data : Data instance
@@ -137,19 +134,19 @@ class MultivariateTE(NetworkInference):
                                                'same length')
 
         # Perform TE estimation for each target individually
-        options.setdefault('verbose', True)
+        settings.setdefault('verbose', True)
         results = {}
         for t in range(len(targets)):
-            if options['verbose']:
+            if settings['verbose']:
                 print('####### analysing target with index {0} from list {1}'
                       .format(t, targets))
-            results[targets[t]] = self.analyse_single_target(options,
+            results[targets[t]] = self.analyse_single_target(settings,
                                                              data,
                                                              targets[t],
                                                              sources[t])
         return results
 
-    def analyse_single_target(self, options, data, target, sources='all'):
+    def analyse_single_target(self, settings, data, target, sources='all'):
         """Find multivariate transfer entropy between sources and a target.
 
         Find multivariate transfer entropy (TE) between all source processes
@@ -177,7 +174,7 @@ class MultivariateTE(NetworkInference):
 
             >>> dat = Data()
             >>> dat.generate_mute_data(100, 5)
-            >>> analysis_opts = {
+            >>> settings = {
             >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
             >>>     'n_perm_min_stat': 200,
@@ -189,12 +186,12 @@ class MultivariateTE(NetworkInference):
             >>> target = 0
             >>> sources = [1, 2, 3]
             >>> network_analysis = MultivariateTE()
-            >>> res = network_analysis.analyse_single_target(analysis_opts,
+            >>> res = network_analysis.analyse_single_target(settings,
             >>>                                              dat, target,
             >>>                                              sources)
 
         Args:
-            options : dict
+            settings : dict
                 parameters for estimation and statistical testing:
 
                 - max_lag_sources : int - maximum temporal search depth for
@@ -215,7 +212,7 @@ class MultivariateTE(NetworkInference):
                   significance, where * can be 'max_stats',  'min_stats',
                   'omnibus', and 'max_seq' (default=0.05)
                 - 'cmi_estimator' : str - estimator to be used for CMI
-                  calculation (for estimator options see the documentation in
+                  calculation (for estimator settings see the documentation in
                   the estimators_* modules)
                 - 'add_conditionals' : list of tuples - force the estimator to
                   add these conditionals when estimating TE; can either be a
@@ -225,7 +222,7 @@ class MultivariateTE(NetworkInference):
                 - 'permute_in_time' : bool - force surrogate creation by
                   shuffling realisations in time instead of shuffling
                   replications; see documentation of Data.permute_samples() for
-                  further options (default=False)
+                  further settings (default=False)
 
             data : Data instance
                 raw data for analysis
@@ -247,7 +244,7 @@ class MultivariateTE(NetworkInference):
                 are listed as tuples (process, lag wrt. current value)
         """
         # Check input and clean up object if it was used before.
-        self._initialise(options, data, sources, target)
+        self._initialise(settings, data, sources, target)
 
         # Main algorithm.
         print('\n---------------------------- (1) include target candidates')
@@ -260,7 +257,7 @@ class MultivariateTE(NetworkInference):
         self._test_final_conditional(data)
 
         # Clean up and return results.
-        if self.options['verbose']:
+        if self.settings['verbose']:
             print('final source samples: {0}'.format(
                     self._idx_to_lag(self.selected_vars_sources)))
             print('final target samples: {0}'.format(
@@ -268,7 +265,7 @@ class MultivariateTE(NetworkInference):
         results = {
             'target': self.target,
             'sources_tested': self.source_set,
-            'options': self.options,
+            'settings': self.settings,
             'current_value': self.current_value,
             'selected_vars_full': self._idx_to_lag(self.selected_vars_full),
             'selected_vars_target': self._idx_to_lag(
@@ -295,7 +292,7 @@ class MultivariateTE(NetworkInference):
         Args:
             data : Data instance
                 raw data
-            options : dict [optional]
+            settings : dict [optional]
                 parameters for estimation and statistical testing
 
         """
@@ -344,7 +341,7 @@ class MultivariateTE(NetworkInference):
             # Test min TE for significance with minimum statistics.
             te_min_candidate = min(temp_te)
             min_candidate = self.selected_vars_sources[np.argmin(temp_te)]
-            if self.options['verbose']:
+            if self.settings['verbose']:
                 print('testing {0} from candidate set {1}'.format(
                                 self._idx_to_lag([min_candidate])[0],
                                 self._idx_to_lag(self.selected_vars_sources)),
@@ -358,11 +355,11 @@ class MultivariateTE(NetworkInference):
             # candidate. If the minimum is significant, break, all other
             # sources will be significant as well (b/c they have higher TE).
             if not significant:
-                if self.options['verbose']:
+                if self.settings['verbose']:
                     print(' -- not significant')
                 self._remove_selected_var(min_candidate)
             else:
-                if self.options['verbose']:
+                if self.settings['verbose']:
                     print(' -- significant')
                 self._min_stats_surr_table = surr_table
                 break
