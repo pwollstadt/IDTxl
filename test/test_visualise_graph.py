@@ -22,7 +22,7 @@ def test_console_output():
         }
     nw = MultivariateTE()
     r = nw.analyse_network(settings, dat, targets='all', sources='all')
-    print_res_to_console(r, fdr=False)
+    print_res_to_console(dat, r, fdr=False)
 
 
 if __name__ == '__main__':
