@@ -20,7 +20,7 @@ class JidtEstimator(Estimator):
 
     Abstract class for implementation of JIDT estimators, child classes
     implement estimators for mutual information (MI), conditional mutual
-    information (CMI), actice information storage (AIS), transfer entropy (TE)
+    information (CMI), active information storage (AIS), transfer entropy (TE)
     using the Kraskov-Grassberger-Stoegbauer estimator for continuous data,
     plug-in estimators for discrete data, and Gaussian estimators for
     continuous Gaussian data. References:
