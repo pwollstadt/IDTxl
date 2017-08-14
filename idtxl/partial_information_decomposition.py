@@ -22,6 +22,15 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
     analyse_single_target() to estimate PID for a single process. See
     docstrings of the two functions for more information.
 
+    References:
+
+        - Williams, P. L., & Beer, R. D. (2010). Nonnegative Decomposition of
+          Multivariate Information, 1–14. Retrieved from
+          http://arxiv.org/abs/1004.2515
+        - Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., & Ay, N. (2014).
+          Quantifying Unique Information. Entropy, 16(4), 2161–2183.
+          http://doi.org/10.3390/e16042161
+
     Attributes:
         target : int
             index of target process

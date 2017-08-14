@@ -23,20 +23,19 @@ class JidtEstimator(Estimator):
     information (CMI), active information storage (AIS), transfer entropy (TE)
     using the Kraskov-Grassberger-Stoegbauer estimator for continuous data,
     plug-in estimators for discrete data, and Gaussian estimators for
-    continuous Gaussian data. References:
+    continuous Gaussian data.
 
-    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
+    References:
 
-    Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating mutual
-    information. Physical review E, 69(6), 066138.
-
-    Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012). Local
-    measures of information storage in complex distributed computation.
-    Information Sciences, 208, 39-54.
-
-    Schreiber, T. (2000). Measuring information transfer. Physical Review
-    Letters, 85(2), 461.
+        - Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
+          studying the dynamics of complex systems. Front Robot AI, 1(11).
+        - Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating
+          mutual information. Phys Rev E, 69(6), 066138.
+        - Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012).
+          Local measures of information storage in complex distributed
+          computation. Inform Sci, 208, 39-54.
+        - Schreiber, T. (2000). Measuring information transfer. Phys Rev Lett,
+          85(2), 461.
 
     Set common estimation parameters for JIDT estimators. For usage of these
     estimators see documentation for the child classes.
@@ -166,20 +165,7 @@ class JidtKraskov(JidtEstimator):
     implement estimators for mutual information (MI), conditional mutual
     information (CMI), actice information storage (AIS), transfer entropy (TE)
     using the Kraskov-Grassberger-Stoegbauer estimator for continuous data.
-    References:
-
-    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
-
-    Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating mutual
-    information. Physical review E, 69(6), 066138.
-
-    Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012). Local
-    measures of information storage in complex distributed computation.
-    Information Sciences, 208, 39-54.
-
-    Schreiber, T. (2000). Measuring information transfer. Physical Review
-    Letters, 85(2), 461.
+    See parent class for references.
 
     Set common estimation parameters for JIDT Kraskov-estimators. For usage of
     these estimators see documentation for the child classes.
@@ -236,17 +222,7 @@ class JidtDiscrete(JidtEstimator):
     Abstract class for implementation of plug-in JIDT-estimators for discrete
     data. Child classes implement estimators for mutual information (MI),
     conditional mutual information (CMI), actice information storage (AIS), and
-    transfer entropy (TE). References:
-
-    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
-
-    Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012). Local
-    measures of information storage in complex distributed computation.
-    Information Sciences, 208, 39-54.
-
-    Schreiber, T. (2000). Measuring information transfer. Physical Review
-    Letters, 85(2), 461.
+    transfer entropy (TE). See parent class for references.
 
     Set common estimation parameters for discrete JIDT-estimators. For usage of
     these estimators see documentation for the child classes.
@@ -374,18 +350,8 @@ class JidtGaussian(JidtEstimator):
     Abstract class for implementation of JIDT Gaussian-estimators, child
     classes implement estimators for mutual information (MI), conditional
     mutual information (CMI), actice information storage (AIS), transfer
-    entropy (TE) using JIDT's Gaussian estimator for continuous data.
-    References:
-
-    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
-
-    Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012). Local
-    measures of information storage in complex distributed computation.
-    Information Sciences, 208, 39-54.
-
-    Schreiber, T. (2000). Measuring information transfer. Physical Review
-    Letters, 85(2), 461.
+    entropy (TE) using JIDT's Gaussian estimator for continuous data. See
+    parent class for references.
 
     Set common estimation parameters for JIDT Kraskov-estimators. For usage of
     these estimators see documentation for the child classes.
@@ -458,13 +424,7 @@ class JidtKraskovCMI(JidtKraskov):
     Calculate the conditional mutual information (CMI) between three variables.
     Call JIDT via jpype and use the Kraskov 1 estimator. If no conditional is
     given (is None), the function returns the mutual information between var1
-    and var2. References:
-
-    Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating mutual
-    information. Physical review E, 69(6), 066138.
-
-    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
+    and var2. See parent class for references.
 
     Args:
         settings : dict [optional]
@@ -551,12 +511,8 @@ class JidtDiscreteCMI(JidtDiscrete):
     """Calculate CMI with JIDT's implementation for discrete variables.
 
     Calculate the conditional mutual information between two variables given
-    the third. Call JIDT via jpype and use the discrete estimator.
-
-    References:
-
-    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
+    the third. Call JIDT via jpype and use the discrete estimator. See parent
+    class for references.
 
     Args:
         settings : dict [optional]
@@ -716,12 +672,7 @@ class JidtDiscreteMI(JidtDiscrete):
     """Calculate MI with JIDT's discrete-variable implementation.
 
     Calculate the mutual information (MI) between two variables. Call JIDT via
-    jpype and use the discrete estimator.
-
-    References:
-
-    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
+    jpype and use the discrete estimator. See parent class for references.
 
     Args:
         settings : dict [optional]
@@ -856,13 +807,7 @@ class JidtKraskovMI(JidtKraskov):
     """Calculate mutual information with JIDT's Kraskov implementation.
 
     Calculate the mutual information between two variables. Call JIDT via jpype
-    and use the Kraskov 1 estimator. References:
-
-    Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating mutual
-    information. Physical review E, 69(6), 066138.
-
-    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
+    and use the Kraskov 1 estimator. See parent class for references.
 
     Args:
         settings : dict [optional]
@@ -951,17 +896,7 @@ class JidtKraskovAIS(JidtKraskov):
     tau describes the embedding delay, i.e., the spacing between every two
     samples from the processes' past.
 
-    References:
-
-    Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012). Local
-    measures of information storage in complex distributed computation.
-    Information Sciences, 208, 39-54.
-
-    Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating mutual
-    information. Physical review E, 69(6), 066138.
-
-    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
+    See parent class for references.
 
     Args:
         settings : dict
@@ -1041,16 +976,7 @@ class JidtDiscreteAIS(JidtDiscrete):
     """Calculate AIS with JIDT's discrete-variable implementation.
 
     Calculate the active information storage (AIS) for one process. Call JIDT
-    via jpype and use the discrete estimator.
-
-    References:
-
-    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
-
-    Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012). Local
-    measures of information storage in complex distributed computation.
-    Information Sciences, 208, 39-54.
+    via jpype and use the discrete estimator. See parent class for references.
 
     Args:
         settings : dict
@@ -1190,14 +1116,7 @@ class JidtGaussianAIS(JidtGaussian):
     tau describes the embedding delay, i.e., the spacing between every two
     samples from the processes' past.
 
-    References:
-
-    Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012). Local
-    measures of information storage in complex distributed computation.
-    Information Sciences, 208, 39-54.
-
-    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
+    See parent class for references.
 
     Args:
         settings : dict
@@ -1274,10 +1193,7 @@ class JidtGaussianMI(JidtGaussian):
     """Calculate mutual information with JIDT's Gaussian implementation.
 
     Calculate the mutual information between two variables. Call JIDT via jpype
-    and use the Gaussian estimator. References:
-
-    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
+    and use the Gaussian estimator. See parent class for references.
 
     Args:
         settings : dict [optional]
@@ -1362,10 +1278,7 @@ class JidtGaussianCMI(JidtGaussian):
     If no conditional is given (is None), the function returns the mutual
     information between var1 and var2.
 
-    References:
-
-    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
+    See parent class for references.
 
     Args:
         settings : dict [optional]
@@ -1489,16 +1402,7 @@ class JidtKraskovTE(JidtKraskov):
     tau descrices the embedding delay, i.e., the spacing between every two
     samples from the processes' past.
 
-    References:
-
-    Schreiber, T. (2000). Measuring information transfer. Physical Review
-    Letters, 85(2), 461.
-
-    Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating mutual
-    information. Physical review E, 69(6), 066138.
-
-    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
+    See parent class for references.
 
     Args:
         settings : dict
@@ -1585,14 +1489,7 @@ class JidtDiscreteTE(JidtDiscrete):
     Call JIDT via jpype and use the discrete estimator. Transfer entropy is
     defined as the conditional mutual information between the source's past
     state and the target's current value, conditional on the target's past.
-
-    References:
-
-    Schreiber, T. (2000). Measuring information transfer. Physical Review
-    Letters, 85(2), 461.
-
-    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
+    See parent class for references.
 
     Args:
         settings : dict
@@ -1738,13 +1635,7 @@ class JidtGaussianTE(JidtGaussian):
     tau descrices the embedding delay, i.e., the spacing between every two
     samples from the processes' past.
 
-    References:
-
-    Schreiber, T. (2000). Measuring information transfer. Physical Review
-    Letters, 85(2), 461.
-
-    Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-    studying the dynamics of complex systems. Front. Robot. AI, 1(11).
+    See parent class for references.
 
     Args:
         settings : dict
