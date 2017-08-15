@@ -171,7 +171,8 @@ class NetworkComparison(NetworkAnalysis):
         print('\n-------------------------- (1) create union of networks')
         network_all = np.hstack((network_set_a, network_set_b))
         self._create_union(*network_all)
-        print('\n-------------------------- (2) calculate original TE values')
+        print('\n-------------------------- (2) calculate differences in TE '
+              'values')
         self._calculate_cmi_diff_between(data_set_a, data_set_b)
         print('\n-------------------------- (3) create surrogate distribution')
         self._create_surrogate_distribution_between(data_set_a, data_set_b)
@@ -325,8 +326,9 @@ class NetworkComparison(NetworkAnalysis):
                 CMI differences
         """
         # re-calculate CMI for each data object using the union network mask
-        self.cmi_diff = self._calculate_diff(self._calculate_cmi(data_a),
-                                             self._calculate_cmi(data_b))
+        self.cmi_diff = self._calculate_diff(
+                                        self._calculate_cmi_all_links(data_a),
+                                        self._calculate_cmi_all_links(data_b))
 
     def _calculate_cmi_diff_between(self, data_set_a, data_set_b):
         """Calculate the difference in CMI between two groups of subjects.
@@ -367,19 +369,19 @@ class NetworkComparison(NetworkAnalysis):
         distribution when testing the orginal difference of the means.
         """
         # re-calculate CMI for each data object using the union network mask
-        cmi_union_a = []
+        cmi_a = []
         for d in data_set_a:
-            cmi_union_a.append(self._calculate_cmi(d))
-        cmi_union_b = []
+            cmi_a.append(self._calculate_cmi_all_links(d))
+        cmi_b = []
         for d in data_set_b:
-            cmi_union_b.append(self._calculate_cmi(d))
+            cmi_b.append(self._calculate_cmi_all_links(d))
 
         # permute data obejcts between conditions a and b before calculating
         # the CMI
         if permute:
-            cmi_all = cmi_union_a + cmi_union_b
+            cmi_all = cmi_a + cmi_b
             new_partition_a = np.random.choice(range(len(cmi_all)),
-                                               size=len(cmi_union_a),
+                                               size=len(cmi_a),
                                                replace=False)
             new_partition_b = list(set(range(0, len(cmi_all))) -
                                    set(new_partition_a))
@@ -390,12 +392,12 @@ class NetworkComparison(NetworkAnalysis):
                                         self._calculate_mean(cmi_b_perm))
 
         else:
-            return self._calculate_diff(self._calculate_mean(cmi_union_a),
-                                        self._calculate_mean(cmi_union_b))
+            return self._calculate_diff(self._calculate_mean(cmi_a),
+                                        self._calculate_mean(cmi_b))
 
         # get the mean difference between the two sets of CMI estimates
 
-    def _calculate_cmi(self, data):
+    def _calculate_cmi_all_links(self, data):
         """Calculate CMI for each source>target combi in the union network."""
         cmi = {}
         for t in self.union['targets']:
@@ -407,6 +409,7 @@ class NetworkComparison(NetworkAnalysis):
                 continue
 
             # get realisations of the current value and the full cond. set.
+            # TODO why is there a global max_lag and not one for each target?
             current_val = (t, self.union['max_lag'])
             idx_cond_full = (self.union[t]['selected_vars_target'] +
                              self.union[t]['selected_vars_sources'])
@@ -416,31 +419,31 @@ class NetworkComparison(NetworkAnalysis):
                                                    idx_cond_full)[0]
 
             # Calculate TE from each source variable to current target t
+            n_sources = len(self.union[t]['selected_vars_sources'])
+            cmi_temp = np.zeros(n_sources)
+            i = 0
             for idx_source in self.union[t]['selected_vars_sources']:
-                current_cond = cp.copy(self.union[t]['selected_vars_sources'])
-                current_cond.pop(current_cond.index(idx_source))
-
                 # get realisations of current TE-source from the set of all
                 # conditionals and calculate the CMI
                 [cond_real, source_real] = utils.separate_arrays(
                                                              idx_cond_full,
                                                              idx_source,
                                                              cond_full_real)
-                cmi_temp.append(self._cmi_estimator.estimate(
-                                                        cur_val_real,
-                                                        source_real,
-                                                        cond_real))
+                cmi_temp[i] = self._cmi_estimator.estimate(cur_val_real,
+                                                           source_real,
+                                                           cond_real)
+                i += 1
 
-            cmi[t] = np.array(cmi_temp)
+            cmi[t] = cmi_temp
 
         return cmi
 
-    def _calculate_cmi_permuted(self, data_a, data_b):
+    def _calculate_cmi_all_links_permuted(self, data_a, data_b):
         """Calculate surrogate CMI for union network.
 
         Calculate conditional mutual information (CMI) for each source > target
         combination in the union network after permuting realisations of
-        sources between the two data sets (comming from two conditions).
+        sources between the two data sets (coming from two conditions).
         Results can be used in a surrogate permutation test of the original CMI
         in the two data sets.
         """
@@ -469,31 +472,32 @@ class NetworkComparison(NetworkAnalysis):
                                                                t)
             # Calculate CMI from each source to current target t from permuted
             # data
+            n_sources = len(self.union[t]['selected_vars_sources'])
+            cmi_temp_a = np.zeros(n_sources)
+            cmi_temp_b = np.zeros(n_sources)
+            i = 0
             for idx_source in self.union[t]['selected_vars_sources']:
-                current_cond = cp.copy(self.union[t]['selected_vars_sources'])
-                current_cond.pop(current_cond.index(idx_source))
-
-                # Get realisations of current (permuted) TE-source from the set
-                # of all conditionals and calculate the CMI. Do this for both
-                # conditions.
+                # Get realisations of current source from the set of all
+                # surrogate conditionals and calculate the CMI. Do this for
+                # both conditions.
                 [temp_cond_real_a, source_real_a] = utils.separate_arrays(
                                                              idx_cond_full,
                                                              idx_source,
                                                              cond_full_perm_a)
-                cmi_temp_a.append(self._cmi_estimator.estimate(
-                                                        cur_val_perm_a,
-                                                        source_real_a,
-                                                        temp_cond_real_a))
+                cmi_temp_a[i] = self._cmi_estimator.estimate(cur_val_perm_a,
+                                                             source_real_a,
+                                                             temp_cond_real_a)
                 [temp_cond_real_b, source_real_b] = utils.separate_arrays(
                                                              idx_cond_full,
                                                              idx_source,
                                                              cond_full_perm_b)
-                cmi_temp_b.append(self._cmi_estimator.estimate(
-                                                        cur_val_perm_b,
-                                                        source_real_b,
-                                                        temp_cond_real_b))
-            cmi_a[t] = np.array(cmi_temp_a)
-            cmi_b[t] = np.array(cmi_temp_b)
+                cmi_temp_b[i] = self._cmi_estimator.estimate(cur_val_perm_b,
+                                                             source_real_b,
+                                                             temp_cond_real_b)
+                i += 1
+
+            cmi_a[t] = cmi_temp_a
+            cmi_b[t] = cmi_temp_b
 
         return cmi_a, cmi_b
 
@@ -565,7 +569,8 @@ class NetworkComparison(NetworkAnalysis):
         """
         self.cmi_surr = []
         for p in range(self.settings['n_perm_comp']):
-            [cmi_a, cmi_b] = self._calculate_cmi_permuted(data_a, data_b)
+            [cmi_a, cmi_b] = self._calculate_cmi_all_links_permuted(data_a,
+                                                                    data_b)
             self.cmi_surr.append(self._calculate_diff(cmi_a, cmi_b))
 
     def _create_surrogate_distribution_between(self, data_set_a, data_set_b):
@@ -607,8 +612,8 @@ class NetworkComparison(NetworkAnalysis):
         self.cmi_surr = []
         for p in range(self.settings['n_perm_comp']):
             if self.settings['verbose']:
-                print('permutation {0} of {1}'.format(
-                                            p, self.settings['n_perm_comp']))
+                print('Creating surrogate data set {0} of {1}.'.format(
+                        p, self.settings['n_perm_comp']))
             self.cmi_surr.append(self._calculate_diff_of_mean(data_set_a,
                                                               data_set_b,
                                                               permute=True))
@@ -770,7 +775,7 @@ class NetworkComparison(NetworkAnalysis):
 
         # Set defaults for statistical tests.
         settings.setdefault('verbose', True)
-        settings.setdefault('n_perm_comp', 10)
+        settings.setdefault('n_perm_comp', 500)
         settings.setdefault('alpha_comp', 0.05)
         settings.setdefault('tail_comp', 'two')
         stats.check_n_perm(settings['n_perm_comp'], settings['alpha_comp'])
