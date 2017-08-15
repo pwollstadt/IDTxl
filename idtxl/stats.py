@@ -819,7 +819,7 @@ def check_n_perm(n_perm, alpha):
     if not 1.0 / n_perm < alpha:
         raise RuntimeError('The number of permutations {0} is to small to test'
                            ' the requested alpha level {1}. The number of '
-                           'permutations must be greater than (1/alpha).'
+                           'permutations must be greater than 1/alpha.'
                            .format(n_perm, alpha))
 
 
