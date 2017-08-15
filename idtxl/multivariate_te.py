@@ -349,11 +349,6 @@ class MultivariateTE(NetworkInference):
                 i_1 = i_2
                 i_2 += data.n_realisations(self.current_value)
 
-            print(('var1, candidate_realisations: {0}, var2, current_value: '
-                   '{1}, cond: {2}').format(
-                            candidate_realisations.shape,
-                            self._current_value_realisations.shape,
-                            conditional_realisations.shape))
             temp_te = self._cmi_estimator.estimate_mult(
                                 n_chunks=len(self.selected_vars_sources),
                                 re_use=['var2'],
