@@ -105,7 +105,8 @@ class NetworkComparison(NetworkAnalysis):
         # Main comparison.
         print('\n-------------------------- (1) create union of networks')
         self._create_union(network_a, network_b)
-        print('\n-------------------------- (2) calculate original TE values')
+        print('\n-------------------------- (2) calculate differences in TE '
+              'values')
         self._calculate_cmi_diff_within(data_a, data_b)
         print('\n-------------------------- (3) create surrogate distribution')
         self._create_surrogate_distribution_within(data_a, data_b)
@@ -305,8 +306,8 @@ class NetworkComparison(NetworkAnalysis):
                     if c not in self.union[t]['selected_vars_target']:
                         self.union[t]['selected_vars_target'].append(c)
 
-    def _calculate_cmi_diff_within(self, data_a, data_b, permute=False):
-        """Calculate the difference in CMI within a subject.
+    def _calculate_cmi_diff_within(self, data_a, data_b):
+        """Calculate the difference in CMI between conditions within a subject.
 
         Calculate the difference in the conditional mutual information (CMI)
         for each source > target combination in the union network between data
@@ -314,16 +315,9 @@ class NetworkComparison(NetworkAnalysis):
 
         Args:
             data_a : Data instance
-                first set of raw data
+                raw data recorded in condition A
             data_a : Data instance
-                second set of raw data
-            permute : bool [optional]
-                if True, permute data from same replications between sets a and
-                b, depending on the stats type set for the instance
-
-        Returns:
-            numpy array
-                CMI differences
+                raw data recorded in condition B
         """
         # re-calculate CMI for each data object using the union network mask
         self.cmi_diff = self._calculate_diff(
@@ -569,6 +563,9 @@ class NetworkComparison(NetworkAnalysis):
         """
         self.cmi_surr = []
         for p in range(self.settings['n_perm_comp']):
+            if self.settings['verbose']:
+                print('Creating surrogate data set {0} of {1}.'.format(
+                        p, self.settings['n_perm_comp']))
             [cmi_a, cmi_b] = self._calculate_cmi_all_links_permuted(data_a,
                                                                     data_b)
             self.cmi_surr.append(self._calculate_diff(cmi_a, cmi_b))
