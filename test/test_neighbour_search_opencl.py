@@ -13,7 +13,7 @@ from idtxl.estimators_opencl import OpenCLKraskovMI, OpenCLKraskovCMI
 pytest.importorskip('pyopencl')
 
 settings = {'theiler_t': 0,
-            'knn_k': 1,
+            'kraskov_k': 1,
             'gpu_id': 0,
             'debug': True,
             'verbose': True}
