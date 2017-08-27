@@ -96,7 +96,7 @@ def test_single_source_storage_gaussian():
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_mi': 50,
         'alpha_mi': 0.05,
-        'tail_mi': 'one',
+        'tail_mi': 'one_bigger',
         'n_perm_max_stat': 21,
         'max_lag': 5,
         'tau': 1
@@ -120,7 +120,7 @@ def test_compare_jidt_open_cl_estimator():
         'cmi_estimator': 'OpenCLKraskovCMI',
         'n_perm_mi': 22,
         'alpha_mi': 0.05,
-        'tail_mi': 'one',
+        'tail_mi': 'one_bigger',
         'n_perm_max_stat': 21,
         'max_lag': 5,
         'tau': 1
