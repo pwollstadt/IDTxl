@@ -215,6 +215,8 @@ def test_int_types():
         est_sydney, est_tartu = _estimate(Z)
 
 
+@float128_not_available
+@optimization_not_available
 def test_non_binary_alphabet():
     """Test PID estimators on larger alphabets."""
     n = 1000
