@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+
+
+
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    
+    <title>idtxl.partial_information_decomposition &mdash; IDTxl 0.1 documentation</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    
+
+<link rel="stylesheet" href="../../_static/css/basicstrap-base.css" type="text/css" />
+<link rel="stylesheet" id="current-theme" href="../../_static/css/bootstrap3/bootswatch-spacelab.css" type="text/css" />
+<link rel="stylesheet" id="current-adjust-theme" href="../../_static/css/adjust_theme/bootswatch-spacelab.css" type="text/css" />
+
+<link rel="stylesheet" href="../../_static/css/font-awesome.min.css">
+
+<style type="text/css">
+  body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+  }
+</style>
+
+<link rel="stylesheet" href="../../_static/css/basicstrap.css" type="text/css" />
+<link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+<script type="text/javascript">
+  var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:    '../../',
+            VERSION:     '0.1',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE:  true
+  };
+</script>
+    <script type="text/javascript" src="../../_static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/bootstrap3.min.js"></script>
+<script type="text/javascript" src="../../_static/js/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="../../_static/js/basicstrap.js"></script>
+<script type="text/javascript">
+</script>
+    <link rel="top" title="IDTxl 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div id="navbar-top" class="navbar navbar-fixed-top navbar-default" role="navigation" aria-label="top navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../../index.html">IDTxl 0.1 documentation</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+
+            
+              <li><a href="../../py-modindex.html" title="Python Module Index" >modules </a></li>
+              <li><a href="../../genindex.html" title="General Index" accesskey="I">index </a></li>
+              <li><a href="../index.html" accesskey="U">Module code</a></li>
+            
+
+            <li class="visible-xs">
+                <form class="search form-search form-inline navbar-form navbar-right sp-searchbox" action="../../search.html" method="get">
+                  <div class="input-append input-group">
+                    <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+                    <span class="input-group-btn">
+                    <input type="submit" class="btn" value="Go" />
+                    </span>
+                  </div>
+                  <input type="hidden" name="check_keywords" value="yes" />
+                  <input type="hidden" name="area" value="default" />
+                </form>
+            </li>
+
+            
+
+          </ul>
+
+        </div>
+      </div>
+    </div>
+    
+
+    <!-- container -->
+    <div class="container">
+
+      <!-- row -->
+      <div class="row">
+        
+        
+
+        <div class="col-md-9" id="content-wrapper">
+          <div class="document" role="main">
+            <div class="documentwrapper">
+              <div class="bodywrapper">
+                <div class="body">
+                  
+  <h1>Source code for idtxl.partial_information_decomposition</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Estimate partial information decomposition (PID).</span>
+
+<span class="sd">Estimate PID for two source and one target process using different estimators.</span>
+
+<span class="sd">Note:</span>
+<span class="sd">    Written for Python 3.4+</span>
+
+<span class="sd">@author: patricia</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.single_process_analysis</span> <span class="kn">import</span> <span class="n">SingleProcessAnalysis</span>
+<span class="kn">from</span> <span class="nn">.estimator</span> <span class="kn">import</span> <span class="n">find_estimator</span>
+
+
+<div class="viewcode-block" id="PartialInformationDecomposition"><a class="viewcode-back" href="../../idtxl.html#idtxl.partial_information_decomposition.PartialInformationDecomposition">[docs]</a><span class="k">class</span> <span class="nc">PartialInformationDecomposition</span><span class="p">(</span><span class="n">SingleProcessAnalysis</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Perform partial information decomposition for individual processes.</span>
+
+<span class="sd">    Perform partial information decomposition (PID) for two source processes</span>
+<span class="sd">    and one target process in the network. Estimate unique, shared, and</span>
+<span class="sd">    synergistic information in the two sources about the target. Call</span>
+<span class="sd">    analyse_network() on the whole network or a set of nodes or call</span>
+<span class="sd">    analyse_single_target() to estimate PID for a single process. See</span>
+<span class="sd">    docstrings of the two functions for more information.</span>
+
+<span class="sd">    References:</span>
+
+<span class="sd">        - Williams, P. L., &amp; Beer, R. D. (2010). Nonnegative Decomposition of</span>
+<span class="sd">          Multivariate Information, 1–14. Retrieved from</span>
+<span class="sd">          http://arxiv.org/abs/1004.2515</span>
+<span class="sd">        - Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., &amp; Ay, N. (2014).</span>
+<span class="sd">          Quantifying Unique Information. Entropy, 16(4), 2161–2183.</span>
+<span class="sd">          http://doi.org/10.3390/e16042161</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        target : int</span>
+<span class="sd">            index of target process</span>
+<span class="sd">        sources : array type</span>
+<span class="sd">            pair of indices of source processes</span>
+<span class="sd">        settings : dict</span>
+<span class="sd">            analysis settings</span>
+<span class="sd">        results : dict</span>
+<span class="sd">            estimated PID</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="PartialInformationDecomposition.analyse_network"><a class="viewcode-back" href="../../idtxl.html#idtxl.partial_information_decomposition.PartialInformationDecomposition.analyse_network">[docs]</a>    <span class="k">def</span> <span class="nf">analyse_network</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">sources</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Estimate partial information decomposition for network nodes.</span>
+
+<span class="sd">        Estimate partial information decomposition (PID) for multiple nodes in</span>
+<span class="sd">        the network.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            For a detailed description and references see the documentation of</span>
+<span class="sd">            the analyse_single_target() method of this class.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">            &gt;&gt;&gt; n = 20</span>
+<span class="sd">            &gt;&gt;&gt; alph = 2</span>
+<span class="sd">            &gt;&gt;&gt; x = np.random.randint(0, alph, n)</span>
+<span class="sd">            &gt;&gt;&gt; y = np.random.randint(0, alph, n)</span>
+<span class="sd">            &gt;&gt;&gt; z = np.logical_xor(x, y).astype(int)</span>
+<span class="sd">            &gt;&gt;&gt; dat = Data(np.vstack((x, y, z)), &#39;ps&#39;, normalise=False)</span>
+<span class="sd">            &gt;&gt;&gt; settings = {</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;alpha&#39;: 0.1,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;alph_s1&#39;: alph,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;alph_s2&#39;: alph,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;alph_t&#39;: alph,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;max_unsuc_swaps_row_parm&#39;: 60,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;num_reps&#39;: 63,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;max_iters&#39;: 1000,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;pid_calc_name&#39;: &#39;SydneyPID&#39;}</span>
+<span class="sd">            &gt;&gt;&gt; targets = [0, 1, 2]</span>
+<span class="sd">            &gt;&gt;&gt; sources = [[1, 2], [0, 2], [0, 1]]</span>
+<span class="sd">            &gt;&gt;&gt; lags = [[1, 1], [3, 2], [0, 0]]</span>
+<span class="sd">            &gt;&gt;&gt; pid_analysis = PartialInformationDecomposition()</span>
+<span class="sd">            &gt;&gt;&gt; res = pid_analysis.analyse_network(settings, dat, targets,</span>
+<span class="sd">            &gt;&gt;&gt;                                    sources)</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            settings : dict</span>
+<span class="sd">                parameters for estimation and statistical testing, see</span>
+<span class="sd">                documentation of analyse_single_target() for details, can</span>
+<span class="sd">                contain</span>
+
+<span class="sd">                - &#39;lags&#39; : list of lists of ints [optional] - lags in samples</span>
+<span class="sd">                  between sources and target (default=[[1, 1], [1, 1] ...])</span>
+
+<span class="sd">            data : Data instance</span>
+<span class="sd">                raw data for analysis</span>
+<span class="sd">            targets : list of int</span>
+<span class="sd">                index of target processes</span>
+<span class="sd">            sources : list of lists</span>
+<span class="sd">                indices of the two source processes for each target, e.g.,</span>
+<span class="sd">                [[0, 2], [1, 0]], must have the same length as targets</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict</span>
+<span class="sd">                results for each process, see documentation of</span>
+<span class="sd">                analyse_single_target()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;lags&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags&#39;</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Lists of targets, sources, and lags must have&#39;</span>
+                               <span class="s1">&#39;the same lengths.&#39;</span><span class="p">)</span>
+        <span class="n">list_of_lags</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags&#39;</span><span class="p">]</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">####### analysing target with index {0} from list {1}&#39;</span>
+                      <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">targets</span><span class="p">))</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">list_of_lags</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analyse_single_target</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">targets</span><span class="p">[</span><span class="n">t</span><span class="p">],</span>
+                                           <span class="n">sources</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+            <span class="n">results</span><span class="p">[</span><span class="n">targets</span><span class="p">[</span><span class="n">t</span><span class="p">]]</span> <span class="o">=</span> <span class="n">r</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+
+<div class="viewcode-block" id="PartialInformationDecomposition.analyse_single_target"><a class="viewcode-back" href="../../idtxl.html#idtxl.partial_information_decomposition.PartialInformationDecomposition.analyse_single_target">[docs]</a>    <span class="k">def</span> <span class="nf">analyse_single_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">sources</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Estimate partial information decomposition for a network node.</span>
+
+<span class="sd">        Estimate partial information decomposition (PID) for a target node in</span>
+<span class="sd">        the network.</span>
+
+<span class="sd">        # TODO add references</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">            &gt;&gt;&gt; n = 20</span>
+<span class="sd">            &gt;&gt;&gt; alph = 2</span>
+<span class="sd">            &gt;&gt;&gt; x = np.random.randint(0, alph, n)</span>
+<span class="sd">            &gt;&gt;&gt; y = np.random.randint(0, alph, n)</span>
+<span class="sd">            &gt;&gt;&gt; z = np.logical_xor(x, y).astype(int)</span>
+<span class="sd">            &gt;&gt;&gt; dat = Data(np.vstack((x, y, z)), &#39;ps&#39;, normalise=False)</span>
+<span class="sd">            &gt;&gt;&gt; settings = {</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;alpha&#39;: 0.1,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;alph_s1&#39;: alph,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;alph_s2&#39;: alph,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;alph_t&#39;: alph,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;max_unsuc_swaps_row_parm&#39;: 60,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;num_reps&#39;: 63,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;max_iters&#39;: 1000,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;pid_calc_name&#39;: &#39;SydneyPID&#39;,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;lags&#39;: [2, 3]}</span>
+<span class="sd">            &gt;&gt;&gt; pid_analysis = PartialInformationDecomposition()</span>
+<span class="sd">            &gt;&gt;&gt; res = pid_analysis.analyse_single_target(settings=settings,</span>
+<span class="sd">            &gt;&gt;&gt;                                          data=dat,</span>
+<span class="sd">            &gt;&gt;&gt;                                          target=0,</span>
+<span class="sd">            &gt;&gt;&gt;                                          sources=[1, 2])</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            settings : dict</span>
+<span class="sd">                parameters for estimator use and statistics:</span>
+
+<span class="sd">                - &#39;pid_estimator&#39; : str - estimator to be used for PID</span>
+<span class="sd">                  estimation (for estimator settings see the documentation in</span>
+<span class="sd">                  the estimators_pid modules)</span>
+<span class="sd">                - &#39;lags&#39; : list of ints [optional] - lags in samples between</span>
+<span class="sd">                  sources and target (default=[1, 1])</span>
+<span class="sd">                - &#39;verbose&#39; : bool [optional] - toggle console output</span>
+<span class="sd">                  (default=True)</span>
+
+<span class="sd">            data : Data instance</span>
+<span class="sd">                raw data for analysis</span>
+<span class="sd">            target : int</span>
+<span class="sd">                index of target processes</span>
+<span class="sd">            sources : list of ints</span>
+<span class="sd">                indices of the two source processes for the target</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict</span>
+<span class="sd">                unique, shared and synergistic information from both sources,</span>
+<span class="sd">                statistical significance and p-values, indices of source</span>
+<span class="sd">                variables, and settings used for estimation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check input and initialise values for analysis.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialise</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">sources</span><span class="p">)</span>
+
+        <span class="c1"># Estimate PID and significance.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_pid</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="c1"># Add analyis info.</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span>
+        <span class="n">results</span><span class="p">[</span><span class="s1">&#39;settings&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span>
+        <span class="n">results</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span>
+        <span class="n">results</span><span class="p">[</span><span class="s1">&#39;source_1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+        <span class="n">results</span><span class="p">[</span><span class="s1">&#39;source_2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+
+    <span class="k">def</span> <span class="nf">_initialise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">sources</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check input, set initial or default values for analysis settings.&quot;&quot;&quot;</span>
+        <span class="c1"># Check requested PID estimator.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">EstimatorClass</span> <span class="o">=</span> <span class="n">find_estimator</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;pid_estimator&#39;</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Estimator was not specified!&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pid_estimator</span> <span class="o">=</span> <span class="n">EstimatorClass</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;lags&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span>
+
+        <span class="c1"># Check if provided lags are correct and work with the number of</span>
+        <span class="c1"># samples in the data.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags&#39;</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;List of lags must have length 2.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">data</span><span class="o">.</span><span class="n">n_samples</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Lag 1 ({0}) is larger than the number of &#39;</span>
+                               <span class="s1">&#39;samples in the data set ({1}).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="o">.</span><span class="n">n_samples</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">data</span><span class="o">.</span><span class="n">n_samples</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Lag 2 ({0}) is larger than the number of &#39;</span>
+                               <span class="s1">&#39;samples in the data set ({1}).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">data</span><span class="o">.</span><span class="n">n_samples</span><span class="p">))</span>
+
+        <span class="c1"># Check if target and sources are provided correctly.</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">int</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Target must be an integer.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;List of sources must have length 2.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;The target ({0}) should not be in the list &#39;</span>
+                               <span class="s1">&#39;of sources ({1}).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">sources</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span> <span class="o">=</span> <span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags&#39;</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">target</span>
+        <span class="c1"># TODO works for single vars only, change to multivariate?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lag_to_idx</span><span class="p">([</span>
+                                    <span class="p">(</span><span class="n">sources</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span>
+                                    <span class="p">(</span><span class="n">sources</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">])])</span>
+
+    <span class="k">def</span> <span class="nf">_calculate_pid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+
+        <span class="c1"># TODO Discuss how and if the following statistical testing should be</span>
+        <span class="c1"># included included. Remove dummy results.</span>
+        <span class="c1"># [orig_pid, sign_1, p_val_1,</span>
+        <span class="c1">#  sign_2, p_val_2] = stats.unq_against_surrogates(self, data)</span>
+        <span class="c1"># [orig_pid, sign_shd,</span>
+        <span class="c1">#  p_val_shd, sign_syn, p_val_syn] = stats.syn_shd_against_surrogates(</span>
+        <span class="c1">#                                                                 self,</span>
+        <span class="n">sign_1</span> <span class="o">=</span> <span class="n">sign_2</span> <span class="o">=</span> <span class="n">sign_shd</span> <span class="o">=</span> <span class="n">sign_syn</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">p_val_1</span> <span class="o">=</span> <span class="n">p_val_2</span> <span class="o">=</span> <span class="n">p_val_shd</span> <span class="o">=</span> <span class="n">p_val_syn</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+        <span class="n">target_realisations</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">,</span>
+                                            <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">source_1_realisations</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">,</span>
+                                            <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="mi">0</span><span class="p">]])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">source_2_realisations</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">,</span>
+                                            <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="mi">1</span><span class="p">]])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">orig_pid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pid_estimator</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span>
+                                <span class="n">s1</span><span class="o">=</span><span class="n">source_1_realisations</span><span class="p">,</span>
+                                <span class="n">s2</span><span class="o">=</span><span class="n">source_2_realisations</span><span class="p">,</span>
+                                <span class="n">t</span><span class="o">=</span><span class="n">target_realisations</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">unq information s1: {0:.8f}, s2: {1:.8f}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                                           <span class="n">orig_pid</span><span class="p">[</span><span class="s1">&#39;unq_s1&#39;</span><span class="p">],</span>
+                                                           <span class="n">orig_pid</span><span class="p">[</span><span class="s1">&#39;unq_s2&#39;</span><span class="p">]))</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;shd information: {0:.8f}, syn information: {1:.8f}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                                        <span class="n">orig_pid</span><span class="p">[</span><span class="s1">&#39;shd_s1_s2&#39;</span><span class="p">],</span>
+                                                        <span class="n">orig_pid</span><span class="p">[</span><span class="s1">&#39;syn_s1_s2&#39;</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">orig_pid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;s1_unq_sign&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sign_1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;s2_unq_sign&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sign_2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;s1_unq_p_val&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_val_1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;s2_unq_p_val&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_val_2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;syn_sign&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sign_syn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;syn_p_val&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_val_syn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;shd_sign&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sign_shd</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;shd_p_val&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_val_shd</span>
+
+        <span class="c1"># TODO make mi_against_surrogates in stats more generic, such that</span>
+        <span class="c1"># it becomes an arbitrary permutation test where one arguemnt gets</span>
+        <span class="c1"># shuffled and then all arguents are passed to the provided estimator</span>
+
+    <span class="k">def</span> <span class="nf">_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reset instance after analysis.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pid_estimator</span></div>
+</pre></div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+         
+<div class="col-md-3 hidden-xs" id="sidebar-wrapper">
+  <div class="sidebar hidden-xs" role="navigation" aria-label="main navigation">
+<div id="searchbox" role="search">
+  <h3>Quick search</h3>
+  <form class="search form-inline" action="../../search.html" method="get">
+      <div class="input-append input-group">
+        <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+        <span class="input-group-btn">
+        <input type="submit" class="btn" value="Go" />
+        </span>
+      </div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+  </div>
+</div> 
+        
+      </div><!-- /row -->
+
+      <!-- row -->
+      <div class="row footer-relbar">
+<div id="navbar-related" class=" related navbar navbar-default" role="navigation" aria-label="related navigation">
+  <div class="navbar-inner">
+    <ul class="nav navbar-nav ">
+        <li><a href="../../index.html">IDTxl 0.1 documentation</a></li>
+    </ul>
+<ul class="nav navbar-nav pull-right hidden-xs hidden-sm">
+      
+        <li><a href="../../py-modindex.html" title="Python Module Index" >modules</a></li>
+        <li><a href="../../genindex.html" title="General Index" >index</a></li>
+        <li><a href="../index.html" >Module code</a></li>
+        <li><a href="#">top</a></li> 
+      
+    </ul>
+  </div>
+</div>
+      </div><!-- /row -->
+
+      <!-- footer -->
+      <footer role="contentinfo">
+          &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.3.6.
+      </footer>
+      <!-- /footer -->
+
+    </div>
+    <!-- /container -->
+
+  </body>
+</html>

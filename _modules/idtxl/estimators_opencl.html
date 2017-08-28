@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+
+
+
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    
+    <title>idtxl.estimators_opencl &mdash; IDTxl 0.1 documentation</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    
+
+<link rel="stylesheet" href="../../_static/css/basicstrap-base.css" type="text/css" />
+<link rel="stylesheet" id="current-theme" href="../../_static/css/bootstrap3/bootswatch-spacelab.css" type="text/css" />
+<link rel="stylesheet" id="current-adjust-theme" href="../../_static/css/adjust_theme/bootswatch-spacelab.css" type="text/css" />
+
+<link rel="stylesheet" href="../../_static/css/font-awesome.min.css">
+
+<style type="text/css">
+  body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+  }
+</style>
+
+<link rel="stylesheet" href="../../_static/css/basicstrap.css" type="text/css" />
+<link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+<script type="text/javascript">
+  var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:    '../../',
+            VERSION:     '0.1',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE:  true
+  };
+</script>
+    <script type="text/javascript" src="../../_static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/bootstrap3.min.js"></script>
+<script type="text/javascript" src="../../_static/js/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="../../_static/js/basicstrap.js"></script>
+<script type="text/javascript">
+</script>
+    <link rel="top" title="IDTxl 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div id="navbar-top" class="navbar navbar-fixed-top navbar-default" role="navigation" aria-label="top navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../../index.html">IDTxl 0.1 documentation</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+
+            
+              <li><a href="../../py-modindex.html" title="Python Module Index" >modules </a></li>
+              <li><a href="../../genindex.html" title="General Index" accesskey="I">index </a></li>
+              <li><a href="../index.html" accesskey="U">Module code</a></li>
+            
+
+            <li class="visible-xs">
+                <form class="search form-search form-inline navbar-form navbar-right sp-searchbox" action="../../search.html" method="get">
+                  <div class="input-append input-group">
+                    <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+                    <span class="input-group-btn">
+                    <input type="submit" class="btn" value="Go" />
+                    </span>
+                  </div>
+                  <input type="hidden" name="check_keywords" value="yes" />
+                  <input type="hidden" name="area" value="default" />
+                </form>
+            </li>
+
+            
+
+          </ul>
+
+        </div>
+      </div>
+    </div>
+    
+
+    <!-- container -->
+    <div class="container">
+
+      <!-- row -->
+      <div class="row">
+        
+        
+
+        <div class="col-md-9" id="content-wrapper">
+          <div class="document" role="main">
+            <div class="documentwrapper">
+              <div class="bodywrapper">
+                <div class="body">
+                  
+  <h1>Source code for idtxl.estimators_opencl</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">resource_filename</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">digamma</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">idtxl.estimator</span> <span class="kn">import</span> <span class="n">Estimator</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">idtxl_exceptions</span> <span class="k">as</span> <span class="n">ex</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pyopencl</span> <span class="kn">as</span> <span class="nn">cl</span>
+<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+    <span class="n">ex</span><span class="o">.</span><span class="n">package_missing</span><span class="p">(</span><span class="n">err</span><span class="p">,</span> <span class="s1">&#39;PyOpenCl is not available on this system. Install&#39;</span>
+                            <span class="s1">&#39; it using pip or the package manager to use &#39;</span>
+                            <span class="s1">&#39;OpenCL-powered CMI estimation.&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="OpenCLKraskov"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_opencl.OpenCLKraskov">[docs]</a><span class="k">class</span> <span class="nc">OpenCLKraskov</span><span class="p">(</span><span class="n">Estimator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract class for implementation of OpenCL estimators.</span>
+
+<span class="sd">    Abstract class for implementation of OpenCL estimators, child classes</span>
+<span class="sd">    implement estimators for mutual information (MI) and conditional mutual</span>
+<span class="sd">    information (CMI) using the Kraskov-Grassberger-Stoegbauer estimator for</span>
+<span class="sd">    continuous data.</span>
+
+<span class="sd">    References:</span>
+
+<span class="sd">        - Kraskov, A., Stoegbauer, H., &amp; Grassberger, P. (2004). Estimating</span>
+<span class="sd">          mutual information. Phys Rev E, 69(6), 066138.</span>
+<span class="sd">        - Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012).</span>
+<span class="sd">          Local measures of information storage in complex distributed</span>
+<span class="sd">          computation. Inform Sci, 208, 39-54.</span>
+<span class="sd">        - Schreiber, T. (2000). Measuring information transfer. Phys Rev Lett,</span>
+<span class="sd">          85(2), 461.</span>
+
+<span class="sd">    Estimators can be used to perform multiple, independent searches in</span>
+<span class="sd">    parallel. Each of these parallel searches is called a &#39;chunk&#39;. To search</span>
+<span class="sd">    multiple chunks, provide point sets as 2D arrays, where the first</span>
+<span class="sd">    dimension represents samples or points, and the second dimension</span>
+<span class="sd">    represents the points&#39; dimensions. Concatenate chunk data in the first</span>
+<span class="sd">    dimension and pass the number of chunks to the estimators. Chunks must be</span>
+<span class="sd">    of equal size.</span>
+
+<span class="sd">    Set common estimation parameters for OpenCL estimators. For usage of these</span>
+<span class="sd">    estimators see documentation for the child classes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        settings : dict [optional]</span>
+<span class="sd">            set estimator parameters:</span>
+
+<span class="sd">            - &#39;gpuid&#39; - device ID used for estimation (if more than one device</span>
+<span class="sd">              is available on the current platform) (default=0)</span>
+<span class="sd">            - &#39;kraskov_k&#39; - no. nearest neighbours for KNN search (default=4)</span>
+<span class="sd">            - &#39;normalise&#39; - z-standardise data (default=False)</span>
+<span class="sd">            - &#39;theiler_t&#39; - no. next temporal neighbours ignored in KNN and</span>
+<span class="sd">              range searches (default=&#39;0&#39;)</span>
+<span class="sd">            - &#39;noise_level&#39; - random noise added to the data (default=&#39;1e-8&#39;)</span>
+<span class="sd">            - &#39;debug&#39; - return intermediate results, i.e. neighbour counts from</span>
+<span class="sd">              range searches and KNN distances (default=False)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="c1"># Get defaults for estimator settings</span>
+        <span class="k">if</span> <span class="n">settings</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">settings</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;settings should be a dictionary.&#39;</span><span class="p">)</span>
+
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;gpuid&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;theiler_t&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;noise_level&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="mf">1e-8</span><span class="p">))</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;local_values&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;debug&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_float</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_int</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span><span class="p">)</span>
+
+        <span class="c1"># Get kernel and devices.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_device</span><span class="p">(</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;gpuid&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_location</span> <span class="o">=</span> <span class="n">resource_filename</span><span class="p">(</span><span class="n">__name__</span><span class="p">,</span>
+                                                 <span class="s1">&#39;gpuKnnKernelNoIdx.cl&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kNN_kernel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">RS_kernel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_kernels</span><span class="p">()</span>
+
+<div class="viewcode-block" id="OpenCLKraskov.is_parallel"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_opencl.OpenCLKraskov.is_parallel">[docs]</a>    <span class="k">def</span> <span class="nf">is_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">True</span></div>
+
+<div class="viewcode-block" id="OpenCLKraskov.is_analytic_null_estimator"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_opencl.OpenCLKraskov.is_analytic_null_estimator">[docs]</a>    <span class="k">def</span> <span class="nf">is_analytic_null_estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_device</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gpuid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return GPU devices, context, and queue.&quot;&quot;&quot;</span>
+        <span class="n">all_platforms</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">get_platforms</span><span class="p">()</span>
+        <span class="n">platform</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">all_platforms</span> <span class="k">if</span>
+                         <span class="n">p</span><span class="o">.</span><span class="n">get_devices</span><span class="p">(</span><span class="n">device_type</span><span class="o">=</span><span class="n">cl</span><span class="o">.</span><span class="n">device_type</span><span class="o">.</span><span class="n">GPU</span><span class="p">)</span> <span class="o">!=</span> <span class="p">[]),</span>
+                        <span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">platform</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;No OpenCL GPU device found.&#39;</span><span class="p">)</span>
+        <span class="n">my_gpu_devices</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">get_devices</span><span class="p">(</span><span class="n">device_type</span><span class="o">=</span><span class="n">cl</span><span class="o">.</span><span class="n">device_type</span><span class="o">.</span><span class="n">GPU</span><span class="p">)</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Context</span><span class="p">(</span><span class="n">devices</span><span class="o">=</span><span class="n">my_gpu_devices</span><span class="p">)</span>
+        <span class="n">queue</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">CommandQueue</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">my_gpu_devices</span><span class="p">[</span><span class="n">gpuid</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Selected Device: &quot;</span><span class="p">,</span> <span class="n">my_gpu_devices</span><span class="p">[</span><span class="n">gpuid</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">my_gpu_devices</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">queue</span>
+
+    <span class="k">def</span> <span class="nf">_get_kernels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return KNN and range search OpenCL kernels.&quot;&quot;&quot;</span>
+        <span class="n">kernel_source</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_location</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">program</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Program</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="n">kernel_source</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+        <span class="n">kNN_kernel</span> <span class="o">=</span> <span class="n">program</span><span class="o">.</span><span class="n">kernelKNNshared</span>
+        <span class="n">kNN_kernel</span><span class="o">.</span><span class="n">set_scalar_arg_dtypes</span><span class="p">([</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                                          <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                                          <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="bp">None</span><span class="p">])</span>
+
+        <span class="n">RS_kernel</span> <span class="o">=</span> <span class="n">program</span><span class="o">.</span><span class="n">kernelBFRSAllshared</span>
+        <span class="n">RS_kernel</span><span class="o">.</span><span class="n">set_scalar_arg_dtypes</span><span class="p">([</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span>
+                                         <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                                         <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="bp">None</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">kNN_kernel</span><span class="p">,</span> <span class="n">RS_kernel</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_number_of_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_points</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sanity check for number of points going into the estimator.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">n_points</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Insufficient number of points ({0}) for the &#39;</span>
+                               <span class="s1">&#39;requested number of nearest neighbours &#39;</span>
+                               <span class="s1">&#39;(kraskov_k: {1}).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                        <span class="n">n_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">n_points</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">])</span> <span class="o">+</span>
+                              <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;theiler_t&#39;</span><span class="p">])):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Insufficient number of points ({0}) for the &#39;</span>
+                               <span class="s1">&#39;requested number of nearest neighbours &#39;</span>
+                               <span class="s1">&#39;(kraskov_k: {1}) and Theiler-correction &#39;</span>
+                               <span class="s1">&#39;(theiler_t: {2}).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                                <span class="n">n_points</span><span class="p">,</span>
+                                                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">],</span>
+                                                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;theiler_t&#39;</span><span class="p">]))</span></div>
+
+
+<div class="viewcode-block" id="OpenCLKraskovMI"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_opencl.OpenCLKraskovMI">[docs]</a><span class="k">class</span> <span class="nc">OpenCLKraskovMI</span><span class="p">(</span><span class="n">OpenCLKraskov</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate mutual information with OpenCL Kraskov implementation.</span>
+
+<span class="sd">    Calculate the mutual information (MI) between two variables using OpenCL</span>
+<span class="sd">    GPU-code. See parent class for references.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        settings : dict [optional]</span>
+<span class="sd">            set estimator parameters:</span>
+
+<span class="sd">            - &#39;gpuid&#39; - device ID used for estimation (if more than one device</span>
+<span class="sd">              is available on the current platform) (default=0)</span>
+<span class="sd">            - &#39;kraskov_k&#39; - no. nearest neighbours for KNN search (default=4)</span>
+<span class="sd">            - &#39;normalise&#39; - z-standardise data (default=False)</span>
+<span class="sd">            - &#39;theiler_t&#39; - no. next temporal neighbours ignored in KNN and</span>
+<span class="sd">              range searches (default=&#39;0&#39;)</span>
+<span class="sd">            - &#39;noise_level&#39; - random noise added to the data (default=&#39;1e-8&#39;)</span>
+<span class="sd">            - &#39;debug&#39; - return intermediate results, i.e. neighbour counts from</span>
+<span class="sd">              range searches and KNN distances (default=False)</span>
+<span class="sd">            - &#39;lag&#39; - time difference in samples to calculate the lagged MI</span>
+<span class="sd">              between processes (default=0)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="c1"># Set default estimator settings.</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;lag&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+<div class="viewcode-block" id="OpenCLKraskovMI.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_opencl.OpenCLKraskovMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">n_chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Estimate mutual information.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            var1 : numpy array</span>
+<span class="sd">                realisations of first variable, a 2D numpy array where array</span>
+<span class="sd">                dimensions represent [(realisations * n_chunks) x variable</span>
+<span class="sd">                dimension], array type should be int32</span>
+<span class="sd">            var2 : numpy array</span>
+<span class="sd">                realisations of the second variable (similar to var1)</span>
+<span class="sd">            n_chunks : int</span>
+<span class="sd">                number of data chunks, no. data points has to be the same for</span>
+<span class="sd">                each chunk</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float | numpy array</span>
+<span class="sd">                average MI over all samples or local MI for individual</span>
+<span class="sd">                samples if &#39;local_values&#39;=True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Prepare data and add noise</span>
+        <span class="k">assert</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">var2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">%</span> <span class="n">n_chunks</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_number_of_points</span><span class="p">(</span><span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">signallength</span> <span class="o">=</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">chunklength</span> <span class="o">=</span> <span class="n">signallength</span> <span class="o">//</span> <span class="n">n_chunks</span>
+        <span class="n">var1dim</span> <span class="o">=</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">var2dim</span> <span class="o">=</span> <span class="n">var2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">pointdim</span> <span class="o">=</span> <span class="n">var1dim</span> <span class="o">+</span> <span class="n">var2dim</span>
+        <span class="n">kraskov_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">]</span>
+
+        <span class="n">mem_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_float</span> <span class="o">*</span> <span class="n">chunklength</span> <span class="o">*</span> <span class="n">pointdim</span>
+        <span class="n">mem_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_float</span> <span class="o">*</span> <span class="n">chunklength</span> <span class="o">*</span> <span class="n">kraskov_k</span>
+        <span class="n">mem_ncnt</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_int</span> <span class="o">*</span> <span class="n">chunklength</span>
+        <span class="n">mem_chunk</span> <span class="o">=</span> <span class="n">mem_data</span> <span class="o">+</span> <span class="n">mem_dist</span> <span class="o">+</span> <span class="n">mem_ncnt</span>
+
+        <span class="k">if</span> <span class="s1">&#39;max_mem&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">:</span>
+            <span class="n">max_mem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;max_mem&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">max_mem</span> <span class="o">=</span> <span class="mf">0.9</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;gpuid&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">global_mem_size</span>
+
+        <span class="n">max_chunks_per_run</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">max_mem</span><span class="o">/</span><span class="n">mem_chunk</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">chunks_per_run</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">max_chunks_per_run</span><span class="p">,</span> <span class="n">n_chunks</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Memory per chunk: {0:.5f} MB, GPU global memory: {1} MB, &#39;</span>
+                  <span class="s1">&#39;chunks per run: {2}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mem_chunk</span> <span class="o">/</span> <span class="mi">1024</span> <span class="o">/</span> <span class="mi">1024</span><span class="p">,</span>
+                                                <span class="n">max_mem</span> <span class="o">/</span> <span class="mi">1024</span> <span class="o">/</span> <span class="mi">1024</span><span class="p">,</span>
+                                                <span class="n">chunks_per_run</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">mem_chunk</span> <span class="o">&gt;</span> <span class="n">max_mem</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Size of single chunk exceeds GPU global &#39;</span>
+                               <span class="s1">&#39;memory.&#39;</span><span class="p">)</span>
+
+        <span class="n">mi_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+            <span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+            <span class="n">count_var1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+            <span class="n">count_var2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_chunks</span><span class="p">,</span> <span class="n">chunks_per_run</span><span class="p">):</span>
+            <span class="n">startidx</span> <span class="o">=</span> <span class="n">r</span><span class="o">*</span><span class="n">chunklength</span>
+            <span class="n">stopidx</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">r</span><span class="o">+</span><span class="n">chunks_per_run</span><span class="p">,</span> <span class="n">n_chunks</span><span class="p">)</span><span class="o">*</span><span class="n">chunklength</span>
+            <span class="n">subset1</span> <span class="o">=</span> <span class="n">var1</span><span class="p">[</span><span class="n">startidx</span><span class="p">:</span><span class="n">stopidx</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">subset2</span> <span class="o">=</span> <span class="n">var2</span><span class="p">[</span><span class="n">startidx</span><span class="p">:</span><span class="n">stopidx</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">n_chunks_current_run</span> <span class="o">=</span> <span class="n">subset1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">chunklength</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_single_run</span><span class="p">(</span><span class="n">subset1</span><span class="p">,</span> <span class="n">subset2</span><span class="p">,</span>
+                                            <span class="n">n_chunks_current_run</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+                <span class="n">mi_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">mi_array</span><span class="p">,</span>   <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+                <span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">distances</span><span class="p">,</span>  <span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="n">count_var1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">count_var1</span><span class="p">,</span> <span class="n">res</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+                <span class="n">count_var2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">count_var2</span><span class="p">,</span> <span class="n">res</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mi_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">mi_array</span><span class="p">,</span> <span class="n">res</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">mi_array</span><span class="p">,</span> <span class="n">distances</span><span class="p">,</span> <span class="n">count_var1</span><span class="p">,</span> <span class="n">count_var2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mi_array</span></div>
+
+    <span class="k">def</span> <span class="nf">_estimate_single_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">n_chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Estimate mutual information in a single GPU run.</span>
+
+<span class="sd">        This method should not be called directly, only inside estimate()</span>
+<span class="sd">        after memory bounds have been checked.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            var1 : numpy array</span>
+<span class="sd">                realisations of first variable, a 2D numpy array where array</span>
+<span class="sd">                dimensions represent [(realisations * n_chunks) x variable</span>
+<span class="sd">                dimension], array type should be int32</span>
+<span class="sd">            var2 : numpy array</span>
+<span class="sd">                realisations of the second variable (similar to var1)</span>
+<span class="sd">            n_chunks : int</span>
+<span class="sd">                number of data chunks, no. data points has to be the same for</span>
+<span class="sd">                each chunk</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float | numpy array</span>
+<span class="sd">                average MI over all samples or local MI for individual</span>
+<span class="sd">                samples if &#39;local_values&#39;=True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Prepare data and add noise</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;var1 shape: {0}, {1}, n_chunks: {2}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                             <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n_chunks</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">var2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">%</span> <span class="n">n_chunks</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_number_of_points</span><span class="p">(</span><span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">signallength</span> <span class="o">=</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">chunklength</span> <span class="o">=</span> <span class="n">signallength</span> <span class="o">//</span> <span class="n">n_chunks</span>
+        <span class="n">var1dim</span> <span class="o">=</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">var2dim</span> <span class="o">=</span> <span class="n">var2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">pointdim</span> <span class="o">=</span> <span class="n">var1dim</span> <span class="o">+</span> <span class="n">var2dim</span>
+        <span class="n">pointset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">pointset</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;noise_level&#39;</span><span class="p">],</span>
+                                     <span class="n">size</span><span class="o">=</span><span class="n">pointset</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pointset</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">:</span>
+            <span class="n">pointset</span> <span class="o">=</span> <span class="n">pointset</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="c1"># Set OpenCL kernel launch parameters</span>
+        <span class="k">if</span> <span class="n">chunklength</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;gpuid&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">max_work_group_size</span><span class="p">:</span>
+            <span class="n">workitems_x</span> <span class="o">=</span> <span class="mi">8</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;gpuid&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">max_work_group_size</span> <span class="o">&lt;</span> <span class="mi">256</span><span class="p">:</span>
+            <span class="n">workitems_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;gpuid&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">max_work_group_size</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">workitems_x</span> <span class="o">=</span> <span class="mi">256</span>
+        <span class="n">NDRange_x</span> <span class="o">=</span> <span class="n">workitems_x</span> <span class="o">*</span> <span class="p">(</span><span class="nb">int</span><span class="p">((</span><span class="n">signallength</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">workitems_x</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Allocate and copy memory to device</span>
+        <span class="n">kraskov_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">]</span>
+        <span class="n">d_pointset</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Buffer</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">,</span>
+                        <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_ONLY</span> <span class="o">|</span> <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">COPY_HOST_PTR</span><span class="p">,</span>
+                        <span class="n">hostbuf</span><span class="o">=</span><span class="n">pointset</span><span class="p">)</span>
+        <span class="n">d_var1</span> <span class="o">=</span> <span class="n">d_pointset</span><span class="o">.</span><span class="n">get_sub_region</span><span class="p">(</span>
+                                    <span class="mi">0</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_float</span> <span class="o">*</span> <span class="n">signallength</span> <span class="o">*</span> <span class="n">var1dim</span><span class="p">,</span>
+                                    <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_ONLY</span><span class="p">)</span>
+        <span class="n">d_var2</span> <span class="o">=</span> <span class="n">d_pointset</span><span class="o">.</span><span class="n">get_sub_region</span><span class="p">(</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_float</span> <span class="o">*</span> <span class="n">signallength</span> <span class="o">*</span> <span class="n">var1dim</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_float</span> <span class="o">*</span> <span class="n">signallength</span> <span class="o">*</span> <span class="n">var2dim</span><span class="p">,</span>
+                                    <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_ONLY</span><span class="p">)</span>
+        <span class="n">d_distances</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Buffer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_WRITE</span><span class="p">,</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_float</span> <span class="o">*</span> <span class="n">kraskov_k</span> <span class="o">*</span> <span class="n">signallength</span><span class="p">)</span>
+        <span class="n">d_vecradius</span> <span class="o">=</span> <span class="n">d_distances</span><span class="o">.</span><span class="n">get_sub_region</span><span class="p">(</span>
+                            <span class="n">signallength</span> <span class="o">*</span> <span class="p">(</span><span class="n">kraskov_k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_float</span><span class="p">,</span>
+                            <span class="n">signallength</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_float</span><span class="p">)</span>
+        <span class="n">d_npointsrange_x</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Buffer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_WRITE</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_int</span> <span class="o">*</span> <span class="n">signallength</span><span class="p">)</span>
+        <span class="n">d_npointsrange_y</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Buffer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_WRITE</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_int</span> <span class="o">*</span> <span class="n">signallength</span><span class="p">)</span>
+
+        <span class="c1"># Neighbour search</span>
+        <span class="n">theiler_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;theiler_t&#39;</span><span class="p">])</span>
+        <span class="n">localmem</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">LocalMemory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sizeof_float</span> <span class="o">*</span> <span class="n">kraskov_k</span> <span class="o">*</span> <span class="n">workitems_x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kNN_kernel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="p">,</span> <span class="p">(</span><span class="n">NDRange_x</span><span class="p">,),</span> <span class="p">(</span><span class="n">workitems_x</span><span class="p">,),</span> <span class="n">d_pointset</span><span class="p">,</span>
+                        <span class="n">d_pointset</span><span class="p">,</span> <span class="n">d_distances</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">pointdim</span><span class="p">),</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">chunklength</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">signallength</span><span class="p">),</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">kraskov_k</span><span class="p">),</span> <span class="n">theiler_t</span><span class="p">,</span> <span class="n">localmem</span><span class="p">)</span>
+        <span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">signallength</span> <span class="o">*</span> <span class="n">kraskov_k</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">cl</span><span class="o">.</span><span class="n">enqueue_copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="p">,</span> <span class="n">distances</span><span class="p">,</span> <span class="n">d_distances</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
+
+        <span class="c1"># Range search in var1</span>
+        <span class="n">localmem</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">LocalMemory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sizeof_int</span> <span class="o">*</span> <span class="n">workitems_x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">RS_kernel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="p">,</span> <span class="p">(</span><span class="n">NDRange_x</span><span class="p">,),</span> <span class="p">(</span><span class="n">workitems_x</span><span class="p">,),</span> <span class="n">d_var1</span><span class="p">,</span>
+                       <span class="n">d_var1</span><span class="p">,</span> <span class="n">d_vecradius</span><span class="p">,</span> <span class="n">d_npointsrange_x</span><span class="p">,</span>
+                       <span class="n">var1dim</span><span class="p">,</span> <span class="n">chunklength</span><span class="p">,</span> <span class="n">signallength</span><span class="p">,</span> <span class="n">theiler_t</span><span class="p">,</span> <span class="n">localmem</span><span class="p">)</span>
+        <span class="n">count_var1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">signallength</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        <span class="n">cl</span><span class="o">.</span><span class="n">enqueue_copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="p">,</span> <span class="n">count_var1</span><span class="p">,</span> <span class="n">d_npointsrange_x</span><span class="p">)</span>
+
+        <span class="c1"># Range search in var2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">RS_kernel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="p">,</span> <span class="p">(</span><span class="n">NDRange_x</span><span class="p">,),</span> <span class="p">(</span><span class="n">workitems_x</span><span class="p">,),</span> <span class="n">d_var2</span><span class="p">,</span>
+                       <span class="n">d_var2</span><span class="p">,</span> <span class="n">d_vecradius</span><span class="p">,</span> <span class="n">d_npointsrange_y</span><span class="p">,</span>
+                       <span class="n">var2dim</span><span class="p">,</span> <span class="n">chunklength</span><span class="p">,</span> <span class="n">signallength</span><span class="p">,</span> <span class="n">theiler_t</span><span class="p">,</span> <span class="n">localmem</span><span class="p">)</span>
+        <span class="n">count_var2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">signallength</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        <span class="n">cl</span><span class="o">.</span><span class="n">enqueue_copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="p">,</span> <span class="n">count_var2</span><span class="p">,</span> <span class="n">d_npointsrange_y</span><span class="p">)</span>
+
+        <span class="n">d_pointset</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="n">d_distances</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="n">d_npointsrange_x</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="n">d_npointsrange_y</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+        <span class="c1"># Calculate and sum digammas</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
+            <span class="n">mi_array</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">chunklength</span> <span class="o">*</span> <span class="n">n_chunks</span><span class="p">,</span>
+                                         <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="n">i1</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">i2</span> <span class="o">=</span> <span class="n">chunklength</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_chunks</span><span class="p">):</span>
+                <span class="n">mi</span> <span class="o">=</span> <span class="p">(</span><span class="n">digamma</span><span class="p">(</span><span class="n">kraskov_k</span><span class="p">)</span> <span class="o">+</span> <span class="n">digamma</span><span class="p">(</span><span class="n">chunklength</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+                       <span class="n">digamma</span><span class="p">(</span><span class="n">count_var1</span><span class="p">[</span><span class="n">c</span><span class="o">*</span><span class="n">chunklength</span><span class="p">:(</span><span class="n">c</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">chunklength</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span>
+                       <span class="n">digamma</span><span class="p">(</span><span class="n">count_var2</span><span class="p">[</span><span class="n">c</span><span class="o">*</span><span class="n">chunklength</span><span class="p">:(</span><span class="n">c</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">chunklength</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+                <span class="n">mi_array</span><span class="p">[</span><span class="n">i1</span><span class="p">:</span><span class="n">i2</span><span class="p">]</span> <span class="o">=</span> <span class="n">mi</span>
+                <span class="n">i1</span> <span class="o">=</span> <span class="n">i2</span>
+                <span class="n">i2</span> <span class="o">=</span> <span class="n">i1</span> <span class="o">+</span> <span class="n">chunklength</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mi_array</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_chunks</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_chunks</span><span class="p">):</span>
+                <span class="n">mi</span> <span class="o">=</span> <span class="p">(</span><span class="n">digamma</span><span class="p">(</span><span class="n">kraskov_k</span><span class="p">)</span> <span class="o">+</span> <span class="n">digamma</span><span class="p">(</span><span class="n">chunklength</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+                       <span class="n">digamma</span><span class="p">(</span><span class="n">count_var1</span><span class="p">[</span><span class="n">c</span><span class="o">*</span><span class="n">chunklength</span><span class="p">:(</span><span class="n">c</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">chunklength</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span>
+                       <span class="n">digamma</span><span class="p">(</span><span class="n">count_var2</span><span class="p">[</span><span class="n">c</span><span class="o">*</span><span class="n">chunklength</span><span class="p">:(</span><span class="n">c</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">chunklength</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+                <span class="n">mi_array</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">mi</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">mi_array</span><span class="p">,</span> <span class="n">distances</span><span class="p">,</span> <span class="n">count_var1</span><span class="p">,</span> <span class="n">count_var2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mi_array</span></div>
+
+
+<div class="viewcode-block" id="OpenCLKraskovCMI"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_opencl.OpenCLKraskovCMI">[docs]</a><span class="k">class</span> <span class="nc">OpenCLKraskovCMI</span><span class="p">(</span><span class="n">OpenCLKraskov</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate conditional mutual inform with OpenCL Kraskov implementation.</span>
+
+<span class="sd">    Calculate the conditional mutual information (CMI) between three variables</span>
+<span class="sd">    using OpenCL GPU-code. If no conditional is given (is None), the function</span>
+<span class="sd">    returns the mutual information between var1 and var2. See parent class for</span>
+<span class="sd">    references.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        settings : dict [optional]</span>
+<span class="sd">            set estimator parameters:</span>
+
+<span class="sd">            - &#39;gpuid&#39; - device ID used for estimation (if more than one device</span>
+<span class="sd">              is available on the current platform) (default=0)</span>
+<span class="sd">            - &#39;kraskov_k&#39; - no. nearest neighbours for KNN search (default=4)</span>
+<span class="sd">            - &#39;normalise&#39; - z-standardise data (default=False)</span>
+<span class="sd">            - &#39;theiler_t&#39; - no. next temporal neighbours ignored in KNN and</span>
+<span class="sd">              range searches (default=&#39;0&#39;)</span>
+<span class="sd">            - &#39;noise_level&#39; - random noise added to the data (default=&#39;1e-8&#39;)</span>
+<span class="sd">            - &#39;debug&#39; - return intermediate results, i.e. neighbour counts from</span>
+<span class="sd">              range searches and KNN distances (default=False)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+
+<div class="viewcode-block" id="OpenCLKraskovCMI.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_opencl.OpenCLKraskovCMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">conditional</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">n_chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Estimate conditional mutual information.</span>
+
+<span class="sd">        If conditional is None, the mutual information between var1 and var2 is</span>
+<span class="sd">        calculated.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            var1 : numpy array</span>
+<span class="sd">                realisations of first variable, a 2D numpy array where array</span>
+<span class="sd">                dimensions represent [(realisations * n_chunks) x variable</span>
+<span class="sd">                dimension], array type should be int32</span>
+<span class="sd">            var2 : numpy array</span>
+<span class="sd">                realisations of the second variable (similar to var1)</span>
+<span class="sd">            conditional : numpy array</span>
+<span class="sd">                realisations of conditioning variable (similar to var1)</span>
+<span class="sd">            n_chunks : int</span>
+<span class="sd">                number of data chunks, no. data points has to be the same for</span>
+<span class="sd">                each chunk</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float | numpy array</span>
+<span class="sd">                average CMI over all samples or local CMI for individual</span>
+<span class="sd">                samples if &#39;local_values&#39;=True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Return MI if no conditional is provided</span>
+        <span class="k">if</span> <span class="n">conditional</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">est_mi</span> <span class="o">=</span> <span class="n">OpenCLKraskovMI</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">est_mi</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">n_chunks</span><span class="p">)</span>
+
+        <span class="c1"># Prepare data and add noise</span>
+        <span class="k">assert</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">var2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">conditional</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">%</span> <span class="n">n_chunks</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_number_of_points</span><span class="p">(</span><span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">signallength</span> <span class="o">=</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">chunklength</span> <span class="o">=</span> <span class="n">signallength</span> <span class="o">//</span> <span class="n">n_chunks</span>
+        <span class="n">var1dim</span> <span class="o">=</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">var2dim</span> <span class="o">=</span> <span class="n">var2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">conddim</span> <span class="o">=</span> <span class="n">conditional</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">pointdim</span> <span class="o">=</span> <span class="n">var1dim</span> <span class="o">+</span> <span class="n">var2dim</span> <span class="o">+</span> <span class="n">conddim</span>
+        <span class="n">kraskov_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">]</span>
+
+        <span class="n">mem_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_float</span> <span class="o">*</span> <span class="n">chunklength</span> <span class="o">*</span> <span class="n">pointdim</span>
+        <span class="n">mem_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_float</span> <span class="o">*</span> <span class="n">chunklength</span> <span class="o">*</span> <span class="n">kraskov_k</span>
+        <span class="n">mem_ncnt</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_int</span> <span class="o">*</span> <span class="n">chunklength</span>
+        <span class="n">mem_chunk</span> <span class="o">=</span> <span class="n">mem_data</span> <span class="o">+</span> <span class="n">mem_dist</span> <span class="o">+</span> <span class="n">mem_ncnt</span>
+
+        <span class="k">if</span> <span class="s1">&#39;max_mem&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">:</span>
+            <span class="n">max_mem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;max_mem&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">max_mem</span> <span class="o">=</span> <span class="mf">0.9</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;gpuid&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">global_mem_size</span>
+
+        <span class="n">max_chunks_per_run</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">max_mem</span><span class="o">/</span><span class="n">mem_chunk</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">chunks_per_run</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">max_chunks_per_run</span><span class="p">,</span> <span class="n">n_chunks</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Memory per chunk: {0:.5f} MB, GPU global memory: {1} MB, &#39;</span>
+                  <span class="s1">&#39;chunks per run: {2}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mem_chunk</span> <span class="o">/</span> <span class="mi">1024</span> <span class="o">/</span> <span class="mi">1024</span><span class="p">,</span>
+                                                <span class="n">max_mem</span> <span class="o">/</span> <span class="mi">1024</span> <span class="o">/</span> <span class="mi">1024</span><span class="p">,</span>
+                                                <span class="n">chunks_per_run</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">mem_chunk</span> <span class="o">&gt;</span> <span class="n">max_mem</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Size of single chunk exceeds GPU global &#39;</span>
+                               <span class="s1">&#39;memory.&#39;</span><span class="p">)</span>
+
+        <span class="n">cmi_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+            <span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+            <span class="n">count_var1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+            <span class="n">count_var2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+            <span class="n">count_cond</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_chunks</span><span class="p">,</span> <span class="n">chunks_per_run</span><span class="p">):</span>
+            <span class="n">startidx</span> <span class="o">=</span> <span class="n">r</span><span class="o">*</span><span class="n">chunklength</span>
+            <span class="n">stopidx</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">r</span><span class="o">+</span><span class="n">chunks_per_run</span><span class="p">,</span> <span class="n">n_chunks</span><span class="p">)</span><span class="o">*</span><span class="n">chunklength</span>
+            <span class="n">subset1</span> <span class="o">=</span> <span class="n">var1</span><span class="p">[</span><span class="n">startidx</span><span class="p">:</span><span class="n">stopidx</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">subset2</span> <span class="o">=</span> <span class="n">var2</span><span class="p">[</span><span class="n">startidx</span><span class="p">:</span><span class="n">stopidx</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">subset3</span> <span class="o">=</span> <span class="n">conditional</span><span class="p">[</span><span class="n">startidx</span><span class="p">:</span><span class="n">stopidx</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">n_chunks_current_run</span> <span class="o">=</span> <span class="n">subset1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">chunklength</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_single_run</span><span class="p">(</span><span class="n">subset1</span><span class="p">,</span> <span class="n">subset2</span><span class="p">,</span> <span class="n">subset3</span><span class="p">,</span>
+                                            <span class="n">n_chunks_current_run</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+                <span class="n">cmi_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">cmi_array</span><span class="p">,</span>  <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+                <span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">distances</span><span class="p">,</span>  <span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="n">count_var1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">count_var1</span><span class="p">,</span> <span class="n">res</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+                <span class="n">count_var2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">count_var2</span><span class="p">,</span> <span class="n">res</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+                <span class="n">count_cond</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">count_cond</span><span class="p">,</span> <span class="n">res</span><span class="p">[</span><span class="mi">4</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cmi_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">cmi_array</span><span class="p">,</span> <span class="n">res</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">cmi_array</span><span class="p">,</span> <span class="n">distances</span><span class="p">,</span> <span class="n">count_var1</span><span class="p">,</span> <span class="n">count_var2</span><span class="p">,</span> <span class="n">count_cond</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cmi_array</span></div>
+
+    <span class="k">def</span> <span class="nf">_estimate_single_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">conditional</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">n_chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Estimate conditional mutual information in a single GPU run.</span>
+
+<span class="sd">        This method should not be called directly, only inside estimate()</span>
+<span class="sd">        after memory bounds have been checked.</span>
+
+<span class="sd">        If conditional is None, the mutual information between var1 and var2 is</span>
+<span class="sd">        calculated.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            var1 : numpy array</span>
+<span class="sd">                realisations of first variable, a 2D numpy array where array</span>
+<span class="sd">                dimensions represent [(realisations * n_chunks) x variable</span>
+<span class="sd">                dimension], array type should be int32</span>
+<span class="sd">            var2 : numpy array</span>
+<span class="sd">                realisations of the second variable (similar to var1)</span>
+<span class="sd">            conditional : numpy array</span>
+<span class="sd">                realisations of conditioning variable (similar to var1)</span>
+<span class="sd">            n_chunks : int</span>
+<span class="sd">                number of data chunks, no. data points has to be the same for</span>
+<span class="sd">                each chunk</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float | numpy array</span>
+<span class="sd">                average CMI over all samples or local CMI for individual</span>
+<span class="sd">                samples if &#39;local_values&#39;=True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Return MI if no conditional is provided</span>
+        <span class="k">if</span> <span class="n">conditional</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">est_mi</span> <span class="o">=</span> <span class="n">OpenCLKraskovMI</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">est_mi</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">n_chunks</span><span class="p">)</span>
+
+        <span class="c1"># Prepare data and add noise</span>
+        <span class="k">assert</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">var2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">conditional</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">%</span> <span class="n">n_chunks</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="n">signallength</span> <span class="o">=</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">chunklength</span> <span class="o">=</span> <span class="n">signallength</span> <span class="o">//</span> <span class="n">n_chunks</span>
+        <span class="n">var1dim</span> <span class="o">=</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">var2dim</span> <span class="o">=</span> <span class="n">var2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">conddim</span> <span class="o">=</span> <span class="n">conditional</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">pointdim</span> <span class="o">=</span> <span class="n">var1dim</span> <span class="o">+</span> <span class="n">var2dim</span> <span class="o">+</span> <span class="n">conddim</span>
+        <span class="n">pointset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">var1</span><span class="p">,</span> <span class="n">conditional</span><span class="p">,</span> <span class="n">var2</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">pointset</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;noise_level&#39;</span><span class="p">],</span>
+                                     <span class="n">size</span><span class="o">=</span><span class="n">pointset</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pointset</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">:</span>
+            <span class="n">pointset</span> <span class="o">=</span> <span class="n">pointset</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="c1"># Set OpenCL kernel launch parameters</span>
+        <span class="k">if</span> <span class="n">chunklength</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;gpuid&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">max_work_group_size</span><span class="p">:</span>
+            <span class="n">workitems_x</span> <span class="o">=</span> <span class="mi">8</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;gpuid&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">max_work_group_size</span> <span class="o">&lt;</span> <span class="mi">256</span><span class="p">:</span>
+            <span class="n">workitems_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;gpuid&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">max_work_group_size</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">workitems_x</span> <span class="o">=</span> <span class="mi">256</span>
+        <span class="n">NDRange_x</span> <span class="o">=</span> <span class="n">workitems_x</span> <span class="o">*</span> <span class="p">(</span><span class="nb">int</span><span class="p">((</span><span class="n">signallength</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">workitems_x</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Allocate and copy memory to device</span>
+        <span class="n">kraskov_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">]</span>
+        <span class="n">d_pointset</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Buffer</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">,</span>
+                        <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_ONLY</span> <span class="o">|</span> <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">COPY_HOST_PTR</span><span class="p">,</span>
+                        <span class="n">hostbuf</span><span class="o">=</span><span class="n">pointset</span><span class="p">)</span>
+        <span class="n">d_src</span> <span class="o">=</span> <span class="n">d_pointset</span><span class="o">.</span><span class="n">get_sub_region</span><span class="p">(</span>
+                                    <span class="mi">0</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_float</span> <span class="o">*</span> <span class="n">signallength</span> <span class="o">*</span> <span class="n">var1dim</span><span class="p">,</span>
+                                    <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_ONLY</span><span class="p">)</span>
+        <span class="n">d_cnd</span> <span class="o">=</span> <span class="n">d_pointset</span><span class="o">.</span><span class="n">get_sub_region</span><span class="p">(</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_float</span> <span class="o">*</span> <span class="n">signallength</span> <span class="o">*</span> <span class="n">var1dim</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_float</span> <span class="o">*</span> <span class="n">signallength</span> <span class="o">*</span> <span class="n">conddim</span><span class="p">,</span>
+                                    <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_ONLY</span><span class="p">)</span>
+        <span class="n">d_distances</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Buffer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_WRITE</span><span class="p">,</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_float</span> <span class="o">*</span> <span class="n">kraskov_k</span> <span class="o">*</span> <span class="n">signallength</span><span class="p">)</span>
+        <span class="n">d_vecradius</span> <span class="o">=</span> <span class="n">d_distances</span><span class="o">.</span><span class="n">get_sub_region</span><span class="p">(</span>
+                            <span class="n">signallength</span> <span class="o">*</span> <span class="p">(</span><span class="n">kraskov_k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_float</span><span class="p">,</span>
+                            <span class="n">signallength</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_float</span><span class="p">)</span>
+        <span class="n">d_npointsrange_x</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Buffer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">,</span>
+                                     <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_WRITE</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_int</span> <span class="o">*</span> <span class="n">signallength</span><span class="p">)</span>
+        <span class="n">d_npointsrange_y</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Buffer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_WRITE</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_int</span> <span class="o">*</span> <span class="n">signallength</span><span class="p">)</span>
+        <span class="n">d_npointsrange_z</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Buffer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="n">cl</span><span class="o">.</span><span class="n">mem_flags</span><span class="o">.</span><span class="n">READ_WRITE</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">sizeof_int</span> <span class="o">*</span> <span class="n">signallength</span><span class="p">)</span>
+
+        <span class="c1"># Neighbour search in full space</span>
+        <span class="n">theiler_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;theiler_t&#39;</span><span class="p">])</span>
+        <span class="n">localmem</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">LocalMemory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sizeof_float</span> <span class="o">*</span> <span class="n">kraskov_k</span> <span class="o">*</span> <span class="n">workitems_x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kNN_kernel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="p">,</span> <span class="p">(</span><span class="n">NDRange_x</span><span class="p">,),</span> <span class="p">(</span><span class="n">workitems_x</span><span class="p">,),</span> <span class="n">d_pointset</span><span class="p">,</span>
+                        <span class="n">d_pointset</span><span class="p">,</span> <span class="n">d_distances</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">pointdim</span><span class="p">),</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">chunklength</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">signallength</span><span class="p">),</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">kraskov_k</span><span class="p">),</span> <span class="n">theiler_t</span><span class="p">,</span> <span class="n">localmem</span><span class="p">)</span>
+        <span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">signallength</span> <span class="o">*</span> <span class="n">kraskov_k</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">cl</span><span class="o">.</span><span class="n">enqueue_copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="p">,</span> <span class="n">distances</span><span class="p">,</span> <span class="n">d_distances</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
+
+        <span class="c1"># Range search in source and conditional</span>
+        <span class="n">localmem</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">LocalMemory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sizeof_int</span> <span class="o">*</span> <span class="n">workitems_x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">RS_kernel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="p">,</span> <span class="p">(</span><span class="n">NDRange_x</span><span class="p">,),</span> <span class="p">(</span><span class="n">workitems_x</span><span class="p">,),</span> <span class="n">d_src</span><span class="p">,</span> <span class="n">d_src</span><span class="p">,</span>
+                       <span class="n">d_vecradius</span><span class="p">,</span> <span class="n">d_npointsrange_x</span><span class="p">,</span> <span class="n">var1dim</span> <span class="o">+</span> <span class="n">conddim</span><span class="p">,</span>
+                       <span class="n">chunklength</span><span class="p">,</span> <span class="n">signallength</span><span class="p">,</span> <span class="n">theiler_t</span><span class="p">,</span> <span class="n">localmem</span><span class="p">)</span>
+        <span class="n">count_src</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">signallength</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        <span class="n">cl</span><span class="o">.</span><span class="n">enqueue_copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="p">,</span> <span class="n">count_src</span><span class="p">,</span> <span class="n">d_npointsrange_x</span><span class="p">)</span>
+
+        <span class="c1"># Range search in target and conditional</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">RS_kernel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="p">,</span> <span class="p">(</span><span class="n">NDRange_x</span><span class="p">,),</span> <span class="p">(</span><span class="n">workitems_x</span><span class="p">,),</span> <span class="n">d_cnd</span><span class="p">,</span> <span class="n">d_cnd</span><span class="p">,</span>
+                       <span class="n">d_vecradius</span><span class="p">,</span> <span class="n">d_npointsrange_y</span><span class="p">,</span> <span class="n">var2dim</span> <span class="o">+</span> <span class="n">conddim</span><span class="p">,</span>
+                       <span class="n">chunklength</span><span class="p">,</span> <span class="n">signallength</span><span class="p">,</span> <span class="n">theiler_t</span><span class="p">,</span> <span class="n">localmem</span><span class="p">)</span>
+        <span class="n">count_tgt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">signallength</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        <span class="n">cl</span><span class="o">.</span><span class="n">enqueue_copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="p">,</span> <span class="n">count_tgt</span><span class="p">,</span> <span class="n">d_npointsrange_y</span><span class="p">)</span>
+
+        <span class="c1"># Range search in conditional</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">RS_kernel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="p">,</span> <span class="p">(</span><span class="n">NDRange_x</span><span class="p">,),</span> <span class="p">(</span><span class="n">workitems_x</span><span class="p">,),</span> <span class="n">d_cnd</span><span class="p">,</span> <span class="n">d_cnd</span><span class="p">,</span>
+                       <span class="n">d_vecradius</span><span class="p">,</span> <span class="n">d_npointsrange_z</span><span class="p">,</span> <span class="n">conddim</span><span class="p">,</span> <span class="n">chunklength</span><span class="p">,</span>
+                       <span class="n">signallength</span><span class="p">,</span> <span class="n">theiler_t</span><span class="p">,</span> <span class="n">localmem</span><span class="p">)</span>
+        <span class="n">count_cnd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">signallength</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        <span class="n">cl</span><span class="o">.</span><span class="n">enqueue_copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="p">,</span> <span class="n">count_cnd</span><span class="p">,</span> <span class="n">d_npointsrange_z</span><span class="p">)</span>
+
+        <span class="n">d_pointset</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="n">d_distances</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="n">d_npointsrange_x</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="n">d_npointsrange_y</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="n">d_npointsrange_z</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+        <span class="c1"># Calculate and sum digammas</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
+            <span class="n">cmi_array</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_chunks</span> <span class="o">*</span> <span class="n">chunklength</span><span class="p">,</span>
+                                          <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="n">i1</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">i2</span> <span class="o">=</span> <span class="n">chunklength</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_chunks</span><span class="p">):</span>
+                <span class="n">cmi</span> <span class="o">=</span> <span class="p">(</span><span class="n">digamma</span><span class="p">(</span><span class="n">kraskov_k</span><span class="p">)</span> <span class="o">+</span>
+                       <span class="n">digamma</span><span class="p">(</span><span class="n">count_cnd</span><span class="p">[</span><span class="n">c</span><span class="o">*</span><span class="n">chunklength</span><span class="p">:(</span><span class="n">c</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">chunklength</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span>
+                       <span class="n">digamma</span><span class="p">(</span><span class="n">count_src</span><span class="p">[</span><span class="n">c</span><span class="o">*</span><span class="n">chunklength</span><span class="p">:(</span><span class="n">c</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">chunklength</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span>
+                       <span class="n">digamma</span><span class="p">(</span><span class="n">count_tgt</span><span class="p">[</span><span class="n">c</span><span class="o">*</span><span class="n">chunklength</span><span class="p">:(</span><span class="n">c</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">chunklength</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+                <span class="n">cmi_array</span><span class="p">[</span><span class="n">i1</span><span class="p">:</span><span class="n">i2</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmi</span>
+                <span class="n">i1</span> <span class="o">=</span> <span class="n">i2</span>
+                <span class="n">i2</span> <span class="o">=</span> <span class="n">i1</span> <span class="o">+</span> <span class="n">chunklength</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cmi_array</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_chunks</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_chunks</span><span class="p">):</span>
+                <span class="n">cmi</span> <span class="o">=</span> <span class="p">(</span><span class="n">digamma</span><span class="p">(</span><span class="n">kraskov_k</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+                        <span class="n">digamma</span><span class="p">(</span><span class="n">count_cnd</span><span class="p">[</span><span class="n">c</span><span class="o">*</span><span class="n">chunklength</span><span class="p">:(</span><span class="n">c</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">chunklength</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span>
+                        <span class="n">digamma</span><span class="p">(</span><span class="n">count_src</span><span class="p">[</span><span class="n">c</span><span class="o">*</span><span class="n">chunklength</span><span class="p">:(</span><span class="n">c</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">chunklength</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span>
+                        <span class="n">digamma</span><span class="p">(</span><span class="n">count_tgt</span><span class="p">[</span><span class="n">c</span><span class="o">*</span><span class="n">chunklength</span><span class="p">:(</span><span class="n">c</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">chunklength</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+                <span class="n">cmi_array</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmi</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">cmi_array</span><span class="p">,</span> <span class="n">distances</span><span class="p">,</span> <span class="n">count_src</span><span class="p">,</span> <span class="n">count_tgt</span><span class="p">,</span> <span class="n">count_cnd</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cmi_array</span></div>
+</pre></div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+         
+<div class="col-md-3 hidden-xs" id="sidebar-wrapper">
+  <div class="sidebar hidden-xs" role="navigation" aria-label="main navigation">
+<div id="searchbox" role="search">
+  <h3>Quick search</h3>
+  <form class="search form-inline" action="../../search.html" method="get">
+      <div class="input-append input-group">
+        <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+        <span class="input-group-btn">
+        <input type="submit" class="btn" value="Go" />
+        </span>
+      </div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+  </div>
+</div> 
+        
+      </div><!-- /row -->
+
+      <!-- row -->
+      <div class="row footer-relbar">
+<div id="navbar-related" class=" related navbar navbar-default" role="navigation" aria-label="related navigation">
+  <div class="navbar-inner">
+    <ul class="nav navbar-nav ">
+        <li><a href="../../index.html">IDTxl 0.1 documentation</a></li>
+    </ul>
+<ul class="nav navbar-nav pull-right hidden-xs hidden-sm">
+      
+        <li><a href="../../py-modindex.html" title="Python Module Index" >modules</a></li>
+        <li><a href="../../genindex.html" title="General Index" >index</a></li>
+        <li><a href="../index.html" >Module code</a></li>
+        <li><a href="#">top</a></li> 
+      
+    </ul>
+  </div>
+</div>
+      </div><!-- /row -->
+
+      <!-- footer -->
+      <footer role="contentinfo">
+          &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.3.6.
+      </footer>
+      <!-- /footer -->
+
+    </div>
+    <!-- /container -->
+
+  </body>
+</html>

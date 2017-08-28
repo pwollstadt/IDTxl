@@ -4,6 +4,14 @@ idtxl package
 Submodules
 ----------
 
+idtxl.active_information_storage module
+---------------------------------------
+
+.. automodule:: idtxl.active_information_storage
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 idtxl.bivariate_te module
 -------------------------
 
@@ -20,42 +28,26 @@ idtxl.data module
     :undoc-members:
     :show-inheritance:
 
-idtxl.estimators_ais module
----------------------------
+idtxl.estimator module
+----------------------
 
-.. automodule:: idtxl.estimators_ais
+.. automodule:: idtxl.estimator
     :members:
     :undoc-members:
     :show-inheritance:
 
-idtxl.estimators_cmi module
----------------------------
+idtxl.estimators_jidt module
+----------------------------
 
-.. automodule:: idtxl.estimators_cmi
+.. automodule:: idtxl.estimators_jidt
     :members:
     :undoc-members:
     :show-inheritance:
 
-idtxl.estimators_fast_pid module
---------------------------------
+idtxl.estimators_opencl module
+------------------------------
 
-.. automodule:: idtxl.estimators_fast_pid
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-idtxl.estimators_fast_pid_ext_rep module
-----------------------------------------
-
-.. automodule:: idtxl.estimators_fast_pid_ext_rep
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-idtxl.estimators_mi module
---------------------------
-
-.. automodule:: idtxl.estimators_mi
+.. automodule:: idtxl.estimators_opencl
     :members:
     :undoc-members:
     :show-inheritance:
@@ -68,26 +60,18 @@ idtxl.estimators_pid module
     :undoc-members:
     :show-inheritance:
 
-idtxl.estimators_te module
---------------------------
-
-.. automodule:: idtxl.estimators_te
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-idtxl.ft2idtxl module
----------------------
-
-.. automodule:: idtxl.ft2idtxl
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 idtxl.idtxl_exceptions module
 -----------------------------
 
 .. automodule:: idtxl.idtxl_exceptions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+idtxl.idtxl_import module
+-------------------------
+
+.. automodule:: idtxl.idtxl_import
     :members:
     :undoc-members:
     :show-inheritance:
@@ -108,10 +92,10 @@ idtxl.idtxl_utils module
     :undoc-members:
     :show-inheritance:
 
-idtxl.matarray2idtxl module
----------------------------
+idtxl.multivariate_spectral_te module
+-------------------------------------
 
-.. automodule:: idtxl.matarray2idtxl
+.. automodule:: idtxl.multivariate_spectral_te
     :members:
     :undoc-members:
     :show-inheritance:
@@ -120,30 +104,6 @@ idtxl.multivariate_te module
 ----------------------------
 
 .. automodule:: idtxl.multivariate_te
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-idtxl.neighbour_search_cuda module
-----------------------------------
-
-.. automodule:: idtxl.neighbour_search_cuda
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-idtxl.neighbour_search_opencl module
-------------------------------------
-
-.. automodule:: idtxl.neighbour_search_opencl
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-idtxl.neighbour_search_opencl_old module
-----------------------------------------
-
-.. automodule:: idtxl.neighbour_search_opencl_old
     :members:
     :undoc-members:
     :show-inheritance:
@@ -164,26 +124,26 @@ idtxl.network_comparison module
     :undoc-members:
     :show-inheritance:
 
-idtxl.pyinfo module
--------------------
+idtxl.network_inference module
+------------------------------
 
-.. automodule:: idtxl.pyinfo
+.. automodule:: idtxl.network_inference
     :members:
     :undoc-members:
     :show-inheritance:
 
-idtxl.set_estimator module
---------------------------
+idtxl.partial_information_decomposition module
+----------------------------------------------
 
-.. automodule:: idtxl.set_estimator
+.. automodule:: idtxl.partial_information_decomposition
     :members:
     :undoc-members:
     :show-inheritance:
 
-idtxl.single_process_storage module
------------------------------------
+idtxl.single_process_analysis module
+------------------------------------
 
-.. automodule:: idtxl.single_process_storage
+.. automodule:: idtxl.single_process_analysis
     :members:
     :undoc-members:
     :show-inheritance:
@@ -196,10 +156,10 @@ idtxl.stats module
     :undoc-members:
     :show-inheritance:
 
-idtxl.surrogates module
------------------------
+idtxl.synergy_tartu module
+--------------------------
 
-.. automodule:: idtxl.surrogates
+.. automodule:: idtxl.synergy_tartu
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,18 +1,18 @@
 Information theoretic estimators
 ================================
 
-idtxl.estimators_cmi module
----------------------------
-.. automodule:: idtxl.estimators_cmi
+idtxl.estimators_jidt module
+----------------------------
+.. automodule:: idtxl.estimators_jidt
     :members:
 
-idtxl.estimators_mi module
----------------------------
-.. automodule:: idtxl.estimators_mi
+idtxl.estimators_opencl module
+------------------------------
+.. automodule:: idtxl.estimators_opencl
     :members:
 
-idtxl.estimators_te module
+idtxl.estimators_pid module
 ---------------------------
-.. automodule:: idtxl.estimators_te
+.. automodule:: idtxl.estimators_pid
     :members:
 

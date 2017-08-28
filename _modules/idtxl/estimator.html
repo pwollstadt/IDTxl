@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+
+
+
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    
+    <title>idtxl.estimator &mdash; IDTxl 0.1 documentation</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    
+
+<link rel="stylesheet" href="../../_static/css/basicstrap-base.css" type="text/css" />
+<link rel="stylesheet" id="current-theme" href="../../_static/css/bootstrap3/bootswatch-spacelab.css" type="text/css" />
+<link rel="stylesheet" id="current-adjust-theme" href="../../_static/css/adjust_theme/bootswatch-spacelab.css" type="text/css" />
+
+<link rel="stylesheet" href="../../_static/css/font-awesome.min.css">
+
+<style type="text/css">
+  body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+  }
+</style>
+
+<link rel="stylesheet" href="../../_static/css/basicstrap.css" type="text/css" />
+<link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+<script type="text/javascript">
+  var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:    '../../',
+            VERSION:     '0.1',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE:  true
+  };
+</script>
+    <script type="text/javascript" src="../../_static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/bootstrap3.min.js"></script>
+<script type="text/javascript" src="../../_static/js/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="../../_static/js/basicstrap.js"></script>
+<script type="text/javascript">
+</script>
+    <link rel="top" title="IDTxl 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div id="navbar-top" class="navbar navbar-fixed-top navbar-default" role="navigation" aria-label="top navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../../index.html">IDTxl 0.1 documentation</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+
+            
+              <li><a href="../../py-modindex.html" title="Python Module Index" >modules </a></li>
+              <li><a href="../../genindex.html" title="General Index" accesskey="I">index </a></li>
+              <li><a href="../index.html" accesskey="U">Module code</a></li>
+            
+
+            <li class="visible-xs">
+                <form class="search form-search form-inline navbar-form navbar-right sp-searchbox" action="../../search.html" method="get">
+                  <div class="input-append input-group">
+                    <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+                    <span class="input-group-btn">
+                    <input type="submit" class="btn" value="Go" />
+                    </span>
+                  </div>
+                  <input type="hidden" name="check_keywords" value="yes" />
+                  <input type="hidden" name="area" value="default" />
+                </form>
+            </li>
+
+            
+
+          </ul>
+
+        </div>
+      </div>
+    </div>
+    
+
+    <!-- container -->
+    <div class="container">
+
+      <!-- row -->
+      <div class="row">
+        
+        
+
+        <div class="col-md-9" id="content-wrapper">
+          <div class="document" role="main">
+            <div class="documentwrapper">
+              <div class="bodywrapper">
+                <div class="body">
+                  
+  <h1>Source code for idtxl.estimator</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Provide estimator base class for information theoretic measures.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">imp</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">importlib</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pprint</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="n">MODULE_EXTENSIONS</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;.py&#39;</span><span class="p">)</span>  <span class="c1"># (&#39;.py&#39;, &#39;.pyc&#39;, &#39;.pyo&#39;)</span>
+<span class="n">ESTIMATOR_PREFIX</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;estimators_&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_package_contents</span><span class="p">():</span>
+    <span class="c1"># Return list of IDTxl modules containing estimators.</span>
+    <span class="nb">file</span><span class="p">,</span> <span class="n">pathname</span><span class="p">,</span> <span class="n">description</span> <span class="o">=</span> <span class="n">imp</span><span class="o">.</span><span class="n">find_module</span><span class="p">(</span><span class="n">__package__</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">file</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s1">&#39;Not a package: </span><span class="si">%r</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">__package__</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">module</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">pathname</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">MODULE_EXTENSIONS</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="n">module</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">ESTIMATOR_PREFIX</span><span class="p">))]</span>
+
+
+<div class="viewcode-block" id="list_estimators"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimator.list_estimators">[docs]</a><span class="k">def</span> <span class="nf">list_estimators</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;List all estimators available in IDTxl.&quot;&quot;&quot;</span>
+    <span class="n">module_list</span> <span class="o">=</span> <span class="n">_package_contents</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">module_list</span><span class="p">:</span>
+        <span class="n">module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">m</span><span class="p">,</span> <span class="n">__package__</span><span class="p">)</span>
+        <span class="n">class_list</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmembers</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">class_list</span><span class="p">:</span>
+            <span class="n">pprint</span><span class="p">(</span><span class="n">class_list</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="find_estimator"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimator.find_estimator">[docs]</a><span class="k">def</span> <span class="nf">find_estimator</span><span class="p">(</span><span class="n">est</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return estimator class.</span>
+
+<span class="sd">    Return an estimator class. If input is a class, check if it implements</span>
+<span class="sd">    methods &#39;estimate&#39; and &#39;is_parallel&#39; necessary for network analysis</span>
+<span class="sd">    (see abstract class &#39;Estimator&#39; for documentation). If input is a string,</span>
+<span class="sd">    search for class with that name in IDTxl and return it.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        est : int | Class</span>
+<span class="sd">            name of an estimator class implemented in IDTxl or custom estimator</span>
+<span class="sd">            class</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">        Class</span>
+<span class="sd">            Estimator class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">(</span><span class="n">est</span><span class="p">):</span>
+        <span class="c1"># Test if provided class implements the Estimator class. This</span>
+        <span class="c1"># constraint may be relaxed in the future.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubclass_</span><span class="p">(</span><span class="n">est</span><span class="p">,</span> <span class="n">Estimator</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Provided class should implement abstract class&#39;</span>
+                               <span class="s1">&#39; Estimator.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">est</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">est</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">module_list</span> <span class="o">=</span> <span class="n">_package_contents</span><span class="p">()</span>
+        <span class="n">estimator</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">module_list</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">m</span><span class="p">,</span> <span class="n">__package__</span><span class="p">)</span>
+                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">est</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">estimator</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Estimator {0} not found.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">est</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Please provide an estimator class or the name of an &#39;</span>
+                        <span class="s1">&#39;estimator as string.&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Estimator"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimator.Estimator">[docs]</a><span class="k">class</span> <span class="nc">Estimator</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract class for implementation of IDTxl estimators.</span>
+
+<span class="sd">    Abstract class for implementation of IDTxl estimators. Child classes</span>
+<span class="sd">    implement various estimators for information-theoretic measures, e.g.,</span>
+<span class="sd">    mutual information (MI), conditional mutual information (CMI),</span>
+<span class="sd">    active information storage (AIS), or transfer entropy (TE).</span>
+
+<span class="sd">    Estimator classes implement a method &#39;estimate()&#39; for the estimation from</span>
+<span class="sd">    single or multiple data sets in parallel. Whether &#39;estimate()&#39; provides</span>
+<span class="sd">    parallel computing capabilities is indicated by the &#39;is_parallel()&#39;</span>
+<span class="sd">    method. The &#39;estimate_mult()&#39; method of this abstract class provides a</span>
+<span class="sd">    common interface to parallel and serial methods (see docstring for</span>
+<span class="sd">    details).</span>
+
+<span class="sd">    The method &#39;is_analytic_null_estimator()&#39; indicates whether the implemented</span>
+<span class="sd">    estimator supports the generation of analytic surrogates (see docstring for</span>
+<span class="sd">    details).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="Estimator.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimator.Estimator.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="nb">vars</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Estimate measure for a single data set.</span>
+
+<span class="sd">        The number of variables in data depends on the measure to be estimated,</span>
+<span class="sd">        e.g., 2 for mutual information and 3 for a conditional mutual</span>
+<span class="sd">        information.</span>
+
+<span class="sd">        Each entry in data should be a numpy array with realisations, where the</span>
+<span class="sd">        first axis is assumed to represent realisations over samples and</span>
+<span class="sd">        replications, while the second axis represents the variable dimension</span>
+<span class="sd">        ([(samples * replications) x variable dimension]).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            self : instance of Estimator class</span>
+<span class="sd">            data: dict of numpy arrays</span>
+<span class="sd">                realisations of random variables</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float</span>
+<span class="sd">                estimated value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="Estimator.is_parallel"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimator.Estimator.is_parallel">[docs]</a>    <span class="k">def</span> <span class="nf">is_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Indicate if estimator supports parallel estimation over chunks.</span>
+
+<span class="sd">        Return true if the supports parallel estimation over chunks, where a</span>
+<span class="sd">        chunk is one independent data set.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="Estimator.is_analytic_null_estimator"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimator.Estimator.is_analytic_null_estimator">[docs]</a>    <span class="k">def</span> <span class="nf">is_analytic_null_estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Indicate if estimator supports analytic surrogates.</span>
+
+<span class="sd">        Return true if the estimator implements</span>
+<span class="sd">        estimate_surrogates_analytic(self, n_perm, **data) where data is</span>
+<span class="sd">        formatted as per the estimate method for this estimator.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Estimator.estimate_mult"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimator.Estimator.estimate_mult">[docs]</a>    <span class="k">def</span> <span class="nf">estimate_mult</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">re_use</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Estimate measure for multiple data sets (chunks).</span>
+
+<span class="sd">        Test if the estimator used provides parallel capabilities; if so,</span>
+<span class="sd">        estimate measure for multiple data sets (&#39;chunks&#39;) in parallel.</span>
+<span class="sd">        Otherwise, iterate over individual chunks.</span>
+
+<span class="sd">        The number of variables in data depends on the measure to be estimated,</span>
+<span class="sd">        e.g., 2 for mutual information and 3 for a conditional mutual</span>
+<span class="sd">        information.</span>
+
+<span class="sd">        Each entry in data should be a numpy array with realisations, where the</span>
+<span class="sd">        first axis is assumed to represent realisations over samples and</span>
+<span class="sd">        replications and chunks, while the second axis represents the variable</span>
+<span class="sd">        dimension ([(samples * replications) * chunks x variable dimension]).</span>
+
+<span class="sd">        Each entry in data should be a numpy array with realisations, where the</span>
+<span class="sd">        first axis is assumed to represent realisations (over chunks), while</span>
+<span class="sd">        the second axis is the variable dimension.</span>
+
+<span class="sd">        Each numpy array with realisations can hold either the realisations for</span>
+<span class="sd">        multiple chunks or can hold the realisation for a single chunk, which</span>
+<span class="sd">        gets replicated for parallel estimation and gets re-used for iterative</span>
+<span class="sd">        estimation, in order to save memory. The variables for re-use are</span>
+<span class="sd">        provided in re-use as list of dictionary keys indicating entries in</span>
+<span class="sd">        data for re-use.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            self : instance of Estimator class</span>
+<span class="sd">            n_chunks : int [optional]</span>
+<span class="sd">                number of data chunks (default=1)</span>
+<span class="sd">            re_use : list of keys [optional}</span>
+<span class="sd">                realisatins to be re-used (default=None)</span>
+<span class="sd">            data: dict of numpy arrays</span>
+<span class="sd">                realisations of random variables</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy array</span>
+<span class="sd">                estimated values for each chunk</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">n_chunks</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;n_chunks must be positive.&#39;</span>
+        <span class="k">if</span> <span class="n">re_use</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">re_use</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># If the estimator supports parallel estimation, pass the variables</span>
+        <span class="c1"># and number of chunks on to the estimator.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_parallel</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">re_use</span><span class="p">:</span>  <span class="c1"># multiply data for re-use</span>
+                <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="p">(</span><span class="n">n_chunks</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">n_chunks</span><span class="o">=</span><span class="n">n_chunks</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="c1"># If estimator does not support parallel estimation, loop over chunks</span>
+        <span class="c1"># and estimate iteratively for individual chunks.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Find arrays that have to be cut up into chunks because they are</span>
+            <span class="c1"># not re-used.</span>
+            <span class="n">slice_vars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">re_use</span><span class="p">)))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">slice_vars</span><span class="p">:</span>
+                <span class="c1"># If there is nothing to slice, we only have one chunk and can</span>
+                <span class="c1"># return the estimate directly.</span>
+                <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)]</span>
+
+            <span class="n">n_samples_total</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">slice_vars</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">n_samples_total</span> <span class="o">%</span> <span class="n">n_chunks</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span>
+                    <span class="s1">&#39;No. chunks ({0}) does not match data length ({1}). &#39;</span>
+                    <span class="s1">&#39;Remainder: {2}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                    <span class="n">n_chunks</span><span class="p">,</span>
+                                    <span class="n">data</span><span class="p">[</span><span class="n">slice_vars</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                    <span class="n">data</span><span class="p">[</span><span class="n">slice_vars</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">%</span> <span class="n">n_chunks</span><span class="p">))</span>
+            <span class="n">chunk_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_samples_total</span> <span class="o">/</span> <span class="n">n_chunks</span><span class="p">)</span>
+            <span class="n">idx_1</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">idx_2</span> <span class="o">=</span> <span class="n">chunk_size</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">n_chunks</span><span class="p">))</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="c1"># Cut data into chunks and call estimator serially.</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_chunks</span><span class="p">):</span>
+                <span class="n">chunk_data</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">slice_vars</span><span class="p">:</span>  <span class="c1"># NOTE: I am consciously not creating a deep copy here to save memory</span>
+                    <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="n">chunk_data</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">idx_1</span><span class="p">:</span><span class="n">idx_2</span><span class="p">,</span> <span class="p">:]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">chunk_data</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">re_use</span><span class="p">:</span>
+                    <span class="n">chunk_data</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="o">**</span><span class="n">chunk_data</span><span class="p">)</span>
+                <span class="n">idx_1</span> <span class="o">=</span> <span class="n">idx_2</span>
+                <span class="n">idx_2</span> <span class="o">+=</span> <span class="n">chunk_size</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="k">return</span> <span class="n">res</span></div></div>
+</pre></div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+         
+<div class="col-md-3 hidden-xs" id="sidebar-wrapper">
+  <div class="sidebar hidden-xs" role="navigation" aria-label="main navigation">
+<div id="searchbox" role="search">
+  <h3>Quick search</h3>
+  <form class="search form-inline" action="../../search.html" method="get">
+      <div class="input-append input-group">
+        <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+        <span class="input-group-btn">
+        <input type="submit" class="btn" value="Go" />
+        </span>
+      </div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+  </div>
+</div> 
+        
+      </div><!-- /row -->
+
+      <!-- row -->
+      <div class="row footer-relbar">
+<div id="navbar-related" class=" related navbar navbar-default" role="navigation" aria-label="related navigation">
+  <div class="navbar-inner">
+    <ul class="nav navbar-nav ">
+        <li><a href="../../index.html">IDTxl 0.1 documentation</a></li>
+    </ul>
+<ul class="nav navbar-nav pull-right hidden-xs hidden-sm">
+      
+        <li><a href="../../py-modindex.html" title="Python Module Index" >modules</a></li>
+        <li><a href="../../genindex.html" title="General Index" >index</a></li>
+        <li><a href="../index.html" >Module code</a></li>
+        <li><a href="#">top</a></li> 
+      
+    </ul>
+  </div>
+</div>
+      </div><!-- /row -->
+
+      <!-- footer -->
+      <footer role="contentinfo">
+          &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.3.6.
+      </footer>
+      <!-- /footer -->
+
+    </div>
+    <!-- /container -->
+
+  </body>
+</html>

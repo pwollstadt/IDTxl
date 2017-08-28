@@ -14,15 +14,6 @@ Links
 * **repository**: `<https://github.com/pwollstadt/IDTxl>`_
 * **bug tracker**: `<https://github.com/pwollstadt/IDTxl/issues>`_
 
-Table of contents
---------------------
-.. toctree::
-   :maxdepth: 2
-
-   getting_started.rst
-   examples.rst
-
-
 Module contents
 --------------------
 .. toctree::

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+
+
+
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    
+    <title>idtxl.multivariate_spectral_te &mdash; IDTxl 0.1 documentation</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    
+
+<link rel="stylesheet" href="../../_static/css/basicstrap-base.css" type="text/css" />
+<link rel="stylesheet" id="current-theme" href="../../_static/css/bootstrap3/bootswatch-spacelab.css" type="text/css" />
+<link rel="stylesheet" id="current-adjust-theme" href="../../_static/css/adjust_theme/bootswatch-spacelab.css" type="text/css" />
+
+<link rel="stylesheet" href="../../_static/css/font-awesome.min.css">
+
+<style type="text/css">
+  body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+  }
+</style>
+
+<link rel="stylesheet" href="../../_static/css/basicstrap.css" type="text/css" />
+<link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+<script type="text/javascript">
+  var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:    '../../',
+            VERSION:     '0.1',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE:  true
+  };
+</script>
+    <script type="text/javascript" src="../../_static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/bootstrap3.min.js"></script>
+<script type="text/javascript" src="../../_static/js/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="../../_static/js/basicstrap.js"></script>
+<script type="text/javascript">
+</script>
+    <link rel="top" title="IDTxl 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div id="navbar-top" class="navbar navbar-fixed-top navbar-default" role="navigation" aria-label="top navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../../index.html">IDTxl 0.1 documentation</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+
+            
+              <li><a href="../../py-modindex.html" title="Python Module Index" >modules </a></li>
+              <li><a href="../../genindex.html" title="General Index" accesskey="I">index </a></li>
+              <li><a href="../index.html" accesskey="U">Module code</a></li>
+            
+
+            <li class="visible-xs">
+                <form class="search form-search form-inline navbar-form navbar-right sp-searchbox" action="../../search.html" method="get">
+                  <div class="input-append input-group">
+                    <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+                    <span class="input-group-btn">
+                    <input type="submit" class="btn" value="Go" />
+                    </span>
+                  </div>
+                  <input type="hidden" name="check_keywords" value="yes" />
+                  <input type="hidden" name="area" value="default" />
+                </form>
+            </li>
+
+            
+
+          </ul>
+
+        </div>
+      </div>
+    </div>
+    
+
+    <!-- container -->
+    <div class="container">
+
+      <!-- row -->
+      <div class="row">
+        
+        
+
+        <div class="col-md-9" id="content-wrapper">
+          <div class="document" role="main">
+            <div class="documentwrapper">
+              <div class="bodywrapper">
+                <div class="body">
+                  
+  <h1>Source code for idtxl.multivariate_spectral_te</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Estimate multivarate spectral TE.</span>
+
+<span class="sd">Note:</span>
+<span class="sd">    Written for Python 3.4+</span>
+
+<span class="sd">@author: edoardo</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">from</span> <span class="nn">.network_analysis</span> <span class="kn">import</span> <span class="n">NetworkAnalysis</span>
+<span class="kn">from</span> <span class="nn">.estimator</span> <span class="kn">import</span> <span class="n">find_estimator</span>
+
+<span class="n">VERBOSE</span> <span class="o">=</span> <span class="bp">True</span>
+
+
+<div class="viewcode-block" id="MultivariateSpectralTE"><a class="viewcode-back" href="../../idtxl.html#idtxl.multivariate_spectral_te.MultivariateSpectralTE">[docs]</a><span class="k">class</span> <span class="nc">MultivariateSpectralTE</span><span class="p">(</span><span class="n">NetworkAnalysis</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Set up a network analysis using multivariate spectral transfer entropy.</span>
+
+<span class="sd">    Set parameters necessary for inference of spectral components of</span>
+<span class="sd">    multivariate transfer entropy (TE). To perform network inference call</span>
+<span class="sd">    analyse_network() on an instance of the data class.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        settings : dict</span>
+<span class="sd">            parameters for estimator use and statistics:</span>
+
+<span class="sd">            - &#39;cmi_estimator&#39; - estimator to be used for CMI calculation</span>
+<span class="sd">              (For estimator settings see the respective documentation.)</span>
+<span class="sd">            - &#39;n_perm_spec&#39; - number of permutations (default=200)</span>
+<span class="sd">            - &#39;alpha_spec&#39; - critical alpha level for statistical significance</span>
+<span class="sd">              (default=0.05)</span>
+<span class="sd">            - &#39;cmi_estimator&#39; - estimator to be used for CMI calculation</span>
+<span class="sd">              (For estimator settings see the respective documentation.)</span>
+<span class="sd">            - &#39;permute_in_time&#39; - force surrogate creation by shuffling</span>
+<span class="sd">              realisations in time instead of shuffling replications; see</span>
+<span class="sd">              documentation of Data.permute_samples() for further settings</span>
+<span class="sd">              (default=False)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+        <span class="c1"># Set estimator in the child class for network inference because the</span>
+        <span class="c1"># estimated quantity may be different from CMI in other inference</span>
+        <span class="c1"># algorithms. (Everything else can be done in the parent class.)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">EstimatorClass</span> <span class="o">=</span> <span class="n">find_estimator</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;cmi_estimator&#39;</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Estimator was not specified!&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator</span> <span class="o">=</span> <span class="n">EstimatorClass</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_permutations</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;n_perm_spec&#39;</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;alpha_spec&#39;</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tail</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tail&#39;</span><span class="p">,</span> <span class="s1">&#39;two&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmi_settings</span> <span class="o">=</span> <span class="n">settings</span>
+
+<div class="viewcode-block" id="MultivariateSpectralTE.analyse_network"><a class="viewcode-back" href="../../idtxl.html#idtxl.multivariate_spectral_te.MultivariateSpectralTE.analyse_network">[docs]</a>    <span class="k">def</span> <span class="nf">analyse_network</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">res_network</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find multivariate spectral transfer entropy between all nodes.</span>
+
+<span class="sd">        Estimate multivariate transfer entropy (TE) between all nodes in the</span>
+<span class="sd">        network or between selected sources and targets.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">            &gt;&gt;&gt; dat = Data()</span>
+<span class="sd">            &gt;&gt;&gt; dat.generate_mute_data(100, 5)</span>
+<span class="sd">            &gt;&gt;&gt; max_lag = 5</span>
+<span class="sd">            &gt;&gt;&gt; min_lag = 4</span>
+<span class="sd">            &gt;&gt;&gt; settings = {</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;cmi_estimator&#39;:  &#39;JidtKraskovCMI&#39;,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;n_perm_max_stat&#39;: 200,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;n_perm_min_stat&#39;: 200,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;n_perm_omnibus&#39;: 500,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;n_perm_max_seq&#39;: 500,</span>
+<span class="sd">            &gt;&gt;&gt;     }</span>
+<span class="sd">            &gt;&gt;&gt; network_analysis = MultivariateTE(max_lag, min_lag,</span>
+<span class="sd">            &gt;&gt;&gt;                                   settings)</span>
+<span class="sd">            &gt;&gt;&gt; res = network_analysis.analyse_network(dat)</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; spectral_settings = {</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;cmi_estimator&#39;:  &#39;JidtKraskovCMI&#39;,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;n_perm_spec&#39;: 200,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;alpha_spec&#39;: 0.05</span>
+<span class="sd">            &gt;&gt;&gt;     }</span>
+<span class="sd">            &gt;&gt;&gt; spectral_analysis = Multivariate_spectral_te()</span>
+<span class="sd">            &gt;&gt;&gt; res_spec = spectral_analysis.analyse_network(spectral_settings,</span>
+<span class="sd">            &gt;&gt;&gt;                                              res)</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            For more details on the estimation of multivariate transfer entropy</span>
+<span class="sd">            see documentation of class method &#39;analyse_single_target&#39;.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            res_network: dict</span>
+<span class="sd">                results from multivariate network inference, e.g., using TE</span>
+<span class="sd">            data : Data instance</span>
+<span class="sd">                raw data from which the network was inferred</span>
+<span class="sd">            targets : list of int | &#39;all&#39; [optional]</span>
+<span class="sd">                index of target processes (default=&#39;all&#39;)</span>
+<span class="sd">            sources : list of int | list of list | &#39;all&#39; [optional]</span>
+<span class="sd">                indices of source processes for each target (default=&#39;all&#39;);</span>
+<span class="sd">                if &#39;all&#39;, all identified sources in the network are tested for</span>
+<span class="sd">                spectral TE;</span>
+<span class="sd">                if list of int, sources specified in the list are tested for</span>
+<span class="sd">                each target;</span>
+<span class="sd">                if list of list, sources specified in each inner list are</span>
+<span class="sd">                tested for the corresponding target</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict</span>
+<span class="sd">                results consisting of</span>
+
+<span class="sd">                - TODO to be specified ...</span>
+
+<span class="sd">                for each target</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO see MultivariateTE.analyse_network()</span>
+        <span class="k">return</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="MultivariateSpectralTE.analyse_single_target"><a class="viewcode-back" href="../../idtxl.html#idtxl.multivariate_spectral_te.MultivariateSpectralTE.analyse_single_target">[docs]</a>    <span class="k">def</span> <span class="nf">analyse_single_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">res_target</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find multivariate spectral transfer entropy into a target.</span>
+
+<span class="sd">        Test multivariate spectral transfer entropy (TE) between all source</span>
+<span class="sd">        identified using multivariate TE and a target:</span>
+
+<span class="sd">        (1) take one relevant variable s</span>
+<span class="sd">        (2) perform a maximal overlap discrete wavelet transform (MODWT)</span>
+<span class="sd">        (3) destroy information carried by a single frequency band by</span>
+<span class="sd">            scrambling the coefficients in the respective scale</span>
+<span class="sd">        (4) perform the inverse of the MODWT, iMODWT, to get back the time-</span>
+<span class="sd">            domain representation of the variable</span>
+<span class="sd">        (5) calculate multivariate TE between s and the target, conditional on</span>
+<span class="sd">            all other relevant sources</span>
+<span class="sd">        (6) repeat (3) to (5) n_perm number of times to build a test</span>
+<span class="sd">            distribution</span>
+<span class="sd">        (7) test original multivariate TE against the test distribution</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">            &gt;&gt;&gt; dat = Data()</span>
+<span class="sd">            &gt;&gt;&gt; dat.generate_mute_data(100, 5)</span>
+<span class="sd">            &gt;&gt;&gt; max_lag = 5</span>
+<span class="sd">            &gt;&gt;&gt; min_lag = 4</span>
+<span class="sd">            &gt;&gt;&gt; settings = {</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;cmi_estimator&#39;:  &#39;JidtKraskovCMI&#39;,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;n_perm_max_stat&#39;: 200,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;n_perm_min_stat&#39;: 200,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;n_perm_omnibus&#39;: 500,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;n_perm_max_seq&#39;: 500,</span>
+<span class="sd">            &gt;&gt;&gt;     }</span>
+<span class="sd">            &gt;&gt;&gt; target = 0</span>
+<span class="sd">            &gt;&gt;&gt; sources = [1, 2, 3]</span>
+<span class="sd">            &gt;&gt;&gt; network_analysis = MultivariateTE(max_lag, min_lag, settings)</span>
+<span class="sd">            &gt;&gt;&gt; res = network_analysis.analyse_single_target(dat, target,</span>
+<span class="sd">            &gt;&gt;&gt;                                              sources)</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; spectral_settings = {</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;cmi_estimator&#39;:  &#39;JidtKraskovCMI&#39;,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;n_perm_spec&#39;: 200,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;alpha_spec&#39;: 0.05</span>
+<span class="sd">            &gt;&gt;&gt;     }</span>
+<span class="sd">            &gt;&gt;&gt; spectral_analysis = Multivariate_spectral_te()</span>
+<span class="sd">            &gt;&gt;&gt; res_spec = spectral_analysis.analyse_single_target(</span>
+<span class="sd">            &gt;&gt;&gt;                                     spectral_settingsres, dat)</span>
+
+<span class="sd">            Note:</span>
+<span class="sd">            For more details on the estimation of multivariate transfer entropy</span>
+<span class="sd">            see documentation of class method &#39;analyse_single_target&#39;.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">            res_network: dict</span>
+<span class="sd">                results from multivariate network inference, e.g., using TE</span>
+<span class="sd">            data : Data instance</span>
+<span class="sd">                raw data from which the network was inferred</span>
+<span class="sd">            sources : list of int | int | &#39;all&#39; [optional]</span>
+<span class="sd">                single index or list of indices of source processes</span>
+<span class="sd">                (default=&#39;all&#39;), if &#39;all&#39;, all possible sources for the given</span>
+<span class="sd">                target are tested</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict</span>
+<span class="sd">                results consisting of sets of selected variables as (full, from</span>
+<span class="sd">                sources only, from target only), pvalues and TE for each</span>
+<span class="sd">                significant source variable, the current value for this</span>
+<span class="sd">                analysis, results for omnibus test (joint influence of all</span>
+<span class="sd">                selected source variables on the target, omnibus TE, p-value,</span>
+<span class="sd">                and significance); NOTE that all variables are listed as tuples</span>
+<span class="sd">                (process, lag wrt. current value)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Convert lags in the results structure to absolute indices</span>
+        <span class="n">idx_list_sources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lag_to_idx</span><span class="p">(</span>
+                    <span class="n">lag_list</span><span class="o">=</span><span class="n">res_target</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="s1">&#39;selected_vars_sources&#39;</span><span class="p">],</span>
+                    <span class="n">current_value_sample</span><span class="o">=</span><span class="n">res_target</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="s1">&#39;current_value&#39;</span><span class="p">])</span>
+
+        <span class="c1"># Main algorithm.</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">idx_list_sources</span><span class="p">:</span>
+            <span class="c1"># TODO do stuff</span>
+            <span class="c1"># new methods in class Data():</span>
+            <span class="c1"># dat._get_data_slice</span>
+            <span class="c1"># dat.slice_permute_samples</span>
+            <span class="c1"># dat.slice_permute_replications</span>
+            <span class="c1"># new method in module stats:</span>
+            <span class="c1"># stats._generate_spectral_surrogates</span>
+            <span class="k">return</span> <span class="mi">1</span></div></div>
+</pre></div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+         
+<div class="col-md-3 hidden-xs" id="sidebar-wrapper">
+  <div class="sidebar hidden-xs" role="navigation" aria-label="main navigation">
+<div id="searchbox" role="search">
+  <h3>Quick search</h3>
+  <form class="search form-inline" action="../../search.html" method="get">
+      <div class="input-append input-group">
+        <input type="text" class="search-query form-control" name="q" placeholder="Search...">
+        <span class="input-group-btn">
+        <input type="submit" class="btn" value="Go" />
+        </span>
+      </div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+  </div>
+</div> 
+        
+      </div><!-- /row -->
+
+      <!-- row -->
+      <div class="row footer-relbar">
+<div id="navbar-related" class=" related navbar navbar-default" role="navigation" aria-label="related navigation">
+  <div class="navbar-inner">
+    <ul class="nav navbar-nav ">
+        <li><a href="../../index.html">IDTxl 0.1 documentation</a></li>
+    </ul>
+<ul class="nav navbar-nav pull-right hidden-xs hidden-sm">
+      
+        <li><a href="../../py-modindex.html" title="Python Module Index" >modules</a></li>
+        <li><a href="../../genindex.html" title="General Index" >index</a></li>
+        <li><a href="../index.html" >Module code</a></li>
+        <li><a href="#">top</a></li> 
+      
+    </ul>
+  </div>
+</div>
+      </div><!-- /row -->
+
+      <!-- footer -->
+      <footer role="contentinfo">
+          &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.3.6.
+      </footer>
+      <!-- /footer -->
+
+    </div>
+    <!-- /container -->
+
+  </body>
+</html>

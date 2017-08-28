@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     
-    <title>idtxl.idtxl_exceptions &mdash; IDTxl 0.1 documentation</title>
+    <title>idtxl.single_process_analysis &mdash; IDTxl 0.1 documentation</title>
     <meta name="description" content="">
     <meta name="author" content="">
 
@@ -107,18 +107,18 @@
               <div class="bodywrapper">
                 <div class="body">
                   
-  <h1>Source code for idtxl.idtxl_exceptions</h1><div class="highlight"><pre>
-<span class="sd">&quot;&quot;&quot;Provide error handling and warnings.&quot;&quot;&quot;</span>
-<span class="kn">import</span> <span class="nn">traceback</span>
+  <h1>Source code for idtxl.single_process_analysis</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Parent class for analysis of single processes in the network.</span>
+
+<span class="sd">@author: patricia</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.network_analysis</span> <span class="kn">import</span> <span class="n">NetworkAnalysis</span>
 
 
-<div class="viewcode-block" id="package_missing"><a class="viewcode-back" href="../../idtxl.html#idtxl.idtxl_exceptions.package_missing">[docs]</a><span class="k">def</span> <span class="nf">package_missing</span><span class="p">(</span><span class="n">err</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Report a missing optional package upon import.&quot;&quot;&quot;</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
-    <span class="n">traceback</span><span class="o">.</span><span class="n">print_tb</span><span class="p">(</span><span class="n">err</span><span class="o">.</span><span class="n">__traceback__</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">()</span></div>
-    <span class="c1"># warnings.simplefilter(&#39;always&#39;, ImportWarning)</span>
-    <span class="c1"># warnings.warn(message, ImportWarning, stacklevel=2)</span>
+<div class="viewcode-block" id="SingleProcessAnalysis"><a class="viewcode-back" href="../../idtxl.html#idtxl.single_process_analysis.SingleProcessAnalysis">[docs]</a><span class="k">class</span> <span class="nc">SingleProcessAnalysis</span><span class="p">(</span><span class="n">NetworkAnalysis</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span></div>
 </pre></div>
 
                 </div>

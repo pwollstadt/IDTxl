@@ -41,14 +41,14 @@
     <script type="text/javascript" src="_static/js/jquery.min.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/bootstrap3.min.js"></script>
 <script type="text/javascript" src="_static/js/jquery.cookie.min.js"></script>
 <script type="text/javascript" src="_static/js/basicstrap.js"></script>
 <script type="text/javascript">
 </script>
     <link rel="top" title="IDTxl 0.1 documentation" href="#" />
-    <link rel="next" title="First Steps with IDTxl" href="getting_started.html" /> 
+    <link rel="next" title="Algorithms for network inference" href="idtxl_network_inference.html" /> 
   </head>
   <body role="document">
     <div id="navbar-top" class="navbar navbar-fixed-top navbar-default" role="navigation" aria-label="top navigation">
@@ -70,7 +70,6 @@
                 <ul>
 <li><a class="reference internal" href="#">IDTxl documentation</a><ul>
 <li><a class="reference internal" href="#links">Links</a></li>
-<li><a class="reference internal" href="#table-of-contents">Table of contents</a></li>
 <li><a class="reference internal" href="#module-contents">Module contents</a></li>
 </ul>
 </li>
@@ -81,7 +80,7 @@
               </li>
 
             
-              <li><a href="getting_started.html" title="First Steps with IDTxl" accesskey="N">next </a></li>
+              <li><a href="idtxl_network_inference.html" title="Algorithms for network inference" accesskey="N">next </a></li>
               <li><a href="py-modindex.html" title="Python Module Index" >modules </a></li>
               <li><a href="genindex.html" title="General Index" accesskey="I">index </a></li>
             
@@ -134,21 +133,6 @@
 <li><strong>bug tracker</strong>: <a class="reference external" href="https://github.com/pwollstadt/IDTxl/issues">https://github.com/pwollstadt/IDTxl/issues</a></li>
 </ul>
 </div>
-<div class="section" id="table-of-contents">
-<h2>Table of contents<a class="headerlink" href="#table-of-contents" title="Permalink to this headline">¶</a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">First Steps with IDTxl</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#installing-idtxl">Installing IDTxl</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Basic Examples</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="examples.html#estimating-transfer-entropy">Estimating Transfer Entropy</a></li>
-</ul>
-</li>
-</ul>
-</div>
-</div>
 <div class="section" id="module-contents">
 <h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
@@ -160,19 +144,17 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="idtxl_network_comparison.html">Algorithms for network comparison</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="idtxl_network_comparison.html#idtxl-network-comparison-network-comparison-class">idtxl.network_comparison.Network_comparison class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="idtxl_network_comparison.html#idtxl-network-comparison-networkcomparison-class">idtxl.network_comparison.NetworkComparison class</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="idtxl_estimators.html">Information theoretic estimators</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="idtxl_estimators.html#module-idtxl.estimators_cmi">idtxl.estimators_cmi module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="idtxl_estimators.html#module-idtxl.estimators_mi">idtxl.estimators_mi module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="idtxl_estimators.html#module-idtxl.estimators_te">idtxl.estimators_te module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="idtxl_estimators.html#module-idtxl.estimators_jidt">idtxl.estimators_jidt module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="idtxl_estimators.html#module-idtxl.estimators_opencl">idtxl.estimators_opencl module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="idtxl_estimators.html#module-idtxl.estimators_pid">idtxl.estimators_pid module</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="idtxl_helper.html">Helper functions</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="idtxl_helper.html#module-idtxl.idtxl_utils">idtxl.utils module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="idtxl_helper.html#module-idtxl.ft2idtxl">idtxl.ft2idtxl module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="idtxl_helper.html#module-idtxl.surrogates">idtxl.surrogates module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="idtxl_helper.html#module-idtxl.stats">idtxl.stats module</a></li>
 </ul>
 </li>
@@ -183,9 +165,9 @@
 <div class="section" id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
-<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
-<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
-<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+<li><a class="reference internal" href="genindex.html"><span>Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span>Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span>Search Page</span></a></li>
 </ul>
 </div>
 
@@ -202,7 +184,6 @@
   <ul>
 <li><a class="reference internal" href="#">IDTxl documentation</a><ul>
 <li><a class="reference internal" href="#links">Links</a></li>
-<li><a class="reference internal" href="#table-of-contents">Table of contents</a></li>
 <li><a class="reference internal" href="#module-contents">Module contents</a></li>
 </ul>
 </li>
@@ -210,13 +191,15 @@
 </ul>
 
   <h4>Next topic</h4>
-  <p class="topless"><a href="getting_started.html"
-                        title="next chapter">First Steps with IDTxl</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/index.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
+  <p class="topless"><a href="idtxl_network_inference.html"
+                        title="next chapter">Algorithms for network inference</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
 <div id="searchbox" role="search">
   <h3>Quick search</h3>
   <form class="search form-inline" action="search.html" method="get">
@@ -247,7 +230,7 @@
     </ul>
 <ul class="nav navbar-nav pull-right hidden-xs hidden-sm">
       
-        <li><a href="getting_started.html" title="First Steps with IDTxl" >next</a></li>
+        <li><a href="idtxl_network_inference.html" title="Algorithms for network inference" >next</a></li>
         <li><a href="py-modindex.html" title="Python Module Index" >modules</a></li>
         <li><a href="genindex.html" title="General Index" >index</a></li>
         <li><a href="#">top</a></li> 
@@ -260,7 +243,7 @@
       <!-- footer -->
       <footer role="contentinfo">
           &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
-        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.3.6.
       </footer>
       <!-- /footer -->
 

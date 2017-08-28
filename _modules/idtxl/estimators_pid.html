@@ -41,7 +41,7 @@
     <script type="text/javascript" src="../../_static/js/jquery.min.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/bootstrap3.min.js"></script>
 <script type="text/javascript" src="../../_static/js/jquery.cookie.min.js"></script>
 <script type="text/javascript" src="../../_static/js/basicstrap.js"></script>
@@ -117,18 +117,21 @@
 <span class="sd">Entropy 2014, 16, 2161-2183; doi:10.3390/e16042161</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">synergy_tartu</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">idtxl_exceptions</span> <span class="k">as</span> <span class="n">ex</span>
+<span class="kn">from</span> <span class="nn">.estimator</span> <span class="kn">import</span> <span class="n">Estimator</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">jpype</span> <span class="kn">as</span> <span class="nn">jp</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="n">ex</span><span class="o">.</span><span class="n">jpype_missing</span><span class="p">(</span><span class="s">&#39;Jpype is not available on this system. To use &#39;</span>
-                     <span class="s">&#39;JAVA/JIDT-powered PID estimation install it from &#39;</span>
-                     <span class="s">&#39;https://pypi.python.org/pypi/JPype1&#39;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+    <span class="n">ex</span><span class="o">.</span><span class="n">package_missing</span><span class="p">(</span><span class="n">err</span><span class="p">,</span> <span class="s1">&#39;Jpype is not available on this system. Install it&#39;</span>
+                            <span class="s1">&#39; from https://pypi.python.org/pypi/JPype1 to use &#39;</span>
+                            <span class="s1">&#39;JAVA/JIDT-powered CMI estimation.&#39;</span><span class="p">)</span>
+
+<span class="c1"># TODO add support for multivariate estimation for Tartu and Sydney estimator</span>
 
 
-<div class="viewcode-block" id="pid"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_pid.pid">[docs]</a><span class="k">def</span> <span class="nf">pid</span><span class="p">(</span><span class="n">s1_o</span><span class="p">,</span> <span class="n">s2_o</span><span class="p">,</span> <span class="n">target_o</span><span class="p">,</span> <span class="n">cfg</span><span class="p">):</span>
+<div class="viewcode-block" id="pid_frankfurt"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_pid.pid_frankfurt">[docs]</a><span class="k">def</span> <span class="nf">pid_frankfurt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Estimate partial information decomposition of discrete variables.</span>
 
 <span class="sd">    The pid estimator returns estimates of shared information, unique</span>
@@ -173,155 +176,149 @@
 <span class="sd">        [est, opt] = pid(x, y, z, cfg)</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        s1 (numpy array): 1D array containing realizations of a discrete</span>
-<span class="sd">            random variable (this is the source variable the algorithm</span>
-<span class="sd">            calculates the actual UI for)</span>
-<span class="sd">        s2 (numpy array): 1D array containing realizations of a discrete</span>
-<span class="sd">            random variable (the other source variable)</span>
-<span class="sd">        target (numpy array): 1D array containing realizations of a discrete</span>
-<span class="sd">            random variable</span>
-<span class="sd">        cfg (dict): dictionary with estimation parameters, must contain</span>
-<span class="sd">            values for &#39;alphabetsize&#39; (no. values in each variable s1, s2,</span>
-<span class="sd">            target), &#39;jarpath&#39; (string with path to JIDT jar file),</span>
-<span class="sd">            &#39;iterations&#39; (no. iterations of the estimator)</span>
+<span class="sd">        s1 : numpy array</span>
+<span class="sd">            1D array containing realizations of a discrete random variable</span>
+<span class="sd">            (this is the source variable the algorithm calculates the actual</span>
+<span class="sd">            UI for)</span>
+<span class="sd">        s2 : numpy array</span>
+<span class="sd">            1D array containing realizations of a discrete random variable (the</span>
+<span class="sd">            other source variable)</span>
+<span class="sd">        t : numpy array</span>
+<span class="sd">            1D array containing realizations of a discrete random variable</span>
+<span class="sd">        settings : dict</span>
+<span class="sd">            estimation parameters</span>
+
+<span class="sd">            - &#39;alphabetsize&#39; - no. values in each variable s1, s2, t</span>
+<span class="sd">            - &#39;jarpath&#39; - string with path to JIDT jar file</span>
+<span class="sd">            - &#39;iterations&#39; - no. iterations of the estimator</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        est (dict): estimated decomposition, contains: MI/CMI values computed</span>
+<span class="sd">        dict</span>
+<span class="sd">            estimated decomposition, contains: MI/CMI values computed</span>
 <span class="sd">            from non-permuted distributions; PID estimates (shared,</span>
 <span class="sd">            synergistic, unique information); I(target;s1,s2) under permuted</span>
 <span class="sd">            distribution Q</span>
-<span class="sd">        opt (dict): additional information about iterative optimization,</span>
-<span class="sd">            contains: final permutation Q; cfg dictionary; array with</span>
+<span class="sd">        dict</span>
+<span class="sd">            additional information about iterative optimization,</span>
+<span class="sd">            contains: final permutation Q; settings dictionary; array with</span>
 <span class="sd">            I(target:s1|s2) for each iteration; array with delta</span>
 <span class="sd">            I(target:s1|s2) for each iteration; I(target:s1,s2) for each</span>
 <span class="sd">            iteration</span>
 
-<span class="sd">    Note:   variables names joined by &quot;_&quot; enter a mutual information</span>
-<span class="sd">            computation together i.e. mi_va1_var2 --&gt; I(var1 : var2).</span>
-<span class="sd">            variables names joined directly form a new joint variable</span>
-<span class="sd">            mi_var1var2_var3 --&gt; I(var3:(var1,var2))</span>
+<span class="sd">    Note:</span>
+<span class="sd">        variables names joined by &quot;_&quot; enter a mutual information computation</span>
+<span class="sd">        together i.e. mi_va1_var2 --&gt; I(var1 : var2). Variables names joined</span>
+<span class="sd">        directly form a new joint variable</span>
+<span class="sd">        mi_var1var2_var3 --&gt; I(var3:(var1,var2))</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c"># make deep copies of input arrays to avoid side effects</span>
-    <span class="n">s1</span> <span class="o">=</span> <span class="n">s1_o</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="n">s2</span> <span class="o">=</span> <span class="n">s2_o</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="n">target</span> <span class="o">=</span> <span class="n">target_o</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">_check_input</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+    <span class="c1"># make deep copies of input arrays to avoid side effects</span>
+    <span class="n">s1_cp</span> <span class="o">=</span> <span class="n">s1</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">s2_cp</span> <span class="o">=</span> <span class="n">s2</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">t_cp</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
-    <span class="k">if</span> <span class="n">s1</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">s2</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">target</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Inputs s1, s2, target have to be vectors&#39;</span>
-                         <span class="s">&#39;(1D-arrays).&#39;</span><span class="p">)</span>
-
+    <span class="c1"># get estimation parameters</span>
+    <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">jarpath</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s">&#39;jarpath&#39;</span><span class="p">]</span>
+        <span class="n">jarpath</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;jarpath&#39;</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s">&#39;The cfg argument should be a dictionary.&#39;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;The settings argument should be a dictionary.&#39;</span><span class="p">)</span>
         <span class="k">raise</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s">&#39;&quot;jarpath&quot; is missing from the cfg dictionary.&#39;</span><span class="p">)</span>
-        <span class="k">raise</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">alph_s1</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s">&#39;alph_s1&#39;</span><span class="p">]</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s">&#39;&quot;alphabetsize&quot; is missing from the cfg dictionary.&#39;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;&quot;jarpath&quot; is missing from the settings dictionary.&#39;</span><span class="p">)</span>
         <span class="k">raise</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">alph_s2</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s">&#39;alph_s2&#39;</span><span class="p">]</span>
+        <span class="n">alph_s1</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph_s1&#39;</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s">&#39;&quot;alphabetsize&quot; is missing from the cfg dictionary.&#39;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;&quot;alphabetsize&quot; is missing from the settings dictionary.&#39;</span><span class="p">)</span>
         <span class="k">raise</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">alph_t</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s">&#39;alph_t&#39;</span><span class="p">]</span>
+        <span class="n">alph_s2</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph_s2&#39;</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s">&#39;&quot;alphabetsize&quot; is missing from the cfg dictionary.&#39;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;&quot;alphabetsize&quot; is missing from the settings dictionary.&#39;</span><span class="p">)</span>
         <span class="k">raise</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">iterations</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s">&#39;iterations&#39;</span><span class="p">]</span>
+        <span class="n">alph_t</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph_t&#39;</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s">&#39;&quot;iterations&quot; is missing from the cfg dictionary.&#39;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;&quot;alphabetsize&quot; is missing from the settings dictionary.&#39;</span><span class="p">)</span>
+        <span class="k">raise</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">iterations</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;iterations&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;&quot;iterations&quot; is missing from the settings dictionary.&#39;</span><span class="p">)</span>
         <span class="k">raise</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">jp</span><span class="o">.</span><span class="n">isJVMStarted</span><span class="p">():</span>
         <span class="n">jp</span><span class="o">.</span><span class="n">startJVM</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">getDefaultJVMPath</span><span class="p">(),</span>
-                    <span class="s">&#39;-ea&#39;</span><span class="p">,</span> <span class="s">&#39;-Djava.class.path=&#39;</span> <span class="o">+</span> <span class="n">jarpath</span><span class="p">,</span> <span class="s">&quot;-Xmx3000M&quot;</span><span class="p">)</span>
-    <span class="c"># what if it&#39;s there already - do we have to attach to it?</span>
+                    <span class="s1">&#39;-ea&#39;</span><span class="p">,</span> <span class="s1">&#39;-Djava.class.path=&#39;</span> <span class="o">+</span> <span class="n">jarpath</span><span class="p">,</span> <span class="s2">&quot;-Xmx3000M&quot;</span><span class="p">)</span>
+    <span class="c1"># what if it&#39;s there already - do we have to attach to it?</span>
 
-    <span class="c"># transform variables as far as possible outside the loops below</span>
-    <span class="c"># (note: only these variables should change when executing the loop)</span>
-    <span class="n">target_jA</span> <span class="o">=</span> <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">ndim</span><span class="p">)(</span><span class="n">target</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+    <span class="c1"># transform variables as far as possible outside the loops below</span>
+    <span class="c1"># (note: only these variables should change when executing the loop)</span>
+    <span class="n">target_jA</span> <span class="o">=</span> <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">ndim</span><span class="p">)(</span><span class="n">t</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
     <span class="n">s2_jA</span> <span class="o">=</span> <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="n">s2</span><span class="o">.</span><span class="n">ndim</span><span class="p">)(</span><span class="n">s2</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
-    <span class="n">s1_list</span> <span class="o">=</span> <span class="n">s1</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-    <span class="n">s1_dim</span> <span class="o">=</span> <span class="n">s1</span><span class="o">.</span><span class="n">ndim</span>
+    <span class="n">s1_list</span> <span class="o">=</span> <span class="n">s1_cp</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="n">s1_dim</span> <span class="o">=</span> <span class="n">s1_cp</span><span class="o">.</span><span class="n">ndim</span>
 
-    <span class="n">Cmi_calc_class</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s">&#39;infodynamics.measures.discrete&#39;</span><span class="p">)</span>
+    <span class="n">Cmi_calc_class</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.discrete&#39;</span><span class="p">)</span>
                       <span class="o">.</span><span class="n">ConditionalMutualInformationCalculatorDiscrete</span><span class="p">)</span>
-    <span class="n">Mi_calc_class</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s">&#39;infodynamics.measures.discrete&#39;</span><span class="p">)</span>
+    <span class="n">Mi_calc_class</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.discrete&#39;</span><span class="p">)</span>
                      <span class="o">.</span><span class="n">MutualInformationCalculatorDiscrete</span><span class="p">)</span>
-<span class="c">#</span>
-<span class="c">#   cmi_calc = Cmi_calc_class(alphabet,alphabet,alphabet)</span>
+<span class="c1">#</span>
+<span class="c1">#   cmi_calc = Cmi_calc_class(alphabet,alphabet,alphabet)</span>
     <span class="n">cmi_calc_target_s1_cond_s2</span> <span class="o">=</span> <span class="n">Cmi_calc_class</span><span class="p">(</span><span class="n">alph_t</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">)</span>
 
-    <span class="c"># MAX THE CORRECT WAY TO GO?</span>
+    <span class="c1"># MAX THE CORRECT WAY TO GO?</span>
     <span class="n">alph_max_s1_t</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">alph_s1</span><span class="p">,</span> <span class="n">alph_t</span><span class="p">)</span>
     <span class="n">alph_max_s2_t</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">alph_s2</span><span class="p">,</span> <span class="n">alph_t</span><span class="p">)</span>
-    <span class="n">alph_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">alph_s1</span><span class="o">*</span><span class="n">alph_s2</span><span class="p">,</span> <span class="n">alph_t</span><span class="p">)</span>
+    <span class="n">alph_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">alph_s1</span> <span class="o">*</span> <span class="n">alph_s2</span><span class="p">,</span> <span class="n">alph_t</span><span class="p">)</span>
 
-<span class="c">#   mi_calc  = Mi_calc_class(alphabet)</span>
+<span class="c1">#   mi_calc  = Mi_calc_class(alphabet)</span>
     <span class="n">mi_calc_s1</span> <span class="o">=</span> <span class="n">Mi_calc_class</span><span class="p">(</span><span class="n">alph_max_s1_t</span><span class="p">)</span>
     <span class="n">mi_calc_s2</span> <span class="o">=</span> <span class="n">Mi_calc_class</span><span class="p">(</span><span class="n">alph_max_s2_t</span><span class="p">)</span>
 
-<span class="c">#   jointmi_calc = Mi_calc_class(alphabet ** 2)</span>
+<span class="c1">#   jointmi_calc = Mi_calc_class(alphabet ** 2)</span>
     <span class="n">jointmi_calc</span> <span class="o">=</span> <span class="n">Mi_calc_class</span><span class="p">(</span><span class="n">alph_max</span><span class="p">)</span>
 
-    <span class="k">print</span><span class="p">(</span><span class="s">&quot;initialized all estimators&quot;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;initialized all estimators&quot;</span><span class="p">)</span>
     <span class="n">cmi_target_s1_cond_s2</span> <span class="o">=</span> <span class="n">_calculate_cmi</span><span class="p">(</span><span class="n">cmi_calc_target_s1_cond_s2</span><span class="p">,</span>
-                                           <span class="n">target</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">)</span>
-    <span class="n">jointmi_s1s2_target</span> <span class="o">=</span> <span class="n">_calculate_jointmi</span><span class="p">(</span><span class="n">jointmi_calc</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
-<span class="c">#   print(&quot;Original joint mutual information: {0}&quot;.format(jointmi_s1s2_target))</span>
-    <span class="n">mi_target_s1</span> <span class="o">=</span> <span class="n">_calculate_mi</span><span class="p">(</span><span class="n">mi_calc_s1</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
-<span class="c">#   print(&quot;Original mutual information I(target:s1): {0}&quot;.format(mi_target_s1))</span>
-    <span class="n">mi_target_s2</span> <span class="o">=</span> <span class="n">_calculate_mi</span><span class="p">(</span><span class="n">mi_calc_s2</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
-<span class="c">#   print(&quot;Original mutual information I(target:s2): {0}&quot;.format(mi_target_s2))</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Original redundancy - synergy: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                           <span class="n">t_cp</span><span class="p">,</span> <span class="n">s1_cp</span><span class="p">,</span> <span class="n">s2_cp</span><span class="p">)</span>
+    <span class="n">jointmi_s1s2_target</span> <span class="o">=</span> <span class="n">_calculate_jointmi</span><span class="p">(</span><span class="n">jointmi_calc</span><span class="p">,</span> <span class="n">s1_cp</span><span class="p">,</span> <span class="n">s2_cp</span><span class="p">,</span> <span class="n">t_cp</span><span class="p">)</span>
+<span class="c1">#   print(&quot;Original joint mutual information: {0}&quot;.format(jointmi_s1s2_target))</span>
+    <span class="n">mi_target_s1</span> <span class="o">=</span> <span class="n">_calculate_mi</span><span class="p">(</span><span class="n">mi_calc_s1</span><span class="p">,</span> <span class="n">s1_cp</span><span class="p">,</span> <span class="n">t_cp</span><span class="p">)</span>
+<span class="c1">#   print(&quot;Original mutual information I(target:s1): {0}&quot;.format(mi_target_s1))</span>
+    <span class="n">mi_target_s2</span> <span class="o">=</span> <span class="n">_calculate_mi</span><span class="p">(</span><span class="n">mi_calc_s2</span><span class="p">,</span> <span class="n">s2_cp</span><span class="p">,</span> <span class="n">t_cp</span><span class="p">)</span>
+<span class="c1">#   print(&quot;Original mutual information I(target:s2): {0}&quot;.format(mi_target_s2))</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Original redundancy - synergy: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                             <span class="n">mi_target_s1</span> <span class="o">+</span> <span class="n">mi_target_s2</span> <span class="o">-</span> <span class="n">jointmi_s1s2_target</span><span class="p">))</span>
 
-    <span class="n">n</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">t_cp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">reps</span> <span class="o">=</span> <span class="n">iterations</span> <span class="o">+</span> <span class="mi">1</span>
     <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-    <span class="c"># collect estimates in each iteration</span>
-    <span class="n">cmi_q_target_s1_cond_s2_all</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">reps</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float128&#39;</span><span class="p">)</span>
-    <span class="n">cmi_q_target_s1_cond_s2_delta</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">reps</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float128&#39;</span><span class="p">)</span>  <span class="c"># collect delta of estimates</span>
-    <span class="n">cmi_q_target_s1_cond_s2_all</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmi_target_s1_cond_s2</span>  <span class="c"># initial I(s1;target|Y)</span>
+    <span class="c1"># collect estimates in each iteration</span>
+    <span class="n">cmi_q_target_s1_cond_s2_all</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">reps</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float128&#39;</span><span class="p">)</span>
+    <span class="n">cmi_q_target_s1_cond_s2_delta</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">reps</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float128&#39;</span><span class="p">)</span>
+    <span class="n">cmi_q_target_s1_cond_s2_all</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmi_target_s1_cond_s2</span>
     <span class="n">unsuccessful</span> <span class="o">=</span> <span class="mi">0</span>
 
-<span class="c">#    print(&#39;Starting [                   ]&#39;, end=&#39;&#39;)</span>
-<span class="c">#    print(&#39;\b&#39; * 21, end=&#39;&#39;)</span>
-    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">reps</span><span class="p">):</span>
-<span class="c">#        steps = reps/20</span>
-<span class="c">#        if i%steps == 0:</span>
-<span class="c">#            print(&#39;\b.&#39;, end=&#39;&#39;)</span>
-<span class="c">#            sys.stdout.flush()</span>
-
-        <span class="c"># print(&#39;iteration &#39; + str(i + 1) + &#39; of &#39; + str(reps - 1)</span>
-
         <span class="n">s1_new_list</span> <span class="o">=</span> <span class="n">s1_list</span>
-
         <span class="n">ind_new</span> <span class="o">=</span> <span class="n">ind</span>
 
-        <span class="c"># swapping: pick sample at random, find all other samples that</span>
-        <span class="c"># are potential matches (have the same value in target), pick one of</span>
-        <span class="c"># the matches for the actual swap</span>
+        <span class="c1"># swapping: pick sample at random, find all other samples that</span>
+        <span class="c1"># are potential matches (have the same value in target), pick one of</span>
+        <span class="c1"># the matches for the actual swap</span>
         <span class="n">swap_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-        <span class="n">swap_candidates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">target</span> <span class="o">==</span> <span class="n">target</span><span class="p">[</span><span class="n">swap_1</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">swap_candidates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">t_cp</span> <span class="o">==</span> <span class="n">t_cp</span><span class="p">[</span><span class="n">swap_1</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">swap_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">swap_candidates</span><span class="p">)</span>
 
-        <span class="c"># swap value in s1 and index to keep track</span>
+        <span class="c1"># swap value in s1 and index to keep track</span>
         <span class="n">s1_new_list</span><span class="p">[</span><span class="n">swap_1</span><span class="p">],</span> <span class="n">s1_new_list</span><span class="p">[</span><span class="n">swap_2</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">s1_new_list</span><span class="p">[</span><span class="n">swap_2</span><span class="p">],</span>
                                                     <span class="n">s1_new_list</span><span class="p">[</span><span class="n">swap_1</span><span class="p">])</span>
         <span class="n">ind_new</span><span class="p">[</span><span class="n">swap_1</span><span class="p">],</span> <span class="n">ind_new</span><span class="p">[</span><span class="n">swap_2</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">ind_new</span><span class="p">[</span><span class="n">swap_2</span><span class="p">],</span>
                                             <span class="n">ind_new</span><span class="p">[</span><span class="n">swap_1</span><span class="p">])</span>
 
-        <span class="c"># calculate CMI under new swapped distribution</span>
+        <span class="c1"># calculate CMI under new swapped distribution</span>
         <span class="n">cmi_new</span> <span class="o">=</span> <span class="n">_calculate_cmi_from_jA_list</span><span class="p">(</span><span class="n">cmi_calc_target_s1_cond_s2</span><span class="p">,</span>
                                               <span class="n">target_jA</span><span class="p">,</span>
                                               <span class="n">s1_new_list</span><span class="p">,</span>
@@ -337,42 +334,42 @@
             <span class="n">cmi_q_target_s1_cond_s2_all</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmi_q_target_s1_cond_s2_all</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
             <span class="n">unsuccessful</span> <span class="o">+=</span> <span class="mi">1</span>
 
-    <span class="k">print</span><span class="p">(</span><span class="s">&#39;Unsuccessful swaps: {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">unsuccessful</span><span class="p">))</span>
-    <span class="c"># convert the final s1 back to an array</span>
+    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Unsuccessful swaps: {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">unsuccessful</span><span class="p">))</span>
+    <span class="c1"># convert the final s1 back to an array</span>
     <span class="n">s1_final</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">s1_new_list</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
-    <span class="c"># estimate unq/syn/shd information</span>
-    <span class="n">jointmi_q_s1s2_target</span> <span class="o">=</span> <span class="n">_calculate_jointmi</span><span class="p">(</span>
-                                            <span class="n">jointmi_calc</span><span class="p">,</span> <span class="n">s1_final</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
-    <span class="n">unq_s1</span> <span class="o">=</span> <span class="n">_get_last_value</span><span class="p">(</span><span class="n">cmi_q_target_s1_cond_s2_all</span><span class="p">)</span>  <span class="c"># Bertschinger, 2014, p. 2163</span>
+    <span class="c1"># estimate unq/syn/shd information</span>
+    <span class="n">jointmi_q_s1s2_target</span> <span class="o">=</span> <span class="n">_calculate_jointmi</span><span class="p">(</span><span class="n">jointmi_calc</span><span class="p">,</span> <span class="n">s1_final</span><span class="p">,</span>
+                                               <span class="n">s2_cp</span><span class="p">,</span> <span class="n">t_cp</span><span class="p">)</span>
+    <span class="n">unq_s1</span> <span class="o">=</span> <span class="n">_get_last_value</span><span class="p">(</span><span class="n">cmi_q_target_s1_cond_s2_all</span><span class="p">)</span>  <span class="c1"># Bertschinger, 2014, p. 2163</span>
 
-    <span class="c"># NEED TO REINITIALISE the calculator</span>
+    <span class="c1"># NEED TO REINITIALISE the estimator</span>
     <span class="n">cmi_calc_target_s2_cond_s1</span> <span class="o">=</span> <span class="n">Cmi_calc_class</span><span class="p">(</span><span class="n">alph_t</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">)</span>
-    <span class="n">unq_s2</span> <span class="o">=</span> <span class="n">_calculate_cmi</span><span class="p">(</span><span class="n">cmi_calc_target_s2_cond_s1</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">s1_final</span><span class="p">)</span>  <span class="c"># Bertschinger, 2014, p. 2166</span>
-    <span class="n">syn_s1s2</span> <span class="o">=</span> <span class="n">jointmi_s1s2_target</span> <span class="o">-</span> <span class="n">jointmi_q_s1s2_target</span>  <span class="c"># Bertschinger, 2014, p. 2163</span>
-    <span class="n">shd_s1s2</span> <span class="o">=</span> <span class="n">mi_target_s1</span> <span class="o">+</span> <span class="n">mi_target_s2</span> <span class="o">-</span> <span class="n">jointmi_q_s1s2_target</span>  <span class="c"># Bertschinger, 2014, p. 2167</span>
+    <span class="n">unq_s2</span> <span class="o">=</span> <span class="n">_calculate_cmi</span><span class="p">(</span><span class="n">cmi_calc_target_s2_cond_s1</span><span class="p">,</span> <span class="n">t_cp</span><span class="p">,</span> <span class="n">s2_cp</span><span class="p">,</span> <span class="n">s1_final</span><span class="p">)</span>  <span class="c1"># Bertschinger, 2014, p. 2166</span>
+    <span class="n">syn_s1s2</span> <span class="o">=</span> <span class="n">jointmi_s1s2_target</span> <span class="o">-</span> <span class="n">jointmi_q_s1s2_target</span>  <span class="c1"># Bertschinger, 2014, p. 2163</span>
+    <span class="n">shd_s1s2</span> <span class="o">=</span> <span class="n">mi_target_s1</span> <span class="o">+</span> <span class="n">mi_target_s2</span> <span class="o">-</span> <span class="n">jointmi_q_s1s2_target</span>  <span class="c1"># Bertschinger, 2014, p. 2167</span>
 
     <span class="n">estimate</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s">&#39;unq_s1&#39;</span><span class="p">:</span> <span class="n">unq_s1</span><span class="p">,</span>
-        <span class="s">&#39;unq_s2&#39;</span><span class="p">:</span> <span class="n">unq_s2</span><span class="p">,</span>
-        <span class="s">&#39;shd_s1s2&#39;</span><span class="p">:</span> <span class="n">shd_s1s2</span><span class="p">,</span>
-        <span class="s">&#39;syn_s1s2&#39;</span><span class="p">:</span> <span class="n">syn_s1s2</span><span class="p">,</span>
-        <span class="s">&#39;jointmi_q_s1s2_target&#39;</span><span class="p">:</span> <span class="n">jointmi_q_s1s2_target</span><span class="p">,</span>
-        <span class="s">&#39;orig_cmi_target_s1_cond_s2&#39;</span><span class="p">:</span> <span class="n">cmi_target_s1_cond_s2</span><span class="p">,</span>  <span class="c"># orignial values (empirical P)</span>
-        <span class="s">&#39;orig_jointmi_s1s2_target&#39;</span><span class="p">:</span> <span class="n">jointmi_s1s2_target</span><span class="p">,</span>
-        <span class="s">&#39;orig_mi_target_s1&#39;</span><span class="p">:</span> <span class="n">mi_target_s1</span><span class="p">,</span>
-        <span class="s">&#39;orig_mi_target_s2&#39;</span><span class="p">:</span> <span class="n">mi_target_s2</span>
+        <span class="s1">&#39;unq_s1&#39;</span><span class="p">:</span> <span class="n">unq_s1</span><span class="p">,</span>
+        <span class="s1">&#39;unq_s2&#39;</span><span class="p">:</span> <span class="n">unq_s2</span><span class="p">,</span>
+        <span class="s1">&#39;shd_s1s2&#39;</span><span class="p">:</span> <span class="n">shd_s1s2</span><span class="p">,</span>
+        <span class="s1">&#39;syn_s1s2&#39;</span><span class="p">:</span> <span class="n">syn_s1s2</span><span class="p">,</span>
+        <span class="s1">&#39;jointmi_q_s1s2_target&#39;</span><span class="p">:</span> <span class="n">jointmi_q_s1s2_target</span><span class="p">,</span>
+        <span class="s1">&#39;orig_cmi_target_s1_cond_s2&#39;</span><span class="p">:</span> <span class="n">cmi_target_s1_cond_s2</span><span class="p">,</span>
+        <span class="s1">&#39;orig_jointmi_s1s2_target&#39;</span><span class="p">:</span> <span class="n">jointmi_s1s2_target</span><span class="p">,</span>
+        <span class="s1">&#39;orig_mi_target_s1&#39;</span><span class="p">:</span> <span class="n">mi_target_s1</span><span class="p">,</span>
+        <span class="s1">&#39;orig_mi_target_s2&#39;</span><span class="p">:</span> <span class="n">mi_target_s2</span>
     <span class="p">}</span>
-    <span class="c"># useful outputs for plotting/debugging</span>
+    <span class="c1"># useful outputs for plotting/debugging</span>
     <span class="n">optimization</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s">&#39;q&#39;</span><span class="p">:</span> <span class="n">ind_new</span><span class="p">,</span>
-        <span class="s">&#39;unsuc_swaps&#39;</span><span class="p">:</span> <span class="n">unsuccessful</span><span class="p">,</span>
-        <span class="s">&#39;cmi_q_target_s1_cond_s2_all&#39;</span><span class="p">:</span> <span class="n">cmi_q_target_s1_cond_s2_all</span><span class="p">,</span>
-        <span class="s">&#39;cmi_q_target_s1_cond_s2_delta&#39;</span><span class="p">:</span> <span class="n">cmi_q_target_s1_cond_s2_delta</span><span class="p">,</span>
-        <span class="s">&#39;cfg&#39;</span><span class="p">:</span> <span class="n">cfg</span>
+        <span class="s1">&#39;q&#39;</span><span class="p">:</span> <span class="n">ind_new</span><span class="p">,</span>
+        <span class="s1">&#39;unsuc_swaps&#39;</span><span class="p">:</span> <span class="n">unsuccessful</span><span class="p">,</span>
+        <span class="s1">&#39;cmi_q_target_s1_cond_s2_all&#39;</span><span class="p">:</span> <span class="n">cmi_q_target_s1_cond_s2_all</span><span class="p">,</span>
+        <span class="s1">&#39;cmi_q_target_s1_cond_s2_delta&#39;</span><span class="p">:</span> <span class="n">cmi_q_target_s1_cond_s2_delta</span><span class="p">,</span>
+        <span class="s1">&#39;settings&#39;</span><span class="p">:</span> <span class="n">settings</span>
     <span class="p">}</span>
-    <span class="k">return</span> <span class="n">estimate</span><span class="p">,</span> <span class="n">optimization</span>
+    <span class="k">return</span> <span class="n">estimate</span><span class="p">,</span> <span class="n">optimization</span></div>
 
-</div>
+
 <span class="k">def</span> <span class="nf">_nan</span><span class="p">(</span><span class="n">shape</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return 1D numpy array of nans.</span>
 
@@ -391,7 +388,7 @@
     <span class="sd">&quot;&quot;&quot;Calculate conditional MI from three variables usind JIDT.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        cmi_calc (JIDT calculator object): JIDT calculator for conditio-</span>
+<span class="sd">        cmi_calc (JIDT estimator object): JIDT estimator for conditio-</span>
 <span class="sd">            nal mutual information</span>
 <span class="sd">        var_1, var_2 (1D numpy array): realizations of two discrete</span>
 <span class="sd">            random variables</span>
@@ -410,12 +407,13 @@
     <span class="n">cmi</span> <span class="o">=</span> <span class="n">cmi_calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">cmi</span>
 
+
 <span class="k">def</span> <span class="nf">_calculate_cmi_from_jA_list</span><span class="p">(</span><span class="n">cmi_calc</span><span class="p">,</span> <span class="n">var_1_java</span><span class="p">,</span> <span class="n">var_2_list</span><span class="p">,</span> <span class="n">var_2_ndim</span><span class="p">,</span>
                                 <span class="n">cond_java</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculate conditional MI from three variables usind JIDT.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        cmi_calc (JIDT calculator object): JIDT calculator for conditio-</span>
+<span class="sd">        cmi_calc (JIDT estimator object): JIDT estimator for conditio-</span>
 <span class="sd">            nal mutual information</span>
 <span class="sd">        var_1, var_2 (1D numpy array): realizations of two discrete</span>
 <span class="sd">            random variables</span>
@@ -426,9 +424,9 @@
 <span class="sd">        double: conditional mutual information between var_1 and var_2</span>
 <span class="sd">            conditional on cond</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<span class="c">#    var_1_java = jp.JArray(jp.JInt, var_1.ndim)(var_1.tolist())</span>
+<span class="c1">#    var_1_java = jp.JArray(jp.JInt, var_1.ndim)(var_1.tolist())</span>
     <span class="n">var_2_java</span> <span class="o">=</span> <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="n">var_2_ndim</span><span class="p">)(</span><span class="n">var_2_list</span><span class="p">)</span>
-<span class="c">#    cond_java = jp.JArray(jp.JInt, cond.ndim)(cond.tolist())</span>
+<span class="c1">#    cond_java = jp.JArray(jp.JInt, cond.ndim)(cond.tolist())</span>
     <span class="n">cmi_calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">()</span>
     <span class="n">cmi_calc</span><span class="o">.</span><span class="n">addObservations</span><span class="p">(</span><span class="n">var_1_java</span><span class="p">,</span> <span class="n">var_2_java</span><span class="p">,</span> <span class="n">cond_java</span><span class="p">)</span>
     <span class="n">cmi</span> <span class="o">=</span> <span class="n">cmi_calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span>
@@ -439,7 +437,7 @@
     <span class="sd">&quot;&quot;&quot;Calculate MI from two variables usind JIDT.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        mi_calc (JIDT calculator object): JIDT calculator for mutual</span>
+<span class="sd">        mi_calc (JIDT estimator object): JIDT estimator for mutual</span>
 <span class="sd">            information</span>
 <span class="sd">        var_1, var_2, (1D numpy array): realizations of some discrete</span>
 <span class="sd">            random variables</span>
@@ -458,7 +456,7 @@
     <span class="sd">&quot;&quot;&quot;Calculate MI from three variables usind JIDT.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        jointmi_calc (JIDT calculator object): JIDT calculator for</span>
+<span class="sd">        jointmi_calc (JIDT estimator object): JIDT estimator for</span>
 <span class="sd">            mutual information</span>
 <span class="sd">        var_1, var_2, var_3 (1D numpy array): realizations of some</span>
 <span class="sd">            discrete random variables</span>
@@ -466,14 +464,18 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        double: mutual information between all three input variables</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">mUtils</span> <span class="o">=</span> <span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s">&#39;infodynamics.utils&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">MatrixUtils</span>
-    <span class="c"># speed critical line ?</span>
-    <span class="n">s12</span> <span class="o">=</span> <span class="n">mUtils</span><span class="o">.</span><span class="n">computeCombinedValues</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">2</span><span class="p">)(</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">))</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span> <span class="mi">2</span><span class="p">)</span>
-<span class="c">#    [s12, alph_joined] = _join_variables(s1, s2, 2, 2)</span>
+    <span class="n">mUtils</span> <span class="o">=</span> <span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.utils&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">MatrixUtils</span>
+    <span class="c1"># speed critical line ?</span>
+    <span class="n">s12</span> <span class="o">=</span> <span class="n">mUtils</span><span class="o">.</span><span class="n">computeCombinedValues</span><span class="p">(</span>
+                <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">2</span><span class="p">)(</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">))</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span> <span class="mi">2</span><span class="p">)</span>
+<span class="c1">#    [s12, alph_joined] = _join_variables(s1, s2, 2, 2)</span>
     <span class="n">jointmi_calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">()</span>
-<span class="c">#    jointmi_calc.addObservations(jp.JArray(jp.JInt, s12.T.ndim)(s12.T.tolist()),</span>
-<span class="c">#                                 jp.JArray(jp.JInt, target.ndim)(target.tolist()))</span>
-    <span class="n">jointmi_calc</span><span class="o">.</span><span class="n">addObservations</span><span class="p">(</span><span class="n">s12</span><span class="p">,</span><span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">ndim</span><span class="p">)(</span><span class="n">target</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+<span class="c1">#    jointmi_calc.addObservations(</span>
+<span class="c1">#                           jp.JArray(jp.JInt, s12.T.ndim)(s12.T.tolist()),</span>
+<span class="c1">#                           jp.JArray(jp.JInt, target.ndim)(target.tolist()))</span>
+    <span class="n">jointmi_calc</span><span class="o">.</span><span class="n">addObservations</span><span class="p">(</span>
+                            <span class="n">s12</span><span class="p">,</span>
+                            <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">ndim</span><span class="p">)(</span><span class="n">target</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
 
     <span class="n">jointmi</span> <span class="o">=</span> <span class="n">jointmi_calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">jointmi</span>
@@ -493,36 +495,693 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="n">ind</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
     <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s">&#39;Couldn not find a value that is not -inf.&#39;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Couldn not find a value that is not -inf.&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
 
-<span class="c">#def test_logical_xor():</span>
-<span class="c">#</span>
-<span class="c">#    # logical XOR</span>
-<span class="c">#    n = 1000</span>
-<span class="c">#    alph = 2</span>
-<span class="c">#    s1 = np.random.randint(0, alph, n)</span>
-<span class="c">#    s2 = np.random.randint(0, alph, n)</span>
-<span class="c">#    target = np.logical_xor(s1, s2).astype(int)</span>
-<span class="c">#    cfg = {</span>
-<span class="c">#        &#39;alph_s1&#39;: 2,</span>
-<span class="c">#        &#39;alph_s2&#39;: 2,</span>
-<span class="c">#        &#39;alph_t&#39;: 2,</span>
-<span class="c">#        &#39;jarpath&#39;: &#39;infodynamics.jar&#39;,</span>
-<span class="c">#        &#39;iterations&#39;: 1000</span>
-<span class="c">#    }</span>
-<span class="c">#    print(&#39;Testing PID estimator on binary AND, pointsset size{0}, iterations: {1}&#39;.format(</span>
-<span class="c">#                                                        n, cfg[&#39;iterations&#39;]))</span>
-<span class="c">#    [est, opt] = pid(s1, s2, target, cfg)</span>
-<span class="c">#    print(&quot;----Results: ----&quot;)</span>
-<span class="c">#    print(&quot;unq_s1: {0}&quot;.format(est[&#39;unq_s1&#39;]))</span>
-<span class="c">#    print(&quot;unq_s2: {0}&quot;.format(est[&#39;unq_s2&#39;]))</span>
-<span class="c">#    print(&quot;shd_s1s2: {0}&quot;.format(est[&#39;shd_s1s2&#39;]))</span>
-<span class="c">#    print(&quot;syn_s1s2: {0}&quot;.format(est[&#39;syn_s1s2&#39;]))</span>
-<span class="c">#    assert 0.9 &lt; est[&#39;syn_s1s2&#39;] &lt;=1.1, &#39;incorrect synergy: {0}, expected was {1}&#39;.format(est[&#39;syn_s1s2&#39;], 0.98)</span>
-<span class="c">#</span>
-<span class="c">#if __name__ == &#39;__main__&#39;:</span>
-<span class="c">#    test_logical_xor()</span>
+
+<div class="viewcode-block" id="SydneyPID"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_pid.SydneyPID">[docs]</a><span class="k">class</span> <span class="nc">SydneyPID</span><span class="p">(</span><span class="n">Estimator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Estimate partial information decomposition of discrete variables.</span>
+
+<span class="sd">    Fast implementation of the partial information decomposition (PID)</span>
+<span class="sd">    estimator for discrete data. The estimator does not require JAVA or GPU</span>
+<span class="sd">    modules to run.</span>
+
+<span class="sd">    The estimator finds shared information, unique information and</span>
+<span class="sd">    synergistic information between the two inputs s1 and s2 with respect to</span>
+<span class="sd">    the output t.</span>
+
+<span class="sd">    Improved version with larger initial swaps and checking for convergence of</span>
+<span class="sd">    both the unique information from sources 1 and 2. The function counts the</span>
+<span class="sd">    empirical observations, calculates probabilities and the initial CMI, then</span>
+<span class="sd">    does the vitrualised swaps until it has converged, and finally calculates</span>
+<span class="sd">    the PID. The virtualised swaps stage contains two loops. An inner loop</span>
+<span class="sd">    which actually does the virtualised swapping, keeping the changes if the</span>
+<span class="sd">    CMI decreases; and an outer loop which decreases the size of the</span>
+<span class="sd">    probability mass increment the virtualised swapping utilises.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        settings : dict</span>
+<span class="sd">            estimation parameters</span>
+
+<span class="sd">            - &#39;alph_s1&#39; - alphabet size of s1</span>
+<span class="sd">            - &#39;alph_s2&#39; -  alphabet size of s2</span>
+<span class="sd">            - &#39;alph_t&#39; - alphabet size of t</span>
+<span class="sd">            - &#39;max_unsuc_swaps_row_parm&#39; - soft limit for virtualised swaps</span>
+<span class="sd">              based on the number of unsuccessful swaps attempted in a row.</span>
+<span class="sd">              If there are too many unsuccessful swaps in a row, then it</span>
+<span class="sd">              will break the inner swap loop; the outer loop decrements the</span>
+<span class="sd">              size of the probability mass increment and then attemps</span>
+<span class="sd">              virtualised swaps again with the smaller probability increment.</span>
+<span class="sd">              The exact number of unsuccessful swaps allowed before breaking</span>
+<span class="sd">              is the total number of possible swaps (given our alphabet</span>
+<span class="sd">              sizes) times the control parameter &#39;max_unsuc_swaps_row_parm&#39;,</span>
+<span class="sd">              e.g., if the parameter is set to 3, this gives a high degree of</span>
+<span class="sd">              confidence that nearly (if not) all of the possible swaps have</span>
+<span class="sd">              been attempted before this soft limit breaks the swap loop.</span>
+<span class="sd">            - &#39;num_reps&#39; -  number of times the outer loop will halve the</span>
+<span class="sd">              size of the probability increment used for the virtualised</span>
+<span class="sd">              swaps. This is in direct correspondence with the number of times</span>
+<span class="sd">              the empirical data was replicated in your original</span>
+<span class="sd">              implementation.</span>
+<span class="sd">            - &#39;max_iters&#39; - provides a hard upper bound on the number of times</span>
+<span class="sd">              it will attempt to perform virtualised swaps in the inner loop.</span>
+<span class="sd">              However, this hard limit is (practically) never used as it should</span>
+<span class="sd">              always hit the soft limit defined above (parameter may be removed</span>
+<span class="sd">              in the future).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph_s1&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;&quot;alph_s1&quot; is missing from the settings dictionary.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph_s2&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;&quot;alph_s2&quot; is missing from the settings dictionary.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph_t&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;&quot;alph_t&quot; is missing from the settings dictionary.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;max_unsuc_swaps_row_parm&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;&quot;max_unsuc_swaps_row_parm&quot; is missing from the settings &#39;</span>
+                  <span class="s1">&#39;dictionary.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;num_reps&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;&quot;num_reps&quot; is missing from the settings dictionary.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span>
+        <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;num_reps&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">63</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Number of reps must be 63 or less to prevent &#39;</span>
+                             <span class="s1">&#39;integer overflow.&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;max_iters&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;&quot;max_iters&quot; is missing from the settings dictionary.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span>
+
+<div class="viewcode-block" id="SydneyPID.is_parallel"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_pid.SydneyPID.is_parallel">[docs]</a>    <span class="k">def</span> <span class="nf">is_parallel</span><span class="p">():</span>
+        <span class="k">return</span> <span class="bp">False</span></div>
+
+<div class="viewcode-block" id="SydneyPID.is_analytic_null_estimator"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_pid.SydneyPID.is_analytic_null_estimator">[docs]</a>    <span class="k">def</span> <span class="nf">is_analytic_null_estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span></div>
+
+<div class="viewcode-block" id="SydneyPID.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_pid.SydneyPID.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            s1 : numpy array</span>
+<span class="sd">                1D array containing realizations of a discrete random variable</span>
+<span class="sd">            s2 : numpy array</span>
+<span class="sd">                1D array containing realizations of a discrete random variable</span>
+<span class="sd">            t : numpy array</span>
+<span class="sd">                1D array containing realizations of a discrete random variable</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict</span>
+<span class="sd">                estimated decomposition, contains the joint distribution,</span>
+<span class="sd">                unique, shared, and synergistic information</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">_check_input</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+
+        <span class="c1"># Check if float128 is supported by the architecture</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">float128</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;&#39;module&#39; object has no attribute &#39;float128&#39;&quot;</span> <span class="o">==</span> <span class="n">err</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                        <span class="s1">&#39;This system doesn&#39;&#39;t seem to support float128 &#39;</span>
+                        <span class="s1">&#39;(requirement for using the Sydney PID-estimator.&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span>
+
+        <span class="c1"># -- DEFINE PARAMETERS -- #</span>
+
+        <span class="n">num_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">alph_t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph_t&#39;</span><span class="p">]</span>
+        <span class="n">alph_s1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph_s1&#39;</span><span class="p">]</span>
+        <span class="n">alph_s2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph_s2&#39;</span><span class="p">]</span>
+        <span class="n">max_unsuc_swaps_row_parm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;max_unsuc_swaps_row_parm&#39;</span><span class="p">]</span>
+        <span class="c1"># Max swaps = number of possible swaps * control parameter</span>
+        <span class="n">num_pos_swaps</span> <span class="o">=</span> <span class="n">alph_t</span> <span class="o">*</span> <span class="n">alph_s1</span> <span class="o">*</span> <span class="p">(</span><span class="n">alph_s1</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">alph_s2</span> <span class="o">*</span> <span class="p">(</span><span class="n">alph_s2</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">max_unsuc_swaps_row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">num_pos_swaps</span> <span class="o">*</span>
+                                       <span class="n">max_unsuc_swaps_row_parm</span><span class="p">)</span>
+
+        <span class="c1"># -- CALCULATE PROBABLITIES -- #</span>
+
+        <span class="c1"># Declare arrays for counts</span>
+        <span class="n">t_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">alph_t</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+        <span class="n">s1_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">alph_s1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+        <span class="n">s2_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">alph_s2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+        <span class="n">joint_t_s1_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">alph_t</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+        <span class="n">joint_t_s2_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">alph_t</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+        <span class="n">joint_s1_s2_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">alph_s1</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+        <span class="n">joint_t_s1_s2_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">alph_t</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">),</span>
+                                       <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+
+        <span class="c1"># Count observations</span>
+        <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">):</span>
+            <span class="n">t_count</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="n">obs</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">s1_count</span><span class="p">[</span><span class="n">s1</span><span class="p">[</span><span class="n">obs</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">s2_count</span><span class="p">[</span><span class="n">s2</span><span class="p">[</span><span class="n">obs</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">joint_t_s1_count</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="n">obs</span><span class="p">],</span> <span class="n">s1</span><span class="p">[</span><span class="n">obs</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">joint_t_s2_count</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="n">obs</span><span class="p">],</span> <span class="n">s2</span><span class="p">[</span><span class="n">obs</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">joint_s1_s2_count</span><span class="p">[</span><span class="n">s1</span><span class="p">[</span><span class="n">obs</span><span class="p">],</span> <span class="n">s2</span><span class="p">[</span><span class="n">obs</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">joint_t_s1_s2_count</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="n">obs</span><span class="p">],</span> <span class="n">s1</span><span class="p">[</span><span class="n">obs</span><span class="p">],</span> <span class="n">s2</span><span class="p">[</span><span class="n">obs</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="c1">#    min_joint_nonzero_count = np.min(</span>
+        <span class="c1">#   			np.min(</span>
+        <span class="c1">#   			np.min(</span>
+        <span class="c1">#   			joint_t_s1_s2_count[np.nonzero(joint_t_s1_s2_count)])))</span>
+
+        <span class="n">max_joint_nonzero_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
+                        <span class="n">joint_t_s1_s2_count</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">joint_t_s1_s2_count</span><span class="p">)])</span>
+
+        <span class="c1"># Fixed probabilities</span>
+        <span class="n">t_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">t_count</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float128&#39;</span><span class="p">)</span>
+        <span class="n">s1_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">s1_count</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float128&#39;</span><span class="p">)</span>
+        <span class="n">s2_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">s2_count</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float128&#39;</span><span class="p">)</span>
+        <span class="n">joint_t_s1_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">joint_t_s1_count</span><span class="p">,</span>
+                                    <span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float128&#39;</span><span class="p">)</span>
+        <span class="n">joint_t_s2_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">joint_t_s2_count</span><span class="p">,</span>
+                                    <span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float128&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Variable probabilities</span>
+        <span class="n">joint_s1_s2_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">joint_s1_s2_count</span><span class="p">,</span>
+                                     <span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float128&#39;</span><span class="p">)</span>
+        <span class="n">joint_t_s1_s2_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">joint_t_s1_s2_count</span><span class="p">,</span>
+                                       <span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float128&#39;</span><span class="p">)</span>
+        <span class="n">max_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">joint_t_s1_s2_prob</span><span class="p">)])</span>
+
+    <span class="c1">#    # make copies of the variable probabilities for independent second</span>
+    <span class="c1">#    # optimization and comparison of KLDs for convergence check:</span>
+    <span class="c1">#    # KLDs should initially rise and then fall when close to the minimum</span>
+    <span class="c1">#    joint_s1_s2_prob_alt = joint_s1_s2_prob.copy()</span>
+    <span class="c1">#    joint_t_s1_s2_prob_alt = joint_t_s1_s2_prob.copy()</span>
+
+        <span class="c1"># -- VIRTUALISED SWAPS -- #</span>
+
+        <span class="c1"># Calculate the initial cmi&#39;s and store them</span>
+        <span class="n">cond_mut_info1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_prob</span><span class="p">(</span>
+            <span class="n">s2_prob</span><span class="p">,</span> <span class="n">joint_t_s2_prob</span><span class="p">,</span> <span class="n">joint_s1_s2_prob</span><span class="p">,</span> <span class="n">joint_t_s1_s2_prob</span><span class="p">)</span>
+        <span class="n">cur_cond_mut_info1</span> <span class="o">=</span> <span class="n">cond_mut_info1</span>
+
+        <span class="n">joint_s2_s1_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">joint_s1_s2_prob</span><span class="p">)</span>
+        <span class="n">joint_t_s2_s1_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">joint_t_s1_s2_prob</span><span class="p">,</span>
+                                                  <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">cond_mut_info2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_prob</span><span class="p">(</span>
+            <span class="n">s1_prob</span><span class="p">,</span> <span class="n">joint_t_s1_prob</span><span class="p">,</span> <span class="n">joint_s2_s1_prob</span><span class="p">,</span> <span class="n">joint_t_s2_s1_prob</span><span class="p">)</span>
+        <span class="n">cur_cond_mut_info2</span> <span class="o">=</span> <span class="n">cond_mut_info2</span>
+
+        <span class="c1"># sanity check: the curr cmi must be smaller than the joint, else</span>
+        <span class="c1"># something is fishy</span>
+        <span class="n">jointmi_s1s2_t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_joint_mi</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">,</span> <span class="n">alph_t</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cond_mut_info1</span> <span class="o">&gt;</span> <span class="n">jointmi_s1s2_t</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;joint MI {0} smaller than cMI {1}&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jointmi_s1s2_t</span><span class="p">,</span> <span class="n">cond_mut_info1</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Passed sanity check on jMI and cMI&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Declare reps array of repeated doubling to half the prob_inc</span>
+        <span class="c1"># WARNING: num_reps greater than 63 results in integer overflow</span>
+        <span class="c1"># TODO: in principle we could divide the increment until we run out of</span>
+        <span class="c1"># fp precision, e.g. we can get some extra reps by not starting with a</span>
+        <span class="c1"># swap of size 1/n but soemthing larger, by adding as many steps here</span>
+        <span class="c1"># as we are powers of 2 larger in the max probability than 1/n and by</span>
+        <span class="c1"># starting with swaps in the size of the max probability this will keep</span>
+        <span class="c1"># almost all of the bins of the joint pdf from being swapped but they</span>
+        <span class="c1"># will joint swapping later, or after being swapped into unfortunatley</span>
+        <span class="c1"># this does not run with the current code as it uses large powers of</span>
+        <span class="c1"># integers another idea would be to decrement by something slightly</span>
+        <span class="c1"># smaller than 2</span>
+    <span class="c1">#    num_reps = num_reps + np.int32(np.floor(np.log(max_joint_nonzero_count)/np.log(2)))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;num_reps: {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;num_reps&#39;</span><span class="p">]))</span>
+        <span class="n">reps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;num_reps&#39;</span><span class="p">])))</span>
+
+        <span class="c1"># Replication loop</span>
+        <span class="k">for</span> <span class="n">rep</span> <span class="ow">in</span> <span class="n">reps</span><span class="p">:</span>
+            <span class="n">prob_inc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">float128</span><span class="p">(</span><span class="n">max_prob</span><span class="p">),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float128</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">float128</span><span class="p">(</span><span class="n">rep</span><span class="p">)))</span>
+            <span class="c1"># Want to store number of succesive unsuccessful swaps</span>
+            <span class="n">unsuccessful_swaps_row</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="c1"># SWAP LOOP</span>
+            <span class="k">for</span> <span class="n">attempt_swap</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;max_iters&#39;</span><span class="p">]):</span>
+                <span class="c1"># Pick a random candidate from the targets</span>
+                <span class="n">t_cand</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph_t</span><span class="p">)</span>
+                <span class="n">s1_cand</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">)</span>
+                <span class="n">s2_cand</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">)</span>
+
+                <span class="c1"># Pick a swap candidate</span>
+                <span class="n">s1_prim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph_s1</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">s1_prim</span> <span class="o">&gt;=</span> <span class="n">s1_cand</span><span class="p">):</span>
+                    <span class="n">s1_prim</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">s2_prim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph_s2</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">s2_prim</span> <span class="o">&gt;=</span> <span class="n">s2_cand</span><span class="p">):</span>
+                    <span class="n">s2_prim</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1">#            unsuccessful_swaps_row = _try_swap(cur_cond_mut_info,</span>
+    <span class="c1">#                                               joint_t_s1_s2_prob,</span>
+    <span class="c1">#                                               joint_s1_s2_prob,</span>
+    <span class="c1">#                                               joint_t_s2_prob, s2_prob,</span>
+    <span class="c1">#                                               t_cand, s1_prim, s2_prim,</span>
+    <span class="c1">#                                               s1_cand, s2_cand,</span>
+    <span class="c1">#                                               prob_inc,</span>
+    <span class="c1">#                                               unsuccessful_swaps_row)</span>
+    <span class="c1">#            print(&quot;unsuccessful_swaps_row: {0}&quot;.format(unsuccessful_swaps_row))</span>
+
+                <span class="c1"># START of a possible try_swap function</span>
+                <span class="c1"># based on a fixed set of candidates</span>
+                <span class="c1"># that can then be used recursively until the swap direction</span>
+                <span class="c1"># becomes unsuccessful</span>
+
+                <span class="c1"># Ensure we can decrement without introducing neg probs</span>
+                <span class="c1"># this is very important as we start swaps in the size of the</span>
+                <span class="c1"># maximum probability</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">t_cand</span><span class="p">,</span> <span class="n">s1_cand</span><span class="p">,</span> <span class="n">s2_cand</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">prob_inc</span> <span class="ow">and</span>
+                        <span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">t_cand</span><span class="p">,</span> <span class="n">s1_prim</span><span class="p">,</span> <span class="n">s2_prim</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">prob_inc</span> <span class="ow">and</span>
+                        <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">s1_cand</span><span class="p">,</span> <span class="n">s2_cand</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">prob_inc</span> <span class="ow">and</span>
+                        <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">s1_prim</span><span class="p">,</span> <span class="n">s2_prim</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">prob_inc</span><span class="p">):</span>
+
+                    <span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">t_cand</span><span class="p">,</span> <span class="n">s1_cand</span><span class="p">,</span> <span class="n">s2_cand</span><span class="p">]</span> <span class="o">-=</span> <span class="n">prob_inc</span>
+                    <span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">t_cand</span><span class="p">,</span> <span class="n">s1_prim</span><span class="p">,</span> <span class="n">s2_prim</span><span class="p">]</span> <span class="o">-=</span> <span class="n">prob_inc</span>
+                    <span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">t_cand</span><span class="p">,</span> <span class="n">s1_cand</span><span class="p">,</span> <span class="n">s2_prim</span><span class="p">]</span> <span class="o">+=</span> <span class="n">prob_inc</span>
+                    <span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">t_cand</span><span class="p">,</span> <span class="n">s1_prim</span><span class="p">,</span> <span class="n">s2_cand</span><span class="p">]</span> <span class="o">+=</span> <span class="n">prob_inc</span>
+
+                    <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">s1_cand</span><span class="p">,</span> <span class="n">s2_cand</span><span class="p">]</span> <span class="o">-=</span> <span class="n">prob_inc</span>
+                    <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">s1_prim</span><span class="p">,</span> <span class="n">s2_prim</span><span class="p">]</span> <span class="o">-=</span> <span class="n">prob_inc</span>
+                    <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">s1_cand</span><span class="p">,</span> <span class="n">s2_prim</span><span class="p">]</span> <span class="o">+=</span> <span class="n">prob_inc</span>
+                    <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">s1_prim</span><span class="p">,</span> <span class="n">s2_cand</span><span class="p">]</span> <span class="o">+=</span> <span class="n">prob_inc</span>
+
+                    <span class="c1"># Calculate the cmi after this virtual swap</span>
+                    <span class="n">cond_mut_info1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_prob</span><span class="p">(</span><span class="n">s2_prob</span><span class="p">,</span>
+                                                    <span class="n">joint_t_s2_prob</span><span class="p">,</span>
+                                                    <span class="n">joint_s1_s2_prob</span><span class="p">,</span>
+                                                    <span class="n">joint_t_s1_s2_prob</span><span class="p">)</span>
+                    <span class="n">cond_mut_info2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_prob</span><span class="p">(</span><span class="n">s2_prob</span><span class="p">,</span>
+                                                    <span class="n">joint_t_s2_prob</span><span class="p">,</span>
+                                                    <span class="n">joint_s1_s2_prob</span><span class="p">,</span>
+                                                    <span class="n">joint_t_s1_s2_prob</span><span class="p">)</span>
+
+                    <span class="c1"># If at least one of the cmis is improved keep it,</span>
+                    <span class="c1"># reset the unsuccessful swap counter</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">cond_mut_info1</span> <span class="o">&lt;</span> <span class="n">cur_cond_mut_info1</span> <span class="ow">or</span>
+                            <span class="n">cond_mut_info2</span> <span class="o">&lt;</span> <span class="n">cur_cond_mut_info2</span><span class="p">):</span>
+                        <span class="n">cur_cond_mut_info1</span> <span class="o">=</span> <span class="n">cond_mut_info1</span>
+                        <span class="n">cur_cond_mut_info2</span> <span class="o">=</span> <span class="n">cond_mut_info2</span>
+                        <span class="n">unsuccessful_swaps_row</span> <span class="o">=</span> <span class="mi">0</span>
+                        <span class="c1"># TODO: if this swap direction was successful - repeat it !</span>
+                    <span class="c1"># Else undo the changes, record unsuccessful swap</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">t_cand</span><span class="p">,</span> <span class="n">s1_cand</span><span class="p">,</span> <span class="n">s2_cand</span><span class="p">]</span> <span class="o">+=</span> <span class="n">prob_inc</span>
+                        <span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">t_cand</span><span class="p">,</span> <span class="n">s1_prim</span><span class="p">,</span> <span class="n">s2_prim</span><span class="p">]</span> <span class="o">+=</span> <span class="n">prob_inc</span>
+                        <span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">t_cand</span><span class="p">,</span> <span class="n">s1_cand</span><span class="p">,</span> <span class="n">s2_prim</span><span class="p">]</span> <span class="o">-=</span> <span class="n">prob_inc</span>
+                        <span class="n">joint_t_s1_s2_prob</span><span class="p">[</span><span class="n">t_cand</span><span class="p">,</span> <span class="n">s1_prim</span><span class="p">,</span> <span class="n">s2_cand</span><span class="p">]</span> <span class="o">-=</span> <span class="n">prob_inc</span>
+
+                        <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">s1_cand</span><span class="p">,</span> <span class="n">s2_cand</span><span class="p">]</span> <span class="o">+=</span> <span class="n">prob_inc</span>
+                        <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">s1_prim</span><span class="p">,</span> <span class="n">s2_prim</span><span class="p">]</span> <span class="o">+=</span> <span class="n">prob_inc</span>
+                        <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">s1_cand</span><span class="p">,</span> <span class="n">s2_prim</span><span class="p">]</span> <span class="o">-=</span> <span class="n">prob_inc</span>
+                        <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">s1_prim</span><span class="p">,</span> <span class="n">s2_cand</span><span class="p">]</span> <span class="o">-=</span> <span class="n">prob_inc</span>
+
+                        <span class="n">unsuccessful_swaps_row</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">unsuccessful_swaps_row</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="c1"># END of a possible try_swap function</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="n">unsuccessful_swaps_row</span> <span class="o">&gt;=</span> <span class="n">max_unsuc_swaps_row</span><span class="p">):</span>
+                    <span class="k">break</span>
+
+        <span class="c1"># print(cond_mut_info, &#39;\t&#39;, prob_inc, &#39;\t&#39;, unsuccessful_swaps_row)</span>
+
+        <span class="c1"># -- PID Evaluation -- #</span>
+
+        <span class="c1"># Classical mutual information terms</span>
+        <span class="n">mi_target_s1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mi_prob</span><span class="p">(</span><span class="n">t_prob</span><span class="p">,</span> <span class="n">s1_prob</span><span class="p">,</span> <span class="n">joint_t_s1_prob</span><span class="p">)</span>
+        <span class="n">mi_target_s2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mi_prob</span><span class="p">(</span><span class="n">t_prob</span><span class="p">,</span> <span class="n">s2_prob</span><span class="p">,</span> <span class="n">joint_t_s2_prob</span><span class="p">)</span>
+        <span class="n">jointmi_s1s2_target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_joint_mi</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">,</span>
+                                             <span class="n">alph_t</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;jointmi_s1s2_target: {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jointmi_s1s2_target</span><span class="p">))</span>
+
+        <span class="c1"># PID terms</span>
+        <span class="n">unq_s1</span> <span class="o">=</span> <span class="n">cond_mut_info1</span>
+        <span class="n">shd_s1_s2</span> <span class="o">=</span> <span class="n">mi_target_s1</span> <span class="o">-</span> <span class="n">unq_s1</span>
+        <span class="n">unq_s2</span> <span class="o">=</span> <span class="n">mi_target_s2</span> <span class="o">-</span> <span class="n">shd_s1_s2</span>
+        <span class="n">syn_s1_s2</span> <span class="o">=</span> <span class="n">jointmi_s1s2_target</span> <span class="o">-</span> <span class="n">unq_s1</span> <span class="o">-</span> <span class="n">unq_s2</span> <span class="o">-</span> <span class="n">shd_s1_s2</span>
+
+        <span class="c1"># Return scalars instead of 1-element numpy arrays</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;joint_mi_s1s2_t&#39;</span><span class="p">:</span> <span class="n">jointmi_s1s2_target</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="s1">&#39;unq_s1&#39;</span><span class="p">:</span> <span class="n">unq_s1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="s1">&#39;unq_s2&#39;</span><span class="p">:</span> <span class="n">unq_s2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="s1">&#39;shd_s1_s2&#39;</span><span class="p">:</span> <span class="n">shd_s1_s2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="s1">&#39;syn_s1_s2&#39;</span><span class="p">:</span> <span class="n">syn_s1_s2</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span></div>
+
+    <span class="k">def</span> <span class="nf">_cmi_prob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s2cond_prob</span><span class="p">,</span> <span class="n">joint_t_s2cond_prob</span><span class="p">,</span>
+                  <span class="n">joint_s1_s2cond_prob</span><span class="p">,</span> <span class="n">joint_t_s1_s2cond_prob</span><span class="p">):</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float128&#39;</span><span class="p">)</span>
+
+        <span class="p">[</span><span class="n">alph_t</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">,</span> <span class="n">alph_s2cond</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">joint_t_s1_s2cond_prob</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">sym_s1</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">sym_s2cond</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph_s2cond</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">sym_t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph_t</span><span class="p">):</span>
+
+                    <span class="k">if</span> <span class="p">(</span><span class="n">s2cond_prob</span><span class="p">[</span><span class="n">sym_s2cond</span><span class="p">]</span> <span class="o">*</span>
+                            <span class="n">joint_t_s2cond_prob</span><span class="p">[</span><span class="n">sym_t</span><span class="p">,</span> <span class="n">sym_s2cond</span><span class="p">]</span> <span class="o">*</span>
+                            <span class="n">joint_s1_s2cond_prob</span><span class="p">[</span><span class="n">sym_s1</span><span class="p">,</span> <span class="n">sym_s2cond</span><span class="p">]</span> <span class="o">*</span>
+                            <span class="n">joint_t_s1_s2cond_prob</span><span class="p">[</span><span class="n">sym_t</span><span class="p">,</span> <span class="n">sym_s1</span><span class="p">,</span> <span class="n">sym_s2cond</span><span class="p">]</span> <span class="o">&gt;</span>
+                            <span class="mi">0</span><span class="p">):</span>
+
+                        <span class="n">local_contrib</span> <span class="o">=</span> <span class="p">(</span>
+                               <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">joint_t_s1_s2cond_prob</span><span class="p">[</span><span class="n">sym_t</span><span class="p">,</span> <span class="n">sym_s1</span><span class="p">,</span>
+                                                             <span class="n">sym_s2cond</span><span class="p">])</span> <span class="o">+</span>
+                               <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">s2cond_prob</span><span class="p">[</span><span class="n">sym_s2cond</span><span class="p">])</span> <span class="o">-</span>
+                               <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">joint_t_s2cond_prob</span><span class="p">[</span><span class="n">sym_t</span><span class="p">,</span> <span class="n">sym_s2cond</span><span class="p">])</span> <span class="o">-</span>
+                               <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">joint_s1_s2cond_prob</span><span class="p">[</span><span class="n">sym_s1</span><span class="p">,</span> <span class="n">sym_s2cond</span><span class="p">])</span>
+                                       <span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+                        <span class="n">weighted_contrib</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">joint_t_s1_s2cond_prob</span><span class="p">[</span><span class="n">sym_t</span><span class="p">,</span> <span class="n">sym_s1</span><span class="p">,</span> <span class="n">sym_s2cond</span><span class="p">]</span> <span class="o">*</span>
+                            <span class="n">local_contrib</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">weighted_contrib</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">total</span> <span class="o">+=</span> <span class="n">weighted_contrib</span>
+
+        <span class="k">return</span> <span class="n">total</span>
+
+    <span class="k">def</span> <span class="nf">_mi_prob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s1_prob</span><span class="p">,</span> <span class="n">s2_prob</span><span class="p">,</span> <span class="n">joint_s1_s2_prob</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;MI estimator in the prob domain.&quot;&quot;&quot;</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float128&#39;</span><span class="p">)</span>
+        <span class="p">[</span><span class="n">alph_s1</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">joint_s1_s2_prob</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">sym_s1</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">sym_s2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">):</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="n">s1_prob</span><span class="p">[</span><span class="n">sym_s1</span><span class="p">]</span> <span class="o">*</span> <span class="n">s2_prob</span><span class="p">[</span><span class="n">sym_s2</span><span class="p">]</span> <span class="o">*</span>
+                        <span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">sym_s1</span><span class="p">,</span> <span class="n">sym_s2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+
+                    <span class="n">local_contrib</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">sym_s1</span><span class="p">,</span> <span class="n">sym_s2</span><span class="p">])</span> <span class="o">-</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">s1_prob</span><span class="p">[</span><span class="n">sym_s1</span><span class="p">])</span> <span class="o">-</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">s2_prob</span><span class="p">[</span><span class="n">sym_s2</span><span class="p">])</span>
+                                    <span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+                    <span class="n">weighted_contrib</span> <span class="o">=</span> <span class="p">(</span><span class="n">joint_s1_s2_prob</span><span class="p">[</span><span class="n">sym_s1</span><span class="p">,</span> <span class="n">sym_s2</span><span class="p">]</span> <span class="o">*</span>
+                                        <span class="n">local_contrib</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">weighted_contrib</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">total</span> <span class="o">+=</span> <span class="n">weighted_contrib</span>
+
+        <span class="k">return</span> <span class="n">total</span>
+
+    <span class="k">def</span> <span class="nf">_joint_mi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">,</span> <span class="n">alph_t</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Joint MI estimator in the samples domain.&quot;&quot;&quot;</span>
+
+        <span class="p">[</span><span class="n">s12</span><span class="p">,</span> <span class="n">alph_s12</span><span class="p">]</span> <span class="o">=</span> <span class="n">_join_variables</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">alph_s1</span><span class="p">,</span> <span class="n">alph_s2</span><span class="p">)</span>
+
+        <span class="n">t_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">alph_t</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+        <span class="n">s12_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">alph_s12</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+        <span class="n">joint_t_s12_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">alph_t</span><span class="p">,</span> <span class="n">alph_s12</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+
+        <span class="n">num_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">):</span>
+            <span class="n">t_count</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="n">obs</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">s12_count</span><span class="p">[</span><span class="n">s12</span><span class="p">[</span><span class="n">obs</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">joint_t_s12_count</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="n">obs</span><span class="p">],</span> <span class="n">s12</span><span class="p">[</span><span class="n">obs</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">t_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">t_count</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float128&#39;</span><span class="p">)</span>
+        <span class="n">s12_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">s12_count</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float128&#39;</span><span class="p">)</span>
+        <span class="n">joint_t_s12_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">joint_t_s12_count</span><span class="p">,</span>
+                                     <span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float128&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mi_prob</span><span class="p">(</span><span class="n">t_prob</span><span class="p">,</span> <span class="n">s12_prob</span><span class="p">,</span> <span class="n">joint_t_s12_prob</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_join_variables</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">alph_a</span><span class="p">,</span> <span class="n">alph_b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Join two variables into a new one.&quot;&quot;&quot;</span>
+    <span class="n">alph_new</span> <span class="o">=</span> <span class="n">alph_a</span> <span class="o">*</span> <span class="n">alph_b</span>
+
+    <span class="k">if</span> <span class="n">alph_b</span> <span class="o">&lt;</span> <span class="n">alph_a</span><span class="p">:</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span>
+        <span class="n">alph_a</span><span class="p">,</span> <span class="n">alph_b</span> <span class="o">=</span> <span class="n">alph_b</span><span class="p">,</span> <span class="n">alph_a</span>
+
+    <span class="n">ab</span> <span class="o">=</span> <span class="n">alph_b</span> <span class="o">*</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+
+    <span class="k">return</span> <span class="n">ab</span><span class="p">,</span> <span class="n">alph_new</span>
+
+
+<span class="c1"># TODO fix this - no idea why it does not yield the correct results</span>
+<span class="c1"># def _try_swap(cur_cond_mut_info, joint_t_s1_s2_prob, joint_s1_s2_prob,</span>
+<span class="c1">#              joint_t_s2_prob, s2_prob,</span>
+<span class="c1">#              t_cand, s1_prim, s2_prim, s1_cand, s2_cand,</span>
+<span class="c1">#              prob_inc, unsuccessful_swaps_row):</span>
+<span class="c1"># #            unsuccessful_swaps_row_local = unsuccessful_swaps_row</span>
+<span class="c1"># #            print(&quot;unsuccessful_swaps_row_local: {0}&quot;.format(unsuccessful_swaps_row_local))</span>
+<span class="c1">#            if (joint_t_s1_s2_prob[t_cand, s1_cand, s2_cand] &gt;= prob_inc</span>
+<span class="c1">#            and joint_t_s1_s2_prob[t_cand, s1_prim, s2_prim] &gt;= prob_inc</span>
+<span class="c1">#            and joint_s1_s2_prob[s1_cand, s2_cand] &gt;= prob_inc</span>
+<span class="c1">#            and joint_s1_s2_prob[s1_prim, s2_prim] &gt;= prob_inc):</span>
+<span class="c1">#</span>
+<span class="c1">#                joint_t_s1_s2_prob[t_cand, s1_cand, s2_cand] -= prob_inc</span>
+<span class="c1">#                joint_t_s1_s2_prob[t_cand, s1_prim, s2_prim] -= prob_inc</span>
+<span class="c1">#                joint_t_s1_s2_prob[t_cand, s1_cand, s2_prim] += prob_inc</span>
+<span class="c1">#                joint_t_s1_s2_prob[t_cand, s1_prim, s2_cand] += prob_inc</span>
+<span class="c1">#</span>
+<span class="c1">#                joint_s1_s2_prob[s1_cand, s2_cand] -= prob_inc</span>
+<span class="c1">#                joint_s1_s2_prob[s1_prim, s2_prim] -= prob_inc</span>
+<span class="c1">#                joint_s1_s2_prob[s1_cand, s2_prim] += prob_inc</span>
+<span class="c1">#                joint_s1_s2_prob[s1_prim, s2_cand] += prob_inc</span>
+<span class="c1">#</span>
+<span class="c1">#                # Calculate the cmi after this virtual swap</span>
+<span class="c1">#                cond_mut_info = self._cmi_prob(</span>
+<span class="c1">#                    s2_prob, joint_t_s2_prob, joint_s1_s2_prob, joint_t_s1_s2_prob)</span>
+<span class="c1">#</span>
+<span class="c1">#                # If improved keep it, reset the unsuccessful swap counter</span>
+<span class="c1">#                if ( cond_mut_info &lt; cur_cond_mut_info ):</span>
+<span class="c1">#                    cur_cond_mut_info = cond_mut_info</span>
+<span class="c1">#                    unsuccessful_swaps_row = 0</span>
+<span class="c1">#                    # TODO: if this swap direction was successful - repeat it !</span>
+<span class="c1">#                # Else undo the changes, record unsuccessful swap</span>
+<span class="c1">#                else:</span>
+<span class="c1">#                    joint_t_s1_s2_prob[t_cand, s1_cand, s2_cand] += prob_inc</span>
+<span class="c1">#                    joint_t_s1_s2_prob[t_cand, s1_prim, s2_prim] += prob_inc</span>
+<span class="c1">#                    joint_t_s1_s2_prob[t_cand, s1_cand, s2_prim] -= prob_inc</span>
+<span class="c1">#                    joint_t_s1_s2_prob[t_cand, s1_prim, s2_cand] -= prob_inc</span>
+<span class="c1">#</span>
+<span class="c1">#                    joint_s1_s2_prob[s1_cand, s2_cand] += prob_inc</span>
+<span class="c1">#                    joint_s1_s2_prob[s1_prim, s2_prim] += prob_inc</span>
+<span class="c1">#                    joint_s1_s2_prob[s1_cand, s2_prim] -= prob_inc</span>
+<span class="c1">#                    joint_s1_s2_prob[s1_prim, s2_cand] -= prob_inc</span>
+<span class="c1">#</span>
+<span class="c1">#                    unsuccessful_swaps_row += 1</span>
+<span class="c1">#            else:</span>
+<span class="c1">#                unsuccessful_swaps_row += 1</span>
+<span class="c1">#            return unsuccessful_swaps_row # need to return this to make it visible outside</span>
+<span class="c1">#        # END of a possible try_swap function</span>
+
+
+<div class="viewcode-block" id="TartuPID"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_pid.TartuPID">[docs]</a><span class="k">class</span> <span class="nc">TartuPID</span><span class="p">(</span><span class="n">Estimator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Estimate partial information decomposition for two inputs and one output</span>
+
+<span class="sd">    Fast implementation of the partial information decomposition (PID)</span>
+<span class="sd">    estimator for discrete data. The estimator does require a gurobi</span>
+<span class="sd">    installation.</span>
+
+<span class="sd">    The estimator finds shared information, unique information and</span>
+<span class="sd">    synergistic information between the two inputs s1 and s2 with respect to</span>
+<span class="sd">    the output t.</span>
+
+<span class="sd">    Improved version with larger initial swaps and checking for convergence of</span>
+<span class="sd">    both the unique information from sources 1 and 2.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        settings : dict</span>
+<span class="sd">            estimation parameters (with default parameters)</span>
+
+<span class="sd">            - &#39;get_sorted_pdf&#39; -False</span>
+<span class="sd">            - &#39;true_pdf&#39; - None</span>
+<span class="sd">            - &#39;true_result&#39; - None</span>
+<span class="sd">            - &#39;true_CI&#39; - None</span>
+<span class="sd">            - &#39;true_SI&#39; - None</span>
+<span class="sd">            - &#39;feas_eps&#39; - 1.e-10</span>
+<span class="sd">            - &#39;kkt_eps&#39; - 1.e-5</span>
+<span class="sd">            - &#39;feas_eps_2&#39; - 1.e-6</span>
+<span class="sd">            - &#39;kkt_eps_2&#39; - 0.01</span>
+<span class="sd">            - &#39;kkt_search_eps&#39; - 0.5</span>
+<span class="sd">            - &#39;max_zero_probability&#39; - 1.e-5</span>
+<span class="sd">            - &#39;verbose&#39; - False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+        <span class="c1"># get estimation parameters</span>
+        <span class="c1"># get_sorted_pdf = settings.get(&#39;sorted_pdf&#39;, False)</span>
+        <span class="c1"># true_pdf = settings.get(&#39;true_pdf&#39;, None)</span>
+        <span class="c1"># true_result = settings.get(&#39;true_result&#39;, None)</span>
+        <span class="c1"># true_CI = settings.get(&#39;true_CI&#39;, None)</span>
+        <span class="c1"># true_SI = settings.get(&#39;true_SI&#39;, None)</span>
+        <span class="c1"># feas_eps = settings.get(&#39;feas_eps&#39;, 1.e-10)</span>
+        <span class="c1"># kkt_eps = settings.get(&#39;kkt_eps&#39;, 1.e-5)</span>
+        <span class="c1"># feas_eps_2 = settings.get(&#39;feas_eps_2&#39;, 1.e-6)</span>
+        <span class="c1"># kkt_eps_2 = settings.get(&#39;kkt_eps_2&#39;, .01)</span>
+        <span class="c1"># kkt_search_eps = settings.get(&#39;kkt_search_eps&#39;, .5)</span>
+        <span class="c1"># max_zero_probability = settings.get(&#39;max_zero_probability&#39;, 1.e-5)</span>
+        <span class="c1"># verbose = settings.get(&#39;verbose&#39;, False)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;sorted_pdf&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;true_pdf&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;true_result&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;true_CI&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;true_SI&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;feas_eps&#39;</span><span class="p">,</span> <span class="mf">1.e-10</span><span class="p">)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;kkt_eps&#39;</span><span class="p">,</span> <span class="mf">1.e-5</span><span class="p">)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;feas_eps_2&#39;</span><span class="p">,</span> <span class="mf">1.e-6</span><span class="p">)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;kkt_eps_2&#39;</span><span class="p">,</span> <span class="o">.</span><span class="mo">01</span><span class="p">)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;kkt_search_eps&#39;</span><span class="p">,</span> <span class="o">.</span><span class="mi">5</span><span class="p">)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;max_zero_probability&#39;</span><span class="p">,</span> <span class="mf">1.e-5</span><span class="p">)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span>
+
+<div class="viewcode-block" id="TartuPID.is_parallel"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_pid.TartuPID.is_parallel">[docs]</a>    <span class="k">def</span> <span class="nf">is_parallel</span><span class="p">():</span>
+        <span class="k">return</span> <span class="bp">False</span></div>
+
+<div class="viewcode-block" id="TartuPID.is_analytic_null_estimator"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_pid.TartuPID.is_analytic_null_estimator">[docs]</a>    <span class="k">def</span> <span class="nf">is_analytic_null_estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span></div>
+
+<div class="viewcode-block" id="TartuPID.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_pid.TartuPID.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            s1 : numpy array</span>
+<span class="sd">                1D array containing realizations of a discrete random variable</span>
+<span class="sd">            s2 : numpy array</span>
+<span class="sd">                1D array containing realizations of a discrete random variable</span>
+<span class="sd">            t : numpy array</span>
+<span class="sd">                1D array containing realizations of a discrete random variable</span>
+
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict</span>
+<span class="sd">                estimated decomposition, contains the optimised PDF, shared,</span>
+<span class="sd">                and synergistic information</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">_check_input</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">n_samples</span> <span class="o">=</span> <span class="n">s1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># count occurences</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_samples</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">s1</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">s2</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">counts</span><span class="p">[(</span><span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">s1</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">s2</span><span class="p">[</span><span class="n">i</span><span class="p">])]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">counts</span><span class="p">[(</span><span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">s1</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">s2</span><span class="p">[</span><span class="n">i</span><span class="p">])]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="c1"># make pdf from counts</span>
+        <span class="n">pdf</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">pdf</span><span class="p">[</span><span class="n">xyz</span><span class="p">]</span> <span class="o">=</span> <span class="n">c</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_samples</span><span class="p">)</span>
+
+        <span class="n">retval</span> <span class="o">=</span> <span class="n">synergy_tartu</span><span class="o">.</span><span class="n">solve_PDF</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;true_pdf&#39;</span><span class="p">],</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;true_result&#39;</span><span class="p">],</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;true_CI&#39;</span><span class="p">],</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;true_SI&#39;</span><span class="p">],</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;feas_eps&#39;</span><span class="p">],</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;kkt_eps&#39;</span><span class="p">],</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;feas_eps_2&#39;</span><span class="p">],</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;kkt_eps_2&#39;</span><span class="p">],</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;kkt_search_eps&#39;</span><span class="p">],</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;max_zero_probability&#39;</span><span class="p">],</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">])</span>
+        <span class="n">optpdf</span><span class="p">,</span> <span class="n">feas</span><span class="p">,</span> <span class="n">kkt</span><span class="p">,</span> <span class="n">CI</span><span class="p">,</span> <span class="n">SI</span><span class="p">,</span> <span class="n">UI_s1</span><span class="p">,</span> <span class="n">UI_s2</span> <span class="o">=</span> <span class="n">retval</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;kkt&#39;</span><span class="p">:</span> <span class="n">kkt</span><span class="p">,</span>
+            <span class="s1">&#39;feas&#39;</span><span class="p">:</span> <span class="n">feas</span><span class="p">,</span>
+            <span class="s1">&#39;optpdf&#39;</span><span class="p">:</span> <span class="n">optpdf</span><span class="p">,</span>
+            <span class="s1">&#39;shd_s1_s2&#39;</span><span class="p">:</span> <span class="n">SI</span><span class="p">,</span>
+            <span class="s1">&#39;syn_s1_s2&#39;</span><span class="p">:</span> <span class="n">CI</span><span class="p">,</span>
+            <span class="s1">&#39;unq_s1&#39;</span><span class="p">:</span> <span class="n">UI_s1</span><span class="p">,</span>
+            <span class="s1">&#39;unq_s2&#39;</span><span class="p">:</span> <span class="n">UI_s2</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;sorted_pdf&#39;</span><span class="p">]:</span>
+            <span class="n">res</span><span class="p">[</span><span class="s1">&#39;sorted_pdf&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">synergy_tartu</span><span class="o">.</span><span class="n">sorted_pdf</span><span class="p">(</span><span class="n">pdf</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">res</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">_check_input</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check input to PID estimators.&quot;&quot;&quot;</span>
+<span class="c1">#    if s1.ndim != 1 or s2.ndim != 1 or t.ndim != 1:</span>
+<span class="c1">#        raise ValueError(&#39;Inputs s1, s2, target have to be vectors&#39;</span>
+<span class="c1">#                         &#39;(1D-arrays).&#39;)</span>
+<span class="c1">#    if (len(t) != len(s1) or len(t) != len(s2)):</span>
+<span class="c1">#        raise ValueError(&#39;Number of samples s1, s2 and t must be equal&#39;)</span>
+
+    <span class="c1"># In general, IDTxl expects 2D inputs because JIDT/JPYPE only accepts those</span>
+    <span class="c1"># and we have a multivariate approach, i.e., a vector is a special case of</span>
+    <span class="c1"># 2D-data. Squeeze 2D arrays if the dimension of the second axis is 1.</span>
+    <span class="c1"># Otherwise combine multivariate sources into a single variable for</span>
+    <span class="c1"># estimation.</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="ow">or</span>
+            <span class="nb">type</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;All inputs, s1, s2, t, must be numpy arrays.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Convert IDTxl 2D vectors to 1D arrays. Remove unneeded axis or combine</span>
+    <span class="c1"># multivariate inputs into a single variable.</span>
+    <span class="k">if</span> <span class="n">s1</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">s1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">s1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">s1</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">s1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">s1_joint</span> <span class="o">=</span> <span class="n">s1</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">alph_new</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">s1</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]))</span>
+            <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">s1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="n">alph_col</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">s1</span><span class="p">[:,</span> <span class="n">col</span><span class="p">]))</span>
+                <span class="n">s1_joint</span><span class="p">,</span> <span class="n">alph_new</span> <span class="o">=</span> <span class="n">_join_variables</span><span class="p">(</span><span class="n">s1_joint</span><span class="p">,</span> <span class="n">s1</span><span class="p">[:,</span> <span class="n">col</span><span class="p">],</span>
+                                                     <span class="n">alph_new</span><span class="p">,</span> <span class="n">alph_col</span><span class="p">)</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph_s1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">alph_new</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input source 1 s1 has to be a 1D or 2D numpy &#39;</span>
+                             <span class="s1">&#39;array.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">s2</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">s2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">s2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">s2</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">s2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">s2_joint</span> <span class="o">=</span> <span class="n">s2</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">alph_new</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">s2</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]))</span>
+            <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">s2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="n">alph_col</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">s2</span><span class="p">[:,</span> <span class="n">col</span><span class="p">]))</span>
+                <span class="n">s2_joint</span><span class="p">,</span> <span class="n">alph_new</span> <span class="o">=</span> <span class="n">_join_variables</span><span class="p">(</span><span class="n">s2_joint</span><span class="p">,</span> <span class="n">s2</span><span class="p">[:,</span> <span class="n">col</span><span class="p">],</span>
+                                                     <span class="n">alph_new</span><span class="p">,</span> <span class="n">alph_col</span><span class="p">)</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph_s2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">alph_new</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input source 2 s2 has to be a 1D or 2D numpy &#39;</span>
+                             <span class="s1">&#39;array.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># For now we only allow 1D-targets</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input target t has to be a vector &#39;</span>
+                             <span class="s1">&#39;(t.shape[1]=1).&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Check types of remaining inputs.</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;The settings argument should be a dictionary.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">s1</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Input s1 (source 1) must be an integer numpy array.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">s2</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Input s2 (source 2) must be an integer numpy array.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Input t (target) must be an integer numpy array.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">settings</span>
 </pre></div>
 
                 </div>
@@ -576,7 +1235,7 @@
       <!-- footer -->
       <footer role="contentinfo">
           &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
-        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.3.6.
       </footer>
       <!-- /footer -->
 

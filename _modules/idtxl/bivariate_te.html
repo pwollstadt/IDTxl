@@ -41,7 +41,7 @@
     <script type="text/javascript" src="../../_static/js/jquery.min.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/bootstrap3.min.js"></script>
 <script type="text/javascript" src="../../_static/js/jquery.cookie.min.js"></script>
 <script type="text/javascript" src="../../_static/js/basicstrap.js"></script>
@@ -122,58 +122,51 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">itertools</span> <span class="kn">as</span> <span class="nn">it</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">stats</span>
-<span class="kn">from</span> <span class="nn">.network_analysis</span> <span class="kn">import</span> <span class="n">Network_analysis</span>
-<span class="kn">from</span> <span class="nn">.set_estimator</span> <span class="kn">import</span> <span class="n">Estimator_cmi</span>
-
-<span class="n">VERBOSE</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="kn">from</span> <span class="nn">.network_inference</span> <span class="kn">import</span> <span class="n">NetworkInference</span>
 
 
-<div class="viewcode-block" id="Bivariate_te"><a class="viewcode-back" href="../../idtxl.html#idtxl.bivariate_te.Bivariate_te">[docs]</a><span class="k">class</span> <span class="nc">Bivariate_te</span><span class="p">(</span><span class="n">Network_analysis</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Set up a network analysis using bivariate transfer entropy.</span>
+<div class="viewcode-block" id="BivariateTE"><a class="viewcode-back" href="../../idtxl.html#idtxl.bivariate_te.BivariateTE">[docs]</a><span class="k">class</span> <span class="nc">BivariateTE</span><span class="p">(</span><span class="n">NetworkInference</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Perform network inference using bivariate transfer entropy.</span>
 
-<span class="sd">    Set parameters necessary for network inference using transfer entropy (TE).</span>
-<span class="sd">    To perform network inference call analyse_network() on an instance of the</span>
-<span class="sd">    data class.</span>
+<span class="sd">    Perform network inference using bivariate transfer entropy (TE). To</span>
+<span class="sd">    perform network inference call analyse_network() on the whole network or a</span>
+<span class="sd">    set of nodes or call analyse_single_target() to estimate TE for a single</span>
+<span class="sd">    target. See docstrings of the two functions for more information.</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        max_lag : int</span>
-<span class="sd">            maximum temporal search depth</span>
-<span class="sd">        min_lag : int</span>
-<span class="sd">            minimum temporal search depth</span>
-<span class="sd">        options : dict [optional]</span>
-<span class="sd">            parameters for estimator use and statistics:</span>
+<span class="sd">    References:</span>
 
-<span class="sd">            - &#39;n_perm_*&#39; - number of permutations, where * can be &#39;max_stat&#39;,</span>
-<span class="sd">            - &#39;min_stat&#39;, &#39;omnibus&#39;, and &#39;max_seq&#39; (default=500)</span>
-<span class="sd">            - &#39;alpha_*&#39; - critical alpha level for statistical significance,</span>
-<span class="sd">              where * can be &#39;max_stats&#39;,  &#39;min_stats&#39;, and &#39;omnibus&#39;</span>
-<span class="sd">              (default=0.05)</span>
-<span class="sd">            - &#39;cmi_calc_name&#39; - estimator to be used for CMI calculation</span>
-<span class="sd">              (For estimator options see the respective documentation.)</span>
-<span class="sd">            - &#39;add_conditionals&#39; - force the estimator to add these</span>
-<span class="sd">              conditionals when estimating TE; can either be a list of</span>
-<span class="sd">              variables, where each variable is described as (idx process, lag</span>
-<span class="sd">              wrt to current value) or can be a string: &#39;faes&#39; for Faes-Method</span>
+<span class="sd">        - Schreiber, T. (2000). Measuring Information Transfer. Phys Rev Lett,</span>
+<span class="sd">          85(2), 461–464. http://doi.org/10.1103/PhysRevLett.85.461</span>
+<span class="sd">        - Vicente, R., Wibral, M., Lindner, M., &amp; Pipa, G. (2011). Transfer</span>
+<span class="sd">          entropy-a model-free measure of effective connectivity for the</span>
+<span class="sd">          neurosciences. J Comp Neurosci, 30(1), 45–67.</span>
+<span class="sd">          http://doi.org/10.1007/s10827-010-0262-3</span>
+<span class="sd">        - Lizier, J. T., &amp; Rubinov, M. (2012). Multivariate construction of</span>
+<span class="sd">          effective computational networks from observational data. Max Planck</span>
+<span class="sd">          Institute: Preprint. Retrieved from</span>
+<span class="sd">          http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf</span>
+<span class="sd">        - Faes, L., Nollo, G., &amp; Porta, A. (2011). Information-based detection</span>
+<span class="sd">          of nonlinear Granger causality in multivariate processes via a</span>
+<span class="sd">          nonuniform embedding technique. Phys Rev E, 83, 1–15.</span>
+<span class="sd">          http://doi.org/10.1103/PhysRevE.83.051112</span>
 
 <span class="sd">    Attributes:</span>
+<span class="sd">        source_set : list</span>
+<span class="sd">            indices of source processes tested for their influence on the</span>
+<span class="sd">            target</span>
+<span class="sd">        target : list</span>
+<span class="sd">            index of target process</span>
+<span class="sd">        settings : dict</span>
+<span class="sd">            analysis settings</span>
+<span class="sd">        current_value : tuple</span>
+<span class="sd">            index of the current value in TE estimation, (idx process,</span>
+<span class="sd">            idx sample)</span>
 <span class="sd">        selected_vars_full : list of tuples</span>
 <span class="sd">            samples in the full conditional set, (idx process, idx sample)</span>
 <span class="sd">        selected_vars_sources : list of tuples</span>
 <span class="sd">            source samples in the conditional set, (idx process, idx sample)</span>
 <span class="sd">        selected_vars_target : list of tuples</span>
 <span class="sd">            target samples in the conditional set, (idx process, idx sample)</span>
-<span class="sd">        current_value : tuple</span>
-<span class="sd">            index of the current value in TE estimation, (idx process,</span>
-<span class="sd">            idx sample)</span>
-<span class="sd">        calculator_name : string</span>
-<span class="sd">            calculator used for TE estimation</span>
-<span class="sd">        max_lag_target : int</span>
-<span class="sd">            maximum temporal search depth for candidates in the target&#39;s past</span>
-<span class="sd">            (default=same as max_lag_sources)</span>
-<span class="sd">        max_lag_sources : int</span>
-<span class="sd">            maximum temporal search depth for candidates in the sources&#39; past</span>
-<span class="sd">        min_lag_sources : int</span>
-<span class="sd">            minimum temporal search depth for candidates in the sources&#39; past</span>
 <span class="sd">        pvalue_omnibus : float</span>
 <span class="sd">            p-value of the omnibus test</span>
 <span class="sd">        pvalues_sign_sources : numpy array</span>
@@ -184,48 +177,20 @@
 <span class="sd">            raw TE values from individual sources to the target</span>
 <span class="sd">        sign_ominbus : bool</span>
 <span class="sd">            statistical significance of the over-all TE</span>
-<span class="sd">        source_set : list</span>
-<span class="sd">            list with indices of source processes</span>
-<span class="sd">        target : list</span>
-<span class="sd">            index of target process</span>
-
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c"># TODO right now &#39;options&#39; holds all optional params (stats AND estimator).</span>
-    <span class="c"># We could split this up by adding the stats options to the analyse_*</span>
-    <span class="c"># methods?</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_lag_sources</span><span class="p">,</span> <span class="n">min_lag_sources</span><span class="p">,</span> <span class="n">max_lag_target</span><span class="p">,</span>
-                 <span class="n">tau_sources</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">tau_target</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-
-        <span class="k">if</span> <span class="n">max_lag_target</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">max_lag_target</span> <span class="o">=</span> <span class="n">max_lag_sources</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">max_lag_target</span> <span class="o">=</span> <span class="n">max_lag_target</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">max_lag_sources</span> <span class="o">=</span> <span class="n">max_lag_sources</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">min_lag_sources</span> <span class="o">=</span> <span class="n">min_lag_sources</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">tau_sources</span> <span class="o">=</span> <span class="n">tau_sources</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">tau_target</span> <span class="o">=</span> <span class="n">tau_target</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">te_omnibus</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">te_sign_sources</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">sign_omnibus</span> <span class="o">=</span> <span class="bp">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">sign_sign_sources</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pvalue_omnibus</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pvalues_sign_sources</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">min_stats_surr_table</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">options</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">calculator_name</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="s">&#39;cmi_calc_name&#39;</span><span class="p">]</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&#39;Calculator name was not specified!&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_calculator</span> <span class="o">=</span> <span class="n">Estimator_cmi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calculator_name</span><span class="p">)</span>  <span class="c"># TODO should be &#39;calculator&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
 
-<div class="viewcode-block" id="Bivariate_te.analyse_network"><a class="viewcode-back" href="../../idtxl.html#idtxl.bivariate_te.Bivariate_te.analyse_network">[docs]</a>    <span class="k">def</span> <span class="nf">analyse_network</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="s">&#39;all&#39;</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="s">&#39;all&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="BivariateTE.analyse_network"><a class="viewcode-back" href="../../idtxl.html#idtxl.bivariate_te.BivariateTE.analyse_network">[docs]</a>    <span class="k">def</span> <span class="nf">analyse_network</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Find bivariate transfer entropy between all nodes in the network.</span>
 
-<span class="sd">        Estimate bivariate transfer entropy between provided sources and</span>
-<span class="sd">        each target. Custom source sets can be provided for each target, as</span>
-<span class="sd">        lists of lists of nodes.</span>
+<span class="sd">        Estimate bivariate transfer entropy (TE) between all nodes in the</span>
+<span class="sd">        network or between selected sources and targets.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            For a detailed description see the documentation of the</span>
+<span class="sd">            analyse_single_target() method of this class and the references.</span>
 
 <span class="sd">        Example:</span>
 
@@ -233,72 +198,79 @@
 <span class="sd">            &gt;&gt;&gt; dat.generate_mute_data(100, 5)</span>
 <span class="sd">            &gt;&gt;&gt; max_lag = 5</span>
 <span class="sd">            &gt;&gt;&gt; min_lag = 4</span>
-<span class="sd">            &gt;&gt;&gt; analysis_opts = {</span>
-<span class="sd">            &gt;&gt;&gt;     &#39;cmi_calc_name&#39;: &#39;jidt_kraskov&#39;,</span>
+<span class="sd">            &gt;&gt;&gt; settings = {</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;cmi_estimator&#39;:  &#39;JidtKraskovCMI&#39;,</span>
 <span class="sd">            &gt;&gt;&gt;     &#39;n_perm_max_stat&#39;: 200,</span>
 <span class="sd">            &gt;&gt;&gt;     &#39;n_perm_min_stat&#39;: 200,</span>
 <span class="sd">            &gt;&gt;&gt;     &#39;n_perm_omnibus&#39;: 500,</span>
 <span class="sd">            &gt;&gt;&gt;     &#39;n_perm_max_seq&#39;: 500,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;max_lag&#39;: 5,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;min_lag&#39;: 4</span>
 <span class="sd">            &gt;&gt;&gt;     }</span>
-<span class="sd">            &gt;&gt;&gt; target = 0</span>
-<span class="sd">            &gt;&gt;&gt; sources = [1, 2, 3]</span>
-<span class="sd">            &gt;&gt;&gt; network_analysis = Bivariate_te(max_lag, analysis_opts,</span>
-<span class="sd">            &gt;&gt;&gt;                                 min_lag)</span>
-<span class="sd">            &gt;&gt;&gt; res = network_analysis.analyse_single_target(dat, target,</span>
-<span class="sd">            &gt;&gt;&gt;                                              sources)</span>
-
-<span class="sd">        Note:</span>
-<span class="sd">            For more details on the estimation of bivariate transfer entropy</span>
-<span class="sd">            see documentation of class method &#39;analyse_single_target&#39;.</span>
+<span class="sd">            &gt;&gt;&gt; network_analysis = Bivariate_te()</span>
+<span class="sd">            &gt;&gt;&gt; res = network_analysis.analyse_network(settings, dat)</span>
 
 <span class="sd">        Args:</span>
+<span class="sd">            settings : dict</span>
+<span class="sd">                parameters for estimation and statistical testing, see</span>
+<span class="sd">                documentation of analyse_single_target() for details</span>
 <span class="sd">            data : Data instance</span>
 <span class="sd">                raw data for analysis</span>
-<span class="sd">            targets : list of int</span>
-<span class="sd">                index of target processes</span>
-<span class="sd">            sources : list of int | list of list | &#39;all&#39;</span>
-<span class="sd">                indices of source processes for each target;</span>
-<span class="sd">                if &#39;all&#39;, all sources are tested for each target;</span>
-<span class="sd">                if list of int, sources specified in the list are tested for</span>
-<span class="sd">                each target;</span>
+<span class="sd">            targets : list of int | &#39;all&#39; [optional]</span>
+<span class="sd">                index of target processes (default=&#39;all&#39;)</span>
+<span class="sd">            sources : list of int | list of list | &#39;all&#39;  [optional]</span>
+<span class="sd">                indices of source processes for each target (default=&#39;all&#39;);</span>
+<span class="sd">                if &#39;all&#39;, all network nodes excluding the target node are</span>
+<span class="sd">                considered as potential sources and tested;</span>
+<span class="sd">                if list of int, the source specified by each int is tested as</span>
+<span class="sd">                a potential source for the target with the same index or a</span>
+<span class="sd">                single target;</span>
 <span class="sd">                if list of list, sources specified in each inner list are</span>
-<span class="sd">                tested for the corresponding target</span>
+<span class="sd">                tested for the target with the same index</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict</span>
+<span class="sd">                results for each target, see documentation of</span>
+<span class="sd">                analyse_single_target()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">targets</span> <span class="o">==</span> <span class="s">&#39;all&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">targets</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
             <span class="n">targets</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">n_processes</span><span class="p">)]</span>
-        <span class="k">if</span> <span class="n">sources</span> <span class="o">==</span> <span class="s">&#39;all&#39;</span><span class="p">:</span>
-            <span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;all&#39;</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">sources</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
+            <span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;all&#39;</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">]</span>
         <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sources</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">):</span>
             <span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="n">sources</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">]</span>
         <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sources</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">pass</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Sources was not specified correctly: {0}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Sources was not specified correctly: {0}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                                                                     <span class="n">sources</span><span class="p">))</span>
-        <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)),</span> <span class="p">(</span><span class="s">&#39;List of targets and list of &#39;</span>
-                                               <span class="s">&#39;sources have to have the same &#39;</span>
-                                               <span class="s">&#39;same length&#39;</span><span class="p">)</span>
+        <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)),</span> <span class="p">(</span><span class="s1">&#39;List of targets and list of &#39;</span>
+                                               <span class="s1">&#39;sources have to have the same &#39;</span>
+                                               <span class="s1">&#39;same length&#39;</span><span class="p">)</span>
 
-        <span class="c"># Perform TE estimation for each target individually. FDR-correct</span>
-        <span class="c"># overall results.</span>
+        <span class="c1"># Perform TE estimation for each target individually</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
         <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)):</span>
-            <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
-                <span class="k">print</span><span class="p">(</span><span class="s">&#39;####### analysing target {0} of {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">targets</span><span class="p">))</span>
-            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analyse_single_target</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">targets</span><span class="p">[</span><span class="n">t</span><span class="p">],</span> <span class="n">sources</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
-            <span class="n">r</span><span class="p">[</span><span class="s">&#39;target&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">targets</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
-            <span class="n">r</span><span class="p">[</span><span class="s">&#39;sources&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sources</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s1">&#39;####### analysing target {0} of {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">targets</span><span class="p">))</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analyse_single_target</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span>
+                                           <span class="n">targets</span><span class="p">[</span><span class="n">t</span><span class="p">],</span> <span class="n">sources</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+            <span class="n">r</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">targets</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+            <span class="n">r</span><span class="p">[</span><span class="s1">&#39;sources&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sources</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
             <span class="n">results</span><span class="p">[</span><span class="n">targets</span><span class="p">[</span><span class="n">t</span><span class="p">]]</span> <span class="o">=</span> <span class="n">r</span>
-        <span class="n">results</span><span class="p">[</span><span class="s">&#39;fdr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">network_fdr</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">results</span>
-</div>
-<div class="viewcode-block" id="Bivariate_te.analyse_single_target"><a class="viewcode-back" href="../../idtxl.html#idtxl.bivariate_te.Bivariate_te.analyse_single_target">[docs]</a>    <span class="k">def</span> <span class="nf">analyse_single_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="s">&#39;all&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+
+<div class="viewcode-block" id="BivariateTE.analyse_single_target"><a class="viewcode-back" href="../../idtxl.html#idtxl.bivariate_te.BivariateTE.analyse_single_target">[docs]</a>    <span class="k">def</span> <span class="nf">analyse_single_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Find bivariate transfer entropy between sources and a target.</span>
 
-<span class="sd">        Find bivariate transfer entropy between all source processes and the</span>
-<span class="sd">        target process. Uses bivariate, non-uniform embedding found through</span>
-<span class="sd">        information maximisation (see Faes, ???, and Lizier, 2012). This is</span>
-<span class="sd">        done in four steps (see Lizier and Faes for details):</span>
+<span class="sd">        Find bivariate transfer entropy (TE) between all potential source</span>
+<span class="sd">        processes and the target process. Uses bivariate, non-uniform embedding</span>
+<span class="sd">        found through information maximisation (see Faes et al., 2011, Phys Rev</span>
+<span class="sd">        E 83, 051112 and Lizier &amp; Rubinov, 2012, Max Planck Institute:</span>
+<span class="sd">        Preprint. Retrieved from</span>
+<span class="sd">        http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf). Bivariate</span>
+<span class="sd">        TE is calculated in four steps (see Lizier and Faes for details):</span>
 
 <span class="sd">        (1) find all relevant samples in the target processes&#39; own past, by</span>
 <span class="sd">            iteratively adding candidate samples that have significant</span>
@@ -313,155 +285,118 @@
 <span class="sd">            between the final conditional set and the current value, and for</span>
 <span class="sd">            significant transfer of all individual samples in the set)</span>
 
+<span class="sd">        Example:</span>
+
+<span class="sd">            &gt;&gt;&gt; dat = Data()</span>
+<span class="sd">            &gt;&gt;&gt; dat.generate_mute_data(100, 5)</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; settings = {</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;cmi_estimator&#39;:  &#39;JidtKraskovCMI&#39;,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;n_perm_max_stat&#39;: 200,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;n_perm_min_stat&#39;: 200,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;n_perm_omnibus&#39;: 500,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;n_perm_max_seq&#39;: 500,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;max_lag&#39;: 5,</span>
+<span class="sd">            &gt;&gt;&gt;     &#39;min_lag&#39;: 4</span>
+<span class="sd">            &gt;&gt;&gt;     }</span>
+<span class="sd">            &gt;&gt;&gt; target = 0</span>
+<span class="sd">            &gt;&gt;&gt; sources = [1, 2, 3]</span>
+<span class="sd">            &gt;&gt;&gt; network_analysis = Bivariate_te()</span>
+<span class="sd">            &gt;&gt;&gt; res = network_analysis.analyse_single_target(settings,</span>
+<span class="sd">            &gt;&gt;&gt;                                              dat, target,</span>
+<span class="sd">            &gt;&gt;&gt;                                              sources)</span>
+
 <span class="sd">        Args:</span>
+<span class="sd">            settings : dict</span>
+<span class="sd">                parameters for estimation and statistical testing:</span>
+
+<span class="sd">                - &#39;cmi_estimator&#39; : str - estimator to be used for CMI</span>
+<span class="sd">                  calculation (for estimator settings see the documentation in</span>
+<span class="sd">                  the estimators_* modules)</span>
+<span class="sd">                - &#39;max_lag_sources&#39; : int - maximum temporal search depth for</span>
+<span class="sd">                  candidates in the sources&#39; past in samples</span>
+<span class="sd">                - &#39;min_lag_sources&#39; : int - minimum temporal search depth for</span>
+<span class="sd">                  candidates in the sources&#39; past in samples</span>
+<span class="sd">                - &#39;max_lag_target&#39; : int [optional] - maximum temporal search</span>
+<span class="sd">                  depth for candidates in the target&#39;s past in samples</span>
+<span class="sd">                  (default=same as max_lag_sources)</span>
+<span class="sd">                - &#39;tau_sources&#39; : int [optional] - spacing between candidates in</span>
+<span class="sd">                  the sources&#39; past in samples (default=1)</span>
+<span class="sd">                - &#39;tau_target&#39; : int [optional] - spacing between candidates in</span>
+<span class="sd">                  the target&#39;s past in samples (default=1)</span>
+<span class="sd">                - &#39;n_perm_*&#39; : int - number of permutations, where * can be</span>
+<span class="sd">                  &#39;max_stat&#39;, &#39;min_stat&#39;, &#39;omnibus&#39;, and &#39;max_seq&#39;</span>
+<span class="sd">                  (default=500)</span>
+<span class="sd">                - &#39;alpha_*&#39; : float - critical alpha level for statistical</span>
+<span class="sd">                  significance, where * can be &#39;max_stats&#39;,  &#39;min_stats&#39;, and</span>
+<span class="sd">                  &#39;omnibus&#39; (default=0.05)</span>
+<span class="sd">                - &#39;add_conditionals&#39; : list of tuples | str [optional] - force</span>
+<span class="sd">                  the estimator to add these conditionals when estimating TE;</span>
+<span class="sd">                  can either be a list of variables, where each variable is</span>
+<span class="sd">                  described as (idx process, lag wrt to current value) or can</span>
+<span class="sd">                  be a string: &#39;faes&#39; for Faes-Method (see references)</span>
+<span class="sd">                - &#39;permute_in_time&#39; : bool [optional] - force surrogate</span>
+<span class="sd">                  creation by shuffling realisations in time instead of</span>
+<span class="sd">                  shuffling replications; see documentation of</span>
+<span class="sd">                  Data.permute_samples() for further settings (default=False)</span>
+<span class="sd">                - &#39;verbose&#39; : bool [optional] - toggle console output</span>
+<span class="sd">                  (default=True)</span>
+
 <span class="sd">            data : Data instance</span>
 <span class="sd">                raw data for analysis</span>
 <span class="sd">            target : int</span>
 <span class="sd">                index of target process</span>
-<span class="sd">            sources : list of int, int, or &#39;all&#39;</span>
-<span class="sd">                single index or list of indices of source processes, if &#39;all&#39;,</span>
-<span class="sd">                all possible sources for the given target are tested</span>
+<span class="sd">            sources : list of int | int | &#39;all&#39; [optional]</span>
+<span class="sd">                single index or list of indices of source processes</span>
+<span class="sd">                (default=&#39;all&#39;), if &#39;all&#39;, all network nodes excluding the</span>
+<span class="sd">                target node are considered as potential sources</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            dict</span>
-<span class="sd">                results consisting of</span>
-<span class="sd">                conditional sets (full, from sources, from target),</span>
-<span class="sd">                results for omnibus test (joint influence of source cands.),</span>
-<span class="sd">                pvalues for each significant source candidate</span>
+<span class="sd">                results consisting of sets of selected variables as (full set,</span>
+<span class="sd">                variables from the sources&#39; past, variables from the target&#39;s</span>
+<span class="sd">                past), pvalues and TE for each selected variable, the current</span>
+<span class="sd">                value for this analysis, results for omnibus test (joint</span>
+<span class="sd">                influence of all selected source variables on the target,</span>
+<span class="sd">                omnibus TE, p-value, and significance); NOTE that all variables</span>
+<span class="sd">                are listed as tuples (process, lag wrt. current value)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c"># Check input and clean up object if it was used before.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_initialise</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+        <span class="c1"># Check input and clean up object if it was used before.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialise</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
 
-        <span class="c"># Main algorithm.</span>
-        <span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">---------------------------- (1) include target candidates&#39;</span><span class="p">)</span>
+        <span class="c1"># Main algorithm.</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">---------------------------- (1) include target candidates&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_include_target_candidates</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">---------------------------- (2) include source candidates&#39;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">---------------------------- (2) include source candidates&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_include_source_candidates</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">---------------------------- (3) omnibus test&#39;</span><span class="p">)</span>
-        <span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">te</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">omnibus_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">te_omnibus</span> <span class="o">=</span> <span class="n">te</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">sign_omnibus</span> <span class="o">=</span> <span class="n">s</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pvalue_omnibus</span> <span class="o">=</span> <span class="n">p</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">---------------------------- (3) omnibus test&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_test_final_conditional</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
-        <span class="c"># Clean up and return results.</span>
-        <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s">&#39;final source samples: {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="c1"># Clean up and return results.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;final source samples: {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">)))</span>
-            <span class="k">print</span><span class="p">(</span><span class="s">&#39;final target samples: {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;final target samples: {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span><span class="p">)))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_clean_up</span><span class="p">()</span>
         <span class="n">results</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s">&#39;current_value&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">,</span>
-            <span class="s">&#39;selected_vars_full&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="p">),</span>
-            <span class="s">&#39;selected_vars_sources&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span>
+            <span class="s1">&#39;target&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
+            <span class="s1">&#39;sources_tested&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_set</span><span class="p">,</span>
+            <span class="s1">&#39;settings&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span>
+            <span class="s1">&#39;current_value&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">,</span>
+            <span class="s1">&#39;selected_vars_full&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="p">),</span>
+            <span class="s1">&#39;selected_vars_sources&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span>
                                                 <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">),</span>
-            <span class="s">&#39;selected_vars_target&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span>
+            <span class="s1">&#39;selected_vars_target&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span>
                                                 <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span><span class="p">),</span>
-            <span class="s">&#39;omnibus_te&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">te_omnibus</span><span class="p">,</span>
-            <span class="s">&#39;omnibus_pval&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pvalue_omnibus</span><span class="p">,</span>
-            <span class="s">&#39;omnibus_sign&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sign_omnibus</span><span class="p">,</span>
-            <span class="s">&#39;cond_sources_pval&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pvalues_sign_sources</span><span class="p">,</span>
-            <span class="s">&#39;cond_sources_te&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">te_sign_sources</span><span class="p">}</span>
-        <span class="k">return</span> <span class="n">results</span>
-</div>
-    <span class="k">def</span> <span class="nf">_initialise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Check input and set everything to initial values.&quot;&quot;&quot;</span>
-        <span class="c"># Check the provided target and sources.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">target</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_check_source_set</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">n_processes</span><span class="p">)</span>
-
-        <span class="c"># Check provided search depths for source and target</span>
-        <span class="k">assert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_lag_sources</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_lag_sources</span><span class="p">),</span> <span class="p">(</span>
-            <span class="s">&#39;min_lag_sources ({0}) must be smaller or equal to max_lag_sources&#39;</span>
-            <span class="s">&#39; ({1}).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_lag_sources</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_lag_sources</span><span class="p">))</span>
-        <span class="n">max_lag</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_lag_sources</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_lag_target</span><span class="p">)</span>
-        <span class="k">assert</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">n_samples</span> <span class="o">&gt;=</span> <span class="n">max_lag</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span>
-            <span class="s">&#39;Not enough samples in data ({0}) to allow for the chosen maximum &#39;</span>
-            <span class="s">&#39;lag ({1})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_current_value</span> <span class="o">=</span> <span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">)</span>
-        <span class="p">[</span><span class="n">cv_realisation</span><span class="p">,</span> <span class="n">repl_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span>
-                                             <span class="n">current_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">,</span>
-                                             <span class="n">idx</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_current_value_realisations</span> <span class="o">=</span> <span class="n">cv_realisation</span>
-
-        <span class="c"># Remember which realisations come from which replication. This may be</span>
-        <span class="c"># needed for surrogate creation at a later point.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_replication_index</span> <span class="o">=</span> <span class="n">repl_idx</span>
-
-        <span class="c"># Check the permutation type and no. permutations requested by the</span>
-        <span class="c"># user. This tests if there is sufficient data to do all tests.</span>
-        <span class="c"># surrogates.check_permutations(self, data)</span>
-
-        <span class="c"># Reset all attributes to inital values if the instance has been used</span>
-        <span class="c"># before.</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span> <span class="o">=</span> <span class="bp">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">te_omnibus</span> <span class="o">=</span> <span class="bp">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">sign_sign_sources</span> <span class="o">=</span> <span class="bp">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">pvalue_omnibus</span> <span class="o">=</span> <span class="bp">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">pvalues_sign_sources</span> <span class="o">=</span> <span class="bp">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">te_sign_sources</span> <span class="o">=</span> <span class="bp">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">min_stats_surr_table</span> <span class="o">=</span> <span class="bp">None</span>
-
-        <span class="c"># Check if the user provided a list of candidates that must go into</span>
-        <span class="c"># the conditioning set. These will be added and used for TE estimation,</span>
-        <span class="c"># but never tested for significance.</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">cond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s">&#39;add_conditionals&#39;</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_force_conditionals</span><span class="p">(</span><span class="n">cond</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="k">pass</span>
-
-    <span class="k">def</span> <span class="nf">_check_source_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">n_processes</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set default if no source set was provided by the user.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">sources</span> <span class="o">==</span> <span class="s">&#39;all&#39;</span><span class="p">:</span>
-            <span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_processes</span><span class="p">)]</span>
-            <span class="n">sources</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
-            <span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="n">sources</span><span class="p">]</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&#39;The target {0} should not be in the list &#39;</span>
-                               <span class="s">&#39;of sources {1}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
-                                                        <span class="n">sources</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">source_set</span> <span class="o">=</span> <span class="n">sources</span>
-            <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
-                <span class="k">print</span><span class="p">(</span><span class="s">&#39;Testing sources {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_set</span><span class="p">))</span>
-
-    <span class="k">def</span> <span class="nf">_include_target_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Test candidates from the target&#39;s past.&quot;&quot;&quot;</span>
-        <span class="n">procs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">]</span>
-        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_lag_target</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
-                            <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_target</span><span class="p">)</span>
-        <span class="n">candidates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_define_candidates</span><span class="p">(</span><span class="n">procs</span><span class="p">,</span> <span class="n">samples</span><span class="p">)</span>
-        <span class="n">sources_found</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_include_candidates</span><span class="p">(</span><span class="n">candidates</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-
-        <span class="c"># If no candidates were found in the target&#39;s past, add at least one</span>
-        <span class="c"># sample so we are still calculating a proper TE.</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">sources_found</span><span class="p">:</span>  <span class="c"># TODO put a flag in to make this optional</span>
-            <span class="k">print</span><span class="p">((</span><span class="s">&#39;No informative sources in the target&#39;&#39;s past - &#39;</span> <span class="o">+</span>
-                   <span class="s">&#39;adding point at t-1 in the target&#39;</span><span class="p">))</span>
-            <span class="n">idx</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">realisations</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">,</span> <span class="p">[</span><span class="n">idx</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_append_selected_vars_idx</span><span class="p">([</span><span class="n">idx</span><span class="p">])</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_append_selected_vars_realisations</span><span class="p">(</span><span class="n">realisations</span><span class="p">)</span>
+            <span class="s1">&#39;selected_sources_pval&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pvalues_sign_sources</span><span class="p">,</span>
+            <span class="s1">&#39;selected_sources_te&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">te_sign_sources</span><span class="p">,</span>
+            <span class="s1">&#39;omnibus_te&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">te_omnibus</span><span class="p">,</span>
+            <span class="s1">&#39;omnibus_pval&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pvalue_omnibus</span><span class="p">,</span>
+            <span class="s1">&#39;omnibus_sign&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sign_omnibus</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="p">()</span>  <span class="c1"># remove attributes</span>
+        <span class="k">return</span> <span class="n">results</span></div>
 
     <span class="k">def</span> <span class="nf">_include_source_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Test candidates in the source&#39;s past.&quot;&quot;&quot;</span>
-        <span class="n">procs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_set</span>
-        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_lag_sources</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_lag_sources</span><span class="p">,</span>
-                            <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">tau_sources</span><span class="p">)</span>
-        <span class="n">candidates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_define_candidates</span><span class="p">(</span><span class="n">procs</span><span class="p">,</span> <span class="n">samples</span><span class="p">)</span>
-        <span class="c"># TODO include non-selected target candidates as further candidates, they may get selected due to synergies</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_include_candidates</span><span class="p">(</span><span class="n">candidates</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_include_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidate_set</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Inlcude informative candidates into the conditioning set.</span>
 
 <span class="sd">        Loop over each candidate in the candidate set and test if it has</span>
@@ -472,29 +407,28 @@
 <span class="sd">        conditional set.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            candidate_set : list of tuples</span>
-<span class="sd">                candidate set to be tested, where each entry is a tuple</span>
-<span class="sd">                (process index, sample index)</span>
 <span class="sd">            data : Data instance</span>
 <span class="sd">                raw data</span>
-<span class="sd">            options : dict [optional]</span>
-<span class="sd">                parameters for estimation and statistical testing</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            list of tuples</span>
-<span class="sd">                indices of the conditional set created from the candidate set</span>
-<span class="sd">            selected_vars_realisations : numpy array</span>
-<span class="sd">                realisations of the conditional set</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_append_selected_vars_idx</span><span class="p">(</span><span class="n">candidate_set</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_append_selected_vars_realisations</span><span class="p">(</span>
+        <span class="c1"># Define candidate set and get realisations.</span>
+        <span class="n">procs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_set</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;min_lag_sources&#39;</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;max_lag_sources&#39;</span><span class="p">],</span>
+                <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tau_sources&#39;</span><span class="p">])</span>
+        <span class="n">candidate_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_define_candidates</span><span class="p">(</span><span class="n">procs</span><span class="p">,</span> <span class="n">samples</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_append_selected_vars</span><span class="p">(</span>
+                <span class="n">candidate_set</span><span class="p">,</span>
                 <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">,</span> <span class="n">candidate_set</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">te</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">max_statistic_sequential</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">)</span>
-        <span class="c"># Remove non-significant sources from the candidate set. Loop</span>
-        <span class="c"># backwards over the candidates to remove them iteratively.</span>
+
+        <span class="c1"># Perform one round of sequential max statistics.</span>
+        <span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">te</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">max_statistic_sequential</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+        <span class="c1"># Remove non-significant sources from the candidate set. Loop</span>
+        <span class="c1"># backwards over the candidates to remove them iteratively.</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_remove_candidate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_remove_selected_var</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
                 <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
                 <span class="n">te</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">te</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pvalues_sign_sources</span> <span class="o">=</span> <span class="n">p</span>
@@ -516,7 +450,21 @@
         <span class="n">candidate_set</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">it</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">processes</span><span class="p">,</span> <span class="n">samples</span><span class="p">):</span>
             <span class="n">candidate_set</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">candidate_set</span></div>
+        <span class="k">return</span> <span class="n">candidate_set</span>
+
+    <span class="k">def</span> <span class="nf">_test_final_conditional</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>  <span class="c1"># TODO test this!</span>
+        <span class="sd">&quot;&quot;&quot;Perform statistical test on the final conditional set.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;---------------------------- no sources found&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">te_omnibus</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sign_omnibus</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pvalue_omnibus</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="p">))</span>
+            <span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">te</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">omnibus_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">te_omnibus</span> <span class="o">=</span> <span class="n">te</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sign_omnibus</span> <span class="o">=</span> <span class="n">s</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pvalue_omnibus</span> <span class="o">=</span> <span class="n">p</span></div>
 </pre></div>
 
                 </div>
@@ -570,7 +518,7 @@
       <!-- footer -->
       <footer role="contentinfo">
           &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
-        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.2.2.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.3.6.
       </footer>
       <!-- /footer -->
 
