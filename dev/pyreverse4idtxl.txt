@@ -1,0 +1,50 @@
+pyreverse is part of pylint and can be used to generate UML diagrams from Python code:
+
+https://www.logilab.org/blogentry/6883
+
+(requires a Graphviz installation)
+
+pyreverse creates by default two diagrams:
+
+$ pyreverse -o png -p Pyreverse pylint/pyreverse/
+[...]
+creating diagram packages_Pyreverse.png
+creating diagram classes_Pyreverse.png
+
+-o : sets the output format
+-p name : yields the output files packages_name.png and classes_name.png
+
+Options
+One can modify the output with following options:
+
+-a N, -A    depth of research for ancestors
+-s N, -S    depth of research for associated classes
+-A, -S      all ancestors, resp. all associated
+-m[yn]      add or remove the module name
+-f MOD      filter the attributes : PUB_ONLY/SPECIAL/OTHER/ALL
+-k          show only the classes (no attributes and methods)
+-b          show 'builtin' objects
+-c <class>  create  a  class  diagram  with  all classes related to
+	    <class>  [current: none] the class must be in the  file
+	    <modules>.  By default, this will include all ancestors
+	    and associated classes of <class>  and  include  module
+	    names (i.e. '-ASmy' ).
+
+see https://docs.oracle.com/cd/E36784_01/html/E36870/pyreverse-1.html for a full documentation
+
+simply call:
+
+pyreverse -o svg -p idtxl [path2idtxl]/IDTxl/idtxl
+
+to create
+
+classes_idtxl.svg
+packages_idtxl.svg
+
+in the current folder.
+
+call:
+
+pyreverse -f ALL -o svg -p idtxl ~/repos/IDTxl/idtxl
+
+to also include private methods/attributes, 'PUB_ONLY': filter  all  non  public  attributes is the default

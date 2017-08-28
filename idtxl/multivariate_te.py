@@ -11,71 +11,53 @@ Note:
 @author: patricia
 """
 import numpy as np
-import itertools as it
 from . import stats
-from .network_analysis import Network_analysis
-from .set_estimator import Estimator_cmi
-
-VERBOSE = True
+from .network_inference import NetworkInference
+from .stats import network_fdr
 
 
-class Multivariate_te(Network_analysis):
-    """Set up a network analysis using multivariate transfer entropy.
+class MultivariateTE(NetworkInference):
+    """Perform network inference using multivariate transfer entropy.
 
-    Set parameters necessary for network inference using transfer entropy (TE).
-    To perform network inference call analyse_network() on an instance of the
-    data class.
+    Perform network inference using multivariate transfer entropy (TE). To
+    perform network inference call analyse_network() on the whole network or a
+    set of nodes or call analyse_single_target() to estimate TE for a single
+    target. See docstrings of the two functions for more information.
 
-    Args:
-        max_lag_target : int
-            maximum temporal search depth for candidates in the target's past
-            (default=same as max_lag_sources)
-        max_lag_sources : int
-            maximum temporal search depth for candidates in the sources' past
-        min_lag_sources : int
-            minimum temporal search depth for candidates in the sources' past
-        tau_sources : int [optinal]
-            spacing between candidates in the sources' past (default=1)
-        tau_target : int [optinal]
-            spacing between candidates in the target's past (default=1)
-        options : dict
-            parameters for estimator use and statistics:
+    References:
 
-            - 'n_perm_*' - number of permutations, where * can be 'max_stat',
-              'min_stat', 'omnibus', and 'max_seq' (default=500)
-            - 'alpha_*' - critical alpha level for statistical significance,
-              where * can be 'max_stats',  'min_stats', 'omnibus', and
-              'max_seq' (default=0.05)
-            - 'cmi_calc_name' - estimator to be used for CMI calculation
-              (For estimator options see the respective documentation.)
-            - 'add_conditionals' - force the estimator to add these
-              conditionals when estimating TE; can either be a list of
-              variables, where each variable is described as (idx process, lag
-              wrt to current value) or can be a string: 'faes' for Faes-Method
+        - Schreiber, T. (2000). Measuring Information Transfer. Phys Rev Lett,
+          85(2), 461–464. http://doi.org/10.1103/PhysRevLett.85.461
+        - Vicente, R., Wibral, M., Lindner, M., & Pipa, G. (2011). Transfer
+          entropy-a model-free measure of effective connectivity for the
+          neurosciences. J Comp Neurosci, 30(1), 45–67.
+          http://doi.org/10.1007/s10827-010-0262-3
+        - Lizier, J. T., & Rubinov, M. (2012). Multivariate construction of
+          effective computational networks from observational data. Max Planck
+          Institute: Preprint. Retrieved from
+          http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf
+        - Faes, L., Nollo, G., & Porta, A. (2011). Information-based detection
+          of nonlinear Granger causality in multivariate processes via a
+          nonuniform embedding technique. Phys Rev E, 83, 1–15.
+          http://doi.org/10.1103/PhysRevE.83.051112
 
     Attributes:
+        source_set : list
+            indices of source processes tested for their influence on the
+            target
+        target : list
+            index of target process
+        settings : dict
+            analysis settings
+        current_value : tuple
+            index of the current value in TE estimation, (idx process,
+            idx sample)
         selected_vars_full : list of tuples
             samples in the full conditional set, (idx process, idx sample)
         selected_vars_sources : list of tuples
             source samples in the conditional set, (idx process, idx sample)
         selected_vars_target : list of tuples
             target samples in the conditional set, (idx process, idx sample)
-        current_value : tuple
-            index of the current value in TE estimation, (idx process,
-            idx sample)
-        calculator_name : string
-            calculator used for TE estimation
-        max_lag_target : int
-            maximum temporal search depth for candidates in the target's past
-            (default=same as max_lag_sources)
-        max_lag_sources : int
-            maximum temporal search depth for candidates in the sources' past
-        min_lag_sources : int
-            minimum temporal search depth for candidates in the sources' past
-        tau_sources : int
-            spacing between candidates in the sources' past
-        tau_target : int
-            spacing between candidates in the target's past
         pvalue_omnibus : float
             p-value of the omnibus test
         pvalues_sign_sources : numpy array
@@ -86,86 +68,73 @@ class Multivariate_te(Network_analysis):
             raw TE values from individual sources to the target
         sign_ominbus : bool
             statistical significance of the over-all TE
-        source_set : list
-            list with indices of source processes
-        target : list
-            index of target process
-        options : dict
-            dictionary with the analysis options
     """
 
-    # TODO right now 'options' holds all optional params (stats AND estimator).
-    # We could split this up by adding the stats options to the analyse_*
-    # methods?
-    def __init__(self, max_lag_sources, min_lag_sources, max_lag_target,
-                 options, tau_sources=1, tau_target=1):
-        if max_lag_target is None:
-            self.max_lag_target = max_lag_sources
-        else:
-            self.max_lag_target = max_lag_target
-        self.max_lag_sources = max_lag_sources
-        self.min_lag_sources = min_lag_sources
-        self.tau_sources = tau_sources
-        self.tau_target = tau_target
-        self.te_omnibus = None
-        self.te_sign_sources = None
-        self.sign_omnibus = False
-        self.sign_sign_sources = None
-        self.pvalue_omnibus = None
-        self.pvalues_sign_sources = None
-        self.options = options
-        self._min_stats_surr_table = None
-        try:
-            self.calculator_name = options['cmi_calc_name']
-        except KeyError:
-            raise KeyError('Calculator name was not specified!')
-        self._cmi_calculator = Estimator_cmi(self.calculator_name)
+    def __init__(self):
         super().__init__()
 
-    def analyse_network(self, data, targets='all', sources='all'):
+    def analyse_network(self, settings, data, targets='all', sources='all'):
         """Find multivariate transfer entropy between all nodes in the network.
 
-        Estimate multivariate transfer entropy between provided sources and
-        each target. Custom source sets can be provided for each target, as
-        lists of lists of nodes.
+        Estimate multivariate transfer entropy (TE) between all nodes in the
+        network or between selected sources and targets.
+
+        Note:
+            For a detailed description see the documentation of the
+            analyse_single_target() method of this class and the references.
 
         Example:
 
             >>> dat = Data()
             >>> dat.generate_mute_data(100, 5)
-            >>> max_lag = 5
-            >>> min_lag = 4
-            >>> analysis_opts = {
-            >>>     'cmi_calc_name': 'jidt_kraskov',
+            >>> settings = {
+            >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
             >>>     'n_perm_min_stat': 200,
             >>>     'n_perm_omnibus': 500,
             >>>     'n_perm_max_seq': 500,
+            >>>     'max_lag_sources': 5,
+            >>>     'min_lag_sources': 2
             >>>     }
-            >>> target = 0
-            >>> sources = [1, 2, 3]
-            >>> network_analysis = Multivariate_te(max_lag, analysis_opts,
-            >>>                                    min_lag)
-            >>> res = network_analysis.analyse_single_target(dat, target,
-            >>>                                              sources)
-
-        Note:
-            For more details on the estimation of multivariate transfer entropy
-            see documentation of class method 'analyse_single_target'.
+            >>> network_analysis = MultivariateTE()
+            >>> res = network_analysis.analyse_network(settings, dat)
 
         Args:
+            settings : dict
+                parameters for estimation and statistical testing, see
+                documentation of analyse_single_target() for details, settings
+                can further contain
+
+                - 'verbose' : bool [optional] - toggle console output
+                  (default=True)
+                - 'fdr_correction' : bool [optional] - correct results on the
+                  network level, see documentation of stats.network_fdr() for
+                  details (default=True)
+
             data : Data instance
                 raw data for analysis
-            targets : list of int | 'all' [optinal]
+            targets : list of int | 'all' [optional]
                 index of target processes (default='all')
             sources : list of int | list of list | 'all' [optional]
                 indices of source processes for each target (default='all');
-                if 'all', all sources are tested for each target;
-                if list of int, sources specified in the list are tested for
-                each target;
+                if 'all', all network nodes excluding the target node are
+                considered as potential sources and tested;
+                if list of int, the source specified by each int is tested as
+                a potential source for the target with the same index or a
+                single target;
                 if list of list, sources specified in each inner list are
-                tested for the corresponding target
+                tested for the target with the same index
+
+        Returns:
+            dict
+                results for each target, see documentation of
+                analyse_single_target(); results FDR-corrected, see
+                documentation of stats.network_fdr()
         """
+        # Set defaults for network inference.
+        settings.setdefault('verbose', True)
+        settings.setdefault('fdr_correction', True)
+
         # Check which targets and sources are requested for analysis.
         if targets == 'all':
             targets = [t for t in range(data.n_processes)]
@@ -182,27 +151,35 @@ class Multivariate_te(Network_analysis):
                                                'sources have to have the same '
                                                'same length')
 
-        # Perform TE estimation for each target individually. FDR-correct
-        # overall results.
+        # Perform TE estimation for each target individually
         results = {}
         for t in range(len(targets)):
-            if VERBOSE:
+            if settings['verbose']:
                 print('####### analysing target with index {0} from list {1}'
                       .format(t, targets))
-            r = self.analyse_single_target(data, targets[t], sources[t])
-            r['target'] = targets[t]
-            r['sources'] = sources[t]
-            results[targets[t]] = r
-        results['fdr'] = stats.network_fdr(results)
+            results[targets[t]] = self.analyse_single_target(settings,
+                                                             data,
+                                                             targets[t],
+                                                             sources[t])
+
+        # Perform FDR-correction on the network level. Add FDR-corrected
+        # results as an extra field. Network_fdr/combine_results internally
+        # creates a deep copy of the results.
+        if settings['fdr_correction']:
+            results['fdr_corrected'] = network_fdr(settings, results)
+
         return results
 
-    def analyse_single_target(self, data, target, sources='all'):
+    def analyse_single_target(self, settings, data, target, sources='all'):
         """Find multivariate transfer entropy between sources and a target.
 
-        Find multivariate transfer entropy between all source processes and the
-        target process. Uses multivariate, non-uniform embedding found through
-        information maximisation (see Faes, ???, and Lizier, 2012). This is
-        done in four steps (see Lizier and Faes for details):
+        Find multivariate transfer entropy (TE) between all source processes
+        and the target process. Uses multivariate, non-uniform embedding found
+        through information maximisation (see Faes et al., 2011, Phys Rev E 83,
+        051112 and Lizier & Rubinov, 2012, Max Planck Institute: Preprint.
+        Retrieved from
+        http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf). Multivariate
+        TE is calculated in four steps (see Lizier and Faes for details):
 
         (1) find all relevant samples in the target processes' own past, by
             iteratively adding candidate samples that have significant
@@ -217,24 +194,83 @@ class Multivariate_te(Network_analysis):
             between the final conditional set and the current value, and for
             significant transfer of all individual samples in the set)
 
+        Example:
+
+            >>> dat = Data()
+            >>> dat.generate_mute_data(100, 5)
+            >>> settings = {
+            >>>     'cmi_estimator':  'JidtKraskovCMI',
+            >>>     'n_perm_max_stat': 200,
+            >>>     'n_perm_min_stat': 200,
+            >>>     'n_perm_omnibus': 500,
+            >>>     'n_perm_max_seq': 500,
+            >>>     'max_lag_sources': 5,
+            >>>     'min_lag_sources': 2
+            >>>     }
+            >>> target = 0
+            >>> sources = [1, 2, 3]
+            >>> network_analysis = MultivariateTE()
+            >>> res = network_analysis.analyse_single_target(settings,
+            >>>                                              dat, target,
+            >>>                                              sources)
+
         Args:
+            settings : dict
+                parameters for estimation and statistical testing:
+
+                - 'cmi_estimator' : str - estimator to be used for CMI
+                  calculation (for estimator settings see the documentation in
+                  the estimators_* modules)
+                - 'max_lag_sources' : int - maximum temporal search depth for
+                  candidates in the sources' past in samples
+                - 'min_lag_sources' : int - minimum temporal search depth for
+                  candidates in the sources' past in samples
+                - 'max_lag_target' : int [optional] - maximum temporal search
+                  depth for candidates in the target's past in samples
+                  (default=same as max_lag_sources)
+                - 'tau_sources' : int [optional] - spacing between candidates in
+                  the sources' past in samples (default=1)
+                - 'tau_target' : int [optional] - spacing between candidates in
+                  the target's past in samples (default=1)
+                - 'n_perm_*' : int [optional] - number of permutations, where *
+                  can be 'max_stat', 'min_stat', 'omnibus', and 'max_seq'
+                  (default=500)
+                - 'alpha_*' : float [optional] - critical alpha level for
+                  statistical significance, where * can be 'max_stats',
+                  'min_stats', 'omnibus', and 'max_seq' (default=0.05)
+                - 'add_conditionals' : list of tuples | str [optional] - force
+                  the estimator to add these conditionals when estimating TE;
+                  can either be a list of variables, where each variable is
+                  described as (idx process, lag wrt to current value) or can
+                  be a string: 'faes' for Faes-Method (see references)
+                - 'permute_in_time' : bool [optional] - force surrogate
+                  creation by shuffling realisations in time instead of
+                  shuffling replications; see documentation of
+                  Data.permute_samples() for further settings (default=False)
+                - 'verbose' : bool [optional] - toggle console output
+                  (default=True)
+
             data : Data instance
                 raw data for analysis
             target : int
                 index of target process
-            sources : list of int, int, or 'all' [optinal]
-                single index or list of indices of source processes, if 'all',
-                all possible sources for the given target are tested
-                (default='all')
+            sources : list of int | int | 'all' [optional]
+                single index or list of indices of source processes
+                (default='all'), if 'all', all network nodes excluding the
+                target node are considered as potential sources
 
         Returns:
             dict
-                results consisting of conditional sets (full, from sources,
-                from target), results for omnibus test (joint influence of
-                source cands.), pvalues for each significant source candidate
+                results consisting of sets of selected variables as (full set,
+                variables from the sources' past, variables from the target's
+                past), pvalues and TE for each selected variable, the current
+                value for this analysis, results for omnibus test (joint
+                influence of all selected source variables on the target,
+                omnibus TE, p-value, and significance); NOTE that all variables
+                are listed as tuples (process, lag wrt. current value)
         """
         # Check input and clean up object if it was used before.
-        self._initialise(data, sources, target)
+        self._initialise(settings, data, sources, target)
 
         # Main algorithm.
         print('\n---------------------------- (1) include target candidates')
@@ -247,201 +283,29 @@ class Multivariate_te(Network_analysis):
         self._test_final_conditional(data)
 
         # Clean up and return results.
-        if VERBOSE:
+        if self.settings['verbose']:
             print('final source samples: {0}'.format(
                     self._idx_to_lag(self.selected_vars_sources)))
             print('final target samples: {0}'.format(
                     self._idx_to_lag(self.selected_vars_target)))
-        self._clean_up()  # remove realisations and min_stats surrogate table
         results = {
+            'target': self.target,
+            'sources_tested': self.source_set,
+            'settings': self.settings,
             'current_value': self.current_value,
             'selected_vars_full': self._idx_to_lag(self.selected_vars_full),
-            'selected_vars_sources': self._idx_to_lag(
-                                                self.selected_vars_sources),
             'selected_vars_target': self._idx_to_lag(
                                                 self.selected_vars_target),
+            'selected_vars_sources': self._idx_to_lag(
+                                                self.selected_vars_sources),
+            'selected_sources_pval': self.pvalues_sign_sources,
+            'selected_sources_te': self.te_sign_sources,
             'omnibus_te': self.te_omnibus,
             'omnibus_pval': self.pvalue_omnibus,
-            'omnibus_sign': self.sign_omnibus,
-            'cond_sources_pval': self.pvalues_sign_sources,
-            'cond_sources_te': self.te_sign_sources}
+            'omnibus_sign': self.sign_omnibus
+            }
+        self._reset()  # remove attributes
         return results
-
-    def _initialise(self, data, sources, target):
-        """Check input and set everything to initial values."""
-        # Check the provided target and sources.
-        self.target = target
-        self._check_source_set(sources, data.n_processes)
-
-        # Check provided search depths for source and target
-        assert(self.min_lag_sources <= self.max_lag_sources), (
-            'min_lag_sources ({0}) must be smaller or equal to max_lag_sources'
-            ' ({1}).'.format(self.min_lag_sources, self.max_lag_sources))
-        max_lag = max(self.max_lag_sources, self.max_lag_target)
-        assert(data.n_samples >= max_lag + 1), (
-            'Not enough samples in data ({0}) to allow for the chosen maximum '
-            'lag ({1})'.format(data.n_samples, max_lag))
-        self._current_value = (self.target, max_lag)
-        [cv_realisation, repl_idx] = data.get_realisations(
-                                             current_value=self.current_value,
-                                             idx_list=[self.current_value])
-        self._current_value_realisations = cv_realisation
-
-        # Remember which realisations come from which replication. This may be
-        # needed for surrogate creation at a later point.
-        self._replication_index = repl_idx
-
-        # Check the permutation type and no. permutations requested by the
-        # user. This tests if there is sufficient data to do all tests.
-        # surrogates.check_permutations(self, data)
-
-        # Reset all attributes to inital values if the instance of
-        # Multivariate_te has been used before.
-        if self.selected_vars_full:
-            self.selected_vars_full = []
-            self._selected_vars_realisations = None
-            self.selected_vars_sources = []
-            self.selected_vars_target = []
-            self.te_omnibus = None
-            self.sign_sign_sources = None
-            self.pvalue_omnibus = None
-            self.pvalues_sign_sources = None
-            self.te_sign_sources = None
-            self._min_stats_surr_table = None
-
-        # Check if the user provided a list of candidates that must go into
-        # the conditioning set. These will be added and used for TE estimation,
-        # but never tested for significance.
-        try:
-            cond = self.options['add_conditionals']
-            self._force_conditionals(cond, data)
-        except KeyError:
-            pass
-
-    def _check_source_set(self, sources, n_processes):
-        """Set default if no source set was provided by the user."""
-        if sources == 'all':
-            sources = [x for x in range(n_processes)]
-            sources.pop(self.target)
-        elif type(sources) is int:
-            sources = [sources]
-
-        if self.target in sources:
-            raise RuntimeError('The target {0} should not be in the list '
-                               'of sources {1}.'.format(self.target,
-                                                        sources))
-        else:
-            self.source_set = sources
-            if VERBOSE:
-                print('Testing sources {0}'.format(self.source_set))
-
-    def _include_target_candidates(self, data):
-        """Test candidates from the target's past."""
-        procs = [self.target]
-        # Make samples
-        samples = np.arange(self.current_value[1] - 1,
-                            self.current_value[1] - self.max_lag_target - 1,
-                            -self.tau_target).tolist()
-        candidates = self._define_candidates(procs, samples)
-        sources_found = self._include_candidates(candidates, data)
-
-        # If no candidates were found in the target's past, add at least one
-        # sample so we are still calculating a proper TE.
-        if not sources_found:  # TODO put a flag in to make this optional
-            print(('No informative sources in the target''s past - ' +
-                   'adding point at t-1 in the target'))
-            idx = (self.current_value[0], self.current_value[1] - 1)
-            realisations = data.get_realisations(self.current_value, [idx])[0]
-            self._append_selected_vars_idx([idx])
-            self._append_selected_vars_realisations(realisations)
-
-    def _include_source_candidates(self, data):
-        """Test candidates in the source's past."""
-        procs = self.source_set
-        samples = np.arange(self.current_value[1] - self.min_lag_sources,
-                            self.current_value[1] - self.max_lag_sources,
-                            -self.tau_sources).tolist()
-        candidates = self._define_candidates(procs, samples)
-        # TODO include non-selected target candidates as further candidates,
-        # they may get selected due to synergies
-        self._include_candidates(candidates, data)
-
-    def _include_candidates(self, candidate_set, data):
-        """Inlcude informative candidates into the conditioning set.
-
-        Loop over each candidate in the candidate set and test if it has
-        significant mutual information with the current value, conditional
-        on all samples that were informative in previous rounds and are already
-        in the conditioning set. If this conditional mutual information is
-        significant using maximum statistics, add the current candidate to the
-        conditional set.
-
-        Args:
-            candidate_set : list of tuples
-                candidate set to be tested, where each entry is a tuple
-                (process index, sample index)
-            data : Data instance
-                raw data
-            options : dict [optional]
-                parameters for estimation and statistical testing
-
-        Returns:
-            list of tuples
-                indices of the conditional set created from the candidate set
-            selected_vars_realisations : numpy array
-                realisations of the conditional set
-        """
-        success = False
-        while candidate_set:
-            # Find the candidate with maximum TE.
-            candidate_realisations = np.empty(
-                                    (data.n_realisations(self.current_value) *
-                                     len(candidate_set), 1))
-            i_1 = 0
-            i_2 = data.n_realisations(self.current_value)
-            for candidate in candidate_set:
-                candidate_realisations[i_1:i_2, ] = data.get_realisations(
-                                                            self.current_value,
-                                                            [candidate])[0]
-                i_1 = i_2
-                i_2 += data.n_realisations(self.current_value)
-            temp_te = self._cmi_calculator.estimate_mult(
-                                n_chunks=len(candidate_set),
-                                options=self.options,
-                                re_use=['var2', 'conditional'],
-                                var1=candidate_realisations,
-                                var2=self._current_value_realisations,
-                                conditional=self._selected_vars_realisations)
-
-            # Test max TE for significance with maximum statistics.
-            te_max_candidate = max(temp_te)
-            max_candidate = candidate_set[np.argmax(temp_te)]
-            if VERBOSE:
-                print('testing {0} from candidate set {1}'.format(
-                                    self._idx_to_lag([max_candidate])[0],
-                                    self._idx_to_lag(candidate_set)), end='')
-            significant = stats.max_statistic(self, data, candidate_set,
-                                              te_max_candidate,
-                                              self.options)[0]
-
-            # If the max is significant keep it and test the next candidate. If
-            # it is not significant break. There will be no further significant
-            # sources b/c they all have lesser TE.
-            if significant:
-                if VERBOSE:
-                    print(' -- significant')
-                success = True
-                candidate_set.pop(np.argmax(temp_te))
-                self._append_selected_vars_idx([max_candidate])
-                self._append_selected_vars_realisations(
-                            data.get_realisations(self.current_value,
-                                                  [max_candidate])[0])
-            else:
-                if VERBOSE:
-                    print(' -- not significant')
-                break
-
-        return success
 
     def _prune_candidates(self, data):
         """Remove uninformative candidates from the final conditional set.
@@ -454,9 +318,6 @@ class Multivariate_te(Network_analysis):
         Args:
             data : Data instance
                 raw data
-            options : dict [optional]
-                parameters for estimation and statistical testing
-
         """
         # FOR LATER we don't need to test the last included in the first round
         print(self.selected_vars_sources)
@@ -493,9 +354,8 @@ class Multivariate_te(Network_analysis):
                             candidate_realisations.shape,
                             self._current_value_realisations.shape,
                             conditional_realisations.shape))
-            temp_te = self._cmi_calculator.estimate_mult(
+            temp_te = self._cmi_estimator.estimate_mult(
                                 n_chunks=len(self.selected_vars_sources),
-                                options=self.options,
                                 re_use=['var2'],
                                 var1=candidate_realisations,
                                 var2=self._current_value_realisations,
@@ -504,7 +364,7 @@ class Multivariate_te(Network_analysis):
             # Test min TE for significance with minimum statistics.
             te_min_candidate = min(temp_te)
             min_candidate = self.selected_vars_sources[np.argmin(temp_te)]
-            if VERBOSE:
+            if self.settings['verbose']:
                 print('testing {0} from candidate set {1}'.format(
                                 self._idx_to_lag([min_candidate])[0],
                                 self._idx_to_lag(self.selected_vars_sources)),
@@ -512,42 +372,46 @@ class Multivariate_te(Network_analysis):
             [significant, p, surr_table] = stats.min_statistic(
                                               self, data,
                                               self.selected_vars_sources,
-                                              te_min_candidate,
-                                              self.options)
+                                              te_min_candidate)
 
             # Remove the minimum it is not significant and test the next min.
             # candidate. If the minimum is significant, break, all other
             # sources will be significant as well (b/c they have higher TE).
             if not significant:
-                if VERBOSE:
+                if self.settings['verbose']:
                     print(' -- not significant')
-                self._remove_candidate(min_candidate)
+                self._remove_selected_var(min_candidate)
             else:
-                if VERBOSE:
+                if self.settings['verbose']:
                     print(' -- significant')
                 self._min_stats_surr_table = surr_table
                 break
 
     def _test_final_conditional(self, data):  # TODO test this!
         """Perform statistical test on the final conditional set."""
+        self.te_omnibus = None
+        self.sign_omnibus = False
+        self.pvalue_omnibus = None
+        self.pvalues_sign_sources = None
+        self.te_sign_sources = None
+
         if not self.selected_vars_sources:
             print('---------------------------- no sources found')
-            return
         else:
             print(self._idx_to_lag(self.selected_vars_full))
-            [s, p, te] = stats.omnibus_test(self, data, self.options)
+            [s, p, te] = stats.omnibus_test(self, data)
             self.te_omnibus = te
             self.sign_omnibus = s
             self.pvalue_omnibus = p
             # Test individual links if the omnibus test is significant.
             if self.sign_omnibus:
-                [s, p, te] = stats.max_statistic_sequential(self, data,
-                                                            self.options)
+                [s, p, te] = stats.max_statistic_sequential(self, data)
                 # Remove non-significant sources from the candidate set. Loop
                 # backwards over the candidates to remove them iteratively.
                 for i in range(s.shape[0] - 1, -1, -1):
                     if not s[i]:
-                        self._remove_candidate(self.selected_vars_sources[i])
+                        self._remove_selected_var(
+                                                self.selected_vars_sources[i])
                         p = np.delete(p, i)
                         te = np.delete(te, i)
                 self.pvalues_sign_sources = p
@@ -555,21 +419,3 @@ class Multivariate_te(Network_analysis):
             else:
                 self.selected_vars_sources = []
                 self.selected_vars_full = self.selected_vars_target
-
-    def _define_candidates(self, processes, samples):
-        """Build a list of candidate indices.
-
-        Args:
-            processes : list of int
-                process indices
-            samples: list of int
-                sample indices
-
-        Returns:
-            a list of tuples, where each tuple holds the index of one
-            candidate and has the form (process index, sample index)
-        """
-        candidate_set = []
-        for idx in it.product(processes, samples):
-            candidate_set.append(idx)
-        return candidate_set

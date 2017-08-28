@@ -4,63 +4,83 @@ Created on Mon Mar  7 18:13:27 2016
 
 @author: patricia
 """
-import copy as cp
 import numpy as np
 from . import idtxl_utils as utils
 
 VERBOSE = True
 
 
-def network_fdr(results, alpha=0.05, correct_by_target=True):
+def network_fdr(settings=None, *results):
     """Perform FDR-correction on results of network inference.
 
     Perform correction of the false discovery rate (FDR) after network
     analysis. FDR correction can either be applied at the target level
     (by correcting omnibus p-values) or at the single-link level (by correcting
     p-values of individual links between single samples and the target).
-    Reference for FDR correction:
 
-    Genovese, C.R., Lazar, N.A., & Nichols, T. (2002). Thresholding of
-    statistical maps in functional neuroimaging using the false discovery
-    rate. Neuroimage, 15(4), 870-878.
+    Input can be a list of partial results to combine results from parallel
+    analysis.
+
+    References:
+
+        - Genovese, C.R., Lazar, N.A., & Nichols, T. (2002). Thresholding of
+          statistical maps in functional neuroimaging using the false discovery
+          rate. Neuroimage, 15(4), 870-878.
 
     Args:
-        results : dict
-            network inference results where each dict entry represents results
-            for one target node
-        alpha : float [optional]
-            critical alpha value for statistical significance (default=0.05)
-        correct_by_target : bool
-            if true p-values are corrected on the target level and on the
-            single-link level otherwise (default=True)
+        settings : dict [optional]
+            parameters for statistical testing with entries:
+
+            - 'alpha_fdr' : float [optional] - critical alpha level
+              (default=0.05)
+            - 'correct_by_target' : bool [optional] - if true p-values are
+              corrected on the target level and on the single-link level
+              otherwise (default=True)
+
+        results : list of dicts
+            network inference results from .analyse_network methods, where each
+            dict entry represents results for one target node
 
     Returns:
         dict
             input results structure pruned of non-significant links.
     """
-    # Make a copy that can be changed and returned after testing.
-    res = cp.copy(results)
+    if settings is None:
+        settings = {}
+    # Set defaults and get parameters from settings dictionary
+    settings.setdefault('alpha_fdr', 0.05)
+    alpha = settings['alpha_fdr']
+    settings.setdefault('correct_by_target', True)
+    correct_by_target = settings['correct_by_target']
 
-    # Get candidates and their test results from the results dictionary, i.e.,
-    # collect results over targets.
+    # Combine results into single results dict (this creates a copy).
+    res = utils.combine_results(*results)
+
+    # Collect significant source variables for all targets. Either correct
+    # p-value of whole target (all candidates), or correct p-value of
+    # individual source variables. Use targets with significant input only
+    # (determined by the omnibus test).
     pval = np.arange(0)
     target_idx = np.arange(0).astype(int)
+    n_perm = np.arange(0).astype(int)
     cands = []
-    if correct_by_target:  # correct p-value of whole target (all candidates)
+    if correct_by_target:  # whole target
         for target in res.keys():
-            if not res[target]['omnibus_sign']:  # skip if not significant
-                continue
-            pval = np.append(pval, res[target]['omnibus_pval'])
-            target_idx = np.append(target_idx, target)
-    else:   # correct p-value of single candidates
+            if res[target]['omnibus_sign']:
+                pval = np.append(pval, res[target]['omnibus_pval'])
+                target_idx = np.append(target_idx, target)
+                n_perm = np.append(n_perm,
+                                   res[target]['settings']['n_perm_max_seq'])
+    else:  # individual variables
         for target in res.keys():
-            if not res[target]['omnibus_sign']:  # skip if not significant
-                continue
-            n_sign = res[target]['cond_sources_pval'].size
-            pval = np.append(pval, res[target]['cond_sources_pval'])
-            target_idx = np.append(target_idx,
-                                   np.ones(n_sign) * target).astype(int)
-            cands = cands + res[target]['selected_vars_sources']
+            if res[target]['omnibus_sign']:
+                n_sign = res[target]['selected_sources_pval'].size
+                pval = np.append(pval, res[target]['selected_sources_pval'])
+                target_idx = np.append(target_idx,
+                                       np.ones(n_sign) * target).astype(int)
+                cands = cands + res[target]['selected_vars_sources']
+                n_perm = np.append(n_perm,
+                                   res[target]['settings']['n_perm_max_seq'])
 
     if pval.size == 0:
         print('No links in final results. Return ...')
@@ -79,6 +99,15 @@ def network_fdr(results, alpha=0.05, correct_by_target=True):
         thresh = ((np.arange(1, n + 1) / n) * alpha /
                   (np.log(n) + np.e))  # aprx. harmonic sum with Euler's number
 
+    # If the number of permutations for calculating p-values for individual
+    # variables is too low, return without performing any correction.
+    if (1 / min(n_perm)) > thresh[0]:
+        print('WARNING: Number of permutations (''n_perm_max_seq'') for at '
+              'least one target is too low to allow for FDR correction '
+              '(FDR-threshold: {0:.4f}, min. theoretically possible p-value: '
+              '{1}).'.format(thresh[0], 1 / min(n_perm)))
+        return None
+
     # Compare data to threshold.
     sign = pval <= thresh
     if np.invert(sign).any():
@@ -88,14 +117,12 @@ def network_fdr(results, alpha=0.05, correct_by_target=True):
     # Go over list of all candidates and remove them from the results dict.
     sign = sign[sort_idx]
     for s in range(sign.shape[0]):
-        if sign[s]:
-            continue
-        else:  # remove non-significant candidate and it's p-value from results
+        if not sign[s]:
             if correct_by_target:
                 t = target_idx[s]
                 res[t]['selected_vars_full'] = res[t]['selected_vars_target']
-                res[t]['cond_sources_te'] = None
-                res[t]['cond_sources_pval'] = None
+                res[t]['selected_sources_te'] = None
+                res[t]['selected_sources_pval'] = None
                 res[t]['selected_vars_sources'] = []
                 res[t]['omnibus_pval'] = 1
                 res[t]['omnibus_sign'] = False
@@ -104,16 +131,16 @@ def network_fdr(results, alpha=0.05, correct_by_target=True):
                 cand = cands[s]
                 cand_ind = res[t]['selected_vars_sources'].index(cand)
                 res[t]['selected_vars_sources'].pop(cand_ind)
-                res[t]['cond_sources_pval'] = np.delete(
-                                    res[t]['cond_sources_pval'], cand_ind)
-                res[t]['cond_sources_te'] = np.delete(
-                                    res[t]['cond_sources_te'], cand_ind)
+                res[t]['selected_sources_pval'] = np.delete(
+                                    res[t]['selected_sources_pval'], cand_ind)
+                res[t]['selected_sources_te'] = np.delete(
+                                    res[t]['selected_sources_te'], cand_ind)
                 res[t]['selected_vars_full'].pop(
                                     res[t]['selected_vars_full'].index(cand))
     return res
 
 
-def omnibus_test(analysis_setup, data, opts=None):
+def omnibus_test(analysis_setup, data):
     """Perform an omnibus test on identified conditional variables.
 
     Test the joint information transfer from all identified sources to the
@@ -123,17 +150,20 @@ def omnibus_test(analysis_setup, data, opts=None):
     distribution.
 
     Args:
-        analysis_setup : Multivariate_te instance
-            information on the current analysis
+        analysis_setup : MultivariateTE instance
+            information on the current analysis, can have an optional attribute
+            'settings', a dictionary with parameters for statistical testing:
+
+            - 'n_perm_omnibus' : int [optional] - number of permutations
+              (default=500)
+            - 'alpha_omnibus' : float [optional] - critical alpha level
+              (default=0.05)
+            - 'permute_in_time' : bool [optional] - generate surrogates by
+              shuffling samples in time instead of shuffling whole replications
+              (default=False)
+
         data : Data instance
             raw data
-        opts : dict [optional]
-            parameters for statistical testing, can contain
-
-            - 'n_perm_omnibus' - number of permutations (default=500)
-            - 'alpha_omnibus' - critical alpha level (default=0.05)
-            - 'perm_range' - permutation range if permutation over samples is
-              used to create surrogates (default='max')
 
     Returns:
         bool
@@ -141,14 +171,18 @@ def omnibus_test(analysis_setup, data, opts=None):
         float
             the test's p-value
     """
-    if opts is None:
-        opts = {}
-    n_permutations = opts.get('n_perm_omnibus', 21)
-    alpha = opts.get('alpha_omnibus', 0.05)
-    perm_range = opts.get('perm_range_omnibus', 'max')
+    # Set defaults and get parameters from settings dictionary
+    analysis_setup.settings.setdefault('n_perm_omnibus', 500)
+    n_permutations = analysis_setup.settings['n_perm_omnibus']
+    analysis_setup.settings.setdefault('alpha_omnibus', 0.05)
+    alpha = analysis_setup.settings['alpha_omnibus']
+    permute_in_time = _check_permute_in_time(analysis_setup, data,
+                                             n_permutations)
+
     print('no. target sources: {0}, no. sources: {1}'.format(
                                     len(analysis_setup.selected_vars_target),
                                     len(analysis_setup.selected_vars_sources)))
+    assert analysis_setup.selected_vars_sources, 'No sources to test.'
 
     # Create temporary variables b/c realisations for sources and targets are
     # created on the fly, which is costly, so we want to re-use them after
@@ -157,11 +191,10 @@ def omnibus_test(analysis_setup, data, opts=None):
                                 ._selected_vars_sources_realisations)
     cond_target_realisations = (analysis_setup
                                 ._selected_vars_target_realisations)
-    te_orig = analysis_setup._cmi_calculator.estimate(
+    te_orig = analysis_setup._cmi_estimator.estimate(
                             var1=cond_source_realisations,
                             var2=analysis_setup._current_value_realisations,
-                            conditional=cond_target_realisations,
-                            opts=analysis_setup.options)
+                            conditional=cond_target_realisations)
 
     # Create the surrogate distribution by permuting the conditional sources.
     if VERBOSE:
@@ -185,20 +218,30 @@ def omnibus_test(analysis_setup, data, opts=None):
         i_1 = i_2
         i_2 += data.n_realisations(analysis_setup.current_value)
         '''
-    surr_cond_real = _generate_surrogates(data,
-                                          analysis_setup.current_value,
-                                          analysis_setup.selected_vars_sources,
-                                          n_permutations,
-                                          perm_range)
+    if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
+            permute_in_time):
+        # Generate the surrogates analytically
+        surr_distribution = (analysis_setup._cmi_estimator.
+                             estimate_surrogates_analytic(
+                               n_perm=n_permutations,
+                               var1=cond_source_realisations,
+                               var2=analysis_setup._current_value_realisations,
+                               conditional=cond_target_realisations))
+    else:
+        surr_cond_real = _get_surrogates(data,
+                                         analysis_setup.current_value,
+                                         analysis_setup.selected_vars_sources,
+                                         n_permutations,
+                                         analysis_setup.settings)
 
-    surr_distribution = analysis_setup._cmi_calculator.estimate_mult(
+        surr_distribution = analysis_setup._cmi_estimator.estimate_mult(
                             n_chunks=n_permutations,
-                            options=analysis_setup.options,
                             re_use=['var2', 'conditional'],
                             var1=surr_cond_real,
                             var2=analysis_setup._current_value_realisations,
                             conditional=cond_target_realisations)
-    [significance, pvalue] = _find_pvalue(te_orig, surr_distribution, alpha)
+    [significance, pvalue] = _find_pvalue(te_orig, surr_distribution,
+                                          alpha, 'one_bigger')
     if VERBOSE:
         if significance:
             print(' -- significant')
@@ -207,27 +250,31 @@ def omnibus_test(analysis_setup, data, opts=None):
     return significance, pvalue, te_orig
 
 
-def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
-                  opts=None):
+def max_statistic(analysis_setup, data, candidate_set, te_max_candidate):
     """Perform maximum statistics for one candidate source.
 
     Test if a transfer entropy value is significantly bigger than the maximum
     values obtained from surrogates of all remanining candidates.
 
     Args:
-        analysis_setup : Multivariate_te instance
-            information on the current analysis
+        analysis_setup : MultivariateTE instance
+            information on the current analysis, can have an optional attribute
+            'settings', a dictionary with parameters for statistical testing:
+
+            - 'n_perm_max_stat' : int [optional] - number of permutations
+              (default=200)
+            - 'alpha_max_stat' : float [optional] - critical alpha level
+              (default=0.05)
+            - 'permute_in_time' : bool [optional] - generate surrogates by
+              shuffling samples in time instead of shuffling whole replications
+              (default=False)
+
         data : Data instance
             raw data
         candidate_set : list of tuples
             list of indices of remaning candidates
         te_max_candidate : float
             transfer entropy value to be tested
-        opts : dict [optional]
-            parameters for statistical testing, can contain:
-
-            - 'n_perm_max_stat' - number of permutations (default=500)
-            - 'alpha_max_stat' - critical alpha level (default=0.05)
 
     Returns:
         bool
@@ -237,21 +284,25 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
         numpy array
             surrogate table
     """
-    if opts is None:
-        opts = {}
-    n_perm = opts.get('n_perm_max_stat', 21)
-    alpha = opts.get('alpha_max_stat', 0.05)
+    # Set defaults and get parameters from settings dictionary
+    analysis_setup.settings.setdefault('n_perm_max_stat', 200)
+    n_perm = analysis_setup.settings['n_perm_max_stat']
+    analysis_setup.settings.setdefault('alpha_max_stat', 0.05)
+    alpha = analysis_setup.settings['alpha_max_stat']
+    _check_permute_in_time(analysis_setup, data, n_perm)
     assert(candidate_set), 'The candidate set is empty.'
 
     surr_table = _create_surrogate_table(analysis_setup, data, candidate_set,
                                          n_perm)
     max_distribution = _find_table_max(surr_table)
-    [significance, pvalue] = _find_pvalue(te_max_candidate, max_distribution,
-                                          alpha)
+    [significance, pvalue] = _find_pvalue(statistic=te_max_candidate,
+                                          distribution=max_distribution,
+                                          alpha=alpha,
+                                          tail='one_bigger')
     return significance, pvalue, surr_table
 
 
-def max_statistic_sequential(analysis_setup, data, opts=None):
+def max_statistic_sequential(analysis_setup, data):
     """Perform sequential maximum statistics for a set of candidate sources.
 
     Test if sorted transfer entropy (TE) values are significantly bigger than
@@ -267,16 +318,20 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
     calculation of surrogates for this statistic.
 
     Args:
-        analysis_setup : Multivariate_te instance
-            information on the current analysis
+        analysis_setup : MultivariateTE instance
+            information on the current analysis, can have an optional attribute
+            'settings', a dictionary with parameters for statistical testing:
+
+            - 'n_perm_max_seq' : int [optional] - number of permutations
+              (default='n_perm_min_stat'|500)
+            - 'alpha_max_seq' : float [optional] - critical alpha level
+              (default=0.05)
+            - 'permute_in_time' : bool [optional] - generate surrogates by
+              shuffling samples in time instead of shuffling whole replications
+              (default=False)
+
         data : Data instance
             raw data
-        opts : dict [optional]
-            parameters for statistical testing, can contain:
-
-            - 'n_perm_max_seq' - number of permutations
-              (default='n_perm_min_stat'|500)
-            - 'alpha_max_seq' - critical alpha level (default=0.05)
 
     Returns:
         numpy array, bool
@@ -286,16 +341,20 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
         numpy array, float
             TE values for individual sources
     """
-    if opts is None:
-        opts = {}
     try:
-        n_permutations = opts['n_perm_max_seq']
+        n_permutations = analysis_setup.settings['n_perm_max_seq']
     except KeyError:
         try:  # use the same n_perm as for min_stats if surr table is reused
             n_permutations = analysis_setup._min_stats_surr_table.shape[1]
-        except TypeError:  # is surr table is None, use default
-            n_permutations = 500
-    alpha = opts.get('alpha_max_seq', 0.05)
+            analysis_setup.settings['n_perm_max_seq'] = n_permutations
+        except AttributeError:  # is surr table is None, use default
+            analysis_setup.settings['n_perm_max_seq'] = 500
+            n_permutations = analysis_setup.settings['n_perm_max_seq']
+    analysis_setup.settings.setdefault('alpha_max_seq', 0.05)
+    alpha = analysis_setup.settings['alpha_max_seq']
+    _check_permute_in_time(analysis_setup, data, n_permutations)
+
+    assert analysis_setup.selected_vars_sources, 'No sources to test.'
 
     # Calculate TE for each candidate in the conditional source set and sort
     # TE values.
@@ -320,9 +379,8 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
         i_1 = i_2
         i_2 += data.n_realisations(analysis_setup.current_value)
 
-    individual_te = analysis_setup._cmi_calculator.estimate_mult(
+    individual_te = analysis_setup._cmi_estimator.estimate_mult(
                             n_chunks=len(analysis_setup.selected_vars_sources),
-                            options=opts,
                             re_use=['var2'],
                             var1=candidate_realisations,
                             var2=analysis_setup._current_value_realisations,
@@ -350,7 +408,7 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
     pvalue = np.ones(individual_te.shape[0])
     for c in range(individual_te.shape[0]):
         [s, p] = _find_pvalue(individual_te_sorted[c],
-                              max_distribution[c, ], alpha)
+                              max_distribution[c, ], alpha, tail='one_bigger')
         significance[c] = s
         pvalue[c] = p
         if not s:  # break as soon as a candidate is no longer significant
@@ -365,28 +423,29 @@ def max_statistic_sequential(analysis_setup, data, opts=None):
     return significance, pvalue, individual_te
 
 
-# TODO opts is part of analysis setup, see mi_stats below
-def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
-                  opts=None):
+def min_statistic(analysis_setup, data, candidate_set, te_min_candidate):
     """Perform minimum statistics for one candidate source.
 
     Test if a transfer entropy value is significantly bigger than the minimum
     values obtained from surrogates of all remanining candidates.
 
     Args:
-        analysis_setup : Multivariate_te instance
-            information on the current analysis
+        analysis_setup : MultivariateTE instance
+            information on the current analysis, can have an optional attribute
+            'settings', a dictionary with parameters for statistical testing:
+
+            - 'n_perm_min_stat' - number of permutations (default=500)
+            - 'alpha_min_stat' - critical alpha level (default=0.05)
+            - 'permute_in_time' bool [optional] - generate surrogates by
+              shuffling samples in time instead of shuffling whole replications
+              (default=False)
+
         data : Data instance
             raw data
         candidate_set : list of tuples
             list of indices of remaning candidates
         te_min_candidate : float
             transfer entropy value to be tested
-        opts : dict [optional]
-            parameters for statistical testing, can contain:
-
-            - 'n_perm_min_stat' - number of permutations (default=500)
-            - 'alpha_min_stat' - critical alpha level (default=0.05)
 
     Returns:
         bool
@@ -396,22 +455,27 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
         numpy array
             surrogate table
     """
-    if opts is None:
-        opts = {}
-    n_perm = opts.get('n_perm_min_stat', 21)
-    alpha = opts.get('alpha_min_stat', 0.05)
+    # Set defaults and get parameters from settings dictionary
+    analysis_setup.settings.setdefault('n_perm_min_stat', 500)
+    n_perm = analysis_setup.settings['n_perm_min_stat']
+    analysis_setup.settings.setdefault('alpha_min_stat', 0.05)
+    alpha = analysis_setup.settings['alpha_min_stat']
+    _check_permute_in_time(analysis_setup, data, n_perm)
+
     assert(candidate_set), 'The candidate set is empty.'
 
     surr_table = _create_surrogate_table(analysis_setup, data, candidate_set,
                                          n_perm)
     min_distribution = _find_table_min(surr_table)
-    [significance, pvalue] = _find_pvalue(te_min_candidate, min_distribution,
-                                          alpha)
+    [significance, pvalue] = _find_pvalue(statistic=te_min_candidate,
+                                          distribution=min_distribution,
+                                          alpha=alpha,
+                                          tail='one_bigger')
     return significance, pvalue, surr_table
 
 
-def mi_against_surrogates(analysis_setup, data, opts=None):
-    """Test estimaed mutual information for significance against surrogate data.
+def mi_against_surrogates(analysis_setup, data):
+    """Test estimated mutual information for significance against surrogate data.
 
     Shuffle realisations of the current value (point to be predicted) and re-
     calculate mutual information (MI) for shuffled data. The actual estimated
@@ -419,19 +483,22 @@ def mi_against_surrogates(analysis_setup, data, opts=None):
     data.
 
     Args:
-        analysis_setup : Multivariate_te instance
-            information on the current analysis
+        analysis_setup : MultivariateTE instance
+            information on the current analysis, can have an optional attribute
+            'settings', a dictionary with parameters for statistical testing:
+
+            - 'n_perm_mi' : int [optional] - number of permutations
+              (default=500)
+            - 'alpha_mi' : float [optional] - critical alpha level
+              (default=0.05)
+            - 'tail_mi' : str [optional] - tail for testing, can be 'one' or
+              'two' (default='one')
+            - 'permute_in_time' : bool [optional] - generate surrogates by
+              shuffling samples in time instead of shuffling whole replications
+              (default=False)
+
         data : Data instance
             raw data
-        opts : dict [optional]
-            parameters for statistical testing, can contain:
-
-            - 'n_perm_mi' - number of permutations (default=500)
-            - 'alpha_mi' - critical alpha level (default=0.05)
-            - 'tail_mi' - tail for testing, can be 'one' or 'two'
-              (default='one')
-            - 'perm_range' - permutation range if permutation over samples is
-              used to create surrogates (default='max')
 
     Returns:
         float
@@ -441,12 +508,14 @@ def mi_against_surrogates(analysis_setup, data, opts=None):
         float
             p_value for estimated MI value
     """
-    if opts is None:
-        opts = {}
-    n_perm = analysis_setup.options.get('n_perm_mi', 500)
-    alpha = analysis_setup.options.get('alpha_mi', 0.05)
-    tail = analysis_setup.options.get('tail_mi', 'one')
-    perm_range = analysis_setup.options.get('perm_range', 'max')
+    analysis_setup.settings.setdefault('n_perm_mi', 500)
+    n_perm = analysis_setup.settings['n_perm_mi']
+    analysis_setup.settings.setdefault('alpha_mi', 0.05)
+    alpha = analysis_setup.settings['alpha_mi']
+    analysis_setup.settings.setdefault('tail_mi', 'one_bigger')
+    tail = analysis_setup.settings['tail_mi']
+    permute_in_time = _check_permute_in_time(analysis_setup, data, n_perm)
+
     '''
     surr_realisations = np.empty(
                         (data.n_realisations(analysis_setup.current_value) *
@@ -475,21 +544,29 @@ def mi_against_surrogates(analysis_setup, data, opts=None):
                                             analysis_setup.current_value,
                                             [analysis_setup.current_value])
         '''
-    surr_realisations = _generate_surrogates(data,
-                                             analysis_setup.current_value,
-                                             [analysis_setup.current_value],
-                                             n_perm,
-                                             perm_range)
+    if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
+            permute_in_time):
+        # Generate the surrogates analytically
+        surr_dist = (analysis_setup._cmi_estimator.
+                     estimate_surrogates_analytic(
+                            n_perm=n_perm,
+                            var1=analysis_setup._current_value_realisations,
+                            var2=analysis_setup._selected_vars_realisations,
+                            conditional=None))
+    else:
+        surr_realisations = _get_surrogates(data,
+                                            analysis_setup.current_value,
+                                            [analysis_setup.current_value],
+                                            n_perm,
+                                            analysis_setup.settings)
 
-    surr_dist = analysis_setup._cmi_calculator.estimate_mult(
+        surr_dist = analysis_setup._cmi_estimator.estimate_mult(
                             n_chunks=n_perm,
-                            options=analysis_setup.options,
-                            re_use=['var2'],
+                            re_use=['var2', 'conditional'],
                             var1=surr_realisations,
                             var2=analysis_setup._selected_vars_realisations,
                             conditional=None)
-    orig_mi = analysis_setup._cmi_calculator.estimate(
-                            opts=analysis_setup.options,
+    orig_mi = analysis_setup._cmi_estimator.estimate(
                             var1=analysis_setup._current_value_realisations,
                             var2=analysis_setup._selected_vars_realisations,
                             conditional=None
@@ -501,16 +578,259 @@ def mi_against_surrogates(analysis_setup, data, opts=None):
     return [orig_mi, significance, p_value]
 
 
-def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
-    """Create a table of surrogate transfer entropy values.
+def unq_against_surrogates(analysis_setup, data):
+    """Test the unique information in the PID estimate against surrogate data.
 
-    Calculate transfer entropy between surrogates for each source in the test
+    Shuffle realisations of both sources individually and re-calculate PID,
+    in particular the unique information from shuffled data. The original
+    unique information is then compared against the distribution of values
+    calculated from surrogate data.
+
+    Args:
+        analysis_setup : Partial_information_decomposition instance
+            information on the current analysis, should have an Attribute
+            'settings', a dict with optional fields
+
+            - 'n_perm' - number of permutations (default=500)
+            - 'alpha' - critical alpha level (default=0.05)
+            - 'tail' - tail for testing, can be 'one' or 'two'
+              (default='one')
+            - 'permute_in_time' : bool [optional] - generate surrogates by
+              shuffling samples in time instead of shuffling whole replications
+              (default=False)
+
+        data : Data instance
+            raw data
+
+    Returns:
+        dict
+            PID estimate from original data
+        bool
+            statistical significance of the unique information in source 1
+        float
+            p-value of the unique information in source 1
+        bool
+            statistical significance of the unique information in source 2
+        float
+            p-value of the unique information in source 2
+    """
+    # Get analysis settings and defaults.
+    analysis_setup.settings.setdefault('n_perm', 500)
+    n_perm = analysis_setup.settings['n_perm']
+    analysis_setup.settings.setdefault('alpha', 0.05)
+    alpha = analysis_setup.settings['alpha']
+    analysis_setup.settings.setdefault('tail', 'one')
+    tail = analysis_setup.settings['tail']
+    _check_permute_in_time(analysis_setup, data, n_perm)
+
+    # Get realisations and estimate PID for orginal data
+    target_realisations = data.get_realisations(
+                                            analysis_setup.current_value,
+                                            [analysis_setup.current_value])[0]
+    source_1_realisations = data.get_realisations(
+                                        analysis_setup.current_value,
+                                        [analysis_setup.sources[0]])[0]
+    source_2_realisations = data.get_realisations(
+                                        analysis_setup.current_value,
+                                        [analysis_setup.sources[1]])[0]
+    orig_pid = analysis_setup._pid_estimator.estimate(
+                            settings=analysis_setup.settings,
+                            s1=source_1_realisations,
+                            s2=source_2_realisations,
+                            t=target_realisations)
+
+    # Test unique information from source 1
+    surr_realisations = _get_surrogates(data,
+                                        analysis_setup.current_value,
+                                        [analysis_setup.sources[0]],
+                                        n_perm,
+                                        analysis_setup.settings)
+    # Calculate surrogate distribution for unique information of source 1.
+    # Note: calling  .estimate_mult does not work here because the PID
+    # estimator returns a dictionary not a single value. We have to get the
+    # unique from the dictionary manually.
+    surr_dist_s1 = np.empty(n_perm)
+    chunk_size = int(surr_realisations.shape[0] / n_perm)
+    i_1 = 0
+    i_2 = chunk_size
+    if VERBOSE:
+            print('\nTesting unq information in s1')
+    for p in range(n_perm):
+        if VERBOSE:
+            print('\tperm {0} of {1}'.format(p, n_perm))
+        pid_est = analysis_setup._pid_estimator.estimate(
+                                settings=analysis_setup.settings,
+                                s1=surr_realisations[i_1:i_2, :],
+                                s2=source_2_realisations,
+                                t=target_realisations
+                                )
+        surr_dist_s1[p] = pid_est['unq_s1']
+        i_1 = i_2
+        i_2 += chunk_size
+
+    # Test unique information from source 2
+    surr_realisations = _get_surrogates(data,
+                                        analysis_setup.current_value,
+                                        [analysis_setup.sources[1]],
+                                        n_perm,
+                                        analysis_setup.settings)
+    # Calculate surrogate distribution for unique information of source 2.
+    surr_dist_s2 = np.empty(n_perm)
+    chunk_size = int(surr_realisations.shape[0] / n_perm)
+    i_1 = 0
+    i_2 = chunk_size
+    if VERBOSE:
+            print('\nTesting unq information in s2')
+    for p in range(n_perm):
+        if VERBOSE:
+            print('\tperm {0} of {1}'.format(p, n_perm))
+        pid_est = analysis_setup._pid_estimator.estimate(
+                                settings=analysis_setup.settings,
+                                s1=source_1_realisations,
+                                s2=surr_realisations[i_1:i_2, :],
+                                t=target_realisations)
+        surr_dist_s2[p] = pid_est['unq_s2']
+        i_1 = i_2
+        i_2 += chunk_size
+    [sign_1, p_val_1] = _find_pvalue(statistic=orig_pid['unq_s1'],
+                                     distribution=surr_dist_s1,
+                                     alpha=alpha,
+                                     tail=tail)
+    [sign_2, p_val_2] = _find_pvalue(statistic=orig_pid['unq_s2'],
+                                     distribution=surr_dist_s2,
+                                     alpha=alpha,
+                                     tail=tail)
+    return [orig_pid, sign_1, p_val_1, sign_2, p_val_2]
+
+
+def syn_shd_against_surrogates(analysis_setup, data):
+    """Test the shared/synergistic information in the PID estimate.
+
+    Shuffle realisations of the target and re-calculate PID, in particular the
+    synergistic and shared information from shuffled data. The original
+    shared and synergistic information are then compared against the
+    distribution of values calculated from surrogate data.
+
+    Args:
+        analysis_setup : Partial_information_decomposition instance
+            information on the current analysis, should have an Attribute
+            'settings', a dict with optional fields
+
+            - 'n_perm' : int [optional] - number of permutations (default=500)
+            - 'alpha' : float [optional] - critical alpha level (default=0.05)
+            - 'tail' : str [optional] - tail for testing, can be 'one' or 'two'
+              (default='one')
+            - 'permute_in_time' : bool [optional] - generate surrogates by
+              shuffling samples in time instead of shuffling whole replications
+              (default=False)
+
+        data : Data instance
+            raw data
+
+    Returns:
+        dict
+            PID estimate from original data
+        bool
+            statistical significance of the shared information
+        float
+            p-value of the shared information
+        bool
+            statistical significance of the synergistic information
+        float
+            p-value of the synergistic information
+    """
+    # Get analysis settings and defaults.
+    analysis_setup.settings.setdefault('n_perm', 500)
+    n_perm = analysis_setup.settings['n_perm']
+    analysis_setup.settings.setdefault('alpha', 0.05)
+    alpha = analysis_setup.settings['alpha']
+    analysis_setup.settings.setdefault('tail', 'one')
+    tail = analysis_setup.settings['tail']
+    _check_permute_in_time(analysis_setup, data, n_perm)
+
+    # Get realisations and estimate PID for original data
+    target_realisations = data.get_realisations(
+                                            analysis_setup.current_value,
+                                            [analysis_setup.current_value])[0]
+    source_1_realisations = data.get_realisations(
+                                        analysis_setup.current_value,
+                                        [analysis_setup.sources[0]])[0]
+    source_2_realisations = data.get_realisations(
+                                        analysis_setup.current_value,
+                                        [analysis_setup.sources[1]])[0]
+    orig_pid = analysis_setup._pid_estimator.estimate(
+                            settings=analysis_setup.settings,
+                            s1=source_1_realisations,
+                            s2=source_2_realisations,
+                            t=target_realisations)
+
+    # Test shared and synergistic information from both sources
+    surr_realisations = _get_surrogates(data,
+                                        analysis_setup.current_value,
+                                        [analysis_setup.current_value],
+                                        n_perm,
+                                        analysis_setup.settings)
+    # Calculate surrogate distribution for shd/syn information of both sources.
+    # Note: calling  .estimate_mult does not work here because the PID
+    # estimator returns a dictionary not a single value. We have to get the
+    # shared info and synergy from the dictionary manually.
+    surr_dist_shd = np.empty(n_perm)
+    surr_dist_syn = np.empty(n_perm)
+    chunk_size = int(surr_realisations.shape[0] / n_perm)
+    i_1 = 0
+    i_2 = chunk_size
+    if VERBOSE:
+            print('\nTesting shd and syn information in both sources')
+    for p in range(n_perm):
+        if VERBOSE:
+            print('\tperm {0} of {1}'.format(p, n_perm))
+        pid_est = analysis_setup._pid_estimator.estimate(
+                                settings=analysis_setup.settings,
+                                s1=source_1_realisations,
+                                s2=source_2_realisations,
+                                t=surr_realisations[i_1:i_2, :])
+        surr_dist_shd[p] = pid_est['shd_s1_s2']
+        surr_dist_syn[p] = pid_est['syn_s1_s2']
+        i_1 = i_2
+        i_2 += chunk_size
+    [sign_shd, p_val_shd] = _find_pvalue(statistic=orig_pid['shd_s1_s2'],
+                                         distribution=surr_dist_shd,
+                                         alpha=alpha,
+                                         tail=tail)
+    [sign_syn, p_val_syn] = _find_pvalue(statistic=orig_pid['syn_s1_s2'],
+                                         distribution=surr_dist_syn,
+                                         alpha=alpha,
+                                         tail=tail)
+    return [orig_pid, sign_shd, p_val_shd, sign_syn, p_val_syn]
+
+
+def check_n_perm(n_perm, alpha):
+    """Check if no. permutations is big enough to obtain the requested alpha.
+
+    Note:
+        The no. permutations must be big enough to theoretically allow for the
+        detection of a p-value that is smaller than the critical alpha level.
+        Otherwise the permutation test is pointless. The smalles possible
+        p-value is 1/n_perm.
+    """
+    if not 1.0 / n_perm < alpha:
+        raise RuntimeError('The number of permutations {0} is to small to test'
+                           ' the requested alpha level {1}. The number of '
+                           'permutations must be greater than (1/alpha).'
+                           .format(n_perm, alpha))
+
+
+def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
+    """Create a table of surrogate MI/CMI/TE values.
+
+    Calculate MI/CMI/TE between surrogates for each source in the test
     set and the target in the analysis setup using the current conditional in
     the analysis setup.
 
     Args:
-        analysis_setup : Multivariate_te instance
-            information on the current analysis
+        analysis_setup : MultivariateTE instance
+            information on the current analysis, must contain an attribute
+            settings with entry 'permute_in_time'
         data : Data instance
             raw data
         idx_test_set : list of tuples
@@ -520,19 +840,16 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
 
     Returns:
         numpy array
-            surrogate TE values, dimensions: (length test set, number of
+            surrogate MI/CMI/TE values, dimensions: (length test set, number of
             surrogates)
     """
-    # Check if n_replications is high enough to allow for the requested number
-    # of permutations. If not permute samples over time
-
-    # permute_over_replications = _permute_over_replications(data, n_perm)
-    perm_range = analysis_setup.options.get('perm_range', 'max')
+    # Check which permutation type is requested by the calling function.
+    permute_in_time = analysis_setup.settings['permute_in_time']
 
     # Create surrogate table.
     if VERBOSE:
         print('\ncreate surrogates table with {0} permutations'.format(n_perm))
-    surr_table = np.zeros((len(idx_test_set), n_perm))  # surrogate TE values
+    surr_table = np.zeros((len(idx_test_set), n_perm))
     current_value_realisations = analysis_setup._current_value_realisations
     idx_c = 0
     for candidate in idx_test_set:
@@ -560,15 +877,25 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
             i_1 = i_2
             i_2 += data.n_realisations(analysis_setup.current_value)
         '''
-        surr_candidate_realisations = _generate_surrogates(
+        if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
+                permute_in_time):
+            # Generate the surrogates analytically
+            surr_table[idx_c, :] = (analysis_setup._cmi_estimator.
+                                    estimate_surrogates_analytic(
+                                        n_perm=n_perm,
+                                        var1=data.get_realisations(
+                                                analysis_setup.current_value, [candidate])[0],
+                                        var2=current_value_realisations,
+                                        conditional=analysis_setup._selected_vars_realisations))
+        else:
+            surr_candidate_realisations = _get_surrogates(
                                                  data,
                                                  analysis_setup.current_value,
                                                  [candidate],
                                                  n_perm,
-                                                 perm_range)
-        surr_table[idx_c, :] = analysis_setup._cmi_calculator.estimate_mult(
+                                                 analysis_setup.settings)
+            surr_table[idx_c, :] = analysis_setup._cmi_estimator.estimate_mult(
                     n_chunks=n_perm,
-                    options=analysis_setup.options,
                     re_use=['var2', 'conditional'],
                     var1=surr_candidate_realisations,  # too long
                     var2=current_value_realisations,
@@ -604,7 +931,7 @@ def _sort_table_max(table):
     return table_sorted
 
 
-def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
+def _find_pvalue(statistic, distribution, alpha, tail):
     """Find p-value of a test statistic under some distribution.
 
     Args:
@@ -612,10 +939,11 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
             value to be tested against distribution
         distribution : numpy array
             1-dimensional distribution of values, test distribution
-        alpha : float [optional]
-            critical alpha level for statistical significance (default=0.05)
-        tail : str [optional]
-            'one' or 'two' for one-/two-tailed testing (default='one')
+        alpha : float
+            critical alpha level for statistical significance
+        tail : str
+            'one_bigger' for one-tailed testing H1 > H0, 'one_smaller' for one-
+            tailed testing H1 < H0, or 'two' for two-tailed testing
 
     Returns:
         bool
@@ -623,27 +951,22 @@ def _find_pvalue(statistic, distribution, alpha=0.05, tail='one'):
         float
             the test's p-value
     """
-    assert(distribution.ndim == 1)
-    assert(1.0 / distribution.shape[0] < alpha), ('The number of permutations '
-                                                  'is to small ({0}) to test '
-                                                  'the requested alpha level '
-                                                  '({1}).'.format(
-                                                       distribution.shape[0],
-                                                       alpha))
-#    if (1.0 / distribution.shape[0] >= alpha):
-#        print('The number of permutations is to small ({0}) to test the '
-#              'requested alpha level ({1}).'.format(distribution.shape[0],
-#                                                    alpha))
-    if tail == 'one':
-        pvalue = sum(distribution > statistic) / distribution.shape[0]
+    assert alpha <= 1.0, 'Critical alpha levels needs to be smaller than 1.'
+    assert distribution.ndim == 1, 'Test distribution must be 1D.'
+    check_n_perm(distribution.shape[0], alpha)
+
+    if tail == 'one_bigger':
+        pvalue = sum(distribution >= statistic) / distribution.shape[0]
+    elif tail == 'one_smaller':
+        pvalue = sum(distribution <= statistic) / distribution.shape[0]
     elif tail == 'two':
-        p_bigger = sum(distribution > statistic) / distribution.shape[0]
-        p_smaller = sum(distribution < statistic) / distribution.shape[0]
+        p_bigger = sum(distribution >= statistic) / distribution.shape[0]
+        p_smaller = sum(distribution <= statistic) / distribution.shape[0]
         pvalue = min(p_bigger, p_smaller)
         alpha = alpha / 2
     else:
-        raise ValueError(('Unkown value for "tail" (should be "one" or "two"):'
-                          ' {0}'.format(tail)))
+        raise ValueError(('Unkown value for ''tail'', can be ''one_bigger'', '
+                          ' ''one_smaller'', or ''two''): {0}.'.format(tail)))
 
     # If the statistic is larger than all values in the test distribution, set
     # the p-value to the smallest possible value 1/n_perm.
@@ -666,16 +989,17 @@ def _sufficient_replications(data, n_perm):
         return False
 
 
-def _generate_surrogates(data, current_value, idx_list, n_perm,
-                         perm_range='max'):
-    """Generate surrogate data for statistical testing.
+def _get_surrogates(data, current_value, idx_list, n_perm, perm_settings):
+    """Return surrogate data for statistical testing.
 
-    The method for data generation depends on whether sufficient replications
-    of the data exists. If the number of replications is high enough
-    (reps! > n_permutations), surrogates are created by shuffling data over
-    replications (while keeping the temporal order of samples intact). If the
-    number of replications is too low, samples are shuffled over time (while
-    keeping the order of replications intact).
+    Calls surrogate generation methods of the data instance. The method for
+    surrogate generation depends on whether sufficient replications of the data
+    exists. If the number of replications is high enough (reps! >
+    n_permutations), surrogates are created by shuffling data over replications
+    (while keeping the temporal order of samples intact). If the number of
+    replications is too low, samples are shuffled over time (while keeping the
+    order of replications intact). The latter method can be forced by setting
+    'permute_in_time' to True in 'perm_settings'.
 
     Args:
         data : Data instance
@@ -687,9 +1011,11 @@ def _generate_surrogates(data, current_value, idx_list, n_perm,
             list of variables, for which surrogates have to be created
         n_perm : int
             number of permutations
-        perm_range : int [optional]
-            permutation range if permutation over samples is used to create
-            surrogates (default='max')
+        perm_settings : dict
+            settings for surrogate creation by shuffling samples over time, set
+            'permute_in_time' to True to create surrogates by shuffling data
+            over time. See Data.permute_samples() for settings for surrogate
+            creation.
 
     Returns:
         numpy array
@@ -698,23 +1024,105 @@ def _generate_surrogates(data, current_value, idx_list, n_perm,
     """
     # Allocate memory for surrogates
     n_realisations = data.n_realisations(current_value)
-    surrogates = np.empty((n_realisations * n_perm, len(idx_list)))
+    surrogates = np.empty((n_realisations * n_perm,
+                           len(idx_list))).astype(data.data_type)
+
+    # Check if the user requested to permute samples in time and not over
+    # replications
+    permute_in_time = perm_settings['permute_in_time']
 
     # Generate surrogates by permuting over replications if possible (no.
     # replications needs to be sufficient); else permute samples over time.
     i_1 = 0
     i_2 = n_realisations
-    if _sufficient_replications(data, n_perm):  # permute replications
+    # permute samples
+    if permute_in_time:
+        for perm in range(n_perm):
+            surrogates[i_1:i_2, ] = data.permute_samples(current_value,
+                                                         idx_list,
+                                                         perm_settings)[0]
+            i_1 = i_2
+            i_2 += n_realisations
+
+    else:  # permute replications
+        assert _sufficient_replications(data, n_perm), (
+                'Not enough replications for surrogate creation.')
         for perm in range(n_perm):
             surrogates[i_1:i_2, ] = data.permute_replications(current_value,
                                                               idx_list)[0]
             i_1 = i_2
             i_2 += n_realisations
-    else:  # permute samples
-        for perm in range(n_perm):
-            surrogates[i_1:i_2, ] = data.permute_samples(current_value,
-                                                         idx_list,
-                                                         perm_range)[0]
-            i_1 = i_2
-            i_2 += n_realisations
     return surrogates
+
+
+def _generate_spectral_surrogates(data, scale, n_perm, perm_settings):
+    """Generate surrogate data for statistical testing of spectral TE.
+
+    The method for surrogate generation depends on whether sufficient
+    replications of the data exists. If the number of replications is high
+    enough (reps! > n_permutations), surrogates are created by shuffling data
+    over replications (while keeping the temporal order of samples intact). If
+    the number of replications is too low, samples are shuffled over time
+    (while keeping the order of replications intact).
+
+    Args:
+        data : Data instance
+            raw data for analysis
+        scale : int
+            index of the scale to be shuffled
+        n_perm : int
+            number of permutations
+        perm_settings : dict
+            settings for surrogate creation by shuffling samples over time
+
+    Returns:
+        numpy array
+            surrogate data with dimensions
+            (realisations * n_perm) x len(idx_list)
+    """
+    # Allocate memory for surrogates
+    surrogates = np.empty((data.n_samples, data.n_replications,
+                           n_perm)).astype(data.data_type)
+    permute_in_time = perm_settings['permute_in_time']
+    # Generate surrogates by permuting over replications if possible (no.
+    # replications needs to be sufficient); else permute samples over time.
+    if permute_in_time:
+        for perm in range(n_perm):
+            surrogates[:, :, perm] = data.slice_permute_samples(
+                                                    scale, perm_settings)[0]
+    else:
+        assert(_sufficient_replications(data, n_perm))
+        for perm in range(n_perm):
+            surrogates[:, :, perm] = data.slice_permute_replications(scale)[0]
+    return surrogates
+
+
+def _check_permute_in_time(analysis_setup, data, n_perm):
+    """Set defaults for permuting samples in time.
+
+    The default for creating surrogate data is the permutation of original data
+    over replications (such that the temporal ordering of samples stays
+    intact). The function checks if this default can be used given the
+    requested number of permutations and the number of replications in the
+    data.
+
+    The function tries to set the setting 'permute_in_time' to its default
+    'False' if no value for 'permute_in_time' was provided by the user. If the
+    number of replications is insufficient to generate the requested number of
+    permutations, the function sets 'permute_in_time' to true such that
+    surrogates are created by permuting samples in time (if not requested
+    otherwise the 'perm_type' is set to 'random', see documentation of
+    Data().permute_samples() for further settings).
+    """
+    analysis_setup.settings.setdefault('permute_in_time', False)
+
+    if (not analysis_setup.settings['permute_in_time'] and
+            not _sufficient_replications(data, n_perm)):
+        print('WARNING: Number of replications is not sufficient to generate '
+              'the desired number of surrogates. Permuting samples in time '
+              'instead.')
+        analysis_setup.settings['permute_in_time'] = True
+
+    if analysis_setup.settings['permute_in_time']:
+        analysis_setup.settings.setdefault('perm_type', 'random')
+    return analysis_setup.settings['permute_in_time']

@@ -10,6 +10,6 @@ multi-node computing clusters.
 
 
 # from .data import Data
-# from .multivariate_te import Multivariate_te
+# from .multivariate_te import MultivariateTE
 
 # TODO add everything that should be callable by the user.
