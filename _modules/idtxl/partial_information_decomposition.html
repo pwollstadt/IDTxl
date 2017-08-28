@@ -134,12 +134,12 @@
 
 <span class="sd">    References:</span>
 
-<span class="sd">        - Williams, P. L., &amp; Beer, R. D. (2010). Nonnegative Decomposition of</span>
-<span class="sd">          Multivariate Information, 1–14. Retrieved from</span>
-<span class="sd">          http://arxiv.org/abs/1004.2515</span>
-<span class="sd">        - Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., &amp; Ay, N. (2014).</span>
-<span class="sd">          Quantifying Unique Information. Entropy, 16(4), 2161–2183.</span>
-<span class="sd">          http://doi.org/10.3390/e16042161</span>
+<span class="sd">    - Williams, P. L., &amp; Beer, R. D. (2010). Nonnegative Decomposition of</span>
+<span class="sd">      Multivariate Information, 1–14. Retrieved from</span>
+<span class="sd">      http://arxiv.org/abs/1004.2515</span>
+<span class="sd">    - Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., &amp; Ay, N. (2014).</span>
+<span class="sd">      Quantifying Unique Information. Entropy, 16(4), 2161–2183.</span>
+<span class="sd">      http://doi.org/10.3390/e16042161</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        target : int</span>
@@ -195,7 +195,7 @@
 <span class="sd">                documentation of analyse_single_target() for details, can</span>
 <span class="sd">                contain</span>
 
-<span class="sd">                - &#39;lags&#39; : list of lists of ints [optional] - lags in samples</span>
+<span class="sd">                - lags : list of lists of ints [optional] - lags in samples</span>
 <span class="sd">                  between sources and target (default=[[1, 1], [1, 1] ...])</span>
 
 <span class="sd">            data : Data instance</span>
@@ -234,8 +234,6 @@
 <span class="sd">        Estimate partial information decomposition (PID) for a target node in</span>
 <span class="sd">        the network.</span>
 
-<span class="sd">        # TODO add references</span>
-
 <span class="sd">        Example:</span>
 
 <span class="sd">            &gt;&gt;&gt; n = 20</span>
@@ -264,12 +262,12 @@
 <span class="sd">            settings : dict</span>
 <span class="sd">                parameters for estimator use and statistics:</span>
 
-<span class="sd">                - &#39;pid_estimator&#39; : str - estimator to be used for PID</span>
-<span class="sd">                  estimation (for estimator settings see the documentation in</span>
-<span class="sd">                  the estimators_pid modules)</span>
-<span class="sd">                - &#39;lags&#39; : list of ints [optional] - lags in samples between</span>
+<span class="sd">                - pid_estimator : str - estimator to be used for PID estimation</span>
+<span class="sd">                  (for estimator settings see the documentation in the</span>
+<span class="sd">                  estimators_pid modules)</span>
+<span class="sd">                - lags : list of ints [optional] - lags in samples between</span>
 <span class="sd">                  sources and target (default=[1, 1])</span>
-<span class="sd">                - &#39;verbose&#39; : bool [optional] - toggle console output</span>
+<span class="sd">                - verbose : bool [optional] - toggle console output</span>
 <span class="sd">                  (default=True)</span>
 
 <span class="sd">            data : Data instance</span>

@@ -121,7 +121,7 @@
                             <span class="s1">&#39;OpenCL-powered CMI estimation.&#39;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="OpenCLKraskov"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_opencl.OpenCLKraskov">[docs]</a><span class="k">class</span> <span class="nc">OpenCLKraskov</span><span class="p">(</span><span class="n">Estimator</span><span class="p">):</span>
+<div class="viewcode-block" id="OpenCLKraskov"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_opencl.OpenCLKraskov">[docs]</a><span class="k">class</span> <span class="nc">OpenCLKraskov</span><span class="p">(</span><span class="n">Estimator</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Abstract class for implementation of OpenCL estimators.</span>
 
 <span class="sd">    Abstract class for implementation of OpenCL estimators, child classes</span>
@@ -131,13 +131,13 @@
 
 <span class="sd">    References:</span>
 
-<span class="sd">        - Kraskov, A., Stoegbauer, H., &amp; Grassberger, P. (2004). Estimating</span>
-<span class="sd">          mutual information. Phys Rev E, 69(6), 066138.</span>
-<span class="sd">        - Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012).</span>
-<span class="sd">          Local measures of information storage in complex distributed</span>
-<span class="sd">          computation. Inform Sci, 208, 39-54.</span>
-<span class="sd">        - Schreiber, T. (2000). Measuring information transfer. Phys Rev Lett,</span>
-<span class="sd">          85(2), 461.</span>
+<span class="sd">    - Kraskov, A., Stoegbauer, H., &amp; Grassberger, P. (2004). Estimating mutual</span>
+<span class="sd">      information. Phys Rev E, 69(6), 066138.</span>
+<span class="sd">    - Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012).</span>
+<span class="sd">      Local measures of information storage in complex distributed computation.</span>
+<span class="sd">      Inform Sci, 208, 39-54.</span>
+<span class="sd">    - Schreiber, T. (2000). Measuring information transfer. Phys Rev Lett,</span>
+<span class="sd">      85(2), 461.</span>
 
 <span class="sd">    Estimators can be used to perform multiple, independent searches in</span>
 <span class="sd">    parallel. Each of these parallel searches is called a &#39;chunk&#39;. To search</span>
@@ -244,7 +244,7 @@
                                                 <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;theiler_t&#39;</span><span class="p">]))</span></div>
 
 
-<div class="viewcode-block" id="OpenCLKraskovMI"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_opencl.OpenCLKraskovMI">[docs]</a><span class="k">class</span> <span class="nc">OpenCLKraskovMI</span><span class="p">(</span><span class="n">OpenCLKraskov</span><span class="p">):</span>
+<div class="viewcode-block" id="OpenCLKraskovMI"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_opencl.OpenCLKraskovMI">[docs]</a><span class="k">class</span> <span class="nc">OpenCLKraskovMI</span><span class="p">(</span><span class="n">OpenCLKraskov</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculate mutual information with OpenCL Kraskov implementation.</span>
 
 <span class="sd">    Calculate the mutual information (MI) between two variables using OpenCL</span>
@@ -272,7 +272,7 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;lag&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
-<div class="viewcode-block" id="OpenCLKraskovMI.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_opencl.OpenCLKraskovMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">n_chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<div class="viewcode-block" id="OpenCLKraskovMI.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_opencl.OpenCLKraskovMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">n_chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate mutual information.</span>
 
 <span class="sd">        Args:</span>
@@ -487,7 +487,7 @@
             <span class="k">return</span> <span class="n">mi_array</span></div>
 
 
-<div class="viewcode-block" id="OpenCLKraskovCMI"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_opencl.OpenCLKraskovCMI">[docs]</a><span class="k">class</span> <span class="nc">OpenCLKraskovCMI</span><span class="p">(</span><span class="n">OpenCLKraskov</span><span class="p">):</span>
+<div class="viewcode-block" id="OpenCLKraskovCMI"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_opencl.OpenCLKraskovCMI">[docs]</a><span class="k">class</span> <span class="nc">OpenCLKraskovCMI</span><span class="p">(</span><span class="n">OpenCLKraskov</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculate conditional mutual inform with OpenCL Kraskov implementation.</span>
 
 <span class="sd">    Calculate the conditional mutual information (CMI) between three variables</span>
@@ -513,7 +513,7 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
 
-<div class="viewcode-block" id="OpenCLKraskovCMI.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_opencl.OpenCLKraskovCMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">conditional</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">n_chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<div class="viewcode-block" id="OpenCLKraskovCMI.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_opencl.OpenCLKraskovCMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">conditional</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">n_chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate conditional mutual information.</span>
 
 <span class="sd">        If conditional is None, the mutual information between var1 and var2 is</span>

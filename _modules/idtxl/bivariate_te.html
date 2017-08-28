@@ -135,20 +135,20 @@
 
 <span class="sd">    References:</span>
 
-<span class="sd">        - Schreiber, T. (2000). Measuring Information Transfer. Phys Rev Lett,</span>
-<span class="sd">          85(2), 461–464. http://doi.org/10.1103/PhysRevLett.85.461</span>
-<span class="sd">        - Vicente, R., Wibral, M., Lindner, M., &amp; Pipa, G. (2011). Transfer</span>
-<span class="sd">          entropy-a model-free measure of effective connectivity for the</span>
-<span class="sd">          neurosciences. J Comp Neurosci, 30(1), 45–67.</span>
-<span class="sd">          http://doi.org/10.1007/s10827-010-0262-3</span>
-<span class="sd">        - Lizier, J. T., &amp; Rubinov, M. (2012). Multivariate construction of</span>
-<span class="sd">          effective computational networks from observational data. Max Planck</span>
-<span class="sd">          Institute: Preprint. Retrieved from</span>
-<span class="sd">          http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf</span>
-<span class="sd">        - Faes, L., Nollo, G., &amp; Porta, A. (2011). Information-based detection</span>
-<span class="sd">          of nonlinear Granger causality in multivariate processes via a</span>
-<span class="sd">          nonuniform embedding technique. Phys Rev E, 83, 1–15.</span>
-<span class="sd">          http://doi.org/10.1103/PhysRevE.83.051112</span>
+<span class="sd">    - Schreiber, T. (2000). Measuring Information Transfer. Phys Rev Lett,</span>
+<span class="sd">      85(2), 461–464. http://doi.org/10.1103/PhysRevLett.85.461</span>
+<span class="sd">    - Vicente, R., Wibral, M., Lindner, M., &amp; Pipa, G. (2011). Transfer</span>
+<span class="sd">      entropy-a model-free measure of effective connectivity for the</span>
+<span class="sd">      neurosciences. J Comp Neurosci, 30(1), 45–67.</span>
+<span class="sd">      http://doi.org/10.1007/s10827-010-0262-3</span>
+<span class="sd">    - Lizier, J. T., &amp; Rubinov, M. (2012). Multivariate construction of</span>
+<span class="sd">      effective computational networks from observational data. Max Planck</span>
+<span class="sd">      Institute: Preprint. Retrieved from</span>
+<span class="sd">      http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf</span>
+<span class="sd">    - Faes, L., Nollo, G., &amp; Porta, A. (2011). Information-based detection</span>
+<span class="sd">      of nonlinear Granger causality in multivariate processes via a</span>
+<span class="sd">      nonuniform embedding technique. Phys Rev E, 83, 1–15.</span>
+<span class="sd">      http://doi.org/10.1103/PhysRevE.83.051112</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        source_set : list</span>
@@ -213,7 +213,12 @@
 <span class="sd">        Args:</span>
 <span class="sd">            settings : dict</span>
 <span class="sd">                parameters for estimation and statistical testing, see</span>
-<span class="sd">                documentation of analyse_single_target() for details</span>
+<span class="sd">                documentation of analyse_single_target() for details, settings</span>
+<span class="sd">                can further contain</span>
+
+<span class="sd">                - verbose : bool [optional] - toggle console output</span>
+<span class="sd">                  (default=True)</span>
+
 <span class="sd">            data : Data instance</span>
 <span class="sd">                raw data for analysis</span>
 <span class="sd">            targets : list of int | &#39;all&#39; [optional]</span>
@@ -310,36 +315,36 @@
 <span class="sd">            settings : dict</span>
 <span class="sd">                parameters for estimation and statistical testing:</span>
 
-<span class="sd">                - &#39;cmi_estimator&#39; : str - estimator to be used for CMI</span>
+<span class="sd">                - cmi_estimator : str - estimator to be used for CMI</span>
 <span class="sd">                  calculation (for estimator settings see the documentation in</span>
 <span class="sd">                  the estimators_* modules)</span>
-<span class="sd">                - &#39;max_lag_sources&#39; : int - maximum temporal search depth for</span>
+<span class="sd">                - max_lag_sources : int - maximum temporal search depth for</span>
 <span class="sd">                  candidates in the sources&#39; past in samples</span>
-<span class="sd">                - &#39;min_lag_sources&#39; : int - minimum temporal search depth for</span>
+<span class="sd">                - min_lag_sources : int - minimum temporal search depth for</span>
 <span class="sd">                  candidates in the sources&#39; past in samples</span>
-<span class="sd">                - &#39;max_lag_target&#39; : int [optional] - maximum temporal search</span>
+<span class="sd">                - max_lag_target : int [optional] - maximum temporal search</span>
 <span class="sd">                  depth for candidates in the target&#39;s past in samples</span>
 <span class="sd">                  (default=same as max_lag_sources)</span>
-<span class="sd">                - &#39;tau_sources&#39; : int [optional] - spacing between candidates in</span>
+<span class="sd">                - tau_sources : int [optional] - spacing between candidates in</span>
 <span class="sd">                  the sources&#39; past in samples (default=1)</span>
-<span class="sd">                - &#39;tau_target&#39; : int [optional] - spacing between candidates in</span>
+<span class="sd">                - tau_target : int [optional] - spacing between candidates in</span>
 <span class="sd">                  the target&#39;s past in samples (default=1)</span>
-<span class="sd">                - &#39;n_perm_*&#39; : int - number of permutations, where * can be</span>
+<span class="sd">                - n_perm_* : int - number of permutations, where * can be</span>
 <span class="sd">                  &#39;max_stat&#39;, &#39;min_stat&#39;, &#39;omnibus&#39;, and &#39;max_seq&#39;</span>
 <span class="sd">                  (default=500)</span>
-<span class="sd">                - &#39;alpha_*&#39; : float - critical alpha level for statistical</span>
+<span class="sd">                - alpha_* : float - critical alpha level for statistical</span>
 <span class="sd">                  significance, where * can be &#39;max_stats&#39;,  &#39;min_stats&#39;, and</span>
 <span class="sd">                  &#39;omnibus&#39; (default=0.05)</span>
-<span class="sd">                - &#39;add_conditionals&#39; : list of tuples | str [optional] - force</span>
+<span class="sd">                - add_conditionals : list of tuples | str [optional] - force</span>
 <span class="sd">                  the estimator to add these conditionals when estimating TE;</span>
 <span class="sd">                  can either be a list of variables, where each variable is</span>
 <span class="sd">                  described as (idx process, lag wrt to current value) or can</span>
 <span class="sd">                  be a string: &#39;faes&#39; for Faes-Method (see references)</span>
-<span class="sd">                - &#39;permute_in_time&#39; : bool [optional] - force surrogate</span>
-<span class="sd">                  creation by shuffling realisations in time instead of</span>
-<span class="sd">                  shuffling replications; see documentation of</span>
-<span class="sd">                  Data.permute_samples() for further settings (default=False)</span>
-<span class="sd">                - &#39;verbose&#39; : bool [optional] - toggle console output</span>
+<span class="sd">                - permute_in_time : bool [optional] - force surrogate creation</span>
+<span class="sd">                  by shuffling realisations in time instead of shuffling</span>
+<span class="sd">                  replications; see documentation of Data.permute_samples() for</span>
+<span class="sd">                  further settings (default=False)</span>
+<span class="sd">                - verbose : bool [optional] - toggle console output</span>
 <span class="sd">                  (default=True)</span>
 
 <span class="sd">            data : Data instance</span>

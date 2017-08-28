@@ -133,17 +133,17 @@
 
 <span class="sd">    References:</span>
 
-<span class="sd">        - Genovese, C.R., Lazar, N.A., &amp; Nichols, T. (2002). Thresholding of</span>
-<span class="sd">          statistical maps in functional neuroimaging using the false discovery</span>
-<span class="sd">          rate. Neuroimage, 15(4), 870-878.</span>
+<span class="sd">    - Genovese, C.R., Lazar, N.A., &amp; Nichols, T. (2002). Thresholding of</span>
+<span class="sd">      statistical maps in functional neuroimaging using the false discovery</span>
+<span class="sd">      rate. Neuroimage, 15(4), 870-878.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        settings : dict [optional]</span>
 <span class="sd">            parameters for statistical testing with entries:</span>
 
-<span class="sd">            - &#39;alpha_fdr&#39; : float [optional] - critical alpha level</span>
+<span class="sd">            - alpha_fdr : float [optional] - critical alpha level</span>
 <span class="sd">              (default=0.05)</span>
-<span class="sd">            - &#39;correct_by_target&#39; : bool [optional] - if true p-values are</span>
+<span class="sd">            - correct_by_target : bool [optional] - if true p-values are</span>
 <span class="sd">              corrected on the target level and on the single-link level</span>
 <span class="sd">              otherwise (default=True)</span>
 
@@ -264,11 +264,11 @@
 <span class="sd">            information on the current analysis, can have an optional attribute</span>
 <span class="sd">            &#39;settings&#39;, a dictionary with parameters for statistical testing:</span>
 
-<span class="sd">            - &#39;n_perm_omnibus&#39; : int [optional] - number of permutations</span>
+<span class="sd">            - n_perm_omnibus : int [optional] - number of permutations</span>
 <span class="sd">              (default=500)</span>
-<span class="sd">            - &#39;alpha_omnibus&#39; : float [optional] - critical alpha level</span>
+<span class="sd">            - alpha_omnibus : float [optional] - critical alpha level</span>
 <span class="sd">              (default=0.05)</span>
-<span class="sd">            - &#39;permute_in_time&#39; : bool [optional] - generate surrogates by</span>
+<span class="sd">            - permute_in_time : bool [optional] - generate surrogates by</span>
 <span class="sd">              shuffling samples in time instead of shuffling whole replications</span>
 <span class="sd">              (default=False)</span>
 
@@ -371,11 +371,11 @@
 <span class="sd">            information on the current analysis, can have an optional attribute</span>
 <span class="sd">            &#39;settings&#39;, a dictionary with parameters for statistical testing:</span>
 
-<span class="sd">            - &#39;n_perm_max_stat&#39; : int [optional] - number of permutations</span>
+<span class="sd">            - n_perm_max_stat : int [optional] - number of permutations</span>
 <span class="sd">              (default=200)</span>
-<span class="sd">            - &#39;alpha_max_stat&#39; : float [optional] - critical alpha level</span>
+<span class="sd">            - alpha_max_stat : float [optional] - critical alpha level</span>
 <span class="sd">              (default=0.05)</span>
-<span class="sd">            - &#39;permute_in_time&#39; : bool [optional] - generate surrogates by</span>
+<span class="sd">            - permute_in_time : bool [optional] - generate surrogates by</span>
 <span class="sd">              shuffling samples in time instead of shuffling whole replications</span>
 <span class="sd">              (default=False)</span>
 
@@ -432,11 +432,11 @@
 <span class="sd">            information on the current analysis, can have an optional attribute</span>
 <span class="sd">            &#39;settings&#39;, a dictionary with parameters for statistical testing:</span>
 
-<span class="sd">            - &#39;n_perm_max_seq&#39; : int [optional] - number of permutations</span>
+<span class="sd">            - n_perm_max_seq : int [optional] - number of permutations</span>
 <span class="sd">              (default=&#39;n_perm_min_stat&#39;|500)</span>
-<span class="sd">            - &#39;alpha_max_seq&#39; : float [optional] - critical alpha level</span>
+<span class="sd">            - alpha_max_seq : float [optional] - critical alpha level</span>
 <span class="sd">              (default=0.05)</span>
-<span class="sd">            - &#39;permute_in_time&#39; : bool [optional] - generate surrogates by</span>
+<span class="sd">            - permute_in_time : bool [optional] - generate surrogates by</span>
 <span class="sd">              shuffling samples in time instead of shuffling whole replications</span>
 <span class="sd">              (default=False)</span>
 
@@ -544,9 +544,11 @@
 <span class="sd">            information on the current analysis, can have an optional attribute</span>
 <span class="sd">            &#39;settings&#39;, a dictionary with parameters for statistical testing:</span>
 
-<span class="sd">            - &#39;n_perm_min_stat&#39; - number of permutations (default=500)</span>
-<span class="sd">            - &#39;alpha_min_stat&#39; - critical alpha level (default=0.05)</span>
-<span class="sd">            - &#39;permute_in_time&#39; bool [optional] - generate surrogates by</span>
+<span class="sd">            - n_perm_min_stat : int [optional] - number of permutations</span>
+<span class="sd">              (default=500)</span>
+<span class="sd">            - alpha_min_stat : float [optional] - critical alpha level</span>
+<span class="sd">              (default=0.05)</span>
+<span class="sd">            - permute_in_time : bool [optional] - generate surrogates by</span>
 <span class="sd">              shuffling samples in time instead of shuffling whole replications</span>
 <span class="sd">              (default=False)</span>
 
@@ -597,13 +599,11 @@
 <span class="sd">            information on the current analysis, can have an optional attribute</span>
 <span class="sd">            &#39;settings&#39;, a dictionary with parameters for statistical testing:</span>
 
-<span class="sd">            - &#39;n_perm_mi&#39; : int [optional] - number of permutations</span>
+<span class="sd">            - n_perm_mi : int [optional] - number of permutations</span>
 <span class="sd">              (default=500)</span>
-<span class="sd">            - &#39;alpha_mi&#39; : float [optional] - critical alpha level</span>
+<span class="sd">            - alpha_mi : float [optional] - critical alpha level</span>
 <span class="sd">              (default=0.05)</span>
-<span class="sd">            - &#39;tail_mi&#39; : str [optional] - tail for testing, can be &#39;one&#39; or</span>
-<span class="sd">              &#39;two&#39; (default=&#39;one&#39;)</span>
-<span class="sd">            - &#39;permute_in_time&#39; : bool [optional] - generate surrogates by</span>
+<span class="sd">            - permute_in_time : bool [optional] - generate surrogates by</span>
 <span class="sd">              shuffling samples in time instead of shuffling whole replications</span>
 <span class="sd">              (default=False)</span>
 
@@ -622,8 +622,6 @@
     <span class="n">n_perm</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;n_perm_mi&#39;</span><span class="p">]</span>
     <span class="n">analysis_setup</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;alpha_mi&#39;</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
     <span class="n">alpha</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alpha_mi&#39;</span><span class="p">]</span>
-    <span class="n">analysis_setup</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;tail_mi&#39;</span><span class="p">,</span> <span class="s1">&#39;one_bigger&#39;</span><span class="p">)</span>
-    <span class="n">tail</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tail_mi&#39;</span><span class="p">]</span>
     <span class="n">permute_in_time</span> <span class="o">=</span> <span class="n">_check_permute_in_time</span><span class="p">(</span><span class="n">analysis_setup</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">n_perm</span><span class="p">)</span>
 
     <span class="sd">&#39;&#39;&#39;</span>
@@ -684,7 +682,7 @@
     <span class="p">[</span><span class="n">significance</span><span class="p">,</span> <span class="n">p_value</span><span class="p">]</span> <span class="o">=</span> <span class="n">_find_pvalue</span><span class="p">(</span><span class="n">statistic</span><span class="o">=</span><span class="n">orig_mi</span><span class="p">,</span>
                                            <span class="n">distribution</span><span class="o">=</span><span class="n">surr_dist</span><span class="p">,</span>
                                            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
-                                           <span class="n">tail</span><span class="o">=</span><span class="n">tail</span><span class="p">)</span>
+                                           <span class="n">tail</span><span class="o">=</span><span class="s1">&#39;one_bigger&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">orig_mi</span><span class="p">,</span> <span class="n">significance</span><span class="p">,</span> <span class="n">p_value</span><span class="p">]</span></div>
 
 
@@ -701,11 +699,9 @@
 <span class="sd">            information on the current analysis, should have an Attribute</span>
 <span class="sd">            &#39;settings&#39;, a dict with optional fields</span>
 
-<span class="sd">            - &#39;n_perm&#39; - number of permutations (default=500)</span>
-<span class="sd">            - &#39;alpha&#39; - critical alpha level (default=0.05)</span>
-<span class="sd">            - &#39;tail&#39; - tail for testing, can be &#39;one&#39; or &#39;two&#39;</span>
-<span class="sd">              (default=&#39;one&#39;)</span>
-<span class="sd">            - &#39;permute_in_time&#39; : bool [optional] - generate surrogates by</span>
+<span class="sd">            - n_perm : int [optional] - number of permutations (default=500)</span>
+<span class="sd">            - alpha : float [optional] - critical alpha level (default=0.05)</span>
+<span class="sd">            - permute_in_time : bool [optional] - generate surrogates by</span>
 <span class="sd">              shuffling samples in time instead of shuffling whole replications</span>
 <span class="sd">              (default=False)</span>
 
@@ -729,8 +725,6 @@
     <span class="n">n_perm</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;n_perm&#39;</span><span class="p">]</span>
     <span class="n">analysis_setup</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;alpha&#39;</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
     <span class="n">alpha</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alpha&#39;</span><span class="p">]</span>
-    <span class="n">analysis_setup</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;tail&#39;</span><span class="p">,</span> <span class="s1">&#39;one&#39;</span><span class="p">)</span>
-    <span class="n">tail</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tail&#39;</span><span class="p">]</span>
     <span class="n">_check_permute_in_time</span><span class="p">(</span><span class="n">analysis_setup</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">n_perm</span><span class="p">)</span>
 
     <span class="c1"># Get realisations and estimate PID for orginal data</span>
@@ -805,11 +799,11 @@
     <span class="p">[</span><span class="n">sign_1</span><span class="p">,</span> <span class="n">p_val_1</span><span class="p">]</span> <span class="o">=</span> <span class="n">_find_pvalue</span><span class="p">(</span><span class="n">statistic</span><span class="o">=</span><span class="n">orig_pid</span><span class="p">[</span><span class="s1">&#39;unq_s1&#39;</span><span class="p">],</span>
                                      <span class="n">distribution</span><span class="o">=</span><span class="n">surr_dist_s1</span><span class="p">,</span>
                                      <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
-                                     <span class="n">tail</span><span class="o">=</span><span class="n">tail</span><span class="p">)</span>
+                                     <span class="n">tail</span><span class="o">=</span><span class="s1">&#39;one_bigger&#39;</span><span class="p">)</span>
     <span class="p">[</span><span class="n">sign_2</span><span class="p">,</span> <span class="n">p_val_2</span><span class="p">]</span> <span class="o">=</span> <span class="n">_find_pvalue</span><span class="p">(</span><span class="n">statistic</span><span class="o">=</span><span class="n">orig_pid</span><span class="p">[</span><span class="s1">&#39;unq_s2&#39;</span><span class="p">],</span>
                                      <span class="n">distribution</span><span class="o">=</span><span class="n">surr_dist_s2</span><span class="p">,</span>
                                      <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
-                                     <span class="n">tail</span><span class="o">=</span><span class="n">tail</span><span class="p">)</span>
+                                     <span class="n">tail</span><span class="o">=</span><span class="s1">&#39;one_bigger&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">orig_pid</span><span class="p">,</span> <span class="n">sign_1</span><span class="p">,</span> <span class="n">p_val_1</span><span class="p">,</span> <span class="n">sign_2</span><span class="p">,</span> <span class="n">p_val_2</span><span class="p">]</span></div>
 
 
@@ -826,11 +820,9 @@
 <span class="sd">            information on the current analysis, should have an Attribute</span>
 <span class="sd">            &#39;settings&#39;, a dict with optional fields</span>
 
-<span class="sd">            - &#39;n_perm&#39; : int [optional] - number of permutations (default=500)</span>
-<span class="sd">            - &#39;alpha&#39; : float [optional] - critical alpha level (default=0.05)</span>
-<span class="sd">            - &#39;tail&#39; : str [optional] - tail for testing, can be &#39;one&#39; or &#39;two&#39;</span>
-<span class="sd">              (default=&#39;one&#39;)</span>
-<span class="sd">            - &#39;permute_in_time&#39; : bool [optional] - generate surrogates by</span>
+<span class="sd">            - n_perm : int [optional] - number of permutations (default=500)</span>
+<span class="sd">            - alpha : float [optional] - critical alpha level (default=0.05)</span>
+<span class="sd">            - permute_in_time : bool [optional] - generate surrogates by</span>
 <span class="sd">              shuffling samples in time instead of shuffling whole replications</span>
 <span class="sd">              (default=False)</span>
 
@@ -854,8 +846,6 @@
     <span class="n">n_perm</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;n_perm&#39;</span><span class="p">]</span>
     <span class="n">analysis_setup</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;alpha&#39;</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
     <span class="n">alpha</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alpha&#39;</span><span class="p">]</span>
-    <span class="n">analysis_setup</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;tail&#39;</span><span class="p">,</span> <span class="s1">&#39;one&#39;</span><span class="p">)</span>
-    <span class="n">tail</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tail&#39;</span><span class="p">]</span>
     <span class="n">_check_permute_in_time</span><span class="p">(</span><span class="n">analysis_setup</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">n_perm</span><span class="p">)</span>
 
     <span class="c1"># Get realisations and estimate PID for original data</span>
@@ -906,11 +896,11 @@
     <span class="p">[</span><span class="n">sign_shd</span><span class="p">,</span> <span class="n">p_val_shd</span><span class="p">]</span> <span class="o">=</span> <span class="n">_find_pvalue</span><span class="p">(</span><span class="n">statistic</span><span class="o">=</span><span class="n">orig_pid</span><span class="p">[</span><span class="s1">&#39;shd_s1_s2&#39;</span><span class="p">],</span>
                                          <span class="n">distribution</span><span class="o">=</span><span class="n">surr_dist_shd</span><span class="p">,</span>
                                          <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
-                                         <span class="n">tail</span><span class="o">=</span><span class="n">tail</span><span class="p">)</span>
+                                         <span class="n">tail</span><span class="o">=</span><span class="s1">&#39;one_bigger&#39;</span><span class="p">)</span>
     <span class="p">[</span><span class="n">sign_syn</span><span class="p">,</span> <span class="n">p_val_syn</span><span class="p">]</span> <span class="o">=</span> <span class="n">_find_pvalue</span><span class="p">(</span><span class="n">statistic</span><span class="o">=</span><span class="n">orig_pid</span><span class="p">[</span><span class="s1">&#39;syn_s1_s2&#39;</span><span class="p">],</span>
                                          <span class="n">distribution</span><span class="o">=</span><span class="n">surr_dist_syn</span><span class="p">,</span>
                                          <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
-                                         <span class="n">tail</span><span class="o">=</span><span class="n">tail</span><span class="p">)</span>
+                                         <span class="n">tail</span><span class="o">=</span><span class="s1">&#39;one_bigger&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">orig_pid</span><span class="p">,</span> <span class="n">sign_shd</span><span class="p">,</span> <span class="n">p_val_shd</span><span class="p">,</span> <span class="n">sign_syn</span><span class="p">,</span> <span class="n">p_val_syn</span><span class="p">]</span></div>
 
 

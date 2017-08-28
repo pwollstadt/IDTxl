@@ -125,7 +125,7 @@
 <span class="c1"># TODO check IDTxl nomenclature (variable &gt; process, estimate vs. calculate)</span>
 
 
-<div class="viewcode-block" id="JidtEstimator"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtEstimator">[docs]</a><span class="k">class</span> <span class="nc">JidtEstimator</span><span class="p">(</span><span class="n">Estimator</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtEstimator"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtEstimator">[docs]</a><span class="k">class</span> <span class="nc">JidtEstimator</span><span class="p">(</span><span class="n">Estimator</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Abstract class for implementation of JIDT estimators.</span>
 
 <span class="sd">    Abstract class for implementation of JIDT estimators, child classes</span>
@@ -137,15 +137,15 @@
 
 <span class="sd">    References:</span>
 
-<span class="sd">        - Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for</span>
-<span class="sd">          studying the dynamics of complex systems. Front Robot AI, 1(11).</span>
-<span class="sd">        - Kraskov, A., Stoegbauer, H., &amp; Grassberger, P. (2004). Estimating</span>
-<span class="sd">          mutual information. Phys Rev E, 69(6), 066138.</span>
-<span class="sd">        - Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012).</span>
-<span class="sd">          Local measures of information storage in complex distributed</span>
-<span class="sd">          computation. Inform Sci, 208, 39-54.</span>
-<span class="sd">        - Schreiber, T. (2000). Measuring information transfer. Phys Rev Lett,</span>
-<span class="sd">          85(2), 461.</span>
+<span class="sd">    - Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for</span>
+<span class="sd">      studying the dynamics of complex systems. Front Robot AI, 1(11).</span>
+<span class="sd">    - Kraskov, A., Stoegbauer, H., &amp; Grassberger, P. (2004). Estimating mutual</span>
+<span class="sd">      information. Phys Rev E, 69(6), 066138.</span>
+<span class="sd">    - Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012).</span>
+<span class="sd">      Local measures of information storage in complex distributed computation.</span>
+<span class="sd">      Inform Sci, 208, 39-54.</span>
+<span class="sd">    - Schreiber, T. (2000). Measuring information transfer. Phys Rev Lett,</span>
+<span class="sd">      85(2), 461.</span>
 
 <span class="sd">    Set common estimation parameters for JIDT estimators. For usage of these</span>
 <span class="sd">    estimators see documentation for the child classes.</span>
@@ -268,7 +268,7 @@
         <span class="k">return</span> <span class="bp">False</span></div></div>
 
 
-<div class="viewcode-block" id="JidtKraskov"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtKraskov">[docs]</a><span class="k">class</span> <span class="nc">JidtKraskov</span><span class="p">(</span><span class="n">JidtEstimator</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtKraskov"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtKraskov">[docs]</a><span class="k">class</span> <span class="nc">JidtKraskov</span><span class="p">(</span><span class="n">JidtEstimator</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Abstract class for implementation of JIDT Kraskov-estimators.</span>
 
 <span class="sd">    Abstract class for implementation of JIDT Kraskov-estimators, child classes</span>
@@ -326,7 +326,7 @@
         <span class="k">return</span> <span class="bp">False</span></div></div>
 
 
-<div class="viewcode-block" id="JidtDiscrete"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtDiscrete">[docs]</a><span class="k">class</span> <span class="nc">JidtDiscrete</span><span class="p">(</span><span class="n">JidtEstimator</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtDiscrete"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscrete">[docs]</a><span class="k">class</span> <span class="nc">JidtDiscrete</span><span class="p">(</span><span class="n">JidtEstimator</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Abstract class for implementation of discrete JIDT-estimators.</span>
 
 <span class="sd">    Abstract class for implementation of plug-in JIDT-estimators for discrete</span>
@@ -412,7 +412,7 @@
         <span class="k">return</span> <span class="bp">True</span></div>
 
     <span class="nd">@abstractmethod</span>
-<div class="viewcode-block" id="JidtDiscrete.get_analytic_distribution"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtDiscrete.get_analytic_distribution">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtDiscrete.get_analytic_distribution"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscrete.get_analytic_distribution">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a JIDT AnalyticNullDistribution object.</span>
 
 <span class="sd">        Required so that our estimate_surrogates_analytic method can use the</span>
@@ -431,7 +431,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="JidtDiscrete.estimate_surrogates_analytic"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtDiscrete.estimate_surrogates_analytic">[docs]</a>    <span class="k">def</span> <span class="nf">estimate_surrogates_analytic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_perm</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtDiscrete.estimate_surrogates_analytic"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscrete.estimate_surrogates_analytic">[docs]</a>    <span class="k">def</span> <span class="nf">estimate_surrogates_analytic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_perm</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return estimate of the analytical surrogate distribution.</span>
 
 <span class="sd">        This method must be implemented because this class&#39;</span>
@@ -454,7 +454,7 @@
         <span class="k">return</span> <span class="n">common_estimate_surrogates_analytic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_perm</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="JidtGaussian"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtGaussian">[docs]</a><span class="k">class</span> <span class="nc">JidtGaussian</span><span class="p">(</span><span class="n">JidtEstimator</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtGaussian"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussian">[docs]</a><span class="k">class</span> <span class="nc">JidtGaussian</span><span class="p">(</span><span class="n">JidtEstimator</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Abstract class for implementation of JIDT Gaussian-estimators.</span>
 
 <span class="sd">    Abstract class for implementation of JIDT Gaussian-estimators, child</span>
@@ -486,7 +486,7 @@
 <div class="viewcode-block" id="JidtGaussian.is_analytic_null_estimator"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtGaussian.is_analytic_null_estimator">[docs]</a>    <span class="k">def</span> <span class="nf">is_analytic_null_estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">True</span></div>
 
-<div class="viewcode-block" id="JidtGaussian.get_analytic_distribution"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtGaussian.get_analytic_distribution">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtGaussian.get_analytic_distribution"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussian.get_analytic_distribution">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a JIDT AnalyticNullDistribution object.</span>
 
 <span class="sd">        Required so that our estimate_surrogates_analytic method can use the</span>
@@ -507,7 +507,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeSignificance</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="JidtGaussian.estimate_surrogates_analytic"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtGaussian.estimate_surrogates_analytic">[docs]</a>    <span class="k">def</span> <span class="nf">estimate_surrogates_analytic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_perm</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtGaussian.estimate_surrogates_analytic"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussian.estimate_surrogates_analytic">[docs]</a>    <span class="k">def</span> <span class="nf">estimate_surrogates_analytic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_perm</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate the surrogate distribution analytically.</span>
 <span class="sd">        This method must be implemented because this class&#39;</span>
 <span class="sd">        is_analytic_null_estimator() method returns true</span>
@@ -528,7 +528,7 @@
         <span class="k">return</span> <span class="n">common_estimate_surrogates_analytic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_perm</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="JidtKraskovCMI"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtKraskovCMI">[docs]</a><span class="k">class</span> <span class="nc">JidtKraskovCMI</span><span class="p">(</span><span class="n">JidtKraskov</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtKraskovCMI"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtKraskovCMI">[docs]</a><span class="k">class</span> <span class="nc">JidtKraskovCMI</span><span class="p">(</span><span class="n">JidtKraskov</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculate conditional mutual inform with JIDT&#39;s Kraskov implementation.</span>
 
 <span class="sd">    Calculate the conditional mutual information (CMI) between three variables.</span>
@@ -568,7 +568,7 @@
                      <span class="n">ConditionalMutualInfoCalculatorMultiVariateKraskov1</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">CalcClass</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
 
-<div class="viewcode-block" id="JidtKraskovCMI.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtKraskovCMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">conditional</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtKraskovCMI.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtKraskovCMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">conditional</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate conditional mutual information.</span>
 
 <span class="sd">        Args:</span>
@@ -617,7 +617,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="JidtDiscreteCMI"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtDiscreteCMI">[docs]</a><span class="k">class</span> <span class="nc">JidtDiscreteCMI</span><span class="p">(</span><span class="n">JidtDiscrete</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtDiscreteCMI"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscreteCMI">[docs]</a><span class="k">class</span> <span class="nc">JidtDiscreteCMI</span><span class="p">(</span><span class="n">JidtDiscrete</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculate CMI with JIDT&#39;s implementation for discrete variables.</span>
 
 <span class="sd">    Calculate the conditional mutual information between two variables given</span>
@@ -670,7 +670,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">CalcClass</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.discrete&#39;</span><span class="p">)</span><span class="o">.</span>
                           <span class="n">ConditionalMutualInformationCalculatorDiscrete</span><span class="p">)</span>
 
-<div class="viewcode-block" id="JidtDiscreteCMI.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtDiscreteCMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">conditional</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">return_calc</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtDiscreteCMI.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscreteCMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">conditional</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">return_calc</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate conditional mutual information.</span>
 
 <span class="sd">        Args:</span>
@@ -750,7 +750,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">result</span></div>
 
-<div class="viewcode-block" id="JidtDiscreteCMI.get_analytic_distribution"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtDiscreteCMI.get_analytic_distribution">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">conditional</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtDiscreteCMI.get_analytic_distribution"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscreteCMI.get_analytic_distribution">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">conditional</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a JIDT AnalyticNullDistribution object.</span>
 
 <span class="sd">        Required so that our estimate_surrogates_analytic method can use the</span>
@@ -778,7 +778,7 @@
         <span class="k">return</span> <span class="n">jidt_calc</span><span class="o">.</span><span class="n">computeSignificance</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="JidtDiscreteMI"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtDiscreteMI">[docs]</a><span class="k">class</span> <span class="nc">JidtDiscreteMI</span><span class="p">(</span><span class="n">JidtDiscrete</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtDiscreteMI"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscreteMI">[docs]</a><span class="k">class</span> <span class="nc">JidtDiscreteMI</span><span class="p">(</span><span class="n">JidtDiscrete</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculate MI with JIDT&#39;s discrete-variable implementation.</span>
 
 <span class="sd">    Calculate the mutual information (MI) between two variables. Call JIDT via</span>
@@ -829,7 +829,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">CalcClass</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.discrete&#39;</span><span class="p">)</span><span class="o">.</span>
                           <span class="n">MutualInformationCalculatorDiscrete</span><span class="p">)</span>
 
-<div class="viewcode-block" id="JidtDiscreteMI.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtDiscreteMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">return_calc</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtDiscreteMI.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscreteMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">return_calc</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate mutual information.</span>
 
 <span class="sd">        Args:</span>
@@ -888,7 +888,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">result</span></div>
 
-<div class="viewcode-block" id="JidtDiscreteMI.get_analytic_distribution"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtDiscreteMI.get_analytic_distribution">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtDiscreteMI.get_analytic_distribution"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscreteMI.get_analytic_distribution">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a JIDT AnalyticNullDistribution object.</span>
 
 <span class="sd">        Required so that our estimate_surrogates_analytic method can use the</span>
@@ -913,7 +913,7 @@
         <span class="k">return</span> <span class="n">jidt_calc</span><span class="o">.</span><span class="n">computeSignificance</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="JidtKraskovMI"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtKraskovMI">[docs]</a><span class="k">class</span> <span class="nc">JidtKraskovMI</span><span class="p">(</span><span class="n">JidtKraskov</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtKraskovMI"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtKraskovMI">[docs]</a><span class="k">class</span> <span class="nc">JidtKraskovMI</span><span class="p">(</span><span class="n">JidtKraskov</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculate mutual information with JIDT&#39;s Kraskov implementation.</span>
 
 <span class="sd">    Calculate the mutual information between two variables. Call JIDT via jpype</span>
@@ -956,7 +956,7 @@
         <span class="c1"># Get lag and shift second variable to account for a lag if requested</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;lag&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
-<div class="viewcode-block" id="JidtKraskovMI.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtKraskovMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtKraskovMI.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtKraskovMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate mutual information.</span>
 
 <span class="sd">        Args:</span>
@@ -993,7 +993,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="JidtKraskovAIS"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtKraskovAIS">[docs]</a><span class="k">class</span> <span class="nc">JidtKraskovAIS</span><span class="p">(</span><span class="n">JidtKraskov</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtKraskovAIS"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtKraskovAIS">[docs]</a><span class="k">class</span> <span class="nc">JidtKraskovAIS</span><span class="p">(</span><span class="n">JidtKraskov</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculate active information storage with JIDT&#39;s Kraskov implementation.</span>
 
 <span class="sd">    Calculate active information storage (AIS) for some process using JIDT&#39;s</span>
@@ -1055,7 +1055,7 @@
                      <span class="n">ActiveInfoStorageCalculatorKraskov</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">CalcClass</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
 
-<div class="viewcode-block" id="JidtKraskovAIS.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtKraskovAIS.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtKraskovAIS.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtKraskovAIS.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate active information storage.</span>
 
 <span class="sd">        Args:</span>
@@ -1082,7 +1082,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="JidtDiscreteAIS"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtDiscreteAIS">[docs]</a><span class="k">class</span> <span class="nc">JidtDiscreteAIS</span><span class="p">(</span><span class="n">JidtDiscrete</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtDiscreteAIS"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscreteAIS">[docs]</a><span class="k">class</span> <span class="nc">JidtDiscreteAIS</span><span class="p">(</span><span class="n">JidtDiscrete</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculate AIS with JIDT&#39;s discrete-variable implementation.</span>
 
 <span class="sd">    Calculate the active information storage (AIS) for one process. Call JIDT</span>
@@ -1133,7 +1133,7 @@
                           <span class="n">ActiveInformationCalculatorDiscrete</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
 
-<div class="viewcode-block" id="JidtDiscreteAIS.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtDiscreteAIS.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process</span><span class="p">,</span> <span class="n">return_calc</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtDiscreteAIS.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscreteAIS.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process</span><span class="p">,</span> <span class="n">return_calc</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate active information storage.</span>
 
 <span class="sd">        Args:</span>
@@ -1190,7 +1190,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">result</span></div>
 
-<div class="viewcode-block" id="JidtDiscreteAIS.get_analytic_distribution"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtDiscreteAIS.get_analytic_distribution">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtDiscreteAIS.get_analytic_distribution"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscreteAIS.get_analytic_distribution">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a JIDT AnalyticNullDistribution object.</span>
 
 <span class="sd">        Required so that our estimate_surrogates_analytic method can use the</span>
@@ -1213,7 +1213,7 @@
         <span class="k">return</span> <span class="n">jidt_calc</span><span class="o">.</span><span class="n">computeSignificance</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="JidtGaussianAIS"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtGaussianAIS">[docs]</a><span class="k">class</span> <span class="nc">JidtGaussianAIS</span><span class="p">(</span><span class="n">JidtGaussian</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtGaussianAIS"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussianAIS">[docs]</a><span class="k">class</span> <span class="nc">JidtGaussianAIS</span><span class="p">(</span><span class="n">JidtGaussian</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculate active information storage with JIDT&#39;s Gaussian implementation.</span>
 
 <span class="sd">    Calculate active information storage (AIS) for some process using JIDT&#39;s</span>
@@ -1275,7 +1275,7 @@
                      <span class="n">ActiveInfoStorageCalculatorGaussian</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">CalcClass</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
 
-<div class="viewcode-block" id="JidtGaussianAIS.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtGaussianAIS.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtGaussianAIS.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussianAIS.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate active information storage.</span>
 
 <span class="sd">        Args:</span>
@@ -1299,7 +1299,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="JidtGaussianMI"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtGaussianMI">[docs]</a><span class="k">class</span> <span class="nc">JidtGaussianMI</span><span class="p">(</span><span class="n">JidtGaussian</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtGaussianMI"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussianMI">[docs]</a><span class="k">class</span> <span class="nc">JidtGaussianMI</span><span class="p">(</span><span class="n">JidtGaussian</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculate mutual information with JIDT&#39;s Gaussian implementation.</span>
 
 <span class="sd">    Calculate the mutual information between two variables. Call JIDT via jpype</span>
@@ -1344,7 +1344,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;lag&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
         <span class="c1"># self.calc.setProperty(&#39;PROP_TIME_DIFF&#39;, str(self.settings[&#39;lag&#39;]))</span>
 
-<div class="viewcode-block" id="JidtGaussianMI.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtGaussianMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtGaussianMI.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussianMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate mutual information.</span>
 
 <span class="sd">        Args:</span>
@@ -1376,7 +1376,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="JidtGaussianCMI"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtGaussianCMI">[docs]</a><span class="k">class</span> <span class="nc">JidtGaussianCMI</span><span class="p">(</span><span class="n">JidtGaussian</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtGaussianCMI"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussianCMI">[docs]</a><span class="k">class</span> <span class="nc">JidtGaussianCMI</span><span class="p">(</span><span class="n">JidtGaussian</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculate conditional mutual infor with JIDT&#39;s Gaussian implementation.</span>
 
 <span class="sd">    Computes the differential conditional mutual information of two</span>
@@ -1423,7 +1423,7 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">CalcClass</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">est_mi</span> <span class="o">=</span> <span class="bp">None</span>
 
-<div class="viewcode-block" id="JidtGaussianCMI.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtGaussianCMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">conditional</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtGaussianCMI.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussianCMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">conditional</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate conditional mutual information.</span>
 
 <span class="sd">        Args:</span>
@@ -1468,7 +1468,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="JidtGaussianCMI.get_analytic_distribution"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtGaussianCMI.get_analytic_distribution">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">conditional</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtGaussianCMI.get_analytic_distribution"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussianCMI.get_analytic_distribution">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">conditional</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a JIDT AnalyticNullDistribution object.</span>
 
 <span class="sd">        Required so that our estimate_surrogates_analytic method can use the</span>
@@ -1498,7 +1498,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeSignificance</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="JidtKraskovTE"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtKraskovTE">[docs]</a><span class="k">class</span> <span class="nc">JidtKraskovTE</span><span class="p">(</span><span class="n">JidtKraskov</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtKraskovTE"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtKraskovTE">[docs]</a><span class="k">class</span> <span class="nc">JidtKraskovTE</span><span class="p">(</span><span class="n">JidtKraskov</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculate transfer entropy with JIDT&#39;s Kraskov implementation.</span>
 
 <span class="sd">    Calculate transfer entropy between a source and a target variable using</span>
@@ -1557,7 +1557,7 @@
         <span class="c1"># Get embedding and delay parameters.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_te_defaults</span><span class="p">()</span>
 
-<div class="viewcode-block" id="JidtKraskovTE.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtKraskovTE.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtKraskovTE.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtKraskovTE.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate transfer entropy from a source to a target variable.</span>
 
 <span class="sd">        Args:</span>
@@ -1592,7 +1592,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="JidtDiscreteTE"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtDiscreteTE">[docs]</a><span class="k">class</span> <span class="nc">JidtDiscreteTE</span><span class="p">(</span><span class="n">JidtDiscrete</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtDiscreteTE"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscreteTE">[docs]</a><span class="k">class</span> <span class="nc">JidtDiscreteTE</span><span class="p">(</span><span class="n">JidtDiscrete</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculate TE with JIDT&#39;s implementation for discrete variables.</span>
 
 <span class="sd">    Calculate the transfer entropy between two time series processes.</span>
@@ -1653,7 +1653,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">CalcClass</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.discrete&#39;</span><span class="p">)</span><span class="o">.</span>
                           <span class="n">TransferEntropyCalculatorDiscrete</span><span class="p">)</span>
 
-<div class="viewcode-block" id="JidtDiscreteTE.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtDiscreteTE.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">return_calc</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtDiscreteTE.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscreteTE.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">return_calc</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate transfer entropy from a source to a target variable.</span>
 
 <span class="sd">        Args:</span>
@@ -1706,7 +1706,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">result</span></div>
 
-<div class="viewcode-block" id="JidtDiscreteTE.get_analytic_distribution"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtDiscreteTE.get_analytic_distribution">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtDiscreteTE.get_analytic_distribution"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscreteTE.get_analytic_distribution">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a JIDT AnalyticNullDistribution object.</span>
 
 <span class="sd">        Required so that our estimate_surrogates_analytic method can use the</span>
@@ -1731,7 +1731,7 @@
         <span class="k">return</span> <span class="n">jidt_calc</span><span class="o">.</span><span class="n">computeSignificance</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="JidtGaussianTE"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtGaussianTE">[docs]</a><span class="k">class</span> <span class="nc">JidtGaussianTE</span><span class="p">(</span><span class="n">JidtGaussian</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtGaussianTE"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussianTE">[docs]</a><span class="k">class</span> <span class="nc">JidtGaussianTE</span><span class="p">(</span><span class="n">JidtGaussian</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculate transfer entropy with JIDT&#39;s Gaussian implementation.</span>
 
 <span class="sd">    Calculate transfer entropy between a source and a target variable using</span>
@@ -1790,7 +1790,7 @@
         <span class="c1"># Get embedding and delay parameters.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_te_defaults</span><span class="p">()</span>
 
-<div class="viewcode-block" id="JidtGaussianTE.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.JidtGaussianTE.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+<div class="viewcode-block" id="JidtGaussianTE.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussianTE.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate transfer entropy from a source to a target variable.</span>
 
 <span class="sd">        Args:</span>
@@ -1821,7 +1821,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="common_estimate_surrogates_analytic"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_jidt.common_estimate_surrogates_analytic">[docs]</a><span class="k">def</span> <span class="nf">common_estimate_surrogates_analytic</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">n_perm</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+<div class="viewcode-block" id="common_estimate_surrogates_analytic"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.common_estimate_surrogates_analytic">[docs]</a><span class="k">def</span> <span class="nf">common_estimate_surrogates_analytic</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">n_perm</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Estimate the surrogate distribution analytically for JidtEstimator.</span>
 
 <span class="sd">    Estimate the surrogate distribution analytically for a JidtEstimator</span>

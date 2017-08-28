@@ -138,13 +138,13 @@
 
 <span class="sd">    References:</span>
 
-<span class="sd">        - Lizier, J. T., Prokopenko, M., &amp; Zomaya, A. Y. (2012). Local measures</span>
-<span class="sd">          of information storage in complex distributed computation. Inform</span>
-<span class="sd">          Sci, 208, 39–54. http://doi.org/10.1016/j.ins.2012.04.016</span>
-<span class="sd">        - Wibral, M., Lizier, J. T., Vögler, S., Priesemann, V., &amp; Galuske, R.</span>
-<span class="sd">          (2014). Local active information storage as a tool to understand</span>
-<span class="sd">          distributed neural information processing. Front Neuroinf, 8, 1.</span>
-<span class="sd">          http://doi.org/10.3389/fninf.2014.00001</span>
+<span class="sd">    - Lizier, J. T., Prokopenko, M., &amp; Zomaya, A. Y. (2012). Local measures of</span>
+<span class="sd">      information storage in complex distributed computation. Inform Sci, 208,</span>
+<span class="sd">      39–54. http://doi.org/10.1016/j.ins.2012.04.016</span>
+<span class="sd">    - Wibral, M., Lizier, J. T., Vögler, S., Priesemann, V., &amp; Galuske, R.</span>
+<span class="sd">      (2014). Local active information storage as a tool to understand</span>
+<span class="sd">      distributed neural information processing. Front Neuroinf, 8, 1.</span>
+<span class="sd">      http://doi.org/10.3389/fninf.2014.00001</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        process_set : list</span>
@@ -254,28 +254,28 @@
 <span class="sd">            settings : dict</span>
 <span class="sd">                parameters for estimator use and statistics:</span>
 
-<span class="sd">                - &#39;cmi_estimator&#39; : str - estimator to be used for CMI and MI</span>
+<span class="sd">                - cmi_estimator : str - estimator to be used for CMI and MI</span>
 <span class="sd">                  calculation (for estimator settings see the documentation in</span>
 <span class="sd">                  the estimators_* modules)</span>
-<span class="sd">                - &#39;max_lag&#39; : int - maximum temporal search depth for</span>
-<span class="sd">                  candidates in the processes&#39; past in samples</span>
-<span class="sd">                - &#39;tau&#39; : int [optional] - spacing between candidates in</span>
-<span class="sd">                  the sources&#39; past in samples (default=1)</span>
-<span class="sd">                - &#39;n_perm_*&#39; : int [optional] - number of permutations, where *</span>
+<span class="sd">                - max_lag : int - maximum temporal search depth for candidates</span>
+<span class="sd">                  in the processes&#39; past in samples</span>
+<span class="sd">                - tau : int [optional] - spacing between candidates in the</span>
+<span class="sd">                  sources&#39; past in samples (default=1)</span>
+<span class="sd">                - n_perm_* : int [optional] - number of permutations, where *</span>
 <span class="sd">                  can be &#39;max_stat&#39;, &#39;min_stat&#39;, &#39;mi&#39; (default=500)</span>
-<span class="sd">                - &#39;alpha_*&#39; : float [optional] - critical alpha level for</span>
+<span class="sd">                - alpha_* : float [optional] - critical alpha level for</span>
 <span class="sd">                  statistical significance, where * can be &#39;max_stat&#39;,</span>
 <span class="sd">                  &#39;min_stat&#39;, &#39;mi&#39; (default=0.05)</span>
-<span class="sd">                - &#39;add_conditionals&#39; : list of tuples | str [optional] - force</span>
+<span class="sd">                - add_conditionals : list of tuples | str [optional] - force</span>
 <span class="sd">                  the estimator to add these conditionals when estimating TE;</span>
 <span class="sd">                  can either be a list of variables, where each variable is</span>
 <span class="sd">                  described as (idx process, lag wrt to current value) or can</span>
 <span class="sd">                  be a string: &#39;faes&#39; for Faes-Method (see references)</span>
-<span class="sd">                - &#39;permute_in_time&#39; : bool [optional] - force surrogate</span>
-<span class="sd">                  creation by shuffling realisations in time instead of</span>
-<span class="sd">                  shuffling replications; see documentation of</span>
-<span class="sd">                  Data.permute_samples() for further settings (default=False)</span>
-<span class="sd">                - &#39;verbose&#39; : bool [optional] - toggle console output</span>
+<span class="sd">                - permute_in_time : bool [optional] - force surrogate creation</span>
+<span class="sd">                  by shuffling realisations in time instead of shuffling</span>
+<span class="sd">                  replications; see documentation of Data.permute_samples() for</span>
+<span class="sd">                  further settings (default=False)</span>
+<span class="sd">                - verbose : bool [optional] - toggle console output</span>
 <span class="sd">                  (default=True)</span>
 
 <span class="sd">            data : Data instance</span>

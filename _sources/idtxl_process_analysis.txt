@@ -1,5 +1,5 @@
-Algorithms for network inference
-================================
+Algorithms for the analysis of individual processes
+==================================================
 
 idtxl.active_information_storage.ActiveInformationStorage
 ---------------------------------------------------------

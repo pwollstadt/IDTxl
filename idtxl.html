@@ -166,17 +166,15 @@ network or a set of nodes or call analyse_single_process() to estimate
 AIS for a single process. See docstrings of the two functions for more
 information.</p>
 <p>References:</p>
-<blockquote>
-<div><ul class="simple">
-<li>Lizier, J. T., Prokopenko, M., &amp; Zomaya, A. Y. (2012). Local measures
-of information storage in complex distributed computation. Inform
-Sci, 208, 39–54. <a class="reference external" href="http://doi.org/10.1016/j.ins.2012.04.016">http://doi.org/10.1016/j.ins.2012.04.016</a></li>
+<ul class="simple">
+<li>Lizier, J. T., Prokopenko, M., &amp; Zomaya, A. Y. (2012). Local measures of
+information storage in complex distributed computation. Inform Sci, 208,
+39–54. <a class="reference external" href="http://doi.org/10.1016/j.ins.2012.04.016">http://doi.org/10.1016/j.ins.2012.04.016</a></li>
 <li>Wibral, M., Lizier, J. T., Vögler, S., Priesemann, V., &amp; Galuske, R.
 (2014). Local active information storage as a tool to understand
 distributed neural information processing. Front Neuroinf, 8, 1.
 <a class="reference external" href="http://doi.org/10.3389/fninf.2014.00001">http://doi.org/10.3389/fninf.2014.00001</a></li>
 </ul>
-</div></blockquote>
 <dl class="docutils">
 <dt>Attributes:</dt>
 <dd><dl class="first last docutils">
@@ -278,28 +276,28 @@ test for statistical significance using a permutation test</li>
 <dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
 <dd><p class="first">parameters for estimator use and statistics:</p>
 <ul class="last simple">
-<li>&#8216;cmi_estimator&#8217; : str - estimator to be used for CMI and MI
+<li>cmi_estimator : str - estimator to be used for CMI and MI
 calculation (for estimator settings see the documentation in
 the estimators_* modules)</li>
-<li>&#8216;max_lag&#8217; : int - maximum temporal search depth for
-candidates in the processes&#8217; past in samples</li>
-<li>&#8216;tau&#8217; : int [optional] - spacing between candidates in
-the sources&#8217; past in samples (default=1)</li>
-<li>&#8216;n_perm_*&#8217; : int [optional] - number of permutations, where *
+<li>max_lag : int - maximum temporal search depth for candidates
+in the processes&#8217; past in samples</li>
+<li>tau : int [optional] - spacing between candidates in the
+sources&#8217; past in samples (default=1)</li>
+<li>n_perm_* : int [optional] - number of permutations, where *
 can be &#8216;max_stat&#8217;, &#8216;min_stat&#8217;, &#8216;mi&#8217; (default=500)</li>
-<li>&#8216;alpha_*&#8217; : float [optional] - critical alpha level for
+<li>alpha_* : float [optional] - critical alpha level for
 statistical significance, where * can be &#8216;max_stat&#8217;,
 &#8216;min_stat&#8217;, &#8216;mi&#8217; (default=0.05)</li>
-<li>&#8216;add_conditionals&#8217; : list of tuples | str [optional] - force
+<li>add_conditionals : list of tuples | str [optional] - force
 the estimator to add these conditionals when estimating TE;
 can either be a list of variables, where each variable is
 described as (idx process, lag wrt to current value) or can
 be a string: &#8216;faes&#8217; for Faes-Method (see references)</li>
-<li>&#8216;permute_in_time&#8217; : bool [optional] - force surrogate
-creation by shuffling realisations in time instead of
-shuffling replications; see documentation of
-Data.permute_samples() for further settings (default=False)</li>
-<li>&#8216;verbose&#8217; : bool [optional] - toggle console output
+<li>permute_in_time : bool [optional] - force surrogate creation
+by shuffling realisations in time instead of shuffling
+replications; see documentation of Data.permute_samples() for
+further settings (default=False)</li>
+<li>verbose : bool [optional] - toggle console output
 (default=True)</li>
 </ul>
 </dd>
@@ -345,8 +343,7 @@ perform network inference call analyse_network() on the whole network or a
 set of nodes or call analyse_single_target() to estimate TE for a single
 target. See docstrings of the two functions for more information.</p>
 <p>References:</p>
-<blockquote>
-<div><ul class="simple">
+<ul class="simple">
 <li>Schreiber, T. (2000). Measuring Information Transfer. Phys Rev Lett,
 85(2), 461–464. <a class="reference external" href="http://doi.org/10.1103/PhysRevLett.85.461">http://doi.org/10.1103/PhysRevLett.85.461</a></li>
 <li>Vicente, R., Wibral, M., Lindner, M., &amp; Pipa, G. (2011). Transfer
@@ -362,7 +359,6 @@ of nonlinear Granger causality in multivariate processes via a
 nonuniform embedding technique. Phys Rev E, 83, 1–15.
 <a class="reference external" href="http://doi.org/10.1103/PhysRevE.83.051112">http://doi.org/10.1103/PhysRevE.83.051112</a></li>
 </ul>
-</div></blockquote>
 <dl class="docutils">
 <dt>Attributes:</dt>
 <dd><dl class="first last docutils">
@@ -428,8 +424,14 @@ analyse_single_target() method of this class and the references.</dd>
 <dt>Args:</dt>
 <dd><dl class="first last docutils">
 <dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
-<dd>parameters for estimation and statistical testing, see
-documentation of analyse_single_target() for details</dd>
+<dd><p class="first">parameters for estimation and statistical testing, see
+documentation of analyse_single_target() for details, settings
+can further contain</p>
+<ul class="last simple">
+<li>verbose : bool [optional] - toggle console output
+(default=True)</li>
+</ul>
+</dd>
 <dt>data <span class="classifier-delimiter">:</span> <span class="classifier">Data instance</span></dt>
 <dd>raw data for analysis</dd>
 <dt>targets <span class="classifier-delimiter">:</span> <span class="classifier">list of int | &#8216;all&#8217; [optional]</span></dt>
@@ -507,36 +509,36 @@ significant transfer of all individual samples in the set)</li>
 <dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
 <dd><p class="first">parameters for estimation and statistical testing:</p>
 <ul class="last simple">
-<li>&#8216;cmi_estimator&#8217; : str - estimator to be used for CMI
+<li>cmi_estimator : str - estimator to be used for CMI
 calculation (for estimator settings see the documentation in
 the estimators_* modules)</li>
-<li>&#8216;max_lag_sources&#8217; : int - maximum temporal search depth for
+<li>max_lag_sources : int - maximum temporal search depth for
 candidates in the sources&#8217; past in samples</li>
-<li>&#8216;min_lag_sources&#8217; : int - minimum temporal search depth for
+<li>min_lag_sources : int - minimum temporal search depth for
 candidates in the sources&#8217; past in samples</li>
-<li>&#8216;max_lag_target&#8217; : int [optional] - maximum temporal search
+<li>max_lag_target : int [optional] - maximum temporal search
 depth for candidates in the target&#8217;s past in samples
 (default=same as max_lag_sources)</li>
-<li>&#8216;tau_sources&#8217; : int [optional] - spacing between candidates in
+<li>tau_sources : int [optional] - spacing between candidates in
 the sources&#8217; past in samples (default=1)</li>
-<li>&#8216;tau_target&#8217; : int [optional] - spacing between candidates in
+<li>tau_target : int [optional] - spacing between candidates in
 the target&#8217;s past in samples (default=1)</li>
-<li>&#8216;n_perm_*&#8217; : int - number of permutations, where * can be
+<li>n_perm_* : int - number of permutations, where * can be
 &#8216;max_stat&#8217;, &#8216;min_stat&#8217;, &#8216;omnibus&#8217;, and &#8216;max_seq&#8217;
 (default=500)</li>
-<li>&#8216;alpha_*&#8217; : float - critical alpha level for statistical
+<li>alpha_* : float - critical alpha level for statistical
 significance, where * can be &#8216;max_stats&#8217;,  &#8216;min_stats&#8217;, and
 &#8216;omnibus&#8217; (default=0.05)</li>
-<li>&#8216;add_conditionals&#8217; : list of tuples | str [optional] - force
+<li>add_conditionals : list of tuples | str [optional] - force
 the estimator to add these conditionals when estimating TE;
 can either be a list of variables, where each variable is
 described as (idx process, lag wrt to current value) or can
 be a string: &#8216;faes&#8217; for Faes-Method (see references)</li>
-<li>&#8216;permute_in_time&#8217; : bool [optional] - force surrogate
-creation by shuffling realisations in time instead of
-shuffling replications; see documentation of
-Data.permute_samples() for further settings (default=False)</li>
-<li>&#8216;verbose&#8217; : bool [optional] - toggle console output
+<li>permute_in_time : bool [optional] - force surrogate creation
+by shuffling realisations in time instead of shuffling
+replications; see documentation of Data.permute_samples() for
+further settings (default=False)</li>
+<li>verbose : bool [optional] - toggle console output
 (default=True)</li>
 </ul>
 </dd>
@@ -1175,7 +1177,7 @@ class</dd>
 <dl class="class">
 <dt id="idtxl.estimators_jidt.JidtDiscrete">
 <em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtDiscrete</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscrete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_jidt.JidtDiscrete" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#idtxl.estimators_jidt.JidtEstimator" title="idtxl.estimators_jidt.JidtEstimator"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtEstimator</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="idtxl_estimators.html#idtxl.estimators_jidt.JidtEstimator" title="idtxl.estimators_jidt.JidtEstimator"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtEstimator</span></code></a></p>
 <p>Abstract class for implementation of discrete JIDT-estimators.</p>
 <p>Abstract class for implementation of plug-in JIDT-estimators for discrete
 data. Child classes implement estimators for mutual information (MI),
@@ -1271,7 +1273,7 @@ CMI). Formatted as per the estimate method for this estimator.</dd>
 <dl class="class">
 <dt id="idtxl.estimators_jidt.JidtDiscreteAIS">
 <em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtDiscreteAIS</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteAIS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_jidt.JidtDiscreteAIS" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#idtxl.estimators_jidt.JidtDiscrete" title="idtxl.estimators_jidt.JidtDiscrete"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtDiscrete</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscrete" title="idtxl.estimators_jidt.JidtDiscrete"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtDiscrete</span></code></a></p>
 <p>Calculate AIS with JIDT&#8217;s discrete-variable implementation.</p>
 <p>Calculate the active information storage (AIS) for one process. Call JIDT
 via jpype and use the discrete estimator. See parent class for references.</p>
@@ -1362,7 +1364,7 @@ discretisation) or int</dd>
 <dl class="class">
 <dt id="idtxl.estimators_jidt.JidtDiscreteCMI">
 <em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtDiscreteCMI</code><span class="sig-paren">(</span><em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteCMI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_jidt.JidtDiscreteCMI" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#idtxl.estimators_jidt.JidtDiscrete" title="idtxl.estimators_jidt.JidtDiscrete"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtDiscrete</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscrete" title="idtxl.estimators_jidt.JidtDiscrete"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtDiscrete</span></code></a></p>
 <p>Calculate CMI with JIDT&#8217;s implementation for discrete variables.</p>
 <p>Calculate the conditional mutual information between two variables given
 the third. Call JIDT via jpype and use the discrete estimator. See parent
@@ -1466,7 +1468,7 @@ no conditional is provided, return MI between var1 and var2</dd>
 <dl class="class">
 <dt id="idtxl.estimators_jidt.JidtDiscreteMI">
 <em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtDiscreteMI</code><span class="sig-paren">(</span><em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteMI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_jidt.JidtDiscreteMI" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#idtxl.estimators_jidt.JidtDiscrete" title="idtxl.estimators_jidt.JidtDiscrete"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtDiscrete</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscrete" title="idtxl.estimators_jidt.JidtDiscrete"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtDiscrete</span></code></a></p>
 <p>Calculate MI with JIDT&#8217;s discrete-variable implementation.</p>
 <p>Calculate the mutual information (MI) between two variables. Call JIDT via
 jpype and use the discrete estimator. See parent class for references.</p>
@@ -1563,7 +1565,7 @@ float (requires discretisation) or int</dd>
 <dl class="class">
 <dt id="idtxl.estimators_jidt.JidtDiscreteTE">
 <em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtDiscreteTE</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteTE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_jidt.JidtDiscreteTE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#idtxl.estimators_jidt.JidtDiscrete" title="idtxl.estimators_jidt.JidtDiscrete"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtDiscrete</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscrete" title="idtxl.estimators_jidt.JidtDiscrete"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtDiscrete</span></code></a></p>
 <p>Calculate TE with JIDT&#8217;s implementation for discrete variables.</p>
 <p>Calculate the transfer entropy between two time series processes.
 Call JIDT via jpype and use the discrete estimator. Transfer entropy is
@@ -1678,19 +1680,17 @@ using the Kraskov-Grassberger-Stoegbauer estimator for continuous data,
 plug-in estimators for discrete data, and Gaussian estimators for
 continuous Gaussian data.</p>
 <p>References:</p>
-<blockquote>
-<div><ul class="simple">
+<ul class="simple">
 <li>Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
 studying the dynamics of complex systems. Front Robot AI, 1(11).</li>
-<li>Kraskov, A., Stoegbauer, H., &amp; Grassberger, P. (2004). Estimating
-mutual information. Phys Rev E, 69(6), 066138.</li>
+<li>Kraskov, A., Stoegbauer, H., &amp; Grassberger, P. (2004). Estimating mutual
+information. Phys Rev E, 69(6), 066138.</li>
 <li>Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012).
-Local measures of information storage in complex distributed
-computation. Inform Sci, 208, 39-54.</li>
+Local measures of information storage in complex distributed computation.
+Inform Sci, 208, 39-54.</li>
 <li>Schreiber, T. (2000). Measuring information transfer. Phys Rev Lett,
 85(2), 461.</li>
 </ul>
-</div></blockquote>
 <p>Set common estimation parameters for JIDT estimators. For usage of these
 estimators see documentation for the child classes.</p>
 <dl class="docutils">
@@ -1718,7 +1718,7 @@ estimators see documentation for the child classes.</p>
 <dl class="class">
 <dt id="idtxl.estimators_jidt.JidtGaussian">
 <em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtGaussian</code><span class="sig-paren">(</span><em>CalcClass</em>, <em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_jidt.JidtGaussian" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#idtxl.estimators_jidt.JidtEstimator" title="idtxl.estimators_jidt.JidtEstimator"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtEstimator</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="idtxl_estimators.html#idtxl.estimators_jidt.JidtEstimator" title="idtxl.estimators_jidt.JidtEstimator"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtEstimator</span></code></a></p>
 <p>Abstract class for implementation of JIDT Gaussian-estimators.</p>
 <p>Abstract class for implementation of JIDT Gaussian-estimators, child
 classes implement estimators for mutual information (MI), conditional
@@ -1805,7 +1805,7 @@ CMI). Formatted as per the estimate method for this estimator.</dd>
 <dl class="class">
 <dt id="idtxl.estimators_jidt.JidtGaussianAIS">
 <em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtGaussianAIS</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianAIS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_jidt.JidtGaussianAIS" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#idtxl.estimators_jidt.JidtGaussian" title="idtxl.estimators_jidt.JidtGaussian"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtGaussian</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussian" title="idtxl.estimators_jidt.JidtGaussian"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtGaussian</span></code></a></p>
 <p>Calculate active information storage with JIDT&#8217;s Gaussian implementation.</p>
 <p>Calculate active information storage (AIS) for some process using JIDT&#8217;s
 implementation of the Gaussian estimator. AIS is defined as the
@@ -1876,7 +1876,7 @@ samples if &#8216;local_values&#8217;=True</dd>
 <dl class="class">
 <dt id="idtxl.estimators_jidt.JidtGaussianCMI">
 <em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtGaussianCMI</code><span class="sig-paren">(</span><em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianCMI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_jidt.JidtGaussianCMI" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#idtxl.estimators_jidt.JidtGaussian" title="idtxl.estimators_jidt.JidtGaussian"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtGaussian</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussian" title="idtxl.estimators_jidt.JidtGaussian"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtGaussian</span></code></a></p>
 <p>Calculate conditional mutual infor with JIDT&#8217;s Gaussian implementation.</p>
 <p>Computes the differential conditional mutual information of two
 multivariate sets of observations, conditioned on another, assuming that
@@ -1979,7 +1979,7 @@ no conditional is provided, return MI between var1 and var2</dd>
 <dl class="class">
 <dt id="idtxl.estimators_jidt.JidtGaussianMI">
 <em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtGaussianMI</code><span class="sig-paren">(</span><em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianMI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_jidt.JidtGaussianMI" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#idtxl.estimators_jidt.JidtGaussian" title="idtxl.estimators_jidt.JidtGaussian"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtGaussian</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussian" title="idtxl.estimators_jidt.JidtGaussian"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtGaussian</span></code></a></p>
 <p>Calculate mutual information with JIDT&#8217;s Gaussian implementation.</p>
 <p>Calculate the mutual information between two variables. Call JIDT via jpype
 and use the Gaussian estimator. See parent class for references.</p>
@@ -2044,7 +2044,7 @@ samples if &#8216;local_values&#8217;=True</dd>
 <dl class="class">
 <dt id="idtxl.estimators_jidt.JidtGaussianTE">
 <em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtGaussianTE</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianTE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_jidt.JidtGaussianTE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#idtxl.estimators_jidt.JidtGaussian" title="idtxl.estimators_jidt.JidtGaussian"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtGaussian</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussian" title="idtxl.estimators_jidt.JidtGaussian"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtGaussian</span></code></a></p>
 <p>Calculate transfer entropy with JIDT&#8217;s Gaussian implementation.</p>
 <p>Calculate transfer entropy between a source and a target variable using
 JIDT&#8217;s implementation of the Gaussian estimator. Transfer entropy is
@@ -2123,7 +2123,7 @@ samples if &#8216;local_values&#8217;=True</dd>
 <dl class="class">
 <dt id="idtxl.estimators_jidt.JidtKraskov">
 <em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtKraskov</code><span class="sig-paren">(</span><em>CalcClass</em>, <em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_jidt.JidtKraskov" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#idtxl.estimators_jidt.JidtEstimator" title="idtxl.estimators_jidt.JidtEstimator"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtEstimator</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="idtxl_estimators.html#idtxl.estimators_jidt.JidtEstimator" title="idtxl.estimators_jidt.JidtEstimator"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtEstimator</span></code></a></p>
 <p>Abstract class for implementation of JIDT Kraskov-estimators.</p>
 <p>Abstract class for implementation of JIDT Kraskov-estimators, child classes
 implement estimators for mutual information (MI), conditional mutual
@@ -2167,7 +2167,7 @@ on the current machine)</li>
 <dl class="class">
 <dt id="idtxl.estimators_jidt.JidtKraskovAIS">
 <em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtKraskovAIS</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovAIS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_jidt.JidtKraskovAIS" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#idtxl.estimators_jidt.JidtKraskov" title="idtxl.estimators_jidt.JidtKraskov"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtKraskov</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="idtxl_estimators.html#idtxl.estimators_jidt.JidtKraskov" title="idtxl.estimators_jidt.JidtKraskov"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtKraskov</span></code></a></p>
 <p>Calculate active information storage with JIDT&#8217;s Kraskov implementation.</p>
 <p>Calculate active information storage (AIS) for some process using JIDT&#8217;s
 implementation of the Kraskov type 1 estimator. AIS is defined as the
@@ -2238,7 +2238,7 @@ samples if &#8216;local_values&#8217;=True</dd>
 <dl class="class">
 <dt id="idtxl.estimators_jidt.JidtKraskovCMI">
 <em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtKraskovCMI</code><span class="sig-paren">(</span><em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovCMI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_jidt.JidtKraskovCMI" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#idtxl.estimators_jidt.JidtKraskov" title="idtxl.estimators_jidt.JidtKraskov"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtKraskov</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="idtxl_estimators.html#idtxl.estimators_jidt.JidtKraskov" title="idtxl.estimators_jidt.JidtKraskov"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtKraskov</span></code></a></p>
 <p>Calculate conditional mutual inform with JIDT&#8217;s Kraskov implementation.</p>
 <p>Calculate the conditional mutual information (CMI) between three variables.
 Call JIDT via jpype and use the Kraskov 1 estimator. If no conditional is
@@ -2306,7 +2306,7 @@ samples if &#8216;local_values&#8217;=True</dd>
 <dl class="class">
 <dt id="idtxl.estimators_jidt.JidtKraskovMI">
 <em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtKraskovMI</code><span class="sig-paren">(</span><em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovMI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_jidt.JidtKraskovMI" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#idtxl.estimators_jidt.JidtKraskov" title="idtxl.estimators_jidt.JidtKraskov"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtKraskov</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="idtxl_estimators.html#idtxl.estimators_jidt.JidtKraskov" title="idtxl.estimators_jidt.JidtKraskov"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtKraskov</span></code></a></p>
 <p>Calculate mutual information with JIDT&#8217;s Kraskov implementation.</p>
 <p>Calculate the mutual information between two variables. Call JIDT via jpype
 and use the Kraskov 1 estimator. See parent class for references.</p>
@@ -2371,7 +2371,7 @@ samples if &#8216;local_values&#8217;=True</dd>
 <dl class="class">
 <dt id="idtxl.estimators_jidt.JidtKraskovTE">
 <em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtKraskovTE</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovTE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_jidt.JidtKraskovTE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#idtxl.estimators_jidt.JidtKraskov" title="idtxl.estimators_jidt.JidtKraskov"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtKraskov</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="idtxl_estimators.html#idtxl.estimators_jidt.JidtKraskov" title="idtxl.estimators_jidt.JidtKraskov"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_jidt.JidtKraskov</span></code></a></p>
 <p>Calculate transfer entropy with JIDT&#8217;s Kraskov implementation.</p>
 <p>Calculate transfer entropy between a source and a target variable using
 JIDT&#8217;s implementation of the Kraskov type 1 estimator. Transfer entropy is
@@ -2490,17 +2490,15 @@ implement estimators for mutual information (MI) and conditional mutual
 information (CMI) using the Kraskov-Grassberger-Stoegbauer estimator for
 continuous data.</p>
 <p>References:</p>
-<blockquote>
-<div><ul class="simple">
-<li>Kraskov, A., Stoegbauer, H., &amp; Grassberger, P. (2004). Estimating
-mutual information. Phys Rev E, 69(6), 066138.</li>
+<ul class="simple">
+<li>Kraskov, A., Stoegbauer, H., &amp; Grassberger, P. (2004). Estimating mutual
+information. Phys Rev E, 69(6), 066138.</li>
 <li>Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012).
-Local measures of information storage in complex distributed
-computation. Inform Sci, 208, 39-54.</li>
+Local measures of information storage in complex distributed computation.
+Inform Sci, 208, 39-54.</li>
 <li>Schreiber, T. (2000). Measuring information transfer. Phys Rev Lett,
 85(2), 461.</li>
 </ul>
-</div></blockquote>
 <p>Estimators can be used to perform multiple, independent searches in
 parallel. Each of these parallel searches is called a &#8216;chunk&#8217;. To search
 multiple chunks, provide point sets as 2D arrays, where the first
@@ -2545,7 +2543,7 @@ range searches and KNN distances (default=False)</li>
 <dl class="class">
 <dt id="idtxl.estimators_opencl.OpenCLKraskovCMI">
 <em class="property">class </em><code class="descclassname">idtxl.estimators_opencl.</code><code class="descname">OpenCLKraskovCMI</code><span class="sig-paren">(</span><em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskovCMI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_opencl.OpenCLKraskovCMI" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#idtxl.estimators_opencl.OpenCLKraskov" title="idtxl.estimators_opencl.OpenCLKraskov"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_opencl.OpenCLKraskov</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="idtxl_estimators.html#idtxl.estimators_opencl.OpenCLKraskov" title="idtxl.estimators_opencl.OpenCLKraskov"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_opencl.OpenCLKraskov</span></code></a></p>
 <p>Calculate conditional mutual inform with OpenCL Kraskov implementation.</p>
 <p>Calculate the conditional mutual information (CMI) between three variables
 using OpenCL GPU-code. If no conditional is given (is None), the function
@@ -2608,7 +2606,7 @@ samples if &#8216;local_values&#8217;=True</dd>
 <dl class="class">
 <dt id="idtxl.estimators_opencl.OpenCLKraskovMI">
 <em class="property">class </em><code class="descclassname">idtxl.estimators_opencl.</code><code class="descname">OpenCLKraskovMI</code><span class="sig-paren">(</span><em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskovMI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_opencl.OpenCLKraskovMI" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#idtxl.estimators_opencl.OpenCLKraskov" title="idtxl.estimators_opencl.OpenCLKraskov"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_opencl.OpenCLKraskov</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="idtxl_estimators.html#idtxl.estimators_opencl.OpenCLKraskov" title="idtxl.estimators_opencl.OpenCLKraskov"><code class="xref py py-class docutils literal"><span class="pre">idtxl.estimators_opencl.OpenCLKraskov</span></code></a></p>
 <p>Calculate mutual information with OpenCL Kraskov implementation.</p>
 <p>Calculate the mutual information (MI) between two variables using OpenCL
 GPU-code. See parent class for references.</p>
@@ -2670,8 +2668,8 @@ samples if &#8216;local_values&#8217;=True</dd>
 <p>Partical information decomposition for discrete random variables.</p>
 <p>This module provides an estimator for partial information decomposition
 as proposed in</p>
-<p>Bertschinger, Rauh, Olbrich, Jost, Ay; Quantifying Unique Information,
-Entropy 2014, 16, 2161-2183; doi:10.3390/e16042161</p>
+<p>Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., &amp; Ay, N. (2014). Quantifying
+Unique Information. Entropy, 16(4), 2161–2183. <a class="reference external" href="http://doi.org/10.3390/e16042161">http://doi.org/10.3390/e16042161</a></p>
 <dl class="class">
 <dt id="idtxl.estimators_pid.SydneyPID">
 <em class="property">class </em><code class="descclassname">idtxl.estimators_pid.</code><code class="descname">SydneyPID</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#SydneyPID"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_pid.SydneyPID" title="Permalink to this definition">¶</a></dt>
@@ -3594,8 +3592,7 @@ perform network inference call analyse_network() on the whole network or a
 set of nodes or call analyse_single_target() to estimate TE for a single
 target. See docstrings of the two functions for more information.</p>
 <p>References:</p>
-<blockquote>
-<div><ul class="simple">
+<ul class="simple">
 <li>Schreiber, T. (2000). Measuring Information Transfer. Phys Rev Lett,
 85(2), 461–464. <a class="reference external" href="http://doi.org/10.1103/PhysRevLett.85.461">http://doi.org/10.1103/PhysRevLett.85.461</a></li>
 <li>Vicente, R., Wibral, M., Lindner, M., &amp; Pipa, G. (2011). Transfer
@@ -3611,7 +3608,6 @@ of nonlinear Granger causality in multivariate processes via a
 nonuniform embedding technique. Phys Rev E, 83, 1–15.
 <a class="reference external" href="http://doi.org/10.1103/PhysRevE.83.051112">http://doi.org/10.1103/PhysRevE.83.051112</a></li>
 </ul>
-</div></blockquote>
 <dl class="docutils">
 <dt>Attributes:</dt>
 <dd><dl class="first last docutils">
@@ -3679,9 +3675,9 @@ analyse_single_target() method of this class and the references.</dd>
 documentation of analyse_single_target() for details, settings
 can further contain</p>
 <ul class="last simple">
-<li>&#8216;verbose&#8217; : bool [optional] - toggle console output
+<li>verbose : bool [optional] - toggle console output
 (default=True)</li>
-<li>&#8216;fdr_correction&#8217; : bool [optional] - correct results on the
+<li>fdr_correction : bool [optional] - correct results on the
 network level, see documentation of stats.network_fdr() for
 details (default=True)</li>
 </ul>
@@ -3763,36 +3759,36 @@ significant transfer of all individual samples in the set)</li>
 <dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
 <dd><p class="first">parameters for estimation and statistical testing:</p>
 <ul class="last simple">
-<li>&#8216;cmi_estimator&#8217; : str - estimator to be used for CMI
+<li>cmi_estimator : str - estimator to be used for CMI
 calculation (for estimator settings see the documentation in
 the estimators_* modules)</li>
-<li>&#8216;max_lag_sources&#8217; : int - maximum temporal search depth for
+<li>max_lag_sources : int - maximum temporal search depth for
 candidates in the sources&#8217; past in samples</li>
-<li>&#8216;min_lag_sources&#8217; : int - minimum temporal search depth for
+<li>min_lag_sources : int - minimum temporal search depth for
 candidates in the sources&#8217; past in samples</li>
-<li>&#8216;max_lag_target&#8217; : int [optional] - maximum temporal search
+<li>max_lag_target : int [optional] - maximum temporal search
 depth for candidates in the target&#8217;s past in samples
 (default=same as max_lag_sources)</li>
-<li>&#8216;tau_sources&#8217; : int [optional] - spacing between candidates in
+<li>tau_sources : int [optional] - spacing between candidates in
 the sources&#8217; past in samples (default=1)</li>
-<li>&#8216;tau_target&#8217; : int [optional] - spacing between candidates in
+<li>tau_target : int [optional] - spacing between candidates in
 the target&#8217;s past in samples (default=1)</li>
-<li>&#8216;n_perm_*&#8217; : int [optional] - number of permutations, where *
+<li>n_perm_* : int [optional] - number of permutations, where *
 can be &#8216;max_stat&#8217;, &#8216;min_stat&#8217;, &#8216;omnibus&#8217;, and &#8216;max_seq&#8217;
 (default=500)</li>
-<li>&#8216;alpha_*&#8217; : float [optional] - critical alpha level for
+<li>alpha_* : float [optional] - critical alpha level for
 statistical significance, where * can be &#8216;max_stats&#8217;,
 &#8216;min_stats&#8217;, &#8216;omnibus&#8217;, and &#8216;max_seq&#8217; (default=0.05)</li>
-<li>&#8216;add_conditionals&#8217; : list of tuples | str [optional] - force
+<li>add_conditionals : list of tuples | str [optional] - force
 the estimator to add these conditionals when estimating TE;
 can either be a list of variables, where each variable is
 described as (idx process, lag wrt to current value) or can
 be a string: &#8216;faes&#8217; for Faes-Method (see references)</li>
-<li>&#8216;permute_in_time&#8217; : bool [optional] - force surrogate
+<li>permute_in_time : bool [optional] - force surrogate
 creation by shuffling realisations in time instead of
 shuffling replications; see documentation of
 Data.permute_samples() for further settings (default=False)</li>
-<li>&#8216;verbose&#8217; : bool [optional] - toggle console output
+<li>verbose : bool [optional] - toggle console output
 (default=True)</li>
 </ul>
 </dd>
@@ -4063,8 +4059,7 @@ analyse_network() on the whole network or a set of nodes or call
 analyse_single_target() to estimate PID for a single process. See
 docstrings of the two functions for more information.</p>
 <p>References:</p>
-<blockquote>
-<div><ul class="simple">
+<ul class="simple">
 <li>Williams, P. L., &amp; Beer, R. D. (2010). Nonnegative Decomposition of
 Multivariate Information, 1–14. Retrieved from
 <a class="reference external" href="http://arxiv.org/abs/1004.2515">http://arxiv.org/abs/1004.2515</a></li>
@@ -4072,7 +4067,6 @@ Multivariate Information, 1–14. Retrieved from
 Quantifying Unique Information. Entropy, 16(4), 2161–2183.
 <a class="reference external" href="http://doi.org/10.3390/e16042161">http://doi.org/10.3390/e16042161</a></li>
 </ul>
-</div></blockquote>
 <dl class="docutils">
 <dt>Attributes:</dt>
 <dd><dl class="first last docutils">
@@ -4130,7 +4124,7 @@ the analyse_single_target() method of this class.</dd>
 documentation of analyse_single_target() for details, can
 contain</p>
 <ul class="last simple">
-<li>&#8216;lags&#8217; : list of lists of ints [optional] - lags in samples
+<li>lags : list of lists of ints [optional] - lags in samples
 between sources and target (default=[[1, 1], [1, 1] ...])</li>
 </ul>
 </dd>
@@ -4159,7 +4153,6 @@ analyse_single_target()</dd>
 <dd><p>Estimate partial information decomposition for a network node.</p>
 <p>Estimate partial information decomposition (PID) for a target node in
 the network.</p>
-<p># TODO add references</p>
 <p>Example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mi">20</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">alph</span> <span class="o">=</span> <span class="mi">2</span>
@@ -4190,12 +4183,12 @@ the network.</p>
 <dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
 <dd><p class="first">parameters for estimator use and statistics:</p>
 <ul class="last simple">
-<li>&#8216;pid_estimator&#8217; : str - estimator to be used for PID
-estimation (for estimator settings see the documentation in
-the estimators_pid modules)</li>
-<li>&#8216;lags&#8217; : list of ints [optional] - lags in samples between
+<li>pid_estimator : str - estimator to be used for PID estimation
+(for estimator settings see the documentation in the
+estimators_pid modules)</li>
+<li>lags : list of ints [optional] - lags in samples between
 sources and target (default=[1, 1])</li>
-<li>&#8216;verbose&#8217; : bool [optional] - toggle console output
+<li>verbose : bool [optional] - toggle console output
 (default=True)</li>
 </ul>
 </dd>
@@ -4263,11 +4256,11 @@ values obtained from surrogates of all remanining candidates.</p>
 <dd><p class="first">information on the current analysis, can have an optional attribute
 &#8216;settings&#8217;, a dictionary with parameters for statistical testing:</p>
 <ul class="last simple">
-<li>&#8216;n_perm_max_stat&#8217; : int [optional] - number of permutations
+<li>n_perm_max_stat : int [optional] - number of permutations
 (default=200)</li>
-<li>&#8216;alpha_max_stat&#8217; : float [optional] - critical alpha level
+<li>alpha_max_stat : float [optional] - critical alpha level
 (default=0.05)</li>
-<li>&#8216;permute_in_time&#8217; : bool [optional] - generate surrogates by
+<li>permute_in_time : bool [optional] - generate surrogates by
 shuffling samples in time instead of shuffling whole replications
 (default=False)</li>
 </ul>
@@ -4314,11 +4307,11 @@ calculation of surrogates for this statistic.</p>
 <dd><p class="first">information on the current analysis, can have an optional attribute
 &#8216;settings&#8217;, a dictionary with parameters for statistical testing:</p>
 <ul class="last simple">
-<li>&#8216;n_perm_max_seq&#8217; : int [optional] - number of permutations
+<li>n_perm_max_seq : int [optional] - number of permutations
 (default=&#8217;n_perm_min_stat&#8217;<a href="#id7"><span class="problematic" id="id8">|</span></a>500)</li>
-<li>&#8216;alpha_max_seq&#8217; : float [optional] - critical alpha level
+<li>alpha_max_seq : float [optional] - critical alpha level
 (default=0.05)</li>
-<li>&#8216;permute_in_time&#8217; : bool [optional] - generate surrogates by
+<li>permute_in_time : bool [optional] - generate surrogates by
 shuffling samples in time instead of shuffling whole replications
 (default=False)</li>
 </ul>
@@ -4355,13 +4348,11 @@ data.</p>
 <dd><p class="first">information on the current analysis, can have an optional attribute
 &#8216;settings&#8217;, a dictionary with parameters for statistical testing:</p>
 <ul class="last simple">
-<li>&#8216;n_perm_mi&#8217; : int [optional] - number of permutations
+<li>n_perm_mi : int [optional] - number of permutations
 (default=500)</li>
-<li>&#8216;alpha_mi&#8217; : float [optional] - critical alpha level
+<li>alpha_mi : float [optional] - critical alpha level
 (default=0.05)</li>
-<li>&#8216;tail_mi&#8217; : str [optional] - tail for testing, can be &#8216;one&#8217; or
-&#8216;two&#8217; (default=&#8217;one&#8217;)</li>
-<li>&#8216;permute_in_time&#8217; : bool [optional] - generate surrogates by
+<li>permute_in_time : bool [optional] - generate surrogates by
 shuffling samples in time instead of shuffling whole replications
 (default=False)</li>
 </ul>
@@ -4396,9 +4387,11 @@ values obtained from surrogates of all remanining candidates.</p>
 <dd><p class="first">information on the current analysis, can have an optional attribute
 &#8216;settings&#8217;, a dictionary with parameters for statistical testing:</p>
 <ul class="last simple">
-<li>&#8216;n_perm_min_stat&#8217; - number of permutations (default=500)</li>
-<li>&#8216;alpha_min_stat&#8217; - critical alpha level (default=0.05)</li>
-<li>&#8216;permute_in_time&#8217; bool [optional] - generate surrogates by
+<li>n_perm_min_stat : int [optional] - number of permutations
+(default=500)</li>
+<li>alpha_min_stat : float [optional] - critical alpha level
+(default=0.05)</li>
+<li>permute_in_time : bool [optional] - generate surrogates by
 shuffling samples in time instead of shuffling whole replications
 (default=False)</li>
 </ul>
@@ -4435,22 +4428,20 @@ p-values of individual links between single samples and the target).</p>
 <p>Input can be a list of partial results to combine results from parallel
 analysis.</p>
 <p>References:</p>
-<blockquote>
-<div><ul class="simple">
+<ul class="simple">
 <li>Genovese, C.R., Lazar, N.A., &amp; Nichols, T. (2002). Thresholding of
 statistical maps in functional neuroimaging using the false discovery
 rate. Neuroimage, 15(4), 870-878.</li>
 </ul>
-</div></blockquote>
 <dl class="docutils">
 <dt>Args:</dt>
 <dd><dl class="first last docutils">
 <dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
 <dd><p class="first">parameters for statistical testing with entries:</p>
 <ul class="last simple">
-<li>&#8216;alpha_fdr&#8217; : float [optional] - critical alpha level
+<li>alpha_fdr : float [optional] - critical alpha level
 (default=0.05)</li>
-<li>&#8216;correct_by_target&#8217; : bool [optional] - if true p-values are
+<li>correct_by_target : bool [optional] - if true p-values are
 corrected on the target level and on the single-link level
 otherwise (default=True)</li>
 </ul>
@@ -4485,11 +4476,11 @@ distribution.</p>
 <dd><p class="first">information on the current analysis, can have an optional attribute
 &#8216;settings&#8217;, a dictionary with parameters for statistical testing:</p>
 <ul class="last simple">
-<li>&#8216;n_perm_omnibus&#8217; : int [optional] - number of permutations
+<li>n_perm_omnibus : int [optional] - number of permutations
 (default=500)</li>
-<li>&#8216;alpha_omnibus&#8217; : float [optional] - critical alpha level
+<li>alpha_omnibus : float [optional] - critical alpha level
 (default=0.05)</li>
-<li>&#8216;permute_in_time&#8217; : bool [optional] - generate surrogates by
+<li>permute_in_time : bool [optional] - generate surrogates by
 shuffling samples in time instead of shuffling whole replications
 (default=False)</li>
 </ul>
@@ -4524,11 +4515,9 @@ distribution of values calculated from surrogate data.</p>
 <dd><p class="first">information on the current analysis, should have an Attribute
 &#8216;settings&#8217;, a dict with optional fields</p>
 <ul class="last simple">
-<li>&#8216;n_perm&#8217; : int [optional] - number of permutations (default=500)</li>
-<li>&#8216;alpha&#8217; : float [optional] - critical alpha level (default=0.05)</li>
-<li>&#8216;tail&#8217; : str [optional] - tail for testing, can be &#8216;one&#8217; or &#8216;two&#8217;
-(default=&#8217;one&#8217;)</li>
-<li>&#8216;permute_in_time&#8217; : bool [optional] - generate surrogates by
+<li>n_perm : int [optional] - number of permutations (default=500)</li>
+<li>alpha : float [optional] - critical alpha level (default=0.05)</li>
+<li>permute_in_time : bool [optional] - generate surrogates by
 shuffling samples in time instead of shuffling whole replications
 (default=False)</li>
 </ul>
@@ -4569,11 +4558,9 @@ calculated from surrogate data.</p>
 <dd><p class="first">information on the current analysis, should have an Attribute
 &#8216;settings&#8217;, a dict with optional fields</p>
 <ul class="last simple">
-<li>&#8216;n_perm&#8217; - number of permutations (default=500)</li>
-<li>&#8216;alpha&#8217; - critical alpha level (default=0.05)</li>
-<li>&#8216;tail&#8217; - tail for testing, can be &#8216;one&#8217; or &#8216;two&#8217;
-(default=&#8217;one&#8217;)</li>
-<li>&#8216;permute_in_time&#8217; : bool [optional] - generate surrogates by
+<li>n_perm : int [optional] - number of permutations (default=500)</li>
+<li>alpha : float [optional] - critical alpha level (default=0.05)</li>
+<li>permute_in_time : bool [optional] - generate surrogates by
 shuffling samples in time instead of shuffling whole replications
 (default=False)</li>
 </ul>

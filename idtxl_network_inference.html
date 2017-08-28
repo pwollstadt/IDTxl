@@ -48,7 +48,7 @@
 <script type="text/javascript">
 </script>
     <link rel="top" title="IDTxl 0.1 documentation" href="index.html" />
-    <link rel="next" title="Algorithms for network comparison" href="idtxl_network_comparison.html" />
+    <link rel="next" title="Algorithms for the analysis of individual processes" href="idtxl_process_analysis.html" />
     <link rel="prev" title="IDTxl documentation" href="index.html" /> 
   </head>
   <body role="document">
@@ -81,7 +81,7 @@
 
             
               <li><a href="index.html" title="IDTxl documentation" accesskey="P">previous </a></li>
-              <li><a href="idtxl_network_comparison.html" title="Algorithms for network comparison" accesskey="N">next </a></li>
+              <li><a href="idtxl_process_analysis.html" title="Algorithms for the analysis of individual processes" accesskey="N">next </a></li>
               <li><a href="py-modindex.html" title="Python Module Index" >modules </a></li>
               <li><a href="genindex.html" title="General Index" accesskey="I">index </a></li>
             
@@ -136,8 +136,7 @@ perform network inference call analyse_network() on the whole network or a
 set of nodes or call analyse_single_target() to estimate TE for a single
 target. See docstrings of the two functions for more information.</p>
 <p>References:</p>
-<blockquote>
-<div><ul class="simple">
+<ul class="simple">
 <li>Schreiber, T. (2000). Measuring Information Transfer. Phys Rev Lett,
 85(2), 461–464. <a class="reference external" href="http://doi.org/10.1103/PhysRevLett.85.461">http://doi.org/10.1103/PhysRevLett.85.461</a></li>
 <li>Vicente, R., Wibral, M., Lindner, M., &amp; Pipa, G. (2011). Transfer
@@ -153,7 +152,6 @@ of nonlinear Granger causality in multivariate processes via a
 nonuniform embedding technique. Phys Rev E, 83, 1–15.
 <a class="reference external" href="http://doi.org/10.1103/PhysRevE.83.051112">http://doi.org/10.1103/PhysRevE.83.051112</a></li>
 </ul>
-</div></blockquote>
 <dl class="docutils">
 <dt>Attributes:</dt>
 <dd><dl class="first last docutils">
@@ -221,9 +219,9 @@ analyse_single_target() method of this class and the references.</dd>
 documentation of analyse_single_target() for details, settings
 can further contain</p>
 <ul class="last simple">
-<li>&#8216;verbose&#8217; : bool [optional] - toggle console output
+<li>verbose : bool [optional] - toggle console output
 (default=True)</li>
-<li>&#8216;fdr_correction&#8217; : bool [optional] - correct results on the
+<li>fdr_correction : bool [optional] - correct results on the
 network level, see documentation of stats.network_fdr() for
 details (default=True)</li>
 </ul>
@@ -305,36 +303,36 @@ significant transfer of all individual samples in the set)</li>
 <dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
 <dd><p class="first">parameters for estimation and statistical testing:</p>
 <ul class="last simple">
-<li>&#8216;cmi_estimator&#8217; : str - estimator to be used for CMI
+<li>cmi_estimator : str - estimator to be used for CMI
 calculation (for estimator settings see the documentation in
 the estimators_* modules)</li>
-<li>&#8216;max_lag_sources&#8217; : int - maximum temporal search depth for
+<li>max_lag_sources : int - maximum temporal search depth for
 candidates in the sources&#8217; past in samples</li>
-<li>&#8216;min_lag_sources&#8217; : int - minimum temporal search depth for
+<li>min_lag_sources : int - minimum temporal search depth for
 candidates in the sources&#8217; past in samples</li>
-<li>&#8216;max_lag_target&#8217; : int [optional] - maximum temporal search
+<li>max_lag_target : int [optional] - maximum temporal search
 depth for candidates in the target&#8217;s past in samples
 (default=same as max_lag_sources)</li>
-<li>&#8216;tau_sources&#8217; : int [optional] - spacing between candidates in
+<li>tau_sources : int [optional] - spacing between candidates in
 the sources&#8217; past in samples (default=1)</li>
-<li>&#8216;tau_target&#8217; : int [optional] - spacing between candidates in
+<li>tau_target : int [optional] - spacing between candidates in
 the target&#8217;s past in samples (default=1)</li>
-<li>&#8216;n_perm_*&#8217; : int [optional] - number of permutations, where *
+<li>n_perm_* : int [optional] - number of permutations, where *
 can be &#8216;max_stat&#8217;, &#8216;min_stat&#8217;, &#8216;omnibus&#8217;, and &#8216;max_seq&#8217;
 (default=500)</li>
-<li>&#8216;alpha_*&#8217; : float [optional] - critical alpha level for
+<li>alpha_* : float [optional] - critical alpha level for
 statistical significance, where * can be &#8216;max_stats&#8217;,
 &#8216;min_stats&#8217;, &#8216;omnibus&#8217;, and &#8216;max_seq&#8217; (default=0.05)</li>
-<li>&#8216;add_conditionals&#8217; : list of tuples | str [optional] - force
+<li>add_conditionals : list of tuples | str [optional] - force
 the estimator to add these conditionals when estimating TE;
 can either be a list of variables, where each variable is
 described as (idx process, lag wrt to current value) or can
 be a string: &#8216;faes&#8217; for Faes-Method (see references)</li>
-<li>&#8216;permute_in_time&#8217; : bool [optional] - force surrogate
+<li>permute_in_time : bool [optional] - force surrogate
 creation by shuffling realisations in time instead of
 shuffling replications; see documentation of
 Data.permute_samples() for further settings (default=False)</li>
-<li>&#8216;verbose&#8217; : bool [optional] - toggle console output
+<li>verbose : bool [optional] - toggle console output
 (default=True)</li>
 </ul>
 </dd>
@@ -377,8 +375,7 @@ perform network inference call analyse_network() on the whole network or a
 set of nodes or call analyse_single_target() to estimate TE for a single
 target. See docstrings of the two functions for more information.</p>
 <p>References:</p>
-<blockquote>
-<div><ul class="simple">
+<ul class="simple">
 <li>Schreiber, T. (2000). Measuring Information Transfer. Phys Rev Lett,
 85(2), 461–464. <a class="reference external" href="http://doi.org/10.1103/PhysRevLett.85.461">http://doi.org/10.1103/PhysRevLett.85.461</a></li>
 <li>Vicente, R., Wibral, M., Lindner, M., &amp; Pipa, G. (2011). Transfer
@@ -394,7 +391,6 @@ of nonlinear Granger causality in multivariate processes via a
 nonuniform embedding technique. Phys Rev E, 83, 1–15.
 <a class="reference external" href="http://doi.org/10.1103/PhysRevE.83.051112">http://doi.org/10.1103/PhysRevE.83.051112</a></li>
 </ul>
-</div></blockquote>
 <dl class="docutils">
 <dt>Attributes:</dt>
 <dd><dl class="first last docutils">
@@ -460,8 +456,14 @@ analyse_single_target() method of this class and the references.</dd>
 <dt>Args:</dt>
 <dd><dl class="first last docutils">
 <dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
-<dd>parameters for estimation and statistical testing, see
-documentation of analyse_single_target() for details</dd>
+<dd><p class="first">parameters for estimation and statistical testing, see
+documentation of analyse_single_target() for details, settings
+can further contain</p>
+<ul class="last simple">
+<li>verbose : bool [optional] - toggle console output
+(default=True)</li>
+</ul>
+</dd>
 <dt>data <span class="classifier-delimiter">:</span> <span class="classifier">Data instance</span></dt>
 <dd>raw data for analysis</dd>
 <dt>targets <span class="classifier-delimiter">:</span> <span class="classifier">list of int | &#8216;all&#8217; [optional]</span></dt>
@@ -539,36 +541,36 @@ significant transfer of all individual samples in the set)</li>
 <dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
 <dd><p class="first">parameters for estimation and statistical testing:</p>
 <ul class="last simple">
-<li>&#8216;cmi_estimator&#8217; : str - estimator to be used for CMI
+<li>cmi_estimator : str - estimator to be used for CMI
 calculation (for estimator settings see the documentation in
 the estimators_* modules)</li>
-<li>&#8216;max_lag_sources&#8217; : int - maximum temporal search depth for
+<li>max_lag_sources : int - maximum temporal search depth for
 candidates in the sources&#8217; past in samples</li>
-<li>&#8216;min_lag_sources&#8217; : int - minimum temporal search depth for
+<li>min_lag_sources : int - minimum temporal search depth for
 candidates in the sources&#8217; past in samples</li>
-<li>&#8216;max_lag_target&#8217; : int [optional] - maximum temporal search
+<li>max_lag_target : int [optional] - maximum temporal search
 depth for candidates in the target&#8217;s past in samples
 (default=same as max_lag_sources)</li>
-<li>&#8216;tau_sources&#8217; : int [optional] - spacing between candidates in
+<li>tau_sources : int [optional] - spacing between candidates in
 the sources&#8217; past in samples (default=1)</li>
-<li>&#8216;tau_target&#8217; : int [optional] - spacing between candidates in
+<li>tau_target : int [optional] - spacing between candidates in
 the target&#8217;s past in samples (default=1)</li>
-<li>&#8216;n_perm_*&#8217; : int - number of permutations, where * can be
+<li>n_perm_* : int - number of permutations, where * can be
 &#8216;max_stat&#8217;, &#8216;min_stat&#8217;, &#8216;omnibus&#8217;, and &#8216;max_seq&#8217;
 (default=500)</li>
-<li>&#8216;alpha_*&#8217; : float - critical alpha level for statistical
+<li>alpha_* : float - critical alpha level for statistical
 significance, where * can be &#8216;max_stats&#8217;,  &#8216;min_stats&#8217;, and
 &#8216;omnibus&#8217; (default=0.05)</li>
-<li>&#8216;add_conditionals&#8217; : list of tuples | str [optional] - force
+<li>add_conditionals : list of tuples | str [optional] - force
 the estimator to add these conditionals when estimating TE;
 can either be a list of variables, where each variable is
 described as (idx process, lag wrt to current value) or can
 be a string: &#8216;faes&#8217; for Faes-Method (see references)</li>
-<li>&#8216;permute_in_time&#8217; : bool [optional] - force surrogate
-creation by shuffling realisations in time instead of
-shuffling replications; see documentation of
-Data.permute_samples() for further settings (default=False)</li>
-<li>&#8216;verbose&#8217; : bool [optional] - toggle console output
+<li>permute_in_time : bool [optional] - force surrogate creation
+by shuffling realisations in time instead of shuffling
+replications; see documentation of Data.permute_samples() for
+further settings (default=False)</li>
+<li>verbose : bool [optional] - toggle console output
 (default=True)</li>
 </ul>
 </dd>
@@ -624,8 +626,8 @@ are listed as tuples (process, lag wrt. current value)</dd>
   <p class="topless"><a href="index.html"
                         title="previous chapter">IDTxl documentation</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="idtxl_network_comparison.html"
-                        title="next chapter">Algorithms for network comparison</a></p>
+  <p class="topless"><a href="idtxl_process_analysis.html"
+                        title="next chapter">Algorithms for the analysis of individual processes</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -664,7 +666,7 @@ are listed as tuples (process, lag wrt. current value)</dd>
 <ul class="nav navbar-nav pull-right hidden-xs hidden-sm">
       
         <li><a href="index.html" title="IDTxl documentation" >previous</a></li>
-        <li><a href="idtxl_network_comparison.html" title="Algorithms for network comparison" >next</a></li>
+        <li><a href="idtxl_process_analysis.html" title="Algorithms for the analysis of individual processes" >next</a></li>
         <li><a href="py-modindex.html" title="Python Module Index" >modules</a></li>
         <li><a href="genindex.html" title="General Index" >index</a></li>
         <li><a href="#">top</a></li> 

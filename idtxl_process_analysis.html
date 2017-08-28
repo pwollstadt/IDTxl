@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     
-    <title>Algorithms for network inference &mdash; IDTxl 0.1 documentation</title>
+    <title>Algorithms for the analysis of individual processes &mdash; IDTxl 0.1 documentation</title>
     <meta name="description" content="">
     <meta name="author" content="">
 
@@ -47,7 +47,9 @@
 <script type="text/javascript" src="_static/js/basicstrap.js"></script>
 <script type="text/javascript">
 </script>
-    <link rel="top" title="IDTxl 0.1 documentation" href="index.html" /> 
+    <link rel="top" title="IDTxl 0.1 documentation" href="index.html" />
+    <link rel="next" title="Algorithms for network comparison" href="idtxl_network_comparison.html" />
+    <link rel="prev" title="Algorithms for network inference" href="idtxl_network_inference.html" /> 
   </head>
   <body role="document">
     <div id="navbar-top" class="navbar navbar-fixed-top navbar-default" role="navigation" aria-label="top navigation">
@@ -67,7 +69,7 @@
                 <a role="button" id="localToc" data-toggle="dropdown" data-target="#" href="#">Table Of Contents <b class="caret"></b></a>
                 <ul class="dropdown-menu localtoc sp-localtoc" role="menu" aria-labelledby="localToc">
                 <ul>
-<li><a class="reference internal" href="#">Algorithms for network inference</a><ul>
+<li><a class="reference internal" href="#">Algorithms for the analysis of individual processes</a><ul>
 <li><a class="reference internal" href="#idtxl-active-information-storage-activeinformationstorage">idtxl.active_information_storage.ActiveInformationStorage</a></li>
 <li><a class="reference internal" href="#idtxl-partial-information-decomposition-partialinformationdecomposition">idtxl.partial_information_decomposition.PartialInformationDecomposition</a></li>
 </ul>
@@ -78,6 +80,8 @@
               </li>
 
             
+              <li><a href="idtxl_network_inference.html" title="Algorithms for network inference" accesskey="P">previous </a></li>
+              <li><a href="idtxl_network_comparison.html" title="Algorithms for network comparison" accesskey="N">next </a></li>
               <li><a href="py-modindex.html" title="Python Module Index" >modules </a></li>
               <li><a href="genindex.html" title="General Index" accesskey="I">index </a></li>
             
@@ -119,8 +123,8 @@
               <div class="bodywrapper">
                 <div class="body">
                   
-  <div class="section" id="algorithms-for-network-inference">
-<h1>Algorithms for network inference<a class="headerlink" href="#algorithms-for-network-inference" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="algorithms-for-the-analysis-of-individual-processes">
+<h1>Algorithms for the analysis of individual processes<a class="headerlink" href="#algorithms-for-the-analysis-of-individual-processes" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="idtxl-active-information-storage-activeinformationstorage">
 <h2>idtxl.active_information_storage.ActiveInformationStorage<a class="headerlink" href="#idtxl-active-information-storage-activeinformationstorage" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -133,17 +137,15 @@ network or a set of nodes or call analyse_single_process() to estimate
 AIS for a single process. See docstrings of the two functions for more
 information.</p>
 <p>References:</p>
-<blockquote>
-<div><ul class="simple">
-<li>Lizier, J. T., Prokopenko, M., &amp; Zomaya, A. Y. (2012). Local measures
-of information storage in complex distributed computation. Inform
-Sci, 208, 39–54. <a class="reference external" href="http://doi.org/10.1016/j.ins.2012.04.016">http://doi.org/10.1016/j.ins.2012.04.016</a></li>
+<ul class="simple">
+<li>Lizier, J. T., Prokopenko, M., &amp; Zomaya, A. Y. (2012). Local measures of
+information storage in complex distributed computation. Inform Sci, 208,
+39–54. <a class="reference external" href="http://doi.org/10.1016/j.ins.2012.04.016">http://doi.org/10.1016/j.ins.2012.04.016</a></li>
 <li>Wibral, M., Lizier, J. T., Vögler, S., Priesemann, V., &amp; Galuske, R.
 (2014). Local active information storage as a tool to understand
 distributed neural information processing. Front Neuroinf, 8, 1.
 <a class="reference external" href="http://doi.org/10.3389/fninf.2014.00001">http://doi.org/10.3389/fninf.2014.00001</a></li>
 </ul>
-</div></blockquote>
 <dl class="docutils">
 <dt>Attributes:</dt>
 <dd><dl class="first last docutils">
@@ -245,28 +247,28 @@ test for statistical significance using a permutation test</li>
 <dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
 <dd><p class="first">parameters for estimator use and statistics:</p>
 <ul class="last simple">
-<li>&#8216;cmi_estimator&#8217; : str - estimator to be used for CMI and MI
+<li>cmi_estimator : str - estimator to be used for CMI and MI
 calculation (for estimator settings see the documentation in
 the estimators_* modules)</li>
-<li>&#8216;max_lag&#8217; : int - maximum temporal search depth for
-candidates in the processes&#8217; past in samples</li>
-<li>&#8216;tau&#8217; : int [optional] - spacing between candidates in
-the sources&#8217; past in samples (default=1)</li>
-<li>&#8216;n_perm_*&#8217; : int [optional] - number of permutations, where *
+<li>max_lag : int - maximum temporal search depth for candidates
+in the processes&#8217; past in samples</li>
+<li>tau : int [optional] - spacing between candidates in the
+sources&#8217; past in samples (default=1)</li>
+<li>n_perm_* : int [optional] - number of permutations, where *
 can be &#8216;max_stat&#8217;, &#8216;min_stat&#8217;, &#8216;mi&#8217; (default=500)</li>
-<li>&#8216;alpha_*&#8217; : float [optional] - critical alpha level for
+<li>alpha_* : float [optional] - critical alpha level for
 statistical significance, where * can be &#8216;max_stat&#8217;,
 &#8216;min_stat&#8217;, &#8216;mi&#8217; (default=0.05)</li>
-<li>&#8216;add_conditionals&#8217; : list of tuples | str [optional] - force
+<li>add_conditionals : list of tuples | str [optional] - force
 the estimator to add these conditionals when estimating TE;
 can either be a list of variables, where each variable is
 described as (idx process, lag wrt to current value) or can
 be a string: &#8216;faes&#8217; for Faes-Method (see references)</li>
-<li>&#8216;permute_in_time&#8217; : bool [optional] - force surrogate
-creation by shuffling realisations in time instead of
-shuffling replications; see documentation of
-Data.permute_samples() for further settings (default=False)</li>
-<li>&#8216;verbose&#8217; : bool [optional] - toggle console output
+<li>permute_in_time : bool [optional] - force surrogate creation
+by shuffling realisations in time instead of shuffling
+replications; see documentation of Data.permute_samples() for
+further settings (default=False)</li>
+<li>verbose : bool [optional] - toggle console output
 (default=True)</li>
 </ul>
 </dd>
@@ -305,8 +307,7 @@ analyse_network() on the whole network or a set of nodes or call
 analyse_single_target() to estimate PID for a single process. See
 docstrings of the two functions for more information.</p>
 <p>References:</p>
-<blockquote>
-<div><ul class="simple">
+<ul class="simple">
 <li>Williams, P. L., &amp; Beer, R. D. (2010). Nonnegative Decomposition of
 Multivariate Information, 1–14. Retrieved from
 <a class="reference external" href="http://arxiv.org/abs/1004.2515">http://arxiv.org/abs/1004.2515</a></li>
@@ -314,7 +315,6 @@ Multivariate Information, 1–14. Retrieved from
 Quantifying Unique Information. Entropy, 16(4), 2161–2183.
 <a class="reference external" href="http://doi.org/10.3390/e16042161">http://doi.org/10.3390/e16042161</a></li>
 </ul>
-</div></blockquote>
 <dl class="docutils">
 <dt>Attributes:</dt>
 <dd><dl class="first last docutils">
@@ -372,7 +372,7 @@ the analyse_single_target() method of this class.</dd>
 documentation of analyse_single_target() for details, can
 contain</p>
 <ul class="last simple">
-<li>&#8216;lags&#8217; : list of lists of ints [optional] - lags in samples
+<li>lags : list of lists of ints [optional] - lags in samples
 between sources and target (default=[[1, 1], [1, 1] ...])</li>
 </ul>
 </dd>
@@ -401,7 +401,6 @@ analyse_single_target()</dd>
 <dd><p>Estimate partial information decomposition for a network node.</p>
 <p>Estimate partial information decomposition (PID) for a target node in
 the network.</p>
-<p># TODO add references</p>
 <p>Example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mi">20</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">alph</span> <span class="o">=</span> <span class="mi">2</span>
@@ -432,12 +431,12 @@ the network.</p>
 <dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
 <dd><p class="first">parameters for estimator use and statistics:</p>
 <ul class="last simple">
-<li>&#8216;pid_estimator&#8217; : str - estimator to be used for PID
-estimation (for estimator settings see the documentation in
-the estimators_pid modules)</li>
-<li>&#8216;lags&#8217; : list of ints [optional] - lags in samples between
+<li>pid_estimator : str - estimator to be used for PID estimation
+(for estimator settings see the documentation in the
+estimators_pid modules)</li>
+<li>lags : list of ints [optional] - lags in samples between
 sources and target (default=[1, 1])</li>
-<li>&#8216;verbose&#8217; : bool [optional] - toggle console output
+<li>verbose : bool [optional] - toggle console output
 (default=True)</li>
 </ul>
 </dd>
@@ -476,13 +475,19 @@ variables, and settings used for estimation</dd>
   <div class="sidebar hidden-xs" role="navigation" aria-label="main navigation">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Algorithms for network inference</a><ul>
+<li><a class="reference internal" href="#">Algorithms for the analysis of individual processes</a><ul>
 <li><a class="reference internal" href="#idtxl-active-information-storage-activeinformationstorage">idtxl.active_information_storage.ActiveInformationStorage</a></li>
 <li><a class="reference internal" href="#idtxl-partial-information-decomposition-partialinformationdecomposition">idtxl.partial_information_decomposition.PartialInformationDecomposition</a></li>
 </ul>
 </li>
 </ul>
 
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="idtxl_network_inference.html"
+                        title="previous chapter">Algorithms for network inference</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="idtxl_network_comparison.html"
+                        title="next chapter">Algorithms for network comparison</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -520,6 +525,8 @@ variables, and settings used for estimation</dd>
     </ul>
 <ul class="nav navbar-nav pull-right hidden-xs hidden-sm">
       
+        <li><a href="idtxl_network_inference.html" title="Algorithms for network inference" >previous</a></li>
+        <li><a href="idtxl_network_comparison.html" title="Algorithms for network comparison" >next</a></li>
         <li><a href="py-modindex.html" title="Python Module Index" >modules</a></li>
         <li><a href="genindex.html" title="General Index" >index</a></li>
         <li><a href="#">top</a></li> 

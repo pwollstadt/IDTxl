@@ -113,8 +113,8 @@
 <span class="sd">This module provides an estimator for partial information decomposition</span>
 <span class="sd">as proposed in</span>
 
-<span class="sd">Bertschinger, Rauh, Olbrich, Jost, Ay; Quantifying Unique Information,</span>
-<span class="sd">Entropy 2014, 16, 2161-2183; doi:10.3390/e16042161</span>
+<span class="sd">Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., &amp; Ay, N. (2014). Quantifying</span>
+<span class="sd">Unique Information. Entropy, 16(4), 2161–2183. http://doi.org/10.3390/e16042161</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
@@ -131,7 +131,7 @@
 <span class="c1"># TODO add support for multivariate estimation for Tartu and Sydney estimator</span>
 
 
-<div class="viewcode-block" id="pid_frankfurt"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_pid.pid_frankfurt">[docs]</a><span class="k">def</span> <span class="nf">pid_frankfurt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+<div class="viewcode-block" id="pid_frankfurt"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_pid.pid_frankfurt">[docs]</a><span class="k">def</span> <span class="nf">pid_frankfurt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Estimate partial information decomposition of discrete variables.</span>
 
 <span class="sd">    The pid estimator returns estimates of shared information, unique</span>
@@ -499,7 +499,7 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
 
 
-<div class="viewcode-block" id="SydneyPID"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_pid.SydneyPID">[docs]</a><span class="k">class</span> <span class="nc">SydneyPID</span><span class="p">(</span><span class="n">Estimator</span><span class="p">):</span>
+<div class="viewcode-block" id="SydneyPID"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_pid.SydneyPID">[docs]</a><span class="k">class</span> <span class="nc">SydneyPID</span><span class="p">(</span><span class="n">Estimator</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Estimate partial information decomposition of discrete variables.</span>
 
 <span class="sd">    Fast implementation of the partial information decomposition (PID)</span>
@@ -592,7 +592,7 @@
 <div class="viewcode-block" id="SydneyPID.is_analytic_null_estimator"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_pid.SydneyPID.is_analytic_null_estimator">[docs]</a>    <span class="k">def</span> <span class="nf">is_analytic_null_estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">False</span></div>
 
-<div class="viewcode-block" id="SydneyPID.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_pid.SydneyPID.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+<div class="viewcode-block" id="SydneyPID.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_pid.SydneyPID.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            s1 : numpy array</span>
@@ -989,7 +989,7 @@
 <span class="c1">#        # END of a possible try_swap function</span>
 
 
-<div class="viewcode-block" id="TartuPID"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_pid.TartuPID">[docs]</a><span class="k">class</span> <span class="nc">TartuPID</span><span class="p">(</span><span class="n">Estimator</span><span class="p">):</span>
+<div class="viewcode-block" id="TartuPID"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_pid.TartuPID">[docs]</a><span class="k">class</span> <span class="nc">TartuPID</span><span class="p">(</span><span class="n">Estimator</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Estimate partial information decomposition for two inputs and one output</span>
 
 <span class="sd">    Fast implementation of the partial information decomposition (PID)</span>
@@ -1055,7 +1055,7 @@
 <div class="viewcode-block" id="TartuPID.is_analytic_null_estimator"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_pid.TartuPID.is_analytic_null_estimator">[docs]</a>    <span class="k">def</span> <span class="nf">is_analytic_null_estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">False</span></div>
 
-<div class="viewcode-block" id="TartuPID.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimators_pid.TartuPID.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+<div class="viewcode-block" id="TartuPID.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_pid.TartuPID.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            s1 : numpy array</span>
