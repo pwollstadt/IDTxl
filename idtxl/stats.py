@@ -493,8 +493,6 @@ def mi_against_surrogates(analysis_setup, data):
               (default=500)
             - alpha_mi : float [optional] - critical alpha level
               (default=0.05)
-            - tail_mi : str [optional] - tail for testing, can be 'one' or
-              'two' (default='one')
             - permute_in_time : bool [optional] - generate surrogates by
               shuffling samples in time instead of shuffling whole replications
               (default=False)
@@ -514,8 +512,6 @@ def mi_against_surrogates(analysis_setup, data):
     n_perm = analysis_setup.settings['n_perm_mi']
     analysis_setup.settings.setdefault('alpha_mi', 0.05)
     alpha = analysis_setup.settings['alpha_mi']
-    analysis_setup.settings.setdefault('tail_mi', 'one_bigger')
-    tail = analysis_setup.settings['tail_mi']
     permute_in_time = _check_permute_in_time(analysis_setup, data, n_perm)
 
     '''
@@ -576,7 +572,7 @@ def mi_against_surrogates(analysis_setup, data):
     [significance, p_value] = _find_pvalue(statistic=orig_mi,
                                            distribution=surr_dist,
                                            alpha=alpha,
-                                           tail=tail)
+                                           tail='one_bigger')
     return [orig_mi, significance, p_value]
 
 
@@ -595,8 +591,6 @@ def unq_against_surrogates(analysis_setup, data):
 
             - n_perm : int [optional] - number of permutations (default=500)
             - alpha : float [optional] - critical alpha level (default=0.05)
-            - tail : str [optional] - tail for testing, can be 'one_bigger' or
-              'two' (default='one_bigger')
             - permute_in_time : bool [optional] - generate surrogates by
               shuffling samples in time instead of shuffling whole replications
               (default=False)
@@ -621,8 +615,6 @@ def unq_against_surrogates(analysis_setup, data):
     n_perm = analysis_setup.settings['n_perm']
     analysis_setup.settings.setdefault('alpha', 0.05)
     alpha = analysis_setup.settings['alpha']
-    analysis_setup.settings.setdefault('tail', 'one_bigger')
-    tail = analysis_setup.settings['tail']
     _check_permute_in_time(analysis_setup, data, n_perm)
 
     # Get realisations and estimate PID for orginal data
@@ -697,11 +689,11 @@ def unq_against_surrogates(analysis_setup, data):
     [sign_1, p_val_1] = _find_pvalue(statistic=orig_pid['unq_s1'],
                                      distribution=surr_dist_s1,
                                      alpha=alpha,
-                                     tail=tail)
+                                     tail='one_bigger')
     [sign_2, p_val_2] = _find_pvalue(statistic=orig_pid['unq_s2'],
                                      distribution=surr_dist_s2,
                                      alpha=alpha,
-                                     tail=tail)
+                                     tail='one_bigger')
     return [orig_pid, sign_1, p_val_1, sign_2, p_val_2]
 
 
@@ -720,8 +712,6 @@ def syn_shd_against_surrogates(analysis_setup, data):
 
             - n_perm : int [optional] - number of permutations (default=500)
             - alpha : float [optional] - critical alpha level (default=0.05)
-            - tail : str [optional] - tail for testing, can be 'one_bigger' or
-              'two' (default='one_bigger')
             - permute_in_time : bool [optional] - generate surrogates by
               shuffling samples in time instead of shuffling whole replications
               (default=False)
@@ -746,8 +736,6 @@ def syn_shd_against_surrogates(analysis_setup, data):
     n_perm = analysis_setup.settings['n_perm']
     analysis_setup.settings.setdefault('alpha', 0.05)
     alpha = analysis_setup.settings['alpha']
-    analysis_setup.settings.setdefault('tail', 'one_bigger')
-    tail = analysis_setup.settings['tail']
     _check_permute_in_time(analysis_setup, data, n_perm)
 
     # Get realisations and estimate PID for original data
@@ -798,11 +786,11 @@ def syn_shd_against_surrogates(analysis_setup, data):
     [sign_shd, p_val_shd] = _find_pvalue(statistic=orig_pid['shd_s1_s2'],
                                          distribution=surr_dist_shd,
                                          alpha=alpha,
-                                         tail=tail)
+                                         tail='one_bigger')
     [sign_syn, p_val_syn] = _find_pvalue(statistic=orig_pid['syn_s1_s2'],
                                          distribution=surr_dist_syn,
                                          alpha=alpha,
-                                         tail=tail)
+                                         tail='one_bigger')
     return [orig_pid, sign_shd, p_val_shd, sign_syn, p_val_syn]
 
 
