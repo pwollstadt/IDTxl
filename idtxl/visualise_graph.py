@@ -121,7 +121,6 @@ def plot_network(res, n_nodes, fdr=True, find_u='max_te'):
     """
     graph = generate_network_graph(res, n_nodes, fdr, find_u)
     adj_matrix = nx.to_numpy_matrix(graph)
-    max_u = np.max(adj_matrix)
     print(graph.node)
 
     plt.figure(figsize=(10, 5))
@@ -137,16 +136,8 @@ def plot_network(res, n_nodes, fdr=True, find_u='max_te'):
                                  font_size=13)  # font_weight='bold'
 
     # Plot adjacency matrix.
-    ax2 = plt.subplot(122)
-    plt.imshow(adj_matrix, cmap="gray_r", interpolation="none")
-    # Make colorbar match the image in size:
-    # https://stackoverflow.com/a/26720422
-    cbar = plt.colorbar(fraction=0.046, pad=0.04,
-                        ticks=np.arange(0, max_u + 1).astype(int))
-    cbar.set_label('delay [samples]', rotation=90)
-    plt.xticks(np.arange(adj_matrix.shape[1]))
-    plt.yticks(np.arange(adj_matrix.shape[0]))
-    ax2.xaxis.tick_top()
+    plt.subplot(122)
+    _plot_adj_matrix(adj_matrix)
     plt.show()
     return graph
 
@@ -207,6 +198,41 @@ def plot_selected_vars(res, sign_sources=True):
              linestyle='--', linewidth=1, color='0.5')
     plt.show()
     return graph
+
+
+def _plot_adj_matrix(adj_matrix, mat_color='gray_r', diverging=False,
+                     cbar_label='delay', cbar_stepsize=1):
+    """Plot adjacency matrix."""
+    # Plot matrix, set minimum and maximum values to the same value for
+    # diverging plots to center colormap at 0, i.e., 0 is plotted in white
+    # https://stackoverflow.com/questions/25500541/
+    # matplotlib-bwr-colormap-always-centered-on-zero
+    if diverging:
+        max_val = np.max(abs(adj_matrix))
+        min_val = -max_val
+    else:
+        max_val = np.max(adj_matrix)
+        min_val = -np.min(adj_matrix)
+    plt.imshow(adj_matrix, cmap=mat_color, interpolation='nearest',
+               vmin=min_val, vmax=max_val)
+
+    # Set the colorbar and make colorbar match the image in size using the
+    # fraction and pad parameters (see https://stackoverflow.com/a/26720422).
+    if cbar_label == 'delay':
+        cbar_label = 'delay [samples]'
+        cbar_ticks = np.arange(0, max_val + 1, cbar_stepsize)
+    else:
+        cbar_ticks = np.arange(min_val, max_val + 0.01 * max_val,
+                               cbar_stepsize)
+    cbar = plt.colorbar(fraction=0.046, pad=0.04, ticks=cbar_ticks)
+    cbar.set_label(cbar_label, rotation=90)
+
+    # Set x- and y-ticks.
+    plt.xticks(np.arange(adj_matrix.shape[1]))
+    plt.yticks(np.arange(adj_matrix.shape[0]))
+    ax = plt.gca()
+    ax.xaxis.tick_top()
+    return cbar
 
 
 def plot_mute_graph():
@@ -351,7 +377,7 @@ def _get_adj_matrix(res, n_nodes, fdr=True, find_u='max_te'):
             pass
 
     targets = list(r.keys())
-    adj_matrix = np.zeros((n_nodes + 1, n_nodes + 1)).astype(int)
+    adj_matrix = np.zeros((n_nodes, n_nodes)).astype(int)
 
     for t in targets:
         all_vars_sources = np.array([x[0] for x in
@@ -374,3 +400,77 @@ def _get_adj_matrix(res, n_nodes, fdr=True, find_u='max_te'):
             adj_matrix[s, t] = u
 
     return adj_matrix
+
+
+def plot_network_comparison(res, mask_sign=True, show=True):
+    """Plot results of network comparison."""
+    union = res['union_network']
+
+    targets = res['union_network']['targets']
+    n_nodes = max(targets) + 1
+    union_network = np.zeros((n_nodes, n_nodes), dtype=int)
+    adj_matrix_te_diff = np.zeros((n_nodes, n_nodes))
+    adj_matrix_pval = np.zeros((n_nodes, n_nodes))
+    adj_matrix_comp = np.zeros((n_nodes, n_nodes))
+
+    for t in targets:
+        all_vars_sources = np.array([x[0] for x in
+                                     union[t]['selected_vars_sources']])
+        all_vars_lags = np.array([x[1] for x in
+                                  union[t]['selected_vars_sources']])
+
+        for s in np.unique(all_vars_sources):
+            union_network[s, t] = 1
+
+        pval = res['pval'][t]
+        sign = res['sign'][t]
+        te_diff = res['cmi_diff_abs'][t]
+        comp = res['a>b'][t].astype(int)
+        comp[comp == 0] = -1
+        if mask_sign:
+            all_vars_sources = all_vars_sources[sign]
+            all_vars_lags = all_vars_lags[sign]
+            pval = pval[sign]
+            te_diff = te_diff[sign]
+            comp = comp[sign]
+
+        sources = np.unique(all_vars_sources)
+
+        for s in sources:
+            # For now, if there are multiple variables in the past of a source,
+            # report the one with the maximum TE difference
+            te_diff_abs = abs(te_diff)
+            max_te = max(te_diff_abs[all_vars_sources == s])
+            idx = np.where(te_diff_abs == max_te)[0]
+            adj_matrix_te_diff[s, t] = te_diff[idx]
+            adj_matrix_pval[s, t] = pval[idx]
+            adj_matrix_comp[s, t] = comp[idx]
+
+    adj_matrix_te_diff_sign = adj_matrix_te_diff / np.max(adj_matrix_te_diff)
+    adj_matrix_te_diff_sign *= adj_matrix_comp
+
+    f = plt.figure(figsize=(10, 10))
+    ax = plt.subplot(221)
+    _plot_adj_matrix(adj_matrix_te_diff_sign, mat_color='seismic',
+                     diverging=True, cbar_label='norm. CMI diff [a.u.]',
+                     cbar_stepsize=0.1)
+    ax.set_title('CMI raw diff cond. A - B', y=1.1)
+    ax = plt.subplot(222)
+    _plot_adj_matrix(adj_matrix_pval, cbar_label='p-value [%]',
+                     cbar_stepsize=0.005)
+    ax.set_title('p-values cond. A vs. B', y=1.1)
+    ax = plt.subplot(223)
+    _plot_adj_matrix(union_network, mat_color='PuBu',
+                     cbar_label='link in union', cbar_stepsize=1)
+    ax.set_title('union network A and B', y=1.1)
+    # ax = plt.subplot(224)
+    # cbar = _plot_adj_matrix(adj_matrix_comp, diverging=True,
+    #                         mat_color='bwr', cbar_stepsize=1)
+    # cbar.set_ticks([1, -1])
+    # cbar.ax.set_yticklabels(['A > B', 'B>=A'])
+    # ax.set_title('Comparison mean TE', y=1.1)
+
+    if show:
+        plt.show()
+
+    return adj_matrix_te_diff_sign, adj_matrix_pval, f
