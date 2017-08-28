@@ -21,13 +21,13 @@ class OpenCLKraskov(Estimator):
 
     References:
 
-        - Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating
-          mutual information. Phys Rev E, 69(6), 066138.
-        - Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012).
-          Local measures of information storage in complex distributed
-          computation. Inform Sci, 208, 39-54.
-        - Schreiber, T. (2000). Measuring information transfer. Phys Rev Lett,
-          85(2), 461.
+    - Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating mutual
+      information. Phys Rev E, 69(6), 066138.
+    - Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012).
+      Local measures of information storage in complex distributed computation.
+      Inform Sci, 208, 39-54.
+    - Schreiber, T. (2000). Measuring information transfer. Phys Rev Lett,
+      85(2), 461.
 
     Estimators can be used to perform multiple, independent searches in
     parallel. Each of these parallel searches is called a 'chunk'. To search
