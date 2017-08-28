@@ -85,7 +85,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
                 documentation of analyse_single_target() for details, can
                 contain
 
-                - lags : list of lists of ints [optional] - lags in samples
+                - 'lags' : list of lists of ints [optional] - lags in samples
                   between sources and target (default=[[1, 1], [1, 1] ...])
 
             data : Data instance
@@ -154,10 +154,13 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             settings : dict
                 parameters for estimator use and statistics:
 
-                - lags : list of ints [optional] - lags in samples between
+                - 'pid_estimator' : str - estimator to be used for PID
+                  estimation (for estimator settings see the documentation in
+                  the estimators_pid modules)
+                - 'lags' : list of ints [optional] - lags in samples between
                   sources and target (default=[1, 1])
-                - for estimator settings see the documentation in the
-                  estimators_pid modules
+                - 'verbose' : bool [optional] - toggle console output
+                  (default=True)
 
             data : Data instance
                 raw data for analysis
