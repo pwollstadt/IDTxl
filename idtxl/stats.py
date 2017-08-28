@@ -10,7 +10,7 @@ from . import idtxl_utils as utils
 VERBOSE = True
 
 
-def network_fdr(settings, *results):
+def network_fdr(settings=None, *results):
     """Perform FDR-correction on results of network inference.
 
     Perform correction of the false discovery rate (FDR) after network
@@ -21,14 +21,14 @@ def network_fdr(settings, *results):
     Input can be a list of partial results to combine results from parallel
     analysis.
 
-    Reference for FDR correction:
+    References:
 
-    Genovese, C.R., Lazar, N.A., & Nichols, T. (2002). Thresholding of
-    statistical maps in functional neuroimaging using the false discovery
-    rate. Neuroimage, 15(4), 870-878.
+        - Genovese, C.R., Lazar, N.A., & Nichols, T. (2002). Thresholding of
+          statistical maps in functional neuroimaging using the false discovery
+          rate. Neuroimage, 15(4), 870-878.
 
     Args:
-        settings : dict
+        settings : dict [optional]
             parameters for statistical testing with entries:
 
             - 'alpha_fdr' : float [optional] - critical alpha level
@@ -45,6 +45,8 @@ def network_fdr(settings, *results):
         dict
             input results structure pruned of non-significant links.
     """
+    if settings is None:
+        settings = {}
     # Set defaults and get parameters from settings dictionary
     settings.setdefault('alpha_fdr', 0.05)
     alpha = settings['alpha_fdr']
@@ -103,8 +105,8 @@ def network_fdr(settings, *results):
     if (1 / min(n_perm)) > thresh[0]:
         print('WARNING: Number of permutations (''n_perm_max_seq'') for at '
               'least one target is too low to allow for FDR correction '
-              '(threshold: {0:.4f}, min. possible p-value: {1}).'.format(
-                                                  thresh[0], 1 / min(n_perm)))
+              '(FDR-threshold: {0:.4f}, min. theoretically possible p-value: '
+              '{1}).'.format(thresh[0], 1 / min(n_perm)))
         return None
 
     # Compare data to threshold.

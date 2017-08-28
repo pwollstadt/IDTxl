@@ -251,7 +251,7 @@ class NetworkComparison(NetworkAnalysis):
         for nw in networks:
             k = [i for i in nw.keys()]
             try:
-                k.remove('fdr')
+                k.remove('fdr_corrected')
             except ValueError:
                 pass
             targets = targets + k
