@@ -20,6 +20,7 @@ Module contents
    :maxdepth: 3
 
    idtxl_network_inference.rst
+   idtxl_process_analysis.rst
    idtxl_network_comparison.rst
    idtxl_estimators.rst
    idtxl_helper.rst
