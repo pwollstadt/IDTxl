@@ -257,9 +257,9 @@ def omnibus_test(analysis_setup, data):
                                           alpha, 'one_bigger')
     if VERBOSE:
         if significance:
-            print(' -- significant')
+            print(' -- significant\n')
         else:
-            print(' -- not significant')
+            print(' -- not significant\n')
     return significance, pvalue, te_orig
 
 
@@ -851,14 +851,16 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
 
     # Create surrogate table.
     if VERBOSE:
-        print('\ncreate surrogates table with {0} permutations'.format(n_perm))
+        print('\ncreating surrogate table with {0} permutations:'.format(
+                                                                    n_perm))
+        print('\tcand.', end='')
     surr_table = np.zeros((len(idx_test_set), n_perm))
     current_value_realisations = analysis_setup._current_value_realisations
     idx_c = 0
     for candidate in idx_test_set:
         if VERBOSE:
-            print('\tcand. {0}'.format(
-                                analysis_setup._idx_to_lag([candidate])[0]))
+            print('\t{0}'.format(analysis_setup._idx_to_lag([candidate])[0]),
+                  end='')
         '''
         surr_candidate_realisations = np.empty(
                 (data.n_realisations(analysis_setup.current_value) * n_perm,
@@ -1121,7 +1123,7 @@ def _check_permute_in_time(analysis_setup, data, n_perm):
 
     if (not analysis_setup.settings['permute_in_time'] and
             not _sufficient_replications(data, n_perm)):
-        print('WARNING: Number of replications is not sufficient to generate '
+        print('\n\nWARNING: Number of replications is not sufficient to generate '
               'the desired number of surrogates. Permuting samples in time '
               'instead.')
         analysis_setup.settings['permute_in_time'] = True

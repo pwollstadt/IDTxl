@@ -610,7 +610,7 @@ class NetworkComparison(NetworkAnalysis):
         for p in range(self.settings['n_perm_comp']):
             if self.settings['verbose']:
                 print('Creating surrogate data set {0} of {1}.'.format(
-                        p, self.settings['n_perm_comp']))
+                                        p + 1, self.settings['n_perm_comp']))
             self.cmi_surr.append(self._calculate_diff_of_mean(data_set_a,
                                                               data_set_b,
                                                               permute=True))
