@@ -113,6 +113,10 @@ def test_network_fdr():
                                 'Source list and list of p-values should have '
                                 'the same length.')
 
+    # Test function call for single result
+    res_pruned = stats.network_fdr(settings, res_1)
+    print('successful call on single result dict.')
+
     # Test None result for insufficient no. permutations
     res_1[0]['settings']['n_perm_max_seq'] = 2
     res_pruned = stats.network_fdr(settings, res_1, res_2)

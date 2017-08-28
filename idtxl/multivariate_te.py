@@ -13,6 +13,7 @@ Note:
 import numpy as np
 from . import stats
 from .network_inference import NetworkInference
+from .stats import network_fdr
 
 
 class MultivariateTE(NetworkInference):
@@ -101,7 +102,15 @@ class MultivariateTE(NetworkInference):
         Args:
             settings : dict
                 parameters for estimation and statistical testing, see
-                documentation of analyse_single_target() for details
+                documentation of analyse_single_target() for details, settings
+                can further contain
+
+                - 'verbose' : bool [optional] - toggle console output
+                  (default=True)
+                - 'fdr_correction' : bool [optional] - correct results on the
+                  network level, see documentation of stats.network_fdr() for
+                  details (default=True)
+
             data : Data instance
                 raw data for analysis
             targets : list of int | 'all' [optional]
@@ -119,8 +128,13 @@ class MultivariateTE(NetworkInference):
         Returns:
             dict
                 results for each target, see documentation of
-                analyse_single_target()
+                analyse_single_target(); results FDR-corrected, see
+                documentation of stats.network_fdr()
         """
+        # Set defaults for network inference.
+        settings.setdefault('verbose', True)
+        settings.setdefault('fdr_correction', True)
+
         # Check which targets and sources are requested for analysis.
         if targets == 'all':
             targets = [t for t in range(data.n_processes)]
@@ -138,7 +152,6 @@ class MultivariateTE(NetworkInference):
                                                'same length')
 
         # Perform TE estimation for each target individually
-        settings.setdefault('verbose', True)
         results = {}
         for t in range(len(targets)):
             if settings['verbose']:
@@ -148,6 +161,13 @@ class MultivariateTE(NetworkInference):
                                                              data,
                                                              targets[t],
                                                              sources[t])
+
+        # Perform FDR-correction on the network level. Add FDR-corrected
+        # results as an extra field. Network_fdr/combine_results internally
+        # creates a deep copy of the results.
+        if settings['fdr_correction']:
+            results['fdr_corrected'] = network_fdr(settings, results)
+
         return results
 
     def analyse_single_target(self, settings, data, target, sources='all'):
@@ -198,6 +218,9 @@ class MultivariateTE(NetworkInference):
             settings : dict
                 parameters for estimation and statistical testing:
 
+                - 'cmi_estimator' : str - estimator to be used for CMI
+                  calculation (for estimator settings see the documentation in
+                  the estimators_* modules)
                 - max_lag_sources : int - maximum temporal search depth for
                   candidates in the sources' past in samples
                 - min_lag_sources : int - minimum temporal search depth for
@@ -212,21 +235,20 @@ class MultivariateTE(NetworkInference):
                 - 'n_perm_*' : int [optional] - number of permutations, where *
                   can be 'max_stat', 'min_stat', 'omnibus', and 'max_seq'
                   (default=500)
-                - 'alpha_*' : float - critical alpha level for statistical
-                  significance, where * can be 'max_stats',  'min_stats',
-                  'omnibus', and 'max_seq' (default=0.05)
-                - 'cmi_estimator' : str - estimator to be used for CMI
-                  calculation (for estimator settings see the documentation in
-                  the estimators_* modules)
-                - 'add_conditionals' : list of tuples - force the estimator to
-                  add these conditionals when estimating TE; can either be a
-                  list of variables, where each variable is described as (idx
-                  process, lag wrt to current value) or can be a string: 'faes'
-                  for Faes-Method (see references)
-                - 'permute_in_time' : bool - force surrogate creation by
-                  shuffling realisations in time instead of shuffling
-                  replications; see documentation of Data.permute_samples() for
-                  further settings (default=False)
+                - 'alpha_*' : float [optional] - critical alpha level for
+                  statistical significance, where * can be 'max_stats',
+                  'min_stats', 'omnibus', and 'max_seq' (default=0.05)
+                - 'add_conditionals' : list of tuples | str [optional] - force
+                  the estimator to add these conditionals when estimating TE;
+                  can either be a list of variables, where each variable is
+                  described as (idx process, lag wrt to current value) or can
+                  be a string: 'faes' for Faes-Method (see references)
+                - 'permute_in_time' : bool [optional] - force surrogate
+                  creation by shuffling realisations in time instead of
+                  shuffling replications; see documentation of
+                  Data.permute_samples() for further settings (default=False)
+                - 'verbose' : bool [optional] - toggle console output
+                  (default=True)
 
             data : Data instance
                 raw data for analysis

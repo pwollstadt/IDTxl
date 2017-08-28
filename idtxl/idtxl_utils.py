@@ -294,7 +294,9 @@ def combine_results(*results):
     Combine a list of partial network inference results into a single results
     dictionary (e.g., results from analysis parallelized over target nodes).
     Raise an error if duplicate keys, i.e., duplicate targets, occur in
-    partial results.
+    partial results. Remove FDR-corrections from partial results before
+    combining them. Corrections performed on the basis of parts of the network
+    a not valid for the combined network.
 
     Args:
         results : list of dicts
@@ -307,6 +309,14 @@ def combine_results(*results):
     """
     res = {}
     for r in results:
+        # Remove potential partial FDR-corrected results. These are no longer
+        # valid for the combined network.
+        try:
+            del r['fdr_corrected']
+            print('Removing FDR-corrected results.')
+        except KeyError:
+            pass
+        # Check for duplicate keys in the partial results.
         for k in r:
             if k in res:
                 raise RuntimeError('Duplicate keys.')

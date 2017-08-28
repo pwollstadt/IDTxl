@@ -340,13 +340,13 @@ def _get_adj_matrix(res, n_nodes, fdr=True, find_u='max_te'):
     # Check if FDR-corrected or uncorrected results are requested.
     if fdr:
         try:
-            r = res['fdr']
+            r = res['fdr_corrected']
         except KeyError:
             raise RuntimeError('No FDR-corrected results found.')
     else:
         r = res.copy()
         try:
-            del r['fdr']
+            del r['fdr_corrected']
         except KeyError:
             pass
 

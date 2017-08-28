@@ -276,7 +276,7 @@ def test_analyse_network():
     # Test all to all analysis
     r = nw_0.analyse_network(settings, dat, targets='all', sources='all')
     try:
-        del r['fdr']
+        del r['fdr_corrected']
     except:
         pass
     k = list(r.keys())
@@ -292,7 +292,7 @@ def test_analyse_network():
     target_list = [1, 2, 3]
     r = nw_0.analyse_network(settings, dat, targets=target_list, sources='all')
     try:
-        del r['fdr']
+        del r['fdr_corrected']
     except:
         pass
     k = list(r.keys())
@@ -310,7 +310,7 @@ def test_analyse_network():
     r = nw_0.analyse_network(settings, dat, targets=target_list,
                              sources=source_list)
     try:
-        del r['fdr']
+        del r['fdr_corrected']
     except:
         pass
     k = list(r.keys())
