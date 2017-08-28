@@ -144,27 +144,29 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             settings : dict
                 parameters for estimator use and statistics:
 
-                - max_lag : int - maximum temporal search depth for candidates
-                  in the processes' past in samples
-                - tau : int [optional] - spacing between candidates in
+                - 'cmi_estimator' : str - estimator to be used for CMI and MI
+                  calculation (for estimator settings see the documentation in
+                  the estimators_* modules)
+                - 'max_lag' : int - maximum temporal search depth for
+                  candidates in the processes' past in samples
+                - 'tau' : int [optional] - spacing between candidates in
                   the sources' past in samples (default=1)
                 - 'n_perm_*' : int [optional] - number of permutations, where *
                   can be 'max_stat', 'min_stat', 'mi' (default=500)
-                - 'alpha_*' float [optional] - critical alpha level for
+                - 'alpha_*' : float [optional] - critical alpha level for
                   statistical significance, where * can be 'max_stat',
                   'min_stat', 'mi' (default=0.05)
-                - 'cmi_estimator' str - estimator to be used for CMI and MI
-                  calculation (for estimator settings see the documentation in
-                  the estimators_* modules)
-                - 'add_conditionals' : list of tuples - force the estimator to
-                  add these conditionals when estimating TE; can either be a
-                  list of variables, where each variable is described as (idx
-                  process, lag wrt to current value) or can be a string: 'faes'
-                  for Faes-Method (see references)
-                - 'permute_in_time' : bool - force surrogate creation by
-                  shuffling realisations in time instead of shuffling
-                  replications; see documentation of Data.permute_samples() for
-                  further settings (default=False)
+                - 'add_conditionals' : list of tuples | str [optional] - force
+                  the estimator to add these conditionals when estimating TE;
+                  can either be a list of variables, where each variable is
+                  described as (idx process, lag wrt to current value) or can
+                  be a string: 'faes' for Faes-Method (see references)
+                - 'permute_in_time' : bool [optional] - force surrogate
+                  creation by shuffling realisations in time instead of
+                  shuffling replications; see documentation of
+                  Data.permute_samples() for further settings (default=False)
+                - 'verbose' : bool [optional] - toggle console output
+                  (default=True)
 
             data : Data instance
                 raw data for analysis

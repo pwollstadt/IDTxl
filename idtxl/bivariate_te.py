@@ -200,35 +200,37 @@ class BivariateTE(NetworkInference):
             settings : dict
                 parameters for estimation and statistical testing:
 
-                - max_lag_sources : int - maximum temporal search depth for
+                - 'cmi_estimator' : str - estimator to be used for CMI
+                  calculation (for estimator settings see the documentation in
+                  the estimators_* modules)
+                - 'max_lag_sources' : int - maximum temporal search depth for
                   candidates in the sources' past in samples
-                - min_lag_sources : int - minimum temporal search depth for
+                - 'min_lag_sources' : int - minimum temporal search depth for
                   candidates in the sources' past in samples
-                - max_lag_target : int [optional] - maximum temporal search
+                - 'max_lag_target' : int [optional] - maximum temporal search
                   depth for candidates in the target's past in samples
                   (default=same as max_lag_sources)
-                - tau_sources : int [optional] - spacing between candidates in
+                - 'tau_sources' : int [optional] - spacing between candidates in
                   the sources' past in samples (default=1)
-                - tau_target : int [optional] - spacing between candidates in
+                - 'tau_target' : int [optional] - spacing between candidates in
                   the target's past in samples (default=1)
                 - 'n_perm_*' : int - number of permutations, where * can be
                   'max_stat', 'min_stat', 'omnibus', and 'max_seq'
                   (default=500)
-                - 'alpha_*' float - critical alpha level for statistical
+                - 'alpha_*' : float - critical alpha level for statistical
                   significance, where * can be 'max_stats',  'min_stats', and
                   'omnibus' (default=0.05)
-                - 'cmi_estimator' : str - estimator to be used for CMI
-                  calculation (for estimator settings see the documentation in
-                  the estimators_* modules)
-                - 'add_conditionals' : list of tuples - force the estimator to
-                  add these conditionals when estimating TE; can either be a
-                  list of variables, where each variable is described as (idx
-                  process, lag wrt to current value) or can be a string: 'faes'
-                  for Faes-Method (see references)
-                - 'permute_in_time' : bool - force surrogate creation by
-                  shuffling realisations in time instead of shuffling
-                  replications; see documentation of Data.permute_samples() for
-                  further settings (default=False)
+                - 'add_conditionals' : list of tuples | str [optional] - force
+                  the estimator to add these conditionals when estimating TE;
+                  can either be a list of variables, where each variable is
+                  described as (idx process, lag wrt to current value) or can
+                  be a string: 'faes' for Faes-Method (see references)
+                - 'permute_in_time' : bool [optional] - force surrogate
+                  creation by shuffling realisations in time instead of
+                  shuffling replications; see documentation of
+                  Data.permute_samples() for further settings (default=False)
+                - 'verbose' : bool [optional] - toggle console output
+                  (default=True)
 
             data : Data instance
                 raw data for analysis

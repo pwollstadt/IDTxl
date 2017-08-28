@@ -221,16 +221,16 @@ class MultivariateTE(NetworkInference):
                 - 'cmi_estimator' : str - estimator to be used for CMI
                   calculation (for estimator settings see the documentation in
                   the estimators_* modules)
-                - max_lag_sources : int - maximum temporal search depth for
+                - 'max_lag_sources' : int - maximum temporal search depth for
                   candidates in the sources' past in samples
-                - min_lag_sources : int - minimum temporal search depth for
+                - 'min_lag_sources' : int - minimum temporal search depth for
                   candidates in the sources' past in samples
-                - max_lag_target : int [optional] - maximum temporal search
+                - 'max_lag_target' : int [optional] - maximum temporal search
                   depth for candidates in the target's past in samples
                   (default=same as max_lag_sources)
-                - tau_sources : int [optional] - spacing between candidates in
+                - 'tau_sources' : int [optional] - spacing between candidates in
                   the sources' past in samples (default=1)
-                - tau_target : int [optional] - spacing between candidates in
+                - 'tau_target' : int [optional] - spacing between candidates in
                   the target's past in samples (default=1)
                 - 'n_perm_*' : int [optional] - number of permutations, where *
                   can be 'max_stat', 'min_stat', 'omnibus', and 'max_seq'
