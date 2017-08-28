@@ -28,13 +28,13 @@ class ActiveInformationStorage(SingleProcessAnalysis):
 
     References:
 
-        - Lizier, J. T., Prokopenko, M., & Zomaya, A. Y. (2012). Local measures
-          of information storage in complex distributed computation. Inform
-          Sci, 208, 39–54. http://doi.org/10.1016/j.ins.2012.04.016
-        - Wibral, M., Lizier, J. T., Vögler, S., Priesemann, V., & Galuske, R.
-          (2014). Local active information storage as a tool to understand
-          distributed neural information processing. Front Neuroinf, 8, 1.
-          http://doi.org/10.3389/fninf.2014.00001
+    - Lizier, J. T., Prokopenko, M., & Zomaya, A. Y. (2012). Local measures of
+      information storage in complex distributed computation. Inform Sci, 208,
+      39–54. http://doi.org/10.1016/j.ins.2012.04.016
+    - Wibral, M., Lizier, J. T., Vögler, S., Priesemann, V., & Galuske, R.
+      (2014). Local active information storage as a tool to understand
+      distributed neural information processing. Front Neuroinf, 8, 1.
+      http://doi.org/10.3389/fninf.2014.00001
 
     Attributes:
         process_set : list
@@ -144,28 +144,28 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             settings : dict
                 parameters for estimator use and statistics:
 
-                - 'cmi_estimator' : str - estimator to be used for CMI and MI
+                - cmi_estimator : str - estimator to be used for CMI and MI
                   calculation (for estimator settings see the documentation in
                   the estimators_* modules)
-                - 'max_lag' : int - maximum temporal search depth for
-                  candidates in the processes' past in samples
-                - 'tau' : int [optional] - spacing between candidates in
-                  the sources' past in samples (default=1)
-                - 'n_perm_*' : int [optional] - number of permutations, where *
+                - max_lag : int - maximum temporal search depth for candidates
+                  in the processes' past in samples
+                - tau : int [optional] - spacing between candidates in the
+                  sources' past in samples (default=1)
+                - n_perm_* : int [optional] - number of permutations, where *
                   can be 'max_stat', 'min_stat', 'mi' (default=500)
-                - 'alpha_*' : float [optional] - critical alpha level for
+                - alpha_* : float [optional] - critical alpha level for
                   statistical significance, where * can be 'max_stat',
                   'min_stat', 'mi' (default=0.05)
-                - 'add_conditionals' : list of tuples | str [optional] - force
+                - add_conditionals : list of tuples | str [optional] - force
                   the estimator to add these conditionals when estimating TE;
                   can either be a list of variables, where each variable is
                   described as (idx process, lag wrt to current value) or can
                   be a string: 'faes' for Faes-Method (see references)
-                - 'permute_in_time' : bool [optional] - force surrogate
-                  creation by shuffling realisations in time instead of
-                  shuffling replications; see documentation of
-                  Data.permute_samples() for further settings (default=False)
-                - 'verbose' : bool [optional] - toggle console output
+                - permute_in_time : bool [optional] - force surrogate creation
+                  by shuffling realisations in time instead of shuffling
+                  replications; see documentation of Data.permute_samples() for
+                  further settings (default=False)
+                - verbose : bool [optional] - toggle console output
                   (default=True)
 
             data : Data instance

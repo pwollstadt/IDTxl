@@ -27,15 +27,15 @@ class JidtEstimator(Estimator):
 
     References:
 
-        - Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
-          studying the dynamics of complex systems. Front Robot AI, 1(11).
-        - Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating
-          mutual information. Phys Rev E, 69(6), 066138.
-        - Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012).
-          Local measures of information storage in complex distributed
-          computation. Inform Sci, 208, 39-54.
-        - Schreiber, T. (2000). Measuring information transfer. Phys Rev Lett,
-          85(2), 461.
+    - Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
+      studying the dynamics of complex systems. Front Robot AI, 1(11).
+    - Kraskov, A., Stoegbauer, H., & Grassberger, P. (2004). Estimating mutual
+      information. Phys Rev E, 69(6), 066138.
+    - Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012).
+      Local measures of information storage in complex distributed computation.
+      Inform Sci, 208, 39-54.
+    - Schreiber, T. (2000). Measuring information transfer. Phys Rev Lett,
+      85(2), 461.
 
     Set common estimation parameters for JIDT estimators. For usage of these
     estimators see documentation for the child classes.
