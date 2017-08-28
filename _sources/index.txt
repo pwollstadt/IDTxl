@@ -14,7 +14,7 @@ Links
 * **repository**: `<https://github.com/pwollstadt/IDTxl>`_
 * **issues**: `<https://github.com/pwollstadt/IDTxl/issues>`_
 
-Module contents
+Overview
 --------------------
 .. toctree::
    :maxdepth: 3
@@ -24,6 +24,13 @@ Module contents
    idtxl_network_comparison.rst
    idtxl_estimators.rst
    idtxl_helper.rst
+
+Package contents
+--------------------
+.. toctree::
+   :maxdepth: 3
+
+   idtxl.rst
 
 Indices and tables
 ==================
