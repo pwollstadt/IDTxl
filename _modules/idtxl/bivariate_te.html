@@ -125,7 +125,7 @@
 <span class="kn">from</span> <span class="nn">.network_inference</span> <span class="kn">import</span> <span class="n">NetworkInference</span>
 
 
-<div class="viewcode-block" id="BivariateTE"><a class="viewcode-back" href="../../idtxl.html#idtxl.bivariate_te.BivariateTE">[docs]</a><span class="k">class</span> <span class="nc">BivariateTE</span><span class="p">(</span><span class="n">NetworkInference</span><span class="p">):</span>
+<div class="viewcode-block" id="BivariateTE"><a class="viewcode-back" href="../../idtxl_network_inference.html#idtxl.bivariate_te.BivariateTE">[docs]</a><span class="k">class</span> <span class="nc">BivariateTE</span><span class="p">(</span><span class="n">NetworkInference</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Perform network inference using bivariate transfer entropy.</span>
 
 <span class="sd">    Perform network inference using bivariate transfer entropy (TE). To</span>
@@ -182,7 +182,7 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
 
-<div class="viewcode-block" id="BivariateTE.analyse_network"><a class="viewcode-back" href="../../idtxl.html#idtxl.bivariate_te.BivariateTE.analyse_network">[docs]</a>    <span class="k">def</span> <span class="nf">analyse_network</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="BivariateTE.analyse_network"><a class="viewcode-back" href="../../idtxl_network_inference.html#idtxl.bivariate_te.BivariateTE.analyse_network">[docs]</a>    <span class="k">def</span> <span class="nf">analyse_network</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Find bivariate transfer entropy between all nodes in the network.</span>
 
 <span class="sd">        Estimate bivariate transfer entropy (TE) between all nodes in the</span>
@@ -261,7 +261,7 @@
             <span class="n">results</span><span class="p">[</span><span class="n">targets</span><span class="p">[</span><span class="n">t</span><span class="p">]]</span> <span class="o">=</span> <span class="n">r</span>
         <span class="k">return</span> <span class="n">results</span></div>
 
-<div class="viewcode-block" id="BivariateTE.analyse_single_target"><a class="viewcode-back" href="../../idtxl.html#idtxl.bivariate_te.BivariateTE.analyse_single_target">[docs]</a>    <span class="k">def</span> <span class="nf">analyse_single_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="BivariateTE.analyse_single_target"><a class="viewcode-back" href="../../idtxl_network_inference.html#idtxl.bivariate_te.BivariateTE.analyse_single_target">[docs]</a>    <span class="k">def</span> <span class="nf">analyse_single_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Find bivariate transfer entropy between sources and a target.</span>
 
 <span class="sd">        Find bivariate transfer entropy (TE) between all potential source</span>

@@ -12,7 +12,7 @@ Welcome to the IDTxl user documentation. IDTxl is being hosted at
 Links
 --------------------
 * **repository**: `<https://github.com/pwollstadt/IDTxl>`_
-* **bug tracker**: `<https://github.com/pwollstadt/IDTxl/issues>`_
+* **issues**: `<https://github.com/pwollstadt/IDTxl/issues>`_
 
 Module contents
 --------------------
