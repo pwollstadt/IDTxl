@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-IDTxl documentation
+IDTxl user reference
 =================================
 
 Welcome to the IDTxl user documentation. IDTxl is being hosted at
