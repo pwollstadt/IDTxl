@@ -2,7 +2,7 @@ Algorithms for network comparison
 =================================
 
 
-idtxl.network_comparison.NetworkComparison class
-------------------------------------------------
+Network Comparison 
+------------------
 .. autoclass:: idtxl.network_comparison.NetworkComparison
     :members:

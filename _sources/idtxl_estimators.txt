@@ -1,18 +1,18 @@
 Information theoretic estimators
 ================================
 
-idtxl.estimators_jidt module
-----------------------------
+JIDT Estimators (CPU)
+---------------------
 .. automodule:: idtxl.estimators_jidt
     :members:
 
-idtxl.estimators_opencl module
-------------------------------
+OpenCL Estimators (GPU)
+-----------------------
 .. automodule:: idtxl.estimators_opencl
     :members:
 
-idtxl.estimators_pid module
----------------------------
+PID Estimators
+--------------
 .. automodule:: idtxl.estimators_pid
     :members:
 

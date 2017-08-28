@@ -1,12 +1,12 @@
 Algorithms for network inference
 ================================
 
-idtxl.multivariate_te.Multivariate_te class
--------------------------------------------
+Multivariate Transfer Entropy (mTE)
+-----------------------------------
 .. autoclass:: idtxl.multivariate_te.MultivariateTE
     :members:
 
-idtxl.bivariate_te.Bivariate_te class
--------------------------------------
+Bivariate Transfer Entropy (bTE)
+--------------------------------
 .. autoclass:: idtxl.bivariate_te.BivariateTE
     :members:

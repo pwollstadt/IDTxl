@@ -1,12 +1,12 @@
 Algorithms for the analysis of individual processes
 ==================================================
 
-idtxl.active_information_storage.ActiveInformationStorage
----------------------------------------------------------
+Active Information Storage (AIS)
+-------------------------------
 .. autoclass:: idtxl.active_information_storage.ActiveInformationStorage
     :members:
 
-idtxl.partial_information_decomposition.PartialInformationDecomposition
-----------------------------------------------------------------------
+Partial Information Decomposition (PID)
+---------------------------------------
 .. autoclass:: idtxl.partial_information_decomposition.PartialInformationDecomposition
     :members:
