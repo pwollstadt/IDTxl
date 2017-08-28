@@ -155,7 +155,7 @@ class MultivariateTE(NetworkInference):
         results = {}
         for t in range(len(targets)):
             if settings['verbose']:
-                print('####### analysing target with index {0} from list {1}'
+                print('\n####### analysing target with index {0} from list {1}'
                       .format(t, targets))
             results[targets[t]] = self.analyse_single_target(settings,
                                                              data,
@@ -374,11 +374,11 @@ class MultivariateTE(NetworkInference):
             # sources will be significant as well (b/c they have higher TE).
             if not significant:
                 if self.settings['verbose']:
-                    print(' -- not significant')
+                    print(' -- not significant\n')
                 self._remove_selected_var(min_candidate)
             else:
                 if self.settings['verbose']:
-                    print(' -- significant')
+                    print(' -- significant\n')
                 self._min_stats_surr_table = surr_table
                 break
 
