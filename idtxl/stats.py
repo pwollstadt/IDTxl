@@ -1044,8 +1044,8 @@ def _get_surrogates(data, current_value, idx_list, n_perm, perm_settings):
             i_2 += n_realisations
 
     else:  # permute replications
-        assert (_sufficient_replications(data, n_perm), (
-                'Not enough replications for surrogate creation.'))
+        assert _sufficient_replications(data, n_perm), (
+                'Not enough replications for surrogate creation.')
         for perm in range(n_perm):
             surrogates[i_1:i_2, ] = data.permute_replications(current_value,
                                                               idx_list)[0]
