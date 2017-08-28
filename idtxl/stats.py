@@ -52,7 +52,6 @@ def network_fdr(settings=None, *results):
     alpha = settings['alpha_fdr']
     settings.setdefault('correct_by_target', True)
     correct_by_target = settings['correct_by_target']
-    # TODO add updated analysis settings to the results structure
 
     # Combine results into single results dict (this creates a copy).
     res = utils.combine_results(*results)

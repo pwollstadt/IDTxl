@@ -346,11 +346,10 @@ class NetworkComparison(NetworkAnalysis):
         """
         self.cmi_diff = self._calculate_diff_of_mean(data_set_a, data_set_b,
                                                      permute=False)
-        # TODO idea: loop over pairs of data in data_set_a and *_b and feed it
-        # to the within function? is the mean of differences the same as the
-        # difference of the mean? > yes
-        # BUT: such an implementation doesn't allow for unbalanced designs
-        # > this sucks and needs to be changed in the within function as well
+        # TODO Idea: loop over pairs of data in data_set_a and *_b and feed it
+        # to the within function? BUT: such an implementation doesn't allow for
+        # unbalanced designs, which is a problem and needs to be changed in the
+        # within function as well
 
     def _calculate_diff_of_mean(self, data_set_a, data_set_b, permute=False):
         """Calculate the difference of the means of CMI for two data sets.
