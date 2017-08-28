@@ -3,8 +3,8 @@
 This module provides an estimator for partial information decomposition
 as proposed in
 
-Bertschinger, Rauh, Olbrich, Jost, Ay; Quantifying Unique Information,
-Entropy 2014, 16, 2161-2183; doi:10.3390/e16042161
+Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., & Ay, N. (2014). Quantifying
+Unique Information. Entropy, 16(4), 2161–2183. http://doi.org/10.3390/e16042161
 
 """
 import numpy as np

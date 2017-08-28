@@ -23,17 +23,17 @@ def network_fdr(settings=None, *results):
 
     References:
 
-        - Genovese, C.R., Lazar, N.A., & Nichols, T. (2002). Thresholding of
-          statistical maps in functional neuroimaging using the false discovery
-          rate. Neuroimage, 15(4), 870-878.
+    - Genovese, C.R., Lazar, N.A., & Nichols, T. (2002). Thresholding of
+      statistical maps in functional neuroimaging using the false discovery
+      rate. Neuroimage, 15(4), 870-878.
 
     Args:
         settings : dict [optional]
             parameters for statistical testing with entries:
 
-            - 'alpha_fdr' : float [optional] - critical alpha level
+            - alpha_fdr : float [optional] - critical alpha level
               (default=0.05)
-            - 'correct_by_target' : bool [optional] - if true p-values are
+            - correct_by_target : bool [optional] - if true p-values are
               corrected on the target level and on the single-link level
               otherwise (default=True)
 
@@ -154,11 +154,11 @@ def omnibus_test(analysis_setup, data):
             information on the current analysis, can have an optional attribute
             'settings', a dictionary with parameters for statistical testing:
 
-            - 'n_perm_omnibus' : int [optional] - number of permutations
+            - n_perm_omnibus : int [optional] - number of permutations
               (default=500)
-            - 'alpha_omnibus' : float [optional] - critical alpha level
+            - alpha_omnibus : float [optional] - critical alpha level
               (default=0.05)
-            - 'permute_in_time' : bool [optional] - generate surrogates by
+            - permute_in_time : bool [optional] - generate surrogates by
               shuffling samples in time instead of shuffling whole replications
               (default=False)
 
@@ -261,11 +261,11 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate):
             information on the current analysis, can have an optional attribute
             'settings', a dictionary with parameters for statistical testing:
 
-            - 'n_perm_max_stat' : int [optional] - number of permutations
+            - n_perm_max_stat : int [optional] - number of permutations
               (default=200)
-            - 'alpha_max_stat' : float [optional] - critical alpha level
+            - alpha_max_stat : float [optional] - critical alpha level
               (default=0.05)
-            - 'permute_in_time' : bool [optional] - generate surrogates by
+            - permute_in_time : bool [optional] - generate surrogates by
               shuffling samples in time instead of shuffling whole replications
               (default=False)
 
@@ -322,11 +322,11 @@ def max_statistic_sequential(analysis_setup, data):
             information on the current analysis, can have an optional attribute
             'settings', a dictionary with parameters for statistical testing:
 
-            - 'n_perm_max_seq' : int [optional] - number of permutations
+            - n_perm_max_seq : int [optional] - number of permutations
               (default='n_perm_min_stat'|500)
-            - 'alpha_max_seq' : float [optional] - critical alpha level
+            - alpha_max_seq : float [optional] - critical alpha level
               (default=0.05)
-            - 'permute_in_time' : bool [optional] - generate surrogates by
+            - permute_in_time : bool [optional] - generate surrogates by
               shuffling samples in time instead of shuffling whole replications
               (default=False)
 
@@ -434,9 +434,11 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate):
             information on the current analysis, can have an optional attribute
             'settings', a dictionary with parameters for statistical testing:
 
-            - 'n_perm_min_stat' - number of permutations (default=500)
-            - 'alpha_min_stat' - critical alpha level (default=0.05)
-            - 'permute_in_time' bool [optional] - generate surrogates by
+            - n_perm_min_stat : int [optional] - number of permutations
+              (default=500)
+            - alpha_min_stat : float [optional] - critical alpha level
+              (default=0.05)
+            - permute_in_time : bool [optional] - generate surrogates by
               shuffling samples in time instead of shuffling whole replications
               (default=False)
 
@@ -487,13 +489,11 @@ def mi_against_surrogates(analysis_setup, data):
             information on the current analysis, can have an optional attribute
             'settings', a dictionary with parameters for statistical testing:
 
-            - 'n_perm_mi' : int [optional] - number of permutations
+            - n_perm_mi : int [optional] - number of permutations
               (default=500)
-            - 'alpha_mi' : float [optional] - critical alpha level
+            - alpha_mi : float [optional] - critical alpha level
               (default=0.05)
-            - 'tail_mi' : str [optional] - tail for testing, can be 'one' or
-              'two' (default='one')
-            - 'permute_in_time' : bool [optional] - generate surrogates by
+            - permute_in_time : bool [optional] - generate surrogates by
               shuffling samples in time instead of shuffling whole replications
               (default=False)
 
@@ -512,8 +512,6 @@ def mi_against_surrogates(analysis_setup, data):
     n_perm = analysis_setup.settings['n_perm_mi']
     analysis_setup.settings.setdefault('alpha_mi', 0.05)
     alpha = analysis_setup.settings['alpha_mi']
-    analysis_setup.settings.setdefault('tail_mi', 'one_bigger')
-    tail = analysis_setup.settings['tail_mi']
     permute_in_time = _check_permute_in_time(analysis_setup, data, n_perm)
 
     '''
@@ -574,7 +572,7 @@ def mi_against_surrogates(analysis_setup, data):
     [significance, p_value] = _find_pvalue(statistic=orig_mi,
                                            distribution=surr_dist,
                                            alpha=alpha,
-                                           tail=tail)
+                                           tail='one_bigger')
     return [orig_mi, significance, p_value]
 
 
@@ -591,11 +589,9 @@ def unq_against_surrogates(analysis_setup, data):
             information on the current analysis, should have an Attribute
             'settings', a dict with optional fields
 
-            - 'n_perm' - number of permutations (default=500)
-            - 'alpha' - critical alpha level (default=0.05)
-            - 'tail' - tail for testing, can be 'one' or 'two'
-              (default='one')
-            - 'permute_in_time' : bool [optional] - generate surrogates by
+            - n_perm : int [optional] - number of permutations (default=500)
+            - alpha : float [optional] - critical alpha level (default=0.05)
+            - permute_in_time : bool [optional] - generate surrogates by
               shuffling samples in time instead of shuffling whole replications
               (default=False)
 
@@ -619,8 +615,6 @@ def unq_against_surrogates(analysis_setup, data):
     n_perm = analysis_setup.settings['n_perm']
     analysis_setup.settings.setdefault('alpha', 0.05)
     alpha = analysis_setup.settings['alpha']
-    analysis_setup.settings.setdefault('tail', 'one')
-    tail = analysis_setup.settings['tail']
     _check_permute_in_time(analysis_setup, data, n_perm)
 
     # Get realisations and estimate PID for orginal data
@@ -695,11 +689,11 @@ def unq_against_surrogates(analysis_setup, data):
     [sign_1, p_val_1] = _find_pvalue(statistic=orig_pid['unq_s1'],
                                      distribution=surr_dist_s1,
                                      alpha=alpha,
-                                     tail=tail)
+                                     tail='one_bigger')
     [sign_2, p_val_2] = _find_pvalue(statistic=orig_pid['unq_s2'],
                                      distribution=surr_dist_s2,
                                      alpha=alpha,
-                                     tail=tail)
+                                     tail='one_bigger')
     return [orig_pid, sign_1, p_val_1, sign_2, p_val_2]
 
 
@@ -716,11 +710,9 @@ def syn_shd_against_surrogates(analysis_setup, data):
             information on the current analysis, should have an Attribute
             'settings', a dict with optional fields
 
-            - 'n_perm' : int [optional] - number of permutations (default=500)
-            - 'alpha' : float [optional] - critical alpha level (default=0.05)
-            - 'tail' : str [optional] - tail for testing, can be 'one' or 'two'
-              (default='one')
-            - 'permute_in_time' : bool [optional] - generate surrogates by
+            - n_perm : int [optional] - number of permutations (default=500)
+            - alpha : float [optional] - critical alpha level (default=0.05)
+            - permute_in_time : bool [optional] - generate surrogates by
               shuffling samples in time instead of shuffling whole replications
               (default=False)
 
@@ -744,8 +736,6 @@ def syn_shd_against_surrogates(analysis_setup, data):
     n_perm = analysis_setup.settings['n_perm']
     analysis_setup.settings.setdefault('alpha', 0.05)
     alpha = analysis_setup.settings['alpha']
-    analysis_setup.settings.setdefault('tail', 'one')
-    tail = analysis_setup.settings['tail']
     _check_permute_in_time(analysis_setup, data, n_perm)
 
     # Get realisations and estimate PID for original data
@@ -796,11 +786,11 @@ def syn_shd_against_surrogates(analysis_setup, data):
     [sign_shd, p_val_shd] = _find_pvalue(statistic=orig_pid['shd_s1_s2'],
                                          distribution=surr_dist_shd,
                                          alpha=alpha,
-                                         tail=tail)
+                                         tail='one_bigger')
     [sign_syn, p_val_syn] = _find_pvalue(statistic=orig_pid['syn_s1_s2'],
                                          distribution=surr_dist_syn,
                                          alpha=alpha,
-                                         tail=tail)
+                                         tail='one_bigger')
     return [orig_pid, sign_shd, p_val_shd, sign_syn, p_val_syn]
 
 

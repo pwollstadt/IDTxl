@@ -25,20 +25,20 @@ class BivariateTE(NetworkInference):
 
     References:
 
-        - Schreiber, T. (2000). Measuring Information Transfer. Phys Rev Lett,
-          85(2), 461–464. http://doi.org/10.1103/PhysRevLett.85.461
-        - Vicente, R., Wibral, M., Lindner, M., & Pipa, G. (2011). Transfer
-          entropy-a model-free measure of effective connectivity for the
-          neurosciences. J Comp Neurosci, 30(1), 45–67.
-          http://doi.org/10.1007/s10827-010-0262-3
-        - Lizier, J. T., & Rubinov, M. (2012). Multivariate construction of
-          effective computational networks from observational data. Max Planck
-          Institute: Preprint. Retrieved from
-          http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf
-        - Faes, L., Nollo, G., & Porta, A. (2011). Information-based detection
-          of nonlinear Granger causality in multivariate processes via a
-          nonuniform embedding technique. Phys Rev E, 83, 1–15.
-          http://doi.org/10.1103/PhysRevE.83.051112
+    - Schreiber, T. (2000). Measuring Information Transfer. Phys Rev Lett,
+      85(2), 461–464. http://doi.org/10.1103/PhysRevLett.85.461
+    - Vicente, R., Wibral, M., Lindner, M., & Pipa, G. (2011). Transfer
+      entropy-a model-free measure of effective connectivity for the
+      neurosciences. J Comp Neurosci, 30(1), 45–67.
+      http://doi.org/10.1007/s10827-010-0262-3
+    - Lizier, J. T., & Rubinov, M. (2012). Multivariate construction of
+      effective computational networks from observational data. Max Planck
+      Institute: Preprint. Retrieved from
+      http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf
+    - Faes, L., Nollo, G., & Porta, A. (2011). Information-based detection
+      of nonlinear Granger causality in multivariate processes via a
+      nonuniform embedding technique. Phys Rev E, 83, 1–15.
+      http://doi.org/10.1103/PhysRevE.83.051112
 
     Attributes:
         source_set : list
@@ -103,7 +103,12 @@ class BivariateTE(NetworkInference):
         Args:
             settings : dict
                 parameters for estimation and statistical testing, see
-                documentation of analyse_single_target() for details
+                documentation of analyse_single_target() for details, settings
+                can further contain
+
+                - verbose : bool [optional] - toggle console output
+                  (default=True)
+
             data : Data instance
                 raw data for analysis
             targets : list of int | 'all' [optional]
@@ -200,36 +205,36 @@ class BivariateTE(NetworkInference):
             settings : dict
                 parameters for estimation and statistical testing:
 
-                - 'cmi_estimator' : str - estimator to be used for CMI
+                - cmi_estimator : str - estimator to be used for CMI
                   calculation (for estimator settings see the documentation in
                   the estimators_* modules)
-                - 'max_lag_sources' : int - maximum temporal search depth for
+                - max_lag_sources : int - maximum temporal search depth for
                   candidates in the sources' past in samples
-                - 'min_lag_sources' : int - minimum temporal search depth for
+                - min_lag_sources : int - minimum temporal search depth for
                   candidates in the sources' past in samples
-                - 'max_lag_target' : int [optional] - maximum temporal search
+                - max_lag_target : int [optional] - maximum temporal search
                   depth for candidates in the target's past in samples
                   (default=same as max_lag_sources)
-                - 'tau_sources' : int [optional] - spacing between candidates in
+                - tau_sources : int [optional] - spacing between candidates in
                   the sources' past in samples (default=1)
-                - 'tau_target' : int [optional] - spacing between candidates in
+                - tau_target : int [optional] - spacing between candidates in
                   the target's past in samples (default=1)
-                - 'n_perm_*' : int - number of permutations, where * can be
+                - n_perm_* : int - number of permutations, where * can be
                   'max_stat', 'min_stat', 'omnibus', and 'max_seq'
                   (default=500)
-                - 'alpha_*' : float - critical alpha level for statistical
+                - alpha_* : float - critical alpha level for statistical
                   significance, where * can be 'max_stats',  'min_stats', and
                   'omnibus' (default=0.05)
-                - 'add_conditionals' : list of tuples | str [optional] - force
+                - add_conditionals : list of tuples | str [optional] - force
                   the estimator to add these conditionals when estimating TE;
                   can either be a list of variables, where each variable is
                   described as (idx process, lag wrt to current value) or can
                   be a string: 'faes' for Faes-Method (see references)
-                - 'permute_in_time' : bool [optional] - force surrogate
-                  creation by shuffling realisations in time instead of
-                  shuffling replications; see documentation of
-                  Data.permute_samples() for further settings (default=False)
-                - 'verbose' : bool [optional] - toggle console output
+                - permute_in_time : bool [optional] - force surrogate creation
+                  by shuffling realisations in time instead of shuffling
+                  replications; see documentation of Data.permute_samples() for
+                  further settings (default=False)
+                - verbose : bool [optional] - toggle console output
                   (default=True)
 
             data : Data instance

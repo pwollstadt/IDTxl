@@ -24,12 +24,12 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
 
     References:
 
-        - Williams, P. L., & Beer, R. D. (2010). Nonnegative Decomposition of
-          Multivariate Information, 1–14. Retrieved from
-          http://arxiv.org/abs/1004.2515
-        - Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., & Ay, N. (2014).
-          Quantifying Unique Information. Entropy, 16(4), 2161–2183.
-          http://doi.org/10.3390/e16042161
+    - Williams, P. L., & Beer, R. D. (2010). Nonnegative Decomposition of
+      Multivariate Information, 1–14. Retrieved from
+      http://arxiv.org/abs/1004.2515
+    - Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., & Ay, N. (2014).
+      Quantifying Unique Information. Entropy, 16(4), 2161–2183.
+      http://doi.org/10.3390/e16042161
 
     Attributes:
         target : int
@@ -85,7 +85,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
                 documentation of analyse_single_target() for details, can
                 contain
 
-                - 'lags' : list of lists of ints [optional] - lags in samples
+                - lags : list of lists of ints [optional] - lags in samples
                   between sources and target (default=[[1, 1], [1, 1] ...])
 
             data : Data instance
@@ -124,8 +124,6 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         Estimate partial information decomposition (PID) for a target node in
         the network.
 
-        # TODO add references
-
         Example:
 
             >>> n = 20
@@ -154,12 +152,12 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             settings : dict
                 parameters for estimator use and statistics:
 
-                - 'pid_estimator' : str - estimator to be used for PID
-                  estimation (for estimator settings see the documentation in
-                  the estimators_pid modules)
-                - 'lags' : list of ints [optional] - lags in samples between
+                - pid_estimator : str - estimator to be used for PID estimation
+                  (for estimator settings see the documentation in the
+                  estimators_pid modules)
+                - lags : list of ints [optional] - lags in samples between
                   sources and target (default=[1, 1])
-                - 'verbose' : bool [optional] - toggle console output
+                - verbose : bool [optional] - toggle console output
                   (default=True)
 
             data : Data instance
