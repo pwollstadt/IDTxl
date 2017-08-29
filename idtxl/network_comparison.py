@@ -172,17 +172,20 @@ class NetworkComparison(NetworkAnalysis):
         print('\n-------------------------- (1) create union of networks')
         network_all = np.hstack((network_set_a, network_set_b))
         self._create_union(*network_all)
+        self._calculate_union_cmi(data_set_a, data_set_b)
+        self._compare_union_cmi()
         print('\n-------------------------- (2) calculate differences in TE '
               'values')
-        self._calculate_cmi_diff_between(data_set_a, data_set_b)
+        self._calculate_cmi_diff_between()
         print('\n-------------------------- (3) create surrogate distribution')
-        self._create_surrogate_distribution_between(data_set_a, data_set_b)
+        self._create_surrogate_distribution_between()
         print('\n-------------------------- (4) determine p-value')
         [pvalue, sign] = self._p_value_union()
 
         self._union_indices_to_lags()
         results = {
             'cmi_diff': self.cmi_diff,
+            'cmi_comp': self.cmi_comp,
             'cmi_surr': self.cmi_surr,
             'union_network': self.union,
             'pval': pvalue,
@@ -324,7 +327,7 @@ class NetworkComparison(NetworkAnalysis):
                                         self._calculate_cmi_all_links(data_a),
                                         self._calculate_cmi_all_links(data_b))
 
-    def _calculate_cmi_diff_between(self, data_set_a, data_set_b):
+    def _calculate_cmi_diff_between(self):
         """Calculate the difference in CMI between two groups of subjects.
 
         Calculate the difference in the conditional mutual information (CMI)
@@ -332,24 +335,17 @@ class NetworkComparison(NetworkAnalysis):
         sets recorded from subjects measured under one of two experimental
         conditions.
 
-        Args:
-            data_set_a : list/array of Data instances
-                first set of raw data
-            data_set_b : list/array of Data instances
-                second set of raw data
-
         Returns:
             numpy array
                 CMI differences
         """
-        self.cmi_diff = self._calculate_diff_of_mean(data_set_a, data_set_b,
-                                                     permute=False)
+        self.cmi_diff = self._calculate_diff_of_mean(permute=False)
         # TODO Idea: loop over pairs of data in data_set_a and *_b and feed it
         # to the within function? BUT: such an implementation doesn't allow for
         # unbalanced designs, which is a problem and needs to be changed in the
         # within function as well
 
-    def _calculate_diff_of_mean(self, data_set_a, data_set_b, permute=False):
+    def _calculate_diff_of_mean(self, permute=False):
         """Calculate the difference of the means of CMI for two data sets.
 
         Calculate the difference of the mean conditional mutual information
@@ -362,20 +358,12 @@ class NetworkComparison(NetworkAnalysis):
         surrogate data sets. These surrogate data can be used as test
         distribution when testing the orginal difference of the means.
         """
-        # re-calculate CMI for each data object using the union network mask
-        cmi_a = []
-        for d in data_set_a:
-            cmi_a.append(self._calculate_cmi_all_links(d))
-        cmi_b = []
-        for d in data_set_b:
-            cmi_b.append(self._calculate_cmi_all_links(d))
-
-        # permute data obejcts between conditions a and b before calculating
-        # the CMI
         if permute:
-            cmi_all = cmi_a + cmi_b
+            # Permute data obejcts between conditions a and b before
+            # calculating the CMI.
+            cmi_all = self.cmi_a + self.cmi_b
             new_partition_a = np.random.choice(range(len(cmi_all)),
-                                               size=len(cmi_a),
+                                               size=len(self.cmi_a),
                                                replace=False)
             new_partition_b = list(set(range(0, len(cmi_all))) -
                                    set(new_partition_a))
@@ -386,10 +374,24 @@ class NetworkComparison(NetworkAnalysis):
                                         self._calculate_mean(cmi_b_perm))
 
         else:
-            return self._calculate_diff(self._calculate_mean(cmi_a),
-                                        self._calculate_mean(cmi_b))
+            return self._calculate_diff(self._calculate_mean(self.cmi_a),
+                                        self._calculate_mean(self.cmi_b))
 
-        # get the mean difference between the two sets of CMI estimates
+    def _calculate_union_cmi(self, data_set_a, data_set_b):
+        """Calculate CMI for each data object using the union network mask.
+
+        Args:
+            data_set_a : list/array of Data instances
+                first set of raw data
+            data_set_b : list/array of Data instances
+                second set of raw data
+        """
+        self.cmi_a = []
+        for d in data_set_a:
+            self.cmi_a.append(self._calculate_cmi_all_links(d))
+        self.cmi_b = []
+        for d in data_set_b:
+            self.cmi_b.append(self._calculate_cmi_all_links(d))
 
     def _calculate_cmi_all_links(self, data):
         """Calculate CMI for each source>target combi in the union network."""
@@ -431,6 +433,14 @@ class NetworkComparison(NetworkAnalysis):
             cmi[t] = cmi_temp
 
         return cmi
+
+    def _compare_union_cmi(self):
+        """Compare means between conditions to get direction of effect."""
+        self.cmi_comp = {}
+        cmi_a_mean = self._calculate_mean(self.cmi_a)
+        cmi_b_mean = self._calculate_mean(self.cmi_b)
+        for t in self.union['targets']:
+            self.cmi_comp[t] = cmi_a_mean[t] > cmi_b_mean[t]
 
     def _calculate_cmi_all_links_permuted(self, data_a, data_b):
         """Calculate surrogate CMI for union network.
@@ -565,12 +575,12 @@ class NetworkComparison(NetworkAnalysis):
         for p in range(self.settings['n_perm_comp']):
             if self.settings['verbose']:
                 print('Creating surrogate data set {0} of {1}.'.format(
-                        p, self.settings['n_perm_comp']))
+                        p + 1, self.settings['n_perm_comp']))
             [cmi_a, cmi_b] = self._calculate_cmi_all_links_permuted(data_a,
                                                                     data_b)
             self.cmi_surr.append(self._calculate_diff(cmi_a, cmi_b))
 
-    def _create_surrogate_distribution_between(self, data_set_a, data_set_b):
+    def _create_surrogate_distribution_between(self):
         """Create the surrogate distribution for network inference.
 
         Create distribution by permuting data sets between conditions, re-
@@ -599,21 +609,10 @@ class NetworkComparison(NetworkAnalysis):
         A_4    B_4        ->        A_5    A_4
         A_5    B_5        ->        B_1    A_2
         ...                         ...
-
-        Args:
-            data_set_a : list/array of Data instances
-                first set of raw data
-            data_set_b : list/array of Data instances
-                second set of raw data
         """
         self.cmi_surr = []
         for p in range(self.settings['n_perm_comp']):
-            if self.settings['verbose']:
-                print('Creating surrogate data set {0} of {1}.'.format(
-                                        p + 1, self.settings['n_perm_comp']))
-            self.cmi_surr.append(self._calculate_diff_of_mean(data_set_a,
-                                                              data_set_b,
-                                                              permute=True))
+            self.cmi_surr.append(self._calculate_diff_of_mean(permute=True))
 
     def _p_value_union(self):
         """Calculate the p-value for the CMI between each source and target."""
