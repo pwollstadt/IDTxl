@@ -62,17 +62,19 @@ class NetworkComparison(NetworkAnalysis):
             settings : dict
                 parameters for estimation and statistical testing
 
-                - 'stats_type' str - 'dependent' or 'independent' for
+                - stats_type : str - 'dependent' or 'independent' for
                   dependent or independent units of observation
-                - 'cmi_estimator' str - estimator to be used for CMI
+                - cmi_estimator : str - estimator to be used for CMI
                   calculation (for estimator settings see the documentation in
                   the estimators_* modules)
-                - 'tail_comp' str [optional] - test tail, 'one' for one-sided
+                - tail_comp : str [optional] - test tail, 'one' for one-sided
                   test, 'two' for two-sided test (default='two')
-                - 'n_perm_comp' int [optional] - number of permutations
+                - n_perm_comp : int [optional] - number of permutations
                   (default=500)
-                - 'alpha_comp' float - critical alpha level for statistical
+                - alpha_comp : float - critical alpha level for statistical
                   significance (default=0.05)
+                - verbose : bool [optional] - toggle console output
+                  (default=True)
 
             network_a : dict
                 results from network inference, condition a
@@ -604,6 +606,9 @@ class NetworkComparison(NetworkAnalysis):
         """
         self.cmi_surr = []
         for p in range(self.settings['n_perm_comp']):
+            if self.settings['verbose']:
+                print('permutation {0} of {1}'.format(
+                                            p, self.settings['n_perm_comp']))
             self.cmi_surr.append(self._calculate_diff_of_mean(data_set_a,
                                                               data_set_b,
                                                               permute=True))
