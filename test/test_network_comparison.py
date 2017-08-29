@@ -6,6 +6,7 @@ within subjects.
 @author: patricia
 """
 import os
+import pickle
 import random as rn
 import pytest
 import numpy as np
@@ -30,19 +31,18 @@ from test_estimators_jidt import jpype_missing
 #     'min_lag_sources': 1,
 #     }
 # # network inference for individual data sets
+# path = os.path.join(os.path.dirname(__file__) + '/data/'
 # nw_0 = MultivariateTE()
 # res_0 = nw_0.analyse_network(settings, dat, targets=[0, 1], sources='all')
+# pickle.dump(res_0, open(path + 'mute_res_0.pkl', 'wb'))
 # res_1 = nw_0.analyse_network(settings, dat,  targets=[1, 2], sources='all')
+# pickle.dump(res_1, open(path + 'mute_res_1.pkl', 'wb'))
 # res_2 = nw_0.analyse_network(settings, dat,  targets=[0, 2], sources='all')
+# pickle.dump(res_2, open(path + 'mute_res_2.pkl', 'wb'))
 # res_3 = nw_0.analyse_network(settings, dat,  targets=[0, 1, 2], sources='all')
+# pickle.dump(res_3, open(path + 'mute_res_3.pkl', 'wb'))
 # res_4 = nw_0.analyse_network(settings, dat,  targets=[1, 2], sources='all')
-#
-# path = os.path.dirname(__file__) + 'data/'
-# idtxl_io.save_pickle(res_0, path + 'mute_res_0')
-# idtxl_io.save_pickle(res_1, path + 'mute_res_1')
-# idtxl_io.save_pickle(res_2, path + 'mute_res_2')
-# idtxl_io.save_pickle(res_3, path + 'mute_res_3')
-# idtxl_io.save_pickle(res_4, path + 'mute_res_4')
+# pickle.dump(res_4, open(path + 'mute_res_4.pkl', 'wb'))
 
 
 @jpype_missing
@@ -334,7 +334,7 @@ def test_get_permuted_replications():
 
 
 @jpype_missing
-def test_calculate_cmi():
+def test_calculate_cmi_all_links():
     """Test if the CMI is estimated correctly."""
     dat = Data()
     n = 1000
@@ -362,7 +362,7 @@ def test_calculate_cmi():
     comp._initialise(comp_settings)
     comp._create_union(res_0)
     comp.union[1]['selected_vars_sources'] = [(0, 4)]
-    cmi = comp._calculate_cmi(dat)
+    cmi = comp._calculate_cmi_all_links(dat)
     cmi_expected = np.log(1 / (1 - cov ** 2))
     print('correlated Gaussians: TE result {0:.4f} bits; expected to be '
           '{1:0.4f} bit for the copy'.format(cmi[1][0], cmi_expected))
@@ -392,7 +392,7 @@ def test_calculate_mean():
     comp = NetworkComparison()
     comp._initialise(comp_settings)
     comp._create_union(res_0)
-    cmi = comp._calculate_cmi(dat)
+    cmi = comp._calculate_cmi_all_links(dat)
     cmi_mean = comp._calculate_mean([cmi, cmi])
     for t in comp.union['targets']:
         assert (cmi_mean[t] == cmi[t]).all(), ('Error in mean of CMI for '
@@ -445,11 +445,12 @@ def test_p_value_union():
                                 'The p-value was not calculated correctly: {0}'
                                 .format(p[target]))
 
+
 if __name__ == '__main__':
     test_network_comparison_use_cases()
     test_p_value_union()
     test_calculate_mean()
-    test_calculate_cmi()
+    test_calculate_cmi_all_links()
     test_get_permuted_replications()
     test_assertions()
     test_create_union_network()
