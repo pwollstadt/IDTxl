@@ -33,9 +33,10 @@ def network_fdr(settings=None, *results):
 
             - alpha_fdr : float [optional] - critical alpha level
               (default=0.05)
-            - correct_by_target : bool [optional] - if true p-values are
-              corrected on the target level and on the single-link level
-              otherwise (default=True)
+            - correct_by_target : bool [optional] - if true correct p-values on
+              on the target level (omnibus test p-values), otherwise correct
+              p_values for individual variables (sequential max stats p-values)
+              (default=True)
 
         results : list of dicts
             network inference results from .analyse_network methods, where each
@@ -70,7 +71,7 @@ def network_fdr(settings=None, *results):
                 pval = np.append(pval, res[target]['omnibus_pval'])
                 target_idx = np.append(target_idx, target)
                 n_perm = np.append(n_perm,
-                                   res[target]['settings']['n_perm_max_seq'])
+                                   res[target]['settings']['n_perm_omnibus'])
     else:  # individual variables
         for target in res.keys():
             if res[target]['omnibus_sign']:
