@@ -37,6 +37,10 @@ def network_fdr(settings=None, *results):
               on the target level (omnibus test p-values), otherwise correct
               p_values for individual variables (sequential max stats p-values)
               (default=True)
+            - fdr_constant : int [optional] - choose one of two constants used
+              for calculating the FDR-thresholds according to Genovese (2002):
+              1 will divide alpha by 1, 2 will divide alpha by the sum_i(1/i);
+              see the paper for details on the assumptions (default=2)
 
         results : list of dicts
             network inference results from .analyse_network methods, where each
@@ -53,6 +57,8 @@ def network_fdr(settings=None, *results):
     alpha = settings['alpha_fdr']
     settings.setdefault('correct_by_target', True)
     correct_by_target = settings['correct_by_target']
+    settings.setdefault('fdr_constant', 2)
+    constant = settings['fdr_constant']
 
     # Combine results into single results dict (this creates a copy).
     res = utils.combine_results(*results)
@@ -91,14 +97,20 @@ def network_fdr(settings=None, *results):
     sort_idx = np.argsort(pval)
     pval.sort()
 
-    # Calculate threshold (exact or by approximating the harmonic sum).
+    # Calculate threshold
     n = pval.size
-    if n < 1000:
-        thresh = ((np.arange(1, n + 1) / n) * alpha /
-                  sum(1 / np.arange(1, n + 1)))
-    else:
-        thresh = ((np.arange(1, n + 1) / n) * alpha /
-                  (np.log(n) + np.e))  # aprx. harmonic sum with Euler's number
+    if constant == 2:  # pick the requested constant (see Genovese, p.872)
+        if n < 1000:
+            const = sum(1 / np.arange(1, n + 1))
+        else:
+            const = np.log(n) + np.e  # aprx. harmonic sum with Euler's number
+    elif constant == 1:
+        # This is less strict than the other one and corresponds to a
+        # Bonoferroni-correction for the first p-value, however, it makes more
+        # strict assumptions on the distribution of p-values, while constant 2
+        # works for any joint distribution of the p-values.
+        const = 1
+    thresh = (np.arange(1, n + 1) / n) * alpha / const
 
     # If the number of permutations for calculating p-values for individual
     # variables is too low, return without performing any correction.
