@@ -186,7 +186,7 @@ class JidtKraskov(JidtEstimator):
               range searches (default='0')
             - 'noise_level' - random noise added to the data (default='1e-8')
             - 'num_threads' - number of threads used for estimation
-              (default='USE_ALL', not that this uses *all* available threads
+              (default='USE_ALL', note that this uses *all* available threads
               on the current machine)
     """
 
