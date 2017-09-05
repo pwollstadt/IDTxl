@@ -115,7 +115,7 @@ def test_single_source_storage_gaussian():
 def test_compare_jidt_open_cl_estimator():
     """Compare results from OpenCl and JIDT estimators for AIS calculation."""
     dat = Data()
-    dat.generate_mute_data(100, 2)
+    dat.generate_mute_data(1000, 2)
     settings = {
         'cmi_estimator': 'OpenCLKraskovCMI',
         'n_perm_mi': 22,
@@ -140,13 +140,13 @@ def test_compare_jidt_open_cl_estimator():
         assert (res_opencl[2]['ais'] - res_jidt[2]['ais']) < 0.05, (
                        'AIS results differ between OpenCl and JIDT estimator.')
     else:
-        assert res_opencl[2]['ais'] == res_jidt[2]['ais'], (
+        assert res_opencl[2]['ais'] is res_jidt[2]['ais'], (
                        'AIS results differ between OpenCl and JIDT estimator.')
     if not (res_opencl[3]['ais'] is np.nan or res_jidt[3]['ais'] is np.nan):
         assert (res_opencl[3]['ais'] - res_jidt[3]['ais']) < 0.05, (
                        'AIS results differ between OpenCl and JIDT estimator.')
     else:
-        assert res_opencl[3]['ais'] == res_jidt[3]['ais'], (
+        assert res_opencl[3]['ais'] is res_jidt[3]['ais'], (
                        'AIS results differ between OpenCl and JIDT estimator.')
 #    np.testing.assert_approx_equal(res_opencl[2]['ais'], res_jidt[2]['ais'],
 #                                   significant=3,
