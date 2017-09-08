@@ -112,10 +112,9 @@ def test_two_dim_longer_sequence():
     """
     # This is the same sequence as in the previous test case, padded with a
     # bunch of points very far away.
-    pointset1 = np.expand_dims(
-                np.array([[-1, 0.5, 1.1, 2, 10, 11, 10.5, -100, -50, 666],
-                          [-1, 0.5, 1.1, 2, 98, -9, -200, 45.3, -53, 0.1]]),
-                axis=1).T.copy()
+    pointset1 = np.array(
+                    [[-1, 0.5, 1.1, 2, 10, 11, 10.5, -100, -50, 666],
+                     [-1, 0.5, 1.1, 2, 98, -9, -200, 45.3, -53, 0.1]]).T.copy()
     pointset2 = np.ones(pointset1.shape) * 9999
 
     # Call MI estimator
