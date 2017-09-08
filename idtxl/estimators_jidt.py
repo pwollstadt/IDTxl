@@ -1284,7 +1284,7 @@ class JidtGaussianCMI(JidtGaussian):
                 var1.shape[0], cond.shape[0]))
 
         self.calc.initialise(var1.shape[1], var2.shape[1], cond.shape[1])
-        self.calc.setObservations(var1, var2, conditional)
+        self.calc.setObservations(var1, var2, cond)
         if self.settings['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
         else:

@@ -53,10 +53,10 @@ ais = est.estimate(target)
 print('Estimated AIS: {0:.5f}, expected AIS: ~0'.format(ais))
 
 # JIDT Gaussian estimators
-# settings = {}
-# est = JidtGaussianCMI(settings)
-# cmi = est.estimate(source_cor, target, source_uncor)
-# print('Estimated CMI: {0:.5f}, expected CMI: {1:.5f}'.format(cmi, expected_mi))
+settings = {}
+est = JidtGaussianCMI(settings)
+cmi = est.estimate(source_cor, target, source_uncor)
+print('Estimated CMI: {0:.5f}, expected CMI: {1:.5f}'.format(cmi, expected_mi))
 est = JidtGaussianMI(settings)
 mi = est.estimate(source_cor, target)
 print('Estimated MI: {0:.5f}, expected MI: {1:.5f}'.format(mi, expected_mi))
