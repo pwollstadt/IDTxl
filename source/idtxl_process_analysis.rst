@@ -1,5 +1,5 @@
-Algorithms for the analysis of individual processes
-==================================================
+Algorithms for the analysis of node dynamics
+============================================
 
 Active Information Storage (AIS)
 -------------------------------
