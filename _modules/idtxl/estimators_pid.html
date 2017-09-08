@@ -523,10 +523,10 @@
 <span class="sd">        settings : dict</span>
 <span class="sd">            estimation parameters</span>
 
-<span class="sd">            - &#39;alph_s1&#39; - alphabet size of s1</span>
-<span class="sd">            - &#39;alph_s2&#39; -  alphabet size of s2</span>
-<span class="sd">            - &#39;alph_t&#39; - alphabet size of t</span>
-<span class="sd">            - &#39;max_unsuc_swaps_row_parm&#39; - soft limit for virtualised swaps</span>
+<span class="sd">            - alph_s1 : int - alphabet size of s1</span>
+<span class="sd">            - alph_s2 : int - alphabet size of s2</span>
+<span class="sd">            - alph_t : int - alphabet size of t</span>
+<span class="sd">            - max_unsuc_swaps_row_parm : int - soft limit for virtualised swaps</span>
 <span class="sd">              based on the number of unsuccessful swaps attempted in a row.</span>
 <span class="sd">              If there are too many unsuccessful swaps in a row, then it</span>
 <span class="sd">              will break the inner swap loop; the outer loop decrements the</span>
@@ -534,20 +534,20 @@
 <span class="sd">              virtualised swaps again with the smaller probability increment.</span>
 <span class="sd">              The exact number of unsuccessful swaps allowed before breaking</span>
 <span class="sd">              is the total number of possible swaps (given our alphabet</span>
-<span class="sd">              sizes) times the control parameter &#39;max_unsuc_swaps_row_parm&#39;,</span>
+<span class="sd">              sizes) times the control parameter max_unsuc_swaps_row_parm,</span>
 <span class="sd">              e.g., if the parameter is set to 3, this gives a high degree of</span>
 <span class="sd">              confidence that nearly (if not) all of the possible swaps have</span>
 <span class="sd">              been attempted before this soft limit breaks the swap loop.</span>
-<span class="sd">            - &#39;num_reps&#39; -  number of times the outer loop will halve the</span>
+<span class="sd">            - num_reps : int -  number of times the outer loop will halve the</span>
 <span class="sd">              size of the probability increment used for the virtualised</span>
 <span class="sd">              swaps. This is in direct correspondence with the number of times</span>
 <span class="sd">              the empirical data was replicated in your original</span>
 <span class="sd">              implementation.</span>
-<span class="sd">            - &#39;max_iters&#39; - provides a hard upper bound on the number of times</span>
-<span class="sd">              it will attempt to perform virtualised swaps in the inner loop.</span>
-<span class="sd">              However, this hard limit is (practically) never used as it should</span>
-<span class="sd">              always hit the soft limit defined above (parameter may be removed</span>
-<span class="sd">              in the future).</span>
+<span class="sd">            - max_iters : int - provides a hard upper bound on the number of</span>
+<span class="sd">              times it will attempt to perform virtualised swaps in the inner</span>
+<span class="sd">              loop. However, this hard limit is (practically) never used as it</span>
+<span class="sd">              should always hit the soft limit defined above (parameter may be</span>
+<span class="sd">              removed in the future).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -1007,18 +1007,18 @@
 <span class="sd">        settings : dict</span>
 <span class="sd">            estimation parameters (with default parameters)</span>
 
-<span class="sd">            - &#39;get_sorted_pdf&#39; -False</span>
-<span class="sd">            - &#39;true_pdf&#39; - None</span>
-<span class="sd">            - &#39;true_result&#39; - None</span>
-<span class="sd">            - &#39;true_CI&#39; - None</span>
-<span class="sd">            - &#39;true_SI&#39; - None</span>
-<span class="sd">            - &#39;feas_eps&#39; - 1.e-10</span>
-<span class="sd">            - &#39;kkt_eps&#39; - 1.e-5</span>
-<span class="sd">            - &#39;feas_eps_2&#39; - 1.e-6</span>
-<span class="sd">            - &#39;kkt_eps_2&#39; - 0.01</span>
-<span class="sd">            - &#39;kkt_search_eps&#39; - 0.5</span>
-<span class="sd">            - &#39;max_zero_probability&#39; - 1.e-5</span>
-<span class="sd">            - &#39;verbose&#39; - False</span>
+<span class="sd">            - get_sorted_pdf : bool [optional] - False</span>
+<span class="sd">            - true_pdf : [optional] - None</span>
+<span class="sd">            - true_result : [optional] - None</span>
+<span class="sd">            - true_CI : float [optional] - None</span>
+<span class="sd">            - true_SI : float [optional] - None</span>
+<span class="sd">            - feas_eps : float [optional] - 1.e-10</span>
+<span class="sd">            - kkt_eps : float [optional] - 1.e-5</span>
+<span class="sd">            - feas_eps_2 : float [optional] - 1.e-6</span>
+<span class="sd">            - kkt_eps_2 : float [optional] - 0.01</span>
+<span class="sd">            - kkt_search_eps : float [optional] - 0.5</span>
+<span class="sd">            - max_zero_probability : float [optional] - 1.e-5</span>
+<span class="sd">            - verbose : bool [optional] - False</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
@@ -1064,7 +1064,6 @@
 <span class="sd">                1D array containing realizations of a discrete random variable</span>
 <span class="sd">            t : numpy array</span>
 <span class="sd">                1D array containing realizations of a discrete random variable</span>
-
 
 <span class="sd">        Returns:</span>
 <span class="sd">            dict</span>

@@ -154,15 +154,18 @@
 <span class="sd">        settings : dict [optional]</span>
 <span class="sd">            set estimator parameters:</span>
 
-<span class="sd">            - &#39;gpuid&#39; - device ID used for estimation (if more than one device</span>
-<span class="sd">              is available on the current platform) (default=0)</span>
-<span class="sd">            - &#39;kraskov_k&#39; - no. nearest neighbours for KNN search (default=4)</span>
-<span class="sd">            - &#39;normalise&#39; - z-standardise data (default=False)</span>
-<span class="sd">            - &#39;theiler_t&#39; - no. next temporal neighbours ignored in KNN and</span>
-<span class="sd">              range searches (default=&#39;0&#39;)</span>
-<span class="sd">            - &#39;noise_level&#39; - random noise added to the data (default=&#39;1e-8&#39;)</span>
-<span class="sd">            - &#39;debug&#39; - return intermediate results, i.e. neighbour counts from</span>
-<span class="sd">              range searches and KNN distances (default=False)</span>
+<span class="sd">            - gpuid : int [optional] - device ID used for estimation (if more</span>
+<span class="sd">              than one device is available on the current platform) (default=0)</span>
+<span class="sd">            - kraskov_k : int [optional] - no. nearest neighbours for KNN</span>
+<span class="sd">              search (default=4)</span>
+<span class="sd">            - normalise : bool [optional] - z-standardise data (default=False)</span>
+<span class="sd">            - theiler_t : int [optional] - no. next temporal neighbours ignored</span>
+<span class="sd">              in KNN and range searches (default=0)</span>
+<span class="sd">            - noise_level : float [optional] - random noise added to the data</span>
+<span class="sd">              (default=1e-8)</span>
+<span class="sd">            - debug : bool [optional] - return intermediate results, i.e.</span>
+<span class="sd">              neighbour counts from range searches and KNN distances</span>
+<span class="sd">              (default=False)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -233,17 +236,20 @@
 <span class="sd">        settings : dict [optional]</span>
 <span class="sd">            set estimator parameters:</span>
 
-<span class="sd">            - &#39;gpuid&#39; - device ID used for estimation (if more than one device</span>
-<span class="sd">              is available on the current platform) (default=0)</span>
-<span class="sd">            - &#39;kraskov_k&#39; - no. nearest neighbours for KNN search (default=4)</span>
-<span class="sd">            - &#39;normalise&#39; - z-standardise data (default=False)</span>
-<span class="sd">            - &#39;theiler_t&#39; - no. next temporal neighbours ignored in KNN and</span>
-<span class="sd">              range searches (default=&#39;0&#39;)</span>
-<span class="sd">            - &#39;noise_level&#39; - random noise added to the data (default=&#39;1e-8&#39;)</span>
-<span class="sd">            - &#39;debug&#39; - return intermediate results, i.e. neighbour counts from</span>
-<span class="sd">              range searches and KNN distances (default=False)</span>
-<span class="sd">            - &#39;lag&#39; - time difference in samples to calculate the lagged MI</span>
-<span class="sd">              between processes (default=0)</span>
+<span class="sd">            - gpuid : int [optional] - device ID used for estimation (if more</span>
+<span class="sd">              than one device is available on the current platform) (default=0)</span>
+<span class="sd">            - kraskov_k : int [optional] - no. nearest neighbours for KNN</span>
+<span class="sd">              search (default=4)</span>
+<span class="sd">            - normalise : bool [optional] - z-standardise data (default=False)</span>
+<span class="sd">            - theiler_t : int [optional] - no. next temporal neighbours ignored</span>
+<span class="sd">              in KNN and range searches (default=0)</span>
+<span class="sd">            - noise_level : float [optional] - random noise added to the data</span>
+<span class="sd">              (default=1e-8)</span>
+<span class="sd">            - debug : bool [optional] - return intermediate results, i.e.</span>
+<span class="sd">              neighbour counts from range searches and KNN distances</span>
+<span class="sd">              (default=False)</span>
+<span class="sd">            - lag : int [optional] - time difference in samples to calculate</span>
+<span class="sd">              the lagged MI between processes (default=0)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -486,15 +492,18 @@
 <span class="sd">        settings : dict [optional]</span>
 <span class="sd">            set estimator parameters:</span>
 
-<span class="sd">            - &#39;gpuid&#39; - device ID used for estimation (if more than one device</span>
-<span class="sd">              is available on the current platform) (default=0)</span>
-<span class="sd">            - &#39;kraskov_k&#39; - no. nearest neighbours for KNN search (default=4)</span>
-<span class="sd">            - &#39;normalise&#39; - z-standardise data (default=False)</span>
-<span class="sd">            - &#39;theiler_t&#39; - no. next temporal neighbours ignored in KNN and</span>
-<span class="sd">              range searches (default=&#39;0&#39;)</span>
-<span class="sd">            - &#39;noise_level&#39; - random noise added to the data (default=&#39;1e-8&#39;)</span>
-<span class="sd">            - &#39;debug&#39; - return intermediate results, i.e. neighbour counts from</span>
-<span class="sd">              range searches and KNN distances (default=False)</span>
+<span class="sd">            - gpuid : int [optional] - device ID used for estimation (if more</span>
+<span class="sd">              than one device is available on the current platform) (default=0)</span>
+<span class="sd">            - kraskov_k : int [optional] - no. nearest neighbours for KNN</span>
+<span class="sd">              search (default=4)</span>
+<span class="sd">            - normalise : bool [optional] - z-standardise data (default=False)</span>
+<span class="sd">            - theiler_t : int [optional] - no. next temporal neighbours ignored</span>
+<span class="sd">              in KNN and range searches (default=0)</span>
+<span class="sd">            - noise_level : float [optional] - random noise added to the data</span>
+<span class="sd">              (default=1e-8)</span>
+<span class="sd">            - debug : bool [optional] - return intermediate results, i.e.</span>
+<span class="sd">              neighbour counts from range searches and KNN distances</span>
+<span class="sd">              (default=False)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>

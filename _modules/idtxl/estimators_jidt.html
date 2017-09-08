@@ -154,11 +154,10 @@
 <span class="sd">        settings : dict [optional]</span>
 <span class="sd">            set estimator parameters:</span>
 
-<span class="sd">            - &#39;debug&#39; - return debug information when calling JIDT.</span>
-<span class="sd">              (Boolean, default=False)</span>
-<span class="sd">            - &#39;local_values&#39; - return local TE instead of average TE</span>
-<span class="sd">              (default=False)</span>
-
+<span class="sd">            - debug : bool [optional] - return debug information when calling</span>
+<span class="sd">              JIDT (default=False)</span>
+<span class="sd">            - local_values : bool [optional] - return local TE instead of</span>
+<span class="sd">              average TE (default=False)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -218,18 +217,20 @@
 <span class="sd">        settings : dict [optional]</span>
 <span class="sd">            set estimator parameters:</span>
 
-<span class="sd">            - &#39;debug&#39; - return debug information when calling JIDT.</span>
-<span class="sd">              (boolean, default=False)</span>
-<span class="sd">            - &#39;local_values&#39; - return local TE instead of average TE</span>
-<span class="sd">              (default=False)</span>
-<span class="sd">            - &#39;kraskov_k&#39; - no. nearest neighbours for KNN search (default=4)</span>
-<span class="sd">            - &#39;normalise&#39; - z-standardise data (default=False)</span>
-<span class="sd">            - &#39;theiler_t&#39; - no. next temporal neighbours ignored in KNN and</span>
-<span class="sd">              range searches (default=&#39;0&#39;)</span>
-<span class="sd">            - &#39;noise_level&#39; - random noise added to the data (default=&#39;1e-8&#39;)</span>
-<span class="sd">            - &#39;num_threads&#39; - number of threads used for estimation</span>
-<span class="sd">              (default=&#39;USE_ALL&#39;, note that this uses *all* available threads</span>
-<span class="sd">              on the current machine)</span>
+<span class="sd">            - debug : bool [optional] - return debug information when calling</span>
+<span class="sd">              JIDT (default=False)</span>
+<span class="sd">            - local_values : bool [optional] - return local TE instead of</span>
+<span class="sd">              average TE (default=False)</span>
+<span class="sd">            - kraskov_k : int [optional] - no. nearest neighbours for KNN</span>
+<span class="sd">              search (default=4)</span>
+<span class="sd">            - normalise : bool [optional] - z-standardise data (default=False)</span>
+<span class="sd">            - theiler_t : int [optional] - no. next temporal neighbours ignored</span>
+<span class="sd">              in KNN and range searches (default=0)</span>
+<span class="sd">            - noise_level : float [optional] - random noise added to the data</span>
+<span class="sd">              (default=1e-8)</span>
+<span class="sd">            - num_threads : int | str [optional] - number of threads used for</span>
+<span class="sd">              estimation (default=&#39;USE_ALL&#39;, note that this uses *all*</span>
+<span class="sd">              available threads on the current machine)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">CalcClass</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -273,14 +274,14 @@
 <span class="sd">        settings : dict [optional]</span>
 <span class="sd">            set estimator parameters:</span>
 
-<span class="sd">            - &#39;debug&#39; - return debug information when calling JIDT.</span>
-<span class="sd">              (Boolean, default=False)</span>
-<span class="sd">            - &#39;local_values&#39; - return local TE instead of average TE</span>
-<span class="sd">              (default=False)</span>
-<span class="sd">            - &#39;discretise_method&#39; - if and how to discretise incoming</span>
-<span class="sd">              continuous variables to discrete values, can be &#39;max_ent&#39; for</span>
-<span class="sd">              maximum entropy binning, &#39;equal&#39; for equal size bins, and &#39;none&#39;</span>
-<span class="sd">              if no binning is required (default=&#39;none&#39;)</span>
+<span class="sd">            - debug : bool [optional] - return debug information when calling</span>
+<span class="sd">              JIDT (default=False)</span>
+<span class="sd">            - local_values : bool [optional] - return local TE instead of</span>
+<span class="sd">              average TE (default=False)</span>
+<span class="sd">            - discretise_method : str [optional] - if and how to discretise</span>
+<span class="sd">              incoming continuous variables to discrete values, can be</span>
+<span class="sd">              &#39;max_ent&#39; for maximum entropy binning, &#39;equal&#39; for equal size</span>
+<span class="sd">              bins, and &#39;none&#39; if no binning is required (default=&#39;none&#39;)</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        Discrete JIDT estimators require the data&#39;s alphabet size for</span>
@@ -404,10 +405,10 @@
 <span class="sd">        settings : dict [optional]</span>
 <span class="sd">            set estimator parameters:</span>
 
-<span class="sd">            - &#39;debug&#39; - return debug information when calling JIDT.</span>
-<span class="sd">              (boolean, default=False)</span>
-<span class="sd">            - &#39;local_values&#39; - return local TE instead of average TE</span>
-<span class="sd">              (default=False)</span>
+<span class="sd">            - debug : bool [optional] - return debug information when calling</span>
+<span class="sd">              JIDT (default=False)</span>
+<span class="sd">            - local_values : bool [optional] - return local TE instead of</span>
+<span class="sd">              average TE (default=False)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">CalcClass</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
@@ -472,18 +473,20 @@
 <span class="sd">        settings : dict [optional]</span>
 <span class="sd">            set estimator parameters:</span>
 
-<span class="sd">            - &#39;debug&#39; - return debug information when calling JIDT.</span>
-<span class="sd">              (Boolean, default=False)</span>
-<span class="sd">            - &#39;local_values&#39; - return local TE instead of average TE</span>
-<span class="sd">              (default=False)</span>
-<span class="sd">            - &#39;kraskov_k&#39; - no. nearest neighbours for KNN search (default=4)</span>
-<span class="sd">            - &#39;normalise&#39; - z-standardise data (default=False)</span>
-<span class="sd">            - &#39;theiler_t&#39; - no. next temporal neighbours ignored in KNN and</span>
-<span class="sd">              range searches (default=&#39;0&#39;)</span>
-<span class="sd">            - &#39;noise_level&#39; - random noise added to the data (default=&#39;1e-8&#39;)</span>
-<span class="sd">            - &#39;num_threads&#39; - number of threads used for estimation</span>
-<span class="sd">              (default=&#39;USE_ALL&#39;, not that this uses *all* available threads</span>
-<span class="sd">              on the current machine)</span>
+<span class="sd">            - debug : bool [optional] - return debug information when calling</span>
+<span class="sd">              JIDT (default=False)</span>
+<span class="sd">            - local_values : bool [optional] - return local TE instead of</span>
+<span class="sd">              average TE (default=False)</span>
+<span class="sd">            - kraskov_k : int [optional] - no. nearest neighbours for KNN</span>
+<span class="sd">              search (default=4)</span>
+<span class="sd">            - normalise : bool [optional] - z-standardise data (default=False)</span>
+<span class="sd">            - theiler_t : int [optional] - no. next temporal neighbours ignored</span>
+<span class="sd">              in KNN and range searches (default=0)</span>
+<span class="sd">            - noise_level : float [optional] - random noise added to the data</span>
+<span class="sd">              (default=1e-8)</span>
+<span class="sd">            - num_threads : int | str [optional] - number of threads used for</span>
+<span class="sd">              estimation (default=&#39;USE_ALL&#39;, note that this uses *all*</span>
+<span class="sd">              available threads on the current machine)</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        Some technical details: JIDT normalises over realisations, IDTxl</span>
@@ -560,23 +563,24 @@
 <span class="sd">        settings : dict [optional]</span>
 <span class="sd">            sets estimation parameters:</span>
 
-<span class="sd">            - &#39;debug&#39; - return debug information when calling JIDT.</span>
-<span class="sd">              (Boolean, default=&#39;false&#39;)</span>
-<span class="sd">            - &#39;local_values&#39; - return local TE instead of average TE</span>
-<span class="sd">              (default=False)</span>
-<span class="sd">            - &#39;discretise_method&#39; - if and how to discretise incoming</span>
-<span class="sd">              continuous variables to discrete values, can be &#39;max_ent&#39; for</span>
-<span class="sd">              maximum entropy binning, &#39;equal&#39; for equal size bins, and &#39;none&#39;</span>
-<span class="sd">              if no binning is required (default=&#39;none&#39;)</span>
-<span class="sd">            - &#39;num_discrete_bins&#39; - number of discrete bins/levels or the base</span>
-<span class="sd">              of each dimension of the discrete variables (default=2). If set,</span>
-<span class="sd">              this parameter overwrites/sets &#39;alph1&#39;, &#39;alph2&#39; and &#39;alphc&#39;</span>
-<span class="sd">            - &#39;alph1&#39; - number of discrete bins/levels for var1 (default=2, or</span>
-<span class="sd">              the value set for &#39;num_discrete_bins&#39;)</span>
-<span class="sd">            - &#39;alph2&#39; - number of discrete bins/levels for var2 (default=2, or</span>
-<span class="sd">              the value set for &#39;num_discrete_bins&#39;)</span>
-<span class="sd">            - &#39;alphc&#39; - number of discrete bins/levels for conditional</span>
-<span class="sd">              (default=2, or the value set for &#39;num_discrete_bins&#39;)</span>
+<span class="sd">            - debug : bool [optional] - return debug information when calling</span>
+<span class="sd">              JIDT (default=False)</span>
+<span class="sd">            - local_values : bool [optional] - return local TE instead of</span>
+<span class="sd">              average TE (default=False)</span>
+<span class="sd">            - discretise_method : str [optional] - if and how to discretise</span>
+<span class="sd">              incoming continuous variables to discrete values, can be</span>
+<span class="sd">              &#39;max_ent&#39; for maximum entropy binning, &#39;equal&#39; for equal size</span>
+<span class="sd">              bins, and &#39;none&#39; if no binning is required (default=&#39;none&#39;)</span>
+<span class="sd">            - num_discrete_bins : int [optional] - number of discrete bins/</span>
+<span class="sd">              levels or the base of each dimension of the discrete variables</span>
+<span class="sd">              (default=2). If set, this parameter overwrites/sets alph1, alph2</span>
+<span class="sd">              and alphc</span>
+<span class="sd">            - alph1 : int [optional] - number of discrete bins/levels for var1</span>
+<span class="sd">              (default=2, or the value set for num_discrete_bins)</span>
+<span class="sd">            - alph2 : int [optional] - number of discrete bins/levels for var2</span>
+<span class="sd">              (default=2, or the value set for num_discrete_bins)</span>
+<span class="sd">            - alphc : int [optional] - number of discrete bins/levels for</span>
+<span class="sd">              conditional (default=2, or the value set for num_discrete_bins)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -720,23 +724,24 @@
 <span class="sd">        settings : dict [optional]</span>
 <span class="sd">            sets estimation parameters:</span>
 
-<span class="sd">            - &#39;debug&#39; - return debug information when calling JIDT.</span>
-<span class="sd">              (Boolean, default=False)</span>
-<span class="sd">            - &#39;local_values&#39; - return local TE instead of average TE</span>
-<span class="sd">              (default=False)</span>
-<span class="sd">            - &#39;discretise_method&#39; - if and how to discretise incoming</span>
-<span class="sd">              continuous variables to discrete values, can be &#39;max_ent&#39; for</span>
-<span class="sd">              maximum entropy binning, &#39;equal&#39; for equal size bins, and &#39;none&#39;</span>
-<span class="sd">              if no binning is required (default=&#39;none&#39;)</span>
-<span class="sd">            - &#39;num_discrete_bins&#39; - number of discrete bins/levels or the base</span>
-<span class="sd">              of each dimension of the discrete variables (default=2). If set,</span>
-<span class="sd">              this parameter overwrites/sets &#39;alph1&#39; and &#39;alph2&#39;</span>
-<span class="sd">            - &#39;alph1&#39; - number of discrete bins/levels for var1 (default=2, or</span>
-<span class="sd">              the value set for &#39;num_discrete_bins&#39;)</span>
-<span class="sd">            - &#39;alph2&#39; - number of discrete bins/levels for var2 (default=2, or</span>
-<span class="sd">              the value set for &#39;num_discrete_bins&#39;)</span>
-<span class="sd">            - &#39;lag&#39; - time difference in samples to calculate the lagged MI</span>
-<span class="sd">              between processes (default=0)</span>
+<span class="sd">            - debug : bool [optional] - return debug information when calling</span>
+<span class="sd">              JIDT (default=False)</span>
+<span class="sd">            - local_values : bool [optional] - return local TE instead of</span>
+<span class="sd">              average TE (default=False)</span>
+<span class="sd">            - discretise_method : str [optional] - if and how to discretise</span>
+<span class="sd">              incoming continuous variables to discrete values, can be</span>
+<span class="sd">              &#39;max_ent&#39; for maximum entropy binning, &#39;equal&#39; for equal size</span>
+<span class="sd">              bins, and &#39;none&#39; if no binning is required (default=&#39;none&#39;)</span>
+<span class="sd">            - num_discrete_bins : int [optional] - number of discrete bins/</span>
+<span class="sd">              levels or the base of each dimension of the discrete variables</span>
+<span class="sd">              (default=2). If set, this parameter overwrites/sets alph1 and</span>
+<span class="sd">              alph2</span>
+<span class="sd">            - alph1 : int [optional] - number of discrete bins/levels for var1</span>
+<span class="sd">              (default=2, or the value set for num_discrete_bins)</span>
+<span class="sd">            - alph2 : int [optional] - number of discrete bins/levels for var2</span>
+<span class="sd">              (default=2, or the value set for num_discrete_bins)</span>
+<span class="sd">            - lag : int [optional] - time difference in samples to calculate</span>
+<span class="sd">              the lagged MI between processes (default=0)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -855,20 +860,22 @@
 <span class="sd">        settings : dict [optional]</span>
 <span class="sd">            sets estimation parameters:</span>
 
-<span class="sd">            - &#39;debug&#39; - return debug information when calling JIDT.</span>
-<span class="sd">              (Boolean, default=False)</span>
-<span class="sd">            - &#39;local_values&#39; - return local TE instead of average TE</span>
-<span class="sd">              (default=False)</span>
-<span class="sd">            - &#39;kraskov_k&#39; - no. nearest neighbours for KNN search (default=4)</span>
-<span class="sd">            - &#39;normalise&#39; - z-standardise data (default=False)</span>
-<span class="sd">            - &#39;theiler_t&#39; - no. next temporal neighbours ignored in KNN and</span>
-<span class="sd">              range searches (default=&#39;0&#39;)</span>
-<span class="sd">            - &#39;noise_level&#39; - random noise added to the data (default=&#39;1e-8&#39;)</span>
-<span class="sd">            - &#39;num_threads&#39; - number of threads used for estimation</span>
-<span class="sd">              (default=&#39;USE_ALL&#39;, not that this uses *all* available threads</span>
-<span class="sd">              on the current machine)</span>
-<span class="sd">            - &#39;lag&#39; - time difference in samples to calculate the lagged MI</span>
-<span class="sd">              between processes (default=0)</span>
+<span class="sd">            - debug : bool [optional] - return debug information when calling</span>
+<span class="sd">              JIDT (default=False)</span>
+<span class="sd">            - local_values : bool [optional] - return local TE instead of</span>
+<span class="sd">              average TE (default=False)</span>
+<span class="sd">            - kraskov_k : int [optional] - no. nearest neighbours for KNN</span>
+<span class="sd">              search (default=4)</span>
+<span class="sd">            - normalise : bool [optional] - z-standardise data (default=False)</span>
+<span class="sd">            - theiler_t : int [optional] - no. next temporal neighbours ignored</span>
+<span class="sd">              in KNN and range searches (default=0)</span>
+<span class="sd">            - noise_level : float [optional] - random noise added to the data</span>
+<span class="sd">              (default=1e-8)</span>
+<span class="sd">            - num_threads : int | str [optional] - number of threads used for</span>
+<span class="sd">              estimation (default=&#39;USE_ALL&#39;, note that this uses *all*</span>
+<span class="sd">              available threads on the current machine)</span>
+<span class="sd">            - lag : int [optional] - time difference in samples to calculate</span>
+<span class="sd">              the lagged MI between processes (default=0)</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        Some technical details: JIDT normalises over realisations, IDTxl</span>
@@ -944,21 +951,23 @@
 <span class="sd">        settings : dict</span>
 <span class="sd">            sets estimation parameters:</span>
 
-<span class="sd">            - &#39;debug&#39; - return debug information when calling JIDT.</span>
-<span class="sd">              (Boolean, default=False)</span>
-<span class="sd">            - &#39;local_values&#39; - return local TE instead of average TE</span>
-<span class="sd">              (default=False)</span>
-<span class="sd">            - &#39;kraskov_k&#39; - no. nearest neighbours for KNN search (default=4)</span>
-<span class="sd">            - &#39;normalise&#39; - z-standardise data (default=False)</span>
-<span class="sd">            - &#39;theiler_t&#39; - no. next temporal neighbours ignored in KNN and</span>
-<span class="sd">              range searches (default=&#39;0&#39;)</span>
-<span class="sd">            - &#39;noise_level&#39; - random noise added to the data (default=&#39;1e-8&#39;)</span>
-<span class="sd">            - &#39;num_threads&#39; - number of threads used for estimation</span>
-<span class="sd">              (default=&#39;USE_ALL&#39;, not that this uses *all* available threads</span>
-<span class="sd">              on the current machine)</span>
-<span class="sd">            - &#39;history&#39; - number of samples in the processes&#39; past used as</span>
+<span class="sd">            - history : int - number of samples in the processes&#39; past used as</span>
 <span class="sd">              embedding</span>
-<span class="sd">            - &#39;tau&#39; - the processes&#39; embedding delay (default=1)</span>
+<span class="sd">            - tau : int [optional] - the processes&#39; embedding delay (default=1)</span>
+<span class="sd">            - debug : bool [optional] - return debug information when calling</span>
+<span class="sd">              JIDT (default=False)</span>
+<span class="sd">            - local_values : bool [optional] - return local TE instead of</span>
+<span class="sd">              average TE (default=False)</span>
+<span class="sd">            - kraskov_k : int [optional] - no. nearest neighbours for KNN</span>
+<span class="sd">              search (default=4)</span>
+<span class="sd">            - normalise : bool [optional] - z-standardise data (default=False)</span>
+<span class="sd">            - theiler_t : int [optional] - no. next temporal neighbours ignored</span>
+<span class="sd">              in KNN and range searches (default=0)</span>
+<span class="sd">            - noise_level : float [optional] - random noise added to the data</span>
+<span class="sd">              (default=1e-8)</span>
+<span class="sd">            - num_threads : int | str [optional] - number of threads used for</span>
+<span class="sd">              estimation (default=&#39;USE_ALL&#39;, note that this uses *all*</span>
+<span class="sd">              available threads on the current machine)</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        Some technical details: JIDT normalises over realisations, IDTxl</span>
@@ -1024,21 +1033,21 @@
 <span class="sd">        settings : dict</span>
 <span class="sd">            set estimator parameters:</span>
 
-<span class="sd">            - &#39;debug&#39; - return debug information when calling JIDT.</span>
-<span class="sd">              (Boolean, default=False)</span>
-<span class="sd">            - &#39;local_values&#39; - return local TE instead of average TE</span>
-<span class="sd">              (default=False)</span>
-<span class="sd">            - &#39;discretise_method&#39; - if and how to discretise incoming</span>
-<span class="sd">              continuous variables to discrete values, can be &#39;max_ent&#39; for</span>
-<span class="sd">              maximum entropy binning, &#39;equal&#39; for equal size bins, and &#39;none&#39;</span>
-<span class="sd">              if no binning is required (default=&#39;none&#39;)</span>
-<span class="sd">            - &#39;num_discrete_bins&#39; - number of discrete bins/levels or the base</span>
-<span class="sd">              of each dimension of the discrete variables (default=2). If set,</span>
-<span class="sd">              this parameter overwrites/sets &#39;alph&#39;</span>
-<span class="sd">            - &#39;history&#39; - number of samples in the target&#39;s past used as</span>
+<span class="sd">            - history : int - number of samples in the target&#39;s past used as</span>
 <span class="sd">              embedding</span>
-<span class="sd">            - &#39;alph&#39; - number of discrete bins/levels for var1 (default=2 , or</span>
-<span class="sd">              the value set for &#39;num_discrete_bins&#39;)</span>
+<span class="sd">            - debug : bool [optional] - return debug information when calling</span>
+<span class="sd">              JIDT (default=False)</span>
+<span class="sd">            - local_values : bool [optional] - return local TE instead of</span>
+<span class="sd">              average TE (default=False)</span>
+<span class="sd">            - discretise_method : str [optional] - if and how to discretise</span>
+<span class="sd">              incoming continuous variables to discrete values, can be</span>
+<span class="sd">              &#39;max_ent&#39; for maximum entropy binning, &#39;equal&#39; for equal</span>
+<span class="sd">              size bins, and &#39;none&#39; if no binning is required (default=&#39;none&#39;)</span>
+<span class="sd">            - num_discrete_bins : int [optional] - number of discrete bins/</span>
+<span class="sd">              levels or the base of each dimension of the discrete variables</span>
+<span class="sd">              (default=2). If set, this parameter overwrites/sets alph</span>
+<span class="sd">            - alph : int [optional] - number of discrete bins/levels for var1</span>
+<span class="sd">              (default=2 , or the value set for num_discrete_bins)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
@@ -1164,21 +1173,13 @@
 <span class="sd">        settings : dict</span>
 <span class="sd">            sets estimation parameters:</span>
 
-<span class="sd">            - &#39;debug&#39; - return debug information when calling JIDT.</span>
-<span class="sd">              (Boolean, default=False)</span>
-<span class="sd">            - &#39;local_values&#39; - return local TE instead of average TE</span>
-<span class="sd">              (default=False)</span>
-<span class="sd">            - &#39;kraskov_k&#39; - no. nearest neighbours for KNN search (default=4)</span>
-<span class="sd">            - &#39;normalise&#39; - z-standardise data (default=False)</span>
-<span class="sd">            - &#39;theiler_t&#39; - no. next temporal neighbours ignored in KNN and</span>
-<span class="sd">              range searches (default=&#39;0&#39;)</span>
-<span class="sd">            - &#39;noise_level&#39; - random noise added to the data (default=&#39;1e-8&#39;)</span>
-<span class="sd">            - &#39;num_threads&#39; - number of threads used for estimation</span>
-<span class="sd">              (default=&#39;USE_ALL&#39;, not that this uses *all* available threads</span>
-<span class="sd">              on the current machine)</span>
-<span class="sd">            - &#39;history&#39; - number of samples in the processes&#39; past used as</span>
+<span class="sd">            - history : int - number of samples in the processes&#39; past used as</span>
 <span class="sd">              embedding</span>
-<span class="sd">            - &#39;tau&#39; - the processes&#39; embedding delay (default=1)</span>
+<span class="sd">            - tau : int [optional] - the processes&#39; embedding delay (default=1)</span>
+<span class="sd">            - debug : bool [optional] - return debug information when calling</span>
+<span class="sd">              JIDT (default=False)</span>
+<span class="sd">            - local_values : bool [optional] - return local TE instead of</span>
+<span class="sd">              average TE (default=False)</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        Some technical details: JIDT normalises over realisations, IDTxl</span>
@@ -1241,20 +1242,12 @@
 <span class="sd">        settings : dict [optional]</span>
 <span class="sd">            sets estimation parameters:</span>
 
-<span class="sd">            - &#39;debug&#39; - return debug information when calling JIDT.</span>
-<span class="sd">              (Boolean, default=False)</span>
-<span class="sd">            - &#39;local_values&#39; - return local TE instead of average TE</span>
-<span class="sd">              (default=False)</span>
-<span class="sd">            - &#39;kraskov_k&#39; - no. nearest neighbours for KNN search (default=4)</span>
-<span class="sd">            - &#39;normalise&#39; - z-standardise data (default=False)</span>
-<span class="sd">            - &#39;theiler_t&#39; - no. next temporal neighbours ignored in KNN and</span>
-<span class="sd">              range searches (default=&#39;0&#39;)</span>
-<span class="sd">            - &#39;noise_level&#39; - random noise added to the data (default=&#39;1e-8&#39;)</span>
-<span class="sd">            - &#39;num_threads&#39; - number of threads used for estimation</span>
-<span class="sd">              (default=&#39;USE_ALL&#39;, not that this uses *all* available threads</span>
-<span class="sd">              on the current machine)</span>
-<span class="sd">            - &#39;lag&#39; - time difference in samples to calculate the lagged MI</span>
-<span class="sd">              between processes (default=0)</span>
+<span class="sd">            - debug : bool [optional] - return debug information when calling</span>
+<span class="sd">              JIDT (default=False)</span>
+<span class="sd">            - local_values : bool [optional] - return local TE instead of</span>
+<span class="sd">              average TE (default=False)</span>
+<span class="sd">            - lag : int [optional] - time difference in samples to calculate</span>
+<span class="sd">              the lagged MI between processes (default=0)</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        Some technical details: JIDT normalises over realisations, IDTxl</span>
@@ -1326,18 +1319,10 @@
 <span class="sd">        settings : dict [optional]</span>
 <span class="sd">            sets estimation parameters:</span>
 
-<span class="sd">            - &#39;debug&#39; - return debug information when calling JIDT.</span>
-<span class="sd">              (Boolean, default=False)</span>
-<span class="sd">            - &#39;local_values&#39; - return local TE instead of average TE</span>
-<span class="sd">              (default=False)</span>
-<span class="sd">            - &#39;kraskov_k&#39; - no. nearest neighbours for KNN search (default=4)</span>
-<span class="sd">            - &#39;normalise&#39; - z-standardise data (default=False)</span>
-<span class="sd">            - &#39;theiler_t&#39; - no. next temporal neighbours ignored in KNN and</span>
-<span class="sd">              range searches (default=&#39;0&#39;)</span>
-<span class="sd">            - &#39;noise_level&#39; - random noise added to the data (default=&#39;1e-8&#39;)</span>
-<span class="sd">            - &#39;num_threads&#39; - number of threads used for estimation</span>
-<span class="sd">              (default=&#39;USE_ALL&#39;, not that this uses *all* available threads</span>
-<span class="sd">              on the current machine)</span>
+<span class="sd">            - debug : bool [optional] - return debug information when calling</span>
+<span class="sd">              JIDT (default=False)</span>
+<span class="sd">            - local_values : bool [optional] - return local TE instead of</span>
+<span class="sd">              average TE (default=False)</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        Some technical details: JIDT normalises over realisations, IDTxl</span>
@@ -1450,26 +1435,21 @@
 <span class="sd">        settings : dict</span>
 <span class="sd">            sets estimation parameters:</span>
 
-<span class="sd">            - &#39;debug&#39; - return debug information when calling JIDT.</span>
-<span class="sd">              (Boolean, default=False)</span>
-<span class="sd">            - &#39;local_values&#39; - return local TE instead of average TE</span>
-<span class="sd">              (default=False)</span>
-<span class="sd">            - &#39;kraskov_k&#39; - no. nearest neighbours for KNN search (default=4)</span>
-<span class="sd">            - &#39;normalise&#39; - z-standardise data (default=False)</span>
-<span class="sd">            - &#39;theiler_t&#39; - no. next temporal neighbours ignored in KNN and</span>
-<span class="sd">              range searches (default=&#39;0&#39;)</span>
-<span class="sd">            - &#39;noise_level&#39; - random noise added to the data (default=&#39;1e-8&#39;)</span>
-<span class="sd">            - &#39;num_threads&#39; - number of threads used for estimation</span>
-<span class="sd">              (default=&#39;USE_ALL&#39;, not that this uses *all* available threads</span>
-<span class="sd">              on the current machine)</span>
-<span class="sd">            - &#39;history_target&#39; - number of samples in the target&#39;s past used as</span>
-<span class="sd">              embedding</span>
-<span class="sd">            - &#39;history_source&#39; - number of samples in the source&#39;s past used as</span>
-<span class="sd">              embedding (default=same as the target history)</span>
-<span class="sd">            - &#39;tau_source&#39; - source&#39;s embedding delay (default=1)</span>
-<span class="sd">            - &#39;tau_target&#39; - target&#39;s embedding delay (default=1)</span>
-<span class="sd">            - &#39;source_target_delay&#39; - information transfer delay between source</span>
-<span class="sd">              and target (default=1)</span>
+<span class="sd">            - history_target : int - number of samples in the target&#39;s past</span>
+<span class="sd">              used as embedding</span>
+<span class="sd">            - history_source  : int [optional] - number of samples in the</span>
+<span class="sd">              source&#39;s past used as embedding (default=same as the target</span>
+<span class="sd">              history)</span>
+<span class="sd">            - tau_source : int [optional] - source&#39;s embedding delay</span>
+<span class="sd">              (default=1)</span>
+<span class="sd">            - tau_target : int [optional] - target&#39;s embedding delay</span>
+<span class="sd">              (default=1)</span>
+<span class="sd">            - source_target_delay : int [optional] - information transfer delay</span>
+<span class="sd">              between source and target (default=1)</span>
+<span class="sd">            - debug : bool [optional] - return debug information when calling</span>
+<span class="sd">              JIDT (default=False)</span>
+<span class="sd">            - local_values : bool [optional] - return local TE instead of</span>
+<span class="sd">              average TE (default=False)</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        Some technical details: JIDT normalises over realisations, IDTxl</span>
@@ -1537,29 +1517,33 @@
 <span class="sd">        settings : dict</span>
 <span class="sd">            sets estimation parameters:</span>
 
-<span class="sd">            - &#39;debug&#39; - return debug information when calling JIDT.</span>
-<span class="sd">              (Boolean, default=False)</span>
-<span class="sd">            - &#39;local_values&#39; - return local TE instead of average TE</span>
-<span class="sd">              (default=False)</span>
-<span class="sd">            - &#39;discretise_method&#39; - if and how to discretise incoming</span>
-<span class="sd">              continuous variables to discrete values, can be &#39;max_ent&#39; for</span>
-<span class="sd">              maximum entropy binning, &#39;equal&#39; for equal size bins, and &#39;none&#39;</span>
-<span class="sd">              if no binning is required (default=&#39;none&#39;)</span>
-<span class="sd">            - &#39;num_discrete_bins&#39; - number of discrete bins/levels or the base</span>
-<span class="sd">              of each dimension of the discrete variables (default=2). If set,</span>
-<span class="sd">              this parameter overwrites/sets &#39;alph1&#39; and &#39;alph2&#39;</span>
-<span class="sd">            - &#39;alph1&#39; - number of discrete bins/levels for source</span>
-<span class="sd">              (default=2, or the value set for &#39;num_discrete_bins&#39;)</span>
-<span class="sd">            - &#39;alph2&#39; - number of discrete bins/levels for target</span>
-<span class="sd">              (default=2, or the value set for &#39;num_discrete_bins&#39;)</span>
-<span class="sd">            - &#39;history_target&#39; - number of samples in the target&#39;s past used as</span>
-<span class="sd">              embedding</span>
-<span class="sd">            - &#39;history_source&#39; - number of samples in the source&#39;s past used as</span>
-<span class="sd">              embedding (default=same as the target history)</span>
-<span class="sd">            - &#39;tau_source&#39; - source&#39;s embedding delay (default=1)</span>
-<span class="sd">            - &#39;tau_target&#39; - target&#39;s embedding delay (default=1)</span>
-<span class="sd">            - &#39;source_target_delay&#39; - information transfer delay between source</span>
-<span class="sd">              and target (default=1)</span>
+<span class="sd">            - history_target : int - number of samples in the target&#39;s past</span>
+<span class="sd">              used as embedding</span>
+<span class="sd">            - history_source  : int [optional] - number of samples in the</span>
+<span class="sd">              source&#39;s past used as embedding (default=same as the target</span>
+<span class="sd">              history)</span>
+<span class="sd">            - tau_source : int [optional] - source&#39;s embedding delay</span>
+<span class="sd">              (default=1)</span>
+<span class="sd">            - tau_target : int [optional] - target&#39;s embedding delay</span>
+<span class="sd">              (default=1)</span>
+<span class="sd">            - source_target_delay : int [optional] - information transfer delay</span>
+<span class="sd">              between source and target (default=1)</span>
+<span class="sd">            - discretise_method : str [optional] - if and how to discretise</span>
+<span class="sd">              incoming continuous variables to discrete values, can be</span>
+<span class="sd">              &#39;max_ent&#39; for maximum entropy binning, &#39;equal&#39; for equal size</span>
+<span class="sd">              bins, and &#39;none&#39; if no binning is required (default=&#39;none&#39;)</span>
+<span class="sd">            - num_discrete_bins : int [optional] - number of discrete bins/</span>
+<span class="sd">              levels or the base of each dimension of the discrete variables</span>
+<span class="sd">              (default=2). If set, this parameter overwrites/sets alph1 and</span>
+<span class="sd">              alph2</span>
+<span class="sd">            - alph1 : int [optional] - number of discrete bins/levels for</span>
+<span class="sd">              source (default=2, or the value set for num_discrete_bins)</span>
+<span class="sd">            - alph2 : int [optional] - number of discrete bins/levels for</span>
+<span class="sd">              target (default=2, or the value set for num_discrete_bins)</span>
+<span class="sd">            - debug : bool [optional] - return debug information when calling</span>
+<span class="sd">              JIDT (default=False)</span>
+<span class="sd">            - local_values : bool [optional] - return local TE instead of</span>
+<span class="sd">              average TE (default=False)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
@@ -1683,26 +1667,21 @@
 <span class="sd">        settings : dict</span>
 <span class="sd">            sets estimation parameters:</span>
 
-<span class="sd">            - &#39;debug&#39; - return debug information when calling JIDT.</span>
-<span class="sd">              (Boolean, default=False)</span>
-<span class="sd">            - &#39;local_values&#39; - return local TE instead of average TE</span>
-<span class="sd">              (default=False)</span>
-<span class="sd">            - &#39;kraskov_k&#39; - no. nearest neighbours for KNN search (default=4)</span>
-<span class="sd">            - &#39;normalise&#39; - z-standardise data (default=False)</span>
-<span class="sd">            - &#39;theiler_t&#39; - no. next temporal neighbours ignored in KNN and</span>
-<span class="sd">              range searches (default=&#39;0&#39;)</span>
-<span class="sd">            - &#39;noise_level&#39; - random noise added to the data (default=&#39;1e-8&#39;)</span>
-<span class="sd">            - &#39;num_threads&#39; - number of threads used for estimation</span>
-<span class="sd">              (default=&#39;USE_ALL&#39;, not that this uses *all* available threads</span>
-<span class="sd">              on the current machine)</span>
-<span class="sd">            - &#39;history_target&#39; - number of samples in the target&#39;s past used as</span>
-<span class="sd">              embedding</span>
-<span class="sd">            - &#39;history_source&#39; - number of samples in the source&#39;s past used as</span>
-<span class="sd">              embedding (default=same as the target history)</span>
-<span class="sd">            - &#39;tau_source&#39; - source&#39;s embedding delay (default=1)</span>
-<span class="sd">            - &#39;tau_target&#39; - target&#39;s embedding delay (default=1)</span>
-<span class="sd">            - &#39;source_target_delay&#39; - information transfer delay between source</span>
-<span class="sd">              and target (default=1)</span>
+<span class="sd">            - history_target : int - number of samples in the target&#39;s past</span>
+<span class="sd">              used as embedding</span>
+<span class="sd">            - history_source  : int [optional] - number of samples in the</span>
+<span class="sd">              source&#39;s past used as embedding (default=same as the target</span>
+<span class="sd">              history)</span>
+<span class="sd">            - tau_source : int [optional] - source&#39;s embedding delay</span>
+<span class="sd">              (default=1)</span>
+<span class="sd">            - tau_target : int [optional] - target&#39;s embedding delay</span>
+<span class="sd">              (default=1)</span>
+<span class="sd">            - source_target_delay : int [optional] - information transfer delay</span>
+<span class="sd">              between source and target (default=1)</span>
+<span class="sd">            - debug : bool [optional] - return debug information when calling</span>
+<span class="sd">              JIDT (default=False)</span>
+<span class="sd">            - local_values : bool [optional] - return local TE instead of</span>
+<span class="sd">              average TE (default=False)</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        Some technical details: JIDT normalises over realisations, IDTxl</span>
