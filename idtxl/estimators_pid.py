@@ -413,10 +413,10 @@ class SydneyPID(Estimator):
         settings : dict
             estimation parameters
 
-            - 'alph_s1' - alphabet size of s1
-            - 'alph_s2' -  alphabet size of s2
-            - 'alph_t' - alphabet size of t
-            - 'max_unsuc_swaps_row_parm' - soft limit for virtualised swaps
+            - alph_s1 : int - alphabet size of s1
+            - alph_s2 : int - alphabet size of s2
+            - alph_t : int - alphabet size of t
+            - max_unsuc_swaps_row_parm : int - soft limit for virtualised swaps
               based on the number of unsuccessful swaps attempted in a row.
               If there are too many unsuccessful swaps in a row, then it
               will break the inner swap loop; the outer loop decrements the
@@ -424,20 +424,20 @@ class SydneyPID(Estimator):
               virtualised swaps again with the smaller probability increment.
               The exact number of unsuccessful swaps allowed before breaking
               is the total number of possible swaps (given our alphabet
-              sizes) times the control parameter 'max_unsuc_swaps_row_parm',
+              sizes) times the control parameter max_unsuc_swaps_row_parm,
               e.g., if the parameter is set to 3, this gives a high degree of
               confidence that nearly (if not) all of the possible swaps have
               been attempted before this soft limit breaks the swap loop.
-            - 'num_reps' -  number of times the outer loop will halve the
+            - num_reps : int -  number of times the outer loop will halve the
               size of the probability increment used for the virtualised
               swaps. This is in direct correspondence with the number of times
               the empirical data was replicated in your original
               implementation.
-            - 'max_iters' - provides a hard upper bound on the number of times
-              it will attempt to perform virtualised swaps in the inner loop.
-              However, this hard limit is (practically) never used as it should
-              always hit the soft limit defined above (parameter may be removed
-              in the future).
+            - max_iters : int - provides a hard upper bound on the number of
+              times it will attempt to perform virtualised swaps in the inner
+              loop. However, this hard limit is (practically) never used as it
+              should always hit the soft limit defined above (parameter may be
+              removed in the future).
     """
     def __init__(self, settings):
         try:
@@ -897,18 +897,18 @@ class TartuPID(Estimator):
         settings : dict
             estimation parameters (with default parameters)
 
-            - 'get_sorted_pdf' -False
-            - 'true_pdf' - None
-            - 'true_result' - None
-            - 'true_CI' - None
-            - 'true_SI' - None
-            - 'feas_eps' - 1.e-10
-            - 'kkt_eps' - 1.e-5
-            - 'feas_eps_2' - 1.e-6
-            - 'kkt_eps_2' - 0.01
-            - 'kkt_search_eps' - 0.5
-            - 'max_zero_probability' - 1.e-5
-            - 'verbose' - False
+            - get_sorted_pdf : bool [optional] - False
+            - true_pdf : [optional] - None
+            - true_result : [optional] - None
+            - true_CI : float [optional] - None
+            - true_SI : float [optional] - None
+            - feas_eps : float [optional] - 1.e-10
+            - kkt_eps : float [optional] - 1.e-5
+            - feas_eps_2 : float [optional] - 1.e-6
+            - kkt_eps_2 : float [optional] - 0.01
+            - kkt_search_eps : float [optional] - 0.5
+            - max_zero_probability : float [optional] - 1.e-5
+            - verbose : bool [optional] - False
     """
 
     def __init__(self, settings):
@@ -954,7 +954,6 @@ class TartuPID(Estimator):
                 1D array containing realizations of a discrete random variable
             t : numpy array
                 1D array containing realizations of a discrete random variable
-
 
         Returns:
             dict
