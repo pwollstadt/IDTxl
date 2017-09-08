@@ -93,7 +93,7 @@ class OpenCLKraskov(Estimator):
         my_gpu_devices = platform.get_devices(device_type=cl.device_type.GPU)
         context = cl.Context(devices=my_gpu_devices)
         queue = cl.CommandQueue(context, my_gpu_devices[gpuid])
-        if self.settings['verbose']:
+        if self.settings['debug']:
             print("Selected Device: ", my_gpu_devices[gpuid].name)
         return my_gpu_devices, context, queue
 
