@@ -65,20 +65,6 @@ class JidtEstimator(Estimator):
             jp.startJVM(jp.getDefaultJVMPath(), '-ea', ('-Djava.class.path=' +
                                                         jar_location))
 
-    def _check_settings(self, settings=None):
-        """Set default for settings dictionary.
-
-        Check if settings dictionary is None. If None, initialise an empty
-        dictionary. If not None check if type is dictionary. Function should be
-        called before setting default values.
-        """
-        if settings is None:
-            return {}
-        elif type(settings) is not dict:
-            raise TypeError('settings should be a dictionary.')
-        else:
-            return settings
-
     def _set_te_defaults(self):
         """Set defaults for transfer entropy estimation."""
         try:
@@ -99,60 +85,6 @@ class JidtEstimator(Estimator):
             'Target history has to be an integer.')
         assert type(self.settings['history_source']) is int, (
             'Source history has to be an integer.')
-
-    def _ensure_one_dim_input(self, var):
-        """Make sure input arrays have one dimension.
-
-        Check dimensions of input to AIS and TE estimators. JIDT expects one-
-        dimensional arrays for these estimators, while it expects two-
-        dimensional arrays for MI and CMI estimators. To make usage of all
-        estimator types easier, allow both 1D- and 2D inputs for all
-        estimators. Squeeze 2D-arrays if their second dimension is 1 when
-        calling AIS and TE estimators (assuming that this array dimension
-        represents the variable dimension).
-        """
-        if len(var.shape) == 2:
-            if var.shape[1] == 1:
-                var = np.squeeze(var)
-            else:
-                raise TypeError('2D input arrays must have shape[1] == 1.')
-        elif len(var.shape) > 2:
-            raise TypeError('Input arrays must be 1D or 2D with shape[1] == '
-                            '1.')
-        return var
-
-    def _ensure_two_dim_input(self, var):
-        """Make sure input arrays have two dimension.
-
-        Check dimensions of input to MI and CMI estimators. JIDT expects two-
-        dimensional arrays for these estimators, while it expects one-
-        dimensional arrays for MI and CMI estimators. To make usage of all
-        estimator types easier allow both 1D- and 2D inputs for all estimators.
-        Add an extra dimension to 1D-arrays when calling MI and CMI estimators
-        (assuming that this array dimension represents the variable dimension).
-        """
-        if len(var.shape) == 1:
-            var = np.expand_dims(var, axis=1)
-        elif len(var.shape) > 2:
-            raise TypeError('Input arrays must be 1D or 2D')
-        return var
-
-    def _check_number_of_points(self, n_points):
-        """Sanity check for number of points going into the estimator."""
-        if (n_points - 1) <= int(self.settings['kraskov_k']):
-            raise RuntimeError('Insufficient number of points ({0}) for the '
-                               'requested number of nearest neighbours '
-                               '(kraskov_k: {1}).'.format(
-                                        n_points, self.settings['kraskov_k']))
-        if (n_points - 1) <= (int(self.settings['kraskov_k']) +
-                              int(self.settings['theiler_t'])):
-            raise RuntimeError('Insufficient number of points ({0}) for the '
-                               'requested number of nearest neighbours '
-                               '(kraskov_k: {1}) and Theiler-correction '
-                               '(theiler_t: {2}).'.format(
-                                                n_points,
-                                                self.settings['kraskov_k'],
-                                                self.settings['theiler_t']))
 
     def is_parallel(self):
         return False
