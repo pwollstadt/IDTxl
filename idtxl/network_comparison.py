@@ -12,19 +12,26 @@ class NetworkComparison(NetworkAnalysis):
     """Set up network comparison between two experimental conditions.
 
     The class provides methods for the comparison of networks inferred from
-    data recorded under two experimental conditions. Four statistical tests
-    are implemented:
+    data recorded under two experimental conditions A and B. Four statistical
+    tests are implemented:
 
-    |                      | stats_type | example                             |
-    |----------------------|------------|-------------------------------------|
-    | __within__ subjects  |dependent   |base line (A) vs. task (B)           |
+    +----------------------+------------+-------------------------------------+
+    |units of observation/ |stats_type  |example                              |
+    |comparison type       |            |                                     |
+    +======================+============+=====================================+
+    | replications/        |dependent   |base line (A) vs. task (B)           |
+    | **within** a subject +------------+-------------------------------------+
     |                      |independent |detect house (A) vs. face (B)        |
-    | __between__ subjects |dependent   |patients (A) vs. matched controls (B)|
+    +----------------------+------------+-------------------------------------+
+    | sets of data/        |dependent   |patients (A) vs. matched controls (B)|
+    | **between** subjects +------------+-------------------------------------+
     |                      |independent |male (A) vs. female (B) participants |
+    +----------------------+------------+-------------------------------------+
 
-    There are two methods for within and between comparisons: compare_within()
-    and compare_between(). The stats_type is passed as an analysis option, see
-    the documentation of the two classes for details.
+    Depending on the units of observations, one of two statistics methods can
+    be used: compare_within() and compare_between(). The stats_type is passed
+    as an analysis setting, see the documentation of the two methods for
+    details.
 
     Attributes:
         union : dict
