@@ -210,7 +210,7 @@ def test_multivariate_te_lorenz_2():
     settings['max_lag_sources'] = 60
     settings['min_lag_sources'] = 31
     settings['tau_sources'] = 2
-    settings['max_lag_target'] = 0
+    settings['max_lag_target'] = 1  # was 0 before, but this is no longer allowed by the estimator
     settings['tau_target'] = 1
     # res = lorenz_analysis.analyse_network(settings, dat)
     # res_0 = lorenz_analysis.analyse_single_target(settings, dat, 0)  # no coupling
