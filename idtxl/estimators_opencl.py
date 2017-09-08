@@ -57,11 +57,7 @@ class OpenCLKraskov(Estimator):
 
     def __init__(self, settings=None):
         # Get defaults for estimator settings
-        if settings is None:
-            settings = {}
-        elif type(settings) is not dict:
-            raise TypeError('settings should be a dictionary.')
-
+        settings = self._check_settings(settings)
         settings.setdefault('gpuid', int(0))
         settings.setdefault('kraskov_k', int(4))
         settings.setdefault('theiler_t', int(0))
@@ -97,7 +93,7 @@ class OpenCLKraskov(Estimator):
         my_gpu_devices = platform.get_devices(device_type=cl.device_type.GPU)
         context = cl.Context(devices=my_gpu_devices)
         queue = cl.CommandQueue(context, my_gpu_devices[gpuid])
-        if self.settings['verbose']:
+        if self.settings['debug']:
             print("Selected Device: ", my_gpu_devices[gpuid].name)
         return my_gpu_devices, context, queue
 
@@ -115,23 +111,6 @@ class OpenCLKraskov(Estimator):
                                          np.int32, np.int32, np.int32,
                                          np.int32, None])
         return (kNN_kernel, RS_kernel)
-
-    def _check_number_of_points(self, n_points):
-        """Sanity check for number of points going into the estimator."""
-        if (n_points - 1) <= int(self.settings['kraskov_k']):
-            raise RuntimeError('Insufficient number of points ({0}) for the '
-                               'requested number of nearest neighbours '
-                               '(kraskov_k: {1}).'.format(
-                                        n_points, self.settings['kraskov_k']))
-        if (n_points - 1) <= (int(self.settings['kraskov_k']) +
-                              int(self.settings['theiler_t'])):
-            raise RuntimeError('Insufficient number of points ({0}) for the '
-                               'requested number of nearest neighbours '
-                               '(kraskov_k: {1}) and Theiler-correction '
-                               '(theiler_t: {2}).'.format(
-                                                n_points,
-                                                self.settings['kraskov_k'],
-                                                self.settings['theiler_t']))
 
 
 class OpenCLKraskovMI(OpenCLKraskov):
@@ -167,9 +146,10 @@ class OpenCLKraskovMI(OpenCLKraskov):
 
         Args:
             var1 : numpy array
-                realisations of first variable, a 2D numpy array where array
-                dimensions represent [(realisations * n_chunks) x variable
-                dimension], array type should be int32
+                realisations of first variable, either a 2D numpy array where
+                array dimensions represent [(realisations * n_chunks) x
+                variable dimension] or a 1D array representing [realisations],
+                array type should be int32
             var2 : numpy array
                 realisations of the second variable (similar to var1)
             n_chunks : int
@@ -181,7 +161,10 @@ class OpenCLKraskovMI(OpenCLKraskov):
                 average MI over all samples or local MI for individual
                 samples if 'local_values'=True
         """
-        # Prepare data and add noise
+        # Prepare data and add noise: check if variable realisations are passed
+        # as 1D or 2D arrays and have equal no. observations.
+        var1 = self._ensure_two_dim_input(var1)
+        var2 = self._ensure_two_dim_input(var2)
         assert var1.shape[0] == var2.shape[0]
         assert var1.shape[0] % n_chunks == 0
         self._check_number_of_points(var1.shape[0])
@@ -251,9 +234,10 @@ class OpenCLKraskovMI(OpenCLKraskov):
 
         Args:
             var1 : numpy array
-                realisations of first variable, a 2D numpy array where array
-                dimensions represent [(realisations * n_chunks) x variable
-                dimension], array type should be int32
+                realisations of first variable, either a 2D numpy array where
+                array dimensions represent [(realisations * n_chunks) x
+                variable dimension] or a 1D array representing [realisations],
+                array type should be int32
             var2 : numpy array
                 realisations of the second variable (similar to var1)
             n_chunks : int
@@ -265,10 +249,13 @@ class OpenCLKraskovMI(OpenCLKraskov):
                 average MI over all samples or local MI for individual
                 samples if 'local_values'=True
         """
-        # Prepare data and add noise
+        # Prepare data and add noise: check if variable realisations are passed
+        # as 1D or 2D arrays and have equal no. observations.
         if self.settings['debug']:
             print('var1 shape: {0}, {1}, n_chunks: {2}'.format(
                              var1.shape[0], var1.shape[1], n_chunks))
+        var1 = self._ensure_two_dim_input(var1)
+        var2 = self._ensure_two_dim_input(var2)
         assert var1.shape[0] == var2.shape[0]
         assert var1.shape[0] % n_chunks == 0
         self._check_number_of_points(var1.shape[0])
@@ -411,9 +398,10 @@ class OpenCLKraskovCMI(OpenCLKraskov):
 
         Args:
             var1 : numpy array
-                realisations of first variable, a 2D numpy array where array
-                dimensions represent [(realisations * n_chunks) x variable
-                dimension], array type should be int32
+                realisations of first variable, either a 2D numpy array where
+                array dimensions represent [(realisations * n_chunks) x
+                variable dimension] or a 1D array representing [realisations],
+                array type should be int32
             var2 : numpy array
                 realisations of the second variable (similar to var1)
             conditional : numpy array
@@ -432,7 +420,11 @@ class OpenCLKraskovCMI(OpenCLKraskov):
             est_mi = OpenCLKraskovMI(self.settings)
             return est_mi.estimate(var1, var2, n_chunks)
 
-        # Prepare data and add noise
+        # Prepare data and add noise: check if variable realisations are passed
+        # as 1D or 2D arrays and have equal no. observations.
+        var1 = self._ensure_two_dim_input(var1)
+        var2 = self._ensure_two_dim_input(var2)
+        conditional = self._ensure_two_dim_input(conditional)
         assert var1.shape[0] == var2.shape[0]
         assert var1.shape[0] == conditional.shape[0]
         assert var1.shape[0] % n_chunks == 0
@@ -509,9 +501,10 @@ class OpenCLKraskovCMI(OpenCLKraskov):
 
         Args:
             var1 : numpy array
-                realisations of first variable, a 2D numpy array where array
-                dimensions represent [(realisations * n_chunks) x variable
-                dimension], array type should be int32
+                realisations of first variable, either a 2D numpy array where
+                array dimensions represent [(realisations * n_chunks) x
+                variable dimension] or a 1D array representing [realisations],
+                array type should be int32
             var2 : numpy array
                 realisations of the second variable (similar to var1)
             conditional : numpy array
@@ -530,10 +523,15 @@ class OpenCLKraskovCMI(OpenCLKraskov):
             est_mi = OpenCLKraskovMI(self.settings)
             return est_mi.estimate(var1, var2, n_chunks)
 
-        # Prepare data and add noise
+        # Prepare data and add noise: check if variable realisations are passed
+        # as 1D or 2D arrays and have equal no. observations.
+        var1 = self._ensure_two_dim_input(var1)
+        var2 = self._ensure_two_dim_input(var2)
+        conditional = self._ensure_two_dim_input(conditional)
         assert var1.shape[0] == var2.shape[0]
         assert var1.shape[0] == conditional.shape[0]
         assert var1.shape[0] % n_chunks == 0
+        self._check_number_of_points(var1.shape[0])
         signallength = var1.shape[0]
         chunklength = signallength // n_chunks
         var1dim = var1.shape[1]

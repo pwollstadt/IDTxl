@@ -33,9 +33,14 @@ def network_fdr(settings=None, *results):
 
             - alpha_fdr : float [optional] - critical alpha level
               (default=0.05)
-            - correct_by_target : bool [optional] - if true p-values are
-              corrected on the target level and on the single-link level
-              otherwise (default=True)
+            - correct_by_target : bool [optional] - if true correct p-values on
+              on the target level (omnibus test p-values), otherwise correct
+              p_values for individual variables (sequential max stats p-values)
+              (default=True)
+            - fdr_constant : int [optional] - choose one of two constants used
+              for calculating the FDR-thresholds according to Genovese (2002):
+              1 will divide alpha by 1, 2 will divide alpha by the sum_i(1/i);
+              see the paper for details on the assumptions (default=2)
 
         results : list of dicts
             network inference results from .analyse_network methods, where each
@@ -52,6 +57,8 @@ def network_fdr(settings=None, *results):
     alpha = settings['alpha_fdr']
     settings.setdefault('correct_by_target', True)
     correct_by_target = settings['correct_by_target']
+    settings.setdefault('fdr_constant', 2)
+    constant = settings['fdr_constant']
 
     # Combine results into single results dict (this creates a copy).
     res = utils.combine_results(*results)
@@ -70,7 +77,7 @@ def network_fdr(settings=None, *results):
                 pval = np.append(pval, res[target]['omnibus_pval'])
                 target_idx = np.append(target_idx, target)
                 n_perm = np.append(n_perm,
-                                   res[target]['settings']['n_perm_max_seq'])
+                                   res[target]['settings']['n_perm_omnibus'])
     else:  # individual variables
         for target in res.keys():
             if res[target]['omnibus_sign']:
@@ -90,14 +97,20 @@ def network_fdr(settings=None, *results):
     sort_idx = np.argsort(pval)
     pval.sort()
 
-    # Calculate threshold (exact or by approximating the harmonic sum).
+    # Calculate threshold
     n = pval.size
-    if n < 1000:
-        thresh = ((np.arange(1, n + 1) / n) * alpha /
-                  sum(1 / np.arange(1, n + 1)))
-    else:
-        thresh = ((np.arange(1, n + 1) / n) * alpha /
-                  (np.log(n) + np.e))  # aprx. harmonic sum with Euler's number
+    if constant == 2:  # pick the requested constant (see Genovese, p.872)
+        if n < 1000:
+            const = sum(1 / np.arange(1, n + 1))
+        else:
+            const = np.log(n) + np.e  # aprx. harmonic sum with Euler's number
+    elif constant == 1:
+        # This is less strict than the other one and corresponds to a
+        # Bonoferroni-correction for the first p-value, however, it makes more
+        # strict assumptions on the distribution of p-values, while constant 2
+        # works for any joint distribution of the p-values.
+        const = 1
+    thresh = (np.arange(1, n + 1) / n) * alpha / const
 
     # If the number of permutations for calculating p-values for individual
     # variables is too low, return without performing any correction.
@@ -244,9 +257,9 @@ def omnibus_test(analysis_setup, data):
                                           alpha, 'one_bigger')
     if VERBOSE:
         if significance:
-            print(' -- significant')
+            print(' -- significant\n')
         else:
-            print(' -- not significant')
+            print(' -- not significant\n')
     return significance, pvalue, te_orig
 
 
@@ -806,7 +819,7 @@ def check_n_perm(n_perm, alpha):
     if not 1.0 / n_perm < alpha:
         raise RuntimeError('The number of permutations {0} is to small to test'
                            ' the requested alpha level {1}. The number of '
-                           'permutations must be greater than (1/alpha).'
+                           'permutations must be greater than 1/alpha.'
                            .format(n_perm, alpha))
 
 
@@ -838,14 +851,16 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
 
     # Create surrogate table.
     if VERBOSE:
-        print('\ncreate surrogates table with {0} permutations'.format(n_perm))
+        print('\ncreating surrogate table with {0} permutations:'.format(
+                                                                    n_perm))
+        print('\tcand.', end='')
     surr_table = np.zeros((len(idx_test_set), n_perm))
     current_value_realisations = analysis_setup._current_value_realisations
     idx_c = 0
     for candidate in idx_test_set:
         if VERBOSE:
-            print('\tcand. {0}'.format(
-                                analysis_setup._idx_to_lag([candidate])[0]))
+            print('\t{0}'.format(analysis_setup._idx_to_lag([candidate])[0]),
+                  end='')
         '''
         surr_candidate_realisations = np.empty(
                 (data.n_realisations(analysis_setup.current_value) * n_perm,
@@ -1108,7 +1123,7 @@ def _check_permute_in_time(analysis_setup, data, n_perm):
 
     if (not analysis_setup.settings['permute_in_time'] and
             not _sufficient_replications(data, n_perm)):
-        print('WARNING: Number of replications is not sufficient to generate '
+        print('\n\nWARNING: Number of replications is not sufficient to generate '
               'the desired number of surrogates. Permuting samples in time '
               'instead.')
         analysis_setup.settings['permute_in_time'] = True

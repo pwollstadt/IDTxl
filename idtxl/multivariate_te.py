@@ -155,7 +155,7 @@ class MultivariateTE(NetworkInference):
         results = {}
         for t in range(len(targets)):
             if settings['verbose']:
-                print('####### analysing target with index {0} from list {1}'
+                print('\n####### analysing target with index {0} from list {1}'
                       .format(t, targets))
             results[targets[t]] = self.analyse_single_target(settings,
                                                              data,
@@ -349,11 +349,6 @@ class MultivariateTE(NetworkInference):
                 i_1 = i_2
                 i_2 += data.n_realisations(self.current_value)
 
-            print(('var1, candidate_realisations: {0}, var2, current_value: '
-                   '{1}, cond: {2}').format(
-                            candidate_realisations.shape,
-                            self._current_value_realisations.shape,
-                            conditional_realisations.shape))
             temp_te = self._cmi_estimator.estimate_mult(
                                 n_chunks=len(self.selected_vars_sources),
                                 re_use=['var2'],
@@ -379,11 +374,11 @@ class MultivariateTE(NetworkInference):
             # sources will be significant as well (b/c they have higher TE).
             if not significant:
                 if self.settings['verbose']:
-                    print(' -- not significant')
+                    print(' -- not significant\n')
                 self._remove_selected_var(min_candidate)
             else:
                 if self.settings['verbose']:
-                    print(' -- significant')
+                    print(' -- significant\n')
                 self._min_stats_surr_table = surr_table
                 break
 
