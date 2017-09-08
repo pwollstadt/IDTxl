@@ -44,15 +44,18 @@ class OpenCLKraskov(Estimator):
         settings : dict [optional]
             set estimator parameters:
 
-            - 'gpuid' - device ID used for estimation (if more than one device
-              is available on the current platform) (default=0)
-            - 'kraskov_k' - no. nearest neighbours for KNN search (default=4)
-            - 'normalise' - z-standardise data (default=False)
-            - 'theiler_t' - no. next temporal neighbours ignored in KNN and
-              range searches (default='0')
-            - 'noise_level' - random noise added to the data (default='1e-8')
-            - 'debug' - return intermediate results, i.e. neighbour counts from
-              range searches and KNN distances (default=False)
+            - gpuid : int [optional] - device ID used for estimation (if more
+              than one device is available on the current platform) (default=0)
+            - kraskov_k : int [optional] - no. nearest neighbours for KNN
+              search (default=4)
+            - normalise : bool [optional] - z-standardise data (default=False)
+            - theiler_t : int [optional] - no. next temporal neighbours ignored
+              in KNN and range searches (default=0)
+            - noise_level : float [optional] - random noise added to the data
+              (default=1e-8)
+            - debug : bool [optional] - return intermediate results, i.e.
+              neighbour counts from range searches and KNN distances
+              (default=False)
     """
 
     def __init__(self, settings=None):
@@ -123,17 +126,20 @@ class OpenCLKraskovMI(OpenCLKraskov):
         settings : dict [optional]
             set estimator parameters:
 
-            - 'gpuid' - device ID used for estimation (if more than one device
-              is available on the current platform) (default=0)
-            - 'kraskov_k' - no. nearest neighbours for KNN search (default=4)
-            - 'normalise' - z-standardise data (default=False)
-            - 'theiler_t' - no. next temporal neighbours ignored in KNN and
-              range searches (default='0')
-            - 'noise_level' - random noise added to the data (default='1e-8')
-            - 'debug' - return intermediate results, i.e. neighbour counts from
-              range searches and KNN distances (default=False)
-            - 'lag' - time difference in samples to calculate the lagged MI
-              between processes (default=0)
+            - gpuid : int [optional] - device ID used for estimation (if more
+              than one device is available on the current platform) (default=0)
+            - kraskov_k : int [optional] - no. nearest neighbours for KNN
+              search (default=4)
+            - normalise : bool [optional] - z-standardise data (default=False)
+            - theiler_t : int [optional] - no. next temporal neighbours ignored
+              in KNN and range searches (default=0)
+            - noise_level : float [optional] - random noise added to the data
+              (default=1e-8)
+            - debug : bool [optional] - return intermediate results, i.e.
+              neighbour counts from range searches and KNN distances
+              (default=False)
+            - lag : int [optional] - time difference in samples to calculate
+              the lagged MI between processes (default=0)
     """
 
     def __init__(self, settings=None):
@@ -376,15 +382,18 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         settings : dict [optional]
             set estimator parameters:
 
-            - 'gpuid' - device ID used for estimation (if more than one device
-              is available on the current platform) (default=0)
-            - 'kraskov_k' - no. nearest neighbours for KNN search (default=4)
-            - 'normalise' - z-standardise data (default=False)
-            - 'theiler_t' - no. next temporal neighbours ignored in KNN and
-              range searches (default='0')
-            - 'noise_level' - random noise added to the data (default='1e-8')
-            - 'debug' - return intermediate results, i.e. neighbour counts from
-              range searches and KNN distances (default=False)
+            - gpuid : int [optional] - device ID used for estimation (if more
+              than one device is available on the current platform) (default=0)
+            - kraskov_k : int [optional] - no. nearest neighbours for KNN
+              search (default=4)
+            - normalise : bool [optional] - z-standardise data (default=False)
+            - theiler_t : int [optional] - no. next temporal neighbours ignored
+              in KNN and range searches (default=0)
+            - noise_level : float [optional] - random noise added to the data
+              (default=1e-8)
+            - debug : bool [optional] - return intermediate results, i.e.
+              neighbour counts from range searches and KNN distances
+              (default=False)
     """
 
     def __init__(self, settings=None):
