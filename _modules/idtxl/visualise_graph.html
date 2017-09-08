@@ -231,7 +231,6 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">graph</span> <span class="o">=</span> <span class="n">generate_network_graph</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">fdr</span><span class="p">,</span> <span class="n">find_u</span><span class="p">)</span>
     <span class="n">adj_matrix</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_numpy_matrix</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
-    <span class="n">max_u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">)</span>
     <span class="k">print</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">)</span>
 
     <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
@@ -247,16 +246,8 @@
                                  <span class="n">font_size</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>  <span class="c1"># font_weight=&#39;bold&#39;</span>
 
     <span class="c1"># Plot adjacency matrix.</span>
-    <span class="n">ax2</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">122</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;gray_r&quot;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">)</span>
-    <span class="c1"># Make colorbar match the image in size:</span>
-    <span class="c1"># https://stackoverflow.com/a/26720422</span>
-    <span class="n">cbar</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">fraction</span><span class="o">=</span><span class="mf">0.046</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.04</span><span class="p">,</span>
-                        <span class="n">ticks</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_u</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
-    <span class="n">cbar</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s1">&#39;delay [samples]&#39;</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-    <span class="n">ax2</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">tick_top</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">122</span><span class="p">)</span>
+    <span class="n">_plot_adj_matrix</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">)</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">graph</span></div>
 
@@ -317,6 +308,41 @@
              <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;0.5&#39;</span><span class="p">)</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">graph</span></div>
+
+
+<span class="k">def</span> <span class="nf">_plot_adj_matrix</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">,</span> <span class="n">mat_color</span><span class="o">=</span><span class="s1">&#39;gray_r&#39;</span><span class="p">,</span> <span class="n">diverging</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                     <span class="n">cbar_label</span><span class="o">=</span><span class="s1">&#39;delay&#39;</span><span class="p">,</span> <span class="n">cbar_stepsize</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Plot adjacency matrix.&quot;&quot;&quot;</span>
+    <span class="c1"># Plot matrix, set minimum and maximum values to the same value for</span>
+    <span class="c1"># diverging plots to center colormap at 0, i.e., 0 is plotted in white</span>
+    <span class="c1"># https://stackoverflow.com/questions/25500541/</span>
+    <span class="c1"># matplotlib-bwr-colormap-always-centered-on-zero</span>
+    <span class="k">if</span> <span class="n">diverging</span><span class="p">:</span>
+        <span class="n">max_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">))</span>
+        <span class="n">min_val</span> <span class="o">=</span> <span class="o">-</span><span class="n">max_val</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">max_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">)</span>
+        <span class="n">min_val</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">mat_color</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">,</span>
+               <span class="n">vmin</span><span class="o">=</span><span class="n">min_val</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">max_val</span><span class="p">)</span>
+
+    <span class="c1"># Set the colorbar and make colorbar match the image in size using the</span>
+    <span class="c1"># fraction and pad parameters (see https://stackoverflow.com/a/26720422).</span>
+    <span class="k">if</span> <span class="n">cbar_label</span> <span class="o">==</span> <span class="s1">&#39;delay&#39;</span><span class="p">:</span>
+        <span class="n">cbar_label</span> <span class="o">=</span> <span class="s1">&#39;delay [samples]&#39;</span>
+        <span class="n">cbar_ticks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_val</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">cbar_stepsize</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cbar_ticks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span> <span class="o">+</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">max_val</span><span class="p">,</span>
+                               <span class="n">cbar_stepsize</span><span class="p">)</span>
+    <span class="n">cbar</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">fraction</span><span class="o">=</span><span class="mf">0.046</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.04</span><span class="p">,</span> <span class="n">ticks</span><span class="o">=</span><span class="n">cbar_ticks</span><span class="p">)</span>
+    <span class="n">cbar</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="n">cbar_label</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
+
+    <span class="c1"># Set x- and y-ticks.</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">tick_top</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">cbar</span>
 
 
 <div class="viewcode-block" id="plot_mute_graph"><a class="viewcode-back" href="../../idtxl.html#idtxl.visualise_graph.plot_mute_graph">[docs]</a><span class="k">def</span> <span class="nf">plot_mute_graph</span><span class="p">():</span>
@@ -461,7 +487,7 @@
             <span class="k">pass</span>
 
     <span class="n">targets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-    <span class="n">adj_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_nodes</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_nodes</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">adj_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
         <span class="n">all_vars_sources</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span>
@@ -484,6 +510,80 @@
             <span class="n">adj_matrix</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span>
 
     <span class="k">return</span> <span class="n">adj_matrix</span>
+
+
+<div class="viewcode-block" id="plot_network_comparison"><a class="viewcode-back" href="../../idtxl.html#idtxl.visualise_graph.plot_network_comparison">[docs]</a><span class="k">def</span> <span class="nf">plot_network_comparison</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">mask_sign</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Plot results of network comparison.&quot;&quot;&quot;</span>
+    <span class="n">union</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;union_network&#39;</span><span class="p">]</span>
+
+    <span class="n">targets</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;union_network&#39;</span><span class="p">][</span><span class="s1">&#39;targets&#39;</span><span class="p">]</span>
+    <span class="n">n_nodes</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">union_network</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">adj_matrix_te_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">))</span>
+    <span class="n">adj_matrix_pval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">))</span>
+    <span class="n">adj_matrix_comp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
+        <span class="n">all_vars_sources</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span>
+                                     <span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;selected_vars_sources&#39;</span><span class="p">]])</span>
+        <span class="n">all_vars_lags</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span>
+                                  <span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;selected_vars_sources&#39;</span><span class="p">]])</span>
+
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">all_vars_sources</span><span class="p">):</span>
+            <span class="n">union_network</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">pval</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;pval&#39;</span><span class="p">][</span><span class="n">t</span><span class="p">]</span>
+        <span class="n">sign</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;sign&#39;</span><span class="p">][</span><span class="n">t</span><span class="p">]</span>
+        <span class="n">te_diff</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;cmi_diff_abs&#39;</span><span class="p">][</span><span class="n">t</span><span class="p">]</span>
+        <span class="n">comp</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;a&gt;b&#39;</span><span class="p">][</span><span class="n">t</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">comp</span><span class="p">[</span><span class="n">comp</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">mask_sign</span><span class="p">:</span>
+            <span class="n">all_vars_sources</span> <span class="o">=</span> <span class="n">all_vars_sources</span><span class="p">[</span><span class="n">sign</span><span class="p">]</span>
+            <span class="n">all_vars_lags</span> <span class="o">=</span> <span class="n">all_vars_lags</span><span class="p">[</span><span class="n">sign</span><span class="p">]</span>
+            <span class="n">pval</span> <span class="o">=</span> <span class="n">pval</span><span class="p">[</span><span class="n">sign</span><span class="p">]</span>
+            <span class="n">te_diff</span> <span class="o">=</span> <span class="n">te_diff</span><span class="p">[</span><span class="n">sign</span><span class="p">]</span>
+            <span class="n">comp</span> <span class="o">=</span> <span class="n">comp</span><span class="p">[</span><span class="n">sign</span><span class="p">]</span>
+
+        <span class="n">sources</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">all_vars_sources</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
+            <span class="c1"># For now, if there are multiple variables in the past of a source,</span>
+            <span class="c1"># report the one with the maximum TE difference</span>
+            <span class="n">te_diff_abs</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">te_diff</span><span class="p">)</span>
+            <span class="n">max_te</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">te_diff_abs</span><span class="p">[</span><span class="n">all_vars_sources</span> <span class="o">==</span> <span class="n">s</span><span class="p">])</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">te_diff_abs</span> <span class="o">==</span> <span class="n">max_te</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">adj_matrix_te_diff</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">te_diff</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">adj_matrix_pval</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">pval</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">adj_matrix_comp</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">comp</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+    <span class="n">adj_matrix_te_diff_sign</span> <span class="o">=</span> <span class="n">adj_matrix_te_diff</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">adj_matrix_te_diff</span><span class="p">)</span>
+    <span class="n">adj_matrix_te_diff_sign</span> <span class="o">*=</span> <span class="n">adj_matrix_comp</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">221</span><span class="p">)</span>
+    <span class="n">_plot_adj_matrix</span><span class="p">(</span><span class="n">adj_matrix_te_diff_sign</span><span class="p">,</span> <span class="n">mat_color</span><span class="o">=</span><span class="s1">&#39;seismic&#39;</span><span class="p">,</span>
+                     <span class="n">diverging</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">cbar_label</span><span class="o">=</span><span class="s1">&#39;norm. CMI diff [a.u.]&#39;</span><span class="p">,</span>
+                     <span class="n">cbar_stepsize</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;CMI raw diff cond. A - B&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.1</span><span class="p">)</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">222</span><span class="p">)</span>
+    <span class="n">_plot_adj_matrix</span><span class="p">(</span><span class="n">adj_matrix_pval</span><span class="p">,</span> <span class="n">cbar_label</span><span class="o">=</span><span class="s1">&#39;p-value [%]&#39;</span><span class="p">,</span>
+                     <span class="n">cbar_stepsize</span><span class="o">=</span><span class="mf">0.005</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;p-values cond. A vs. B&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.1</span><span class="p">)</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">223</span><span class="p">)</span>
+    <span class="n">_plot_adj_matrix</span><span class="p">(</span><span class="n">union_network</span><span class="p">,</span> <span class="n">mat_color</span><span class="o">=</span><span class="s1">&#39;PuBu&#39;</span><span class="p">,</span>
+                     <span class="n">cbar_label</span><span class="o">=</span><span class="s1">&#39;link in union&#39;</span><span class="p">,</span> <span class="n">cbar_stepsize</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;union network A and B&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.1</span><span class="p">)</span>
+    <span class="c1"># ax = plt.subplot(224)</span>
+    <span class="c1"># cbar = _plot_adj_matrix(adj_matrix_comp, diverging=True,</span>
+    <span class="c1">#                         mat_color=&#39;bwr&#39;, cbar_stepsize=1)</span>
+    <span class="c1"># cbar.set_ticks([1, -1])</span>
+    <span class="c1"># cbar.ax.set_yticklabels([&#39;A &gt; B&#39;, &#39;B&gt;=A&#39;])</span>
+    <span class="c1"># ax.set_title(&#39;Comparison mean TE&#39;, y=1.1)</span>
+
+    <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">adj_matrix_te_diff_sign</span><span class="p">,</span> <span class="n">adj_matrix_pval</span><span class="p">,</span> <span class="n">f</span></div>
 </pre></div>
 
                 </div>

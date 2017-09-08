@@ -7,7 +7,10 @@ IDTxl user reference
 =================================
 
 Welcome to the IDTxl user documentation. IDTxl is being hosted at
-`GitHub <https://github.com/pwollstadt/IDTxl>`_.
+`GitHub <https://github.com/pwollstadt/IDTxl>`_. 
+
+Have a look at the `wiki <https://github.com/pwollstadt/IDTxl/wiki>`_
+for more information and user tutorials.
 
 Links
 --------------------

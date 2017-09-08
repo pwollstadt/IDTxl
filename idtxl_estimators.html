@@ -1078,7 +1078,7 @@ these estimators see documentation for the child classes.</p>
 range searches (default=&#8216;0&#8217;)</li>
 <li>&#8216;noise_level&#8217; - random noise added to the data (default=&#8216;1e-8&#8217;)</li>
 <li>&#8216;num_threads&#8217; - number of threads used for estimation
-(default=&#8217;USE_ALL&#8217;, not that this uses <em>all</em> available threads
+(default=&#8217;USE_ALL&#8217;, note that this uses <em>all</em> available threads
 on the current machine)</li>
 </ul>
 </dd>
@@ -1486,9 +1486,10 @@ calculated.</p>
 <dt>Args:</dt>
 <dd><dl class="first last docutils">
 <dt>var1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
-<dd>realisations of first variable, a 2D numpy array where array
-dimensions represent [(realisations * n_chunks) x variable
-dimension], array type should be int32</dd>
+<dd>realisations of first variable, either a 2D numpy array where
+array dimensions represent [(realisations * n_chunks) x
+variable dimension] or a 1D array representing [realisations],
+array type should be int32</dd>
 <dt>var2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
 <dd>realisations of the second variable (similar to var1)</dd>
 <dt>conditional <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
@@ -1546,9 +1547,10 @@ between processes (default=0)</li>
 <dt>Args:</dt>
 <dd><dl class="first last docutils">
 <dt>var1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
-<dd>realisations of first variable, a 2D numpy array where array
-dimensions represent [(realisations * n_chunks) x variable
-dimension], array type should be int32</dd>
+<dd>realisations of first variable, either a 2D numpy array where
+array dimensions represent [(realisations * n_chunks) x
+variable dimension] or a 1D array representing [realisations],
+array type should be int32</dd>
 <dt>var2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
 <dd>realisations of the second variable (similar to var1)</dd>
 <dt>n_chunks <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>

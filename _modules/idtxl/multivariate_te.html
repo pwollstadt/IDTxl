@@ -265,7 +265,7 @@
         <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)):</span>
             <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
-                <span class="k">print</span><span class="p">(</span><span class="s1">&#39;####### analysing target with index {0} from list {1}&#39;</span>
+                <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">####### analysing target with index {0} from list {1}&#39;</span>
                       <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">targets</span><span class="p">))</span>
             <span class="n">results</span><span class="p">[</span><span class="n">targets</span><span class="p">[</span><span class="n">t</span><span class="p">]]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analyse_single_target</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span>
                                                              <span class="n">data</span><span class="p">,</span>
@@ -459,11 +459,6 @@
                 <span class="n">i_1</span> <span class="o">=</span> <span class="n">i_2</span>
                 <span class="n">i_2</span> <span class="o">+=</span> <span class="n">data</span><span class="o">.</span><span class="n">n_realisations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">)</span>
 
-            <span class="k">print</span><span class="p">((</span><span class="s1">&#39;var1, candidate_realisations: {0}, var2, current_value: &#39;</span>
-                   <span class="s1">&#39;{1}, cond: {2}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                            <span class="n">candidate_realisations</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_current_value_realisations</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
-                            <span class="n">conditional_realisations</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
             <span class="n">temp_te</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator</span><span class="o">.</span><span class="n">estimate_mult</span><span class="p">(</span>
                                 <span class="n">n_chunks</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">),</span>
                                 <span class="n">re_use</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;var2&#39;</span><span class="p">],</span>
@@ -489,11 +484,11 @@
             <span class="c1"># sources will be significant as well (b/c they have higher TE).</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">significant</span><span class="p">:</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
-                    <span class="k">print</span><span class="p">(</span><span class="s1">&#39; -- not significant&#39;</span><span class="p">)</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s1">&#39; -- not significant</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_remove_selected_var</span><span class="p">(</span><span class="n">min_candidate</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
-                    <span class="k">print</span><span class="p">(</span><span class="s1">&#39; -- significant&#39;</span><span class="p">)</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s1">&#39; -- significant</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_min_stats_surr_table</span> <span class="o">=</span> <span class="n">surr_table</span>
                 <span class="k">break</span>
 

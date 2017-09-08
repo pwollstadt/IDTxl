@@ -131,19 +131,44 @@
 <em class="property">class </em><code class="descclassname">idtxl.network_comparison.</code><code class="descname">NetworkComparison</code><a class="reference internal" href="_modules/idtxl/network_comparison.html#NetworkComparison"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.network_comparison.NetworkComparison" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set up network comparison between two experimental conditions.</p>
 <p>The class provides methods for the comparison of networks inferred from
-data recorded under two experimental conditions. Four statistical tests
-are implemented:</p>
-<div class="line-block">
-<div class="line">| stats_type | example                             |</div>
-</div>
-<p><a href="#id5"><span class="problematic" id="id6">|&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;-|</span></a>&#8212;&#8212;&#8212;&#8212;<a href="#id7"><span class="problematic" id="id8">|&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;-|</span></a>
-| __within__ subjects  <a href="#id9"><span class="problematic" id="id10">|dependent   |base line (A) vs. task (B)           |
-|                      |independent |detect house (A) vs. face (B)        |
-| __between__ subjects |dependent   |patients (A) vs. matched controls (B)|</span></a>
-|                      <a href="#id1"><span class="problematic" id="id2">|</span></a>independent <a href="#id3"><span class="problematic" id="id4">|</span></a>male (A) vs. female (B) participants |</p>
-<p>There are two methods for within and between comparisons: compare_within()
-and compare_between(). The stats_type is passed as an analysis option, see
-the documentation of the two classes for details.</p>
+data recorded under two experimental conditions A and B. Four statistical
+tests are implemented:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="31%" />
+<col width="17%" />
+<col width="52%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">units of observation/
+comparison type</th>
+<th class="head">stats_type</th>
+<th class="head">example</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td rowspan="2">replications/
+<strong>within</strong> a subject</td>
+<td>dependent</td>
+<td>base line (A) vs. task (B)</td>
+</tr>
+<tr class="row-odd"><td>independent</td>
+<td>detect house (A) vs. face (B)</td>
+</tr>
+<tr class="row-even"><td rowspan="2">sets of data/
+<strong>between</strong> subjects</td>
+<td>dependent</td>
+<td>patients (A) vs. matched controls (B)</td>
+</tr>
+<tr class="row-odd"><td>independent</td>
+<td>male (A) vs. female (B) participants</td>
+</tr>
+</tbody>
+</table>
+<p>Depending on the units of observations, one of two statistics methods can
+be used: compare_within() and compare_between(). The stats_type is passed
+as an analysis setting, see the documentation of the two methods for
+details.</p>
 <dl class="docutils">
 <dt>Attributes:</dt>
 <dd><dl class="first last docutils">
@@ -200,13 +225,16 @@ under condition b</dd>
 <dt>dict</dt>
 <dd>results of network comparison, contains the union network
 (&#8216;union_network&#8217;), parameters used for statistical comparison
-(critical alpha level, &#8216;alpha&#8217;; number of permutations,
-&#8216;n_permutations&#8217;; statistics type, &#8216;stats_type&#8217;, test tail,
-&#8216;tail&#8217;), parameters used for CMI estimation (&#8216;settings&#8217;),
-the original CMI difference (&#8216;cmi_diff&#8217;), the surrogate CMI
-values (&#8216;cmi_surr&#8217;), the p-value for each source variable &gt;
-target combination in the union network (&#8216;pval&#8217;) and their
-statistical significance (&#8216;sign&#8217;)</dd>
+and for CMI estimation (&#8216;settings&#8217;, includes critical alpha
+level, &#8216;alpha_comp&#8217;; number of permutations, &#8216;n_perm_comp&#8217;;
+statistics type, &#8216;stats_type&#8217;, test tail, &#8216;tail_comp&#8217;, number
+of subjects per group), the original absolute CMI differences
+per source variable- target combination in the union network
+(&#8216;cmi_diff_abs&#8217;), the direction of the effect, i.e., if TE was
+stronger in condition A than B (&#8216;a&gt;b&#8217;), the surrogate CMI
+difference values (&#8216;cmi_surr&#8217;), the p-value for each source
+variable &gt; target combination (&#8216;pval&#8217;) and their statistical
+significance (&#8216;sign&#8217;).</dd>
 </dl>
 </dd>
 </dl>
@@ -225,17 +253,19 @@ replications of one experimental condition within one subject).</p>
 <dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
 <dd><p class="first">parameters for estimation and statistical testing</p>
 <ul class="last simple">
-<li>&#8216;stats_type&#8217; str - &#8216;dependent&#8217; or &#8216;independent&#8217; for
+<li>stats_type : str - &#8216;dependent&#8217; or &#8216;independent&#8217; for
 dependent or independent units of observation</li>
-<li>&#8216;cmi_estimator&#8217; str - estimator to be used for CMI
+<li>cmi_estimator : str - estimator to be used for CMI
 calculation (for estimator settings see the documentation in
 the estimators_* modules)</li>
-<li>&#8216;tail_comp&#8217; str [optional] - test tail, &#8216;one&#8217; for one-sided
+<li>tail_comp : str [optional] - test tail, &#8216;one&#8217; for one-sided
 test, &#8216;two&#8217; for two-sided test (default=&#8217;two&#8217;)</li>
-<li>&#8216;n_perm_comp&#8217; int [optional] - number of permutations
+<li>n_perm_comp : int [optional] - number of permutations
 (default=500)</li>
-<li>&#8216;alpha_comp&#8217; float - critical alpha level for statistical
+<li>alpha_comp : float - critical alpha level for statistical
 significance (default=0.05)</li>
+<li>verbose : bool [optional] - toggle console output
+(default=True)</li>
 </ul>
 </dd>
 <dt>network_a <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
@@ -253,13 +283,16 @@ significance (default=0.05)</li>
 <dt>dict</dt>
 <dd>results of network comparison, contains the union network
 (&#8216;union_network&#8217;), parameters used for statistical comparison
-(critical alpha level, &#8216;alpha&#8217;; number of permutations,
-&#8216;n_permutations&#8217;; statistics type, &#8216;stats_type&#8217;, test tail,
-&#8216;tail&#8217;), parameters used for CMI estimation (&#8216;settings&#8217;),
-the original CMI difference (&#8216;cmi_diff&#8217;), the surrogate CMI
-values (&#8216;cmi_surr&#8217;), the p-value for each source variable &gt;
-target combination in the union network (&#8216;pval&#8217;) and their
-statistical significance (&#8216;sign&#8217;)</dd>
+and for CMI estimation (&#8216;settings&#8217;, includes critical alpha
+level, &#8216;alpha_comp&#8217;; number of permutations, &#8216;n_perm_comp&#8217;;
+statistics type, &#8216;stats_type&#8217;, test tail, &#8216;tail_comp&#8217;),
+the original absolute CMI differences per source variable-
+target combination in the union network (&#8216;cmi_diff_abs&#8217;), the
+direction of the effect, i.e., if TE was stronger in condition
+A than B (&#8216;a&gt;b&#8217;), the surrogate CMI difference values
+(&#8216;cmi_surr&#8217;), the p-value for each source variable &gt; target
+combination (&#8216;pval&#8217;) and their statistical significance
+(&#8216;sign&#8217;).</dd>
 </dl>
 </dd>
 </dl>

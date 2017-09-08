@@ -255,6 +255,74 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
+    <span class="k">def</span> <span class="nf">_check_settings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set default for settings dictionary.</span>
+
+<span class="sd">        Check if settings dictionary is None. If None, initialise an empty</span>
+<span class="sd">        dictionary. If not None check if type is dictionary. Function should be</span>
+<span class="sd">        called before setting default values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">settings</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;settings should be a dictionary.&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">settings</span>
+
+    <span class="k">def</span> <span class="nf">_check_number_of_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_points</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sanity check for number of points going into the estimator.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">n_points</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Insufficient number of points ({0}) for the &#39;</span>
+                               <span class="s1">&#39;requested number of nearest neighbours &#39;</span>
+                               <span class="s1">&#39;(kraskov_k: {1}).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                        <span class="n">n_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">n_points</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">])</span> <span class="o">+</span>
+                              <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;theiler_t&#39;</span><span class="p">])):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Insufficient number of points ({0}) for the &#39;</span>
+                               <span class="s1">&#39;requested number of nearest neighbours &#39;</span>
+                               <span class="s1">&#39;(kraskov_k: {1}) and Theiler-correction &#39;</span>
+                               <span class="s1">&#39;(theiler_t: {2}).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                                <span class="n">n_points</span><span class="p">,</span>
+                                                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">],</span>
+                                                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;theiler_t&#39;</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">_ensure_one_dim_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make sure input arrays have one dimension.</span>
+
+<span class="sd">        Check dimensions of input to AIS and TE estimators. JIDT expects one-</span>
+<span class="sd">        dimensional arrays for these estimators, while it expects two-</span>
+<span class="sd">        dimensional arrays for MI and CMI estimators. To make usage of all</span>
+<span class="sd">        estimator types easier, allow both 1D- and 2D inputs for all</span>
+<span class="sd">        estimators. Squeeze 2D-arrays if their second dimension is 1 when</span>
+<span class="sd">        calling AIS and TE estimators (assuming that this array dimension</span>
+<span class="sd">        represents the variable dimension).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;2D input arrays must have shape[1] == 1.&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Input arrays must be 1D or 2D with shape[1] == &#39;</span>
+                            <span class="s1">&#39;1.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">var</span>
+
+    <span class="k">def</span> <span class="nf">_ensure_two_dim_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make sure input arrays have two dimension.</span>
+
+<span class="sd">        Check dimensions of input to MI and CMI estimators. JIDT expects two-</span>
+<span class="sd">        dimensional arrays for these estimators, while it expects one-</span>
+<span class="sd">        dimensional arrays for MI and CMI estimators. To make usage of all</span>
+<span class="sd">        estimator types easier allow both 1D- and 2D inputs for all estimators.</span>
+<span class="sd">        Add an extra dimension to 1D-arrays when calling MI and CMI estimators</span>
+<span class="sd">        (assuming that this array dimension represents the variable dimension).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Input arrays must be 1D or 2D&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">var</span>
+
 <div class="viewcode-block" id="Estimator.estimate_mult"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimator.Estimator.estimate_mult">[docs]</a>    <span class="k">def</span> <span class="nf">estimate_mult</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">re_use</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate measure for multiple data sets (chunks).</span>
 

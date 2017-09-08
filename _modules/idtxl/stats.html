@@ -143,9 +143,14 @@
 
 <span class="sd">            - alpha_fdr : float [optional] - critical alpha level</span>
 <span class="sd">              (default=0.05)</span>
-<span class="sd">            - correct_by_target : bool [optional] - if true p-values are</span>
-<span class="sd">              corrected on the target level and on the single-link level</span>
-<span class="sd">              otherwise (default=True)</span>
+<span class="sd">            - correct_by_target : bool [optional] - if true correct p-values on</span>
+<span class="sd">              on the target level (omnibus test p-values), otherwise correct</span>
+<span class="sd">              p_values for individual variables (sequential max stats p-values)</span>
+<span class="sd">              (default=True)</span>
+<span class="sd">            - fdr_constant : int [optional] - choose one of two constants used</span>
+<span class="sd">              for calculating the FDR-thresholds according to Genovese (2002):</span>
+<span class="sd">              1 will divide alpha by 1, 2 will divide alpha by the sum_i(1/i);</span>
+<span class="sd">              see the paper for details on the assumptions (default=2)</span>
 
 <span class="sd">        results : list of dicts</span>
 <span class="sd">            network inference results from .analyse_network methods, where each</span>
@@ -162,6 +167,8 @@
     <span class="n">alpha</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alpha_fdr&#39;</span><span class="p">]</span>
     <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;correct_by_target&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
     <span class="n">correct_by_target</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;correct_by_target&#39;</span><span class="p">]</span>
+    <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;fdr_constant&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">constant</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;fdr_constant&#39;</span><span class="p">]</span>
 
     <span class="c1"># Combine results into single results dict (this creates a copy).</span>
     <span class="n">res</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">combine_results</span><span class="p">(</span><span class="o">*</span><span class="n">results</span><span class="p">)</span>
@@ -180,7 +187,7 @@
                 <span class="n">pval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pval</span><span class="p">,</span> <span class="n">res</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="s1">&#39;omnibus_pval&#39;</span><span class="p">])</span>
                 <span class="n">target_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target_idx</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
                 <span class="n">n_perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n_perm</span><span class="p">,</span>
-                                   <span class="n">res</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="s1">&#39;settings&#39;</span><span class="p">][</span><span class="s1">&#39;n_perm_max_seq&#39;</span><span class="p">])</span>
+                                   <span class="n">res</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="s1">&#39;settings&#39;</span><span class="p">][</span><span class="s1">&#39;n_perm_omnibus&#39;</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>  <span class="c1"># individual variables</span>
         <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">res</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="s1">&#39;omnibus_sign&#39;</span><span class="p">]:</span>
@@ -200,14 +207,20 @@
     <span class="n">sort_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">pval</span><span class="p">)</span>
     <span class="n">pval</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
 
-    <span class="c1"># Calculate threshold (exact or by approximating the harmonic sum).</span>
+    <span class="c1"># Calculate threshold</span>
     <span class="n">n</span> <span class="o">=</span> <span class="n">pval</span><span class="o">.</span><span class="n">size</span>
-    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">1000</span><span class="p">:</span>
-        <span class="n">thresh</span> <span class="o">=</span> <span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">alpha</span> <span class="o">/</span>
-                  <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">thresh</span> <span class="o">=</span> <span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">alpha</span> <span class="o">/</span>
-                  <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">e</span><span class="p">))</span>  <span class="c1"># aprx. harmonic sum with Euler&#39;s number</span>
+    <span class="k">if</span> <span class="n">constant</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># pick the requested constant (see Genovese, p.872)</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">1000</span><span class="p">:</span>
+            <span class="n">const</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">const</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">e</span>  <span class="c1"># aprx. harmonic sum with Euler&#39;s number</span>
+    <span class="k">elif</span> <span class="n">constant</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># This is less strict than the other one and corresponds to a</span>
+        <span class="c1"># Bonoferroni-correction for the first p-value, however, it makes more</span>
+        <span class="c1"># strict assumptions on the distribution of p-values, while constant 2</span>
+        <span class="c1"># works for any joint distribution of the p-values.</span>
+        <span class="n">const</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">thresh</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">alpha</span> <span class="o">/</span> <span class="n">const</span>
 
     <span class="c1"># If the number of permutations for calculating p-values for individual</span>
     <span class="c1"># variables is too low, return without performing any correction.</span>
@@ -354,9 +367,9 @@
                                           <span class="n">alpha</span><span class="p">,</span> <span class="s1">&#39;one_bigger&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">significance</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s1">&#39; -- significant&#39;</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39; -- significant</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s1">&#39; -- not significant&#39;</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39; -- not significant</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">significance</span><span class="p">,</span> <span class="n">pvalue</span><span class="p">,</span> <span class="n">te_orig</span></div>
 
 
@@ -916,7 +929,7 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">n_perm</span> <span class="o">&lt;</span> <span class="n">alpha</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;The number of permutations {0} is to small to test&#39;</span>
                            <span class="s1">&#39; the requested alpha level {1}. The number of &#39;</span>
-                           <span class="s1">&#39;permutations must be greater than (1/alpha).&#39;</span>
+                           <span class="s1">&#39;permutations must be greater than 1/alpha.&#39;</span>
                            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_perm</span><span class="p">,</span> <span class="n">alpha</span><span class="p">))</span></div>
 
 
@@ -948,14 +961,16 @@
 
     <span class="c1"># Create surrogate table.</span>
     <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">create surrogates table with {0} permutations&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_perm</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">creating surrogate table with {0} permutations:&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                                                    <span class="n">n_perm</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">cand.&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
     <span class="n">surr_table</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">idx_test_set</span><span class="p">),</span> <span class="n">n_perm</span><span class="p">))</span>
     <span class="n">current_value_realisations</span> <span class="o">=</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">_current_value_realisations</span>
     <span class="n">idx_c</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">idx_test_set</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">cand. {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                                <span class="n">analysis_setup</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">([</span><span class="n">candidate</span><span class="p">])[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">{0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">analysis_setup</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">([</span><span class="n">candidate</span><span class="p">])[</span><span class="mi">0</span><span class="p">]),</span>
+                  <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        surr_candidate_realisations = np.empty(</span>
 <span class="sd">                (data.n_realisations(analysis_setup.current_value) * n_perm,</span>
@@ -1218,7 +1233,7 @@
 
     <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">analysis_setup</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;permute_in_time&#39;</span><span class="p">]</span> <span class="ow">and</span>
             <span class="ow">not</span> <span class="n">_sufficient_replications</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">n_perm</span><span class="p">)):</span>
-        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;WARNING: Number of replications is not sufficient to generate &#39;</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">WARNING: Number of replications is not sufficient to generate &#39;</span>
               <span class="s1">&#39;the desired number of surrogates. Permuting samples in time &#39;</span>
               <span class="s1">&#39;instead.&#39;</span><span class="p">)</span>
         <span class="n">analysis_setup</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;permute_in_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>

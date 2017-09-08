@@ -122,19 +122,26 @@
     <span class="sd">&quot;&quot;&quot;Set up network comparison between two experimental conditions.</span>
 
 <span class="sd">    The class provides methods for the comparison of networks inferred from</span>
-<span class="sd">    data recorded under two experimental conditions. Four statistical tests</span>
-<span class="sd">    are implemented:</span>
+<span class="sd">    data recorded under two experimental conditions A and B. Four statistical</span>
+<span class="sd">    tests are implemented:</span>
 
-<span class="sd">    |                      | stats_type | example                             |</span>
-<span class="sd">    |----------------------|------------|-------------------------------------|</span>
-<span class="sd">    | __within__ subjects  |dependent   |base line (A) vs. task (B)           |</span>
+<span class="sd">    +----------------------+------------+-------------------------------------+</span>
+<span class="sd">    |units of observation/ |stats_type  |example                              |</span>
+<span class="sd">    |comparison type       |            |                                     |</span>
+<span class="sd">    +======================+============+=====================================+</span>
+<span class="sd">    | replications/        |dependent   |base line (A) vs. task (B)           |</span>
+<span class="sd">    | **within** a subject +------------+-------------------------------------+</span>
 <span class="sd">    |                      |independent |detect house (A) vs. face (B)        |</span>
-<span class="sd">    | __between__ subjects |dependent   |patients (A) vs. matched controls (B)|</span>
+<span class="sd">    +----------------------+------------+-------------------------------------+</span>
+<span class="sd">    | sets of data/        |dependent   |patients (A) vs. matched controls (B)|</span>
+<span class="sd">    | **between** subjects +------------+-------------------------------------+</span>
 <span class="sd">    |                      |independent |male (A) vs. female (B) participants |</span>
+<span class="sd">    +----------------------+------------+-------------------------------------+</span>
 
-<span class="sd">    There are two methods for within and between comparisons: compare_within()</span>
-<span class="sd">    and compare_between(). The stats_type is passed as an analysis option, see</span>
-<span class="sd">    the documentation of the two classes for details.</span>
+<span class="sd">    Depending on the units of observations, one of two statistics methods can</span>
+<span class="sd">    be used: compare_within() and compare_between(). The stats_type is passed</span>
+<span class="sd">    as an analysis setting, see the documentation of the two methods for</span>
+<span class="sd">    details.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        union : dict</span>
@@ -172,17 +179,19 @@
 <span class="sd">            settings : dict</span>
 <span class="sd">                parameters for estimation and statistical testing</span>
 
-<span class="sd">                - &#39;stats_type&#39; str - &#39;dependent&#39; or &#39;independent&#39; for</span>
+<span class="sd">                - stats_type : str - &#39;dependent&#39; or &#39;independent&#39; for</span>
 <span class="sd">                  dependent or independent units of observation</span>
-<span class="sd">                - &#39;cmi_estimator&#39; str - estimator to be used for CMI</span>
+<span class="sd">                - cmi_estimator : str - estimator to be used for CMI</span>
 <span class="sd">                  calculation (for estimator settings see the documentation in</span>
 <span class="sd">                  the estimators_* modules)</span>
-<span class="sd">                - &#39;tail_comp&#39; str [optional] - test tail, &#39;one&#39; for one-sided</span>
+<span class="sd">                - tail_comp : str [optional] - test tail, &#39;one&#39; for one-sided</span>
 <span class="sd">                  test, &#39;two&#39; for two-sided test (default=&#39;two&#39;)</span>
-<span class="sd">                - &#39;n_perm_comp&#39; int [optional] - number of permutations</span>
+<span class="sd">                - n_perm_comp : int [optional] - number of permutations</span>
 <span class="sd">                  (default=500)</span>
-<span class="sd">                - &#39;alpha_comp&#39; float - critical alpha level for statistical</span>
+<span class="sd">                - alpha_comp : float - critical alpha level for statistical</span>
 <span class="sd">                  significance (default=0.05)</span>
+<span class="sd">                - verbose : bool [optional] - toggle console output</span>
+<span class="sd">                  (default=True)</span>
 
 <span class="sd">            network_a : dict</span>
 <span class="sd">                results from network inference, condition a</span>
@@ -197,13 +206,16 @@
 <span class="sd">            dict</span>
 <span class="sd">                results of network comparison, contains the union network</span>
 <span class="sd">                (&#39;union_network&#39;), parameters used for statistical comparison</span>
-<span class="sd">                (critical alpha level, &#39;alpha&#39;; number of permutations,</span>
-<span class="sd">                &#39;n_permutations&#39;; statistics type, &#39;stats_type&#39;, test tail,</span>
-<span class="sd">                &#39;tail&#39;), parameters used for CMI estimation (&#39;settings&#39;),</span>
-<span class="sd">                the original CMI difference (&#39;cmi_diff&#39;), the surrogate CMI</span>
-<span class="sd">                values (&#39;cmi_surr&#39;), the p-value for each source variable &gt;</span>
-<span class="sd">                target combination in the union network (&#39;pval&#39;) and their</span>
-<span class="sd">                statistical significance (&#39;sign&#39;)</span>
+<span class="sd">                and for CMI estimation (&#39;settings&#39;, includes critical alpha</span>
+<span class="sd">                level, &#39;alpha_comp&#39;; number of permutations, &#39;n_perm_comp&#39;;</span>
+<span class="sd">                statistics type, &#39;stats_type&#39;, test tail, &#39;tail_comp&#39;),</span>
+<span class="sd">                the original absolute CMI differences per source variable-</span>
+<span class="sd">                target combination in the union network (&#39;cmi_diff_abs&#39;), the</span>
+<span class="sd">                direction of the effect, i.e., if TE was stronger in condition</span>
+<span class="sd">                A than B (&#39;a&gt;b&#39;), the surrogate CMI difference values</span>
+<span class="sd">                (&#39;cmi_surr&#39;), the p-value for each source variable &gt; target</span>
+<span class="sd">                combination (&#39;pval&#39;) and their statistical significance</span>
+<span class="sd">                (&#39;sign&#39;).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Check input and analysis parameters.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_initialise</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
@@ -213,7 +225,8 @@
         <span class="c1"># Main comparison.</span>
         <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">-------------------------- (1) create union of networks&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_create_union</span><span class="p">(</span><span class="n">network_a</span><span class="p">,</span> <span class="n">network_b</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">-------------------------- (2) calculate original TE values&#39;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">-------------------------- (2) calculate differences in TE &#39;</span>
+              <span class="s1">&#39;values&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cmi_diff_within</span><span class="p">(</span><span class="n">data_a</span><span class="p">,</span> <span class="n">data_b</span><span class="p">)</span>
         <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">-------------------------- (3) create surrogate distribution&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_create_surrogate_distribution_within</span><span class="p">(</span><span class="n">data_a</span><span class="p">,</span> <span class="n">data_b</span><span class="p">)</span>
@@ -222,7 +235,12 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_union_indices_to_lags</span><span class="p">()</span>
         <span class="n">results</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;cmi_diff&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmi_diff</span><span class="p">,</span>
+            <span class="c1"># Return both the absolute difference and the direction of the</span>
+            <span class="c1"># effect. Returning just the difference and evalutating the sign</span>
+            <span class="c1"># does not give the direction of the effect if one or both values</span>
+            <span class="c1"># are negative (which may happen due to estimator bias).</span>
+            <span class="s1">&#39;cmi_diff_abs&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_abs_diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cmi_diff</span><span class="p">),</span>
+            <span class="s1">&#39;a&gt;b&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmi_comp</span><span class="p">,</span>
             <span class="s1">&#39;cmi_surr&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmi_surr</span><span class="p">,</span>
             <span class="s1">&#39;union_network&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">,</span>
             <span class="s1">&#39;pval&#39;</span><span class="p">:</span> <span class="n">pvalue</span><span class="p">,</span>
@@ -261,13 +279,16 @@
 <span class="sd">            dict</span>
 <span class="sd">                results of network comparison, contains the union network</span>
 <span class="sd">                (&#39;union_network&#39;), parameters used for statistical comparison</span>
-<span class="sd">                (critical alpha level, &#39;alpha&#39;; number of permutations,</span>
-<span class="sd">                &#39;n_permutations&#39;; statistics type, &#39;stats_type&#39;, test tail,</span>
-<span class="sd">                &#39;tail&#39;), parameters used for CMI estimation (&#39;settings&#39;),</span>
-<span class="sd">                the original CMI difference (&#39;cmi_diff&#39;), the surrogate CMI</span>
-<span class="sd">                values (&#39;cmi_surr&#39;), the p-value for each source variable &gt;</span>
-<span class="sd">                target combination in the union network (&#39;pval&#39;) and their</span>
-<span class="sd">                statistical significance (&#39;sign&#39;)</span>
+<span class="sd">                and for CMI estimation (&#39;settings&#39;, includes critical alpha</span>
+<span class="sd">                level, &#39;alpha_comp&#39;; number of permutations, &#39;n_perm_comp&#39;;</span>
+<span class="sd">                statistics type, &#39;stats_type&#39;, test tail, &#39;tail_comp&#39;, number</span>
+<span class="sd">                of subjects per group), the original absolute CMI differences</span>
+<span class="sd">                per source variable- target combination in the union network</span>
+<span class="sd">                (&#39;cmi_diff_abs&#39;), the direction of the effect, i.e., if TE was</span>
+<span class="sd">                stronger in condition A than B (&#39;a&gt;b&#39;), the surrogate CMI</span>
+<span class="sd">                difference values (&#39;cmi_surr&#39;), the p-value for each source</span>
+<span class="sd">                variable &gt; target combination (&#39;pval&#39;) and their statistical</span>
+<span class="sd">                significance (&#39;sign&#39;).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Check input and analysis parameters.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_initialise</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
@@ -279,16 +300,23 @@
         <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">-------------------------- (1) create union of networks&#39;</span><span class="p">)</span>
         <span class="n">network_all</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">network_set_a</span><span class="p">,</span> <span class="n">network_set_b</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_create_union</span><span class="p">(</span><span class="o">*</span><span class="n">network_all</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">-------------------------- (2) calculate original TE values&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cmi_diff_between</span><span class="p">(</span><span class="n">data_set_a</span><span class="p">,</span> <span class="n">data_set_b</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_union_cmi</span><span class="p">(</span><span class="n">data_set_a</span><span class="p">,</span> <span class="n">data_set_b</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">-------------------------- (2) calculate differences in TE &#39;</span>
+              <span class="s1">&#39;values&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cmi_diff_between</span><span class="p">()</span>
         <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">-------------------------- (3) create surrogate distribution&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_create_surrogate_distribution_between</span><span class="p">(</span><span class="n">data_set_a</span><span class="p">,</span> <span class="n">data_set_b</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_surrogate_distribution_between</span><span class="p">()</span>
         <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">-------------------------- (4) determine p-value&#39;</span><span class="p">)</span>
         <span class="p">[</span><span class="n">pvalue</span><span class="p">,</span> <span class="n">sign</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_p_value_union</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_union_indices_to_lags</span><span class="p">()</span>
         <span class="n">results</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;cmi_diff&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmi_diff</span><span class="p">,</span>
+            <span class="c1"># Return both the absolute difference and the direction of the</span>
+            <span class="c1"># effect. Returning just the difference and evalutating the sign</span>
+            <span class="c1"># does not give the direction of the effect if one or both values</span>
+            <span class="c1"># are negative (which may happen due to estimator bias).</span>
+            <span class="s1">&#39;cmi_diff_abs&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_abs_diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cmi_diff</span><span class="p">),</span>
+            <span class="s1">&#39;a&gt;b&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmi_comp</span><span class="p">,</span>
             <span class="s1">&#39;cmi_surr&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmi_surr</span><span class="p">,</span>
             <span class="s1">&#39;union_network&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">,</span>
             <span class="s1">&#39;pval&#39;</span><span class="p">:</span> <span class="n">pvalue</span><span class="p">,</span>
@@ -345,6 +373,7 @@
                                                 <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;n_perm_comp&#39;</span><span class="p">]))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unknown &#39;&#39;stats_type&#39;&#39;!&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;n_subjects&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">data_set_a</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_set_b</span><span class="p">)]</span>
 
     <span class="k">def</span> <span class="nf">_check_equal_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">data_sets</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Check if all data sets have an equal no. realisations.&quot;&quot;&quot;</span>
@@ -412,56 +441,47 @@
                     <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;selected_vars_target&#39;</span><span class="p">]:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;selected_vars_target&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_calculate_cmi_diff_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_a</span><span class="p">,</span> <span class="n">data_b</span><span class="p">,</span> <span class="n">permute</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Calculate the difference in CMI within a subject.</span>
+    <span class="k">def</span> <span class="nf">_calculate_cmi_diff_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_a</span><span class="p">,</span> <span class="n">data_b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the difference in CMI between conditions within a subject.</span>
 
 <span class="sd">        Calculate the difference in the conditional mutual information (CMI)</span>
 <span class="sd">        for each source &gt; target combination in the union network between data</span>
-<span class="sd">        recorded under two experimental conditions within one subject.</span>
+<span class="sd">        recorded under two experimental conditions within one subject. Compare</span>
+<span class="sd">        the absolute mean TE values between the two groups.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            data_a : Data instance</span>
-<span class="sd">                first set of raw data</span>
+<span class="sd">                raw data recorded in condition A</span>
 <span class="sd">            data_a : Data instance</span>
-<span class="sd">                second set of raw data</span>
-<span class="sd">            permute : bool [optional]</span>
-<span class="sd">                if True, permute data from same replications between sets a and</span>
-<span class="sd">                b, depending on the stats type set for the instance</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            numpy array</span>
-<span class="sd">                CMI differences</span>
+<span class="sd">                raw data recorded in condition B</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># re-calculate CMI for each data object using the union network mask</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cmi_diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cmi</span><span class="p">(</span><span class="n">data_a</span><span class="p">),</span>
-                                             <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cmi</span><span class="p">(</span><span class="n">data_b</span><span class="p">))</span>
+        <span class="n">cmi_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cmi_all_links</span><span class="p">(</span><span class="n">data_a</span><span class="p">)</span>
+        <span class="n">cmi_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cmi_all_links</span><span class="p">(</span><span class="n">data_b</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmi_diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_diff</span><span class="p">(</span><span class="n">cmi_a</span><span class="p">,</span> <span class="n">cmi_b</span><span class="p">)</span>
+        <span class="c1"># compare raw TE values betw. cond.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmi_comp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compare_union_cmi_within</span><span class="p">(</span><span class="n">cmi_a</span><span class="p">,</span> <span class="n">cmi_b</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_calculate_cmi_diff_between</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_set_a</span><span class="p">,</span> <span class="n">data_set_b</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_calculate_cmi_diff_between</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Calculate the difference in CMI between two groups of subjects.</span>
 
 <span class="sd">        Calculate the difference in the conditional mutual information (CMI)</span>
 <span class="sd">        for each source &gt; target combination in the union network between data</span>
 <span class="sd">        sets recorded from subjects measured under one of two experimental</span>
-<span class="sd">        conditions.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            data_set_a : list/array of Data instances</span>
-<span class="sd">                first set of raw data</span>
-<span class="sd">            data_set_b : list/array of Data instances</span>
-<span class="sd">                second set of raw data</span>
+<span class="sd">        conditions. Compare the absolute mean TE values between the two groups.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            numpy array</span>
 <span class="sd">                CMI differences</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cmi_diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_diff_of_mean</span><span class="p">(</span><span class="n">data_set_a</span><span class="p">,</span> <span class="n">data_set_b</span><span class="p">,</span>
-                                                     <span class="n">permute</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmi_diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_diff_of_mean</span><span class="p">(</span><span class="n">permute</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compare_union_cmi_between</span><span class="p">()</span>  <span class="c1"># compare raw TE values betw. cond.</span>
         <span class="c1"># TODO Idea: loop over pairs of data in data_set_a and *_b and feed it</span>
         <span class="c1"># to the within function? BUT: such an implementation doesn&#39;t allow for</span>
         <span class="c1"># unbalanced designs, which is a problem and needs to be changed in the</span>
         <span class="c1"># within function as well</span>
 
-    <span class="k">def</span> <span class="nf">_calculate_diff_of_mean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_set_a</span><span class="p">,</span> <span class="n">data_set_b</span><span class="p">,</span> <span class="n">permute</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_calculate_diff_of_mean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">permute</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Calculate the difference of the means of CMI for two data sets.</span>
 
 <span class="sd">        Calculate the difference of the mean conditional mutual information</span>
@@ -474,20 +494,12 @@
 <span class="sd">        surrogate data sets. These surrogate data can be used as test</span>
 <span class="sd">        distribution when testing the orginal difference of the means.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># re-calculate CMI for each data object using the union network mask</span>
-        <span class="n">cmi_union_a</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data_set_a</span><span class="p">:</span>
-            <span class="n">cmi_union_a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cmi</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
-        <span class="n">cmi_union_b</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data_set_b</span><span class="p">:</span>
-            <span class="n">cmi_union_b</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cmi</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
-
-        <span class="c1"># permute data obejcts between conditions a and b before calculating</span>
-        <span class="c1"># the CMI</span>
         <span class="k">if</span> <span class="n">permute</span><span class="p">:</span>
-            <span class="n">cmi_all</span> <span class="o">=</span> <span class="n">cmi_union_a</span> <span class="o">+</span> <span class="n">cmi_union_b</span>
+            <span class="c1"># Permute data obejcts between conditions a and b before</span>
+            <span class="c1"># calculating the CMI.</span>
+            <span class="n">cmi_all</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmi_a</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmi_b</span>
             <span class="n">new_partition_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cmi_all</span><span class="p">)),</span>
-                                               <span class="n">size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">cmi_union_a</span><span class="p">),</span>
+                                               <span class="n">size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cmi_a</span><span class="p">),</span>
                                                <span class="n">replace</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
             <span class="n">new_partition_b</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">cmi_all</span><span class="p">)))</span> <span class="o">-</span>
                                    <span class="nb">set</span><span class="p">(</span><span class="n">new_partition_a</span><span class="p">))</span>
@@ -498,12 +510,26 @@
                                         <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_mean</span><span class="p">(</span><span class="n">cmi_b_perm</span><span class="p">))</span>
 
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calculate_mean</span><span class="p">(</span><span class="n">cmi_union_a</span><span class="p">),</span>
-                                        <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_mean</span><span class="p">(</span><span class="n">cmi_union_b</span><span class="p">))</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calculate_mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cmi_a</span><span class="p">),</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cmi_b</span><span class="p">))</span>
 
-        <span class="c1"># get the mean difference between the two sets of CMI estimates</span>
+    <span class="k">def</span> <span class="nf">_calculate_union_cmi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_set_a</span><span class="p">,</span> <span class="n">data_set_b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate CMI for each data object using the union network mask.</span>
 
-    <span class="k">def</span> <span class="nf">_calculate_cmi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="sd">        Args:</span>
+<span class="sd">            data_set_a : list/array of Data instances</span>
+<span class="sd">                first set of raw data</span>
+<span class="sd">            data_set_b : list/array of Data instances</span>
+<span class="sd">                second set of raw data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmi_a</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data_set_a</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cmi_a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cmi_all_links</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmi_b</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data_set_b</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cmi_b</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cmi_all_links</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_calculate_cmi_all_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Calculate CMI for each source&gt;target combi in the union network.&quot;&quot;&quot;</span>
         <span class="n">cmi</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="s1">&#39;targets&#39;</span><span class="p">]:</span>
@@ -515,6 +541,7 @@
                 <span class="k">continue</span>
 
             <span class="c1"># get realisations of the current value and the full cond. set.</span>
+            <span class="c1"># TODO why is there a global max_lag and not one for each target?</span>
             <span class="n">current_val</span> <span class="o">=</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="s1">&#39;max_lag&#39;</span><span class="p">])</span>
             <span class="n">idx_cond_full</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;selected_vars_target&#39;</span><span class="p">]</span> <span class="o">+</span>
                              <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;selected_vars_sources&#39;</span><span class="p">])</span>
@@ -524,31 +551,52 @@
                                                    <span class="n">idx_cond_full</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
             <span class="c1"># Calculate TE from each source variable to current target t</span>
+            <span class="n">n_sources</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;selected_vars_sources&#39;</span><span class="p">])</span>
+            <span class="n">cmi_temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_sources</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">for</span> <span class="n">idx_source</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;selected_vars_sources&#39;</span><span class="p">]:</span>
-                <span class="n">current_cond</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;selected_vars_sources&#39;</span><span class="p">])</span>
-                <span class="n">current_cond</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">current_cond</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx_source</span><span class="p">))</span>
-
                 <span class="c1"># get realisations of current TE-source from the set of all</span>
                 <span class="c1"># conditionals and calculate the CMI</span>
                 <span class="p">[</span><span class="n">cond_real</span><span class="p">,</span> <span class="n">source_real</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">separate_arrays</span><span class="p">(</span>
                                                              <span class="n">idx_cond_full</span><span class="p">,</span>
                                                              <span class="n">idx_source</span><span class="p">,</span>
                                                              <span class="n">cond_full_real</span><span class="p">)</span>
-                <span class="n">cmi_temp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span>
-                                                        <span class="n">cur_val_real</span><span class="p">,</span>
-                                                        <span class="n">source_real</span><span class="p">,</span>
-                                                        <span class="n">cond_real</span><span class="p">))</span>
+                <span class="n">cmi_temp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">cur_val_real</span><span class="p">,</span>
+                                                           <span class="n">source_real</span><span class="p">,</span>
+                                                           <span class="n">cond_real</span><span class="p">)</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
 
-            <span class="n">cmi</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cmi_temp</span><span class="p">)</span>
+            <span class="n">cmi</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmi_temp</span>
 
         <span class="k">return</span> <span class="n">cmi</span>
 
-    <span class="k">def</span> <span class="nf">_calculate_cmi_permuted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_a</span><span class="p">,</span> <span class="n">data_b</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_compare_union_cmi_between</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compare mean TE between conditions to get direction of effect.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmi_comp</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">cmi_a_mean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cmi_a</span><span class="p">)</span>
+        <span class="n">cmi_b_mean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cmi_b</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="s1">&#39;targets&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cmi_comp</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmi_a_mean</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">cmi_b_mean</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_compare_union_cmi_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmi_a</span><span class="p">,</span> <span class="n">cmi_b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compare TE between conditions to get direction of effect.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmi_comp</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="s1">&#39;targets&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cmi_comp</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmi_a</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">cmi_b</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_get_abs_diff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmi_diff</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the absolute value for each difference in the union network.&quot;&quot;&quot;</span>
+        <span class="n">cmi_diff_abs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="s1">&#39;targets&#39;</span><span class="p">]:</span>
+            <span class="n">cmi_diff_abs</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">cmi_diff</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">cmi_diff_abs</span>
+
+    <span class="k">def</span> <span class="nf">_calculate_cmi_all_links_permuted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_a</span><span class="p">,</span> <span class="n">data_b</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Calculate surrogate CMI for union network.</span>
 
 <span class="sd">        Calculate conditional mutual information (CMI) for each source &gt; target</span>
 <span class="sd">        combination in the union network after permuting realisations of</span>
-<span class="sd">        sources between the two data sets (comming from two conditions).</span>
+<span class="sd">        sources between the two data sets (coming from two conditions).</span>
 <span class="sd">        Results can be used in a surrogate permutation test of the original CMI</span>
 <span class="sd">        in the two data sets.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -577,31 +625,32 @@
                                                                <span class="n">t</span><span class="p">)</span>
             <span class="c1"># Calculate CMI from each source to current target t from permuted</span>
             <span class="c1"># data</span>
+            <span class="n">n_sources</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;selected_vars_sources&#39;</span><span class="p">])</span>
+            <span class="n">cmi_temp_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_sources</span><span class="p">)</span>
+            <span class="n">cmi_temp_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_sources</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">for</span> <span class="n">idx_source</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;selected_vars_sources&#39;</span><span class="p">]:</span>
-                <span class="n">current_cond</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;selected_vars_sources&#39;</span><span class="p">])</span>
-                <span class="n">current_cond</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">current_cond</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx_source</span><span class="p">))</span>
-
-                <span class="c1"># Get realisations of current (permuted) TE-source from the set</span>
-                <span class="c1"># of all conditionals and calculate the CMI. Do this for both</span>
-                <span class="c1"># conditions.</span>
+                <span class="c1"># Get realisations of current source from the set of all</span>
+                <span class="c1"># surrogate conditionals and calculate the CMI. Do this for</span>
+                <span class="c1"># both conditions.</span>
                 <span class="p">[</span><span class="n">temp_cond_real_a</span><span class="p">,</span> <span class="n">source_real_a</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">separate_arrays</span><span class="p">(</span>
                                                              <span class="n">idx_cond_full</span><span class="p">,</span>
                                                              <span class="n">idx_source</span><span class="p">,</span>
                                                              <span class="n">cond_full_perm_a</span><span class="p">)</span>
-                <span class="n">cmi_temp_a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span>
-                                                        <span class="n">cur_val_perm_a</span><span class="p">,</span>
-                                                        <span class="n">source_real_a</span><span class="p">,</span>
-                                                        <span class="n">temp_cond_real_a</span><span class="p">))</span>
+                <span class="n">cmi_temp_a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">cur_val_perm_a</span><span class="p">,</span>
+                                                             <span class="n">source_real_a</span><span class="p">,</span>
+                                                             <span class="n">temp_cond_real_a</span><span class="p">)</span>
                 <span class="p">[</span><span class="n">temp_cond_real_b</span><span class="p">,</span> <span class="n">source_real_b</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">separate_arrays</span><span class="p">(</span>
                                                              <span class="n">idx_cond_full</span><span class="p">,</span>
                                                              <span class="n">idx_source</span><span class="p">,</span>
                                                              <span class="n">cond_full_perm_b</span><span class="p">)</span>
-                <span class="n">cmi_temp_b</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span>
-                                                        <span class="n">cur_val_perm_b</span><span class="p">,</span>
-                                                        <span class="n">source_real_b</span><span class="p">,</span>
-                                                        <span class="n">temp_cond_real_b</span><span class="p">))</span>
-            <span class="n">cmi_a</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cmi_temp_a</span><span class="p">)</span>
-            <span class="n">cmi_b</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cmi_temp_b</span><span class="p">)</span>
+                <span class="n">cmi_temp_b</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">cur_val_perm_b</span><span class="p">,</span>
+                                                             <span class="n">source_real_b</span><span class="p">,</span>
+                                                             <span class="n">temp_cond_real_b</span><span class="p">)</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="n">cmi_a</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmi_temp_a</span>
+            <span class="n">cmi_b</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmi_temp_b</span>
 
         <span class="k">return</span> <span class="n">cmi_a</span><span class="p">,</span> <span class="n">cmi_b</span>
 
@@ -673,10 +722,14 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cmi_surr</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;n_perm_comp&#39;</span><span class="p">]):</span>
-            <span class="p">[</span><span class="n">cmi_a</span><span class="p">,</span> <span class="n">cmi_b</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cmi_permuted</span><span class="p">(</span><span class="n">data_a</span><span class="p">,</span> <span class="n">data_b</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Creating surrogate data set {0} of {1}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;n_perm_comp&#39;</span><span class="p">]))</span>
+            <span class="p">[</span><span class="n">cmi_a</span><span class="p">,</span> <span class="n">cmi_b</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cmi_all_links_permuted</span><span class="p">(</span><span class="n">data_a</span><span class="p">,</span>
+                                                                    <span class="n">data_b</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">cmi_surr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calculate_diff</span><span class="p">(</span><span class="n">cmi_a</span><span class="p">,</span> <span class="n">cmi_b</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">_create_surrogate_distribution_between</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_set_a</span><span class="p">,</span> <span class="n">data_set_b</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_create_surrogate_distribution_between</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create the surrogate distribution for network inference.</span>
 
 <span class="sd">        Create distribution by permuting data sets between conditions, re-</span>
@@ -705,18 +758,10 @@
 <span class="sd">        A_4    B_4        -&gt;        A_5    A_4</span>
 <span class="sd">        A_5    B_5        -&gt;        B_1    A_2</span>
 <span class="sd">        ...                         ...</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            data_set_a : list/array of Data instances</span>
-<span class="sd">                first set of raw data</span>
-<span class="sd">            data_set_b : list/array of Data instances</span>
-<span class="sd">                second set of raw data</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cmi_surr</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;n_perm_comp&#39;</span><span class="p">]):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cmi_surr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calculate_diff_of_mean</span><span class="p">(</span><span class="n">data_set_a</span><span class="p">,</span>
-                                                              <span class="n">data_set_b</span><span class="p">,</span>
-                                                              <span class="n">permute</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cmi_surr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calculate_diff_of_mean</span><span class="p">(</span><span class="n">permute</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">_p_value_union</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Calculate the p-value for the CMI between each source and target.&quot;&quot;&quot;</span>
@@ -875,7 +920,7 @@
 
         <span class="c1"># Set defaults for statistical tests.</span>
         <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
-        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;n_perm_comp&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;n_perm_comp&#39;</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>
         <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;alpha_comp&#39;</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
         <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;tail_comp&#39;</span><span class="p">,</span> <span class="s1">&#39;two&#39;</span><span class="p">)</span>
         <span class="n">stats</span><span class="o">.</span><span class="n">check_n_perm</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;n_perm_comp&#39;</span><span class="p">],</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alpha_comp&#39;</span><span class="p">])</span>
