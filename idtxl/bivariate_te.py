@@ -86,7 +86,6 @@ class BivariateTE(NetworkInference):
 
             >>> dat = Data()
             >>> dat.generate_mute_data(100, 5)
-            >>> max_lag = 5
             >>> min_lag = 4
             >>> settings = {
             >>>     'cmi_estimator':  'JidtKraskovCMI',
