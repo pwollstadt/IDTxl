@@ -71,7 +71,6 @@ class ActiveInformationStorage(SingleProcessAnalysis):
 
             >>> dat = Data()
             >>> dat.generate_mute_data(100, 5)
-            >>> max_lag = 5
             >>> settings = {
             >>>     'cmi_estimator': 'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
