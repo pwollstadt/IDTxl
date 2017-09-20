@@ -40,8 +40,12 @@ def standardise(a, dimension=0, df=1):
         numpy array
             standardised data
     """
-    a = (a - a.mean(axis=dimension)) / a.std(axis=dimension, ddof=df)
-    return a
+    # Don't divide by standard devitation if process is constant.
+    a_sd = a.std(axis=dimension, ddof=df)
+    if np.isclose(a_sd, 0):
+        return a - a.mean(axis=dimension)
+    else:
+        return (a - a.mean(axis=dimension)) / a_sd
 
 
 def sort_descending(a):
@@ -307,4 +311,3 @@ def combine_results(*results):
                 raise RuntimeError('Duplicate keys.')
         results_combined.update(r)
     return cp.deepcopy(results_combined)
-
