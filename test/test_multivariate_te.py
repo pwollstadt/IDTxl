@@ -321,6 +321,27 @@ def test_analyse_network():
             'Network analysis did not run on the correct subset of sources '
             'for target {0}'.format(t))
 
+@jpype_missing
+def test_permute_time():
+    """Create surrogates by permuting data in time instead of over replic."""
+    # Test if perm type is set to default
+    default = 'random'
+    dat = Data()
+    dat.generate_mute_data(10, 5)
+    settings = {
+        'cmi_estimator': 'JidtKraskovCMI',
+        'n_perm_max_stat': 21,
+        'n_perm_max_seq': 21,
+        'n_perm_omnibus': 21,
+        'max_lag_sources': 5,
+        'min_lag_sources': 4,
+        'max_lag_target': 5,
+        'permute_in_time': True}
+    nw_0 = MultivariateTE()
+    r = nw_0.analyse_network(settings, dat, targets='all', sources='all')
+    assert r[0]['settings']['perm_type'] == default, ('Perm type was not set '
+                                                      'to default.')
+
 
 def test_include_target_candidates():
     pass
