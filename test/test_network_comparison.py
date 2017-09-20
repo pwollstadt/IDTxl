@@ -17,8 +17,8 @@ from test_estimators_jidt import jpype_missing
 
 # # Generate example data: the following was ran once to generate example data,
 # # which is now in the data sub-folder of the test-folder.
-# dat = Data()
-# dat.generate_mute_data(100, 5)
+# data = Data()
+# data.generate_mute_data(100, 5)
 # # analysis settings
 # settings = {
 #     'cmi_estimator': 'JidtKraskovCMI',
@@ -33,23 +33,23 @@ from test_estimators_jidt import jpype_missing
 # # network inference for individual data sets
 # path = os.path.join(os.path.dirname(__file__) + '/data/'
 # nw_0 = MultivariateTE()
-# res_0 = nw_0.analyse_network(settings, dat, targets=[0, 1], sources='all')
+# res_0 = nw_0.analyse_network(settings, data, targets=[0, 1], sources='all')
 # pickle.dump(res_0, open(path + 'mute_res_0.pkl', 'wb'))
-# res_1 = nw_0.analyse_network(settings, dat,  targets=[1, 2], sources='all')
+# res_1 = nw_0.analyse_network(settings, data,  targets=[1, 2], sources='all')
 # pickle.dump(res_1, open(path + 'mute_res_1.pkl', 'wb'))
-# res_2 = nw_0.analyse_network(settings, dat,  targets=[0, 2], sources='all')
+# res_2 = nw_0.analyse_network(settings, data,  targets=[0, 2], sources='all')
 # pickle.dump(res_2, open(path + 'mute_res_2.pkl', 'wb'))
-# res_3 = nw_0.analyse_network(settings, dat,  targets=[0, 1, 2], sources='all')
+# res_3 = nw_0.analyse_network(settings, data,  targets=[0, 1, 2], sources='all')
 # pickle.dump(res_3, open(path + 'mute_res_3.pkl', 'wb'))
-# res_4 = nw_0.analyse_network(settings, dat,  targets=[1, 2], sources='all')
+# res_4 = nw_0.analyse_network(settings, data,  targets=[1, 2], sources='all')
 # pickle.dump(res_4, open(path + 'mute_res_4.pkl', 'wb'))
 
 
 @jpype_missing
 def test_network_comparison_use_cases():
     """Run all intended use cases, within/between, dependent/independent."""
-    dat = Data()
-    dat.generate_mute_data(100, 5)
+    data = Data()
+    data.generate_mute_data(100, 5)
 
     # Load previously generated example data (pickled)
     res_0 = np.load(os.path.join(os.path.dirname(__file__),
@@ -86,32 +86,32 @@ def test_network_comparison_use_cases():
 
     print('\n\nTEST 0 - independent within')
     comp_settings['stats_type'] = 'independent'
-    comp.compare_within(comp_settings, res_0, res_1, dat, dat)
+    comp.compare_within(comp_settings, res_0, res_1, data, data)
 
     print('\n\nTEST 1 - dependent within')
     comp_settings['stats_type'] = 'dependent'
-    comp.compare_within(comp_settings, res_0, res_1, dat, dat)
+    comp.compare_within(comp_settings, res_0, res_1, data, data)
 
     print('\n\nTEST 2 - independent between')
     comp_settings['stats_type'] = 'independent'
     comp.compare_between(comp_settings,
                          network_set_a=np.array((res_0, res_1)),
                          network_set_b=np.array((res_2, res_3)),
-                         data_set_a=np.array((dat, dat)),
-                         data_set_b=np.array((dat, dat)))
+                         data_set_a=np.array((data, data)),
+                         data_set_b=np.array((data, data)))
 
     print('\n\nTEST 3 - dependent between')
     comp_settings['stats_type'] = 'dependent'
     comp.compare_between(comp_settings,
                          network_set_a=np.array((res_0, res_1)),
                          network_set_b=np.array((res_2, res_3)),
-                         data_set_a=np.array((dat, dat)),
-                         data_set_b=np.array((dat, dat)))
+                         data_set_a=np.array((data, data)),
+                         data_set_b=np.array((data, data)))
 
     print('\n\nTEST 4 - independent within unbalanced')
     comp_settings['stats_type'] = 'independent'
     comp = NetworkComparison()
-    comp.compare_within(comp_settings, res_0, res_1, dat, dat)
+    comp.compare_within(comp_settings, res_0, res_1, data, data)
 
     print('\n\nTEST 5 - independent between unbalanced')
     comp_settings['stats_type'] = 'independent'
@@ -119,15 +119,15 @@ def test_network_comparison_use_cases():
     comp.compare_between(comp_settings,
                          network_set_a=np.array((res_0, res_1)),
                          network_set_b=np.array((res_2, res_3, res_4)),
-                         data_set_a=np.array((dat, dat)),
-                         data_set_b=np.array((dat, dat, dat)))
+                         data_set_a=np.array((data, data)),
+                         data_set_b=np.array((data, data, data)))
 
 
 @jpype_missing
 def test_assertions():
     """Test if input checks raise errors."""
-    dat = Data()
-    dat.generate_mute_data(100, 5)
+    data = Data()
+    data.generate_mute_data(100, 5)
 
     # Load previously generated example data
     res_0 = np.load(os.path.join(os.path.dirname(__file__),
@@ -165,7 +165,7 @@ def test_assertions():
     comp_settings['n_perm_comp'] = 1000
     comp = NetworkComparison()
     with pytest.raises(AssertionError):
-        comp.compare_within(comp_settings, res_0, res_1, dat, dat2)
+        comp.compare_within(comp_settings, res_0, res_1, data, dat2)
 
     # data sets have unequal no. realisations
     dat2 = Data()
@@ -175,7 +175,7 @@ def test_assertions():
     comp_settings['n_perm_comp'] = 21
     comp = NetworkComparison()
     with pytest.raises(RuntimeError):
-        comp.compare_within(comp_settings, res_0, res_1, dat, dat2)
+        comp.compare_within(comp_settings, res_0, res_1, data, dat2)
 
     # no. replications/subjects too small for dependent-samples test
     comp_settings['stats_type'] = 'dependent'
@@ -185,8 +185,8 @@ def test_assertions():
         comp.compare_between(comp_settings,
                              network_set_a=np.array((res_0, res_1)),
                              network_set_b=np.array((res_2, res_3)),
-                             data_set_a=np.array((dat, dat)),
-                             data_set_b=np.array((dat, dat)))
+                             data_set_a=np.array((data, data)),
+                             data_set_b=np.array((data, data)))
     with pytest.raises(RuntimeError):   # within
         comp.compare_within(comp_settings, res_0, res_1, dat2, dat2)
 
@@ -197,8 +197,8 @@ def test_assertions():
         comp.compare_between(comp_settings,
                              network_set_a=np.array((res_0, res_1)),
                              network_set_b=np.array((res_2, res_3)),
-                             data_set_a=np.array((dat, dat)),
-                             data_set_b=np.array((dat, dat)))
+                             data_set_a=np.array((data, data)),
+                             data_set_b=np.array((data, data)))
     with pytest.raises(RuntimeError):   # within
         comp.compare_within(comp_settings, res_0, res_1, dat2, dat2)
 
@@ -336,7 +336,7 @@ def test_get_permuted_replications():
 @jpype_missing
 def test_calculate_cmi_all_links():
     """Test if the CMI is estimated correctly."""
-    dat = Data()
+    data = Data()
     n = 1000
     cov = 0.4
     source = [rn.normalvariate(0, 1) for r in range(n)]  # correlated src
@@ -344,7 +344,7 @@ def test_calculate_cmi_all_links():
         [cov * y for y in source[0:n - 1]],
         [(1 - cov) * y for y in
             [rn.normalvariate(0, 1) for r in range(n - 1)]])]
-    dat.set_data(np.vstack((source, target)), 'ps')
+    data.set_data(np.vstack((source, target)), 'ps')
     res_0 = np.load(os.path.join(os.path.dirname(__file__),
                     'data/mute_res_0.pkl'))
     comp_settings = {
@@ -362,7 +362,7 @@ def test_calculate_cmi_all_links():
     comp._initialise(comp_settings)
     comp._create_union(res_0)
     comp.union[1]['selected_vars_sources'] = [(0, 4)]
-    cmi = comp._calculate_cmi_all_links(dat)
+    cmi = comp._calculate_cmi_all_links(data)
     cmi_expected = np.log(1 / (1 - cov ** 2))
     print('correlated Gaussians: TE result {0:.4f} bits; expected to be '
           '{1:0.4f} bit for the copy'.format(cmi[1][0], cmi_expected))
@@ -374,8 +374,8 @@ def test_calculate_cmi_all_links():
 @jpype_missing
 def test_calculate_mean():
     """Test if mean over CMI estimates is calculated correctly."""
-    dat = Data()
-    dat.generate_mute_data(100, 5)
+    data = Data()
+    data.generate_mute_data(100, 5)
     res_0 = np.load(os.path.join(os.path.dirname(__file__),
                     'data/mute_res_0.pkl'))
     comp_settings = {
@@ -392,7 +392,7 @@ def test_calculate_mean():
     comp = NetworkComparison()
     comp._initialise(comp_settings)
     comp._create_union(res_0)
-    cmi = comp._calculate_cmi_all_links(dat)
+    cmi = comp._calculate_cmi_all_links(data)
     cmi_mean = comp._calculate_mean([cmi, cmi])
     for t in comp.union['targets']:
         assert (cmi_mean[t] == cmi[t]).all(), ('Error in mean of CMI for '
@@ -402,8 +402,8 @@ def test_calculate_mean():
 @jpype_missing
 def test_p_value_union():
     """Test if the p-value is calculated correctly."""
-    dat = Data()
-    dat.generate_mute_data(100, 5)
+    data = Data()
+    data.generate_mute_data(100, 5)
     res_0 = np.load(os.path.join(os.path.dirname(__file__),
                     'data/mute_res_0.pkl'))
     res_1 = np.load(os.path.join(os.path.dirname(__file__),
@@ -420,7 +420,7 @@ def test_p_value_union():
         'stats_type': 'independent'
         }
     comp = NetworkComparison()
-    res_comp = comp.compare_within(comp_settings, res_0, res_1, dat, dat)
+    comp.compare_within(comp_settings, res_0, res_1, data, data)
 
     # Replace the surrogate CMI by all zeros for source 0 and all ones for
     # source 1. Set the CMI difference to 0.5 for both sources. Check if this
@@ -428,8 +428,8 @@ def test_p_value_union():
     # correct p-values.
     comp._initialise(comp_settings)
     comp._create_union(res_0, res_1)
-    comp._calculate_cmi_diff_within(dat, dat)
-    comp._create_surrogate_distribution_within(dat, dat)
+    comp._calculate_cmi_diff_within(data, data)
+    comp._create_surrogate_distribution_within(data, data)
     target = 1
     for p in range(comp_settings['n_perm_comp']):
         comp.cmi_surr[p][target] = np.array([0, 1])

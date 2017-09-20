@@ -27,16 +27,16 @@ def test_pid_user_input():
 
     # Test default lags for network_analysis
     settings = {'pid_estimator': 'TartuPID'}
-    dat = Data(np.random.randint(0, 10, size=(5, 100)), dim_order='ps',
-               normalise=False)
-    res = pid.analyse_network(settings=settings, data=dat,
-                              targets=[0, 1, 2],
-                              sources=[[1, 3], [2, 4], [0, 1]])
-    assert np.all(res[0]['settings']['lags'] == [1, 1]), (
+    data = Data(np.random.randint(0, 10, size=(5, 100)), dim_order='ps',
+                normalise=False)
+    results = pid.analyse_network(settings=settings, data=data,
+                                  targets=[0, 1, 2],
+                                  sources=[[1, 3], [2, 4], [0, 1]])
+    assert np.all(results[0]['settings']['lags'] == [1, 1]), (
                                             'Lags were not set to default.')
-    assert np.all(res[1]['settings']['lags'] == [1, 1]), (
+    assert np.all(results[1]['settings']['lags'] == [1, 1]), (
                                             'Lags were not set to default.')
-    assert np.all(res[2]['settings']['lags'] == [1, 1]), (
+    assert np.all(results[2]['settings']['lags'] == [1, 1]), (
                                             'Lags were not set to default.')
 
     n = 20
@@ -44,35 +44,33 @@ def test_pid_user_input():
     x = np.random.randint(0, alph, n)
     y = np.random.randint(0, alph, n)
     z = np.logical_xor(x, y).astype(int)
-    dat = Data(np.vstack((x, y, z)), 'ps', normalise=False)
+    data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
     # Test two-tailed significance test
-    settings = {'pid_estimator': 'TartuPID',
-                     'tail': 'two',
-                     'lags': [0, 0]}
+    settings = {'pid_estimator': 'TartuPID', 'tail': 'two', 'lags': [0, 0]}
     pid = PartialInformationDecomposition()
 
     with pytest.raises(RuntimeError):  # Test incorrect number of sources
-        pid.analyse_single_target(settings=settings, data=dat, target=2,
+        pid.analyse_single_target(settings=settings, data=data, target=2,
                                   sources=[1, 2, 3])
     settings['lags'] = [0, 0, 0]
     with pytest.raises(RuntimeError):  # Test incorrect number of lags
-        pid.analyse_single_target(settings=settings, data=dat, target=2,
+        pid.analyse_single_target(settings=settings, data=data, target=2,
                                   sources=[1, 3])
     settings['lags'] = [n * 3, 0]
     with pytest.raises(RuntimeError):  # Test lag > no. samples
-        pid.analyse_single_target(settings=settings, data=dat, target=2,
+        pid.analyse_single_target(settings=settings, data=data, target=2,
                                   sources=[0, 1])
     settings['lags'] = [n, 0]
     with pytest.raises(RuntimeError):  # Test lag == no. samples
-        pid.analyse_single_target(settings=settings, data=dat, target=2,
+        pid.analyse_single_target(settings=settings, data=data, target=2,
                                   sources=[0, 1])
     settings['lags'] = [0, 0]
     with pytest.raises(RuntimeError):  # Test target in sources
-        pid.analyse_single_target(settings=settings, data=dat, target=2,
+        pid.analyse_single_target(settings=settings, data=data, target=2,
                                   sources=[2, 3])
     with pytest.raises(IndexError):  # Test target not in processes
-        pid.analyse_single_target(settings=settings, data=dat, target=5,
+        pid.analyse_single_target(settings=settings, data=data, target=5,
                                   sources=[0, 1])
 
 
@@ -84,15 +82,14 @@ def test_network_analysis():
     x = np.random.randint(0, alph, n)
     y = np.random.randint(0, alph, n)
     z = np.logical_xor(x, y).astype(int)
-    dat = Data(np.vstack((x, y, z)), 'ps', normalise=False)
+    data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
     # Run Tartu estimator
-    settings = {'pid_estimator': 'TartuPID',
-                     'tail': 'two',
-                     'lags': [[0, 0], [0, 0]]}
+    settings = {'pid_estimator': 'TartuPID', 'tail': 'two',
+                'lags': [[0, 0], [0, 0]]}
     pid = PartialInformationDecomposition()
     est_tartu = pid.analyse_network(settings=settings,
-                                    data=dat, targets=[0, 2],
+                                    data=data, targets=[0, 2],
                                     sources=[[1, 2], [0, 1]])
     assert 0.9 < est_tartu[2]['syn_s1_s2'] <= 1.1, (
             'Tartu estimator incorrect synergy: {0}, should approx. 1'.format(
@@ -107,14 +104,14 @@ def test_analyse_single_target():
     x = np.random.randint(0, alph, n)
     y = np.random.randint(0, alph, n)
     z = np.logical_xor(x, y).astype(int)
-    dat = Data(np.vstack((x, y, z)), 'ps', normalise=False)
+    data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
     # Run Tartu estimator
     settings = {'pid_estimator': 'TartuPID',
                 'tail': 'two',
                 'lags': [0, 0]}
     pid = PartialInformationDecomposition()
-    est_tartu = pid.analyse_single_target(settings=settings, data=dat,
+    est_tartu = pid.analyse_single_target(settings=settings, data=data,
                                           target=2, sources=[0, 1])
     assert 0.9 < est_tartu['syn_s1_s2'] <= 1.1, (
             'Tartu estimator incorrect synergy: {0}, should approx. 1'.format(

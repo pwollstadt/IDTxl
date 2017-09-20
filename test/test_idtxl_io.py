@@ -10,8 +10,8 @@ from test_estimators_jidt import jpype_missing
 # def test_save_te_results():
 #     """Test saving of TE results."""
 #     # Generate some example output
-#     dat = Data()
-#     dat.generate_mute_data(100, 2)
+#     data = Data()
+#     data.generate_mute_data(100, 2)
 #     settings = {
 #         'cmi_estimator': 'JidtKraskovCMI',
 #         'n_perm_mi': 22,
@@ -22,7 +22,7 @@ from test_estimators_jidt import jpype_missing
 #     network_analysis = ActiveInformationStorage(max_lag=5,
 #                                                 tau=1,
 #                                                 options=settings)
-#     res_ais = network_analysis.analyse_network(dat, processes)
+#     res_ais = network_analysis.analyse_network(data, processes)
 
 #     cwd = os.getcwd()
 #     fp = ''.join([cwd, '/idtxl_unit_test/'])

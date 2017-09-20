@@ -286,7 +286,7 @@ class Estimator(metaclass=ABCMeta):
             chunk_size = int(n_samples_total / n_chunks)
             idx_1 = 0
             idx_2 = chunk_size
-            res = np.empty((n_chunks))
+            results = np.empty((n_chunks))
             i = 0
             # Cut data into chunks and call estimator serially.
             for c in range(n_chunks):
@@ -298,9 +298,9 @@ class Estimator(metaclass=ABCMeta):
                         chunk_data[v] = data[v]
                 for v in re_use:
                     chunk_data[v] = data[v]
-                res[i] = self.estimate(**chunk_data)
+                results[i] = self.estimate(**chunk_data)
                 idx_1 = idx_2
                 idx_2 += chunk_size
                 i += 1
 
-            return res
+            return results

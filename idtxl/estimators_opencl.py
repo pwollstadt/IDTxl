@@ -217,15 +217,15 @@ class OpenCLKraskovMI(OpenCLKraskov):
             subset1 = var1[startidx:stopidx, :]
             subset2 = var2[startidx:stopidx, :]
             n_chunks_current_run = subset1.shape[0] // chunklength
-            res = self._estimate_single_run(subset1, subset2,
-                                            n_chunks_current_run)
+            results = self._estimate_single_run(subset1, subset2,
+                                                n_chunks_current_run)
             if self.settings['debug']:
-                mi_array = np.concatenate((mi_array,   res[0]))
-                distances = np.concatenate((distances,  res[1]))
-                count_var1 = np.concatenate((count_var1, res[2]))
-                count_var2 = np.concatenate((count_var2, res[3]))
+                mi_array = np.concatenate((mi_array,   results[0]))
+                distances = np.concatenate((distances,  results[1]))
+                count_var1 = np.concatenate((count_var1, results[2]))
+                count_var2 = np.concatenate((count_var2, results[3]))
             else:
-                mi_array = np.concatenate((mi_array, res))
+                mi_array = np.concatenate((mi_array, results))
 
         if self.settings['debug']:
             return mi_array, distances, count_var1, count_var2
@@ -483,16 +483,16 @@ class OpenCLKraskovCMI(OpenCLKraskov):
             subset2 = var2[startidx:stopidx, :]
             subset3 = conditional[startidx:stopidx, :]
             n_chunks_current_run = subset1.shape[0] // chunklength
-            res = self._estimate_single_run(subset1, subset2, subset3,
-                                            n_chunks_current_run)
+            results = self._estimate_single_run(subset1, subset2, subset3,
+                                                n_chunks_current_run)
             if self.settings['debug']:
-                cmi_array = np.concatenate((cmi_array,  res[0]))
-                distances = np.concatenate((distances,  res[1]))
-                count_var1 = np.concatenate((count_var1, res[2]))
-                count_var2 = np.concatenate((count_var2, res[3]))
-                count_cond = np.concatenate((count_cond, res[4]))
+                cmi_array = np.concatenate((cmi_array,  results[0]))
+                distances = np.concatenate((distances,  results[1]))
+                count_var1 = np.concatenate((count_var1, results[2]))
+                count_var2 = np.concatenate((count_var2, results[3]))
+                count_cond = np.concatenate((count_cond, results[4]))
             else:
-                cmi_array = np.concatenate((cmi_array, res))
+                cmi_array = np.concatenate((cmi_array, results))
 
         if self.settings['debug']:
             return cmi_array, distances, count_var1, count_var2, count_cond

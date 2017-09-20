@@ -29,18 +29,16 @@ def test_multivariate_te_corr_gaussian():
     """
     n = 1000
     cov = 0.4
-    source_1 = [rn.normalvariate(0, 1) for r in range(n)]  # correlated src
-    # source_2 = [rn.normalvariate(0, 1) for r in range(n)]  # uncorrelated src
+    source = [rn.normalvariate(0, 1) for r in range(n)]
     target = [sum(pair) for pair in zip(
-        [cov * y for y in source_1],
+        [cov * y for y in source],
         [(1 - cov) * y for y in [rn.normalvariate(0, 1) for r in range(n)]])]
     # Cast everything to numpy so the idtxl estimator understands it.
-    source_1 = np.expand_dims(np.array(source_1), axis=1)
-    # source_2 = np.expand_dims(np.array(source_2), axis=1)
+    source = np.expand_dims(np.array(source), axis=1)
     target = np.expand_dims(np.array(target), axis=1)
 
-    dat = Data(normalise=True)
-    dat.set_data(np.vstack((source_1[1:].T, target[:-1].T)), 'ps')
+    data = Data(normalise=True)
+    data.set_data(np.vstack((source[1:].T, target[:-1].T)), 'ps')
     settings = {
         'cmi_estimator': 'JidtDiscreteCMI',
         'discretise_method': 'max_ent',
@@ -53,25 +51,22 @@ def test_multivariate_te_corr_gaussian():
         'n_perm_max_seq': 21,
         }
     random_analysis = MultivariateTE()
-    # res = random_analysis.analyse_network(settings, dat)  # full network
-    # utils.print_dict(res)
-    res_1 = random_analysis.analyse_single_target(settings, dat, 1)  # coupled direction
+    results = random_analysis.analyse_single_target(settings, data, 1)
+
     # Assert that there are significant conditionals from the source for target
     # 1. For 500 repetitions I got mean errors of 0.02097686 and 0.01454073 for
     # examples 1 and 2 respectively. The maximum errors were 0.093841 and
     # 0.05833172 repectively. This inspired the following error boundaries.
     expected_res = np.log(1 / (1 - np.power(cov, 2)))
-    diff = np.abs(max(res_1['cond_sources_te']) - expected_res)
+    diff = np.abs(max(results['cond_sources_te']) - expected_res)
     print('Expected source sample: (0, 1)\nExpected target sample: (1, 1)')
     print(('Estimated TE: {0:5.4f}, analytical result: {1:5.4f}, error:'
-           '{2:2.2f} % ').format(max(res_1['cond_sources_te']), expected_res,
+           '{2:2.2f} % ').format(max(results['cond_sources_te']), expected_res,
                                  diff / expected_res))
     assert (diff < 0.1), ('Multivariate TE calculation for correlated '
                           'Gaussians failed (error larger 0.1: {0}, expected: '
-                          '{1}, actual: {2}).'.format(diff,
-                                                      expected_res,
-                                                      res_1['cond_sources_te']
-                                                      ))
+                          '{1}, actual: {2}).'.format(
+                              diff, expected_res, results['cond_sources_te']))
 
 
 def test_multivariate_te_lagged_copies():
@@ -90,8 +85,8 @@ def test_multivariate_te_lagged_copies():
     d_0 = np.random.rand(1, 1000, 20)
     d_1 = np.hstack((np.random.rand(1, lag, 20), d_0[:, lag:, :]))
 
-    dat = Data()
-    dat.set_data(np.vstack((d_0, d_1)), 'psr')
+    data = Data()
+    data.set_data(np.vstack((d_0, d_1)), 'psr')
     settings = {
         'cmi_estimator': 'JidtDiscreteCMI',
         'discretise_method': 'max_ent',
@@ -106,22 +101,21 @@ def test_multivariate_te_lagged_copies():
     # other than the mandatory single sample in the target's past (which
     # ensures that we calculate a proper TE at any time in the algorithm).
     for target in range(2):
-        res = random_analysis.analyse_single_target(settings, dat, target)
-        assert (len(res['conditional_full']) == 1), ('Conditional contains '
-                                                     'more/less than 1 '
-                                                     'variables.')
-        assert (not res['conditional_sources']), ('Conditional sources is not '
-                                                  'empty.')
-        assert (len(res['conditional_target']) == 1), ('Conditional target '
-                                                       'contains more/less '
-                                                       'than 1 variable.')
-        assert (res['cond_sources_pval'] is None), ('Conditional p-value is '
-                                                    'not None.')
-        assert (res['omnibus_pval'] is None), ('Omnibus p-value is not None.')
-        assert (res['omnibus_sign'] is None), ('Omnibus significance is not '
-                                               'None.')
-        assert (res['conditional_sources_te'] is None), ('Conditional TE '
-                                                         'values is not None.')
+        results = random_analysis.analyse_single_target(settings, data, target)
+        assert (len(results['conditional_full']) == 1), (
+                    'Conditional contains more/less than 1 variables.')
+        assert (not results['conditional_sources']), (
+                    'Conditional sources is not empty.')
+        assert (len(results['conditional_target']) == 1), (
+                    'Conditional target contains more/less than 1 variable.')
+        assert (results['cond_sources_pval'] is None), (
+                    'Conditional p-value is not None.')
+        assert (results['omnibus_pval'] is None), (
+                    'Omnibus p-value is not None.')
+        assert (results['omnibus_sign'] is None), (
+                    'Omnibus significance is not None.')
+        assert (results['conditional_sources_te'] is None), (
+                    'Conditional TE values is not None.')
 
 
 def test_multivariate_te_random():
@@ -136,8 +130,8 @@ def test_multivariate_te_random():
         machines.
     """
     d = np.random.rand(2, 1000, 20)
-    dat = Data()
-    dat.set_data(d, 'psr')
+    data = Data()
+    data.set_data(d, 'psr')
     settings = {
         'cmi_estimator': 'JidtDiscreteCMI',
         'discretise_method': 'max_ent',
@@ -152,22 +146,21 @@ def test_multivariate_te_random():
     # other than the mandatory single sample in the target's past (which
     # ensures that we calculate a proper TE at any time in the algorithm).
     for target in range(2):
-        res = random_analysis.analyse_single_target(settings, dat, target)
-        assert (len(res['conditional_full']) == 1), ('Conditional contains '
-                                                     'more/less than 1 '
-                                                     'variables.')
-        assert (not res['conditional_sources']), ('Conditional sources is not '
-                                                  'empty.')
-        assert (len(res['conditional_target']) == 1), ('Conditional target '
-                                                       'contains more/less '
-                                                       'than 1 variable.')
-        assert (res['cond_sources_pval'] is None), ('Conditional p-value is '
-                                                    'not None.')
-        assert (res['omnibus_pval'] is None), ('Omnibus p-value is not None.')
-        assert (res['omnibus_sign'] is None), ('Omnibus significance is not '
-                                               'None.')
-        assert (res['conditional_sources_te'] is None), ('Conditional TE '
-                                                         'values is not None.')
+        results = random_analysis.analyse_single_target(settings, data, target)
+        assert (len(results['conditional_full']) == 1), (
+                    'Conditional contains more/less than 1 variables.')
+        assert (not results['conditional_sources']), (
+                    'Conditional sources is not empty.')
+        assert (len(results['conditional_target']) == 1), (
+                    'Conditional target contains more/less than 1 variable.')
+        assert (results['cond_sources_pval'] is None), (
+                    'Conditional p-value is not None.')
+        assert (results['omnibus_pval'] is None), (
+                    'Omnibus p-value is not None.')
+        assert (results['omnibus_sign'] is None), (
+                    'Omnibus significance is not None.')
+        assert (results['conditional_sources_te'] is None), (
+                    'Conditional TE values is not None.')
 
 
 def test_multivariate_te_lorenz_2():
@@ -184,8 +177,8 @@ def test_multivariate_te_lorenz_2():
 
     d = np.load(os.path.join(os.path.dirname(__file__),
                 'data/lorenz_2_exampledata.npy'))
-    dat = Data()
-    dat.set_data(d, 'psr')
+    data = Data()
+    data.set_data(d, 'psr')
     settings = {
         'cmi_estimator': 'JidtDiscreteCMI',
         'discretise_method': 'max_ent',
@@ -212,11 +205,9 @@ def test_multivariate_te_lorenz_2():
     settings['tau_sources'] = 2
     settings['max_lag_target'] = 1  # was 0 before, but this is no longer allowed by the estimator
     settings['tau_target'] = 1
-    # res = lorenz_analysis.analyse_network(settings, dat)
-    # res_0 = lorenz_analysis.analyse_single_target(settings, dat, 0)  # no coupling
-    # print(res_0)
-    res_1 = lorenz_analysis.analyse_single_target(settings, dat, 1)  # coupling
-    print(res_1)
+    # Just analyse the coupled direction
+    results = lorenz_analysis.analyse_single_target(settings, data, 1)
+    print(results)
 
 
 def test_multivariate_te_mute():
@@ -234,8 +225,8 @@ def test_multivariate_te_mute():
 
     The maximum order of any single AR process is never higher than 2.
     """
-    dat = Data()
-    dat.generate_mute_data(n_samples=1000, n_replications=10)
+    data = Data()
+    data.generate_mute_data(n_samples=1000, n_replications=10)
     settings = {
         'cmi_estimator': 'JidtDiscreteCMI',
         'discretise_method': 'max_ent',
@@ -250,16 +241,18 @@ def test_multivariate_te_mute():
         }
 
     network_analysis = MultivariateTE()
-    res_me = network_analysis.analyse_network(settings, dat, targets=[1, 2])
+    results_me = network_analysis.analyse_network(settings, data,
+                                                  targets=[1, 2])
     settings['discretise_method'] = 'equal'
-    res_eq = network_analysis.analyse_network(settings, dat, targets=[1, 2])
+    results_eq = network_analysis.analyse_network(settings, data,
+                                                  targets=[1, 2])
 
-    assert (np.isclose(res_eq[1]['omnibus_te'], res_me[1]['omnibus_te'],
-            rtol=0.05)), ('TE into first target is not equal for both binning'
-                          ' methods.')
-    assert (np.isclose(res_eq[2]['omnibus_te'], res_me[2]['omnibus_te'],
-            rtol=0.05)), ('TE into second target is not equal for both binning'
-                          ' methods.')
+    assert (np.isclose(results_eq[1]['omnibus_te'],
+            results_me[1]['omnibus_te'], rtol=0.05)), (
+                'TE into first target is not equal for both binning methods.')
+    assert (np.isclose(results_eq[2]['omnibus_te'],
+            results_me[2]['omnibus_te'], rtol=0.05)), (
+                'TE into second target is not equal for both binning methods.')
 
 
 if __name__ == '__main__':

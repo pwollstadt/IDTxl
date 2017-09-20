@@ -292,7 +292,7 @@ def combine_results(*results):
         dict
             combined results dict
     """
-    res = {}
+    results_combined = {}
     for r in results:
         # Remove potential partial FDR-corrected results. These are no longer
         # valid for the combined network.
@@ -303,8 +303,8 @@ def combine_results(*results):
             pass
         # Check for duplicate keys in the partial results.
         for k in r:
-            if k in res:
+            if k in results_combined:
                 raise RuntimeError('Duplicate keys.')
-        res.update(r)
-    return cp.deepcopy(res)
+        results_combined.update(r)
+    return cp.deepcopy(results_combined)
 

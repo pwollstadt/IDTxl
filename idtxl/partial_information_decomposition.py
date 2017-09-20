@@ -62,7 +62,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             >>> x = np.random.randint(0, alph, n)
             >>> y = np.random.randint(0, alph, n)
             >>> z = np.logical_xor(x, y).astype(int)
-            >>> dat = Data(np.vstack((x, y, z)), 'ps', normalise=False)
+            >>> data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
             >>> settings = {
             >>>     'alpha': 0.1,
             >>>     'alph_s1': alph,
@@ -76,8 +76,8 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             >>> sources = [[1, 2], [0, 2], [0, 1]]
             >>> lags = [[1, 1], [3, 2], [0, 0]]
             >>> pid_analysis = PartialInformationDecomposition()
-            >>> res = pid_analysis.analyse_network(settings, dat, targets,
-            >>>                                    sources)
+            >>> results = pid_analysis.analyse_network(settings, data, targets,
+            >>>                                        sources)
 
         Args:
             settings : dict
@@ -131,7 +131,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             >>> x = np.random.randint(0, alph, n)
             >>> y = np.random.randint(0, alph, n)
             >>> z = np.logical_xor(x, y).astype(int)
-            >>> dat = Data(np.vstack((x, y, z)), 'ps', normalise=False)
+            >>> data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
             >>> settings = {
             >>>     'alpha': 0.1,
             >>>     'alph_s1': alph,
@@ -143,10 +143,10 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             >>>     'pid_calc_name': 'SydneyPID',
             >>>     'lags': [2, 3]}
             >>> pid_analysis = PartialInformationDecomposition()
-            >>> res = pid_analysis.analyse_single_target(settings=settings,
-            >>>                                          data=dat,
-            >>>                                          target=0,
-            >>>                                          sources=[1, 2])
+            >>> results = pid_analysis.analyse_single_target(settings=settings,
+            >>>                                              data=data,
+            >>>                                              target=0,
+            >>>                                              sources=[1, 2])
 
         Args:
             settings : dict

@@ -22,15 +22,21 @@ class Data():
     for an array with realisations over (1) samples in time, (2) processes, (3)
     replications.
 
-    Examples:
-        d_mute = Data()              # initialise empty data object
-        d_mute.generate_mute_data()  # simulate data from MuTE paper
-        dat = np.arange(10000).reshape((2, 1000, 5))  # random data: 2 procs.,
-        d1 = Data(dat, dim_order='psr')               # 1000 samples, 5 repl.
-        dat = np.arange(3000).reshape((3, 1000))  # random data: 3 procs.,
-        d2 = Data(dat, dim_order='ps')            # 1000 samples
-        dat_new = np.arange(5000)
-        d2.set_data(dat_new, 's')  # set new data for the existing object
+    Example:
+
+        >>> data_mute = Data()              # initialise empty data object
+        >>> data_mute.generate_mute_data()  # simulate data from MuTE paper
+        >>>
+        >>> # Create data objects with data of various sizes
+        >>> d = np.arange(10000).reshape((2, 1000, 5))  # 2 procs.,
+        >>> data_1 = Data(d, dim_order='psr')           # 1000 samples, 5 repl.
+        >>>
+        >>> d = np.arange(3000).reshape((3, 1000))  # 3 procs.,
+        >>> data_2 = Data(d, dim_order='ps')        # 1000 samples
+        >>>
+        >>> # Overwrite data in existing object with random data
+        >>> d = np.arange(5000)
+        >>> data_2.set_data(data_new, 's')
 
     Note:
         Realisations are stored as attribute 'data'. This can't be set
@@ -437,12 +443,13 @@ class Data():
             replications is too small to allow a sufficient number of
             permutations for the generation of surrogate data.
         """
-        dat_slice = self._get_data_slice(process, shuffle=True)[0]
-        dat_slice_perm = np.empty(dat_slice.shape).astype(self.data_type)
-        perm = self._get_permutation_samples(dat_slice.shape[0], perm_settings)
+        data_slice = self._get_data_slice(process, shuffle=True)[0]
+        data_slice_perm = np.empty(data_slice.shape).astype(self.data_type)
+        perm = self._get_permutation_samples(data_slice.shape[0],
+                                             perm_settings)
         for r in range(self.n_replications):
-            dat_slice_perm[:, r] = dat_slice[perm, r]
-        return dat_slice_perm, perm
+            data_slice_perm[:, r] = data_slice[perm, r]
+        return data_slice_perm, perm
 
     def permute_replications(self, current_value, idx_list):
         """Return realisations with permuted replications (time stays intact).

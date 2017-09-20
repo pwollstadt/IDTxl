@@ -989,7 +989,7 @@ class TartuPID(Estimator):
                                          self.settings['max_zero_probability'],
                                          self.settings['verbose'])
         optpdf, feas, kkt, CI, SI, UI_s1, UI_s2 = retval
-        res = {
+        results = {
             'kkt': kkt,
             'feas': feas,
             'optpdf': optpdf,
@@ -999,8 +999,8 @@ class TartuPID(Estimator):
             'unq_s2': UI_s2,
         }
         if self.settings['sorted_pdf']:
-            res['sorted_pdf'] = synergy_tartu.sorted_pdf(pdf)
-        return res
+            results['sorted_pdf'] = synergy_tartu.sorted_pdf(pdf)
+        return results
 
 
 def _check_input(s1, s2, t, settings):

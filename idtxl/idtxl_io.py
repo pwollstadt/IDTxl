@@ -8,7 +8,7 @@ from .data import Data
 VERBOSE = False
 
 
-def save(dat, file_path):
+def save(data, file_path):
     """Save IDTxl data to disk.
 
     Save different data types to disk. Supported types are:
@@ -32,7 +32,7 @@ def save(dat, file_path):
     depending on the type of the data to be written.
 
     Args:
-        dat : dict | numpy array | Data object
+        data : dict | numpy array | Data object
             data to be saved to disk
         file_path : string
             string with file name (including the path)
@@ -44,36 +44,36 @@ def save(dat, file_path):
     else:
         add_extension = False
 
-    if type(dat) is dict:
+    if type(data) is dict:
         if add_extension:
             file_path = ''.join([file_path, '.txt'])
         # JSON does not recognize numpy arrays and data types, they have to be
         # converted before dumping them.
-        dat_json = _remove_numpy(dat)
+        data_json = _remove_numpy(data)
         if VERBOSE:
             print('writing file {0}'.format(file_path))
         with open(file_path, 'w') as outfile:
-            json.dump(obj=dat_json, fp=outfile, sort_keys=True)
-    elif type(dat) is np.ndarray:
+            json.dump(obj=data_json, fp=outfile, sort_keys=True)
+    elif type(data) is np.ndarray:
         # TODO this can't handle scalars, handle this as an exception
-        np.save(file_path, dat)
-    elif type(dat) is __name__.data.Data:
-        np.savez(file_path, data=dat.data, normalised=dat.normalise)
+        np.save(file_path, data)
+    elif type(data) is __name__.data.Data:
+        np.savez(file_path, data=data.data, normalised=data.normalise)
 
 
-def _remove_numpy(dat):
+def _remove_numpy(data):
     """Remove all numpy data structures and types from dictionary.
 
     JSON can not handle numpy types and data structures, they have to be
     convertedto native python types first.
     """
-    dat_json = cp.copy(dat)
-    for k in dat_json.keys():
+    data_json = cp.copy(data)
+    for k in data_json.keys():
         if VERBOSE:
-            print('{0}, type: {1}'.format(dat_json[k], type(dat_json[k])))
-        if type(dat_json[k]) is np.ndarray:
-            dat_json[k] = dat_json[k].tolist()
-    return dat_json
+            print('{0}, type: {1}'.format(data_json[k], type(data_json[k])))
+        if type(data_json[k]) is np.ndarray:
+            data_json[k] = data_json[k].tolist()
+    return data_json
 
 
 def load(file_path):

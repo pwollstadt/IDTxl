@@ -11,8 +11,8 @@ def test_plot_mute_graph():
 
 def test_visualise_multivariate_te():
     """Visualise output of multivariate TE estimation."""
-    dat = Data()
-    dat.generate_mute_data(100, 5)
+    data = Data()
+    data.generate_mute_data(100, 5)
     settings = {
         'cmi_estimator':  'JidtKraskovCMI',
         'max_lag_sources': 5,
@@ -23,13 +23,14 @@ def test_visualise_multivariate_te():
         'n_perm_max_seq': 50,
         }
     network_analysis = MultivariateTE()
-    res = network_analysis.analyse_network(settings, dat, targets=[0, 1, 2])
-    vis.plot_network(res)
+    results = network_analysis.analyse_network(settings, data,
+                                               targets=[0, 1, 2])
+    vis.plot_network(results)
 
 
 def test_plot_selected_vars():
-    dat = Data()
-    dat.generate_mute_data(100, 5)
+    data = Data()
+    data.generate_mute_data(100, 5)
     settings = {
         'cmi_estimator':  'JidtKraskovCMI',
         'max_lag_sources': 5,
@@ -40,8 +41,9 @@ def test_plot_selected_vars():
         'n_perm_max_seq': 50,
         }
     network_analysis = MultivariateTE()
-    res = network_analysis.analyse_single_target(settings, dat, target=2)
-    vis.plot_selected_vars(res)
+    results = network_analysis.analyse_single_target(settings, data, target=2)
+    vis.plot_selected_vars(results)
+
 
 if __name__ == '__main__':
     test_plot_selected_vars()

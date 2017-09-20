@@ -18,13 +18,13 @@ def test_pid_xor_data():
     x = np.random.randint(0, alph, n)
     y = np.random.randint(0, alph, n)
     z = np.logical_xor(x, y).astype(int)
-    dat = Data(np.vstack((x, y, z)), 'ps', normalise=False)
+    data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
     # Run Tartu estimator
     settings = {'pid_estimator': 'TartuPID'}
     pid = PartialInformationDecomposition()
     tic = tm.time()
-    est_tartu = pid.analyse_single_target(settings, data=dat, target=2,
+    est_tartu = pid.analyse_single_target(settings, data=data, target=2,
                                           sources=[0, 1], lags=[0, 0])
     t_tartu = tm.time() - tic
 
@@ -41,7 +41,7 @@ def test_pid_xor_data():
         'pid_estimator': 'SydneyPID'}
     pid = PartialInformationDecomposition()
     tic = tm.time()
-    est_sydney = pid.analyse_single_target(settings, data=dat, target=2,
+    est_sydney = pid.analyse_single_target(settings, data=data, target=2,
                                            sources=[0, 1], lags=[0, 0])
     t_sydney = tm.time() - tic
 
@@ -72,7 +72,7 @@ def test_pid_xor_data():
     assert 0.9 < est_tartu['syn_s1_s2'] <= 1.1, (
             'Tartu estimator incorrect synergy: {0}, should approx. 1'.format(
                                                     est_tartu['syn_s1_s2']))
-    # TODO test this: est = pid.analyse_network(data=dat, target=0)
+    # TODO test this: est = pid.analyse_network(data=data, target=0)
 
 
 def test_multivariate_sources():

@@ -85,8 +85,8 @@ class MultivariateTE(NetworkInference):
 
         Example:
 
-            >>> dat = Data()
-            >>> dat.generate_mute_data(100, 5)
+            >>> data = Data()
+            >>> data.generate_mute_data(100, 5)
             >>> settings = {
             >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
@@ -97,7 +97,7 @@ class MultivariateTE(NetworkInference):
             >>>     'min_lag_sources': 2
             >>>     }
             >>> network_analysis = MultivariateTE()
-            >>> res = network_analysis.analyse_network(settings, dat)
+            >>> results = network_analysis.analyse_network(settings, data)
 
         Args:
             settings : dict
@@ -196,8 +196,8 @@ class MultivariateTE(NetworkInference):
 
         Example:
 
-            >>> dat = Data()
-            >>> dat.generate_mute_data(100, 5)
+            >>> data = Data()
+            >>> data.generate_mute_data(100, 5)
             >>> settings = {
             >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
@@ -210,9 +210,9 @@ class MultivariateTE(NetworkInference):
             >>> target = 0
             >>> sources = [1, 2, 3]
             >>> network_analysis = MultivariateTE()
-            >>> res = network_analysis.analyse_single_target(settings,
-            >>>                                              dat, target,
-            >>>                                              sources)
+            >>> results = network_analysis.analyse_single_target(settings,
+            >>>                                                  data, target,
+            >>>                                                  sources)
 
         Args:
             settings : dict

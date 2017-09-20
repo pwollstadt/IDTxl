@@ -7,7 +7,7 @@ from .multivariate_te import MultivariateTE
 VERBOSE = False
 
 
-def generate_network_graph(res, n_nodes, fdr=True, find_u='max_te'):
+def generate_network_graph(results, n_nodes, fdr=True, find_u='max_te'):
     """Generate graph object for an inferred network.
 
     Generate a weighted, directed graph object from the network of inferred
@@ -26,7 +26,7 @@ def generate_network_graph(res, n_nodes, fdr=True, find_u='max_te'):
            significance)
 
     Args:
-        res : dict
+        results : dict
             output of multivariate_te.analyse_network()
         n_nodes : int
             number of nodes in the network
@@ -41,11 +41,11 @@ def generate_network_graph(res, n_nodes, fdr=True, find_u='max_te'):
         instance of a directed graph class from the networkx
         package (DiGraph)
     """
-    adj_matrix = _get_adj_matrix(res, n_nodes, fdr, find_u)
+    adj_matrix = _get_adj_matrix(results, n_nodes, fdr, find_u)
     return nx.from_numpy_matrix(adj_matrix, create_using=nx.DiGraph())
 
 
-def generate_source_graph(res, sign_sources=True):
+def generate_source_graph(results, sign_sources=True):
     """Generate graph object for a target process and single variables.
 
     Generate a graph object from the network of (multivariate)
@@ -54,7 +54,7 @@ def generate_source_graph(res, sign_sources=True):
     directed graphs (DiGraph).
 
     Args:
-        res : dict
+        results : dict
             output of multivariate_te.analyse_single_target()
         sign_sources : bool
             add only sources significant information contribution
@@ -65,29 +65,30 @@ def generate_source_graph(res, sign_sources=True):
         package (DiGraph)
     """
     try:
-        target = (res['current_value'][0], 0)
+        target = (results['current_value'][0], 0)
     except KeyError:
-        KeyError('Input res should be result of analyse_single_target() '
+        KeyError('Input results should be result of analyse_single_target() '
                  'method.')
     graph = nx.DiGraph()
     graph.add_node(target)
     # Add either all tested candidates or only significant ones
     # to the graph.
     if sign_sources:
-        graph.add_nodes_from(res['selected_vars_full'][:])
+        graph.add_nodes_from(results['selected_vars_full'][:])
     else:
-        procs = res['sources_tested']
-        samples = np.arange(res['current_value'][1] - res['min_lag_sources'],
-                            res['current_value'][1] - res['max_lag_sources'],
-                            -res['tau_sources'])
+        procs = results['sources_tested']
+        samples = np.arange(
+                    results['current_value'][1] - results['min_lag_sources'],
+                    results['current_value'][1] - results['max_lag_sources'],
+                    -results['tau_sources'])
         define_candidates = MultivariateTE._define_candidates
         nodes = define_candidates([], procs, samples)
         graph.add_nodes_from(nodes)
 
-    for v in range(len(res['selected_vars_full'])):
+    for v in range(len(results['selected_vars_full'])):
         # Here, one could add additional info in the future, networkx graphs
         # support attributes for graphs, nodes, and edges.
-        graph.add_edge(res['selected_vars_full'][v], target)
+        graph.add_edge(results['selected_vars_full'][v], target)
     if VERBOSE:
         print(graph.node)
         print(graph.edge)
@@ -95,7 +96,7 @@ def generate_source_graph(res, sign_sources=True):
     return graph
 
 
-def plot_network(res, n_nodes, fdr=True, find_u='max_te'):
+def plot_network(results, n_nodes, fdr=True, find_u='max_te'):
     """Plot network of multivariate TE between processes.
 
     Plot graph of the network of (multivariate) interactions between
@@ -104,7 +105,7 @@ def plot_network(res, n_nodes, fdr=True, find_u='max_te'):
     Plots a network and adjacency matrix.
 
     Args:
-        res : dict
+        results : dict
             output of multivariate_te.analyse_network()
         n_nodes : int
             number of nodes in the network
@@ -119,7 +120,7 @@ def plot_network(res, n_nodes, fdr=True, find_u='max_te'):
         instance of a directed graph class from the networkx
         package (DiGraph)
     """
-    graph = generate_network_graph(res, n_nodes, fdr, find_u)
+    graph = generate_network_graph(results, n_nodes, fdr, find_u)
     adj_matrix = nx.to_numpy_matrix(graph)
     print(graph.node)
 
@@ -142,7 +143,7 @@ def plot_network(res, n_nodes, fdr=True, find_u='max_te'):
     return graph
 
 
-def plot_selected_vars(res, sign_sources=True):
+def plot_selected_vars(results, sign_sources=True):
     """Plot network of a target process and single variables.
 
     Plot graph of the network of (multivariate) interactions between
@@ -151,7 +152,7 @@ def plot_selected_vars(res, sign_sources=True):
     Plots a network and reduced adjacency matrix.
 
     Args:
-        res : dict
+        results : dict
             output of multivariate_te.analyse_single_target()
         sign_sources : bool
             add only sources significant information contribution
@@ -161,11 +162,11 @@ def plot_selected_vars(res, sign_sources=True):
         instance of a directed graph class from the networkx
         package (DiGraph)
     """
-    graph = generate_source_graph(res, sign_sources)
+    graph = generate_source_graph(results, sign_sources)
     n = np.array(graph.nodes(),
                  dtype=[('procs', np.int), ('lags', np.int)])
     target = tuple(n[n['lags'] == 0][0])
-    max_lag = max(res['max_lag_sources'], res['max_lag_target'])
+    max_lag = max(results['max_lag_sources'], results['max_lag_target'])
     ind = 0
     color = ['lavender' for c in range(graph.number_of_nodes())]
     pos = nx.spring_layout(graph)
@@ -179,9 +180,9 @@ def plot_selected_vars(res, sign_sources=True):
         else:  # sources with proc. number > target
             pos[n] = np.array([max_lag - n[1], n[0]])
 
-        if n in res['selected_vars_sources']:
+        if n in results['selected_vars_sources']:
             color[ind] = 'cadetblue'
-        elif n in res['selected_vars_target']:
+        elif n in results['selected_vars_target']:
             color[ind] = 'tomato'
         elif n == target:
             color[ind] = 'red'
@@ -271,7 +272,7 @@ def plot_mute_graph():
     # http://stackoverflow.com/questions/10104700/how-to-set-networkx-edge-labels-offset-to-avoid-label-overlap
 
 
-def print_res_to_console(data, res, fdr=True, find_u='max_te'):
+def print_res_to_console(data, results, fdr=True, find_u='max_te'):
     """Print results of network inference to console.
 
     Print results of network inference to console. Output looks like this:
@@ -298,7 +299,7 @@ def print_res_to_console(data, res, fdr=True, find_u='max_te'):
     Args:
         data : Data() instance
             raw data
-        res : dict
+        results : dict
             output of network inference algorithm, e.g., MultivariateTE
         fdr : bool
             print FDR-corrected results (default=True)
@@ -314,7 +315,7 @@ def print_res_to_console(data, res, fdr=True, find_u='max_te'):
     """
     # Generate adjacency matrix from results.
     n_nodes = data.n_processes
-    adj_matrix = _get_adj_matrix(res, n_nodes, fdr, find_u)
+    adj_matrix = _get_adj_matrix(results, n_nodes, fdr, find_u)
 
     # Print link to console.
     link_found = False
@@ -329,7 +330,7 @@ def print_res_to_console(data, res, fdr=True, find_u='max_te'):
     return adj_matrix
 
 
-def _get_adj_matrix(res, n_nodes, fdr=True, find_u='max_te'):
+def _get_adj_matrix(results, n_nodes, fdr=True, find_u='max_te'):
     """Return adjacency matrix as numpy array.
 
     Return results of network inference as directed adjacency matrix. Output is
@@ -347,7 +348,7 @@ def _get_adj_matrix(res, n_nodes, fdr=True, find_u='max_te'):
            significance)
 
     Args:
-        res : dict
+        results : dict
             output of network inference algorithm, e.g., MultivariateTE
         n_nodes : int
             number of nodes in the network
@@ -366,11 +367,11 @@ def _get_adj_matrix(res, n_nodes, fdr=True, find_u='max_te'):
     # Check if FDR-corrected or uncorrected results are requested.
     if fdr:
         try:
-            r = res['fdr_corrected']
+            r = results['fdr_corrected']
         except KeyError:
             raise RuntimeError('No FDR-corrected results found.')
     else:
-        r = res.copy()
+        r = results.copy()
         try:
             del r['fdr_corrected']
         except KeyError:
@@ -402,11 +403,11 @@ def _get_adj_matrix(res, n_nodes, fdr=True, find_u='max_te'):
     return adj_matrix
 
 
-def plot_network_comparison(res, mask_sign=True, show=True):
+def plot_network_comparison(results, mask_sign=True, show=True):
     """Plot results of network comparison."""
-    union = res['union_network']
+    union = results['union_network']
 
-    targets = res['union_network']['targets']
+    targets = results['union_network']['targets']
     n_nodes = max(targets) + 1
     union_network = np.zeros((n_nodes, n_nodes), dtype=int)
     adj_matrix_te_diff = np.zeros((n_nodes, n_nodes))
@@ -422,10 +423,10 @@ def plot_network_comparison(res, mask_sign=True, show=True):
         for s in np.unique(all_vars_sources):
             union_network[s, t] = 1
 
-        pval = res['pval'][t]
-        sign = res['sign'][t]
-        te_diff = res['cmi_diff_abs'][t]
-        comp = res['a>b'][t].astype(int)
+        pval = results['pval'][t]
+        sign = results['sign'][t]
+        te_diff = results['cmi_diff_abs'][t]
+        comp = results['a>b'][t].astype(int)
         comp[comp == 0] = -1
         if mask_sign:
             all_vars_sources = all_vars_sources[sign]

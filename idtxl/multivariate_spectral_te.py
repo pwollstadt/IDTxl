@@ -60,8 +60,8 @@ class MultivariateSpectralTE(NetworkAnalysis):
 
         Example:
 
-            >>> dat = Data()
-            >>> dat.generate_mute_data(100, 5)
+            >>> data = Data()
+            >>> data.generate_mute_data(100, 5)
             >>> max_lag = 5
             >>> min_lag = 4
             >>> settings = {
@@ -73,7 +73,7 @@ class MultivariateSpectralTE(NetworkAnalysis):
             >>>     }
             >>> network_analysis = MultivariateTE(max_lag, min_lag,
             >>>                                   settings)
-            >>> res = network_analysis.analyse_network(dat)
+            >>> results = network_analysis.analyse_network(data)
             >>>
             >>> spectral_settings = {
             >>>     'cmi_estimator':  'JidtKraskovCMI',
@@ -82,7 +82,7 @@ class MultivariateSpectralTE(NetworkAnalysis):
             >>>     }
             >>> spectral_analysis = Multivariate_spectral_te()
             >>> res_spec = spectral_analysis.analyse_network(spectral_settings,
-            >>>                                              res)
+            >>>                                              results)
 
         Note:
             For more details on the estimation of multivariate transfer entropy
@@ -135,8 +135,8 @@ class MultivariateSpectralTE(NetworkAnalysis):
 
         Example:
 
-            >>> dat = Data()
-            >>> dat.generate_mute_data(100, 5)
+            >>> data = Data()
+            >>> data.generate_mute_data(100, 5)
             >>> max_lag = 5
             >>> min_lag = 4
             >>> settings = {
@@ -149,8 +149,8 @@ class MultivariateSpectralTE(NetworkAnalysis):
             >>> target = 0
             >>> sources = [1, 2, 3]
             >>> network_analysis = MultivariateTE(max_lag, min_lag, settings)
-            >>> res = network_analysis.analyse_single_target(dat, target,
-            >>>                                              sources)
+            >>> results = network_analysis.analyse_single_target(data, target,
+            >>>                                                  sources)
             >>>
             >>> spectral_settings = {
             >>>     'cmi_estimator':  'JidtKraskovCMI',
@@ -159,7 +159,7 @@ class MultivariateSpectralTE(NetworkAnalysis):
             >>>     }
             >>> spectral_analysis = Multivariate_spectral_te()
             >>> res_spec = spectral_analysis.analyse_single_target(
-            >>>                                     spectral_settingsres, dat)
+            >>>                                     spectral_settingsres, data)
 
             Note:
             For more details on the estimation of multivariate transfer entropy
@@ -194,9 +194,9 @@ class MultivariateSpectralTE(NetworkAnalysis):
         for s in idx_list_sources:
             # TODO do stuff
             # new methods in class Data():
-            # dat._get_data_slice
-            # dat.slice_permute_samples
-            # dat.slice_permute_replications
+            # data._get_data_slice
+            # data.slice_permute_samples
+            # data.slice_permute_replications
             # new method in module stats:
             # stats._generate_spectral_surrogates
             return 1

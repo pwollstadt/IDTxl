@@ -24,8 +24,8 @@ def test_min_statistic():
 
 
 def test_max_statistic_sequential():
-    dat = Data()
-    dat.generate_mute_data(104, 10)
+    data = Data()
+    data.generate_mute_data(104, 10)
     settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 21,
@@ -37,18 +37,18 @@ def test_max_statistic_sequential():
         'max_lag_target': 5
         }
     setup = MultivariateTE()
-    setup._initialise(settings, dat, sources=[0, 1], target=2)
+    setup._initialise(settings, data, sources=[0, 1], target=2)
     setup.current_value = (0, 4)
     setup.selected_vars_sources = [(1, 1), (1, 2)]
     setup.selected_vars_full = [(0, 1), (1, 1), (1, 2)]
     setup._selected_vars_realisations = np.random.rand(
-                                    dat.n_realisations(setup.current_value),
+                                    data.n_realisations(setup.current_value),
                                     len(setup.selected_vars_full))
     setup._current_value_realisations = np.random.rand(
-                                    dat.n_realisations(setup.current_value),
+                                    data.n_realisations(setup.current_value),
                                     1)
     [sign, p, te] = stats.max_statistic_sequential(analysis_setup=setup,
-                                                   data=dat)
+                                                   data=data)
 
 
 def test_network_fdr():
@@ -96,10 +96,10 @@ def test_network_fdr():
             'min_lag_sources': 1,
             'max_lag_target': 3,
             'correct_by_target': correct_by_target}
-        dat = Data()
-        dat.generate_mute_data(n_samples=100, n_replications=3)
+        data = Data()
+        data.generate_mute_data(n_samples=100, n_replications=3)
         analysis_setup = MultivariateTE()
-        analysis_setup._initialise(settings=settings, data=dat,
+        analysis_setup._initialise(settings=settings, data=data,
                                    sources=[1, 2], target=0)
         res_pruned = stats.network_fdr(settings, res_1, res_2)
         assert (not res_pruned[2]['selected_vars_sources']), ('Target ')
@@ -120,7 +120,8 @@ def test_network_fdr():
     # Test None result for insufficient no. permutations
     res_1[0]['settings']['n_perm_max_seq'] = 2
     res_pruned = stats.network_fdr(settings, res_1, res_2)
-    assert not res_pruned, ('Res. should be None is no. permutations too low.')
+    assert not res_pruned, (
+        'results should be None if no. permutations too low.')
 
 
 def test_find_pvalue():
@@ -154,37 +155,34 @@ def test_find_pvalue():
 
 def test_find_table_max():
     tab = np.array([[0, 2, 1], [3, 4, 5], [10, 8, 1]])
-    res = stats._find_table_max(tab)
-    assert (res == np.array([10,  8,  5])).all(), ('Function did not return '
-                                                   'maximum for each column.')
+    results = stats._find_table_max(tab)
+    assert (results == np.array([10,  8,  5])).all(), (
+        'Function did not return maximum for each column.')
 
 
 def test_find_table_min():
     tab = np.array([[0, 2, 1], [3, 4, 5], [10, 8, 1]])
-    res = stats._find_table_min(tab)
-    assert (res == np.array([0, 2, 1])).all(), ('Function did not return '
-                                                'minimum for each column.')
+    results = stats._find_table_min(tab)
+    assert (results == np.array([0, 2, 1])).all(), (
+        'Function did not return minimum for each column.')
 
 
 def test_sort_table_max():
     tab = np.array([[0, 2, 1], [3, 4, 5], [10, 8, 1]])
-    res = stats._sort_table_max(tab)
-    assert (res[0, :] == np.array([10,  8,  5])).all(), ('Function did not '
-                                                         'return maximum for '
-                                                         'first row.')
-    assert (res[2, :] == np.array([0, 2, 1])).all(), ('Function did not return'
-                                                      ' minimum for last row.')
+    results = stats._sort_table_max(tab)
+    assert (results[0, :] == np.array([10,  8,  5])).all(), (
+        'Function did not return maximum for first row.')
+    assert (results[2, :] == np.array([0, 2, 1])).all(), (
+        'Function did not return minimum for last row.')
 
 
 def test_sort_table_min():
     tab = np.array([[0, 2, 1], [3, 4, 5], [10, 8, 1]])
-    res = stats._sort_table_min(tab)
-    assert (res[0, :] == np.array([0, 2, 1])).all(), ('Function did not return'
-                                                      ' minimum for first '
-                                                      'row.')
-    assert (res[2, :] == np.array([10,  8,  5])).all(), ('Function did not '
-                                                         'return maximum for '
-                                                         'last row.')
+    results = stats._sort_table_min(tab)
+    assert (results[0, :] == np.array([0, 2, 1])).all(), (
+        'Function did not return minimum for first row.')
+    assert (results[2, :] == np.array([10,  8,  5])).all(), (
+        'Function did not return maximum for last row.')
 
 
 def test_data_type():
@@ -192,40 +190,40 @@ def test_data_type():
     # Change data type for the same object instance.
     d_int = np.random.randint(0, 10, size=(3, 50))
     orig_type = type(d_int[0][0])
-    dat = Data(d_int, dim_order='ps', normalise=False)
+    data = Data(d_int, dim_order='ps', normalise=False)
     # The concrete type depends on the platform:
     # https://mail.scipy.org/pipermail/numpy-discussion/2011-November/059261.html
-    assert dat.data_type is orig_type, 'Data type did not change.'
-    assert issubclass(type(dat.data[0, 0, 0]), np.integer), ('Data type is not'
-                                                             ' an int.')
+    assert data.data_type is orig_type, 'Data type did not change.'
+    assert issubclass(type(data.data[0, 0, 0]), np.integer), (
+        'Data type is not an int.')
     settings = {'permute_in_time': True, 'perm_type': 'random'}
-    surr = stats._get_surrogates(data=dat,
+    surr = stats._get_surrogates(data=data,
                                  current_value=(0, 5),
                                  idx_list=[(1, 3), (2, 4)],
                                  n_perm=20,
                                  perm_settings=settings)
-    assert issubclass(type(surr[0, 0]), np.integer), ('Realisations type is '
-                                                      'not an int.')
-    surr = stats._generate_spectral_surrogates(data=dat,
+    assert issubclass(type(surr[0, 0]), np.integer), (
+        'Realisations type is not an int.')
+    surr = stats._generate_spectral_surrogates(data=data,
                                                scale=1,
                                                n_perm=20,
                                                perm_settings=settings)
-    assert issubclass(type(surr[0, 0, 0]), np.integer), ('Realisations type is'
-                                                         ' not an int.')
+    assert issubclass(type(surr[0, 0, 0]), np.integer), (
+        'Realisations type is not an int.')
 
     d_float = np.random.randn(3, 50)
-    dat.set_data(d_float, dim_order='ps')
-    assert dat.data_type is np.float64, 'Data type did not change.'
-    assert issubclass(type(dat.data[0, 0, 0]), np.float), ('Data type is not '
-                                                           'a float.')
-    surr = stats._get_surrogates(data=dat,
+    data.set_data(d_float, dim_order='ps')
+    assert data.data_type is np.float64, 'Data type did not change.'
+    assert issubclass(type(data.data[0, 0, 0]), np.float), (
+        'Data type is not a float.')
+    surr = stats._get_surrogates(data=data,
                                  current_value=(0, 5),
                                  idx_list=[(1, 3), (2, 4)],
                                  n_perm=20,
                                  perm_settings=settings)
-    assert issubclass(type(surr[0, 0]), np.float), ('Realisations type is not '
-                                                    'a float.')
-    surr = stats._generate_spectral_surrogates(data=dat,
+    assert issubclass(type(surr[0, 0]), np.float), (
+        'Realisations type is not a float.')
+    surr = stats._generate_spectral_surrogates(data=data,
                                                scale=1,
                                                n_perm=20,
                                                perm_settings=settings)

@@ -66,8 +66,8 @@ class ActiveInformationStorage(SingleProcessAnalysis):
 
         Example:
 
-            >>> dat = Data()
-            >>> dat.generate_mute_data(100, 5)
+            >>> data = Data()
+            >>> data.generate_mute_data(100, 5)
             >>> settings = {
             >>>     'cmi_estimator': 'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
@@ -77,8 +77,8 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             >>>     }
             >>> processes = [1, 2, 3]
             >>> network_analysis = ActiveInformationStorage()
-            >>> res = network_analysis.analyse_network(settings, dat,
-            >>>                                        processes)
+            >>> results = network_analysis.analyse_network(settings, data,
+            >>>                                            processes)
 
         Args:
             settings : dict

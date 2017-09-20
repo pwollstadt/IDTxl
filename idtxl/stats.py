@@ -61,7 +61,7 @@ def network_fdr(settings=None, *results):
     constant = settings['fdr_constant']
 
     # Combine results into single results dict (this creates a copy).
-    res = utils.combine_results(*results)
+    results = utils.combine_results(*results)
 
     # Collect significant source variables for all targets. Either correct
     # p-value of whole target (all candidates), or correct p-value of
@@ -72,22 +72,23 @@ def network_fdr(settings=None, *results):
     n_perm = np.arange(0).astype(int)
     cands = []
     if correct_by_target:  # whole target
-        for target in res.keys():
-            if res[target]['omnibus_sign']:
-                pval = np.append(pval, res[target]['omnibus_pval'])
+        for target in results.keys():
+            if results[target]['omnibus_sign']:
+                pval = np.append(pval, results[target]['omnibus_pval'])
                 target_idx = np.append(target_idx, target)
-                n_perm = np.append(n_perm,
-                                   res[target]['settings']['n_perm_omnibus'])
+                n_perm = np.append(
+                        n_perm, results[target]['settings']['n_perm_omnibus'])
     else:  # individual variables
-        for target in res.keys():
-            if res[target]['omnibus_sign']:
-                n_sign = res[target]['selected_sources_pval'].size
-                pval = np.append(pval, res[target]['selected_sources_pval'])
+        for target in results.keys():
+            if results[target]['omnibus_sign']:
+                n_sign = results[target]['selected_sources_pval'].size
+                pval = np.append(pval,
+                                 results[target]['selected_sources_pval'])
                 target_idx = np.append(target_idx,
                                        np.ones(n_sign) * target).astype(int)
-                cands = cands + res[target]['selected_vars_sources']
-                n_perm = np.append(n_perm,
-                                   res[target]['settings']['n_perm_max_seq'])
+                cands = cands + results[target]['selected_vars_sources']
+                n_perm = np.append(
+                        n_perm, results[target]['settings']['n_perm_max_seq'])
 
     if pval.size == 0:
         print('No links in final results. Return ...')
@@ -133,24 +134,24 @@ def network_fdr(settings=None, *results):
         if not sign[s]:
             if correct_by_target:
                 t = target_idx[s]
-                res[t]['selected_vars_full'] = res[t]['selected_vars_target']
-                res[t]['selected_sources_te'] = None
-                res[t]['selected_sources_pval'] = None
-                res[t]['selected_vars_sources'] = []
-                res[t]['omnibus_pval'] = 1
-                res[t]['omnibus_sign'] = False
+                results[t]['selected_vars_full'] = results[t]['selected_vars_target']
+                results[t]['selected_sources_te'] = None
+                results[t]['selected_sources_pval'] = None
+                results[t]['selected_vars_sources'] = []
+                results[t]['omnibus_pval'] = 1
+                results[t]['omnibus_sign'] = False
             else:
                 t = target_idx[s]
                 cand = cands[s]
-                cand_ind = res[t]['selected_vars_sources'].index(cand)
-                res[t]['selected_vars_sources'].pop(cand_ind)
-                res[t]['selected_sources_pval'] = np.delete(
-                                    res[t]['selected_sources_pval'], cand_ind)
-                res[t]['selected_sources_te'] = np.delete(
-                                    res[t]['selected_sources_te'], cand_ind)
-                res[t]['selected_vars_full'].pop(
-                                    res[t]['selected_vars_full'].index(cand))
-    return res
+                cand_ind = results[t]['selected_vars_sources'].index(cand)
+                results[t]['selected_vars_sources'].pop(cand_ind)
+                results[t]['selected_sources_pval'] = np.delete(
+                                results[t]['selected_sources_pval'], cand_ind)
+                results[t]['selected_sources_te'] = np.delete(
+                                results[t]['selected_sources_te'], cand_ind)
+                results[t]['selected_vars_full'].pop(
+                                results[t]['selected_vars_full'].index(cand))
+    return results
 
 
 def omnibus_test(analysis_setup, data):
@@ -885,13 +886,13 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
         if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
                 permute_in_time):
             # Generate the surrogates analytically
-            surr_table[idx_c, :] = (analysis_setup._cmi_estimator.
-                                    estimate_surrogates_analytic(
-                                        n_perm=n_perm,
-                                        var1=data.get_realisations(
-                                                analysis_setup.current_value, [candidate])[0],
-                                        var2=current_value_realisations,
-                                        conditional=analysis_setup._selected_vars_realisations))
+            surr_table[idx_c, :] = (
+                analysis_setup._cmi_estimator.estimate_surrogates_analytic(
+                    n_perm=n_perm,
+                    var1=data.get_realisations(analysis_setup.current_value,
+                                               [candidate])[0],
+                    var2=current_value_realisations,
+                    conditional=analysis_setup._selected_vars_realisations))
         else:
             surr_candidate_realisations = _get_surrogates(
                                                  data,
@@ -1123,9 +1124,9 @@ def _check_permute_in_time(analysis_setup, data, n_perm):
 
     if (not analysis_setup.settings['permute_in_time'] and
             not _sufficient_replications(data, n_perm)):
-        print('\n\nWARNING: Number of replications is not sufficient to generate '
-              'the desired number of surrogates. Permuting samples in time '
-              'instead.')
+        print('\n\nWARNING: Number of replications is not sufficient to '
+              'generate the desired number of surrogates. Permuting samples '
+              'in time instead.')
         analysis_setup.settings['permute_in_time'] = True
 
     if analysis_setup.settings['permute_in_time']:

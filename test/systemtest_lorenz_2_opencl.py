@@ -8,8 +8,8 @@ start_time = time.time()
 # load simulated data from 2 coupled Lorenz systems 1->2, u = 45 ms
 d = np.load(os.path.join(os.path.dirname(__file__),
             'data/lorenz_2_exampledata.npy'))
-dat = Data()
-dat.set_data(d[:, :, 0:100], 'psr')
+data = Data()
+data.set_data(d[:, :, 0:100], 'psr')
 settings = {
         'cmi_estimator':  'OpenCLKraskovCMI',
         'max_lag_sources': 50,
@@ -23,8 +23,8 @@ settings = {
         'n_perm_max_seq': 500,
         }
 lorenz_analysis = MultivariateTE()
-res_1 = lorenz_analysis.analyse_single_target(settings, dat, 0)
-res_2 = lorenz_analysis.analyse_single_target(settings, dat, 1)
+res_1 = lorenz_analysis.analyse_single_target(settings, data, 0)
+res_2 = lorenz_analysis.analyse_single_target(settings, data, 1)
 runtime = time.time() - start_time
 print("---- {0} minutes".format(runtime / 60))
 

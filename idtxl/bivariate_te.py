@@ -84,8 +84,8 @@ class BivariateTE(NetworkInference):
 
         Example:
 
-            >>> dat = Data()
-            >>> dat.generate_mute_data(100, 5)
+            >>> data = Data()
+            >>> data.generate_mute_data(100, 5)
             >>> settings = {
             >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
@@ -96,7 +96,7 @@ class BivariateTE(NetworkInference):
             >>>     'min_lag': 4
             >>>     }
             >>> network_analysis = Bivariate_te()
-            >>> res = network_analysis.analyse_network(settings, dat)
+            >>> results = network_analysis.analyse_network(settings, data)
 
         Args:
             settings : dict
@@ -180,8 +180,8 @@ class BivariateTE(NetworkInference):
 
         Example:
 
-            >>> dat = Data()
-            >>> dat.generate_mute_data(100, 5)
+            >>> data = Data()
+            >>> data.generate_mute_data(100, 5)
             >>> settings = {
             >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
@@ -194,9 +194,9 @@ class BivariateTE(NetworkInference):
             >>> target = 0
             >>> sources = [1, 2, 3]
             >>> network_analysis = Bivariate_te()
-            >>> res = network_analysis.analyse_single_target(settings,
-            >>>                                              dat, target,
-            >>>                                              sources)
+            >>> results = network_analysis.analyse_single_target(settings,
+            >>>                                                  data, target,
+            >>>                                                  sources)
 
         Args:
             settings : dict

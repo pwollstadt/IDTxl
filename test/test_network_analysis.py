@@ -40,8 +40,8 @@ def test_idx_to_lag():
     idx_list = [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (1, 5)]
     reference_list = [(1, 5), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0)]
     lag_list = n._idx_to_lag(idx_list)
-    res = [True for i, j in zip(lag_list, reference_list) if i == j]
-    assert np.array(res).all(), 'Indices were not converted to lags correctly.'
+    results = [True for i, j in zip(lag_list, reference_list) if i == j]
+    assert np.array(results).all(), 'Indices were not converted to lags correctly.'
 
     with pytest.raises(IndexError):
         idx_list = [(1, 7)]
@@ -54,8 +54,9 @@ def test_lag_to_idx():
     lag_list = [(1, 5), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0)]
     reference_list = [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (1, 5)]
     idx_list = n._lag_to_idx(lag_list)
-    res = [True for i, j in zip(idx_list, reference_list) if i == j]
-    assert np.array(res).all(), 'Lags were not converted to indices correctly.'
+    results = [True for i, j in zip(idx_list, reference_list) if i == j]
+    assert np.array(results).all(), (
+        'Lags were not converted to indices correctly.')
 
     with pytest.raises(IndexError):
         idx_list = [(1, 7)]

@@ -5,18 +5,6 @@ Provide functions to import the following into IDTxl:
     - mat-files (version>7.3, hdf5)
     - FieldTrip-style mat-files (version>7.3, hdf5)
 
-Matlab supports hdf5 only for files saved as version 7.3 or higher:
-https://au.mathworks.com/help/matlab/ref/save.html#inputarg_version
-
-Creates a numpy array usable as input to IDTxl.
-
-Methods:
-    ft_trial_2_numpyarray(file_name, ft_struct_name)
-    matarray2idtxlconverter(file_name, array_name, order) =     takes a file_name,
-                    the name of the array variable (array_name) inside,
-                    and the order of sensor axis,  time axisand (CHECK THIS!!)
-                    repetition axis (as a list)
-
 Note:
     Written for Python 3.4+
 
@@ -83,8 +71,8 @@ def import_fieldtrip(file_name, ft_struct_name, file_version, normalise=True):
     fsample = _ft_fsample_2_float(file_name, ft_struct_name)
     timestamps = _ft_import_time(file_name, ft_struct_name)
 
-    dat = Data(data=trial_data, dim_order='spr', normalise=normalise)
-    return dat, label, timestamps, fsample
+    data = Data(data=trial_data, dim_order='spr', normalise=normalise)
+    return data, label, timestamps, fsample
 
 
 def _ft_import_trial(file_name, ft_struct_name):
@@ -246,10 +234,10 @@ def import_matarray(file_name, array_name, file_version, dim_order,
     # Create output: IDTxl data object, list of labels, sampling info in unit
     # time steps (sampling rate of 1).
     print('Creating Data object from matlab array: {0}.'.format(array_name))
-    dat = Data(mat_data, dim_order=dim_order, normalise=normalise)
+    data = Data(mat_data, dim_order=dim_order, normalise=normalise)
     label = []
-    for n in range(dat.n_processes):
+    for n in range(data.n_processes):
         label.append('channel_{0:03d}'.format(n))
     fsample = 1
-    timestamps = np.arange(dat.n_samples)
-    return dat, label, timestamps, fsample
+    timestamps = np.arange(data.n_samples)
+    return data, label, timestamps, fsample

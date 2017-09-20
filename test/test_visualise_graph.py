@@ -12,8 +12,8 @@ from idtxl.visualise_graph import print_res_to_console
 
 
 def test_console_output():
-    dat = Data()
-    dat.generate_mute_data(n_samples=10, n_replications=5)
+    data = Data()
+    data.generate_mute_data(n_samples=10, n_replications=5)
     settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'max_lag_sources': 5,
@@ -21,8 +21,8 @@ def test_console_output():
         'max_lag_target': 5
         }
     nw = MultivariateTE()
-    r = nw.analyse_network(settings, dat, targets='all', sources='all')
-    print_res_to_console(dat, r, fdr=False)
+    r = nw.analyse_network(settings, data, targets='all', sources='all')
+    print_res_to_console(data, r, fdr=False)
 
 
 if __name__ == '__main__':

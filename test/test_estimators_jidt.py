@@ -30,13 +30,12 @@ jpype_missing = pytest.mark.skipif(
         reason="Jpype is missing, JIDT estimators are not available")
 
 
-def _assert_result(res, expected_res, estimator, measure, tol=0.05):
+def _assert_result(results, expected_res, estimator, measure, tol=0.05):
     # Compare estimates with analytic results and print output.
     print('{0} - {1} result: {2:.4f} nats; expected to be close to {3:.4f} '
-          'nats.'.format(estimator, measure, res, expected_res))
-    assert np.isclose(res, expected_res, atol=tol), (
-                        '{0} calculation failed (error larger than '
-                        '{1}).'.format(measure, tol))
+          'nats.'.format(estimator, measure, results, expected_res))
+    assert np.isclose(results, expected_res, atol=tol), (
+        '{0} calculation failed (error larger than {1}).'.format(measure, tol))
 
 
 def _compare_result(res1, res2, estimator1, estimator2, measure, tol=0.05):
