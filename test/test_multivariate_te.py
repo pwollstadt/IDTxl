@@ -123,13 +123,6 @@ def test_multivariate_te_init():
         nw.analyse_single_target(settings=settings, data=data, target=0,
                                  sources=[20])
 
-    # Force conditionals
-    settings['add_conditionals'] = [(0, 1), (1, 3)]
-    nw.analyse_single_target(settings=settings, data=data, target=0)
-    settings['add_conditionals'] = (8, 0)
-    with pytest.raises(IndexError):
-        nw.analyse_single_target(settings=settings, data=data, target=0)
-
 
 @jpype_missing
 def test_multivariate_te_one_realisation_per_replication():
@@ -186,19 +179,30 @@ def test_faes_method():
 
 @jpype_missing
 def test_add_conditional_manually():
-    """Adda variable that is not in the data set."""
+    """Enforce the conditioning on additional variables."""
     settings = {'cmi_estimator': 'JidtKraskovCMI',
-                'add_conditionals': (8, 0),
                 'max_lag_sources': 5,
                 'min_lag_sources': 3,
                 'max_lag_target': 7}
-    nw_1 = MultivariateTE()
+    nw = MultivariateTE()
     data = Data()
     data.generate_mute_data()
-    sources = [1, 2, 3]
-    target = 0
+
+    # Add a conditional with a lag bigger than the max_lag requested above
+    settings['add_conditionals'] = (8, 0)
     with pytest.raises(IndexError):
-        nw_1._initialise(settings, data, sources, target)
+        nw._initialise(settings, data, sources=[1, 2], target=0)
+
+    # Add valid conditionals and test if they were added
+    settings['add_conditionals'] = [(0, 1), (1, 3)]
+    nw._initialise(settings=settings, data=data, target=0, sources=[1, 2])
+    # Get list of conditionals after intialisation and convert absolute samples
+    # back to lags for comparison.
+    cond_list = nw._idx_to_lag(nw.selected_vars_full)
+    assert settings['add_conditionals'][0] in cond_list, (
+        'First enforced conditional is missing from results.')
+    assert settings['add_conditionals'][1] in cond_list, (
+        'Second enforced conditional is missing from results.')
 
 
 @jpype_missing

@@ -283,18 +283,27 @@ class NetworkInference(NetworkAnalysis):
 
     def _force_conditionals(self, cond, data):
         """Enforce a given conditioning set."""
-        if type(cond) is tuple:  # easily add single variable
-            cond = [cond]
-        elif type(cond) is str:
+        if type(cond) is str:
+            # Get realisations and indices of source variables with lag 0. Note
+            # that _define_candidates returns tuples with absolute indices and
+            # not lags.
             if cond == 'faes':
                 cond = self._define_candidates(self.source_set,
                                                [self.current_value[1]])
-
-        print('Adding the following variables to the conditioning set: {0}.'.
-              format(self._idx_to_lag(cond)))
-        self._append_selected_vars(cond,
-                                   data.get_realisations(self.current_value,
-                                                         cond)[0])
+                self._append_selected_vars(
+                        cond,
+                        data.get_realisations(self.current_value, cond)[0])
+        else:
+            # If specific variables for conditioning were provided, convert
+            # lags to absolute sample indices and add variables.
+            if type(cond) is tuple:  # easily add single variable
+                cond = [cond]
+            print('Adding the following variables to the conditioning set: '
+                  '{0}.'.format(cond))
+            cond_idx = self._lag_to_idx(cond)
+            self._append_selected_vars(
+                        cond_idx,
+                        data.get_realisations(self.current_value, cond_idx)[0])
 
     def _reset(self):
         """Reset instance after analysis."""

@@ -196,10 +196,10 @@ def test_multivariate_te_lorenz_2():
     lorenz_analysis = MultivariateTE()
     # FOR DEBUGGING: add the whole history for k = 20, tau = 2 to the
     # estimation, this makes things faster, b/c these don't have to be
-    # tested again.
-    settings['add_conditionals'] = [(1, 44), (1, 42), (1, 40), (1, 38),
-                                    (1, 36), (1, 34), (1, 32), (1, 30),
-                                    (1, 28)]
+    # tested again. Note conditionals are specified using lags.
+    settings['add_conditionals'] = [(1, 19), (1, 17), (1, 15), (1, 13),
+                                    (1, 11), (1, 9), (1, 7), (1, 5), (1, 3),
+                                    (1, 1)]
 
     settings['max_lag_sources'] = 60
     settings['min_lag_sources'] = 31
@@ -208,7 +208,7 @@ def test_multivariate_te_lorenz_2():
     settings['tau_target'] = 1
 
     # Just analyse the direction of coupling
-    results = lorenz_analysis.analyse_single_target(settings, data, 1)
+    results = lorenz_analysis.analyse_single_target(settings, data, target=1)
     print(results)
 
 

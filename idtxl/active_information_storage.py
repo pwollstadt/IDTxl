@@ -453,12 +453,11 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         """Enforce a given conditioning set."""
         if type(cond) is tuple:  # easily add single variable
             cond = [cond]
-
         print('Adding the following variables to the conditioning set: {0}.'.
-              format(self._idx_to_lag(cond)))
-        self._append_selected_vars(cond,
-                                   data.get_realisations(self.current_value,
-                                                         cond)[0])
+              format(cond))
+        cond_idx = self._lag_to_idx(cond)
+        self._append_selected_vars(
+            cond_idx, data.get_realisations(self.current_value, cond_idx)[0])
 
     def _reset(self):
         """Reset instance after analysis."""

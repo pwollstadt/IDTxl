@@ -262,7 +262,14 @@ class NetworkAnalysis():
         return candidate_set
 
     def _append_selected_vars_idx(self, idx):
-        """Append indices of conditionals to existing list."""
+        """Append indices of conditionals to existing list.
+
+        Args:
+            idx : list of tuples
+                indeces of selected variables, where each entry is a tuple
+                (idx process, idx sample), where indices are absolute values
+                with respect to entries in a data array
+        """
         if self.selected_vars_full is None:
             self.selected_vars_full = idx
         else:

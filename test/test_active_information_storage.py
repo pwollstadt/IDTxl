@@ -56,11 +56,32 @@ def test_ActiveInformationStorage_init():
     with pytest.raises(RuntimeError):  # wrong type
         ais.analyse_single_process(settings, data, process={})
 
-    # Force conditionals
+
+@jpype_missing
+def test_add_conditional_manually():
+    """Enforce the conditioning on additional variables."""
+    settings = {'cmi_estimator': 'JidtKraskovCMI',
+                'max_lag': 5,
+                'n_perm_min_stat': 21}
+    data = Data()
+    data.generate_mute_data(10, 3)
+    ais = ActiveInformationStorage()
+
+    # Add a conditional with a lag bigger than the max_lag requested above
+    settings['add_conditionals'] = (8, 0)
+    with pytest.raises(IndexError):
+        ais.analyse_single_process(settings=settings, data=data, process=0)
+
+    # Add valid conditionals and test if they were added
     settings['add_conditionals'] = [(0, 1), (1, 3)]
-    settings['n_perm_max_stat'] = 21
-    settings['n_perm_min_stat'] = 21
-    results = ais.analyse_single_process(settings, data, process=0)
+    ais._initialise(settings, data, 0)
+    # Get list of conditionals after intialisation and convert absolute samples
+    # back to lags for comparison.
+    cond_list = ais._idx_to_lag(ais.selected_vars_full)
+    assert settings['add_conditionals'][0] in cond_list, (
+        'First enforced conditional is missing from results.')
+    assert settings['add_conditionals'][1] in cond_list, (
+        'Second enforced conditional is missing from results.')
 
 
 def test_analyse_network():
