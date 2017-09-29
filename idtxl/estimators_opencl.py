@@ -167,8 +167,8 @@ class OpenCLKraskovMI(OpenCLKraskov):
                 average MI over all samples or local MI for individual
                 samples if 'local_values'=True
         """
-        # Prepare data and add noise: check if variable realisations are passed
-        # as 1D or 2D arrays and have equal no. observations.
+        # Prepare data: check if variable realisations are passed as 1D or 2D
+        # arrays and have equal no. observations.
         var1 = self._ensure_two_dim_input(var1)
         var2 = self._ensure_two_dim_input(var2)
         assert var1.shape[0] == var2.shape[0]
@@ -429,8 +429,8 @@ class OpenCLKraskovCMI(OpenCLKraskov):
             est_mi = OpenCLKraskovMI(self.settings)
             return est_mi.estimate(var1, var2, n_chunks)
 
-        # Prepare data and add noise: check if variable realisations are passed
-        # as 1D or 2D arrays and have equal no. observations.
+        # Prepare data: check if variable realisations are passed as 1D or 2D
+        # arrays and have equal no. observations.
         var1 = self._ensure_two_dim_input(var1)
         var2 = self._ensure_two_dim_input(var2)
         conditional = self._ensure_two_dim_input(conditional)
