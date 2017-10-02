@@ -485,34 +485,43 @@ class Data():
         """Return realisations with permuted samples (repl. stays intact).
 
         Create surrogate data by permuting realisations over samples (time)
-        while keeping the order of replications intact. Return realisations for
-        all indices in the list, where an index is expected to have the form
-        (process index, sample index). Realisations are permuted according to
-        the settings specified in perm_settings:
+        while keeping the order of replications intact. Surrogates can be
+        created for multiple variables in parallel, where variables are
+        provided as a list of indices. An index is expected to have the form
+        (process index, sample index).
+
+        Permuting samples in time is the fall-back option for surrogate data
+        creation. The default method for surrogate data creation is the
+        permutation of replications, while keeping the order of samples in time
+        intact. If the number of replications is too small to allow for a
+        sufficient number of permutations for the generation of surrogate data,
+        permutation of samples in time is chosen instead.
+
+        Different permutation strategies can be chosen to permute realisations
+        in time. Note that if data consists of multiple replications, within
+        each replication, samples are shuffled following the same permutation
+        pattern:
 
         original data:
             rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3 ...
             sample: 1 2 3 4 5 6 7 8  1 2 3 4 5 6 7 8  1 2 3 4 5 6 7 8 ...
 
-        circular shift (default) by 2, 6, and 4 samples:
+        circular shift by a random number of samples (default), e.g. for four
+        samples:
             rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3  ...
-            sample: 7 8 1 2 3 4 5 6  3 4 5 6 7 8 1 2  5 6 7 8 1 2 3 4  ...
+            sample: 5 6 7 8 1 2 3 4  5 6 7 8 1 2 3 4  5 6 7 8 1 2 3 4  ...
 
         permute blocks of 3 samples:
             rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3 ...
-            sample: 4 5 6 7 8 1 2 3  1 2 3 7 8 4 5 6  7 8 4 5 6 1 2 3 ...
+            sample: 4 5 6 7 8 1 2 3  4 5 6 7 8 1 2 3  4 5 6 7 8 1 2 3 ...
 
         permute data locally within a range of 4 samples:
             rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3 ...
-            sample: 1 2 4 3 8 5 6 7  4 1 2 3 5 7 8 6  3 1 2 4 8 5 6 7 ...
+            sample: 1 2 4 3 8 5 6 7  1 2 4 3 8 5 6 7  1 2 4 3 8 5 6 7 ...
 
         random permutation:
             rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3  ...
             sample: 4 2 5 7 1 3 2 6  4 2 5 7 1 3 2 6  4 2 5 7 1 3 2 6  ...
-
-        Permuting samples is the fall-back option for surrogate creation if the
-        number of replications is too small to allow for a sufficient number of
-        permutations for the generation of surrogate data.
 
         Args:
             current_value : tuple
