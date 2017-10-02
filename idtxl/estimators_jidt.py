@@ -209,19 +209,19 @@ class JidtDiscrete(JidtEstimator):
             assert issubclass(var2.dtype.type, np.integer), (
                 'Var2 is not an integer numpy array. '
                 'Discretise data to use this estimator.')
-            assert min(var1) >= 0, 'Minimum of var1 is smaller than 0.'
-            assert min(var2) >= 0, 'Minimum of var2 is smaller than 0.'
-            assert max(var1) < self.settings['alph1'], (
+            assert np.min(var1) >= 0, 'Minimum of var1 is smaller than 0.'
+            assert np.min(var2) >= 0, 'Minimum of var2 is smaller than 0.'
+            assert np.max(var1) < self.settings['alph1'], (
                         'Maximum of var1 is larger than the alphabet size.')
-            assert max(var2) < self.settings['alph2'], (
+            assert np.max(var2) < self.settings['alph2'], (
                         'Maximum of var2 is larger than the alphabet size.')
-            if not (conditional is None):
-                assert min(conditional) >= 0, ('Minimum of conditional is '
-                                               'smaller than 0.')
+            if conditional is not None:
+                assert np.min(conditional) >= 0, (
+                        'Minimum of conditional is smaller than 0.')
                 assert issubclass(conditional.dtype.type, np.integer), (
                     'Conditional is not an integer numpy array. '
                     'Discretise data to use this estimator.')
-                assert max(conditional) < self.settings['alphc'], (
+                assert np.max(conditional) < self.settings['alphc'], (
                     'Maximum of conditional is larger than the alphabet size.')
         else:
             raise ValueError('Unkown discretisation method.')
