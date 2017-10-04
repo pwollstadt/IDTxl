@@ -55,7 +55,7 @@ class NetworkInference(NetworkAnalysis):
             raise RuntimeError('The maximum lag for source embedding '
                                '(''max_lag_sources'') needs to be specified.')
         if 'min_lag_sources' not in settings:
-            raise RuntimeError('The maximum lag for source embedding '
+            raise RuntimeError('The minimum lag for source embedding '
                                '(''max_lag_sources'') needs to be specified.')
 
         settings.setdefault('tau_target', 1)
