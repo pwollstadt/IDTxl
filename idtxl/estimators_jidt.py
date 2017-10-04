@@ -191,7 +191,7 @@ class JidtDiscrete(JidtEstimator):
         if self.settings['discretise_method'] == 'equal':
             var1 = utils.discretise(var1, self.settings['alph1'])
             var2 = utils.discretise(var2, self.settings['alph2'])
-            if not (conditional is None):
+            if conditional is not None:
                 conditional = utils.discretise(conditional,
                                                self.settings['alphc'])
 
@@ -226,7 +226,7 @@ class JidtDiscrete(JidtEstimator):
         else:
             raise ValueError('Unkown discretisation method.')
 
-        if not (conditional is None):
+        if conditional is not None:
             return var1, var2, conditional
         else:
             return var1, var2
