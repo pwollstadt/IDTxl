@@ -12,8 +12,6 @@ except ImportError as err:
                             ' from https://pypi.python.org/pypi/JPype1 to use '
                             'JAVA/JIDT-powered CMI estimation.')
 
-# TODO check IDTxl nomenclature (variable > process, estimate vs. calculate)
-
 
 class JidtEstimator(Estimator):
     """Abstract class for implementation of JIDT estimators.
@@ -169,9 +167,9 @@ class JidtDiscrete(JidtEstimator):
             - local_values : bool [optional] - return local TE instead of
               average TE (default=False)
             - discretise_method : str [optional] - if and how to discretise
-              incoming continuous variables to discrete values, can be
-              'max_ent' for maximum entropy binning, 'equal' for equal size
-              bins, and 'none' if no binning is required (default='none')
+              incoming continuous data, can be 'max_ent' for maximum entropy
+              binning, 'equal' for equal size bins, and 'none' if no binning is
+              required (default='none')
 
     Note:
         Discrete JIDT estimators require the data's alphabet size for
@@ -458,9 +456,9 @@ class JidtDiscreteCMI(JidtDiscrete):
             - local_values : bool [optional] - return local TE instead of
               average TE (default=False)
             - discretise_method : str [optional] - if and how to discretise
-              incoming continuous variables to discrete values, can be
-              'max_ent' for maximum entropy binning, 'equal' for equal size
-              bins, and 'none' if no binning is required (default='none')
+              incoming continuous data, can be 'max_ent' for maximum entropy
+              binning, 'equal' for equal size bins, and 'none' if no binning is
+              required (default='none')
             - num_discrete_bins : int [optional] - number of discrete bins/
               levels or the base of each dimension of the discrete variables
               (default=2). If set, this parameter overwrites/sets alph1, alph2
@@ -619,9 +617,9 @@ class JidtDiscreteMI(JidtDiscrete):
             - local_values : bool [optional] - return local TE instead of
               average TE (default=False)
             - discretise_method : str [optional] - if and how to discretise
-              incoming continuous variables to discrete values, can be
-              'max_ent' for maximum entropy binning, 'equal' for equal size
-              bins, and 'none' if no binning is required (default='none')
+              incoming continuous data, can be 'max_ent' for maximum entropy
+              binning, 'equal' for equal size bins, and 'none' if no binning is
+              required (default='none')
             - num_discrete_bins : int [optional] - number of discrete bins/
               levels or the base of each dimension of the discrete variables
               (default=2). If set, this parameter overwrites/sets alph1 and
@@ -930,9 +928,9 @@ class JidtDiscreteAIS(JidtDiscrete):
             - local_values : bool [optional] - return local TE instead of
               average TE (default=False)
             - discretise_method : str [optional] - if and how to discretise
-              incoming continuous variables to discrete values, can be
-              'max_ent' for maximum entropy binning, 'equal' for equal
-              size bins, and 'none' if no binning is required (default='none')
+              incoming continuous data, can be 'max_ent' for maximum entropy
+              binning, 'equal' for equal size bins, and 'none' if no binning is
+              required (default='none')
             - num_discrete_bins : int [optional] - number of discrete bins/
               levels or the base of each dimension of the discrete variables
               (default=2). If set, this parameter overwrites/sets alph
@@ -1419,9 +1417,9 @@ class JidtDiscreteTE(JidtDiscrete):
             - source_target_delay : int [optional] - information transfer delay
               between source and target (default=1)
             - discretise_method : str [optional] - if and how to discretise
-              incoming continuous variables to discrete values, can be
-              'max_ent' for maximum entropy binning, 'equal' for equal size
-              bins, and 'none' if no binning is required (default='none')
+              incoming continuous data, can be 'max_ent' for maximum entropy
+              binning, 'equal' for equal size bins, and 'none' if no binning is
+              required (default='none')
             - num_discrete_bins : int [optional] - number of discrete bins/
               levels or the base of each dimension of the discrete variables
               (default=2). If set, this parameter overwrites/sets alph1 and

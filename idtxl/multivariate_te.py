@@ -383,7 +383,7 @@ class MultivariateTE(NetworkInference):
                 self._min_stats_surr_table = surr_table
                 break
 
-    def _test_final_conditional(self, data):  # TODO test this!
+    def _test_final_conditional(self, data):
         """Perform statistical test on the final conditional set."""
         self.te_omnibus = None
         self.sign_omnibus = False

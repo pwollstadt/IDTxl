@@ -13,9 +13,6 @@ from . import stats
 from .single_process_analysis import SingleProcessAnalysis
 from .estimator import find_estimator
 
-# TODO use target instead of process to define the process that is analyzed.
-# This would reuse an attribute set in the parent class.
-
 
 class ActiveInformationStorage(SingleProcessAnalysis):
     """Estimate active information storage in individual processes.
@@ -432,7 +429,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 self._min_stats_surr_table = surr_table
                 break
 
-    def _test_final_conditional(self, data):  # TODO test this!
+    def _test_final_conditional(self, data):
         """Perform statistical test on AIS using the final conditional set."""
         if self._selected_vars_full:
             print(self._idx_to_lag(self.selected_vars_full))
