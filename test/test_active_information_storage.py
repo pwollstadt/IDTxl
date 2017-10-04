@@ -7,6 +7,7 @@ import random as rn
 import numpy as np
 from idtxl.data import Data
 from idtxl.active_information_storage import ActiveInformationStorage
+from idtxl.estimators_jidt import JidtDiscreteCMI
 from test_estimators_jidt import jpype_missing
 
 package_missing = False
@@ -158,7 +159,40 @@ def test_compare_jidt_open_cl_estimator():
 #                                            'OpenCl and JIDT estimator.'))
 
 
+def test_discrete_input():
+    """Test AIS estimation from discrete data."""
+    # Generate AR data
+    order = 1
+    n = 10000 - order
+    self_coupling = 0.5
+    process = np.zeros(n + order)
+    process[0:order] = np.random.normal(size=(order))
+    for n in range(order, n + order):
+        process[n] = self_coupling * process[n - 1] + np.random.normal()
+
+    # Discretise data
+    settings = {'discretise_method': 'equal',
+                'alph1': 5,
+                'alph2': 5}
+    est = JidtDiscreteCMI(settings)
+    process_dis, temp = est._discretise_vars(var1=process, var2=process)
+    data = Data(process_dis, dim_order='s', normalise=False)
+    settings = {
+        'cmi_estimator': 'JidtDiscreteCMI',
+        'discretise_method': 'none',
+        'alph1': 5,
+        'alph2': 5,
+        'alphc': 5,
+        'n_perm_max_stat': 21,
+        'n_perm_omnibus': 30,
+        'n_perm_max_seq': 30,
+        'max_lag': 2}
+    nw = ActiveInformationStorage()
+    nw.analyse_single_process(settings=settings, data=data, process=0)
+
+
 if __name__ == '__main__':
+    test_discrete_input()
     test_analyse_network()
     test_ActiveInformationStorage_init()
     test_single_source_storage_gaussian()

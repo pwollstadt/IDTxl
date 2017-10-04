@@ -372,12 +372,12 @@ def max_statistic_sequential(analysis_setup, data):
     # Calculate TE for each candidate in the conditional source set and sort
     # TE values.
     candidate_realisations = np.empty(
-                        (data.n_realisations(analysis_setup.current_value) *
-                         len(analysis_setup.selected_vars_sources), 1))
+        (data.n_realisations(analysis_setup.current_value) *
+         len(analysis_setup.selected_vars_sources), 1)).astype(data.data_type)
     conditional_realisations = np.empty(
-                        (data.n_realisations(analysis_setup.current_value) *
-                            len(analysis_setup.selected_vars_sources),
-                         len(analysis_setup.selected_vars_full) - 1))
+        (data.n_realisations(analysis_setup.current_value) *
+            len(analysis_setup.selected_vars_sources),
+         len(analysis_setup.selected_vars_full) - 1)).astype(data.data_type)
     i_1 = 0
     i_2 = data.n_realisations(analysis_setup.current_value)
     for conditional in analysis_setup.selected_vars_sources:

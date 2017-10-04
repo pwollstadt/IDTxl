@@ -9,6 +9,7 @@ import itertools as it
 import numpy as np
 from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
+from idtxl.estimators_jidt import JidtDiscreteCMI
 from test_estimators_jidt import jpype_missing
 
 
@@ -343,6 +344,47 @@ def test_permute_time():
                                                       'to default.')
 
 
+def test_discrete_input():
+    """Test multivariate TE estimation from discrete data."""
+    # Generate Gaussian test data
+    covariance = 0.4
+    n = 10000
+    delay = 1
+    source = np.random.normal(0, 1, size=n)
+    target = (covariance * source + (1 - covariance) *
+              np.random.normal(0, 1, size=n))
+    expected_mi = np.log(1 / (1 - np.power(covariance, 2)))
+    source = source[delay:]
+    target = target[:-delay]
+
+    # Discretise data
+    settings = {'discretise_method': 'equal',
+                'alph1': 5,
+                'alph2': 5}
+    est = JidtDiscreteCMI(settings)
+    source_dis, target_dis = est._discretise_vars(var1=source, var2=target)
+    data = Data(np.vstack((source_dis, target_dis)),
+                dim_order='ps', normalise=False)
+    settings = {
+        'cmi_estimator': 'JidtDiscreteCMI',
+        'discretise_method': 'none',
+        'alph1': 5,
+        'alph2': 5,
+        'alphc': 5,
+        'n_perm_max_stat': 21,
+        'n_perm_omnibus': 30,
+        'n_perm_max_seq': 30,
+        'min_lag_sources': 1,
+        'max_lag_sources': 2,
+        'max_lag_target': 1}
+    nw = MultivariateTE()
+    res = nw.analyse_single_target(settings=settings, data=data, target=1)
+    assert np.isclose(res['selected_sources_te'][0], expected_mi, atol=0.05), (
+        'Estimated TE for discrete variables is not correct. Expected: {0}, '
+        'Actual results: {1}.'.format(expected_mi,
+                                      res['selected_sources_te'][0]))
+
+
 def test_include_target_candidates():
     pass
 
@@ -368,6 +410,7 @@ def test_indices_to_lags():
 
 
 if __name__ == '__main__':
+    test_discrete_input()
     test_analyse_network()
     test_check_source_set()
     test_multivariate_te_init()  # test init function of the Class

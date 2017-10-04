@@ -326,11 +326,12 @@ class MultivariateTE(NetworkInference):
             temp_te = np.empty(len(self.selected_vars_sources))
             cond_dim = len(self.selected_vars_full) - 1
             candidate_realisations = np.empty(
-                                (data.n_realisations(self.current_value) *
-                                 len(self.selected_vars_sources), 1))
+                (data.n_realisations(self.current_value) *
+                 len(self.selected_vars_sources), 1)).astype(data.data_type)
             conditional_realisations = np.empty(
                 (data.n_realisations(self.current_value) *
-                 len(self.selected_vars_sources), cond_dim))
+                 len(self.selected_vars_sources),
+                 cond_dim)).astype(data.data_type)
 
             # calculate TE simultaneously for all candidates
             i_1 = 0

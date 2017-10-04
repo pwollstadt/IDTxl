@@ -374,11 +374,13 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             # Find the candidate with the minimum TE into the target.
             cond_dim = len(self.selected_vars_sources) - 1
             candidate_realisations = np.empty(
-                                (data.n_realisations(self.current_value) *
-                                 len(self.selected_vars_sources), 1))
+                (data.n_realisations(self.current_value) *
+                    len(self.selected_vars_sources),
+                    1)).astype(data.data_type)
             conditional_realisations = np.empty(
-                                (data.n_realisations(self.current_value) *
-                                 len(self.selected_vars_sources), cond_dim))
+                (data.n_realisations(self.current_value) *
+                 len(self.selected_vars_sources),
+                 cond_dim)).astype(data.data_type)
             i_1 = 0
             i_2 = data.n_realisations(self.current_value)
             for candidate in self.selected_vars_sources:
