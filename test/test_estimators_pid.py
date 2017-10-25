@@ -11,13 +11,12 @@ from idtxl.estimators_pid import SydneyPID, TartuPID
 
 package_missing = False
 try:
-    import gurobipy
-    import cvxopt
+    import ecos
 except ImportError:
     package_missing = True
-optimization_not_available = pytest.mark.skipif(
+optimiser_missing = pytest.mark.skipif(
     package_missing,
-    reason="at least optimization package is missing (gurobi and cvxopt)")
+    reason='ECOS is missing.')
 
 no_float128 = False
 try:
@@ -55,8 +54,28 @@ Y = np.asarray([0, 1, 0, 1])
 # Y = np.random.randint(0, ALPH_Y, n)
 
 
+@optimiser_missing
+def test_tartu_estimator():
+    # Test Tartu estimator on logical and
+    pid_tartu = TartuPID(SETTINGS)
+    Z = np.logical_and(X, Y).astype(int)
+    est_tartu = pid_tartu.estimate(X, Y, Z)
+    assert np.isclose(0.5, est_tartu['syn_s1_s2']), (
+        'Synergy is not 0.5. for Tartu estimator.')
+
+
 @float128_not_available
-@optimization_not_available
+def test_sydney_estimator():
+    # Test Sydney estimator on logical and
+    pid_sydney = SydneyPID(SETTINGS)
+    Z = np.logical_and(X, Y).astype(int)
+    est_sydney = pid_sydney.estimate(X, Y, Z)
+    assert np.isclose(0.5, est_sydney['syn_s1_s2']), (
+        'Synergy is not 0.5. for Sydney estimator.')
+
+
+@float128_not_available
+@optimiser_missing
 def test_pid_and():
     """Test PID estimator on logical AND."""
     Z = np.logical_and(X, Y).astype(int)
@@ -69,7 +88,7 @@ def test_pid_and():
 
 
 @float128_not_available
-@optimization_not_available
+@optimiser_missing
 def test_pid_xor():
     """Test PID estimator on logical XOR."""
     Z = np.logical_xor(X, Y).astype(int)
@@ -80,7 +99,7 @@ def test_pid_xor():
 
 
 @float128_not_available
-@optimization_not_available
+@optimiser_missing
 def test_pip_source_copy():
     """Test PID estimator on copied source."""
     Z = X
@@ -101,7 +120,7 @@ def test_pip_source_copy():
 
 
 @float128_not_available
-@optimization_not_available
+@optimiser_missing
 def test_xor_long():
     """Test PID estimation with Sydney estimator on XOR with higher N."""
     # logical AND
@@ -190,7 +209,7 @@ def _estimate(Z):
 
 
 @float128_not_available
-@optimization_not_available
+@optimiser_missing
 def test_int_types():
     """Test PID estimator on different integer types."""
     Z = np.logical_xor(X, Y).astype(np.int32)
@@ -216,7 +235,7 @@ def test_int_types():
 
 
 @float128_not_available
-@optimization_not_available
+@optimiser_missing
 def test_non_binary_alphabet():
     """Test PID estimators on larger alphabets."""
     n = 1000

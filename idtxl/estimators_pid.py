@@ -12,11 +12,11 @@ from . import synergy_tartu
 from . import idtxl_exceptions as ex
 from .estimator import Estimator
 try:
-    import jpype as jp
+    import ecos
 except ImportError as err:
-    ex.package_missing(err, 'Jpype is not available on this system. Install it'
-                            ' from https://pypi.python.org/pypi/JPype1 to use '
-                            'JAVA/JIDT-powered CMI estimation.')
+    ex.package_missing(err, 'ECOS is not available on this system. Install it '
+                            'from https://pypi.python.org/pypi/ecos to use '
+                            'The Tartu cone programming PID estimator.')
 
 # TODO add support for multivariate estimation for Tartu and Sydney estimator
 
@@ -461,113 +461,35 @@ def _join_variables(a, b, alph_a, alph_b):
     return ab, alph_new
 
 
-# TODO fix this - no idea why it does not yield the correct results
-# def _try_swap(cur_cond_mut_info, joint_t_s1_s2_prob, joint_s1_s2_prob,
-#              joint_t_s2_prob, s2_prob,
-#              t_cand, s1_prim, s2_prim, s1_cand, s2_cand,
-#              prob_inc, unsuccessful_swaps_row):
-# #            unsuccessful_swaps_row_local = unsuccessful_swaps_row
-# #            print("unsuccessful_swaps_row_local: {0}".format(unsuccessful_swaps_row_local))
-#            if (joint_t_s1_s2_prob[t_cand, s1_cand, s2_cand] >= prob_inc
-#            and joint_t_s1_s2_prob[t_cand, s1_prim, s2_prim] >= prob_inc
-#            and joint_s1_s2_prob[s1_cand, s2_cand] >= prob_inc
-#            and joint_s1_s2_prob[s1_prim, s2_prim] >= prob_inc):
-#
-#                joint_t_s1_s2_prob[t_cand, s1_cand, s2_cand] -= prob_inc
-#                joint_t_s1_s2_prob[t_cand, s1_prim, s2_prim] -= prob_inc
-#                joint_t_s1_s2_prob[t_cand, s1_cand, s2_prim] += prob_inc
-#                joint_t_s1_s2_prob[t_cand, s1_prim, s2_cand] += prob_inc
-#
-#                joint_s1_s2_prob[s1_cand, s2_cand] -= prob_inc
-#                joint_s1_s2_prob[s1_prim, s2_prim] -= prob_inc
-#                joint_s1_s2_prob[s1_cand, s2_prim] += prob_inc
-#                joint_s1_s2_prob[s1_prim, s2_cand] += prob_inc
-#
-#                # Calculate the cmi after this virtual swap
-#                cond_mut_info = self._cmi_prob(
-#                    s2_prob, joint_t_s2_prob, joint_s1_s2_prob, joint_t_s1_s2_prob)
-#
-#                # If improved keep it, reset the unsuccessful swap counter
-#                if ( cond_mut_info < cur_cond_mut_info ):
-#                    cur_cond_mut_info = cond_mut_info
-#                    unsuccessful_swaps_row = 0
-#                    # TODO: if this swap direction was successful - repeat it !
-#                # Else undo the changes, record unsuccessful swap
-#                else:
-#                    joint_t_s1_s2_prob[t_cand, s1_cand, s2_cand] += prob_inc
-#                    joint_t_s1_s2_prob[t_cand, s1_prim, s2_prim] += prob_inc
-#                    joint_t_s1_s2_prob[t_cand, s1_cand, s2_prim] -= prob_inc
-#                    joint_t_s1_s2_prob[t_cand, s1_prim, s2_cand] -= prob_inc
-#
-#                    joint_s1_s2_prob[s1_cand, s2_cand] += prob_inc
-#                    joint_s1_s2_prob[s1_prim, s2_prim] += prob_inc
-#                    joint_s1_s2_prob[s1_cand, s2_prim] -= prob_inc
-#                    joint_s1_s2_prob[s1_prim, s2_cand] -= prob_inc
-#
-#                    unsuccessful_swaps_row += 1
-#            else:
-#                unsuccessful_swaps_row += 1
-#            return unsuccessful_swaps_row # need to return this to make it visible outside
-#        # END of a possible try_swap function
-
-
 class TartuPID(Estimator):
     """Estimate partial information decomposition for two inputs and one output
 
-    Fast implementation of the partial information decomposition (PID)
-    estimator for discrete data. The estimator does require a gurobi
-    installation.
+    Implementation of the partial information decomposition (PID) estimator for
+    discrete data. The estimator finds shared information, unique information
+    and synergistic information between the two inputs s1 and s2 with respect
+    to the output t.
 
-    The estimator finds shared information, unique information and
-    synergistic information between the two inputs s1 and s2 with respect to
-    the output t.
+    The algorithm uses exponential cone programming and requires the Python
+    package for ECOS: Embedded Cone Solver (https://pypi.python.org/pypi/ecos).
 
-    Improved version with larger initial swaps and checking for convergence of
-    both the unique information from sources 1 and 2.
+    References:
+
+    - Makkeh, A., Theis, D.O., & Vicente, R. (2017). Bivariate Partial
+      Information Decomposition: The Optimization Perspective. Entropy, 19(10),
+      530.
+    - Makkeh, A., Theis, D.O., & Vicente, R. (2017). BROJA-2PID: A cone
+      programming based Partial Information Decomposition estimator. In prepa-
+      ration, https://github.com/Abzinger/BROJA_2PID
 
     Args:
         settings : dict
             estimation parameters (with default parameters)
 
-            - get_sorted_pdf : bool [optional] - False
-            - true_pdf : [optional] - None
-            - true_result : [optional] - None
-            - true_CI : float [optional] - None
-            - true_SI : float [optional] - None
-            - feas_eps : float [optional] - 1.e-10
-            - kkt_eps : float [optional] - 1.e-5
-            - feas_eps_2 : float [optional] - 1.e-6
-            - kkt_eps_2 : float [optional] - 0.01
-            - kkt_search_eps : float [optional] - 0.5
-            - max_zero_probability : float [optional] - 1.e-5
             - verbose : bool [optional] - False
     """
 
     def __init__(self, settings):
         # get estimation parameters
-        # get_sorted_pdf = settings.get('sorted_pdf', False)
-        # true_pdf = settings.get('true_pdf', None)
-        # true_result = settings.get('true_result', None)
-        # true_CI = settings.get('true_CI', None)
-        # true_SI = settings.get('true_SI', None)
-        # feas_eps = settings.get('feas_eps', 1.e-10)
-        # kkt_eps = settings.get('kkt_eps', 1.e-5)
-        # feas_eps_2 = settings.get('feas_eps_2', 1.e-6)
-        # kkt_eps_2 = settings.get('kkt_eps_2', .01)
-        # kkt_search_eps = settings.get('kkt_search_eps', .5)
-        # max_zero_probability = settings.get('max_zero_probability', 1.e-5)
-        # verbose = settings.get('verbose', False)
-        settings.setdefault('sorted_pdf', False)
-        settings.setdefault('true_pdf', None)
-        settings.setdefault('true_result', None)
-        settings.setdefault('true_CI', None)
-        settings.setdefault('true_SI', None)
-        settings.setdefault('feas_eps', 1.e-10)
-        settings.setdefault('kkt_eps', 1.e-5)
-        settings.setdefault('feas_eps_2', 1.e-6)
-        settings.setdefault('kkt_eps_2', .01)
-        settings.setdefault('kkt_search_eps', .5)
-        settings.setdefault('max_zero_probability', 1.e-5)
         settings.setdefault('verbose', False)
         self.settings = settings
 
@@ -589,72 +511,58 @@ class TartuPID(Estimator):
 
         Returns:
             dict
-                estimated decomposition, contains the optimised PDF, shared,
-                and synergistic information
+                estimated decomposition, solver used, numerical error
         """
         s1, s2, t, self.settings = _check_input(s1, s2, t, self.settings)
-        counts = dict()
-        n_samples = s1.shape[0]
+        pdf = _get_pdf_dict(s1, s2, t)
 
-        # count occurences
-        for i in range(n_samples):
-            if (t[i], s1[i], s2[i]) in counts.keys():
-                counts[(t[i], s1[i], s2[i])] += 1
-            else:
-                counts[(t[i], s1[i], s2[i])] = 1
+        retval = synergy_tartu.pid(
+            pdf_dirty=pdf,
+            output=int(self.settings['verbose']),
+            keep_solver_object=False)
 
-        # make pdf from counts
-        pdf = dict()
-        for xyz, c in counts.items():
-            pdf[xyz] = c / float(n_samples)
-
-        retval = synergy_tartu.solve_PDF(pdf,
-                                         self.settings['true_pdf'],
-                                         self.settings['true_result'],
-                                         self.settings['true_CI'],
-                                         self.settings['true_SI'],
-                                         self.settings['feas_eps'],
-                                         self.settings['kkt_eps'],
-                                         self.settings['feas_eps_2'],
-                                         self.settings['kkt_eps_2'],
-                                         self.settings['kkt_search_eps'],
-                                         self.settings['max_zero_probability'],
-                                         self.settings['verbose'])
-        optpdf, feas, kkt, CI, SI, UI_s1, UI_s2 = retval
         results = {
-            'kkt': kkt,
-            'feas': feas,
-            'optpdf': optpdf,
-            'shd_s1_s2': SI,
-            'syn_s1_s2': CI,
-            'unq_s1': UI_s1,
-            'unq_s2': UI_s2,
+            'num_err': retval['Num_err'],
+            'solver': retval['Solver'],
+            'shd_s1_s2': retval['SI'],
+            'syn_s1_s2': retval['CI'],
+            'unq_s1': retval['UIY'],
+            'unq_s2': retval['UIZ'],
         }
-        if self.settings['sorted_pdf']:
-            results['sorted_pdf'] = synergy_tartu.sorted_pdf(pdf)
         return results
+
+
+def _get_pdf_dict(s1, s2, t):
+    # Create dictionary with probability mass function
+    counts = dict()
+    n_samples = s1.shape[0]
+
+    # Count occurences.
+    for i in range(n_samples):
+        if (t[i], s1[i], s2[i]) in counts.keys():
+            counts[(t[i], s1[i], s2[i])] += 1
+        else:
+            counts[(t[i], s1[i], s2[i])] = 1
+
+    # Create PMF from counts.
+    pmf = dict()
+    for xyz, c in counts.items():
+        pmf[xyz] = c / float(n_samples)
+    return pmf
 
 
 def _check_input(s1, s2, t, settings):
     """Check input to PID estimators."""
-#    if s1.ndim != 1 or s2.ndim != 1 or t.ndim != 1:
-#        raise ValueError('Inputs s1, s2, target have to be vectors'
-#                         '(1D-arrays).')
-#    if (len(t) != len(s1) or len(t) != len(s2)):
-#        raise ValueError('Number of samples s1, s2 and t must be equal')
-
-    # In general, IDTxl expects 2D inputs because JIDT/JPYPE only accepts those
-    # and we have a multivariate approach, i.e., a vector is a special case of
-    # 2D-data. Squeeze 2D arrays if the dimension of the second axis is 1.
-    # Otherwise combine multivariate sources into a single variable for
-    # estimation.
-
+    # Check if inputs are numpy arrays.
     if (type(s1) != np.ndarray or type(s2) != np.ndarray or
             type(t) != np.ndarray):
         raise TypeError('All inputs, s1, s2, t, must be numpy arrays.')
 
-    # Convert IDTxl 2D vectors to 1D arrays. Remove unneeded axis or combine
-    # multivariate inputs into a single variable.
+    # In general, IDTxl expects 2D inputs because JIDT/JPYPE only accepts those
+    # and we have a multivariate approach, i.e., a vector is a special case of
+    # 2D-data. The PID estimators on the other hand, expect 1D data. Squeeze 2D
+    # arrays if the dimension of the second axis is 1. Otherwise combine
+    # multivariate sources into a single variable for estimation.
     if s1.ndim != 1:
         if s1.shape[1] == 1:
             s1 = np.squeeze(s1)
@@ -701,5 +609,9 @@ def _check_input(s1, s2, t, settings):
         raise TypeError('Input s2 (source 2) must be an integer numpy array.')
     if not issubclass(t.dtype.type, np.integer):
         raise TypeError('Input t (target) must be an integer numpy array.')
+
+    # Check if variables have equal length.
+    if (len(t) != len(s1) or len(t) != len(s2)):
+        raise ValueError('Number of samples s1, s2 and t must be equal')
 
     return s1, s2, t, settings

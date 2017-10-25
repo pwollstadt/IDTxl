@@ -7,10 +7,10 @@ import numpy as np
 from idtxl.partial_information_decomposition import (
                                         PartialInformationDecomposition)
 from idtxl.data import Data
-from test_estimators_pid import optimization_not_available
+from test_estimators_pid import optimiser_missing
 
 
-@optimization_not_available
+@optimiser_missing
 def test_pid_user_input():
     """Test if user input is handled correctly."""
     # Test missing estimator name
@@ -74,7 +74,7 @@ def test_pid_user_input():
                                   sources=[0, 1])
 
 
-@optimization_not_available
+@optimiser_missing
 def test_network_analysis():
     """Test call to network_analysis method."""
     n = 50
@@ -96,7 +96,7 @@ def test_network_analysis():
                                                     est_tartu[2]['syn_s1_s2']))
 
 
-@optimization_not_available
+@optimiser_missing
 def test_analyse_single_target():
     """Test call to network_analysis method."""
     n = 50
