@@ -22,7 +22,7 @@ Wollstadt, Lizier, Vicente, Finn, Martinez Zarzeula, Lindner, Martinez Mediano, 
 - [Joseph T. Lizier](http://lizier.me/joseph/), Centre for Complex Systems, The University of Sydney, Sydney, Australia
 - [Raul Vicente](http://neuro.cs.ut.ee/people/), Computational Neuroscience Lab, Institute of Computer Science, University of Tartu, Tartu, Estonia
 - Conor Finn, Centre for Complex Systems, The University of Sydney, Sydney, Australia
-- Mario Martínez Zarzuela, Department of Signal Theory and Communications and Telematics Engineering, University of Valladolid, Valladolid, Spain
+- Mario Martinez Zarzuela, Department of Signal Theory and Communications and Telematics Engineering, University of Valladolid, Valladolid, Spain
 - [Michael Lindner](https://www.reading.ac.uk/Psychology/About/staff/m-lindner.aspx), Center for Integrative Neuroscience and Neurodynamics, University of Reading, Reading, UK
 - Leonardo Novelli, Centre for Complex Systems, The University of Sydney, Sydney, Australia
 - [Pedro Martinez Mediano](https://www.doc.ic.ac.uk/~pam213/), Computational Neurodynamics Group, Imperial College London, London, United Kingdom
