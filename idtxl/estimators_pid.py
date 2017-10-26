@@ -11,12 +11,6 @@ import numpy as np
 from . import synergy_tartu
 from . import idtxl_exceptions as ex
 from .estimator import Estimator
-try:
-    import ecos
-except ImportError as err:
-    ex.package_missing(err, 'ECOS is not available on this system. Install it '
-                            'from https://pypi.python.org/pypi/ecos to use '
-                            'The Tartu cone programming PID estimator.')
 
 # TODO add support for multivariate estimation for Tartu and Sydney estimator
 
