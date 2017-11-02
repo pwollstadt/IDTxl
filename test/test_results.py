@@ -239,7 +239,23 @@ def _generate_gauss_data(covariance=0.4, n=10000, delay=1, normalise=False):
     return Data(np.vstack((source_dis, target_dis)),
                 dim_order='ps', normalise=normalise)
 
+
+def test_console_output():
+    data = Data()
+    data.generate_mute_data(n_samples=10, n_replications=5)
+    settings = {
+        'cmi_estimator': 'JidtKraskovCMI',
+        'max_lag_sources': 5,
+        'min_lag_sources': 4,
+        'max_lag_target': 5
+        }
+    nw = MultivariateTE()
+    r = nw.analyse_network(settings, data, targets='all', sources='all')
+    r.print_to_console(fdr=False)
+
+
 if __name__ == '__main__':
+    test_console_output()
     test_pickle_results()
     test_delay_reconstruction()
     test_combine_results()
