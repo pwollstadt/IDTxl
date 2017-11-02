@@ -279,33 +279,25 @@ def test_analyse_network():
 
     # Test all to all analysis
     results = nw.analyse_network(settings, data, targets='all', sources='all')
-    try:
-        del results['fdr_corrected']
-    except:
-        pass
-    k = list(results.keys())
+    targets_analysed = results.targets_analysed
     sources = np.arange(n_processes)
-    assert all(np.array(k) == np.arange(n_processes)), (
+    assert all(np.array(targets_analysed) == np.arange(n_processes)), (
                 'Network analysis did not run on all targets.')
-    for t in results.keys():
+    for t in results.targets_analysed:
         s = np.array(list(set(sources) - set([t])))
-        assert all(np.array(results[t]['sources_tested']) == s), (
+        assert all(np.array(results.single_target[t].sources_tested) == s), (
                     'Network analysis did not run on all sources for target '
                     '{0}'. format(t))
     # Test analysis for subset of targets
     target_list = [1, 2, 3]
     results = nw.analyse_network(settings, data, targets=target_list,
                                  sources='all')
-    try:
-        del results['fdr_corrected']
-    except:
-        pass
-    k = list(results.keys())
-    assert all(np.array(k) == np.array(target_list)), (
+    targets_analysed = results.targets_analysed
+    assert all(np.array(targets_analysed) == np.array(target_list)), (
                 'Network analysis did not run on correct subset of targets.')
-    for t in results.keys():
+    for t in results.targets_analysed:
         s = np.array(list(set(sources) - set([t])))
-        assert all(np.array(results[t]['sources_tested']) == s), (
+        assert all(np.array(results.single_target[t].sources_tested) == s), (
                     'Network analysis did not run on all sources for target '
                     '{0}'. format(t))
 
@@ -314,17 +306,14 @@ def test_analyse_network():
     target_list = [0, 4]
     results = nw.analyse_network(settings, data, targets=target_list,
                                  sources=source_list)
-    try:
-        del results['fdr_corrected']
-    except:
-        pass
-    k = list(results.keys())
-    assert all(np.array(k) == np.array(target_list)), (
+    targets_analysed = results.targets_analysed
+    assert all(np.array(targets_analysed) == np.array(target_list)), (
                 'Network analysis did not run for all targets.')
-    for t in results.keys():
-        assert all(results[t]['sources_tested'] == np.array(source_list)), (
-            'Network analysis did not run on the correct subset of sources '
-            'for target {0}'.format(t))
+    for t in results.targets_analysed:
+        assert all(results.single_target[t].sources_tested ==
+                   np.array(source_list)), (
+                        'Network analysis did not run on the correct subset '
+                        'of sources for target {0}'.format(t))
 
 
 def test_discrete_input():
@@ -362,10 +351,11 @@ def test_discrete_input():
         'max_lag_target': 1}
     nw = BivariateTE()
     res = nw.analyse_single_target(settings=settings, data=data, target=1)
-    assert np.isclose(res['selected_sources_te'][0], expected_mi, atol=0.05), (
-        'Estimated TE for discrete variables is not correct. Expected: {0}, '
-        'Actual results: {1}.'.format(expected_mi,
-                                      res['selected_sources_te'][0]))
+    assert np.isclose(
+        res.single_target[1].omnibus_te, expected_mi, atol=0.05), (
+            'Estimated TE for discrete variables is not correct. Expected: '
+            '{0}, Actual results: {1}.'.format(
+                expected_mi, res.single_target[1].omnibus_te))
 
 
 def test_include_target_candidates():

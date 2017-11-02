@@ -9,6 +9,7 @@ import numpy as np
 from idtxl import stats
 from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
+from idtxl.results import ResultsNetworkInference
 
 
 def test_omnibus_test():
@@ -52,6 +53,7 @@ def test_max_statistic_sequential():
 
 
 def test_network_fdr():
+    settings = {'n_perm_max_seq': 1000, 'n_perm_omnibus': 1000}
     target_0 = {
         'selected_vars_sources': [(1, 1), (1, 2), (1, 3), (2, 1), (2, 0)],
         'selected_vars_full': [(0, 1), (0, 2), (0, 3), (1, 1), (1, 2), (1, 3),
@@ -60,7 +62,6 @@ def test_network_fdr():
         'omnibus_sign': True,
         'selected_sources_pval': np.array([0.001, 0.0014, 0.01, 0.045, 0.047]),
         'selected_sources_te': np.array([1.1, 1.0, 0.8, 0.7, 0.63]),
-        'settings': {'n_perm_max_seq': 1000, 'n_perm_omnibus': 1000}
         }
     target_1 = {
         'selected_vars_sources': [(1, 2), (2, 1), (2, 2)],
@@ -69,7 +70,6 @@ def test_network_fdr():
         'omnibus_sign': True,
         'selected_sources_pval': np.array([0.00001, 0.00014, 0.01]),
         'selected_sources_te': np.array([1.8, 1.75, 0.75]),
-        'settings': {'n_perm_max_seq': 1000, 'n_perm_omnibus': 1000}
         }
     target_2 = {
         'selected_vars_sources': [],
@@ -78,15 +78,14 @@ def test_network_fdr():
         'omnibus_sign': False,
         'selected_sources_pval': None,
         'selected_sources_te': np.array([]),
-        'settings': {'n_perm_max_seq': 1000, 'n_perm_omnibus': 1000}
         }
-    res_1 = {
-        0: target_0,
-        1: target_1,
-    }
-    res_2 = {
-        2: target_2
-    }
+    res_1 = ResultsNetworkInference(
+        n_nodes=3, n_realisations=1000, normalised=True)
+    res_1._add_single_target(target=0, settings=settings, results=target_0)
+    res_1._add_single_target(target=1, settings=settings, results=target_1)
+    res_2 = ResultsNetworkInference(
+        n_nodes=3, n_realisations=1000, normalised=True)
+    res_2._add_single_target(target=2, settings=settings, results=target_2)
 
     for correct_by_target in [True, False]:
         settings = {
@@ -102,25 +101,29 @@ def test_network_fdr():
         analysis_setup._initialise(settings=settings, data=data,
                                    sources=[1, 2], target=0)
         res_pruned = stats.network_fdr(settings, res_1, res_2)
-        assert (not res_pruned[2]['selected_vars_sources']), ('Target ')
+        assert (not res_pruned.single_target[2].selected_vars_sources), (
+            'Target ')
 
-        for k in res_pruned.keys():
-            if res_pruned[k]['selected_sources_pval'] is None:
-                assert (not res_pruned[k]['selected_vars_sources'])
+        for k in res_pruned.targets_analysed:
+            if res_pruned.single_target[k]['selected_sources_pval'] is None:
+                assert (
+                    not res_pruned.single_target[k]['selected_vars_sources'])
             else:
-                assert (len(res_pruned[k]['selected_vars_sources']) ==
-                        len(res_pruned[k]['selected_sources_pval'])), (
-                                'Source list and list of p-values should have '
-                                'the same length.')
+                assert (
+                    len(res_pruned.single_target[k]['selected_vars_sources']) ==
+                    len(res_pruned.single_target[k]['selected_sources_pval'])), (
+                        'Source list and list of p-values should have '
+                        'the same length.')
 
     # Test function call for single result
     res_pruned = stats.network_fdr(settings, res_1)
     print('successful call on single result dict.')
 
     # Test None result for insufficient no. permutations
-    res_1[0]['settings']['n_perm_max_seq'] = 2
+    res_1.settings['n_perm_max_seq'] = 2
+    res_2.settings['n_perm_max_seq'] = 2
     res_pruned = stats.network_fdr(settings, res_1, res_2)
-    assert not res_pruned, (
+    assert not res_pruned.fdr_correction, (
         'results should be None if no. permutations too low.')
 
 

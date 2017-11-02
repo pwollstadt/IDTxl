@@ -62,15 +62,16 @@ def test_multivariate_te_corr_gaussian(estimator=None):
     # examples 1 and 2 respectively. The maximum errors were 0.093841 and
     # 0.05833172 repectively. This inspired the following error boundaries.
     expected_res = np.log(1 / (1 - np.power(cov, 2)))
-    diff = np.abs(max(results['cond_sources_te']) - expected_res)
+    estimated_res = results.single_target[1].omnibus_te
+    diff = np.abs(estimated_res - expected_res)
     print('Expected source sample: (0, 1)\nExpected target sample: (1, 1)')
     print(('Estimated TE: {0:5.4f}, analytical result: {1:5.4f}, error:'
-           '{2:2.2f} % ').format(max(results['cond_sources_te']),
-                                 expected_res, diff / expected_res))
+           '{2:2.2f} % ').format(
+               estimated_res, expected_res, diff / expected_res))
     assert (diff < 0.1), ('Multivariate TE calculation for correlated '
                           'Gaussians failed (error larger 0.1: {0}, expected: '
                           '{1}, actual: {2}).'.format(
-                              diff, expected_res, results['cond_sources_te']))
+                              diff, expected_res, estimated_res))
 
 
 def test_multivariate_te_lagged_copies():
@@ -103,21 +104,21 @@ def test_multivariate_te_lagged_copies():
     # Assert that there are no significant conditionals in either direction
     # other than the mandatory single sample in the target's past (which
     # ensures that we calculate a proper TE at any time in the algorithm).
-    for target in range(2):
-        results = random_analysis.analyse_single_target(settings, data, target)
-        assert (len(results['conditional_full']) == 1), (
-            'Conditional contains more/less than 1 variables.')
-        assert (not results['conditional_sources']), (
-            'Conditional sources is not empty.')
-        assert (len(results['conditional_target']) == 1), (
+    for t in range(2):
+        results = random_analysis.analyse_single_target(settings, data, t)
+        assert len(results.single_target[t].selected_vars_full) == 1, (
+                    'Conditional contains more/less than 1 variables.')
+        assert not results.single_target[t].selected_vars_sources.size, (
+                    'Conditional sources is not empty.')
+        assert len(results.single_target[t].selected_vars_target) == 1, (
             'Conditional target contains more/less than 1 variable.')
-        assert (results['cond_sources_pval'] is None), (
+        assert results.single_target[t].selected_sources_pval is None, (
             'Conditional p-value is not None.')
-        assert (results['omnibus_pval'] is None), (
+        assert results.single_target[t].omnibus_pval is None, (
             'Omnibus p-value is not None.')
-        assert (results['omnibus_sign'] is None), (
+        assert results.single_target[t].omnibus_sign is None, (
             'Omnibus significance is not None.')
-        assert (results['conditional_sources_te'] is None), (
+        assert results.single_target[t].selected_sources_te is None, (
             'Conditional TE values is not None.')
 
 
@@ -147,21 +148,21 @@ def test_multivariate_te_random():
     # Assert that there are no significant conditionals in either direction
     # other than the mandatory single sample in the target's past (which
     # ensures that we calculate a proper TE at any time in the algorithm).
-    for target in range(2):
-        results = random_analysis.analyse_single_target(settings, data, target)
-        assert (len(results['conditional_full']) == 1), (
-            'Conditional contains more/less than 1 variables.')
-        assert (not results['conditional_sources']), (
-            'Conditional sources is not empty.')
-        assert (len(results['conditional_target']) == 1), (
+    for t in range(2):
+        results = random_analysis.analyse_single_target(settings, data, t)
+        assert len(results.single_target[t].selected_vars_full) == 1, (
+                    'Conditional contains more/less than 1 variables.')
+        assert not results.single_target[t].selected_vars_sources.size, (
+                    'Conditional sources is not empty.')
+        assert len(results.single_target[t].selected_vars_target) == 1, (
             'Conditional target contains more/less than 1 variable.')
-        assert (results['cond_sources_pval'] is None), (
+        assert results.single_target[t].selected_sources_pval is None, (
             'Conditional p-value is not None.')
-        assert (results['omnibus_pval'] is None), (
+        assert results.single_target[t].omnibus_pval is None, (
             'Omnibus p-value is not None.')
-        assert (results['omnibus_sign'] is None), (
+        assert results.single_target[t].omnibus_sign is None, (
             'Omnibus significance is not None.')
-        assert (results['conditional_sources_te'] is None), (
+        assert results.single_target[t].selected_sources_te is None, (
             'Conditional TE values is not None.')
 
 
@@ -209,7 +210,8 @@ def test_multivariate_te_lorenz_2():
 
     # Just analyse the direction of coupling
     results = lorenz_analysis.analyse_single_target(settings, data, target=1)
-    print(results)
+    print(results.single_target)
+    print(results.adjacency_matrix)
 
 
 def test_multivariate_te_mute():
@@ -270,9 +272,9 @@ def test_multivariate_te_multiple_runs():
 
 
 if __name__ == '__main__':
-    # test_multivariate_te_mute()
+    test_multivariate_te_mute()
     test_multivariate_te_lorenz_2()
     test_multivariate_te_random()
-    # test_multivariate_te_multiple_runs()
+    test_multivariate_te_multiple_runs()
     test_multivariate_te_corr_gaussian()
     test_multivariate_te_corr_gaussian('OpenCLKraskovCMI')

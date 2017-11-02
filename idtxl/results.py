@@ -281,7 +281,7 @@ class ResultsNetworkInference(Results):
                 Information-transfer delays for each source
         """
         sources = self.get_target_sources(target, fdr)
-        delays = np.empty(sources.shape[0])
+        delays = np.zeros(sources.shape[0]).astype(int)
 
         # Get the source index for each past source variable of the target
         all_vars_sources = np.array(

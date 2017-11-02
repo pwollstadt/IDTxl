@@ -1,6 +1,6 @@
 import os
+import pickle
 import time
-import numpy as np
 from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
 
@@ -22,6 +22,5 @@ results = network_analysis.analyse_network(settings, data)
 runtime = time.time() - start_time
 print("---- {0} minutes".format(runtime / 60))
 
-path = os.path.dirname(__file__) + 'output/'
-np.save(path + 'test', results)
-np.save(path + 'test_time', runtime)
+path = '{0}output/'.format(os.path.dirname(__file__))
+pickle.dump(results, open('{0}test_mute_res_{1}'.format(path, 0), 'wb'))
