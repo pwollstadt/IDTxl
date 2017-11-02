@@ -277,37 +277,27 @@ def combine_discrete_dimensions(a, numBins):
     return combined_values
 
 
-def combine_results(*results):
-    """Combine partial results into single results dictionary.
+def equal_dicts(dict_1, dict_2):
+    """Test two dictionaries for equality."""
+    if dict_1.keys() != dict_2.keys():
+        return False
+    for k in dict_1.keys():
+        if dict_1[k] != dict_2[k]:
+            return False
+    return True
 
-    Combine a list of partial network inference results into a single results
-    dictionary (e.g., results from analysis parallelized over target nodes).
-    Raise an error if duplicate keys, i.e., duplicate targets, occur in
-    partial results. Remove FDR-corrections from partial results before
-    combining them. Corrections performed on the basis of parts of the network
-    a not valid for the combined network.
 
-    Args:
-        results : list of dicts
-            network inference results from .analyse_network methods, where each
-            dict entry represents results for one target node
+def conflicting_entries(dict_1, dict_2):
+    """Test two dictionaries for unequal entries.
 
-    Returns:
-        dict
-            combined results dict
+    Note that only keys that are present in both dicts are compared. If one
+    dictionary contains an entry not present in the other dictionary, the
+    test passes.
     """
-    results_combined = {}
-    for r in results:
-        # Remove potential partial FDR-corrected results. These are no longer
-        # valid for the combined network.
-        try:
-            del r['fdr_corrected']
-            print('Removing FDR-corrected results.')
-        except KeyError:
-            pass
-        # Check for duplicate keys in the partial results.
-        for k in r:
-            if k in results_combined:
-                raise RuntimeError('Duplicate keys.')
-        results_combined.update(r)
-    return cp.deepcopy(results_combined)
+    d1_keys = dict_1.keys()
+    d2_keys = dict_2.keys()
+    intersect_keys = set(d1_keys).intersection(set(d2_keys))
+    for k in intersect_keys:
+        if dict_1[k] != dict_2[k]:
+            return True
+    return False
