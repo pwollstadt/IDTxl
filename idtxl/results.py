@@ -5,8 +5,18 @@ Created on Wed Sep 20 18:37:27 2017
 @author: patricia
 """
 import copy as cp
+import itertools as it
 import numpy as np
 from . import idtxl_utils as utils
+from . import idtxl_exceptions as ex
+try:
+    import networkx as nx
+except ImportError as err:
+    ex.package_missing(
+        err,
+        ('networkx is not available on this system. Install it from '
+         'https://pypi.python.org/pypi/networkx/2.0 to export and plot IDTxl '
+         'results in this format.'))
 
 
 class DotDict(dict):
@@ -306,6 +316,140 @@ class ResultsNetworkInference(Results):
             delays[ind] = all_vars_lags[all_vars_sources == s][delays_ind]
 
         return delays
+
+    def export_networkx_graph(self, fdr=False):
+        """Generate networkx graph object for an inferred network.
+
+        Generate a weighted, directed graph object from the network of inferred
+        (multivariate) interactions (e.g., multivariate TE), using the networkx
+        class for directed graphs (DiGraph). The graph is weighted by the
+        reconstructed source-target delays (see documentation for method
+        get_target_delays for details).
+
+        Args:
+            fdr : bool [optional]
+                return FDR-corrected results
+
+        Returns:
+            DiGraph object
+                instance of a directed graph class from the networkx
+                package (DiGraph)
+        """
+        if fdr:
+            return nx.from_numpy_matrix(self.fdr_correction.adjacency_matrix,
+                                        create_using=nx.DiGraph())
+        else:
+            return nx.from_numpy_matrix(self.adjacency_matrix,
+                                        create_using=nx.DiGraph())
+
+    def export_networkx_source_graph(self, target,
+                                     sign_sources=True, fdr=False):
+        """Generate graph object of source variables for a single target.
+
+        Generate a graph object from the network of (multivariate)
+        interactions (e.g., multivariate TE) between single source variables
+        and a target process using the networkx class for directed graphs
+        (DiGraph). The graph shows the information transfer between individual
+        source variables and the target.
+
+        Args:
+            target : int
+                target index
+            sign_sources : bool [optional]
+                add only sources significant information contribution
+                (default=True)
+            fdr : bool [optional]
+                return FDR-corrected results
+
+        Returns:
+            DiGraph object
+                instance of a directed graph class from the networkx
+                package (DiGraph)
+        """
+        if target not in self.targets_analysed:
+            raise RuntimeError('No results for target {0}.'.format(target))
+        graph = nx.DiGraph()
+        # Add the target as a node. Each node is a tuple with format (process
+        # index, sample index).
+        graph.add_node(self.single_target[target].current_value)
+
+        if sign_sources:
+            # Add only significant past variables as nodes.
+            if fdr:
+                graph.add_nodes_from(
+                    (self.fdr_correction.single_target[target].
+                     selected_vars_full[:]))
+            else:
+                graph.add_nodes_from(
+                    self.single_target[target].selected_vars_full[:])
+        else:
+            # Add all tested past variables as nodes.
+            # Get all sample indices.
+            current_value = self.single_target[target].current_value
+            min_lag = self.settings.min_lag_sources
+            max_lag = self.settings.max_lag_sources
+            tau = self.settings.max_lag_sources
+            samples_tested = np.arange(
+                current_value[1] - min_lag, current_value[1] - max_lag, -tau)
+            # Get source indices
+            sources_tested = self.single_target[target].sources_tested
+            # Create tuples from source and sample indices
+            nodes = [i for i in it.product(sources_tested, samples_tested)]
+            graph.add_nodes_from(nodes)
+
+        # Add edges from significant past variables to the target. Here, one
+        # could add additional info in the future, networkx graphs support
+        # attributes for graphs, nodes, and edges.
+        if fdr:
+            for v in range(len(self.single_target[target].selected_vars_full)):
+                graph.add_edge(
+                    (self.fdr_correction.single_target[target].
+                     selected_vars_full[v]),
+                    target)
+        else:
+            for v in range(len(self.single_target[target].selected_vars_full)):
+                graph.add_edge(
+                    self.single_target[target].selected_vars_full[v],
+                    self.single_target[target].current_value)
+        if self.settings['verbose']:
+            print(graph.node)
+            print(graph.edge)
+            graph.number_of_edges()
+        return graph
+
+    def print_to_console(self, fdr=False):
+        """Print results of network inference to console.
+
+        Print results of network inference to console. Output looks like this:
+
+            0 -> 1, u = 2
+            0 -> 2, u = 3
+            0 -> 3, u = 2
+            3 -> 4, u = 1
+            4 -> 3, u = 1
+
+        indicating significant information transfer source -> target with an
+        information-transfer delay u (see documentation for method
+        get_target_delays for details). The network can either be plotted from
+        FDR-corrected results or uncorrected results.
+
+        Args:
+            fdr : bool [optional]
+                print FDR-corrected results (default=False)
+        """
+        if fdr:
+            adjacency_matrix = self.fdr_correction.adjacency_matrix
+        else:
+            adjacency_matrix = self.adjacency_matrix
+        link_found = False
+        for s in range(self.data.n_nodes):
+            for t in range(self.data.n_nodes):
+                if adjacency_matrix[s, t]:
+                    print('\t{0} -> {1}, u: {2}'.format(
+                        s, t, adjacency_matrix[s, t]))
+                    link_found = True
+        if not link_found:
+            print('No significant links in network.')
 
     def _duplicate_targets(self, target):
         # Test if target is already present in object
