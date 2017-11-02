@@ -9,7 +9,6 @@ Unique Information. Entropy, 16(4), 2161–2183. http://doi.org/10.3390/e1604216
 """
 import numpy as np
 from . import synergy_tartu
-from . import idtxl_exceptions as ex
 from .estimator import Estimator
 
 # TODO add support for multivariate estimation for Tartu and Sydney estimator
