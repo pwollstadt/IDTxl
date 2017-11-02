@@ -1,5 +1,6 @@
 import os
 import time
+import pickle
 import numpy as np
 from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
@@ -23,11 +24,11 @@ settings = {
         'n_perm_max_seq': 500,
         }
 lorenz_analysis = MultivariateTE()
-res_1 = lorenz_analysis.analyse_single_target(settings, data, 0)
-res_2 = lorenz_analysis.analyse_single_target(settings, data, 1)
+res_0 = lorenz_analysis.analyse_single_target(settings, data, 0)
+res_1 = lorenz_analysis.analyse_single_target(settings, data, 1)
 runtime = time.time() - start_time
 print("---- {0} minutes".format(runtime / 60))
 
-path = os.path.dirname(__file__) + 'output/'
-np.savez(path + 'test_lorenz', res_1, res_2)
-np.save(path + 'test_lorenz_time', runtime)
+path = '{0}output/'.format(os.path.dirname(__file__))
+pickle.dump(res_0, open('{0}test_lorenz_opencl_res_{1}'.format(path, 0), 'wb'))
+pickle.dump(res_1, open('{0}test_lorenz_opencl_res_{1}'.format(path, 1), 'wb'))

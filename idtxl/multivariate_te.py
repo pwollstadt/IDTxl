@@ -12,6 +12,7 @@ Note:
 """
 from .network_inference import NetworkInferenceTE, NetworkInferenceMultivariate
 from .stats import network_fdr
+from .results import ResultsNetworkInference
 
 
 class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
@@ -124,10 +125,9 @@ class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
                 tested for the target with the same index
 
         Returns:
-            dict
-                results for each target, see documentation of
-                analyse_single_target(); results FDR-corrected, see
-                documentation of stats.network_fdr()
+            ResultsNetworkInference object
+                results of network inference, see documentation of
+                ResultsNetworkInference()
         """
         # Set defaults for network inference.
         settings.setdefault('verbose', True)
@@ -150,22 +150,26 @@ class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
                                                'same length')
 
         # Perform TE estimation for each target individually
-        results = {}
+        results = ResultsNetworkInference(n_nodes=data.n_processes,
+                                          n_realisations=data.n_realisations(),
+                                          normalised=data.normalise)
         for t in range(len(targets)):
             if settings['verbose']:
                 print('\n####### analysing target with index {0} from list {1}'
                       .format(t, targets))
-            results[targets[t]] = self.analyse_single_target(settings,
-                                                             data,
-                                                             targets[t],
-                                                             sources[t])
+            res_single = self.analyse_single_target(
+                    settings, data, targets[t], sources[t])
+            results.combine_results(res_single)
+
+        # Get no. realisations actually used for estimation from single target
+        # analysis.
+        results.data.n_realisations = res_single.data.n_realisations
 
         # Perform FDR-correction on the network level. Add FDR-corrected
         # results as an extra field. Network_fdr/combine_results internally
         # creates a deep copy of the results.
         if settings['fdr_correction']:
-            results['fdr_corrected'] = network_fdr(settings, results)
-
+            results = network_fdr(settings, results)
         return results
 
     def analyse_single_target(self, settings, data, target, sources='all'):
@@ -258,14 +262,9 @@ class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
                 target node are considered as potential sources
 
         Returns:
-            dict
-                results consisting of sets of selected variables as (full set,
-                variables from the sources' past, variables from the target's
-                past), pvalues and TE for each selected variable, the current
-                value for this analysis, results for omnibus test (joint
-                influence of all selected source variables on the target,
-                omnibus TE, p-value, and significance); NOTE that all variables
-                are listed as tuples (process, lag wrt. current value)
+            ResultsNetworkInference object
+                results of network inference, see documentation of
+                ResultsNetworkInference()
         """
         # Check input and clean up object if it was used before.
         self._initialise(settings, data, sources, target)
@@ -286,21 +285,25 @@ class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
                     self._idx_to_lag(self.selected_vars_sources)))
             print('final target samples: {0}'.format(
                     self._idx_to_lag(self.selected_vars_target)))
-        results = {
-            'target': self.target,
-            'sources_tested': self.source_set,
-            'settings': self.settings,
-            'current_value': self.current_value,
-            'selected_vars_full': self._idx_to_lag(self.selected_vars_full),
-            'selected_vars_target': self._idx_to_lag(
-                                                self.selected_vars_target),
-            'selected_vars_sources': self._idx_to_lag(
-                                                self.selected_vars_sources),
-            'selected_sources_pval': self.pvalues_sign_sources,
-            'selected_sources_te': self.statistic_sign_sources,
-            'omnibus_te': self.statistic_omnibus,
-            'omnibus_pval': self.pvalue_omnibus,
-            'omnibus_sign': self.sign_omnibus
-            }
+        results = ResultsNetworkInference(
+            n_nodes=data.n_processes,
+            n_realisations=data.n_realisations(self.current_value),
+            normalised=data.normalise)
+        results._add_single_target(
+            target=self.target,
+            settings=self.settings,
+            results={
+                'sources_tested': self.source_set,
+                'current_value': self.current_value,
+                'selected_vars_target': self._idx_to_lag(
+                    self.selected_vars_target),
+                'selected_vars_sources': self._idx_to_lag(
+                    self.selected_vars_sources),
+                'selected_sources_pval': self.pvalues_sign_sources,
+                'selected_sources_te': self.te_sign_sources,
+                'omnibus_te': self.te_omnibus,
+                'omnibus_pval': self.pvalue_omnibus,
+                'omnibus_sign': self.sign_omnibus
+            })
         self._reset()  # remove attributes
         return results

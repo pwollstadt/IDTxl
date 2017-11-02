@@ -4,6 +4,7 @@ Created on Mon Mar  7 18:13:27 2016
 
 @author: patricia
 """
+import copy as cp
 import numpy as np
 from . import idtxl_utils as utils
 
@@ -60,8 +61,12 @@ def network_fdr(settings=None, *results):
     settings.setdefault('fdr_constant', 2)
     constant = settings['fdr_constant']
 
-    # Combine results into single results dict (this creates a copy).
-    results = utils.combine_results(*results)
+    # Combine results into single results dict.
+    if len(results) > 1:
+        results_comb = cp.deepcopy(results[0])
+        results_comb.combine_results(*results[1:])
+    else:
+        results_comb = cp.deepcopy(results[0])
 
     # Collect significant source variables for all targets. Either correct
     # p-value of whole target (all candidates), or correct p-value of
@@ -72,27 +77,33 @@ def network_fdr(settings=None, *results):
     n_perm = np.arange(0).astype(int)
     cands = []
     if correct_by_target:  # whole target
-        for target in results.keys():
-            if results[target]['omnibus_sign']:
-                pval = np.append(pval, results[target]['omnibus_pval'])
+        for target in results_comb.targets_analysed:
+            if results_comb.single_target[target].omnibus_sign:
+                pval = np.append(
+                    pval, results_comb.single_target[target].omnibus_pval)
                 target_idx = np.append(target_idx, target)
                 n_perm = np.append(
-                        n_perm, results[target]['settings']['n_perm_omnibus'])
+                        n_perm, results_comb.settings.n_perm_omnibus)
     else:  # individual variables
-        for target in results.keys():
-            if results[target]['omnibus_sign']:
-                n_sign = results[target]['selected_sources_pval'].size
-                pval = np.append(pval,
-                                 results[target]['selected_sources_pval'])
+        for target in results_comb.targets_analysed:
+            if results_comb.single_target[target].omnibus_sign:
+                n_sign = (results_comb.single_target[target].
+                          selected_sources_pval.size)
+                pval = np.append(
+                    pval, (results_comb.single_target[target].
+                           selected_sources_pval))
                 target_idx = np.append(target_idx,
                                        np.ones(n_sign) * target).astype(int)
-                cands = cands + results[target]['selected_vars_sources']
+                cands = (cands +
+                         (results_comb.single_target[target].
+                          selected_vars_sources))
                 n_perm = np.append(
-                        n_perm, results[target]['settings']['n_perm_max_seq'])
+                    n_perm, results_comb.settings.n_perm_max_seq)
 
     if pval.size == 0:
         print('No links in final results. Return ...')
-        return
+        results_comb._add_fdr(None)
+        return results_comb
 
     # Sort all p-values in ascending order.
     sort_idx = np.argsort(pval)
@@ -120,7 +131,8 @@ def network_fdr(settings=None, *results):
               'least one target is too low to allow for FDR correction '
               '(FDR-threshold: {0:.4f}, min. theoretically possible p-value: '
               '{1}).'.format(thresh[0], 1 / min(n_perm)))
-        return None
+        results_comb._add_fdr(None)
+        return results_comb
 
     # Compare data to threshold.
     sign = pval <= thresh
@@ -129,29 +141,33 @@ def network_fdr(settings=None, *results):
         sign[first_false:] = False  # avoids false positives due to equal pvals
 
     # Go over list of all candidates and remove them from the results dict.
+    # Create a copy of the results dict to leave the original intact.
     sign = sign[sort_idx]
+    fdr = cp.deepcopy(results_comb.single_target)
     for s in range(sign.shape[0]):
         if not sign[s]:
             if correct_by_target:
                 t = target_idx[s]
-                results[t]['selected_vars_full'] = results[t]['selected_vars_target']
-                results[t]['selected_sources_te'] = None
-                results[t]['selected_sources_pval'] = None
-                results[t]['selected_vars_sources'] = []
-                results[t]['omnibus_pval'] = 1
-                results[t]['omnibus_sign'] = False
+                fdr[t].selected_vars_full = cp.deepcopy(
+                    results_comb.single_target[t].selected_vars_target)
+                fdr[t].selected_sources_te = None
+                fdr[t].selected_sources_pval = None
+                fdr[t].selected_vars_sources = []
+                fdr[t].omnibus_pval = 1
+                fdr[t].omnibus_sign = False
             else:
                 t = target_idx[s]
                 cand = cands[s]
-                cand_ind = results[t]['selected_vars_sources'].index(cand)
-                results[t]['selected_vars_sources'].pop(cand_ind)
-                results[t]['selected_sources_pval'] = np.delete(
-                                results[t]['selected_sources_pval'], cand_ind)
-                results[t]['selected_sources_te'] = np.delete(
-                                results[t]['selected_sources_te'], cand_ind)
-                results[t]['selected_vars_full'].pop(
-                                results[t]['selected_vars_full'].index(cand))
-    return results
+                cand_ind = (fdr[t].selected_vars_sources.index(cand))
+                fdr[t].selected_vars_sources.pop(cand_ind)
+                fdr[t].selected_sources_pval = np.delete(
+                    fdr[t].selected_sources_pval, cand_ind)
+                fdr[t].selected_sources_te = np.delete(
+                    fdr[t].selected_sources_te, cand_ind)
+                fdr[t].selected_vars_full.pop(
+                    fdr[t].selected_vars_full.index(cand))
+    results_comb._add_fdr(fdr)
+    return results_comb
 
 
 def omnibus_test(analysis_setup, data):
