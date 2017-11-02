@@ -20,12 +20,18 @@
 # Please cite this paper when you use this software (cf. README.md)
 ##############################################################################################################
 
-from ecos import solve
 from scipy import sparse
 import numpy as np
 from numpy import linalg as LA
 import math
 from collections import defaultdict
+from . import idtxl_exceptions as ex
+try:
+    from ecos import solve
+except ImportError as err:
+    ex.package_missing(err, 'ECOS is not available on this system. Install it '
+                            'from https://pypi.python.org/pypi/ecos to use '
+                            'The Tartu cone programming PID estimator.')
 
 log = math.log2
 ln = math.log
