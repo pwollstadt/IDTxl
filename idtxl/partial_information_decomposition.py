@@ -10,6 +10,7 @@ Note:
 import numpy as np
 from .single_process_analysis import SingleProcessAnalysis
 from .estimator import find_estimator
+from .results import ResultsPartialInformationDecomposition
 
 
 class PartialInformationDecomposition(SingleProcessAnalysis):
@@ -97,25 +98,36 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
                 [[0, 2], [1, 0]], must have the same length as targets
 
         Returns:
-            dict
-                results for each process, see documentation of
-                analyse_single_target()
+            ResultsPartialInformationDecomposition object
+                results of network inference, see documentation of
+                ResultsPartialInformationDecomposition()
         """
+        # Set defaults for PID estimation.
         settings.setdefault('verbose', True)
         settings.setdefault('lags', np.array([[1, 1]] * len(targets)))
+
+        # Check inputs.
         if not len(targets) == len(sources) == len(settings['lags']):
             raise RuntimeError('Lists of targets, sources, and lags must have'
                                'the same lengths.')
         list_of_lags = settings['lags']
-        results = {}
+
+        # Perform PID estimation for each target individually
+        results = ResultsPartialInformationDecomposition(
+            n_nodes=data.n_processes,
+            n_realisations=data.n_realisations(),
+            normalised=data.normalise)
         for t in range(len(targets)):
             if settings['verbose']:
                 print('\n####### analysing target with index {0} from list {1}'
                       .format(t, targets))
             settings['lags'] = list_of_lags[t]
-            r = self.analyse_single_target(settings, data, targets[t],
-                                           sources[t])
-            results[targets[t]] = r
+            res_single = self.analyse_single_target(
+                settings, data, targets[t], sources[t])
+            results.combine_results(res_single)
+        # Get no. realisations actually used for estimation from single target
+        # analysis.
+        results.data.n_realisations = res_single.data.n_realisations
         return results
 
     def analyse_single_target(self, settings, data, target, sources):
@@ -168,10 +180,9 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
                 indices of the two source processes for the target
 
         Returns:
-            dict
-                unique, shared and synergistic information from both sources,
-                statistical significance and p-values, indices of source
-                variables, and settings used for estimation
+            ResultsPartialInformationDecomposition object
+                results of network inference, see documentation of
+                ResultsPartialInformationDecomposition()
         """
         # Check input and initialise values for analysis.
         self._initialise(settings, data, target, sources)
@@ -180,11 +191,14 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         self._calculate_pid(data)
 
         # Add analyis info.
-        results = self.results
-        results['settings'] = self.settings
-        results['target'] = self.target
-        results['source_1'] = self._idx_to_lag([self.sources[0]])
-        results['source_2'] = self._idx_to_lag([self.sources[1]])
+        results = ResultsPartialInformationDecomposition(
+            n_nodes=data.n_processes,
+            n_realisations=data.n_realisations(self.current_value),
+            normalised=data.normalise)
+        results._add_single_target(
+            settings=self.settings,
+            target=self.target,
+            results=self.results)
         self._reset()
         return results
 
@@ -264,6 +278,9 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
                                                         orig_pid['shd_s1_s2'],
                                                         orig_pid['syn_s1_s2']))
         self.results = orig_pid
+        self.results['source_1'] = self._idx_to_lag([self.sources[0]])
+        self.results['source_2'] = self._idx_to_lag([self.sources[1]])
+        self.results['current_value'] = self.current_value
         self.results['s1_unq_sign'] = sign_1
         self.results['s2_unq_sign'] = sign_2
         self.results['s1_unq_p_val'] = p_val_1

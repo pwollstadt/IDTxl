@@ -55,23 +55,23 @@ def test_pid_xor_data():
     print('PID evaluation       {:.3f} s\t\t{:.3f} s\n'.format(t_sydney,
                                                                t_tartu))
     print('Uni s1               {0:.8f}\t\t{1:.8f}'.format(
-                                                    est_sydney['unq_s1'],
-                                                    est_tartu['unq_s1']))
+        est_sydney.single_target[2]['unq_s1'],
+        est_tartu.single_target[2]['unq_s1']))
     print('Uni s2               {0:.8f}\t\t{1:.8f}'.format(
-                                                    est_sydney['unq_s2'],
-                                                    est_tartu['unq_s2']))
+        est_sydney.single_target[2]['unq_s2'],
+        est_tartu.single_target[2]['unq_s2']))
     print('Shared s1_s2         {0:.8f}\t\t{1:.8f}'.format(
-                                                    est_sydney['shd_s1_s2'],
-                                                    est_tartu['shd_s1_s2']))
+        est_sydney.single_target[2]['shd_s1_s2'],
+        est_tartu.single_target[2]['shd_s1_s2']))
     print('Synergy s1_s2        {0:.8f}\t\t{1:.8f}'.format(
-                                                    est_sydney['syn_s1_s2'],
-                                                    est_tartu['syn_s1_s2']))
-    assert 0.9 < est_sydney['syn_s1_s2'] <= 1.1, (
+        est_sydney.single_target[2]['syn_s1_s2'],
+        est_tartu.single_target[2]['syn_s1_s2']))
+    assert 0.9 < est_sydney.single_target[2]['syn_s1_s2'] <= 1.1, (
             'Sydney estimator incorrect synergy: {0}, should approx. 1'.format(
-                                                    est_sydney['syn_s1_s2']))
-    assert 0.9 < est_tartu['syn_s1_s2'] <= 1.1, (
+                est_sydney.single_target[2]['syn_s1_s2']))
+    assert 0.9 < est_tartu.single_target[2]['syn_s1_s2'] <= 1.1, (
             'Tartu estimator incorrect synergy: {0}, should approx. 1'.format(
-                                                    est_tartu['syn_s1_s2']))
+                est_tartu.single_target[2]['syn_s1_s2']))
     # TODO test this: est = pid.analyse_network(data=data, target=0)
 
 
