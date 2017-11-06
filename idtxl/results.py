@@ -60,7 +60,7 @@ class DotDict(dict):
     def __setstate__(self, state):
         # For un-pickling the object
         self.update(state)
-        self.__dict__ = self
+        # self.__dict__ = self
 
 
 class Results():
@@ -94,6 +94,22 @@ class Results():
             'normalised': normalised
         })
 
+    def _print_to_console(self, adjacency_matrix, measure):
+        """Print adjacency matrix to console."""
+        link_found = False
+        for s in range(self.data.n_nodes):
+            for t in range(self.data.n_nodes):
+                if adjacency_matrix[s, t]:
+                    print('\t{0} -> {1}, {2}: {3}'.format(
+                        s, t, measure, adjacency_matrix[s, t]))
+                    link_found = True
+        if not link_found:
+            print('No significant links in network.')
+
+    def _export_to_networkx(self, adjacency_matrix):
+        """Create networkx DiGraph object from numpy adjacency matrix."""
+        return nx.from_numpy_matrix(
+            adjacency_matrix, create_using=nx.DiGraph())
 
 class ResultsNetworkInference(Results):
     """Store results of network inference.
@@ -174,7 +190,7 @@ class ResultsNetworkInference(Results):
                                'index {0} larger than no. nodes ({1}).'.format(
                                    target, self.data.n_nodes))
         # Don't add duplicate targets
-        if self._duplicate_targets(target):
+        if self._is_duplicate_target(target):
             raise RuntimeError('Can not add single target results - results '
                                'for target {0} already exist.'.format(target))
         # Dont' add results with conflicting settings
@@ -190,10 +206,10 @@ class ResultsNetworkInference(Results):
     def combine_results(self, *results):
         """Combine multiple (partial) results objects.
 
-        Combine a list of partial network inference results into a single
-        results object (e.g., results from analysis parallelized over target
-        nodes). Raise an error if duplicate targets occur in partial results,
-        or if analysis settings are not equal.
+        Combine a list of partial results into a single results object (e.g.,
+        results from analysis parallelized over target nodes). Raise an error
+        if duplicate targets occur in partial results, or if analysis settings
+        are not equal.
 
         Note that only conflicting settings cause an error (i.e., settings with
         equal keys but different values). If additional settings are included
@@ -206,9 +222,9 @@ class ResultsNetworkInference(Results):
 
         Args:
             results : list of Results objects
-                network inference results from .analyse_network or
-                .analyse_single_process methods, where each object contains
-                partial results for one or multiple processes
+                results from .analyse_network or .analyse_single_process
+                methods, where each object contains partial results for one or
+                multiple processes
 
         Returns:
             dict
@@ -222,7 +238,7 @@ class ResultsNetworkInference(Results):
             for t in targets:
                 # Remove potential partial FDR-corrected results. These are no
                 # longer valid for the combined network.
-                if self._duplicate_targets(t):
+                if self._is_duplicate_target(t):
                     raise RuntimeError('Can not combine results - results for '
                                        'target {0} already exist.'.format(t))
                 try:
@@ -337,11 +353,10 @@ class ResultsNetworkInference(Results):
                 package (DiGraph)
         """
         if fdr:
-            return nx.from_numpy_matrix(self.fdr_correction.adjacency_matrix,
-                                        create_using=nx.DiGraph())
+            return self._export_to_networkx(
+                self.fdr_correction.adjacency_matrix)
         else:
-            return nx.from_numpy_matrix(self.adjacency_matrix,
-                                        create_using=nx.DiGraph())
+            return self._export_to_networkx(self.adjacency_matrix)
 
     def export_networkx_source_graph(self, target,
                                      sign_sources=True, fdr=False):
@@ -442,17 +457,9 @@ class ResultsNetworkInference(Results):
             adjacency_matrix = self.fdr_correction.adjacency_matrix
         else:
             adjacency_matrix = self.adjacency_matrix
-        link_found = False
-        for s in range(self.data.n_nodes):
-            for t in range(self.data.n_nodes):
-                if adjacency_matrix[s, t]:
-                    print('\t{0} -> {1}, u: {2}'.format(
-                        s, t, adjacency_matrix[s, t]))
-                    link_found = True
-        if not link_found:
-            print('No significant links in network.')
+        self._print_to_console(adjacency_matrix, 'u')
 
-    def _duplicate_targets(self, target):
+    def _is_duplicate_target(self, target):
         # Test if target is already present in object
         if target in self.targets_analysed:
             return True
@@ -555,7 +562,7 @@ class ResultsSingleProcessAnalysis(Results):
                                'index {0} larger than no. nodes ({1}).'.format(
                                    process, self.data.n_nodes))
         # Don't add duplicate processes
-        if self._duplicate_processes(process):
+        if self._is_duplicate_process(process):
             raise RuntimeError('Can not add single process results - results '
                                'for process {0} already exist.'.format(
                                    process))
@@ -604,7 +611,7 @@ class ResultsSingleProcessAnalysis(Results):
             for p in processes:
                 # Remove potential partial FDR-corrected results. These are no
                 # longer valid for the combined network.
-                if self._duplicate_processes(p):
+                if self._is_duplicate_process(p):
                     raise RuntimeError('Can not combine results - results for '
                                        'process {0} already exist.'.format(p))
                 try:
@@ -614,7 +621,7 @@ class ResultsSingleProcessAnalysis(Results):
                     pass
                 self._add_single_process(p, r.single_process[p], r.settings)
 
-    def _duplicate_processes(self, process):
+    def _is_duplicate_process(self, process):
         # Test if process is already present in object
         if process in self.processes_analysed:
             return True
@@ -705,67 +712,154 @@ class ResultsPartialInformationDecomposition(ResultsNetworkInference):
         self.single_target = {}
         self.targets_analysed = []
 
-    def _add_single_target(self, target, results, settings):
-        """Add analysis result for a single target."""
-        # Check if new target is part of the network
-        if target > (self.data.n_nodes - 1):
-            raise RuntimeError('Can not add single target results - target '
-                               'index {0} larger than no. nodes ({1}).'.format(
-                                   target, self.data.n_nodes))
-        # Don't add duplicate targets
-        if self._duplicate_targets(target):
-            raise RuntimeError('Can not add single target results - results '
-                               'for target {0} already exist.'.format(target))
-        # Dont' add results with conflicting settings
-        if utils.conflicting_entries(self.settings, settings):
-            raise RuntimeError('Can not add single target results - analysis '
-                               'settings are not equal.')
+
+class ResultsNetworkComparison(ResultsNetworkInference):
+    """Store results of network comparison.
+
+    Provide a container for results of network comparison algorithms.
+
+    Note that for convenience all dictionaries in this class can additionally
+    be accessed using dot-notation: res_network.single_target[2].omnibus_pval
+    or res_network.single_target[2].['omnibus_pval'].
+
+    Attributes:
+        settings : dict
+            settings used for estimation of information theoretic measures and
+            statistical testing
+        union_network : dict
+            union of networks that entered the comparison
+        adjacency_matrix : 2D numpy array
+            adjacency matrix describing the differences in inferred effective
+            connectivity
+        data : dict
+            data properties, contains
+
+                - n_nodes : int - total number of nodes in the network
+                - n_realisations : int - number of samples available for
+                  analysis given the settings (e.g., a high maximum lag used in
+                  network inference, results in fewer data points available for
+                  estimation)
+                - normalised : bool - indicates if data were normalised before
+                  estimation
+                - single
+
+        comparison : dict
+            results of network comparison, contains
+
+                - cmi_diff_abs :
+                - a>b :
+                - cmi_surr :
+                - sign :
+                - p_val :
+
+        targets_analysed : list
+            list of targets analyzed
+    """
+
+    def __init__(self, n_nodes, n_realisations, normalised):
+        super().__init__(n_nodes, n_realisations, normalised)
+        del self.adjacency_matrix
+        del self.fdr_correction
+        self.adjacency_matrix_pvalue = np.ones(
+            (self.data.n_nodes, self.data.n_nodes), dtype=float)
+        self.adjacency_matrix_comparison = np.zeros(
+            (self.data.n_nodes, self.data.n_nodes), dtype=bool)
+        self.adjacency_matrix_union = np.zeros(
+            (self.data.n_nodes, self.data.n_nodes), dtype=int)
+        self.adjacency_matrix_diff_abs = np.zeros(
+            (self.data.n_nodes, self.data.n_nodes), dtype=float)
+        self.targets_analysed = []
+
+    def _add_results(self, union_network, results, settings):
+        # Check if results have already been added to this instance.
+        if self.settings:
+            raise RuntimeWarning('Overwriting existing results.')
+
         # Add results
-        self.settings.update(DotDict(settings))
-        self.single_target[target] = DotDict(results)
-        self.targets_analysed = list(self.single_target.keys())
+        self.settings = DotDict(settings)
+        self.targets_analysed = union_network['targets_analysed']
+        for t in self.targets_analysed:
+            self.single_target[t] = DotDict(union_network.single_target[t])
+        # self.max_lag = union_network['max_lag']
+        self.surrogate_distributions = results['cmi_surr']
+        self._update_adjacency_matrix(results)
 
-    def combine_results(self, *results):
-        """Combine multiple (partial) results objects.
+    def _update_adjacency_matrix(self, results):
+        for t in self.targets_analysed:
+            sources = self.get_target_sources(t)
+            if sources.size:
+                self.adjacency_matrix_union[sources, t] = 1
+            for (i, s) in enumerate(sources):
+                self.adjacency_matrix_comparison[s, t] = results['a>b'][t][i]
+                self.adjacency_matrix_diff_abs[s, t] = (
+                    results['cmi_diff_abs'][t][i])
+                self.adjacency_matrix_pvalue[s, t] = results['pval'][t][i]
 
-        Combine a list of partial PID results into a single results object
-        (e.g., results from analysis parallelized over target nodes). Raise an
-        error if duplicate targets occur in partial results, or if analysis
-        settings are not equal.
+    def print_to_console(self, matrix='comparison'):
+        """Print results of network comparison to console.
 
-        Note that only conflicting settings cause an error (i.e., settings with
-        equal keys but different values). If additional settings are included
-        in partial results (i.e., settings with different keys) these settings
-        are added to the common settings dictionary.
+        Print results of network comparison to console. Output looks like this:
 
-        Remove FDR-corrections from partial results before combining them. FDR-
-        correction performed on the basis of parts of the network a not valid
-        for the combined network.
+            0 -> 1, abs_diff = 0.2
+            0 -> 2, abs_diff = 0.5
+            0 -> 3, abs_diff = 0.7
+            3 -> 4, abs_diff = 1.3
+            4 -> 3, abs_diff = 0.4
+
+        indicating differences in the network inference measure for a link
+        source -> target.
 
         Args:
-            results : list of Results objects
-                PID results from .analyse_network or .analyse_single_process
-                methods, where each object contains partial results for one or
-                multiple targets
+            matrix : str [optional]
+                can either be
+                - 'union': print all links in the union network, i.e., all
+                  links that were tested for a difference
+                or print information for links with a significant difference
+                - 'comparison': links with a significant difference (default)
+                - 'pvalue': print p-values for links with a significant
+                   difference
+                - 'diff_abs': print the absolute difference
+        """
+        if matrix == 'comparison':
+            adjacency_matrix = self.adjacency_matrix_comparison
+        elif matrix == 'union':
+            adjacency_matrix = self.adjacency_matrix_union
+        elif matrix=='diff_abs':
+            adjacency_matrix = self.adjacency_matrix_diff_abs
+        elif matrix=='pvalue':
+            adjacency_matrix = self.adjacency_matrix_pvalue
+        self._print_to_console(adjacency_matrix, matrix)
+
+    def export_networkx_graph(self, matrix):
+        """Generate networkx graph object from network comparison results.
+
+        Generate a weighted, directed graph object from the adjacency matrix
+        representing results of network comparison, using the networkx class
+        for directed graphs (DiGraph). The graph is weighted by the
+        results requested by 'matrix'.
+
+        Args:
+            matrix : str [optional]
+                can either be
+                - 'union': print all links in the union network, i.e., all
+                  links that were tested for a difference
+                or print information for links with a significant difference
+                - 'comparison': links with a significant difference (default)
+                - 'pvalue': print p-values for links with a significant
+                   difference
+                - 'diff_abs': print the absolute difference
 
         Returns:
-            dict
-                combined results dict
+            DiGraph object
+                instance of a directed graph class from the networkx
+                package (DiGraph)
         """
-        for r in results:
-            targets = r.targets_analysed
-            if utils.conflicting_entries(self.settings, r.settings):
-                raise RuntimeError('Can not combine results - analysis '
-                                   'settings are not equal.')
-            for t in targets:
-                # Remove potential partial FDR-corrected results. These are no
-                # longer valid for the combined network.
-                if self._duplicate_targets(t):
-                    raise RuntimeError('Can not combine results - results for '
-                                       'target {0} already exist.'.format(t))
-                try:
-                    del r.fdr_corrected
-                    print('Removing FDR-corrected results.')
-                except AttributeError:
-                    pass
-                self._add_single_target(t, r.single_target[t], r.settings)
+        if matrix == 'comparison':
+            adjacency_matrix = self.adjacency_matrix_comparison
+        elif matrix == 'union':
+            adjacency_matrix = self.adjacency_matrix_union
+        elif matrix=='diff_abs':
+            adjacency_matrix = self.adjacency_matrix_diff_abs
+        elif matrix=='pvalue':
+            adjacency_matrix = self.adjacency_matrix_pvalue
+        return self._export_to_networkx(self.adjacency_matrix)

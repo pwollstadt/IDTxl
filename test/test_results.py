@@ -1,10 +1,13 @@
 """Test IDTxl results class."""
+import os
 import pickle
 import pytest
 from tempfile import TemporaryFile
+import itertools as it
 import copy as cp
 import numpy as np
 from idtxl.multivariate_te import MultivariateTE
+from idtxl.network_comparison import NetworkComparison
 from idtxl.data import Data
 from idtxl.estimators_jidt import JidtDiscreteCMI
 from test_estimators_jidt import jpype_missing
@@ -253,8 +256,105 @@ def test_console_output():
     r = nw.analyse_network(settings, data, targets='all', sources='all')
     r.print_to_console(fdr=False)
 
+def test_results_network_comparison():
+    """Test results class for network comparison."""
+    data_0 = Data()
+    data_0.generate_mute_data(500, 5)
+    data_1 = Data(np.random.rand(5, 500, 5), 'psr')
+
+    # # Load previously generated example data (pickled)
+    # res_0 = np.load(os.path.join(os.path.dirname(__file__),
+    #                 'data/mute_results_0.p'))
+    # res_1 = np.load(os.path.join(os.path.dirname(__file__),
+    #                 'data/mute_results_1.p'))
+    # res_2 = np.load(os.path.join(os.path.dirname(__file__),
+    #                 'data/mute_results_2.p'))
+    # res_3 = np.load(os.path.join(os.path.dirname(__file__),
+    #                 'data/mute_results_3.p'))
+    # res_4 = np.load(os.path.join(os.path.dirname(__file__),
+    #                 'data/mute_results_4.p'))
+    path = os.path.join(os.path.dirname(__file__), 'data/')
+    res_0 = pickle.load(open(path + 'mute_results_0.p', 'rb'))
+    res_1 = pickle.load(open(path + 'mute_results_1.p', 'rb'))
+
+    # comparison settings
+    comp_settings = {
+            'cmi_estimator': 'JidtKraskovCMI',
+            'n_perm_max_stat': 50,
+            'n_perm_min_stat': 50,
+            'n_perm_omnibus': 200,
+            'n_perm_max_seq': 50,
+            'alpha_comp': 0.26,
+            'n_perm_comp': 200,
+            'tail': 'two',
+            'permute_in_time': True,
+            'perm_type': 'random'
+            }
+    comp = NetworkComparison()
+
+    comp_settings['stats_type'] = 'independent'
+    res_within = comp.compare_within(
+        comp_settings, res_0, res_1, data_0, data_1)
+    comp_settings['stats_type'] = 'independent'
+    res_between = comp.compare_between(
+        comp_settings,
+        network_set_a=np.array(list(it.repeat(res_0, 10))),
+        network_set_b=np.array(list(it.repeat(res_1, 10))),
+        data_set_a=np.array(list(it.repeat(data_0, 10))),
+        data_set_b=np.array(list(it.repeat(data_1, 10))))
+        # comp_settings,
+        # network_set_a=np.array((res_0, res_1)),
+        # network_set_b=np.array((res_2, res_3)),
+        # data_set_a=np.array((data_1, data_1)),
+        # data_set_b=np.array((data_0, data_0)))
+    s = 0
+    t = [1, 2]
+    test = ['Within', 'Between']
+    for (i, res) in enumerate([res_within, res_between]):
+        # Union network
+        # TODO do we need the max_lag entry?
+        assert (res.adjacency_matrix_union[s, t] == 1).all(), (
+            '{0}-test did not return correct union network links.'.format(
+                test[i]))
+        no_diff = np.extract(np.invert(res.adjacency_matrix_comparison),
+                                       res.adjacency_matrix_union)
+        assert (no_diff == 0).all(), (
+            '{0}-test did not return 0 in union network for no links.'.format(
+                test[i]))
+        # Comparison
+        assert res.adjacency_matrix_comparison[s, t].all(), (
+            '{0}-test did not return correct comparison results.'.format(
+                test[i]))
+        no_diff = np.extract(np.invert(res.adjacency_matrix_comparison),
+                                       res.adjacency_matrix_comparison)
+        assert (no_diff == 0).all(), (
+            '{0}-test did not return 0 comparison for non-sign. links.'.format(
+                test[i]))
+        # Abs. difference
+        assert (res.adjacency_matrix_diff_abs[s, t] > 0).all(), (
+            '{0}-test did not return correct absolute differences.'.format(
+                test[i]))
+        no_diff = np.extract(np.invert(res.adjacency_matrix_comparison),
+                                       res.adjacency_matrix_diff_abs)
+        assert (no_diff == 0).all(), (
+            '{0}-test did not return 0 difference for non-sign. links.'.format(
+                test[i]))
+        # p-value
+        p_max = 1 / comp_settings['n_perm_comp']
+        assert (res.adjacency_matrix_pvalue[s, t] == p_max).all(),(
+            '{0}-test did not return correct p-value for sign. links.'.format(
+                test[i]))
+        no_diff = np.extract(np.invert(res.adjacency_matrix_comparison),
+                                       res.adjacency_matrix_pvalue)
+        assert (no_diff == 1).all(), (
+            '{0}-test did not return p-vals of 1 for non-sign. links.'.format(
+                test[i]))
+
+
+
 
 if __name__ == '__main__':
+    test_results_network_comparison()
     test_console_output()
     test_pickle_results()
     test_delay_reconstruction()
