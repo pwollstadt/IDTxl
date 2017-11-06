@@ -29,20 +29,21 @@ from test_estimators_jidt import jpype_missing
 #     'max_lag_target': 5,
 #     'max_lag_sources': 5,
 #     'min_lag_sources': 1,
+#     'permute_in_time': True
 #     }
 # # network inference for individual data sets
-# path = os.path.join(os.path.dirname(__file__) + '/data/'
+# path = os.path.join(os.path.dirname(__file__) + '/data/')
 # nw_0 = MultivariateTE()
 # res_0 = nw_0.analyse_network(settings, data, targets=[0, 1], sources='all')
-# pickle.dump(res_0, open(path + 'mute_res_0.pkl', 'wb'))
+# pickle.dump(res_0, open(path + 'mute_results_0.p', 'wb'))
 # res_1 = nw_0.analyse_network(settings, data,  targets=[1, 2], sources='all')
-# pickle.dump(res_1, open(path + 'mute_res_1.pkl', 'wb'))
+# pickle.dump(res_1, open(path + 'mute_results_1.p', 'wb'))
 # res_2 = nw_0.analyse_network(settings, data,  targets=[0, 2], sources='all')
-# pickle.dump(res_2, open(path + 'mute_res_2.pkl', 'wb'))
+# pickle.dump(res_2, open(path + 'mute_results_2.p', 'wb'))
 # res_3 = nw_0.analyse_network(settings, data,  targets=[0, 1, 2], sources='all')
-# pickle.dump(res_3, open(path + 'mute_res_3.pkl', 'wb'))
+# pickle.dump(res_3, open(path + 'mute_results_3.p', 'wb'))
 # res_4 = nw_0.analyse_network(settings, data,  targets=[1, 2], sources='all')
-# pickle.dump(res_4, open(path + 'mute_res_4.pkl', 'wb'))
+# pickle.dump(res_4, open(path + 'mute_results_4.p', 'wb'))
 
 
 @jpype_missing
@@ -51,24 +52,23 @@ def test_network_comparison_use_cases():
     data = Data()
     data.generate_mute_data(100, 5)
 
-    # Load previously generated example data (pickled)
-    res_0 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_0.pkl'))
-    res_1 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_1.pkl'))
-    res_2 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_2.pkl'))
-    res_3 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_3.pkl'))
-    res_4 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_4.pkl'))
-
-#    path = os.path.dirname(__file__) + 'data/'
-#    res_0 = idtxl_io.load_pickle(path + 'mute_res_0')
-#    res_1 = idtxl_io.load_pickle(path + 'mute_res_1')
-#    res_2 = idtxl_io.load_pickle(path + 'mute_res_2')
-#    res_3 = idtxl_io.load_pickle(path + 'mute_res_3')
-#    res_4 = idtxl_io.load_pickle(path + 'mute_res_4')
+    # # Load previously generated example data (pickled)
+    # res_0 = np.load(os.path.join(os.path.dirname(__file__),
+    #                 'data/mute_results_0.p'))
+    # res_1 = np.load(os.path.join(os.path.dirname(__file__),
+    #                 'data/mute_results_1.p'))
+    # res_2 = np.load(os.path.join(os.path.dirname(__file__),
+    #                 'data/mute_results_2.p'))
+    # res_3 = np.load(os.path.join(os.path.dirname(__file__),
+    #                 'data/mute_results_3.p'))
+    # res_4 = np.load(os.path.join(os.path.dirname(__file__),
+    #                 'data/mute_results_4.p'))
+    path = os.path.join(os.path.dirname(__file__), 'data/')
+    res_0 = pickle.load(open(path + 'mute_results_0.p', 'rb'))
+    res_1 = pickle.load(open(path + 'mute_results_1.p', 'rb'))
+    res_2 = pickle.load(open(path + 'mute_results_2.p', 'rb'))
+    res_3 = pickle.load(open(path + 'mute_results_3.p', 'rb'))
+    res_4 = pickle.load(open(path + 'mute_results_4.p', 'rb'))
 
     # comparison settings
     comp_settings = {
@@ -130,14 +130,11 @@ def test_assertions():
     data.generate_mute_data(100, 5)
 
     # Load previously generated example data
-    res_0 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_0.pkl'))
-    res_1 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_1.pkl'))
-    res_2 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_2.pkl'))
-    res_3 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_3.pkl'))
+    path = os.path.join(os.path.dirname(__file__), 'data/')
+    res_0 = pickle.load(open(path + 'mute_results_0.p', 'rb'))
+    res_1 = pickle.load(open(path + 'mute_results_1.p', 'rb'))
+    res_2 = pickle.load(open(path + 'mute_results_2.p', 'rb'))
+    res_3 = pickle.load(open(path + 'mute_results_3.p', 'rb'))
 
     # comparison settings
     comp_settings = {
@@ -203,13 +200,12 @@ def test_assertions():
         comp.compare_within(comp_settings, res_0, res_1, dat2, dat2)
 
     # add target to network that is not in the data object
-    res_99 = res_0
-    res_99[99] = res_99[1]
+    dat2 = Data(np.random.rand(2, 1000, 50), dim_order='psr')
     comp_settings['alpha_comp'] = 0.05
     comp_settings['n_perm_comp'] = 21
     comp = NetworkComparison()
     with pytest.raises(IndexError):
-        comp.compare_within(comp_settings, res_0, res_99, dat2, dat2)
+        comp.compare_within(comp_settings, res_0, res_2, dat2, dat2)
 
 
 @jpype_missing
@@ -221,10 +217,9 @@ def test_create_union_network():
     dat2.generate_mute_data(100, 5)
 
     # Load previously generated example data
-    res_0 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_0.pkl'))
-    res_1 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_1.pkl'))
+    path = os.path.join(os.path.dirname(__file__), 'data/')
+    res_0 = pickle.load(open(path + 'mute_results_0.p', 'rb'))
+    res_1 = pickle.load(open(path + 'mute_results_1.p', 'rb'))
 
     # comparison settings
     comp_settings = {
@@ -243,26 +238,27 @@ def test_create_union_network():
 
     src_1 = [(0, 2), (0, 1)]
     src_2 = [(0, 4), (0, 5)]
-    res_0[1]['selected_vars_sources'] = src_1
-    res_1[1]['selected_vars_sources'] = src_2
+    res_0.single_target[1].selected_vars_sources = src_1
+    res_1.single_target[1].selected_vars_sources = src_2
 
     comp._create_union(res_0, res_1)
-    ref_targets = [0, 1, 2]
-    assert (comp.union['targets'] == ref_targets).all(), (
-                                        'Union does not include all targets.')
-    assert np.array([True for i in ref_targets if
-                     i in comp.union.keys()]).all(), (
-                                'Not all targets contained in union network.')
-    assert comp.union['max_lag'] == res_0[0]['current_value'][1], (
-                                    'The max. lag was not defined correctly.')
+    ref_targets = np.array([0, 1, 2])
+    assert (comp.union.targets_analysed == ref_targets).all(), (
+        'Union does not include all targets.')
+    assert np.array([
+        True for i in ref_targets if i in comp.union.keys()]).all(), (
+            'Not all targets contained in union network.')
+    assert comp.union['max_lag'] == res_0.single_target[1].current_value[1], (
+        'The max. lag was not defined correctly.')
 
-    src_union = comp._idx_to_lag(comp.union[1]['selected_vars_sources'],
-                                 comp.union['max_lag'])
-    assert src_union == (src_1 + src_2), ('Sources for target 1 were not '
-                                          'combined correctly.')
+    src_union = comp._idx_to_lag(
+        comp.union.single_target[1]['selected_vars_sources'],
+        comp.union['max_lag'])
+    assert src_union == (src_1 + src_2), (
+        'Sources for target 1 were not combined correctly.')
 
     # unequal current values in single networks
-    res_0[1]['current_value'] = (1, 7)  # the original is (1, 5)
+    res_0.single_target[1].current_value = (1, 7)  # the original is (1, 5)
     with pytest.raises(ValueError):
         comp._create_union(res_0, res_1)
 
@@ -271,11 +267,9 @@ def test_create_union_network():
 def test_get_permuted_replications():
     """Test if permutation of replications works."""
     # Load previously generated example data
-    res_0 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_0.pkl'))
-    res_1 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_1.pkl'))
-
+    path = os.path.join(os.path.dirname(__file__), 'data/')
+    res_0 = pickle.load(open(path + 'mute_results_0.p', 'rb'))
+    res_1 = pickle.load(open(path + 'mute_results_1.p', 'rb'))
     comp_settings = {
             'cmi_estimator': 'JidtKraskovCMI',
             'n_perm_max_stat': 50,
@@ -346,7 +340,7 @@ def test_calculate_cmi_all_links():
             [rn.normalvariate(0, 1) for r in range(n - 1)]])]
     data.set_data(np.vstack((source, target)), 'ps')
     res_0 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_0.pkl'))
+                    'data/mute_results_0.p'))
     comp_settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 50,
@@ -361,7 +355,7 @@ def test_calculate_cmi_all_links():
     comp = NetworkComparison()
     comp._initialise(comp_settings)
     comp._create_union(res_0)
-    comp.union[1]['selected_vars_sources'] = [(0, 4)]
+    comp.union.single_target[1]['selected_vars_sources'] = [(0, 4)]
     cmi = comp._calculate_cmi_all_links(data)
     cmi_expected = np.log(1 / (1 - cov ** 2))
     print('correlated Gaussians: TE result {0:.4f} bits; expected to be '
@@ -377,7 +371,7 @@ def test_calculate_mean():
     data = Data()
     data.generate_mute_data(100, 5)
     res_0 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_0.pkl'))
+                    'data/mute_results_0.p'))
     comp_settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 50,
@@ -394,7 +388,7 @@ def test_calculate_mean():
     comp._create_union(res_0)
     cmi = comp._calculate_cmi_all_links(data)
     cmi_mean = comp._calculate_mean([cmi, cmi])
-    for t in comp.union['targets']:
+    for t in comp.union.targets_analysed:
         assert (cmi_mean[t] == cmi[t]).all(), ('Error in mean of CMI for '
                                                'target {0}'.format(t))
 
@@ -404,10 +398,9 @@ def test_p_value_union():
     """Test if the p-value is calculated correctly."""
     data = Data()
     data.generate_mute_data(100, 5)
-    res_0 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_0.pkl'))
-    res_1 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_1.pkl'))
+    path = os.path.join(os.path.dirname(__file__), 'data/')
+    res_0 = pickle.load(open(path + 'mute_results_0.p', 'rb'))
+    res_1 = pickle.load(open(path + 'mute_results_1.p', 'rb'))
     comp_settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 50,
@@ -431,26 +424,34 @@ def test_p_value_union():
     comp._calculate_cmi_diff_within(data, data)
     comp._create_surrogate_distribution_within(data, data)
     target = 1
-    for p in range(comp_settings['n_perm_comp']):
-        comp.cmi_surr[p][target] = np.array([0, 1])
-    comp.cmi_diff[target] = np.array([0.5, 0.5])
-    [p, s] = comp._p_value_union()
-    assert (s[target] == np.array([True, False])).all(), (
-                                    'The significance was not determined '
-                                    'correctly: {0}'.format(s[target]))
-    p_1 = 1 / comp_settings['n_perm_comp']
-    p_2 = 1.0
-    print(p[target])
-    assert (p[target] == np.array([p_1, p_2])).all(), (
-                                'The p-value was not calculated correctly: {0}'
-                                .format(p[target]))
+    source = 0
+
+    comp.cmi_surr[target] = np.zeros((1, comp_settings['n_perm_comp']))
+    comp.cmi_diff[target] = np.array([0.5])
+    comp._p_value_union()
+    p = comp.pvalue
+    s = comp.significance
+    assert s[target][source], (
+        'The significance was not determined correctly: {0}'.format(s[target]))
+    assert p[target][source] == 1 / comp_settings['n_perm_comp'], (
+        'The p-value was not calculated correctly: {0}'.format(p[target]))
+
+    comp.cmi_surr[target] = np.ones((1, comp_settings['n_perm_comp']))
+    comp.cmi_diff[target] = np.array([0.5])
+    comp._p_value_union()
+    p = comp.pvalue
+    s = comp.significance
+    assert not s[target][source], (
+        'The significance was not determined correctly: {0}'.format(s[target]))
+    assert p[target][source] == 1.0, (
+        'The p-value was not calculated correctly: {0}'.format(p[target]))
 
 
 if __name__ == '__main__':
     test_network_comparison_use_cases()
     test_p_value_union()
+    test_create_union_network()
+    test_assertions()
     test_calculate_mean()
     test_calculate_cmi_all_links()
     test_get_permuted_replications()
-    test_assertions()
-    test_create_union_network()
