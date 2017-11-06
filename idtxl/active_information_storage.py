@@ -12,6 +12,7 @@ import numpy as np
 from . import stats
 from .single_process_analysis import SingleProcessAnalysis
 from .estimator import find_estimator
+from .results import ResultsSingleProcessAnalysis
 
 
 class ActiveInformationStorage(SingleProcessAnalysis):
@@ -93,10 +94,13 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 list.
 
         Returns:
-            dict
-                results for each process, see documentation of
-                analyse_single_process()
+            ResultsSingleProcessAnalysis object
+                results of network AIS estimation, see documentation of
+                ResultsSingleProcessAnalysis()
         """
+        # Set defaults for AIS estimation.
+        settings.setdefault('verbose', True)
+
         # Check provided processes for analysis.
         if processes == 'all':
             processes = [t for t in range(data.n_processes)]
@@ -107,15 +111,21 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                              '{0}.'.format(processes))
 
         # Perform AIS estimation for each target individually.
-        settings.setdefault('verbose', True)
-        results = {}
+        results = ResultsSingleProcessAnalysis(n_nodes=data.n_processes,
+                                          n_realisations=data.n_realisations(),
+                                          normalised=data.normalise)
         for t in range(len(processes)):
             if settings['verbose']:
                 print('\n####### analysing process {0} of {1}'.format(
                                                 processes[t], processes))
-            r = self.analyse_single_process(settings, data, processes[t])
-            r['process'] = processes[t]
-            results[processes[t]] = r
+            res_single = self.analyse_single_process(settings, data, processes[t])
+            results.combine_results(res_single)
+
+        # Get no. realisations actually used for estimation from single target
+        # analysis.
+        results.data.n_realisations = res_single.data.n_realisations
+
+        # TODO FDR-correction on the network level?
         return results
 
     def analyse_single_process(self, settings, data, process):
@@ -170,12 +180,9 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 index of process
 
         Returns:
-            dict
-                results consisting of sets of selected variables as, the
-                current value for this analysis, results for omnibus test
-                (joint influence of all selected variables, omnibus TE,
-                p-value, and significance); NOTE that all variables are listed
-                as tuples (process, lag wrt. current value)
+            ResultsSingleProcessAnalysis object
+                results of AIS estimation, see documentation of
+                ResultsSingleProcessAnalysis()
         """
         # Check input and clean up object if it was used before.
         self._initialise(settings, data, process)
@@ -192,13 +199,20 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         if self.settings['verbose']:
             print('final conditional samples: {0}'.format(
                     self._idx_to_lag(self.selected_vars_full)))
-        results = {
-            'current_value': self.current_value,
-            'selected_vars': self._idx_to_lag(self.selected_vars_full),
-            'ais': self.ais,
-            'ais_pval': self.pvalue,
-            'ais_sign': self.sign,
-            'settings': self.settings}
+        results = ResultsSingleProcessAnalysis(
+            n_nodes=data.n_processes,
+            n_realisations=data.n_realisations(self.current_value),
+            normalised=data.normalise)
+        results._add_single_process(
+            process=self.process,
+            settings=self.settings,
+            results={
+                'current_value': self.current_value,
+                'selected_vars': self._idx_to_lag(self.selected_vars_full),
+                'ais': self.ais,
+                'ais_pval': self.pvalue,
+                'ais_sign': self.sign
+            })
         self._reset()  # remove realisations and min_stats surrogate table
         return results
 

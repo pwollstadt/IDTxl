@@ -1,9 +1,9 @@
 """System test for AIS estimation on example data."""
 from idtxl.data import Data
-from idtxl.single_process_storage import Single_process_storage
+from idtxl.active_information_storage import ActiveInformationStorage
 
 
-def test_single_source_storage_opencl():
+def test_active_information_storage_opencl():
     """Test AIS estimation in MuTE example network."""
     data = Data()
     data.generate_mute_data(1000, 5)
@@ -16,14 +16,14 @@ def test_single_source_storage_opencl():
         'tail_mi': 'one',
         }
     processes = [1, 2, 3]
-    network_analysis = Single_process_storage()
+    network_analysis = ActiveInformationStorage()
     results = network_analysis.analyse_network(settings, data, processes)
     print('AIS for MUTE data proc 1: {0}'.format(results[1]['ais']))
     print('AIS for MUTE data proc 2: {0}'.format(results[2]['ais']))
     print('AIS for MUTE data proc 3: {0}'.format(results[3]['ais']))
 
 
-def test_single_source_storage_jidt():
+def test_active_information_storage_jidt():
     """Test AIS estimation in MuTE example network."""
     data = Data()
     data.generate_mute_data(1000, 5)
@@ -36,7 +36,7 @@ def test_single_source_storage_jidt():
         'tail_mi': 'one',
         }
     processes = [1, 2, 3]
-    network_analysis = Single_process_storage()
+    network_analysis = ActiveInformationStorage()
     results = network_analysis.analyse_network(settings, data, processes)
     print('AIS for MUTE data proc 1: {0}'.format(results[1]['ais']))
     print('AIS for MUTE data proc 2: {0}'.format(results[2]['ais']))
@@ -44,5 +44,5 @@ def test_single_source_storage_jidt():
 
 
 if __name__ == '__main__':
-    test_single_source_storage_jidt()
-    test_single_source_storage_opencl()
+    test_active_information_storage_jidt()
+    test_active_information_storage_opencl()

@@ -96,8 +96,8 @@ def test_analyse_network():
     data.generate_mute_data(10, 3)
     ais = ActiveInformationStorage()
     # Test analysis of 'all' processes
-    r = ais.analyse_network(settings, data)
-    k = list(r.keys())
+    results = ais.analyse_network(settings, data)
+    k = results.processes_analysed
     assert all(np.array(k) == np.arange(data.n_processes)), (
                 'Network analysis did not run on all targets.')
     # Test check for correct definition of processes
@@ -127,9 +127,9 @@ def test_single_source_storage_gaussian():
     network_analysis = ActiveInformationStorage()
     results = network_analysis.analyse_network(settings, data, processes)
     print('AIS for random normal data without memory (expected is NaN): '
-          '{0}'.format(results[1]['ais']))
-    assert results[1]['ais'] is np.nan, ('Estimator did not return nan for '
-                                         'memoryless data.')
+          '{0}'.format(results.single_process[1].ais))
+    assert results.single_process[1].ais is np.nan, (
+        'Estimator did not return nan for memoryless data.')
 
 
 @jpype_missing
@@ -154,27 +154,31 @@ def test_compare_jidt_open_cl_estimator():
     res_jidt = network_analysis.analyse_network(settings, data, processes)
     # Note that I require equality up to three digits. Results become more
     # exact for bigger data sizes, but this takes too long for a unit test.
+    ais_opencl_2 = res_opencl.single_process[2].ais
+    ais_jidt_2 = res_jidt.single_process[2].ais
+    ais_opencl_3 = res_opencl.single_process[3].ais
+    ais_jidt_3 = res_jidt.single_process[3].ais
     print('AIS for MUTE data proc 2 - opencl: {0} and jidt: {1}'.format(
-                                    res_opencl[2]['ais'], res_jidt[2]['ais']))
+        ais_opencl_2, ais_jidt_2))
     print('AIS for MUTE data proc 3 - opencl: {0} and jidt: {1}'.format(
-                                    res_opencl[3]['ais'], res_jidt[3]['ais']))
-    if not (res_opencl[2]['ais'] is np.nan or res_jidt[2]['ais'] is np.nan):
-        assert (res_opencl[2]['ais'] - res_jidt[2]['ais']) < 0.05, (
-                       'AIS results differ between OpenCl and JIDT estimator.')
+        ais_opencl_3, ais_jidt_3))
+    if not (ais_opencl_2 is np.nan or ais_jidt_2 is np.nan):
+        assert (ais_opencl_2 - ais_jidt_2) < 0.05, (
+            'AIS results differ between OpenCl and JIDT estimator.')
     else:
-        assert res_opencl[2]['ais'] is res_jidt[2]['ais'], (
-                       'AIS results differ between OpenCl and JIDT estimator.')
-    if not (res_opencl[3]['ais'] is np.nan or res_jidt[3]['ais'] is np.nan):
-        assert (res_opencl[3]['ais'] - res_jidt[3]['ais']) < 0.05, (
-                       'AIS results differ between OpenCl and JIDT estimator.')
+        assert ais_opencl_2 is ais_jidt_2, (
+            'AIS results differ between OpenCl and JIDT estimator.')
+    if not (ais_opencl_3 is np.nan or ais_jidt_3 is np.nan):
+        assert (ais_opencl_3 - ais_jidt_3) < 0.05, (
+            'AIS results differ between OpenCl and JIDT estimator.')
     else:
-        assert res_opencl[3]['ais'] is res_jidt[3]['ais'], (
-                       'AIS results differ between OpenCl and JIDT estimator.')
-#    np.testing.assert_approx_equal(res_opencl[2]['ais'], res_jidt[2]['ais'],
+        assert ais_opencl_3 is ais_jidt_3, (
+            'AIS results differ between OpenCl and JIDT estimator.')
+#    np.testing.assert_approx_equal(ais_opencl_2, ais_jidt_2,
 #                                   significant=3,
 #                                   err_msg=('AIS results differ between '
 #                                            'OpenCl and JIDT estimator.'))
-#    np.testing.assert_approx_equal(res_opencl[3]['ais'], res_jidt[3]['ais'],
+#    np.testing.assert_approx_equal(ais_opencl_3, ais_jidt_3,
 #                                   significant=3,
 #                                   err_msg=('AIS results differ between '
 #                                            'OpenCl and JIDT estimator.'))
