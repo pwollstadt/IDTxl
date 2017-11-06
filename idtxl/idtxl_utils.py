@@ -298,6 +298,6 @@ def conflicting_entries(dict_1, dict_2):
     d2_keys = dict_2.keys()
     intersect_keys = set(d1_keys).intersection(set(d2_keys))
     for k in intersect_keys:
-        if dict_1[k] != dict_2[k]:
+        if np.array(dict_1[k] != dict_2[k]).any():
             return True
     return False

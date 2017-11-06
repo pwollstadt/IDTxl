@@ -32,12 +32,8 @@ def test_pid_user_input():
     results = pid.analyse_network(settings=settings, data=data,
                                   targets=[0, 1, 2],
                                   sources=[[1, 3], [2, 4], [0, 1]])
-    assert np.all(results[0]['settings']['lags'] == [1, 1]), (
-                                            'Lags were not set to default.')
-    assert np.all(results[1]['settings']['lags'] == [1, 1]), (
-                                            'Lags were not set to default.')
-    assert np.all(results[2]['settings']['lags'] == [1, 1]), (
-                                            'Lags were not set to default.')
+    assert np.all(results.settings['lags'] == [1, 1]), (
+        'Lags were not set to default.')
 
     n = 20
     alph = 2
@@ -91,8 +87,8 @@ def test_network_analysis():
     est_tartu = pid.analyse_network(settings=settings,
                                     data=data, targets=[0, 2],
                                     sources=[[1, 2], [0, 1]])
-    assert 0.9 < est_tartu[2]['syn_s1_s2'] <= 1.1, (
-            'Tartu estimator incorrect synergy: {0}, should approx. 1'.format(
+    assert 0.9 < est_tartu.single_target[2]['syn_s1_s2'] <= 1.1, (
+        'Tartu estimator incorrect synergy: {0}, should approx. 1'.format(
                                                     est_tartu[2]['syn_s1_s2']))
 
 
@@ -113,14 +109,14 @@ def test_analyse_single_target():
     pid = PartialInformationDecomposition()
     est_tartu = pid.analyse_single_target(settings=settings, data=data,
                                           target=2, sources=[0, 1])
-    assert 0.9 < est_tartu['syn_s1_s2'] <= 1.1, (
-            'Tartu estimator incorrect synergy: {0}, should approx. 1'.format(
+    assert 0.9 < est_tartu.single_target[2]['syn_s1_s2'] <= 1.1, (
+        'Tartu estimator incorrect synergy: {0}, should approx. 1'.format(
                                                     est_tartu['syn_s1_s2']))
-    assert est_tartu['unq_s1'] < 0.1, ('Tartu estimator incorrect unique '
-                                       's1: {0}, should approx. 0'.format(
+    assert est_tartu.single_target[2]['unq_s1'] < 0.1, (
+        'Tartu estimator incorrect unique s1: {0}, should approx. 0'.format(
                                                     est_tartu['unq_s1']))
-    assert est_tartu['unq_s2'] < 0.1, ('Tartu estimator incorrect unique '
-                                       's2: {0}, should approx. 0'.format(
+    assert est_tartu.single_target[2]['unq_s2'] < 0.1, (
+        'Tartu estimator incorrect unique s2: {0}, should approx. 0'.format(
                                                     est_tartu['unq_s2']))
 
 
@@ -128,4 +124,3 @@ if __name__ == '__main__':
     test_pid_user_input()
     test_network_analysis()
     test_analyse_single_target()
-    # test_pid_xor_data()

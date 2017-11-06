@@ -646,3 +646,126 @@ class ResultsSingleProcessAnalysis(Results):
                     self.fdr_correction.single_process[p].ais_sign)
             else:
                 self.significant_processes[p] = self.single_process[p].ais_sign
+
+
+class ResultsPartialInformationDecomposition(ResultsNetworkInference):
+    """Store results of network inference.
+
+    Provide a container for results of network inference algorithms, e.g.,
+    MultivariateTE or Bivariate TE.
+
+    Note that for convenience all dictionaries in this class can additionally
+    be accessed using dot-notation: res_network.single_target[2].omnibus_pval
+    or res_network.single_target[2].['omnibus_pval'].
+
+    Attributes:
+        settings : dict
+            settings used for estimation of information theoretic measures and
+            statistical testing
+        data : dict
+            data properties, contains
+
+                - n_nodes : int - total number of nodes in the network
+                - n_realisations : int - number of samples available for
+                  analysis given the settings (e.g., a high maximum lag used in
+                  network inference, results in fewer data points available for
+                  estimation)
+                - normalised : bool - indicates if data were normalised before
+                  estimation
+                - single
+
+        single_target : dict
+            results for individual targets, contains for each target
+
+                - source_1 : tuple - source variable 1
+                - source_2 : tuple - source variable 2
+                - s1_unq : float - unique information in source 1
+                - s2_unq : float - unique information in source 2
+                - syn_s1_s2 : float - synergistic information in sources 1
+                  and 2
+                - shd_s1_s2 : float - shared information in sources 1 and 2
+                - s1_unq_sign : float - TODO
+                - s2_unq_sign : float - TODO
+                - s1_unq_p_val : float - TODO
+                - s2_unq_p_val : float - TODO
+                - syn_sign : float - TODO
+                - syn_p_val : float - TODO
+                - shd_sign : float - TODO
+                - shd_p_val : float - TODO
+                - current_value : tuple - current value used for analysis,
+                  described by target and sample index in the data
+
+
+        targets_analysed : list
+            list of targets analyzed
+    """
+
+    def __init__(self, n_nodes, n_realisations, normalised):
+        super().__init__(n_nodes, n_realisations, normalised)
+        self.single_target = {}
+        self.targets_analysed = []
+
+    def _add_single_target(self, target, results, settings):
+        """Add analysis result for a single target."""
+        # Check if new target is part of the network
+        if target > (self.data.n_nodes - 1):
+            raise RuntimeError('Can not add single target results - target '
+                               'index {0} larger than no. nodes ({1}).'.format(
+                                   target, self.data.n_nodes))
+        # Don't add duplicate targets
+        if self._duplicate_targets(target):
+            raise RuntimeError('Can not add single target results - results '
+                               'for target {0} already exist.'.format(target))
+        # Dont' add results with conflicting settings
+        if utils.conflicting_entries(self.settings, settings):
+            raise RuntimeError('Can not add single target results - analysis '
+                               'settings are not equal.')
+        # Add results
+        self.settings.update(DotDict(settings))
+        self.single_target[target] = DotDict(results)
+        self.targets_analysed = list(self.single_target.keys())
+
+    def combine_results(self, *results):
+        """Combine multiple (partial) results objects.
+
+        Combine a list of partial PID results into a single results object
+        (e.g., results from analysis parallelized over target nodes). Raise an
+        error if duplicate targets occur in partial results, or if analysis
+        settings are not equal.
+
+        Note that only conflicting settings cause an error (i.e., settings with
+        equal keys but different values). If additional settings are included
+        in partial results (i.e., settings with different keys) these settings
+        are added to the common settings dictionary.
+
+        Remove FDR-corrections from partial results before combining them. FDR-
+        correction performed on the basis of parts of the network a not valid
+        for the combined network.
+
+        Args:
+            results : list of Results objects
+                PID results from .analyse_network or .analyse_single_process
+                methods, where each object contains partial results for one or
+                multiple targets
+
+        Returns:
+            dict
+                combined results dict
+        """
+        for r in results:
+            targets = r.targets_analysed
+            if utils.conflicting_entries(self.settings, r.settings):
+                raise RuntimeError('Can not combine results - analysis '
+                                   'settings are not equal.')
+            for t in targets:
+                # Remove potential partial FDR-corrected results. These are no
+                # longer valid for the combined network.
+                if self._duplicate_targets(t):
+                    raise RuntimeError('Can not combine results - results for '
+                                       'target {0} already exist.'.format(t))
+                try:
+                    del r.fdr_corrected
+                    print('Removing FDR-corrected results.')
+                except AttributeError:
+                    pass
+                self._add_single_target(t, r.single_target[t], r.settings)
