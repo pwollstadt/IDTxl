@@ -78,9 +78,9 @@ def generate_source_graph(results, sign_sources=True):
     else:
         procs = results['sources_tested']
         samples = np.arange(
-                    results['current_value'][1] - results['min_lag_sources'],
-                    results['current_value'][1] - results['max_lag_sources'],
-                    -results['tau_sources'])
+                    results['current_value'][1] - results['settings']['min_lag_sources'],
+                    results['current_value'][1] - results['settings']['max_lag_sources'],
+                    -results['settings']['tau_sources'])
         define_candidates = MultivariateTE._define_candidates
         nodes = define_candidates([], procs, samples)
         graph.add_nodes_from(nodes)
@@ -166,7 +166,8 @@ def plot_selected_vars(results, sign_sources=True):
     n = np.array(graph.nodes(),
                  dtype=[('procs', np.int), ('lags', np.int)])
     target = tuple(n[n['lags'] == 0][0])
-    max_lag = max(results['max_lag_sources'], results['max_lag_target'])
+    max_lag = max(results['settings']['max_lag_sources'], 
+                  results['settings']['max_lag_target'])
     ind = 0
     color = ['lavender' for c in range(graph.number_of_nodes())]
     pos = nx.spring_layout(graph)
