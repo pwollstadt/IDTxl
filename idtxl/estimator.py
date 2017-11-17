@@ -276,20 +276,25 @@ class Estimator(metaclass=ABCMeta):
                 # return the estimate directly.
                 return [self.estimate(**data)]
 
-            n_samples_total = data[slice_vars[0]].shape[0]
+            # Find the number of samples
+            n_samples_total = None
+            for v in slice_vars:
+                if data[v] is not None:
+                    n_samples_total = data[v].shape[0]
+            assert n_samples_total is not None, (
+                'All variables provided for estimation are empty.')
             assert n_samples_total % n_chunks == 0, (
-                    'No. chunks ({0}) does not match data length ({1}). '
-                    'Remainder: {2}.'.format(
-                                    n_chunks,
-                                    data[slice_vars[0]].shape[0],
-                                    data[slice_vars[0]].shape[0] % n_chunks))
+                'No. chunks ({0}) does not match data length ({1}). Remainder:'
+                ' {2}.'.format(n_chunks,
+                               data[slice_vars[0]].shape[0],
+                               data[slice_vars[0]].shape[0] % n_chunks))
+
+            # Cut data into chunks and call estimator serially on each chunk.
             chunk_size = int(n_samples_total / n_chunks)
             idx_1 = 0
             idx_2 = chunk_size
             results = np.empty((n_chunks))
-            i = 0
-            # Cut data into chunks and call estimator serially.
-            for c in range(n_chunks):
+            for i in range(n_chunks):
                 chunk_data = {}
                 for v in slice_vars:  # NOTE: I am consciously not creating a deep copy here to save memory
                     if data[v] is not None:
@@ -301,6 +306,5 @@ class Estimator(metaclass=ABCMeta):
                 results[i] = self.estimate(**chunk_data)
                 idx_1 = idx_2
                 idx_2 += chunk_size
-                i += 1
 
             return results
