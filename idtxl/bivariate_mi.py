@@ -1,6 +1,6 @@
-"""Estimate bivariate transfer entropy.
+"""Estimate bivariate mutual information.
 
-Calculate bivariate transfer entropy (TE) using the maximum statistic.
+Calculate bivariate mutual information (MI) using the maximum statistic.
 
 Created on Wed Apr 06 17:58:31 2016
 
@@ -9,25 +9,19 @@ Note:
 
 @author: patricia
 """
-from .network_inference import NetworkInferenceTE, NetworkInferenceBivariate
+from .network_inference import NetworkInferenceMI, NetworkInferenceBivariate
 
 
-class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
-    """Perform network inference using bivariate transfer entropy.
+class BivariateMI(NetworkInferenceMI, NetworkInferenceBivariate):
+    """Perform network inference using bivariate mutual information.
 
-    Perform network inference using bivariate transfer entropy (TE). To
+    Perform network inference using bivariate mutual information (MI). To
     perform network inference call analyse_network() on the whole network or a
-    set of nodes or call analyse_single_target() to estimate TE for a single
+    set of nodes or call analyse_single_target() to estimate MI for a single
     target. See docstrings of the two functions for more information.
 
     References:
 
-    - Schreiber, T. (2000). Measuring Information Transfer. Phys Rev Lett,
-      85(2), 461–464. http://doi.org/10.1103/PhysRevLett.85.461
-    - Vicente, R., Wibral, M., Lindner, M., & Pipa, G. (2011). Transfer
-      entropy-a model-free measure of effective connectivity for the
-      neurosciences. J Comp Neurosci, 30(1), 45–67.
-      http://doi.org/10.1007/s10827-010-0262-3
     - Lizier, J. T., & Rubinov, M. (2012). Multivariate construction of
       effective computational networks from observational data. Max Planck
       Institute: Preprint. Retrieved from
@@ -46,7 +40,7 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
         settings : dict
             analysis settings
         current_value : tuple
-            index of the current value in TE estimation, (idx process,
+            index of the current value in MI estimation, (idx process,
             idx sample)
         selected_vars_full : list of tuples
             samples in the full conditional set, (idx process, idx sample)
@@ -57,22 +51,22 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
         pvalue_omnibus : float
             p-value of the omnibus test
         pvalues_sign_sources : numpy array
-            array of p-values for TE from individual sources to the target
-        statistic_omnibus : float
-            joint TE from all sources to the target
-        statistic_sign_sources : numpy array
-            raw TE values from individual sources to the target
+            array of p-values for MI from individual sources to the target
+        mi_omnibus : float
+            joint MI from all sources to the target
+        mi_sign_sources : numpy array
+            raw MI values from individual sources to the target
         sign_ominbus : bool
-            statistical significance of the over-all TE
+            statistical significance of the over-all MI
     """
 
     def __init__(self):
         super().__init__()
 
     def analyse_network(self, settings, data, targets='all', sources='all'):
-        """Find bivariate transfer entropy between all nodes in the network.
+        """Find bivariate mutual information between all nodes in the network.
 
-        Estimate bivariate transfer entropy (TE) between all nodes in the
+        Estimate bivariate mutual information (MI) between all nodes in the
         network or between selected sources and targets.
 
         Note:
@@ -83,6 +77,9 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
 
             >>> data = Data()
             >>> data.generate_mute_data(100, 5)
+            >>> # The algorithm uses a conditional mutual information to
+            >>> # construct a non-uniform embedding, hence a CMI- not MI-
+            >>> # estimator has to be specified:
             >>> settings = {
             >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
@@ -92,7 +89,7 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
             >>>     'max_lag': 5,
             >>>     'min_lag': 4
             >>>     }
-            >>> network_analysis = BivariateTE()
+            >>> network_analysis = BivariateMI()
             >>> results = network_analysis.analyse_network(settings, data)
 
         Args:
@@ -138,7 +135,7 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
                                                'sources have to have the same '
                                                'same length')
 
-        # Perform TE estimation for each target individually
+        # Perform MI estimation for each target individually
         settings.setdefault('verbose', True)
         results = {}
         for t in range(len(targets)):
@@ -152,28 +149,26 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
         return results
 
     def analyse_single_target(self, settings, data, target, sources='all'):
-        """Find bivariate transfer entropy between sources and a target.
+        """Find bivariate mutual information between sources and a target.
 
-        Find bivariate transfer entropy (TE) between all potential source
+        Find bivariate mutual information (MI) between all potential source
         processes and the target process. Uses bivariate, non-uniform embedding
-        found through information maximisation.
+        found through information maximisation
 
         References:
 
         - Faes, L., Nollo, G., & Porta, A. (2011). Information-based detection
           of nonlinear Granger causality in multivariate processes via a
           nonuniform embedding technique. Phys Rev E, 83, 1–15.
-          http://doi.org/10.1103/PhysRevE.83.051112
+          http://doi.org/10.1103/PhysRevE.83.051112 Bivariate
 
-       Bivariate TE is calculated in four steps:
+        MI is calculated in two steps:
 
-        (1) find all relevant samples in the target processes' own past, by
+        (1) find all relevant samples in a single source processes' past, by
             iteratively adding candidate samples that have significant
             conditional mutual information (CMI) with the current value
             (conditional on all samples that were added previously)
-        (2) find all relevant samples in the single source processes' pasts
-            (again by finding all candidates with significant CMI)
-        (3) statistics on the final set of sources (test for over-all transfer
+        (2) statistics on the final set of sources (test for over-all transfer
             between the final conditional set and the current value, and for
             significant transfer of all individual samples in the set)
 
@@ -181,6 +176,9 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
 
             >>> data = Data()
             >>> data.generate_mute_data(100, 5)
+            >>> # The algorithm uses a conditional mutual information to
+            >>> # construct a non-uniform embedding, hence a CMI- not MI-
+            >>> # estimator has to be specified:
             >>> settings = {
             >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
@@ -192,7 +190,7 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
             >>>     }
             >>> target = 0
             >>> sources = [1, 2, 3]
-            >>> network_analysis = BivariateTE()
+            >>> network_analysis = BivariateMI()
             >>> results = network_analysis.analyse_single_target(settings,
             >>>                                                  data, target,
             >>>                                                  sources)
@@ -208,13 +206,8 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
                   candidates in the sources' past in samples
                 - min_lag_sources : int - minimum temporal search depth for
                   candidates in the sources' past in samples
-                - max_lag_target : int [optional] - maximum temporal search
-                  depth for candidates in the target's past in samples
-                  (default=same as max_lag_sources)
                 - tau_sources : int [optional] - spacing between candidates in
                   the sources' past in samples (default=1)
-                - tau_target : int [optional] - spacing between candidates in
-                  the target's past in samples (default=1)
                 - n_perm_* : int - number of permutations, where * can be
                   'max_stat', 'min_stat', 'omnibus', and 'max_seq'
                   (default=500)
@@ -222,7 +215,7 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
                   significance, where * can be 'max_stats',  'min_stats', and
                   'omnibus' (default=0.05)
                 - add_conditionals : list of tuples | str [optional] - force
-                  the estimator to add these conditionals when estimating TE;
+                  the estimator to add these conditionals when estimating MI;
                   can either be a list of variables, where each variable is
                   described as (idx process, lag wrt to current value) or can
                   be a string: 'faes' for Faes-Method (see references)
@@ -245,22 +238,20 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
         Returns:
             dict
                 results consisting of sets of selected variables as (full set,
-                variables from the sources' past, variables from the target's
-                past), pvalues and TE for each selected variable, the current
-                value for this analysis, results for omnibus test (joint
-                influence of all selected source variables on the target,
-                omnibus TE, p-value, and significance); NOTE that all variables
-                are listed as tuples (process, lag wrt. current value)
+                variables from the sources' past), pvalues and MI for each
+                selected variable, the current value for this analysis, results
+                for omnibus test (joint MI between all selected source
+                variables and the target, omnibus MI, p-value, and
+                significance); NOTE that all variables are listed as tuples
+                (process, lag wrt. current value)
         """
         # Check input and clean up object if it was used before.
         self._initialise(settings, data, sources, target)
 
         # Main algorithm.
-        print('\n---------------------------- (1) include target candidates')
-        self._include_target_candidates(data)
-        print('\n---------------------------- (2) include source candidates')
+        print('\n---------------------------- (1) include source candidates')
         self._include_source_candidates(data)
-        print('\n---------------------------- (3) omnibus test')
+        print('\n---------------------------- (2) omnibus test')
         self._test_final_conditional(data)
 
         # Clean up and return results.
@@ -277,11 +268,9 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
             'selected_vars_full': self._idx_to_lag(self.selected_vars_full),
             'selected_vars_sources': self._idx_to_lag(
                                                 self.selected_vars_sources),
-            'selected_vars_target': self._idx_to_lag(
-                                                self.selected_vars_target),
             'selected_sources_pval': self.pvalues_sign_sources,
-            'selected_sources_te': self.statistic_sign_sources,
-            'omnibus_te': self.statistic_omnibus,
+            'selected_sources_mi': self.statistic_sign_sources,
+            'omnibus_mi': self.statistic_omnibus,
             'omnibus_pval': self.pvalue_omnibus,
             'omnibus_sign': self.sign_omnibus}
         self._reset()  # remove attributes
