@@ -115,11 +115,11 @@ class NetworkAnalysis():
             extracted from the array of all realisations, which may be slow!
             Use temporary variables to speed things up.
         """
+        if self.selected_vars_target is None:
+            return None
         indices = np.zeros(len(self.selected_vars_target)).astype(int)
-        i = 0
-        for idx in self.selected_vars_target:
+        for i, idx in enumerate(self.selected_vars_target):
             indices[i] = self.selected_vars_full.index(idx)
-            i += 1
         self._selected_vars_target_realisations = (
                                 self._selected_vars_realisations[:, indices])
         return self.__selected_vars_target_realisations
@@ -138,10 +138,8 @@ class NetworkAnalysis():
             Use temporary variables to speed things up.
         """
         indices = np.zeros(len(self.selected_vars_sources)).astype(int)
-        i = 0
-        for idx in self.selected_vars_sources:
+        for (i, idx) in enumerate(self.selected_vars_sources):
             indices[i] = self.selected_vars_full.index(idx)
-            i += 1
         self._selected_vars_sources_realisations = (
                                 self._selected_vars_realisations[:, indices])
         return self.__selected_vars_sources_realisations
@@ -224,10 +222,8 @@ class NetworkAnalysis():
         # variables).
         array_col_single = self.selected_vars_full.index(idx_single)
         array_col_remain = np.zeros(len(idx_remaining)).astype(int)
-        i = 0
-        for idx in idx_remaining:
+        for (i, idx) in enumerate(idx_remaining):
             array_col_remain[i] = self.selected_vars_full.index(idx)
-            i += 1
 
         # Get realisations of the single and remaining variables.
         real_single = np.expand_dims(
