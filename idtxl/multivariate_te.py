@@ -1,4 +1,4 @@
-"""Estimate multivarate TE.
+"""Estimate multivarate transfer entropy.
 
 Created on Thu Mar 10 14:24:31 2016
 
@@ -10,13 +10,11 @@ Note:
 
 @author: patricia
 """
-import numpy as np
-from . import stats
-from .network_inference import NetworkInference
+from .network_inference import NetworkInferenceTE, NetworkInferenceMultivariate
 from .stats import network_fdr
 
 
-class MultivariateTE(NetworkInference):
+class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
     """Perform network inference using multivariate transfer entropy.
 
     Perform network inference using multivariate transfer entropy (TE). To
@@ -62,9 +60,9 @@ class MultivariateTE(NetworkInference):
             p-value of the omnibus test
         pvalues_sign_sources : numpy array
             array of p-values for TE from individual sources to the target
-        te_omnibus : float
+        statistic_omnibus : float
             joint TE from all sources to the target
-        te_sign_sources : numpy array
+        statistic_sign_sources : numpy array
             raw TE values from individual sources to the target
         sign_ominbus : bool
             statistical significance of the over-all TE
@@ -299,119 +297,10 @@ class MultivariateTE(NetworkInference):
             'selected_vars_sources': self._idx_to_lag(
                                                 self.selected_vars_sources),
             'selected_sources_pval': self.pvalues_sign_sources,
-            'selected_sources_te': self.te_sign_sources,
-            'omnibus_te': self.te_omnibus,
+            'selected_sources_te': self.statistic_sign_sources,
+            'omnibus_te': self.statistic_omnibus,
             'omnibus_pval': self.pvalue_omnibus,
             'omnibus_sign': self.sign_omnibus
             }
         self._reset()  # remove attributes
         return results
-
-    def _prune_candidates(self, data):
-        """Remove uninformative candidates from the final conditional set.
-
-        For each sample in the final conditioning set, check if it is
-        informative about the current value given all other samples in the
-        final set. If a sample is not informative, it is removed from the
-        final set.
-
-        Args:
-            data : Data instance
-                raw data
-        """
-        # FOR LATER we don't need to test the last included in the first round
-        print(self.selected_vars_sources)
-        while self.selected_vars_sources:
-            # Find the candidate with the minimum TE into the target.
-            temp_te = np.empty(len(self.selected_vars_sources))
-            cond_dim = len(self.selected_vars_full) - 1
-            candidate_realisations = np.empty(
-                (data.n_realisations(self.current_value) *
-                 len(self.selected_vars_sources), 1)).astype(data.data_type)
-            conditional_realisations = np.empty(
-                (data.n_realisations(self.current_value) *
-                 len(self.selected_vars_sources),
-                 cond_dim)).astype(data.data_type)
-
-            # calculate TE simultaneously for all candidates
-            i_1 = 0
-            i_2 = data.n_realisations(self.current_value)
-            for candidate in self.selected_vars_sources:
-                # Separate the candidate realisations and all other
-                # realisations to test the candidate's individual contribution.
-                [temp_cond, temp_cand] = self._separate_realisations(
-                                                    self.selected_vars_full,
-                                                    candidate)
-                if temp_cond is None:
-                    conditional_realisations = None
-                else:
-                    conditional_realisations[i_1:i_2, ] = temp_cond
-                candidate_realisations[i_1:i_2, ] = temp_cand
-                i_1 = i_2
-                i_2 += data.n_realisations(self.current_value)
-
-            temp_te = self._cmi_estimator.estimate_mult(
-                                n_chunks=len(self.selected_vars_sources),
-                                re_use=['var2'],
-                                var1=candidate_realisations,
-                                var2=self._current_value_realisations,
-                                conditional=conditional_realisations)
-
-            # Test min TE for significance with minimum statistics.
-            te_min_candidate = min(temp_te)
-            min_candidate = self.selected_vars_sources[np.argmin(temp_te)]
-            if self.settings['verbose']:
-                print('testing {0} from candidate set {1}'.format(
-                                self._idx_to_lag([min_candidate])[0],
-                                self._idx_to_lag(self.selected_vars_sources)),
-                      end='')
-            [significant, p, surr_table] = stats.min_statistic(
-                                              self, data,
-                                              self.selected_vars_sources,
-                                              te_min_candidate)
-
-            # Remove the minimum it is not significant and test the next min.
-            # candidate. If the minimum is significant, break, all other
-            # sources will be significant as well (b/c they have higher TE).
-            if not significant:
-                if self.settings['verbose']:
-                    print(' -- not significant\n')
-                self._remove_selected_var(min_candidate)
-            else:
-                if self.settings['verbose']:
-                    print(' -- significant\n')
-                self._min_stats_surr_table = surr_table
-                break
-
-    def _test_final_conditional(self, data):
-        """Perform statistical test on the final conditional set."""
-        self.te_omnibus = None
-        self.sign_omnibus = False
-        self.pvalue_omnibus = None
-        self.pvalues_sign_sources = None
-        self.te_sign_sources = None
-
-        if not self.selected_vars_sources:
-            print('---------------------------- no sources found')
-        else:
-            print(self._idx_to_lag(self.selected_vars_full))
-            [s, p, te] = stats.omnibus_test(self, data)
-            self.te_omnibus = te
-            self.sign_omnibus = s
-            self.pvalue_omnibus = p
-            # Test individual links if the omnibus test is significant.
-            if self.sign_omnibus:
-                [s, p, te] = stats.max_statistic_sequential(self, data)
-                # Remove non-significant sources from the candidate set. Loop
-                # backwards over the candidates to remove them iteratively.
-                for i in range(s.shape[0] - 1, -1, -1):
-                    if not s[i]:
-                        self._remove_selected_var(
-                                                self.selected_vars_sources[i])
-                        p = np.delete(p, i)
-                        te = np.delete(te, i)
-                self.pvalues_sign_sources = p
-                self.te_sign_sources = te
-            else:
-                self.selected_vars_sources = []
-                self.selected_vars_full = self.selected_vars_target
