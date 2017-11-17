@@ -184,6 +184,9 @@ def omnibus_test(analysis_setup, data):
             statistical significance
         float
             the test's p-value
+        float
+            the estimated test statisic, i.e., the information transfer from
+            all sources into the target
     """
     # Set defaults and get parameters from settings dictionary
     analysis_setup.settings.setdefault('n_perm_omnibus', 500)
@@ -192,20 +195,22 @@ def omnibus_test(analysis_setup, data):
     alpha = analysis_setup.settings['alpha_omnibus']
     permute_in_time = _check_permute_in_time(analysis_setup, data,
                                              n_permutations)
-
-    print('no. target sources: {0}, no. sources: {1}'.format(
-                                    len(analysis_setup.selected_vars_target),
-                                    len(analysis_setup.selected_vars_sources)))
     assert analysis_setup.selected_vars_sources, 'No sources to test.'
 
     # Create temporary variables b/c realisations for sources and targets are
     # created on the fly, which is costly, so we want to re-use them after
     # creation. (This does not apply to the current value realisations).
+    # If there was no target variable selected (e.g., if MI is used for network
+    # inference), set conditional to None such that the MI instead of the CMI
+    # estimator is used when calculating the statistic.
     cond_source_realisations = (analysis_setup
                                 ._selected_vars_sources_realisations)
-    cond_target_realisations = (analysis_setup
-                                ._selected_vars_target_realisations)
-    te_orig = analysis_setup._cmi_estimator.estimate(
+    if analysis_setup._selected_vars_target:
+        cond_target_realisations = (analysis_setup
+                                    ._selected_vars_target_realisations)
+    else:
+        cond_target_realisations = None
+    statisitc = analysis_setup._cmi_estimator.estimate(
                             var1=cond_source_realisations,
                             var2=analysis_setup._current_value_realisations,
                             conditional=cond_target_realisations)
@@ -213,25 +218,6 @@ def omnibus_test(analysis_setup, data):
     # Create the surrogate distribution by permuting the conditional sources.
     if VERBOSE:
         print('omnibus test, n_perm: {0}'.format(n_permutations))
-    '''
-    # Calculate TE in parallel for all permutations
-    surr_cond_real = np.empty(
-        (n_permutations * data.n_realisations(analysis_setup.current_value),
-         len(analysis_setup.selected_vars_sources)))
-    i_1 = 0
-    i_2 = data.n_realisations(analysis_setup.current_value)
-    for perm in range(n_permutations):
-        if permute_over_replications:
-            surr_cond_real[i_1:i_2, ] = data.permute_data(
-                                    analysis_setup.current_value,
-                                    analysis_setup.selected_vars_sources)[0]
-        else:
-            surr_cond_real[i_1:i_2, ] = _permute_realisations(
-                                            cond_source_realisations,
-                                            analysis_setup._replication_index)
-        i_1 = i_2
-        i_2 += data.n_realisations(analysis_setup.current_value)
-        '''
     if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
             permute_in_time):
         # Generate the surrogates analytically
@@ -254,14 +240,14 @@ def omnibus_test(analysis_setup, data):
                             var1=surr_cond_real,
                             var2=analysis_setup._current_value_realisations,
                             conditional=cond_target_realisations)
-    [significance, pvalue] = _find_pvalue(te_orig, surr_distribution,
+    [significance, pvalue] = _find_pvalue(statisitc, surr_distribution,
                                           alpha, 'one_bigger')
     if VERBOSE:
         if significance:
             print(' -- significant\n')
         else:
             print(' -- not significant\n')
-    return significance, pvalue, te_orig
+    return significance, pvalue, statisitc
 
 
 def max_statistic(analysis_setup, data, candidate_set, te_max_candidate):
