@@ -25,6 +25,7 @@ from numpy import linalg as LA
 import math
 from collections import defaultdict
 from . import idtxl_exceptions as ex
+from .idtxl_exceptions import BROJA_2PID_Exception
 try:
     from ecos import solve
 except ImportError as err:
@@ -43,10 +44,6 @@ def p_vidx(i):
     return 3*i+1
 def q_vidx(i):
     return 3*i+2
-
-
-class BROJA_2PID_Exception(Exception):
-    pass
 
 
 class Solve_w_ECOS:
