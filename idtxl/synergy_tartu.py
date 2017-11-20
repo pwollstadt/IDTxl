@@ -25,6 +25,7 @@ from numpy import linalg as LA
 import math
 from collections import defaultdict
 from . import idtxl_exceptions as ex
+from .idtxl_exceptions import BROJA_2PID_Exception
 try:
     import ecos
 except ImportError as err:

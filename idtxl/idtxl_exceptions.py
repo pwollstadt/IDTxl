@@ -9,3 +9,7 @@ def package_missing(err, message):
     print()
     # warnings.simplefilter('always', ImportWarning)
     # warnings.warn(message, ImportWarning, stacklevel=2)
+
+
+class BROJA_2PID_Exception(Exception):
+    pass
