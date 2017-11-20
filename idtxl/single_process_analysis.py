@@ -2,7 +2,6 @@
 
 @author: patricia
 """
-import numpy as np
 from .network_analysis import NetworkAnalysis
 
 
