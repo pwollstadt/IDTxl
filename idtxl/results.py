@@ -542,10 +542,14 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
         # index, sample index).
         graph.add_node(self.single_target[target].current_value)
 
+        # Get list of *all* past variables.
         if fdr:
-            all_variables = (
-                self.fdr_correction.single_target[target].selected_vars_sources +
-                self.fdr_correction.single_target[target].selected_vars_target)
+            if (self.fdr_correction.adjacency_matrix == 0).all():
+                all_variables = []  # no sign. links after FDR-correction
+            else:
+                all_variables = (
+                    self.fdr_correction.single_target[target].selected_vars_sources +
+                    self.fdr_correction.single_target[target].selected_vars_target)
         else:
             all_variables = (
                 self.single_target[target].selected_vars_sources +
@@ -605,6 +609,8 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
         # Add results of FDR-correction
         if fdr is None:
             self.fdr_correction = DotDict()
+            self.fdr_correction['adjacency_matrix'] = np.zeros(
+                (self.data.n_nodes, self.data.n_nodes), dtype=int)
         else:
             self.fdr_correction = DotDict(fdr)
             self.fdr_correction.adjacency_matrix = np.zeros(
@@ -770,9 +776,12 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
         Args:
             matrix : str [optional]
                 can either be
+
                 - 'union': print all links in the union network, i.e., all
                   links that were tested for a difference
+
                 or print information for links with a significant difference
+
                 - 'comparison': links with a significant difference (default)
                 - 'pvalue': print p-values for links with a significant
                    difference

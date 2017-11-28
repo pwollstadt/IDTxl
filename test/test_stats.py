@@ -123,8 +123,8 @@ def test_network_fdr():
     res_1.settings['n_perm_max_seq'] = 2
     res_2.settings['n_perm_max_seq'] = 2
     res_pruned = stats.network_fdr(settings, res_1, res_2)
-    assert not res_pruned.fdr_correction, (
-        'results should be None if no. permutations too low.')
+    assert not res_pruned.fdr_correction.adjacency_matrix.all(), (
+        'Adj. matrix should be empty no. permutations too low.')
 
 
 def test_find_pvalue():
