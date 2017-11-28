@@ -81,11 +81,11 @@ def test_network_fdr():
         }
     res_1 = ResultsNetworkInference(
         n_nodes=3, n_realisations=1000, normalised=True)
-    res_1._add_single_target(target=0, settings=settings, results=target_0)
-    res_1._add_single_target(target=1, settings=settings, results=target_1)
+    res_1._add_single_result(target=0, settings=settings, results=target_0)
+    res_1._add_single_result(target=1, settings=settings, results=target_1)
     res_2 = ResultsNetworkInference(
         n_nodes=3, n_realisations=1000, normalised=True)
-    res_2._add_single_target(target=2, settings=settings, results=target_2)
+    res_2._add_single_result(target=2, settings=settings, results=target_2)
 
     for correct_by_target in [True, False]:
         settings = {

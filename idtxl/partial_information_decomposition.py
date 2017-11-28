@@ -72,7 +72,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             >>>     'max_unsuc_swaps_row_parm': 60,
             >>>     'num_reps': 63,
             >>>     'max_iters': 1000,
-            >>>     'pid_calc_name': 'SydneyPID'}
+            >>>     'pid_estimator': 'SydneyPID'}
             >>> targets = [0, 1, 2]
             >>> sources = [[1, 2], [0, 2], [0, 1]]
             >>> lags = [[1, 1], [3, 2], [0, 0]]
@@ -195,7 +195,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             n_nodes=data.n_processes,
             n_realisations=data.n_realisations(self.current_value),
             normalised=data.normalise)
-        results._add_single_target(
+        results._add_single_result(
             settings=self.settings,
             target=self.target,
             results=self.results)
@@ -280,6 +280,8 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         self.results = orig_pid
         self.results['source_1'] = self._idx_to_lag([self.sources[0]])
         self.results['source_2'] = self._idx_to_lag([self.sources[1]])
+        self.results['selected_vars_sources'] = [
+            self.results['source_1'][0], self.results['source_2'][0]]
         self.results['current_value'] = self.current_value
         self.results['s1_unq_sign'] = sign_1
         self.results['s2_unq_sign'] = sign_2
