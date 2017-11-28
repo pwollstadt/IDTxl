@@ -18,31 +18,24 @@ def plot_network(results, fdr=False):
             print FDR-corrected results (default=False)
 
     Returns:
-        instance of a directed graph class from the networkx package (DiGraph)
+        DiGraph
+            instance of a directed graph class from the networkx package
+        Figure
+            figure handle, Figure object from the matplotlib package
     """
     graph = results.export_networkx_graph(fdr)
-    print(graph.node)
 
-    plt.figure(figsize=(10, 5))
-    # Plot graph.
-    ax1 = plt.subplot(121)
-    nx.draw_circular(graph, with_labels=True, node_size=600, alpha=1.0, ax=ax1,
-                     node_color='Gainsboro', hold=True, font_size=14,
-                     font_weight='bold')
-    pos = nx.circular_layout(graph)
-    edge_labels = nx.get_edge_attributes(graph, 'weight')
-    print(edge_labels)
-    nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels,
-                                 font_size=13)  # font_weight='bold'
-
-    # Plot adjacency matrix.
-    plt.subplot(122)
+    fig = plt.figure(figsize=(10, 5))
+    ax1 = plt.subplot(121)  # plot graph
+    _plot_graph(graph, ax1)
+    plt.subplot(122)  # plot adjacency matrix
     if fdr:
         _plot_adj_matrix(results.fdr_correction.adjacency_matrix)
     else:
         _plot_adj_matrix(results.adjacency_matrix)
     plt.show()
-    return graph
+
+    return graph, fig
 
 
 def plot_selected_vars(results, target, sign_sources=True, fdr=False):
@@ -64,8 +57,10 @@ def plot_selected_vars(results, target, sign_sources=True, fdr=False):
             print FDR-corrected results (default=False)
 
     Returns:
-        instance of a directed graph class from the networkx
-        package (DiGraph)
+        DiGraph
+            instance of a directed graph class from the networkx package
+        Figure
+            figure handle, Figure object from the matplotlib package
     """
     graph = results.export_networkx_source_graph(target, sign_sources, fdr)
     current_value = results.single_target[target].current_value
@@ -95,14 +90,25 @@ def plot_selected_vars(results, target, sign_sources=True, fdr=False):
         elif n == current_value:
             color[ind] = 'red'
 
-    plt.figure()
+    fig = plt.figure()
     nx.draw(graph, pos=pos, with_labels=True, font_weight='bold',
             node_size=900, alpha=0.7, node_shape='s', node_color=color,
             hold=True)
     plt.plot([-0.5, max_lag + 0.5], [0.5, 0.5],
              linestyle='--', linewidth=1, color='0.5')
     plt.show()
-    return graph
+    return graph, fig
+
+
+def _plot_graph(graph, axis):
+    """Plot graph using networkx."""
+    pos = nx.circular_layout(graph)
+    edge_labels = nx.get_edge_attributes(graph, 'weight')
+    nx.draw_circular(graph, with_labels=True, node_size=600, alpha=1.0,
+                     ax=axis, node_color='Gainsboro', hold=True, font_size=14,
+                     font_weight='bold')
+    nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels,
+                                 font_size=13)  # font_weight='bold'
 
 
 def _plot_adj_matrix(adj_matrix, mat_color='gray_r', diverging=False,
@@ -176,75 +182,51 @@ def plot_mute_graph():
     # http://stackoverflow.com/questions/10104700/how-to-set-networkx-edge-labels-offset-to-avoid-label-overlap
 
 
-def plot_network_comparison(results, mask_sign=True, show=True):
-    """Plot results of network comparison."""
-    union = results['union_network']
+def plot_network_comparison(results):
+    """Plot results of network comparison.
 
-    targets = results['union_network']['targets']
-    n_nodes = max(targets) + 1
-    union_network = np.zeros((n_nodes, n_nodes), dtype=int)
-    adj_matrix_te_diff = np.zeros((n_nodes, n_nodes))
-    adj_matrix_pval = np.zeros((n_nodes, n_nodes))
-    adj_matrix_comp = np.zeros((n_nodes, n_nodes))
+    Plot results of network comparison. Produces a figure with five subplots,
+    where the first plot shows the network graph of the union network, the
+    second plot shows the adjacency matrix of the union network, the third
+    plot shows the qualitative results of the comparison of each link, the
+    fourth plot shows the absolute differences in CMI per link, and the fifth
+    plot shows p-values for each link.
 
-    for t in targets:
-        all_vars_sources = np.array([x[0] for x in
-                                     union[t]['selected_vars_sources']])
-        all_vars_lags = np.array([x[1] for x in
-                                  union[t]['selected_vars_sources']])
+    Returns:
+        DiGraph
+            instance of a directed graph class from the networkx package
+        Figure
+            figure handle, Figure object from the matplotlib package
+    """
+    graph = results.export_networkx_graph(matrix='union')
 
-        for s in np.unique(all_vars_sources):
-            union_network[s, t] = 1
-
-        pval = results['pval'][t]
-        sign = results['sign'][t]
-        te_diff = results['cmi_diff_abs'][t]
-        comp = results['a>b'][t].astype(int)
-        comp[comp == 0] = -1
-        if mask_sign:
-            all_vars_sources = all_vars_sources[sign]
-            all_vars_lags = all_vars_lags[sign]
-            pval = pval[sign]
-            te_diff = te_diff[sign]
-            comp = comp[sign]
-
-        sources = np.unique(all_vars_sources)
-
-        for s in sources:
-            # For now, if there are multiple variables in the past of a source,
-            # report the one with the maximum TE difference
-            te_diff_abs = abs(te_diff)
-            max_te = max(te_diff_abs[all_vars_sources == s])
-            idx = np.where(te_diff_abs == max_te)[0]
-            adj_matrix_te_diff[s, t] = te_diff[idx]
-            adj_matrix_pval[s, t] = pval[idx]
-            adj_matrix_comp[s, t] = comp[idx]
-
-    adj_matrix_te_diff_sign = adj_matrix_te_diff / np.max(adj_matrix_te_diff)
-    adj_matrix_te_diff_sign *= adj_matrix_comp
-
-    f = plt.figure(figsize=(10, 10))
-    ax = plt.subplot(221)
-    _plot_adj_matrix(adj_matrix_te_diff_sign, mat_color='seismic',
-                     diverging=True, cbar_label='norm. CMI diff [a.u.]',
-                     cbar_stepsize=0.1)
-    ax.set_title('CMI raw diff cond. A - B', y=1.1)
-    ax = plt.subplot(222)
-    _plot_adj_matrix(adj_matrix_pval, cbar_label='p-value [%]',
-                     cbar_stepsize=0.005)
-    ax.set_title('p-values cond. A vs. B', y=1.1)
-    ax = plt.subplot(223)
-    _plot_adj_matrix(union_network, mat_color='PuBu',
+    fig = plt.figure(figsize=(10, 15))
+    ax1 = plt.subplot(231)  # plot union graph
+    _plot_graph(graph, ax1)
+    ax = plt.subplot(232)
+    _plot_adj_matrix(results.adjacency_matrix_union, mat_color='PuBu',
                      cbar_label='link in union', cbar_stepsize=1)
     ax.set_title('union network A and B', y=1.1)
-    # ax = plt.subplot(224)
-    # cbar = _plot_adj_matrix(adj_matrix_comp, diverging=True,
-    #                         mat_color='bwr', cbar_stepsize=1)
-    # cbar.set_ticks([1, -1])
-    # cbar.ax.set_yticklabels(['A > B', 'B>=A'])
-    # ax.set_title('Comparison mean TE', y=1.1)
 
-    if show:
-        plt.show()
+    ax = plt.subplot(234)
+    if results.settings.tail_comp == 'two':
+        cbar_label = 'A != B'
+    elif results.settings.tail_comp == 'one':
+        cbar_label = 'A > B'
+    _plot_adj_matrix(results.adjacency_matrix_comparison.astype(int),
+                     mat_color='OrRd', cbar_label=cbar_label, cbar_stepsize=1)
+    ax.set_title('Comparison {0}'.format(cbar_label), y=1.1)
 
-    return adj_matrix_te_diff_sign, adj_matrix_pval, f
+    ax = plt.subplot(235)
+    _plot_adj_matrix(results.adjacency_matrix_diff_abs, mat_color='BuGn',
+                     cbar_label='norm. CMI diff [a.u.]',
+                     cbar_stepsize=0.1)
+    ax.set_title('CMI diff abs(A - B)', y=1.1)
+
+    ax = plt.subplot(236)
+    _plot_adj_matrix(results.adjacency_matrix_pvalue, mat_color='gray',
+                     cbar_label='p-value [%]', cbar_stepsize=0.005)
+    ax.set_title('p-values', y=1.1)
+    plt.show()
+
+    return graph, fig
