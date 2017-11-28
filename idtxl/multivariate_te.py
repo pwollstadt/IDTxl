@@ -289,7 +289,7 @@ class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
             n_nodes=data.n_processes,
             n_realisations=data.n_realisations(self.current_value),
             normalised=data.normalise)
-        results._add_single_target(
+        results._add_single_result(
             target=self.target,
             settings=self.settings,
             results={

@@ -203,7 +203,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             n_nodes=data.n_processes,
             n_realisations=data.n_realisations(self.current_value),
             normalised=data.normalise)
-        results._add_single_process(
+        results._add_single_result(
             process=self.process,
             settings=self.settings,
             results={

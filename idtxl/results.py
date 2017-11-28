@@ -111,7 +111,265 @@ class Results():
         return nx.from_numpy_matrix(
             adjacency_matrix, create_using=nx.DiGraph())
 
-class ResultsNetworkInference(Results):
+    def _check_result(self, process, settings):
+        # Check if new result process is part of the network
+        if process > (self.data.n_nodes - 1):
+            raise RuntimeError('Can not add single result - process {0} is not'
+                               ' in no. nodes in the data ({1}).'.format(
+                                   process, self.data.n_nodes))
+        # Don't add duplicate processes
+        if self._is_duplicate_process(process):
+            raise RuntimeError('Can not add single result - results for target'
+                               ' or process {0} already exist.'.format(
+                                   process))
+        # Dont' add results with conflicting settings
+        if utils.conflicting_entries(self.settings, settings):
+            raise RuntimeError(
+                'Can not add single result - analysis settings are not equal.')
+
+    def _is_duplicate_process(self, process):
+        # Test if process is already present in object
+        if process in self._processes_analysed:
+            return True
+        else:
+            return False
+
+    def combine_results(self, *results):
+        """Combine multiple (partial) results objects.
+
+        Combine a list of partial network analysis results into a single
+        results object (e.g., results from analysis parallelized over
+        processes). Raise an error if duplicate processes occur in partial
+        results, or if analysis settings are not equal.
+
+        Note that only conflicting settings cause an error (i.e., settings with
+        equal keys but different values). If additional settings are included
+        in partial results (i.e., settings with different keys) these settings
+        are added to the common settings dictionary.
+
+        Remove FDR-corrections from partial results before combining them. FDR-
+        correction performed on the basis of parts of the network a not valid
+        for the combined network.
+
+        Args:
+            results : list of Results objects
+                single process analysis results from .analyse_network or
+                .analyse_single_process methods, where each object contains
+                partial results for one or multiple processes
+
+        Returns:
+            dict
+                combined results dict
+        """
+        for r in results:
+            processes = r._processes_analysed
+            if utils.conflicting_entries(self.settings, r.settings):
+                raise RuntimeError('Can not combine results - analysis '
+                                   'settings are not equal.')
+            for p in processes:
+                # Remove potential partial FDR-corrected results. These are no
+                # longer valid for the combined network.
+                if self._is_duplicate_process(p):
+                    raise RuntimeError('Can not combine results - results for '
+                                       'process {0} already exist.'.format(p))
+                try:
+                    del r.fdr_corrected
+                    print('Removing FDR-corrected results.')
+                except AttributeError:
+                    pass
+
+                try:
+                    results_to_add = r.single_target[p]
+                except AttributeError:
+                    try:
+                        results_to_add = r.single_process[p]
+                    except AttributeError:
+                        raise AttributeError(
+                            'Did not find any method attributes to combine '
+                            '(.single_proces or .single_target).')
+                self._add_single_result(p, results_to_add, r.settings)
+
+
+class ResultsSingleProcessAnalysis(Results):
+    """Store results of single process analysis.
+
+    Provide a container for results of algorithms for the analysis of single
+    processes forming network nodes, e.g., estimation of active information
+    storage.
+
+    Note that for convenience all dictionaries in this class can additionally
+    be accessed using dot-notation: res_network.single_target[2].omnibus_pval
+    or res_network.single_target[2].['omnibus_pval'].
+
+    Attributes:
+        settings : dict
+            settings used for estimation of information theoretic measures and
+            statistical testing
+        data : dict
+            data properties, contains
+
+                - n_nodes : int - total number of nodes in the network
+                - n_realisations : int - number of samples available for
+                  analysis given the settings (e.g., a high maximum lag used in
+                  network inference, results in fewer data points available for
+                  estimation)
+                - normalised : bool - indicates if data were normalised before
+                  estimation
+                - single
+
+        single_process : dict
+            results for individual processes, contains for each process
+
+                - ais : float - AIS-value for current process
+                - ais_pval : float - p-value of AIS estimate
+                - ais_sign : bool - significance of AIS estimate wrt. to the
+                  alpha_mi specified in the settings
+                - selected_var : list of tuples - variables with significant
+                  information about the current value of the process that have
+                  been added to the processes past state, a variable is
+                  described by the index of the process in the data and its lag
+                  in samples
+                - current_value : tuple - current value used for analysis,
+                  described by target and sample index in the data
+
+        processes_analysed : list
+            list of processes analyzed
+        significant_processes : np array
+            indicates for each process whether AIS is significant
+        fdr_correction : dict
+            FDR-corrected results, see documentation of network inference
+            algorithms and stats.network_fdr
+
+    """
+
+    def __init__(self, n_nodes, n_realisations, normalised):
+        super().__init__(n_nodes, n_realisations, normalised)
+        self.single_process = {}
+        self.processes_analysed = []
+        self.significant_processes = np.zeros(self.data.n_nodes, dtype=bool)
+        self._add_fdr(None)
+
+    @property
+    def processes_analysed(self):
+        """Get index of the current_value."""
+        return self._processes_analysed
+
+    @processes_analysed.setter
+    def processes_analysed(self, processes):
+        self._processes_analysed = processes
+
+    def _add_single_result(self, process, results, settings):
+        """Add analysis result for a single process."""
+        self._check_result(process, settings)
+        self.settings.update(DotDict(settings))
+        self.single_process[process] = DotDict(results)
+        self.processes_analysed = list(self.single_process.keys())
+        self._update_significant_processes(process)
+
+    def _add_fdr(self, fdr):
+        # Add results of FDR-correction
+        if fdr is None:
+            self.fdr_correction = DotDict()
+        else:
+            self.fdr_correction = DotDict(fdr)
+            self.fdr_correction.significant_processes = np.zeros(
+                self.data.n_nodes, dtype=bool)
+            self._update_significant_processes(fdr=True)
+
+    def _update_significant_processes(self, process=None, fdr=False):
+        """Update list of processes with significant results."""
+        # If no process is given, build list from scratch, else: just update
+        # the requested process to save time.
+        if process is None:
+            update_processes = self.processes_analysed
+        else:
+            update_processes = [process]
+
+        for p in update_processes:
+            if fdr:
+                self.fdr_correction.significant_processes[p] = (
+                    self.fdr_correction.single_process[p].ais_sign)
+            else:
+                self.significant_processes[p] = self.single_process[p].ais_sign
+
+
+class ResultsNetworkAnalysis(Results):
+
+    def __init__(self, n_nodes, n_realisations, normalised):
+        super().__init__(n_nodes, n_realisations, normalised)
+        self.single_target = {}
+        self.targets_analysed = []
+
+    @property
+    def targets_analysed(self):
+        """Get index of the current_value."""
+        return self._processes_analysed
+
+    @targets_analysed.setter
+    def targets_analysed(self, targets):
+        self._processes_analysed = targets
+
+    def _add_single_result(self, target, results, settings):
+        """Add analysis result for a single target."""
+        self._check_result(target, settings)
+        # Add results
+        self.settings.update(DotDict(settings))
+        self.single_target[target] = DotDict(results)
+        self.targets_analysed = list(self.single_target.keys())
+        self._update_adjacency_matrix(target=target)
+
+    def _update_adjacency_matrix(self, target=None, fdr=False):
+        """Update adjacency matrix."""
+        # If no target is given, build adjacency matrix from scratch, else:
+        # just update the requested target to save time.
+        if target is None:
+            update_targets = self.targets_analysed
+        else:
+            update_targets = [target]
+
+        for t in update_targets:
+            sources = self.get_target_sources(target=t, fdr=fdr)
+            delays = self.get_target_delays(target=t, fdr=fdr)
+            if sources.size:
+                if fdr:
+                    self.fdr_correction.adjacency_matrix[sources, t] = delays
+                else:
+                    self.adjacency_matrix[sources, t] = delays
+
+    def get_target_sources(self, target, fdr=False):
+        """Return list of sources for given target.
+
+        Args:
+            target : int
+                target index
+            fdr : bool [optional]
+                if True, sources are returned for FDR-corrected results
+        """
+        if target not in self.targets_analysed:
+            raise RuntimeError('No results for target {0}.'.format(target))
+        if fdr:
+            try:
+                return np.unique(np.array(
+                    [s[0] for s in (self.fdr_correction[target].
+                                    selected_vars_sources)]))
+            except AttributeError:
+                raise RuntimeError('No FDR-corrected results have been added.')
+            except KeyError:
+                RuntimeError(
+                    'Didn''t find results for target {0}.'.format(target))
+        else:
+            try:
+                return np.unique(np.array(
+                    [s[0] for s in (self.single_target[target].
+                                    selected_vars_sources)]))
+            except AttributeError:
+                raise RuntimeError('No results have been added.')
+            except KeyError:
+                raise RuntimeError(
+                    'Didn''t find results for target {0}.'.format(target))
+
+
+class ResultsNetworkInference(ResultsNetworkAnalysis):
     """Store results of network inference.
 
     Provide a container for results of network inference algorithms, e.g.,
@@ -149,10 +407,6 @@ class ResultsNetworkInference(Results):
                   transfer into the target
                 - omnibus_sign : bool - significance of omnibus information
                   transfer wrt. to the alpha_omnibus specified in the settings
-                - selected_vars_full : list of tuples - variables with
-                  significant information about the current value of the
-                  target, a variable is described by the index of the process
-                  in the data and its lag in samples
                 - selected_vars_sources : list of tuples - source variables
                   with significant information about the current value
                 - selected_vars_target : list of tuples - target variables
@@ -178,107 +432,7 @@ class ResultsNetworkInference(Results):
         super().__init__(n_nodes, n_realisations, normalised)
         self.adjacency_matrix = np.zeros(
             (self.data.n_nodes, self.data.n_nodes), dtype=int)
-        self.single_target = {}
-        self.targets_analysed = []
         self._add_fdr(None)
-
-    def _add_single_target(self, target, results, settings):
-        """Add analysis result for a single target."""
-        # Check if new target is part of the network
-        if target > (self.data.n_nodes - 1):
-            raise RuntimeError('Can not add single target results - target '
-                               'index {0} larger than no. nodes ({1}).'.format(
-                                   target, self.data.n_nodes))
-        # Don't add duplicate targets
-        if self._is_duplicate_target(target):
-            raise RuntimeError('Can not add single target results - results '
-                               'for target {0} already exist.'.format(target))
-        # Dont' add results with conflicting settings
-        if utils.conflicting_entries(self.settings, settings):
-            raise RuntimeError('Can not add single target results - analysis '
-                               'settings are not equal.')
-        # Add results
-        self.settings.update(DotDict(settings))
-        self.single_target[target] = DotDict(results)
-        self.targets_analysed = list(self.single_target.keys())
-        self._update_adjacency_matrix(target=target)
-
-    def combine_results(self, *results):
-        """Combine multiple (partial) results objects.
-
-        Combine a list of partial results into a single results object (e.g.,
-        results from analysis parallelized over target nodes). Raise an error
-        if duplicate targets occur in partial results, or if analysis settings
-        are not equal.
-
-        Note that only conflicting settings cause an error (i.e., settings with
-        equal keys but different values). If additional settings are included
-        in partial results (i.e., settings with different keys) these settings
-        are added to the common settings dictionary.
-
-        Remove FDR-corrections from partial results before combining them. FDR-
-        correction performed on the basis of parts of the network a not valid
-        for the combined network.
-
-        Args:
-            results : list of Results objects
-                results from .analyse_network or .analyse_single_process
-                methods, where each object contains partial results for one or
-                multiple processes
-
-        Returns:
-            dict
-                combined results dict
-        """
-        for r in results:
-            targets = r.targets_analysed
-            if utils.conflicting_entries(self.settings, r.settings):
-                raise RuntimeError('Can not combine results - analysis '
-                                   'settings are not equal.')
-            for t in targets:
-                # Remove potential partial FDR-corrected results. These are no
-                # longer valid for the combined network.
-                if self._is_duplicate_target(t):
-                    raise RuntimeError('Can not combine results - results for '
-                                       'target {0} already exist.'.format(t))
-                try:
-                    del r.fdr_corrected
-                    print('Removing FDR-corrected results.')
-                except AttributeError:
-                    pass
-                self._add_single_target(t, r.single_target[t], r.settings)
-
-    def get_target_sources(self, target, fdr=False):
-        """Return list of sources for given target.
-
-        Args:
-            target : int
-                target index
-            fdr : bool [optional]
-                if True, sources are returned for FDR-corrected results
-        """
-        if target not in self.targets_analysed:
-            raise RuntimeError('No results for target {0}.'.format(target))
-        if fdr:
-            try:
-                return np.unique(np.array(
-                    [s[0] for s in (self.fdr_correction[target].
-                                    selected_vars_sources)]))
-            except AttributeError:
-                raise RuntimeError('No FDR-corrected results have been added.')
-            except KeyError:
-                RuntimeError(
-                    'Didn''t find results for target {0}.'.format(target))
-        else:
-            try:
-                return np.unique(np.array(
-                    [s[0] for s in (self.single_target[target].
-                                    selected_vars_sources)]))
-            except AttributeError:
-                raise RuntimeError('No results have been added.')
-            except KeyError:
-                raise RuntimeError(
-                    'Didn''t find results for target {0}.'.format(target))
 
     def get_target_delays(self, target, find_delay='max_te', fdr=False):
         """Return list of information-transfer delays for given target.
@@ -312,8 +466,7 @@ class ResultsNetworkInference(Results):
 
         # Get the source index for each past source variable of the target
         all_vars_sources = np.array(
-            [x[0] for x in
-             self.single_target[target].selected_vars_sources])
+            [x[0] for x in self.single_target[target].selected_vars_sources])
         # Get the lag for each past source variable of the target
         all_vars_lags = np.array(
             [x[1] for x in self.single_target[target].selected_vars_sources])
@@ -389,17 +542,18 @@ class ResultsNetworkInference(Results):
         # index, sample index).
         graph.add_node(self.single_target[target].current_value)
 
-        if sign_sources:
-            # Add only significant past variables as nodes.
-            if fdr:
-                graph.add_nodes_from(
-                    (self.fdr_correction.single_target[target].
-                     selected_vars_full[:]))
-            else:
-                graph.add_nodes_from(
-                    self.single_target[target].selected_vars_full[:])
+        if fdr:
+            all_variables = (
+                self.fdr_correction.single_target[target].selected_vars_sources +
+                self.fdr_correction.single_target[target].selected_vars_target)
         else:
-            # Add all tested past variables as nodes.
+            all_variables = (
+                self.single_target[target].selected_vars_sources +
+                self.single_target[target].selected_vars_target)
+
+        if sign_sources:  # Add only significant past variables as nodes.
+            graph.add_nodes_from(all_variables)
+        else:   # Add all tested past variables as nodes.
             # Get all sample indices.
             current_value = self.single_target[target].current_value
             min_lag = self.settings.min_lag_sources
@@ -416,21 +570,9 @@ class ResultsNetworkInference(Results):
         # Add edges from significant past variables to the target. Here, one
         # could add additional info in the future, networkx graphs support
         # attributes for graphs, nodes, and edges.
-        if fdr:
-            for v in range(len(self.single_target[target].selected_vars_full)):
-                graph.add_edge(
-                    (self.fdr_correction.single_target[target].
-                     selected_vars_full[v]),
-                    target)
-        else:
-            for v in range(len(self.single_target[target].selected_vars_full)):
-                graph.add_edge(
-                    self.single_target[target].selected_vars_full[v],
-                    self.single_target[target].current_value)
-        if self.settings['verbose']:
-            print(graph.node)
-            print(graph.edge)
-            graph.number_of_edges()
+        for v in all_variables:
+            graph.add_edge(v, self.single_target[target].current_value)
+
         return graph
 
     def print_to_console(self, fdr=False):
@@ -459,31 +601,6 @@ class ResultsNetworkInference(Results):
             adjacency_matrix = self.adjacency_matrix
         self._print_to_console(adjacency_matrix, 'u')
 
-    def _is_duplicate_target(self, target):
-        # Test if target is already present in object
-        if target in self.targets_analysed:
-            return True
-        else:
-            return False
-
-    def _update_adjacency_matrix(self, target=None, fdr=False):
-        """Update adjacency matrix."""
-        # If no target is given, build adjacency matrix from scratch, else:
-        # just update the requested target to save time.
-        if target is None:
-            update_targets = self.targets_analysed
-        else:
-            update_targets = [target]
-
-        for t in update_targets:
-            sources = self.get_target_sources(target=t, fdr=fdr)
-            delays = self.get_target_delays(target=t, fdr=fdr)
-            if sources.size:
-                if fdr:
-                    self.fdr_correction.adjacency_matrix[sources, t] = delays
-                else:
-                    self.adjacency_matrix[sources, t] = delays
-
     def _add_fdr(self, fdr):
         # Add results of FDR-correction
         if fdr is None:
@@ -495,167 +612,7 @@ class ResultsNetworkInference(Results):
             self._update_adjacency_matrix(fdr=True)
 
 
-class ResultsSingleProcessAnalysis(Results):
-    """Store results of single process analysis.
-
-    Provide a container for results of algorithms for the analysis of single
-    processes forming network nodes, e.g., estimation of active information
-    storage.
-
-    Note that for convenience all dictionaries in this class can additionally
-    be accessed using dot-notation: res_network.single_target[2].omnibus_pval
-    or res_network.single_target[2].['omnibus_pval'].
-
-    Attributes:
-        settings : dict
-            settings used for estimation of information theoretic measures and
-            statistical testing
-        data : dict
-            data properties, contains
-
-                - n_nodes : int - total number of nodes in the network
-                - n_realisations : int - number of samples available for
-                  analysis given the settings (e.g., a high maximum lag used in
-                  network inference, results in fewer data points available for
-                  estimation)
-                - normalised : bool - indicates if data were normalised before
-                  estimation
-                - single
-
-        single_process : dict
-            results for individual processes, contains for each process
-
-                - ais : float - AIS-value for current process
-                - ais_pval : float - p-value of AIS estimate
-                - ais_sign : bool - significance of AIS estimate wrt. to the
-                  alpha_mi specified in the settings
-                - selected_var : list of tuples - variables with significant
-                  information about the current value of the process that have
-                  been added to the processes past state, a variable is
-                  described by the index of the process in the data and its lag
-                  in samples
-                - current_value : tuple - current value used for analysis,
-                  described by target and sample index in the data
-
-        processes_analysed : list
-            list of processes analyzed
-        significant_processes : np array
-            indicates for each process whether AIS is significant
-        fdr_correction : dict
-            FDR-corrected results, see documentation of network inference
-            algorithms and stats.network_fdr
-
-    """
-
-    def __init__(self, n_nodes, n_realisations, normalised):
-        super().__init__(n_nodes, n_realisations, normalised)
-        self.single_process = {}
-        self.processes_analysed = []
-        self.significant_processes = np.zeros(self.data.n_nodes, dtype=bool)
-        self._add_fdr(None)
-
-    def _add_single_process(self, process, results, settings):
-        """Add analysis result for a single process."""
-        # Check if new process is part of the network
-        if process > (self.data.n_nodes - 1):
-            raise RuntimeError('Can not add single process results - process '
-                               'index {0} larger than no. nodes ({1}).'.format(
-                                   process, self.data.n_nodes))
-        # Don't add duplicate processes
-        if self._is_duplicate_process(process):
-            raise RuntimeError('Can not add single process results - results '
-                               'for process {0} already exist.'.format(
-                                   process))
-        # Dont' add results with conflicting settings
-        if utils.conflicting_entries(self.settings, settings):
-            raise RuntimeError('Can not add single process results - analysis '
-                               'settings are not equal.')
-        # Add results
-        self.settings.update(DotDict(settings))
-        self.single_process[process] = DotDict(results)
-        self.processes_analysed = list(self.single_process.keys())
-        self._update_significant_processes(process)
-
-    def combine_results(self, *results):
-        """Combine multiple (partial) results objects.
-
-        Combine a list of partial network analysis results into a single
-        results object (e.g., results from analysis parallelized over
-        processes). Raise an error if duplicate processes occur in partial
-        results, or if analysis settings are not equal.
-
-        Note that only conflicting settings cause an error (i.e., settings with
-        equal keys but different values). If additional settings are included
-        in partial results (i.e., settings with different keys) these settings
-        are added to the common settings dictionary.
-
-        Remove FDR-corrections from partial results before combining them. FDR-
-        correction performed on the basis of parts of the network a not valid
-        for the combined network.
-
-        Args:
-            results : list of Results objects
-                single process analysis results from .analyse_network or
-                .analyse_single_process methods, where each object contains
-                partial results for one or multiple processes
-
-        Returns:
-            dict
-                combined results dict
-        """
-        for r in results:
-            processes = r.processes_analysed
-            if utils.conflicting_entries(self.settings, r.settings):
-                raise RuntimeError('Can not combine results - analysis '
-                                   'settings are not equal.')
-            for p in processes:
-                # Remove potential partial FDR-corrected results. These are no
-                # longer valid for the combined network.
-                if self._is_duplicate_process(p):
-                    raise RuntimeError('Can not combine results - results for '
-                                       'process {0} already exist.'.format(p))
-                try:
-                    del r.fdr_corrected
-                    print('Removing FDR-corrected results.')
-                except AttributeError:
-                    pass
-                self._add_single_process(p, r.single_process[p], r.settings)
-
-    def _is_duplicate_process(self, process):
-        # Test if process is already present in object
-        if process in self.processes_analysed:
-            return True
-        else:
-            return False
-
-    def _add_fdr(self, fdr):
-        # Add results of FDR-correction
-        if fdr is None:
-            self.fdr_correction = DotDict()
-        else:
-            self.fdr_correction = DotDict(fdr)
-            self.fdr_correction.significant_processes = np.zeros(
-                self.data.n_nodes, dtype=bool)
-            self._update_significant_processes(fdr=True)
-
-    def _update_significant_processes(self, process=None, fdr=False):
-        """Update list of processes with significant results."""
-        # If no process is given, build list from scratch, else: just update
-        # the requested process to save time.
-        if process is None:
-            update_processes = self.processes_analysed
-        else:
-            update_processes = [process]
-
-        for p in update_processes:
-            if fdr:
-                self.fdr_correction.significant_processes[p] = (
-                    self.fdr_correction.single_process[p].ais_sign)
-            else:
-                self.significant_processes[p] = self.single_process[p].ais_sign
-
-
-class ResultsPartialInformationDecomposition(ResultsNetworkInference):
+class ResultsPartialInformationDecomposition(ResultsNetworkAnalysis):
     """Store results of network inference.
 
     Provide a container for results of network inference algorithms, e.g.,
@@ -709,11 +666,16 @@ class ResultsPartialInformationDecomposition(ResultsNetworkInference):
 
     def __init__(self, n_nodes, n_realisations, normalised):
         super().__init__(n_nodes, n_realisations, normalised)
-        self.single_target = {}
-        self.targets_analysed = []
+        self.adjacency_matrix = np.zeros(
+            (self.data.n_nodes, self.data.n_nodes), dtype=int)
+
+    def _update_adjacency_matrix(self, target):
+        sources = self.get_target_sources(target)
+        if sources.size:
+            self.adjacency_matrix[sources, target] = 1
 
 
-class ResultsNetworkComparison(ResultsNetworkInference):
+class ResultsNetworkComparison(ResultsNetworkAnalysis):
     """Store results of network comparison.
 
     Provide a container for results of network comparison algorithms.
@@ -758,8 +720,6 @@ class ResultsNetworkComparison(ResultsNetworkInference):
 
     def __init__(self, n_nodes, n_realisations, normalised):
         super().__init__(n_nodes, n_realisations, normalised)
-        del self.adjacency_matrix
-        del self.fdr_correction
         self.adjacency_matrix_pvalue = np.ones(
             (self.data.n_nodes, self.data.n_nodes), dtype=float)
         self.adjacency_matrix_comparison = np.zeros(
@@ -768,13 +728,11 @@ class ResultsNetworkComparison(ResultsNetworkInference):
             (self.data.n_nodes, self.data.n_nodes), dtype=int)
         self.adjacency_matrix_diff_abs = np.zeros(
             (self.data.n_nodes, self.data.n_nodes), dtype=float)
-        self.targets_analysed = []
 
     def _add_results(self, union_network, results, settings):
         # Check if results have already been added to this instance.
         if self.settings:
             raise RuntimeWarning('Overwriting existing results.')
-
         # Add results
         self.settings = DotDict(settings)
         self.targets_analysed = union_network['targets_analysed']
@@ -824,9 +782,9 @@ class ResultsNetworkComparison(ResultsNetworkInference):
             adjacency_matrix = self.adjacency_matrix_comparison
         elif matrix == 'union':
             adjacency_matrix = self.adjacency_matrix_union
-        elif matrix=='diff_abs':
+        elif matrix == 'diff_abs':
             adjacency_matrix = self.adjacency_matrix_diff_abs
-        elif matrix=='pvalue':
+        elif matrix == 'pvalue':
             adjacency_matrix = self.adjacency_matrix_pvalue
         self._print_to_console(adjacency_matrix, matrix)
 
@@ -858,8 +816,8 @@ class ResultsNetworkComparison(ResultsNetworkInference):
             adjacency_matrix = self.adjacency_matrix_comparison
         elif matrix == 'union':
             adjacency_matrix = self.adjacency_matrix_union
-        elif matrix=='diff_abs':
+        elif matrix == 'diff_abs':
             adjacency_matrix = self.adjacency_matrix_diff_abs
-        elif matrix=='pvalue':
+        elif matrix == 'pvalue':
             adjacency_matrix = self.adjacency_matrix_pvalue
-        return self._export_to_networkx(self.adjacency_matrix)
+        return self._export_to_networkx(adjacency_matrix)

@@ -271,6 +271,7 @@ def test_analyse_network():
     settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
         'n_perm_max_seq': 21,
         'n_perm_omnibus': 21,
         'max_lag_sources': 5,
@@ -338,7 +339,7 @@ def test_permute_time():
     nw_0 = MultivariateTE()
     results = nw_0.analyse_network(
         settings, data, targets='all', sources='all')
-    assert results[0]['settings']['perm_type'] == default, (
+    assert results.settings.perm_type == default, (
         'Perm type was not set to default.')
 
 
