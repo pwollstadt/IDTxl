@@ -300,8 +300,8 @@ class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
                 'selected_vars_sources': self._idx_to_lag(
                     self.selected_vars_sources),
                 'selected_sources_pval': self.pvalues_sign_sources,
-                'selected_sources_te': self.te_sign_sources,
-                'omnibus_te': self.te_omnibus,
+                'selected_sources_te': self.statistic_sign_sources,
+                'omnibus_te': self.statistic_omnibus,
                 'omnibus_pval': self.pvalue_omnibus,
                 'omnibus_sign': self.sign_omnibus
             })

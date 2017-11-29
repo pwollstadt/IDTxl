@@ -299,5 +299,7 @@ def conflicting_entries(dict_1, dict_2):
     intersect_keys = set(d1_keys).intersection(set(d2_keys))
     for k in intersect_keys:
         if np.array(dict_1[k] != dict_2[k]).any():
+            print('Unequal entries for key ''{0}'': dict_1: ''{1}'', dict_2:'
+                  ' ''{2}''.'.format(k, dict_1[k], dict_2[k]))
             return True
     return False

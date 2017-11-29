@@ -43,7 +43,7 @@ def test_multivariate_mi_init():
     settings['tau_sources'] = 10
     with pytest.raises(RuntimeError):
         nw.analyse_single_target(settings=settings, data=data, target=1)
-    
+
     # Invalid: negative lags or taus
     settings['tau_sources'] = 1
     settings['min_lag_sources'] = 1
@@ -242,6 +242,7 @@ def test_analyse_network():
     settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
         'n_perm_max_seq': 21,
         'n_perm_omnibus': 21,
         'max_lag_sources': 5,
@@ -250,53 +251,42 @@ def test_analyse_network():
     nw_0 = MultivariateMI()
 
     # Test all to all analysis
-    r = nw_0.analyse_network(settings, data, targets='all', sources='all')
-    try:
-        del r['fdr_corrected']
-    except:
-        pass
-    k = list(r.keys())
+    results = nw_0.analyse_network(settings, data, targets='all', sources='all')
+    targets_analysed = results.targets_analysed
     sources = np.arange(n_processes)
-    assert all(np.array(k) == np.arange(n_processes)), (
+    assert all(np.array(targets_analysed) == np.arange(n_processes)), (
                 'Network analysis did not run on all targets.')
-    for t in r.keys():
+    for t in targets_analysed:
         s = np.array(list(set(sources) - set([t])))
-        assert all(np.array(r[t]['sources_tested']) == s), (
+        assert all(np.array(results.single_target[t].sources_tested) == s), (
                     'Network analysis did not run on all sources for target '
                     '{0}'. format(t))
     # Test analysis for subset of targets
     target_list = [1, 2, 3]
-    r = nw_0.analyse_network(
+    results = nw_0.analyse_network(
         settings, data, targets=target_list, sources='all')
-    try:
-        del r['fdr_corrected']
-    except:
-        pass
-    k = list(r.keys())
-    assert all(np.array(k) == np.array(target_list)), (
+    targets_analysed = results.targets_analysed
+    assert all(np.array(targets_analysed) == np.array(target_list)), (
                 'Network analysis did not run on correct subset of targets.')
-    for t in r.keys():
+    for t in targets_analysed:
         s = np.array(list(set(sources) - set([t])))
-        assert all(np.array(r[t]['sources_tested']) == s), (
+        assert all(np.array(results.single_target[t].sources_tested) == s), (
                     'Network analysis did not run on all sources for target '
                     '{0}'. format(t))
 
     # Test analysis for subset of sources
     source_list = [1, 2, 3]
     target_list = [0, 4]
-    r = nw_0.analyse_network(settings, data, targets=target_list,
+    results = nw_0.analyse_network(settings, data, targets=target_list,
                              sources=source_list)
-    try:
-        del r['fdr_corrected']
-    except:
-        pass
-    k = list(r.keys())
-    assert all(np.array(k) == np.array(target_list)), (
+    targets_analysed = results.targets_analysed
+    assert all(np.array(targets_analysed) == np.array(target_list)), (
                 'Network analysis did not run for all targets.')
-    for t in r.keys():
-        assert all(r[t]['sources_tested'] == np.array(source_list)), (
-            'Network analysis did not run on the correct subset of sources '
-            'for target {0}'.format(t))
+    for t in targets_analysed:
+        assert all(results.single_target[t].sources_tested ==
+                   np.array(source_list)), (
+                        'Network analysis did not run on the correct subset '
+                        'of sources for target {0}'.format(t))
 
 @jpype_missing
 def test_permute_time():
@@ -315,8 +305,8 @@ def test_permute_time():
         'max_lag_target': 5,
         'permute_in_time': True}
     nw_0 = MultivariateMI()
-    r = nw_0.analyse_network(settings, data, targets='all', sources='all')
-    assert r[0]['settings']['perm_type'] == default, (
+    results = nw_0.analyse_network(settings, data, targets='all', sources='all')
+    assert results.settings.perm_type == default, (
         'Perm type was not set to default.')
 
 
@@ -355,10 +345,11 @@ def test_discrete_input():
         'max_lag_target': 1}
     nw = MultivariateMI()
     res = nw.analyse_single_target(settings=settings, data=data, target=1)
-    assert np.isclose(res['selected_sources_mi'][0], expected_mi, atol=0.05), (
-        'Estimated MI for discrete variables is not correct. Expected: {0}, '
-        'Actual results: {1}.'.format(expected_mi,
-                                      res['selected_sources_te'][0]))
+    assert np.isclose(
+        res.single_target[1].omnibus_mi, expected_mi, atol=0.05), (
+            'Estimated MI for discrete variables is not correct. Expected: '
+            '{0}, Actual results: {1}.'.format(
+                expected_mi, res['selected_sources_te'][0]))
 
 
 def test_include_target_candidates():
@@ -386,8 +377,8 @@ def test_indices_to_lags():
 
 
 if __name__ == '__main__':
-    test_discrete_input()
     test_analyse_network()
+    test_discrete_input()
     test_check_source_set()
     test_multivariate_mi_init()  # test init function of the Class
     test_multivariate_mi_one_realisation_per_replication()

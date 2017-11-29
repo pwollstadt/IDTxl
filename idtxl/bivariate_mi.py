@@ -10,6 +10,8 @@ Note:
 @author: patricia
 """
 from .network_inference import NetworkInferenceMI, NetworkInferenceBivariate
+from .stats import network_fdr
+from .results import ResultsNetworkInference
 
 
 class BivariateMI(NetworkInferenceMI, NetworkInferenceBivariate):
@@ -120,6 +122,11 @@ class BivariateMI(NetworkInferenceMI, NetworkInferenceBivariate):
                 results for each target, see documentation of
                 analyse_single_target()
         """
+        # Set defaults for network inference.
+        settings.setdefault('verbose', True)
+        settings.setdefault('fdr_correction', True)
+
+        # Check which targets and sources are requested for analysis.
         if targets == 'all':
             targets = [t for t in range(data.n_processes)]
         if sources == 'all':
@@ -131,21 +138,29 @@ class BivariateMI(NetworkInferenceMI, NetworkInferenceBivariate):
         else:
             ValueError('Sources was not specified correctly: {0}.'.format(
                                                                     sources))
-        assert(len(sources) == len(targets)), ('List of targets and list of '
-                                               'sources have to have the same '
-                                               'same length')
+        assert(len(sources) == len(targets)), (
+            'List of targets and list of sources have to have the same length')
 
         # Perform MI estimation for each target individually
-        settings.setdefault('verbose', True)
-        results = {}
+        results = ResultsNetworkInference(n_nodes=data.n_processes,
+                                          n_realisations=data.n_realisations(),
+                                          normalised=data.normalise)
         for t in range(len(targets)):
             if settings['verbose']:
                 print('####### analysing target {0} of {1}'.format(t, targets))
-            r = self.analyse_single_target(settings, data,
-                                           targets[t], sources[t])
-            r['target'] = targets[t]
-            r['sources'] = sources[t]
-            results[targets[t]] = r
+            res_single = self.analyse_single_target(
+                settings, data, targets[t], sources[t])
+            results.combine_results(res_single)
+
+        # Get no. realisations actually used for estimation from single target
+        # analysis.
+        results.data.n_realisations = res_single.data.n_realisations
+
+        # Perform FDR-correction on the network level. Add FDR-corrected
+        # results as an extra field. Network_fdr/combine_results internally
+        # creates a deep copy of the results.
+        if settings['fdr_correction']:
+            results = network_fdr(settings, results)
         return results
 
     def analyse_single_target(self, settings, data, target, sources='all'):
@@ -260,18 +275,26 @@ class BivariateMI(NetworkInferenceMI, NetworkInferenceBivariate):
                     self._idx_to_lag(self.selected_vars_sources)))
             print('final target samples: {0}'.format(
                     self._idx_to_lag(self.selected_vars_target)))
-        results = {
-            'target': self.target,
-            'sources_tested': self.source_set,
-            'settings': self.settings,
-            'current_value': self.current_value,
-            'selected_vars_full': self._idx_to_lag(self.selected_vars_full),
-            'selected_vars_sources': self._idx_to_lag(
-                                                self.selected_vars_sources),
-            'selected_sources_pval': self.pvalues_sign_sources,
-            'selected_sources_mi': self.statistic_sign_sources,
-            'omnibus_mi': self.statistic_omnibus,
-            'omnibus_pval': self.pvalue_omnibus,
-            'omnibus_sign': self.sign_omnibus}
+        results = ResultsNetworkInference(
+            n_nodes=data.n_processes,
+            n_realisations=data.n_realisations(self.current_value),
+            normalised=data.normalise)
+        results._add_single_result(
+            target=self.target,
+            settings=self.settings,
+            results={
+                'sources_tested': self.source_set,
+                'current_value': self.current_value,
+                'selected_vars_sources': self._idx_to_lag(
+                    self.selected_vars_sources),
+                'selected_vars_target': self._idx_to_lag(
+                    self.selected_vars_target),
+                'selected_sources_pval': self.pvalues_sign_sources,
+                'selected_sources_mi': self.statistic_sign_sources,
+                'omnibus_mi': self.statistic_omnibus,
+                'omnibus_pval': self.pvalue_omnibus,
+                'omnibus_sign': self.sign_omnibus
+            })
+
         self._reset()  # remove attributes
         return results

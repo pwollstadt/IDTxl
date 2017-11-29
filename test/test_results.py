@@ -7,6 +7,9 @@ import itertools as it
 import copy as cp
 import numpy as np
 from idtxl.multivariate_te import MultivariateTE
+from idtxl.bivariate_te import BivariateTE
+from idtxl.multivariate_mi import MultivariateMI
+from idtxl.bivariate_mi import BivariateMI
 from idtxl.network_comparison import NetworkComparison
 from idtxl.data import Data
 from idtxl.estimators_jidt import JidtDiscreteCMI
@@ -28,7 +31,7 @@ settings = {
 
 
 @jpype_missing
-def test_results_multivariate_te():
+def test_results_network_inference():
     """Test results class for multivariate TE network inference."""
     covariance = 0.4
     n = 10000
@@ -51,26 +54,60 @@ def test_results_multivariate_te():
     est = JidtDiscreteCMI(settings_dis)
     source_dis, target_1_dis = est._discretise_vars(var1=source, var2=target_1)
     source_dis, target_2_dis = est._discretise_vars(var1=source, var2=target_2)
-
     data = Data(np.vstack((source_dis, target_1_dis, target_2_dis)),
                 dim_order='ps', normalise=normalisation)
+
     nw = MultivariateTE()
-
-    # Analyse a single target
-    res_single = nw.analyse_single_target(
+    # TE - single target
+    res_single_multi_te = nw.analyse_single_target(
         settings=settings, data=data, target=1)
-    est_mi = res_single.single_target[1].omnibus_te
-    assert np.isclose(est_mi, expected_mi, atol=0.05), (
-        'Estimated TE for discrete variables is not correct. Expected: {0}, '
-        'Actual results: {1}.'.format(expected_mi, est_mi))
+    # TE whole network
+    res_network_multi_te = nw.analyse_network(settings=settings, data=data)
 
-    # Analyse whole network
-    res_network = nw.analyse_network(settings=settings, data=data)
-    est_mi = res_network.single_target[1].omnibus_te
-    assert np.isclose(est_mi, expected_mi, atol=0.05), (
+    nw = BivariateTE()
+    # TE - single target
+    res_single_biv_te = nw.analyse_single_target(
+        settings=settings, data=data, target=1)
+    # TE whole network
+    res_network_biv_te = nw.analyse_network(settings=settings, data=data)
+
+    nw = MultivariateMI()
+    # TE - single target
+    res_single_multi_mi = nw.analyse_single_target(
+        settings=settings, data=data, target=1)
+    # TE whole network
+    res_network_multi_mi = nw.analyse_network(settings=settings, data=data)
+
+    nw = BivariateMI()
+    # TE - single target
+    res_single_biv_mi = nw.analyse_single_target(
+        settings=settings, data=data, target=1)
+    # TE whole network
+    res_network_biv_mi = nw.analyse_network(settings=settings, data=data)
+
+    res_te = [res_single_multi_te, res_network_multi_te, res_single_biv_te,
+               res_network_biv_te]
+    res_mi = [res_single_multi_mi, res_network_multi_mi, res_single_biv_mi,
+              res_network_biv_mi]
+    res_all = res_te + res_mi
+
+    # Check estimated values
+    for res in res_te:
+        est_te = res.single_target[1].omnibus_te
+        assert np.isclose(est_te, expected_mi, atol=0.05), (
+            'Estimated TE for discrete variables is not correct. Expected: '
+            '{0}, Actual results: {1}.'.format(expected_mi, est_mi))
+    for res in res_mi:
+        est_mi = res.single_target[1].omnibus_mi
+        assert np.isclose(est_mi, expected_mi, atol=0.05), (
+            'Estimated TE for discrete variables is not correct. Expected: '
+            '{0}, Actual results: {1}.'.format(expected_mi, est_mi))
+
+    est_te = res_network_multi_te.single_target[2].omnibus_te
+    assert np.isclose(est_te, expected_mi, atol=0.05), (
         'Estimated TE for discrete variables is not correct. Expected: {0}, '
         'Actual results: {1}.'.format(expected_mi, est_mi))
-    est_mi = res_network.single_target[2].omnibus_te
+    est_mi = res_network_multi_mi.single_target[2].omnibus_mi
     assert np.isclose(est_mi, expected_mi, atol=0.05), (
         'Estimated TE for discrete variables is not correct. Expected: {0}, '
         'Actual results: {1}.'.format(expected_mi, est_mi))
@@ -79,24 +116,25 @@ def test_results_multivariate_te():
     n_nodes = 3
     n_realisations = n - delay - max(
         settings['max_lag_sources'], settings['max_lag_target'])
-    assert res_network.data.n_nodes == n_nodes, 'Incorrect no. nodes.'
-    assert res_single.data.n_nodes == n_nodes, 'Incorrect no. nodes.'
-    assert res_network.data.n_realisations == n_realisations, (
-        'Incorrect no. realisations.')
-    assert res_single.data.n_realisations == n_realisations, (
-        'Incorrect no. realisations.')
-    assert res_network.data.normalised == normalisation, (
-        'Incorrect value for data normalisation.')
-    assert res_single.data.normalised == normalisation, (
-        'Incorrect value for data normalisation.')
-    assert res_network.adjacency_matrix.shape[0] == n_nodes, (
-        'Incorrect number of rows in adjacency matrix.')
-    assert res_network.adjacency_matrix.shape[1] == n_nodes, (
-        'Incorrect number of columns in adjacency matrix.')
-    assert res_single.adjacency_matrix.shape[0] == n_nodes, (
-        'Incorrect number of rows in adjacency matrix.')
-    assert res_single.adjacency_matrix.shape[1] == n_nodes, (
-        'Incorrect number of columns in adjacency matrix.')
+    for res in res_all:
+        assert res.data.n_nodes == n_nodes, 'Incorrect no. nodes.'
+        assert res.data.n_nodes == n_nodes, 'Incorrect no. nodes.'
+        assert res.data.n_realisations == n_realisations, (
+            'Incorrect no. realisations.')
+        assert res.data.n_realisations == n_realisations, (
+            'Incorrect no. realisations.')
+        assert res.data.normalised == normalisation, (
+            'Incorrect value for data normalisation.')
+        assert res.data.normalised == normalisation, (
+            'Incorrect value for data normalisation.')
+        assert res.adjacency_matrix.shape[0] == n_nodes, (
+            'Incorrect number of rows in adjacency matrix.')
+        assert res.adjacency_matrix.shape[1] == n_nodes, (
+            'Incorrect number of columns in adjacency matrix.')
+        assert res.adjacency_matrix.shape[0] == n_nodes, (
+            'Incorrect number of rows in adjacency matrix.')
+        assert res.adjacency_matrix.shape[1] == n_nodes, (
+            'Incorrect number of columns in adjacency matrix.')
 
 
 def test_pickle_results():
@@ -337,10 +375,10 @@ def test_results_network_comparison():
 
 
 if __name__ == '__main__':
+    test_results_network_inference()
     test_results_network_comparison()
     test_console_output()
     test_pickle_results()
     test_delay_reconstruction()
     test_combine_results()
     test_add_single_result()
-    test_results_multivariate_te()
