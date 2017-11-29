@@ -283,7 +283,7 @@ def test_analyse_network():
     sources = np.arange(n_processes)
     assert all(np.array(targets_analysed) == np.arange(n_processes)), (
                 'Network analysis did not run on all targets.')
-    for t in results.targets_analysed:
+    for t in targets_analysed:
         s = np.array(list(set(sources) - set([t])))
         assert all(np.array(results.single_target[t].sources_tested) == s), (
                     'Network analysis did not run on all sources for target '
@@ -295,7 +295,7 @@ def test_analyse_network():
     targets_analysed = results.targets_analysed
     assert all(np.array(targets_analysed) == np.array(target_list)), (
                 'Network analysis did not run on correct subset of targets.')
-    for t in results.targets_analysed:
+    for t in targets_analysed:
         s = np.array(list(set(sources) - set([t])))
         assert all(np.array(results.single_target[t].sources_tested) == s), (
                     'Network analysis did not run on all sources for target '

@@ -12,6 +12,7 @@ Note:
 """
 from .stats import network_fdr
 from .network_inference import NetworkInferenceMI, NetworkInferenceMultivariate
+from .results import ResultsNetworkInference
 
 
 class MultivariateMI(NetworkInferenceMI, NetworkInferenceMultivariate):
@@ -145,22 +146,26 @@ class MultivariateMI(NetworkInferenceMI, NetworkInferenceMultivariate):
                                                'same length')
 
         # Perform MI estimation for each target individually
-        results = {}
+        results = ResultsNetworkInference(n_nodes=data.n_processes,
+                                          n_realisations=data.n_realisations(),
+                                          normalised=data.normalise)
         for t in range(len(targets)):
             if settings['verbose']:
                 print('\n####### analysing target with index {0} from list {1}'
                       .format(t, targets))
-            results[targets[t]] = self.analyse_single_target(settings,
-                                                             data,
-                                                             targets[t],
-                                                             sources[t])
+            res_single = self.analyse_single_target(
+                    settings, data, targets[t], sources[t])
+            results.combine_results(res_single)
+
+        # Get no. realisations actually used for estimation from single target
+        # analysis.
+        results.data.n_realisations = res_single.data.n_realisations
 
         # Perform FDR-correction on the network level. Add FDR-corrected
         # results as an extra field. Network_fdr/combine_results internally
         # creates a deep copy of the results.
         if settings['fdr_correction']:
-            results['fdr_corrected'] = network_fdr(settings, results)
-
+            results = network_fdr(settings, results)
         return results
 
     def analyse_single_target(self, settings, data, target, sources='all'):
@@ -282,19 +287,26 @@ class MultivariateMI(NetworkInferenceMI, NetworkInferenceMultivariate):
         # Clean up and return results.
         if self.settings['verbose']:
             print('final source samples: {0}'.format(
-                    self._idx_to_lag(self.selected_vars_sources)))        
-        results = {
-            'target': self.target,
-            'sources_tested': self.source_set,
-            'settings': self.settings,
-            'current_value': self.current_value,
-            'selected_vars_sources': self._idx_to_lag(
-                                                self.selected_vars_sources),
-            'selected_sources_pval': self.pvalues_sign_sources,
-            'selected_sources_mi': self.statistic_sign_sources,
-            'omnibus_mi': self.statistic_omnibus,
-            'omnibus_pval': self.pvalue_omnibus,
-            'omnibus_sign': self.sign_omnibus
-            }
+                    self._idx_to_lag(self.selected_vars_sources)))
+        results = ResultsNetworkInference(
+            n_nodes=data.n_processes,
+            n_realisations=data.n_realisations(self.current_value),
+            normalised=data.normalise)
+        results._add_single_result(
+            target=self.target,
+            settings=self.settings,
+            results={
+                'sources_tested': self.source_set,
+                'current_value': self.current_value,
+                'selected_vars_target': self._idx_to_lag(
+                    self.selected_vars_target),
+                'selected_vars_sources': self._idx_to_lag(
+                    self.selected_vars_sources),
+                'selected_sources_pval': self.pvalues_sign_sources,
+                'selected_sources_mi': self.statistic_sign_sources,
+                'omnibus_mi': self.statistic_omnibus,
+                'omnibus_pval': self.pvalue_omnibus,
+                'omnibus_sign': self.sign_omnibus
+            })
         self._reset()  # remove attributes
         return results

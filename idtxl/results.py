@@ -472,7 +472,7 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
             [x[1] for x in self.single_target[target].selected_vars_sources])
         # Get p-values and TE-values for past source variable
         pval = self.single_target[target].selected_sources_pval
-        te = self.single_target[target].selected_sources_te
+        measure = self._get_inference_measure(target)
 
         # Find delay for each source
         for (ind, s) in enumerate(sources):
@@ -481,11 +481,20 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
                 delays_ind = np.argmin(pval[all_vars_sources == s])
             elif find_delay == 'max_te':
                 # Find the maximum TE-value amongst the variables in source s
-                delays_ind = np.argmax(te[all_vars_sources == s])
+                delays_ind = np.argmax(measure[all_vars_sources == s])
 
             delays[ind] = all_vars_lags[all_vars_sources == s][delays_ind]
 
         return delays
+
+    def _get_inference_measure(self, target):
+        if 'selected_sources_te' in self.single_target[target]:
+            return self.single_target[target].selected_sources_te
+        elif 'selected_sources_mi' in self.single_target[target]:
+            return self.single_target[target].selected_sources_mi
+        else:
+            raise KeyError('No entry with network inference measure found for '
+                           'current target')
 
     def export_networkx_graph(self, fdr=False):
         """Generate networkx graph object for an inferred network.

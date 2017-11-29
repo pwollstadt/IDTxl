@@ -9,16 +9,9 @@ Note:
 
 @author: patricia
 """
-<<<<<<< HEAD
 from .network_inference import NetworkInferenceTE, NetworkInferenceBivariate
-=======
-import numpy as np
-import itertools as it
-from . import stats
-from .network_inference import NetworkInference
 from .stats import network_fdr
 from .results import ResultsNetworkInference
->>>>>>> Add results class for multi- and bivariate TE
 
 
 class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
@@ -148,9 +141,8 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
         else:
             ValueError('Sources was not specified correctly: {0}.'.format(
                                                                     sources))
-        assert(len(sources) == len(targets)), ('List of targets and list of '
-                                               'sources have to have the same '
-                                               'same length')
+        assert(len(sources) == len(targets)), (
+            'List of targets and list of sources have to have the length')
 
         # Perform TE estimation for each target individually
         results = ResultsNetworkInference(n_nodes=data.n_processes,
@@ -298,15 +290,13 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
             results={
                 'sources_tested': self.source_set,
                 'current_value': self.current_value,
-                'selected_vars_full': self._idx_to_lag(
-                    self.selected_vars_full),
                 'selected_vars_sources': self._idx_to_lag(
                     self.selected_vars_sources),
                 'selected_vars_target': self._idx_to_lag(
                     self.selected_vars_target),
                 'selected_sources_pval': self.pvalues_sign_sources,
-                'selected_sources_te': self.te_sign_sources,
-                'omnibus_te': self.te_omnibus,
+                'selected_sources_te': self.statistic_sign_sources,
+                'omnibus_te': self.statistic_omnibus,
                 'omnibus_pval': self.pvalue_omnibus,
                 'omnibus_sign': self.sign_omnibus
             })
