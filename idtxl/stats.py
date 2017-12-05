@@ -55,8 +55,8 @@ def network_fdr(settings=None, *results):
         settings = {}
     # Set defaults and get parameters from settings dictionary
     alpha = settings.get('alpha_fdr', 0.05)
-    correct_by_target = settings.get('correct_by_target', True)    
-    constant = settings.get('fdr_constant', 2)    
+    correct_by_target = settings.get('correct_by_target', True)
+    constant = settings.get('fdr_constant', 2)
 
     # Combine results into single results dict.
     if len(results) > 1:
@@ -234,6 +234,7 @@ def omnibus_test(analysis_setup, data):
     if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
             permute_in_time):
         # Generate the surrogates analytically
+        analysis_setup.settings['analytical_surrogates'] = True
         surr_distribution = (analysis_setup._cmi_estimator.
                              estimate_surrogates_analytic(
                                n_perm=n_permutations,
@@ -241,6 +242,7 @@ def omnibus_test(analysis_setup, data):
                                var2=analysis_setup._current_value_realisations,
                                conditional=cond_target_realisations))
     else:
+        analysis_setup.settings['analytical_surrogates'] = False
         surr_cond_real = _get_surrogates(data,
                                          analysis_setup.current_value,
                                          analysis_setup.selected_vars_sources,
@@ -558,6 +560,7 @@ def mi_against_surrogates(analysis_setup, data):
     if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
             permute_in_time):
         # Generate the surrogates analytically
+        analysis_setup.settings['analytical_surrogates'] = True
         surr_dist = (analysis_setup._cmi_estimator.
                      estimate_surrogates_analytic(
                             n_perm=n_perm,
@@ -565,6 +568,7 @@ def mi_against_surrogates(analysis_setup, data):
                             var2=analysis_setup._selected_vars_realisations,
                             conditional=None))
     else:
+        analysis_setup.settings['analytical_surrogates'] = False
         surr_realisations = _get_surrogates(data,
                                             analysis_setup.current_value,
                                             [analysis_setup.current_value],
@@ -885,6 +889,7 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
         if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
                 permute_in_time):
             # Generate the surrogates analytically
+            analysis_setup.settings['analytical_surrogates'] = True
             surr_table[idx_c, :] = (
                 analysis_setup._cmi_estimator.estimate_surrogates_analytic(
                     n_perm=n_perm,
@@ -893,6 +898,7 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
                     var2=current_value_realisations,
                     conditional=analysis_setup._selected_vars_realisations))
         else:
+            analysis_setup.settings['analytical_surrogates'] = False
             surr_candidate_realisations = _get_surrogates(
                                                  data,
                                                  analysis_setup.current_value,
