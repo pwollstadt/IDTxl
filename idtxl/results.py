@@ -111,6 +111,86 @@ class Results():
         return nx.from_numpy_matrix(
             adjacency_matrix, create_using=nx.DiGraph())
 
+
+    def _export_brain_net(self, adjacency_matrix, mni_coord, file_name,
+                          **kwargs):
+        """Export network to BrainNet Viewer.
+
+        Export networks to BrainNet Viewer (project home page:
+        http://www.nitrc.org/projects/bnv/). BrainNet Viewer is a MATLAB
+        toolbox offering brain network visualisation (e.g., 'glass' brains).
+        The function creates text files *.node and *.edge, containing
+        information on node location (in MNI coordinates), directed edges, node
+        color and size.
+
+        References:
+
+        - Xia, M., Wang, J., & He, Y. (2013). BrainNet Viewer: A Network
+          Visualization Tool for Human Brain Connectomics. PLoS ONE 8(7):
+          e68910. https://doi.org/10.1371/journal.pone.0068910
+
+        Args:
+            adjacency_matrix : 2D numpy array
+                adjacency matrix to be exported
+            mni_coord : numpy array
+                MNI coordinates (x,y,z) of the sources, array with size [n 3],
+                where n is the number of nodes
+            file_name : str
+                file name for output files *.node and *.edge, including the
+                path to the file
+            labels : array type of str [optional]
+                list of node labels of length n, description or label for each
+                node. Note that labels can't contain spaces (causes BrainNet to
+                crash), the function will remove any spaces from labels
+                (default=no labels)
+            node_color : array type of colors [optional]
+                BrainNet gives you the option to color nodes according to the
+                values in this vector (length n), see BrainNet Manual
+            node_size : array type of int [optional]
+                BrainNet gives you the option to size nodes according to the
+                values in this array (length n), see BrainNet Manual
+        """
+        # Check input and get default settings for plotting. The default for
+        # node labels is a list of '-' (no labels).
+        n_nodes = adjacency_matrix.shape[0]
+        n_edges = np.sum(adjacency_matrix > 0)
+        labels = kwargs.get('labels', ['-' for i in range(n_nodes)])
+        node_color = kwargs.get('node_color', np.ones(n_nodes))
+        node_size = kwargs.get('node_size', np.ones(n_nodes))
+        if n_edges == 0:
+            Warning('No edges in results file. Nothing to plot.')
+        assert adjacency_matrix.shape[0] == adjacency_matrix.shape[1], (
+            'Adjacency matrix must be quadratic.')
+        assert mni_coord.shape[0] == n_nodes and mni_coord.shape[1] == 3, (
+            'MNI coordinates must have shape [n_nodes, 3].')
+        assert len(labels) == n_nodes, (
+            'Labels must have same length as no. nodes.')
+        assert len(node_color) == n_nodes, (
+            'Node colors must have same length as no. nodes.')
+        assert len(node_size) == n_nodes, (
+            'Node size must have same length as no. nodes.')
+
+        # Check, if there are blanks in the labels and delete them, otherwise
+        # BrainNet viewer chrashes
+        labels_stripped = [l.replace(" ", "") for l in labels]
+
+        # Write node file.
+        with open('{0}.node'.format(file_name), 'w') as text_file:
+            for n in range(n_nodes):
+                print('{0}\t{1}\t{2}\t'.format(*mni_coord[n, :]),
+                      file=text_file, end='')
+                print('{0}\t{1}\t'.format(node_color[n], node_size[n]),
+                      file=text_file, end='')
+                print('{0}'.format(labels[n]), file=text_file)
+
+        # Write edge file.
+        with open('{0}.edge'.format(file_name), 'w') as text_file:
+            for i in range(n_nodes):
+                for j in range(n_nodes):
+                    print('{0}\t'.format(adjacency_matrix[i, j]),
+                          file=text_file, end='')
+                print('', file=text_file)
+
     def _check_result(self, process, settings):
         # Check if new result process is part of the network
         if process > (self.data.n_nodes - 1):
@@ -496,6 +576,44 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
             raise KeyError('No entry with network inference measure found for '
                            'current target')
 
+    def export_brain_net_viewer(self, mni_coord, file_name, **kwargs):
+        """Export network to BrainNet Viewer.
+
+        Export networks to BrainNet Viewer (project home page:
+        http://www.nitrc.org/projects/bnv/). BrainNet Viewer is a MATLAB
+        toolbox offering brain network visualisation (e.g., 'glass' brains).
+        The function creates text files *.node and *.edge, containing
+        information on node location (in MNI coordinates), directed edges, node
+        color and size.
+
+        References:
+
+        - Xia, M., Wang, J., & He, Y. (2013). BrainNet Viewer: A Network
+          Visualization Tool for Human Brain Connectomics. PLoS ONE 8(7):
+          e68910. https://doi.org/10.1371/journal.pone.0068910
+
+        Args:
+            mni_coord : numpy array
+                MNI coordinates (x,y,z) of the sources, array with size [n 3],
+                where n is the number of nodes
+            file_name : str
+                file name for output files *.node and *.edge, including the
+                path to the file
+            labels : array type of str [optional]
+                list of node labels of length n, description or label for each
+                node. Note that labels can't contain spaces (causes BrainNet to
+                crash), the function will remove any spaces from labels
+                (default=no labels)
+            node_color : array type of colors [optional]
+                BrainNet gives you the option to color nodes according to the
+                values in this vector (length n), see BrainNet Manual
+            node_size : array type of int [optional]
+                BrainNet gives you the option to size nodes according to the
+                values in this array (length n), see BrainNet Manual
+        """
+        self._export_brain_net(self.adjacency_matrix, mni_coord, file_name,
+                               **kwargs)
+
     def export_networkx_graph(self, fdr=False):
         """Generate networkx graph object for an inferred network.
 
@@ -805,6 +923,65 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
         elif matrix == 'pvalue':
             adjacency_matrix = self.adjacency_matrix_pvalue
         self._print_to_console(adjacency_matrix, matrix)
+
+    def export_brain_net_viewer(self, matrix, mni_coord, file_name, **kwargs):
+        """Export network to BrainNet Viewer.
+
+        Export networks to BrainNet Viewer (project home page:
+        http://www.nitrc.org/projects/bnv/). BrainNet Viewer is a MATLAB
+        toolbox offering brain network visualisation (e.g., 'glass' brains).
+        The function creates text files *.node and *.edge, containing
+        information on node location (in MNI coordinates), directed edges, node
+        color and size.
+
+        References:
+
+        - Xia, M., Wang, J., & He, Y. (2013). BrainNet Viewer: A Network
+          Visualization Tool for Human Brain Connectomics. PLoS ONE 8(7):
+          e68910. https://doi.org/10.1371/journal.pone.0068910
+
+        Args:
+            matrix : str [optional]
+                can either be
+
+                - 'union': print all links in the union network, i.e., all
+                  links that were tested for a difference
+
+                or print information for links with a significant difference
+
+                - 'comparison': links with a significant difference (default)
+                - 'pvalue': print p-values for links with a significant
+                   difference
+                - 'diff_abs': print the absolute difference
+
+            mni_coord : numpy array
+                MNI coordinates (x,y,z) of the sources, array with size [n 3],
+                where n is the number of nodes
+            file_name : str
+                file name for output files *.node and *.edge, including the
+                path to the file
+            labels : array type of str [optional]
+                list of node labels of length n, description or label for each
+                node. Note that labels can't contain spaces (causes BrainNet to
+                crash), the function will remove any spaces from labels
+                (default=no labels)
+            node_color : array type of colors [optional]
+                BrainNet gives you the option to color nodes according to the
+                values in this vector (length n), see BrainNet Manual
+            node_size : array type of int [optional]
+                BrainNet gives you the option to size nodes according to the
+                values in this array (length n), see BrainNet Manual
+        """
+        if matrix == 'comparison':
+            adjacency_matrix = self.adjacency_matrix_comparison
+        elif matrix == 'union':
+            adjacency_matrix = self.adjacency_matrix_union
+        elif matrix == 'diff_abs':
+            adjacency_matrix = self.adjacency_matrix_diff_abs
+        elif matrix == 'pvalue':
+            adjacency_matrix = self.adjacency_matrix_pvalue
+        self._export_brain_net(adjacency_matrix, mni_coord, file_name,
+                               **kwargs)
 
     def export_networkx_graph(self, matrix):
         """Generate networkx graph object from network comparison results.
