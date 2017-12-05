@@ -181,7 +181,7 @@ class Results():
                       file=text_file, end='')
                 print('{0}\t{1}\t'.format(node_color[n], node_size[n]),
                       file=text_file, end='')
-                print('{0}'.format(labels[n]), file=text_file)
+                print('{0}'.format(labels_stripped[n]), file=text_file)
 
         # Write edge file.
         with open('{0}.edge'.format(file_name), 'w') as text_file:
@@ -346,7 +346,11 @@ class ResultsSingleProcessAnalysis(Results):
         self.processes_analysed = list(self.single_process.keys())
         self._update_significant_processes(process)
 
-    def _add_fdr(self, fdr):
+    def _add_fdr(self, fdr, alpha=None, correct_by_target=None, constant=None):
+        # Add settings of FDR-correction
+        self.settings['alpha_fdr'] = alpha
+        self.settings['fdr_correct_by_target'] = correct_by_target
+        self.settings['fdr_constant'] = constant
         # Add results of FDR-correction
         if fdr is None:
             self.fdr_correction = DotDict()
@@ -732,7 +736,11 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
             adjacency_matrix = self.adjacency_matrix
         self._print_to_console(adjacency_matrix, 'u')
 
-    def _add_fdr(self, fdr):
+    def _add_fdr(self, fdr, alpha=None, correct_by_target=None, constant=None):
+        # Add settings of FDR-correction
+        self.settings['alpha_fdr'] = alpha
+        self.settings['fdr_correct_by_target'] = correct_by_target
+        self.settings['fdr_constant'] = constant
         # Add results of FDR-correction
         if fdr is None:
             self.fdr_correction = DotDict()

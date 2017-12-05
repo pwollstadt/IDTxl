@@ -54,12 +54,9 @@ def network_fdr(settings=None, *results):
     if settings is None:
         settings = {}
     # Set defaults and get parameters from settings dictionary
-    settings.setdefault('alpha_fdr', 0.05)
-    alpha = settings['alpha_fdr']
-    settings.setdefault('correct_by_target', True)
-    correct_by_target = settings['correct_by_target']
-    settings.setdefault('fdr_constant', 2)
-    constant = settings['fdr_constant']
+    alpha = settings.get('alpha_fdr', 0.05)
+    correct_by_target = settings.get('correct_by_target', True)    
+    constant = settings.get('fdr_constant', 2)    
 
     # Combine results into single results dict.
     if len(results) > 1:
@@ -166,7 +163,7 @@ def network_fdr(settings=None, *results):
                     fdr[t].selected_sources_te, cand_ind)
                 fdr[t].selected_vars_full.pop(
                     fdr[t].selected_vars_full.index(cand))
-    results_comb._add_fdr(fdr)
+    results_comb._add_fdr(fdr, alpha, correct_by_target, constant)
     return results_comb
 
 
