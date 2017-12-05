@@ -8,6 +8,7 @@ import pytest
 import numpy as np
 from idtxl import stats
 from idtxl.multivariate_te import MultivariateTE
+from idtxl.estimators_jidt import JidtDiscreteCMI
 from idtxl.data import Data
 from idtxl.results import ResultsNetworkInference
 
@@ -233,8 +234,44 @@ def test_data_type():
     assert issubclass(type(surr[0, 0, 0]), np.float), ('Realisations type is '
                                                        'not a float.')
 
+def test_analytical_surrogates():
+    # Generate discrete test data.
+    covariance = 0.4
+    n = 10000
+    delay = 1
+    source = np.random.normal(0, 1, size=n)
+    target = (covariance * source + (1 - covariance) *
+              np.random.normal(0, 1, size=n))
+    expected_mi = np.log(1 / (1 - np.power(covariance, 2)))
+    source = source[delay:]
+    target = target[:-delay]
+    settings = {'discretise_method': 'equal',
+                'alph1': 5,
+                'alph2': 5}
+    est = JidtDiscreteCMI(settings)
+    source_dis, target_dis = est._discretise_vars(var1=source, var2=target)
+    data = Data(np.vstack((source_dis, target_dis)),
+                dim_order='ps', normalise=False)
+    settings = {
+        'cmi_estimator': 'JidtDiscreteCMI',
+        'alph1': 5,
+        'alph2': 5,
+        'alphc': 5,
+        'n_perm_max_stat': 100,
+        'n_perm_min_stat': 21,
+        'n_perm_omnibus': 21,
+        'n_perm_max_seq': 21,
+        'max_lag_sources': 5,
+        'min_lag_sources': 1,
+        'max_lag_target': 5
+        }
+    nw = MultivariateTE()
+    res = nw.analyse_single_target(settings, data, target=1)
+    assert res.settings.analytical_surrogates, (
+        'Surrogates were not created analytically.')
 
 if __name__ == '__main__':
+    test_analytical_surrogates()
     # test_data_type()
     test_network_fdr()
     # test_find_pvalue()
