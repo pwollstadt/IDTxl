@@ -423,7 +423,7 @@ def test_export_brain_net():
 
     # Test checks for input.
     with pytest.raises(AssertionError):
-        res_within._export_brain_net(matrix=np.ones((3, 10)),
+        res_within._export_brain_net(adjacency_matrix=np.ones((3, 10)),
                                      mni_coord=mni_coord[:3, :],
                                      file_name=outfile)
     with pytest.raises(AssertionError):
