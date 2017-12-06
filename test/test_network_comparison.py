@@ -459,8 +459,48 @@ def test_compare_links_within():
                                   network=res,
                                   data=data)
 
+def test_tails():
+    """Test one- and two-tailed testing for all stats types."""
+
+    data = Data()
+    data.generate_mute_data(100, 5)
+
+    path = os.path.join(os.path.dirname(__file__), 'data/')
+    res_0 = pickle.load(open(path + 'mute_results_0.p', 'rb'))
+    res_1 = pickle.load(open(path + 'mute_results_1.p', 'rb'))
+    res_2 = pickle.load(open(path + 'mute_results_2.p', 'rb'))
+    res_3 = pickle.load(open(path + 'mute_results_3.p', 'rb'))
+    res_4 = pickle.load(open(path + 'mute_results_4.p', 'rb'))
+
+    # comparison settings
+    comp_settings = {
+            'cmi_estimator': 'JidtKraskovCMI',
+            'n_perm_max_stat': 50,
+            'n_perm_min_stat': 50,
+            'n_perm_omnibus': 200,
+            'n_perm_max_seq': 50,
+            'alpha_comp': 0.26,
+            'n_perm_comp': 4}
+
+    comp = NetworkComparison()
+    for tail in ['two', 'one']:
+        for stats_type in ['independent', 'dependent']:
+            comp_settings['stats_type'] = stats_type
+            comp_settings['tail_comp'] = tail
+            c_within = comp.compare_within(
+                comp_settings, res_0, res_1, data, data)
+            c_between = comp.compare_between(
+                comp_settings,
+                network_set_a=np.array((res_0, res_1)),
+                network_set_b=np.array((res_2, res_3)),
+                data_set_a=np.array((data, data)),
+                data_set_b=np.array((data, data)))
+            print(c_within.adjacency_matrix_pvalue)
+            print(c_between.adjacency_matrix_pvalue)
+
 
 if __name__ == '__main__':
+    test_tails()
     test_compare_links_within()
     test_network_comparison_use_cases()
     test_p_value_union()
