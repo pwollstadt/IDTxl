@@ -404,8 +404,64 @@ def test_p_value_union():
     assert p[target][source] == 1.0, (
         'The p-value was not calculated correctly: {0}'.format(p[target]))
 
+def test_compare_links_within():
+    data = Data()
+    data.generate_mute_data(100, 5)
+
+    path = os.path.join(os.path.dirname(__file__), 'data/')
+    res = pickle.load(open(path + 'mute_results_1.p', 'rb'))
+
+    # comparison settings
+    comp_settings = {
+            'cmi_estimator': 'JidtKraskovCMI',
+            'n_perm_max_stat': 50,
+            'n_perm_min_stat': 50,
+            'n_perm_omnibus': 200,
+            'n_perm_max_seq': 50,
+            'alpha_comp': 0.26,
+            'n_perm_comp': 4,
+            'tail': 'two'
+            }
+
+    link_a = [0, 1]
+    link_b = [0, 2]
+
+    comp = NetworkComparison()
+    comp_settings['stats_type'] = 'independent'
+    res_indep = comp.compare_links_within(settings=comp_settings,
+                                          link_a=link_a,
+                                          link_b=link_b,
+                                          network=res,
+                                          data=data)
+    comp_settings['stats_type'] = 'dependent'
+    res_dep = comp.compare_links_within(settings=comp_settings,
+                                        link_a=[0, 1],
+                                        link_b=[0, 2],
+                                        network=res,
+                                        data=data)
+    for r in [res_indep, res_dep]:
+        assert (r.adjacency_matrix_diff_abs[link_a[0], link_a[1]] ==
+                r.adjacency_matrix_diff_abs[link_b[0], link_b[1]]), (
+                    'Absolute differences for link comparison not equal.')
+        assert (r.adjacency_matrix_comparison[link_a[0], link_a[1]] ==
+                r.adjacency_matrix_comparison[link_b[0], link_b[1]]), (
+                    'Comparison results for link comparison not equal.')
+        assert (r.adjacency_matrix_pvalue[link_a[0], link_a[1]] ==
+                r.adjacency_matrix_pvalue[link_b[0], link_b[1]]), (
+                    'P-value for link comparison not equal.')
+        assert (r.targets_analysed == [link_a[1], link_b[1]]).all(), (
+                'Analysed targets are not correct.')
+
+    with pytest.raises(RuntimeError):
+        comp.compare_links_within(settings=comp_settings,
+                                  link_a=link_a,
+                                  link_b=[3, 4],
+                                  network=res,
+                                  data=data)
+
 
 if __name__ == '__main__':
+    test_compare_links_within()
     test_network_comparison_use_cases()
     test_p_value_union()
     test_create_union_network()
