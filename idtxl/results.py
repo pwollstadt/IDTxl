@@ -829,11 +829,16 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
         settings : dict
             settings used for estimation of information theoretic measures and
             statistical testing
-        union_network : dict
+        adjacency_matrix_union : 2D numpy array
             union of networks that entered the comparison
-        adjacency_matrix : 2D numpy array
-            adjacency matrix describing the differences in inferred effective
-            connectivity
+        adjacency_matrix_comparison : 2D numpy array
+            True for links showing significant differences in inferred
+            effective connectivity
+        adjacency_matrix_diff_abs : 2D numpy array
+            absolute differences in inferred effective connectivity for
+            significant links
+        adjacency_matrix_pvalue : 2D numpy array
+            p-values for significant links
         data : dict
             data properties, contains
 
@@ -846,15 +851,17 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
                   estimation
                 - single
 
-        comparison : dict
-            results of network comparison, contains
+        single_target : dict
+            results for individual targets, contains for each target
 
-                - cmi_diff_abs :
-                - a>b :
-                - cmi_surr :
-                - sign :
-                - p_val :
+                - selected_vars_sources : numpy array - union of source
+                  variables
+                - selected_vars_target : numpy array - union of target
+                  variables
+                - sources : numpy array - list of source processes
 
+        surrogate_distribution : dict
+            surrogate distribution for each target
         targets_analysed : list
             list of targets analyzed
     """

@@ -63,6 +63,102 @@ class NetworkComparison(NetworkAnalysis):
     def __init__(self):
         super().__init__()
 
+    def compare_links_within(self, settings, link_a, link_b, network, data):
+        """Compare two links within the same network.
+
+        Compare two links within the same network. Check if information
+        transfer is different from information transfer in a second link.
+
+        Note that both links have to be part of the inferred network, i.e.,
+        there has to be significant effective connectivity for both links.
+
+        Args:
+            settings : dict
+                parameters for estimation and statistical testing
+
+                - stats_type : str - 'dependent' or 'independent' for
+                  dependent or independent units of observation
+                - cmi_estimator : str - estimator to be used for CMI
+                  calculation (for estimator settings see the documentation in
+                  the estimators_* modules)
+                - tail_comp : str [optional] - test tail, 'one' for one-sided
+                  test, 'two' for two-sided test (default='two')
+                - n_perm_comp : int [optional] - number of permutations
+                  (default=500)
+                - alpha_comp : float - critical alpha level for statistical
+                  significance (default=0.05)
+                - permute_in_time : bool [optional] - if True, create
+                  surrogates by shuffling data over time. See
+                  Data.permute_samples() for settings for further options for
+                  surrogate creation
+                - verbose : bool [optional] - toggle console output
+                  (default=True)
+
+            link_a : array type
+                first link, array type with two entries [source target]
+            link_b : array type
+                second link, array type with two entries [source target]
+            network : dict
+                results from network inference
+            data : Data object
+                data from which network was inferred
+
+        Returns
+            ResultsNetworkComparison object
+                results of network inference, see documentation of
+                ResultsNetworkComparison()
+        """
+        # Check input and analysis parameters.
+        self._initialise(settings)
+        self._check_n_replications(data, data)
+        self._create_union(network)
+        if not self._link_exists(link_a):
+            raise RuntimeError('Link A is not part of the network.')
+        if not self._link_exists(link_b):
+            raise RuntimeError('Link B is not part of the network.')
+
+        # Calculate the test statistic as the difference of information
+        # transfer between link A and link B.
+        te_a = self.calculate_link_te(data, link_a[1], sources=link_a[0])
+        te_b = self.calculate_link_te(data, link_b[1], sources=link_b[0])
+        self.cmi_diff = te_a - te_b
+
+        # Create surrogate distribution as differences of information transfer
+        # estimates of shuffled data. Determine significance of test statistic
+        # against surrogate distribution.
+        surrogates_a = self._get_surrogates_target(
+            data, target=link_a[1], sources=link_a[0])
+        surrogates_b = self._get_surrogates_target(
+            data, target=link_b[1], sources=link_b[0])
+        self.cmi_surr = surrogates_a[0] - surrogates_b[0]
+        [sig, pvalue] = stats._find_pvalue(statistic=self.cmi_diff,
+                                           distribution=self.cmi_surr,
+                                           alpha=self.settings['alpha_comp'],
+                                           tail=self.settings['tail_comp'])
+
+        # Create results object.
+        results = ResultsNetworkComparison(
+            n_nodes=data.n_processes,
+            n_realisations=data.n_realisations(self.current_value),
+            normalised=data.normalise)
+        # Return both the absolute difference and the direction of the
+        # effect. Returning just the difference and evalutating the sign
+        # does not give the direction of the effect if one or both values
+        # are negative (which may happen due to estimator bias).
+        self._union_indices_to_lags()
+        results._add_results(
+            settings=self.settings,
+            union_network=self.union,
+            results={
+                'cmi_diff_abs': {link_a[1]: [np.abs(self.cmi_diff)],
+                                 link_b[1]: [np.abs(self.cmi_diff)]},
+                'a>b': {link_a[1]: [te_a > te_b], link_b[1]: [te_a > te_b]},
+                'pval': {link_a[1]: [pvalue], link_b[1]: [pvalue]},
+                'cmi_surr': self.cmi_surr,
+            })
+        self._reset()  # remove attributes
+        return results
+
     def compare_within(self, settings, network_a, network_b, data_a, data_b):
         """Compare networks inferred under two conditions within one subject.
 
@@ -102,19 +198,9 @@ class NetworkComparison(NetworkAnalysis):
                 data from which network_b was inferred
 
         Returns
-            dict
-                results of network comparison, contains the union network
-                ('union_network'), parameters used for statistical comparison
-                and for CMI estimation ('settings', includes critical alpha
-                level, 'alpha_comp'; number of permutations, 'n_perm_comp';
-                statistics type, 'stats_type', test tail, 'tail_comp'),
-                the original absolute CMI differences per source variable-
-                target combination in the union network ('cmi_diff_abs'), the
-                direction of the effect, i.e., if TE was stronger in condition
-                A than B ('a>b'), the surrogate CMI difference values
-                ('cmi_surr'), the p-value for each source variable > target
-                combination ('pval') and their statistical significance
-                ('sign').
+            ResultsNetworkComparison object
+                results of network inference, see documentation of
+                ResultsNetworkComparison()
         """
         # Check input and analysis parameters.
         self._initialise(settings)
@@ -178,19 +264,9 @@ class NetworkComparison(NetworkAnalysis):
                 set of data from which network_set_b was inferred
 
         Returns
-            dict
-                results of network comparison, contains the union network
-                ('union_network'), parameters used for statistical comparison
-                and for CMI estimation ('settings', includes critical alpha
-                level, 'alpha_comp'; number of permutations, 'n_perm_comp';
-                statistics type, 'stats_type', test tail, 'tail_comp', number
-                of subjects per group), the original absolute CMI differences
-                per source variable- target combination in the union network
-                ('cmi_diff_abs'), the direction of the effect, i.e., if TE was
-                stronger in condition A than B ('a>b'), the surrogate CMI
-                difference values ('cmi_surr'), the p-value for each source
-                variable > target combination ('pval') and their statistical
-                significance ('sign').
+            ResultsNetworkComparison object
+                results of network inference, see documentation of
+                ResultsNetworkComparison()
         """
         # Check input and analysis parameters.
         self._initialise(settings)
@@ -231,13 +307,18 @@ class NetworkComparison(NetworkAnalysis):
         self._reset()  # remove attributes
         return results
 
-    def calculate_link_te(self, data, target):
-        """Calculate the information transfer for a single link.
+    def calculate_link_te(self, data, target, sources='all'):
+        """Calculate the information transfer for whole links into a target.
 
-        Calculate the information transfer for a single link, i.e., the joint
-        information transfer from all source variables to the target,
+        Calculate the information transfer for whole links as the joint
+        information transfer from all variables selected for a single source
+        process into the target. The information transfer is calculated
         conditional on the target's past and, for multivariate TE, conditional
-        on variables selected in further sources.
+        on selected variables from further sources in the network.
+
+        If sources is set to 'all', a list of information transfer values is
+        returned. If sources is set to a single source index, the information
+        transfer from this source to the target is returned.
         """
         # Get lists of source and target variables. Return empty array if there
         # is no significant source variable for requested target.
@@ -256,8 +337,15 @@ class NetworkComparison(NetworkAnalysis):
             current_value, [current_value])[0]
 
         # Calculate TE for each link, i.e., for a single source and the target
-        te_links = np.zeros(len(self.union.single_target[target].sources))
-        for (i, s) in enumerate(self.union.single_target[target].sources):
+        if sources == 'all':
+            sources = self.union.single_target[target].sources
+        else:
+            if sources > (data.n_processes - 1):
+                raise RuntimeError('Source {0} is not in no. nodes in the '
+                                   'data ({1}).'.format(process, data.n_nodes))
+            sources = np.array([sources])
+        te_links = np.zeros(len(sources))
+        for (i, s) in enumerate(sources):
             # Separate selected source variables in variables belonging to the
             # current link and variables belonging to the conditioning set
             link_vars = [i for i in source_vars if i[0] == s]
@@ -650,12 +738,15 @@ class NetworkComparison(NetworkAnalysis):
             for (i, s) in enumerate(self.union.single_target[t].sources):
                 self.cmi_surr[t][i, :] = surrogates_a[s] - surrogates_b[s]
 
-    def _get_surrogates_target(self, data, target):
+    def _get_surrogates_target(self, data, target, sources='all'):
         # Get lists of source and target variables, and the list of significant
         # sources for current target
         source_vars = self.union.single_target[target]['selected_vars_sources']
         target_vars = self.union.single_target[target]['selected_vars_target']
-        sources = np.unique(np.array([s[0] for s in source_vars]))
+        if sources == 'all':
+            sources = np.unique(np.array([s[0] for s in source_vars]))
+        else:
+            sources = np.array([sources])
 
         # Get realisations of target variables and the current value, constant
         # over sources. Permute current value realisations to generate
@@ -903,3 +994,13 @@ class NetworkComparison(NetworkAnalysis):
         del self.cmi_diff
         del self.cmi_surr
         del self._cmi_estimator
+
+    def _link_exists(self, link):
+        """Check if link is part of the union network."""
+        source = link[0]
+        target = link[1]
+        if target not in self.union.targets_analysed:
+            return False
+        if source not in self.union.single_target[target].sources:
+            return False
+        return True
