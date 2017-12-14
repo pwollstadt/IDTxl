@@ -1,15 +1,17 @@
 # BROJA_2PID.py -- Python module
 #
-# BROJA_2PID: Bertschinger-Rauh-Olbrich-Jost-Ay (BROJA) bivariate Partial Information Decomposition
-# https://github.com/Abzinger/BROJA_2PID
+# BROJA_2PID: Bertschinger-Rauh-Olbrich-Jost-Ay (BROJA) bivariate Partial
+# Information Decomposition   https://github.com/Abzinger/BROJA_2PID
 # (c) Abdullah Makkeh, Dirk Oliver Theis
 # Permission to use and modify with proper attribution
 # (Apache License version 2.0)
 #
 # Information about the algorithm, documentation, and examples are here:
 # @Article{makkeh-theis-vicente:pidOpt:2017,
-#          author =       {Makkeh, Abdullah and Theis, Dirk Oliver and Vicente, Raul},
-#          title =        {BROJA-2PID: A cone programming based Partial Information Decomposition estimator},
+#          author =       {Makkeh, Abdullah and Theis, Dirk Oliver and
+#                          Vicente, Raul},
+#          title =        {BROJA-2PID: A cone programming based Partial
+#                          Information Decomposition estimator},
 #          journal =      {jo},
 #          year =         2017,
 #          key =       {key},
@@ -18,7 +20,7 @@
 #          pages =     {1--2}
 # }
 # Please cite this paper when you use this software (cf. README.md)
-##############################################################################################################
+###############################################################################
 from scipy import sparse
 import numpy as np
 from numpy import linalg as LA
@@ -240,9 +242,8 @@ class Solve_w_ECOS:
                         i = q_vidx(self.idx_of_trip[(x, y, z)])
                         q = self.sol_rpq[i]
                         if q > 0:
-                            mysum += q * \
-                                log(q * self.marg_y[y] /
-                                    (self.b_xy[(x, y)] * self.marg_yz[(y, z)]))
+                            mysum += q * log(q * self.marg_y[y] / (
+                                self.b_xy[(x, y)] * self.marg_yz[(y, z)]))
         return mysum
 
     def condZmutinf(self):
@@ -258,9 +259,9 @@ class Solve_w_ECOS:
                         i = q_vidx(self.idx_of_trip[(x, y, z)])
                         q = self.sol_rpq[i]
                         if q > 0:
-                            mysum += q * \
-                                log(q * self.marg_z[z] /
-                                    (self.b_xz[(x, z)] * self.marg_yz[(y, z)]))
+                            mysum += q * log(
+                                q * self.marg_z[z] / (
+                                    self.b_xz[(x, z)] * self.marg_yz[(y, z)]))
         return mysum
 
     def entropy_X(self, pdf):
@@ -282,8 +283,8 @@ class Solve_w_ECOS:
         for y in self.Y:
             for z in self.Z:
                 marg_x = 0.
-                q_list = [q_vidx(self.idx_of_trip[(x, y, z)])
-                          for x in self.X if (x, y, z) in self.idx_of_trip.keys()]
+                q_list = [q_vidx(self.idx_of_trip[ (x,y,z)]) for
+                          x in self.X if (x, y, z) in self.idx_of_trip.keys()]
                 for i in q_list:
                     marg_x += max(0, self.sol_rpq[i])
                 for i in q_list:

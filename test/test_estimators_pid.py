@@ -105,18 +105,24 @@ def test_pip_source_copy():
     Z = X
     est_sydney, est_tartu = _estimate(Z)
 
-    assert np.isclose(1, est_sydney['unq_s1']), ('Unique information 1 is not '
-                                                 '1 for Sydney estimator.')
-    assert np.isclose(0, est_sydney['unq_s2']), ('Unique information 2 is not '
-                                                 '0 for Sydney estimator.')
-    assert np.isclose(0, est_sydney['shd_s1_s2']), ('Shared information is not'
-                                                    '0 for Sydney estimator.')
-    assert np.isclose(0, est_sydney['syn_s1_s2']), ('Synergy is not 0 for '
-                                                    'Sydney estimator.')
-    assert np.isclose(0, est_tartu['shd_s1_s2']), ('Shared information is not'
-                                                   '0 for Tartu estimator.')
-    assert np.isclose(0, est_tartu['syn_s1_s2']), ('Synergy is not 0 for '
-                                                   'Tartu estimator.')
+    assert np.isclose(1, est_sydney['unq_s1'], atol=1.e-7), (
+        'Unique information 1 is not 1 for Sydney estimator ({0}).'.format(
+            est_sydney['unq_s1']))
+    assert np.isclose(0, est_sydney['unq_s2'], atol=1.e-7), (
+        'Unique information 2 is not 0 for Sydney estimator ({0}).'.format(
+            est_sydney['unq_s2']))
+    assert np.isclose(0, est_sydney['shd_s1_s2'], atol=1.e-7), (
+        'Shared information is not 0 for Sydney estimator ({0}).'.format(
+            est_sydney['shd_s1_s2']))
+    assert np.isclose(0, est_sydney['syn_s1_s2'], atol=1.e-7), (
+        'Synergy is not 0 for Sydney estimator ({0}).'.format(
+            est_sydney['syn_s1_s2']))
+    assert np.isclose(0, est_tartu['shd_s1_s2'], atol=1.e-7), (
+        'Shared information is not 0 for Tartu estimator ({0}).'.format(
+            est_tartu['shd_s1_s2']))
+    assert np.isclose(0, est_tartu['syn_s1_s2'], atol=1.e-7), (
+        'Synergy is not 0 for Tartu estimator ({0}).'.format(
+            est_tartu['syn_s1_s2']))
 
 
 @float128_not_available
