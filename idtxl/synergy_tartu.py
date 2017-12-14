@@ -1,15 +1,17 @@
 # BROJA_2PID.py -- Python module
 #
-# BROJA_2PID: Bertschinger-Rauh-Olbrich-Jost-Ay (BROJA) bivariate Partial Information Decomposition
-# https://github.com/Abzinger/BROJA_2PID
+# BROJA_2PID: Bertschinger-Rauh-Olbrich-Jost-Ay (BROJA) bivariate Partial
+# Information Decomposition   https://github.com/Abzinger/BROJA_2PID
 # (c) Abdullah Makkeh, Dirk Oliver Theis
 # Permission to use and modify with proper attribution
 # (Apache License version 2.0)
 #
 # Information about the algorithm, documentation, and examples are here:
 # @Article{makkeh-theis-vicente:pidOpt:2017,
-#          author =       {Makkeh, Abdullah and Theis, Dirk Oliver and Vicente, Raul},
-#          title =        {BROJA-2PID: A cone programming based Partial Information Decomposition estimator},
+#          author =       {Makkeh, Abdullah and Theis, Dirk Oliver and
+#                          Vicente, Raul},
+#          title =        {BROJA-2PID: A cone programming based Partial
+#                          Information Decomposition estimator},
 #          journal =      {jo},
 #          year =         2017,
 #          key =       {key},
@@ -18,7 +20,7 @@
 #          pages =     {1--2}
 # }
 # Please cite this paper when you use this software (cf. README.md)
-##############################################################################################################
+###############################################################################
 from scipy import sparse
 import numpy as np
 from numpy import linalg as LA
@@ -27,7 +29,7 @@ from collections import defaultdict
 from . import idtxl_exceptions as ex
 from .idtxl_exceptions import BROJA_2PID_Exception
 try:
-    from ecos import solve
+    import ecos
 except ImportError as err:
     ex.package_missing(err, 'ECOS is not available on this system. Install it '
                             'from https://pypi.python.org/pypi/ecos to use '
@@ -54,13 +56,7 @@ class Solve_w_ECOS:
         # Permission to use and modify under Apache License version 2.0
 
         # ECOS parameters
-        self.feastol = None
-        self.abstol = None
-        self.reltol = None
-        self.feastol_inacc = None
-        self.abstol_innac = None
-        self.reltol_inacc = None
-        self.max_iters = None
+        self.ecos_kwargs = dict()
         self.verbose = False
 
         # Data for ECOS
@@ -105,9 +101,7 @@ class Solve_w_ECOS:
         n_vars = 3*n
         n_cons = n+m
 
-        #
         # Create the equations: Ax = b
-        #
         self.b = np.zeros((n_cons,), dtype=np.double)
 
         Eqn = []
@@ -198,26 +192,11 @@ class Solve_w_ECOS:
         # Permission to use and modify under Apache License version 2.0
         self.marg_yz = None  # for cond[]mutinf computation below
 
-        kwargs = dict()
-        if self.feastol is not None:
-            kwargs['feastol'] = self.feastol
-        if self.abstol is not None:
-            kwargs['abstol'] = self.abstol
-        if self.reltol is not None:
-            kwargs['reltol'] = self.reltol
-        if self.feastol_inacc is not None:
-            kwargs['feastol_inacc'] = self.feastol_inacc
-        if self.abstol_innac is not None:
-            kwargs['abstol_innac'] = self.abstol_innac
-        if self.reltol_inacc is not None:
-            kwargs['reltol_inacc'] = self.reltol_inacc
-        if self.max_iters is not None:
-            kwargs['max_iters'] = self.max_iters
-        if self.verbose is not None:
-            kwargs['verbose'] = self.verbose
+        if self.verbose != None:
+            self.ecos_kwargs['verbose'] = self.verbose
 
-        solution = solve(self.c, self.G, self.h, self.dims,
-                         self.A, self.b, **kwargs)
+        solution = ecos.solve(self.c, self.G,self.h, self.dims, self.A,
+                              self.b, **self.ecos_kwargs)
 
         if 'x' in solution.keys():
             self.sol_rpq = solution['x']
@@ -261,9 +240,8 @@ class Solve_w_ECOS:
                         i = q_vidx(self.idx_of_trip[(x, y, z)])
                         q = self.sol_rpq[i]
                         if q > 0:
-                            mysum += q * \
-                                log(q * self.marg_y[y] /
-                                    (self.b_xy[(x, y)] * self.marg_yz[(y, z)]))
+                            mysum += q * log(q * self.marg_y[y] / (
+                                self.b_xy[(x, y)] * self.marg_yz[(y, z)]))
         return mysum
 
     def condZmutinf(self):
@@ -279,9 +257,9 @@ class Solve_w_ECOS:
                         i = q_vidx(self.idx_of_trip[(x, y, z)])
                         q = self.sol_rpq[i]
                         if q > 0:
-                            mysum += q * \
-                                log(q * self.marg_z[z] /
-                                    (self.b_xz[(x, z)] * self.marg_yz[(y, z)]))
+                            mysum += q * log(
+                                q * self.marg_z[z] / (
+                                    self.b_xz[(x, z)] * self.marg_yz[(y, z)]))
         return mysum
 
     def entropy_X(self, pdf):
@@ -303,8 +281,8 @@ class Solve_w_ECOS:
         for y in self.Y:
             for z in self.Z:
                 marg_x = 0.
-                q_list = [q_vidx(self.idx_of_trip[(x, y, z)])
-                          for x in self.X if (x, y, z) in self.idx_of_trip.keys()]
+                q_list = [q_vidx(self.idx_of_trip[ (x,y,z)]) for
+                          x in self.X if (x, y, z) in self.idx_of_trip.keys()]
                 for i in q_list:
                     marg_x += max(0, self.sol_rpq[i])
                 for i in q_list:
@@ -364,23 +342,39 @@ class Solve_w_ECOS:
         # -------------------
         idx_of_xy = dict()
         i = 0
-        for (x, y) in self.b_xy.keys():
-            idx_of_xy[(x, y)] = i
-            i += 1
+        for x in self.X:
+            for y in self.Y:
+                if (x,y) in self.b_xy.keys():
+                    idx_of_xy[(x,y)] = i
+                    i += 1
 
         idx_of_xz = dict()
         i = 0
-        for (x, z) in self.b_xz.keys():
-            idx_of_xz[(x, z)] = i
-            i += 1
+        for x in self.X:
+            for z in self.Z:
+                if (x,z) in self.b_xz.keys():
+                    idx_of_xz[(x, z)] = i
+                    i += 1
 
         dual_infeasability = 0.
         for i, xyz in enumerate(self.trip_of_idx):
+            mu_yz = 0.
             x, y, z = xyz
+            # Compute mu_*yz
+            # mu_xyz: dual variable of the coupling constraints
+            for j,uvw in enumerate(self.trip_of_idx):
+                u,v,w = uvw
+                if v == y and w == z:
+                    mu_yz += self.sol_lambda[j]
+
+            # Get indices of dual variables of the marginal constriants
             xy_idx = len(self.trip_of_idx) + idx_of_xy[(x, y)]
             xz_idx = len(self.trip_of_idx) + len(self.b_xy) + idx_of_xz[(x, z)]
-            dual_infeasability = max(dual_infeasability,  -ln(self.sol_lambda[xy_idx] + self.sol_lambda[
-                                     xz_idx] + LA.norm(self.sol_lambda, 1)) - 1 + self.sol_lambda[i])
+
+            # Find the most violated dual ieq
+            dual_infeasability = max(dual_infeasability, (
+                    -self.sol_lambda[xy_idx] - self.sol_lambda[xz_idx] -
+                    mu_yz -ln(-self.sol_lambda[i]) - 1))
 
         return primal_infeasability, dual_infeasability
 
@@ -407,50 +401,115 @@ def marginal_xz(p):
     return marg
 
 
-def pid(pdf_dirty, output=0, keep_solver_object=False):
+def I_X_Y(p):
+    # Mutual information I( X ; Y )
+    mysum = 0.
+    marg_x = defaultdict(lambda: 0.)
+    marg_y = defaultdict(lambda: 0.)
+    b_xy = marginal_xy(p)
+    for xyz, r in p.items():
+        x, y, z = xyz
+        if r > 0:
+            marg_x[x] += r
+            marg_y[y] += r
+
+    for xy, t in b_xy.items():
+        x, y = xy
+        if t > 0:
+            mysum += t * log(t / (marg_x[x] * marg_y[y]))
+    return mysum
+
+
+def I_X_Z(p):
+    # Mutual information I( X ; Z )
+    mysum = 0.
+    marg_x = defaultdict(lambda: 0.)
+    marg_z = defaultdict(lambda: 0.)
+    b_xz = marginal_xz(p)
+    for xyz, r in p.items():
+        x, y, z = xyz
+        if r > 0:
+            marg_x[x] += r
+            marg_z[z] += r
+
+    for xz, t in b_xz.items():
+        x, z = xz
+        if t > 0:
+            mysum += t * log(t / (marg_x[x] * marg_z[z]))
+    return mysum
+
+
+def I_X_YZ(p):
+    # Mutual information I( X ; Y , Z )
+    mysum = 0.
+    marg_x = defaultdict(lambda: 0.)
+    marg_yz = defaultdict(lambda: 0.)
+    for xyz, r in p.items():
+        x, y, z = xyz
+        if r > 0:
+            marg_x[x] += r
+            marg_yz[(y, z)] += r
+
+    for xyz, t in p.items():
+        x, y, z = xyz
+        if t > 0:
+            mysum += t * log(t / (marg_x[x] * marg_yz[(y, z)]))
+    return mysum
+
+
+def pid(pdf_dirty, cone_solver='ECOS', output=0, **solver_args):
     # (c) Abdullah Makkeh, Dirk Oliver Theis
     # Permission to use and modify under Apache License version 2.0
-    assert type(
-        pdf_dirty) is dict, 'broja_2pid.pid(pdf): pdf must be a dictionary'
+    assert type(pdf_dirty) is dict, (
+        'broja_2pid.pid(pdf): pdf must be a dictionary')
+    assert type(cone_solver) is str, (
+        'broja_2pid.pid(pdf): ''cone_solver'' parameter must be string(e.g.,'
+        ' ''ECOS'')')
     if __debug__:
         for k, v in pdf_dirty.items():
-            assert type(k) is tuple or type(
-                k) is list, ('broja_2pid.pid(pdf): pdf''s keys must be tuples '
-                             'or lists.')
-            assert len(k) == 3, ('broja_2pid.pid(pdf): pdf''s keys must be '
-                                 'tuples/lists of length 3.')
+            assert type(k) is tuple or type(k) is list,           (
+                'broja_2pid.pid(pdf): pdf''s keys must be tuples or lists')
+            assert len(k) == 3, (
+                'broja_2pid.pid(pdf): pdf''s keys must be tuples / lists of '
+                'length 3')
             assert type(v) is float or (type(v) == int and v == 0), (
                 'broja_2pid.pid(pdf): pdf''s values must be floats')
             assert v > -.1, (
                 'broja_2pid.pid(pdf): pdf''s values must not be negative')
     assert type(output) is int, (
-        'broja_2pid.pid(pdf, output): output must be an integer')
+        'broja_2pid.pid(pdf,output): output must be an integer')
+
+    # Check if the solver is implemented:
+    assert cone_solver == 'ECOS', (
+        'broja_2pid.pid(pdf): We currently don''t have an interface for the '
+        'Cone Solver ''{0}'' (only ECOS).'.format(cone_solver))
 
     pdf = {k: v for k, v in pdf_dirty.items() if v > 1.e-300}
 
     by_xy = marginal_xy(pdf)
     bz_xz = marginal_xz(pdf)
 
-    if output > 0:
-        print('BROJA_2PID: Preparing Cone Program data', end='...')
+    # if cone_solver=='ECOS': .....
+    if output > 0:  print('BROJA_2PID: Preparing Cone Program data',end='...')
     solver = Solve_w_ECOS(by_xy, bz_xz)
     solver.create_model()
-    if output > 0:
-        print('done.')
+    if output > 1: solver.verbose = True
 
-    if output == 1:
-        print('BROJA_2PID: Starting solver', end='...')
-    if output > 1:
-        print('BROJA_2PID: Starting solver.')
-    if output > 1:
-        solver.verbose = True
+    ecos_keep_solver_obj = solver_args.get('keep_solver_object', False)
+    # del solver_args['keep_solver_object']
+
+    solver.ecos_kwargs = solver_args
+
+    if output > 0: print('done.')
+    if output == 1: print('BROJA_2PID: Starting solver', end='...')
+    if output > 1: print('BROJA_2PID: Starting solver.')
+
     retval = solver.solve()
     if retval != 'success':
         print('\nCone Programming solver failed to find (near) optimal '
-              'solution.\nPlease report the input probability density function'
-              ' to abdullah.makkeh@gmail.com\n')
-        # type(keep_solver_object) is bool
-        if type(keep_solver_object) is bool and keep_solver_object:
+        'solution.\nPlease report the input probability density function to '
+        'abdullah.makkeh@gmail.com\n')
+        if ecos_keep_solver_obj:
             return solver
         else:
             raise BROJA_2PID_Exception(
@@ -458,11 +517,8 @@ def pid(pdf_dirty, output=0, keep_solver_object=False):
                 '(near) optimal solution. Please report the input probability '
                 'density function to abdullah.makkeh@gmail.com')
 
-    if output > 0:
-        print('\nBROJA_2PID: done.')
-
-    if output > 1:
-        print(solver.sol_info)
+    if output > 0:  print('\nBROJA_2PID: done.')
+    if output > 1:  print(solver.sol_info)
 
     entropy_X = solver.entropy_X(pdf)
     condent = solver.condentropy()
@@ -473,18 +529,18 @@ def pid(pdf_dirty, output=0, keep_solver_object=False):
     bits = 1 / log(2)
 
     return_data = dict()
-    return_data['SI'] = (entropy_X - condent -
-                         condZmutinf - condYmutinf) * bits
+    return_data['SI'] = ((entropy_X - condent -
+                          condZmutinf - condYmutinf) * bits)
     return_data['UIY'] = (condZmutinf) * bits
     return_data['UIZ'] = (condYmutinf) * bits
     return_data['CI'] = (condent - condent__orig) * bits
 
     primal_infeas, dual_infeas = solver.check_feasibility()
-    return_data['Num_err'] = (
-        primal_infeas, dual_infeas, abs(condent * ln(2) - dual_val))
+    return_data['Num_err'] = (primal_infeas, dual_infeas,
+                              max(-condent * ln(2) - dual_val, 0.0))
     return_data['Solver'] = 'ECOS http://www.embotech.com/ECOS'
 
-    if type(keep_solver_object) is bool and keep_solver_object:
+    if ecos_keep_solver_obj:
         return_data['Solver Object'] = solver
 
     return return_data

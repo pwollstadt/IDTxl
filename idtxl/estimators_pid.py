@@ -480,11 +480,16 @@ class TartuPID(Estimator):
             estimation parameters (with default parameters)
 
             - verbose : bool [optional] - False
+            - cone_solver : str [optional] - default is 'ECOS'
+            - ecos_solver_args : dict [optional] - parameters for the ECOS cone
+              solver, see ECOS documentation
     """
 
     def __init__(self, settings):
         # get estimation parameters
         settings.setdefault('verbose', False)
+        settings.setdefault('cone_solver', 'ECOS')
+        settings.setdefault('ecos_solver_args', {})
         self.settings = settings
 
     def is_parallel():
@@ -512,8 +517,9 @@ class TartuPID(Estimator):
 
         retval = synergy_tartu.pid(
             pdf_dirty=pdf,
+            cone_solver=self.settings['cone_solver'],
             output=int(self.settings['verbose']),
-            keep_solver_object=False)
+            **self.settings['ecos_solver_args'])
 
         results = {
             'num_err': retval['Num_err'],
