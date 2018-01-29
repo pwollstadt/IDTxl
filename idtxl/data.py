@@ -238,6 +238,9 @@ class Data():
         if not hasattr(self, 'data'):
             raise AttributeError('No data has been added to this Data() '
                                  'instance.')
+        # Return None if index list is empty.
+        if not idx_list:
+            return None, None
         # Check if requested indices are smaller than the current_value.
         if not all(np.array([x[1] for x in idx_list]) <= current_value[1]):
             print('Index list: {0}\ncurrent value: {1}'.format(idx_list,
