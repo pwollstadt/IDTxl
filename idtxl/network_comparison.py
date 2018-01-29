@@ -37,27 +37,6 @@ class NetworkComparison(NetworkAnalysis):
     Note that for network inference methods that use an embedding, i.e., a
     collection of variables in the source, the joint information in all
     variables about the target is used as a test statistic.
-
-    Attributes:
-        union : dict
-            union of all networks entering the comparison, used as the basis
-            for statistical comparison
-        settings : dict
-            parameters for CMI estimation
-        cmi_diff : dict
-            original difference in CMI estimates for each source variable >
-            target combination in the union network
-        cmi_surr : dict
-            differences in CMI estimates from surrogate data, used as test
-            distribution
-        alpha : float
-            critical alpha level for network comparison
-        n_permutations : int
-            number of permutations
-        stats_type : str
-            type of statistics ('dependent' or 'independent')
-        tail : str
-            test tail ('one' or 'two')
     """
 
     def __init__(self):
@@ -82,7 +61,7 @@ class NetworkComparison(NetworkAnalysis):
                   calculation (for estimator settings see the documentation in
                   the estimators_* modules)
                 - tail_comp : str [optional] - test tail, 'one' for one-sided
-                  test, 'two' for two-sided test (default='two')
+                  test A > B, 'two' for two-sided test (default='two')
                 - n_perm_comp : int [optional] - number of permutations
                   (default=500)
                 - alpha_comp : float - critical alpha level for statistical
@@ -176,7 +155,7 @@ class NetworkComparison(NetworkAnalysis):
                   calculation (for estimator settings see the documentation in
                   the estimators_* modules)
                 - tail_comp : str [optional] - test tail, 'one' for one-sided
-                  test, 'two' for two-sided test (default='two')
+                  test A > B, 'two' for two-sided test (default='two')
                 - n_perm_comp : int [optional] - number of permutations
                   (default=500)
                 - alpha_comp : float - critical alpha level for statistical
@@ -353,11 +332,23 @@ class NetworkComparison(NetworkAnalysis):
             # Get realisations for the current link's source variables
             source_realisations = data.get_realisations(
                 current_value, link_vars)[0]
+
             # Get realisations for the conditioning set, consisting of
-            # remaining source variables and target realisations.
-            conditional_realisations = np.hstack((
-                data.get_realisations(current_value, conditional_vars)[0],
-                target_realisations))
+            # remaining source variables and target realisations. Handle empty
+            # sets: these may occur if network comparison is carried out for
+            # results from MI network inference.
+            if not conditional_vars and not target_vars:
+                conditional_realisations = None
+            elif not conditional_vars and target_vars:
+                conditional_realisations = target_realisations
+            elif conditional_vars and not target_vars:
+                conditional_realisations = data.get_realisations(
+                    current_value, conditional_vars)[0]
+            elif conditional_vars and target_vars:
+                conditional_realisations = np.hstack((
+                    data.get_realisations(current_value, conditional_vars)[0],
+                    target_realisations))
+
             te_links[i] = self._cmi_estimator.estimate(
                 current_value_realisations,
                 source_realisations,
@@ -770,10 +761,21 @@ class NetworkComparison(NetworkAnalysis):
             source_realisations = data.get_realisations(
                 current_value, link_vars)[0]
             # Get realisations for the conditioning set, consisting of
-            # remaining source variables and target realisations
-            conditional_realisations = np.hstack((
-                data.get_realisations(current_value, conditional_vars)[0],
-                target_realisations))
+            # remaining source variables and target realisations. Handle empty
+            # sets: these may occur if network comparison is carried out for
+            # results from MI network inference.
+            if not conditional_vars and not target_vars:
+                conditional_realisations = None
+            elif not conditional_vars and target_vars:
+                conditional_realisations = target_realisations
+            elif conditional_vars and not target_vars:
+                conditional_realisations = data.get_realisations(
+                    current_value, conditional_vars)[0]
+            elif conditional_vars and target_vars:
+                conditional_realisations = np.hstack((
+                    data.get_realisations(current_value, conditional_vars)[0],
+                    target_realisations))
+
             te_surrogates[s] = self._cmi_estimator.estimate_mult(
                 n_chunks=self.settings['n_perm_comp'],
                 re_use=['var2', 'conditional'],
