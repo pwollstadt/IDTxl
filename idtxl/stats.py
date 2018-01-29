@@ -953,8 +953,9 @@ def _find_pvalue(statistic, distribution, alpha, tail):
         alpha : float
             critical alpha level for statistical significance
         tail : str
-            'one_bigger' for one-tailed testing H1 > H0, 'one_smaller' for one-
-            tailed testing H1 < H0, or 'two' for two-tailed testing
+            'one' or 'one_bigger' for one-tailed testing H1 > H0,
+            'one_smaller' for one- tailed testing H1 < H0, or 'two' for two-
+            tailed testing
 
     Returns:
         bool
@@ -966,7 +967,7 @@ def _find_pvalue(statistic, distribution, alpha, tail):
     assert distribution.ndim == 1, 'Test distribution must be 1D.'
     check_n_perm(distribution.shape[0], alpha)
 
-    if tail == 'one_bigger':
+    if tail == 'one_bigger' or tail == 'one':
         pvalue = sum(distribution >= statistic) / distribution.shape[0]
     elif tail == 'one_smaller':
         pvalue = sum(distribution <= statistic) / distribution.shape[0]
@@ -976,8 +977,9 @@ def _find_pvalue(statistic, distribution, alpha, tail):
         pvalue = min(p_bigger, p_smaller)
         alpha = alpha / 2
     else:
-        raise ValueError(('Unkown value for ''tail'', can be ''one_bigger'', '
-                          ' ''one_smaller'', or ''two''): {0}.'.format(tail)))
+        raise ValueError(
+            ('Unkown value for ''tail'', should be ''one'', ''one_bigger'','
+             ' ''one_smaller'', or ''two''): {0}.'.format(tail)))
 
     # If the statistic is larger than all values in the test distribution, set
     # the p-value to the smallest possible value 1/n_perm.
