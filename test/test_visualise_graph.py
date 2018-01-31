@@ -112,5 +112,5 @@ def test_plot_network_comparison():
 
 
 if __name__ == '__main__':
-    test_plot_network()
     test_plot_network_comparison()
+    test_plot_network()
