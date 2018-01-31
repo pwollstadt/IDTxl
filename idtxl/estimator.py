@@ -84,7 +84,7 @@ class Estimator(metaclass=ABCMeta):
     Estimator classes implement a method 'estimate()' for the estimation from
     single or multiple data sets in parallel. Whether 'estimate()' provides
     parallel computing capabilities is indicated by the 'is_parallel()'
-    method. The 'estimate_mult()' method of this abstract class provides a
+    method. The 'estimate_parallel()' method of this abstract class provides a
     common interface to parallel and serial methods (see docstring for
     details).
 
@@ -213,7 +213,7 @@ class Estimator(metaclass=ABCMeta):
             raise TypeError('Input arrays must be 1D or 2D')
         return var
 
-    def estimate_mult(self, n_chunks=1, re_use=None, **data):
+    def estimate_parallel(self, n_chunks=1, re_use=None, **data):
         """Estimate measure for multiple data sets (chunks).
 
         Test if the estimator used provides parallel capabilities; if so,

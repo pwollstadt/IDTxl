@@ -338,7 +338,7 @@ class JidtGaussian(JidtEstimator):
             data : array of numpy arrays
                 realisations of random variables required for the calculation
                 (varies between estimators, e.g. 2 variables for MI, 3 for
-                CMI). Formatted as per estimate_mult for this estimator.
+                CMI). Formatted as per estimate_parallel for this estimator.
 
         Returns:
             float | numpy array

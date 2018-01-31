@@ -321,7 +321,8 @@ class NetworkComparison(NetworkAnalysis):
         else:
             if sources > (data.n_processes - 1):
                 raise RuntimeError('Source {0} is not in no. nodes in the '
-                                   'data ({1}).'.format(process, data.n_nodes))
+                                   'data ({1}).'.format(
+                                       sources, data.n_processes))
             sources = np.array([sources])
         te_links = np.zeros(len(sources))
         for (i, s) in enumerate(sources):
@@ -627,11 +628,12 @@ class NetworkComparison(NetworkAnalysis):
                  data_a, data_b, t)
             # Calculate CMI from each source to current target t from permuted
             # data
-            n_sources = len(self.union.single_target[t]['selected_vars_sources'])
+            n_sources = len(
+                self.union.single_target[t]['selected_vars_sources'])
             cmi_temp_a = np.zeros(n_sources)
             cmi_temp_b = np.zeros(n_sources)
             for (i, idx_source) in enumerate(
-                                self.union.single_target[t]['selected_vars_sources']):
+                        self.union.single_target[t]['selected_vars_sources']):
                 # Get realisations of current source from the set of all
                 # surrogate conditionals and calculate the CMI. Do this for
                 # both conditions.
@@ -776,7 +778,7 @@ class NetworkComparison(NetworkAnalysis):
                     data.get_realisations(current_value, conditional_vars)[0],
                     target_realisations))
 
-            te_surrogates[s] = self._cmi_estimator.estimate_mult(
+            te_surrogates[s] = self._cmi_estimator.estimate_parallel(
                 n_chunks=self.settings['n_perm_comp'],
                 re_use=['var2', 'conditional'],
                 var1=current_value_surrogates,

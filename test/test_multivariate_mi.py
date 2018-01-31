@@ -251,7 +251,8 @@ def test_analyse_network():
     nw_0 = MultivariateMI()
 
     # Test all to all analysis
-    results = nw_0.analyse_network(settings, data, targets='all', sources='all')
+    results = nw_0.analyse_network(
+        settings, data, targets='all', sources='all')
     targets_analysed = results.targets_analysed
     sources = np.arange(n_processes)
     assert all(np.array(targets_analysed) == np.arange(n_processes)), (
@@ -277,8 +278,8 @@ def test_analyse_network():
     # Test analysis for subset of sources
     source_list = [1, 2, 3]
     target_list = [0, 4]
-    results = nw_0.analyse_network(settings, data, targets=target_list,
-                             sources=source_list)
+    results = nw_0.analyse_network(
+        settings, data, targets=target_list, sources=source_list)
     targets_analysed = results.targets_analysed
     assert all(np.array(targets_analysed) == np.array(target_list)), (
                 'Network analysis did not run for all targets.')
@@ -287,6 +288,7 @@ def test_analyse_network():
                    np.array(source_list)), (
                         'Network analysis did not run on the correct subset '
                         'of sources for target {0}'.format(t))
+
 
 @jpype_missing
 def test_permute_time():
@@ -305,7 +307,8 @@ def test_permute_time():
         'max_lag_target': 5,
         'permute_in_time': True}
     nw_0 = MultivariateMI()
-    results = nw_0.analyse_network(settings, data, targets='all', sources='all')
+    results = nw_0.analyse_network(
+        settings, data, targets='all', sources='all')
     assert results.settings.perm_type == default, (
         'Perm type was not set to default.')
 

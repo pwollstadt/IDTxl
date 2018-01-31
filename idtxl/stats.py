@@ -249,7 +249,7 @@ def omnibus_test(analysis_setup, data):
                                          n_permutations,
                                          analysis_setup.settings)
 
-        surr_distribution = analysis_setup._cmi_estimator.estimate_mult(
+        surr_distribution = analysis_setup._cmi_estimator.estimate_parallel(
                             n_chunks=n_permutations,
                             re_use=['var2', 'conditional'],
                             var1=surr_cond_real,
@@ -394,7 +394,7 @@ def max_statistic_sequential(analysis_setup, data):
         i_1 = i_2
         i_2 += data.n_realisations(analysis_setup.current_value)
 
-    individual_te = analysis_setup._cmi_estimator.estimate_mult(
+    individual_te = analysis_setup._cmi_estimator.estimate_parallel(
                             n_chunks=len(analysis_setup.selected_vars_sources),
                             re_use=['var2'],
                             var1=candidate_realisations,
@@ -575,7 +575,7 @@ def mi_against_surrogates(analysis_setup, data):
                                             n_perm,
                                             analysis_setup.settings)
 
-        surr_dist = analysis_setup._cmi_estimator.estimate_mult(
+        surr_dist = analysis_setup._cmi_estimator.estimate_parallel(
                             n_chunks=n_perm,
                             re_use=['var2', 'conditional'],
                             var1=surr_realisations,
@@ -657,7 +657,7 @@ def unq_against_surrogates(analysis_setup, data):
                                         n_perm,
                                         analysis_setup.settings)
     # Calculate surrogate distribution for unique information of source 1.
-    # Note: calling  .estimate_mult does not work here because the PID
+    # Note: calling  .estimate_parallel does not work here because the PID
     # estimator returns a dictionary not a single value. We have to get the
     # unique from the dictionary manually.
     surr_dist_s1 = np.empty(n_perm)
@@ -778,7 +778,7 @@ def syn_shd_against_surrogates(analysis_setup, data):
                                         n_perm,
                                         analysis_setup.settings)
     # Calculate surrogate distribution for shd/syn information of both sources.
-    # Note: calling  .estimate_mult does not work here because the PID
+    # Note: calling  .estimate_parallel does not work here because the PID
     # estimator returns a dictionary not a single value. We have to get the
     # shared info and synergy from the dictionary manually.
     surr_dist_shd = np.empty(n_perm)
@@ -905,12 +905,13 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
                                                  [candidate],
                                                  n_perm,
                                                  analysis_setup.settings)
-            surr_table[idx_c, :] = analysis_setup._cmi_estimator.estimate_mult(
+            surr_table[idx_c, :] = (
+                analysis_setup._cmi_estimator.estimate_parallel(
                     n_chunks=n_perm,
                     re_use=['var2', 'conditional'],
                     var1=surr_candidate_realisations,  # too long
                     var2=current_value_realisations,
-                    conditional=analysis_setup._selected_vars_realisations)
+                    conditional=analysis_setup._selected_vars_realisations))
         idx_c += 1
 
     return surr_table

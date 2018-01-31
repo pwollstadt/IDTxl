@@ -10,6 +10,7 @@ import pytest
 import numpy as np
 from idtxl.network_analysis import NetworkAnalysis
 
+
 def test_separate_realisations():
     n = NetworkAnalysis()
     r_1 = np.ones((10, 1))
@@ -41,7 +42,8 @@ def test_idx_to_lag():
     reference_list = [(1, 5), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0)]
     lag_list = n._idx_to_lag(idx_list)
     results = [True for i, j in zip(lag_list, reference_list) if i == j]
-    assert np.array(results).all(), 'Indices were not converted to lags correctly.'
+    assert np.array(results).all(), (
+        'Indices were not converted to lags correctly.')
 
     with pytest.raises(IndexError):
         idx_list = [(1, 7)]
@@ -61,6 +63,7 @@ def test_lag_to_idx():
     with pytest.raises(IndexError):
         idx_list = [(1, 7)]
         n._idx_to_lag(idx_list)
+
 
 if __name__ == '__main__':
     test_idx_to_lag()

@@ -83,7 +83,7 @@ def test_results_network_inference():
     res_network_biv_mi = nw.analyse_network(settings=settings, data=data)
 
     res_te = [res_single_multi_te, res_network_multi_te, res_single_biv_te,
-               res_network_biv_te]
+              res_network_biv_te]
     res_mi = [res_single_multi_mi, res_network_multi_mi, res_single_biv_mi,
               res_network_biv_mi]
     res_all = res_te + res_mi
@@ -93,7 +93,7 @@ def test_results_network_inference():
         est_te = res.single_target[1].omnibus_te
         assert np.isclose(est_te, expected_mi, atol=0.05), (
             'Estimated TE for discrete variables is not correct. Expected: '
-            '{0}, Actual results: {1}.'.format(expected_mi, est_mi))
+            '{0}, Actual results: {1}.'.format(expected_mi, est_te))
     for res in res_mi:
         est_mi = res.single_target[1].omnibus_mi
         assert np.isclose(est_mi, expected_mi, atol=0.05), (
@@ -103,7 +103,7 @@ def test_results_network_inference():
     est_te = res_network_multi_te.single_target[2].omnibus_te
     assert np.isclose(est_te, expected_mi, atol=0.05), (
         'Estimated TE for discrete variables is not correct. Expected: {0}, '
-        'Actual results: {1}.'.format(expected_mi, est_mi))
+        'Actual results: {1}.'.format(expected_mi, est_te))
     est_mi = res_network_multi_mi.single_target[2].omnibus_mi
     assert np.isclose(est_mi, expected_mi, atol=0.05), (
         'Estimated TE for discrete variables is not correct. Expected: {0}, '
@@ -365,6 +365,7 @@ def test_results_network_comparison():
         assert (no_diff == 1).all(), (
             '{0}-test did not return p-vals of 1 for non-sign. links.'.format(
                 test[i]))
+
 
 def test_export_brain_net():
     """Test export to BrainNet Viewer toolbox."""

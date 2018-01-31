@@ -58,13 +58,13 @@ def test_amd_data_padding():
         cmi, dist, n_range_var1, n_range_var2 = est_cmi.estimate(
             data_run_source, data_run_target, n_chunks=n_chunks)
         print('{0} points, {1} chunks: OpenCL MI result: {2:.4f} nats; '
-                'expected to be close to {3:.4f} nats for correlated '
-                'Gaussians.'.format(n, n_chunks, mi[0], expected_mi))
+              'expected to be close to {3:.4f} nats for correlated '
+              'Gaussians.'.format(n, n_chunks, mi[0], expected_mi))
         assert np.isclose(mi[0], expected_mi, atol=0.05), (
             'MI estimation for uncorrelated Gaussians using the OpenCL '
             'estimator failed (error larger 0.05).')
         print('OpenCL CMI result: {0:.4f} nats; expected to be close to '
-                '{1:.4f} nats for correlated Gaussians.'.format(
+              '{1:.4f} nats for correlated Gaussians.'.format(
                     cmi[0], expected_mi))
         assert np.isclose(cmi[0], expected_mi, atol=0.05), (
             'CMI estimation for uncorrelated Gaussians using the OpenCL '
@@ -504,6 +504,7 @@ def test_local_values():
     assert np.isclose(cmi_ch1, cmi_ch2, atol=0.05)
     assert np.isclose(cmi_ch1, cmi[0], atol=0.05)
     assert np.isclose(cmi_ch2, cmi[1], atol=0.05)
+
 
 def test_insufficient_no_points():
     """Test if estimation aborts for too few data points."""

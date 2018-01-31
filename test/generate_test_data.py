@@ -23,6 +23,7 @@ from idtxl.data import Data
 # path = os.path.join(os.path.dirname(__file__) + '/data/')
 path = 'data/'
 
+
 def analyse_mute_te_data():
     # Generate example data: the following was ran once to generate example
     # data, which is now in the data sub-folder of the test-folder.
@@ -51,7 +52,8 @@ def analyse_mute_te_data():
     res_2 = nw_0.analyse_network(
         settings, data,  targets=[0, 2], sources='all')
     pickle.dump(res_2, open(path + 'mute_results_2.p', 'wb'))
-    res_3 = nw_0.analyse_network(settings, data,  targets=[0, 1, 2], sources='all')
+    res_3 = nw_0.analyse_network(
+        settings, data,  targets=[0, 1, 2], sources='all')
     pickle.dump(res_3, open(path + 'mute_results_3.p', 'wb'))
     res_4 = nw_0.analyse_network(
         settings, data,  targets=[1, 2], sources='all')
@@ -59,17 +61,20 @@ def analyse_mute_te_data():
     res_5 = nw_0.analyse_network(settings, data)
     pickle.dump(res_5, open(path + 'mute_results_full.p', 'wb'))
 
+
 def generate_discrete_data(n_replications=1):
     """Generate Gaussian test data: 1 -> 2 -> 3, delay 1."""
     d = generate_gauss_data(n_replications=n_replications, discrete=True)
     data = Data(d, dim_order='psr', normalise=False)
     return data
 
+
 def generate_continuous_data(n_replications=1):
     """Generate Gaussian test data: 1 -> 2 -> 3, delay 1."""
     d = generate_gauss_data(n_replications=n_replications, discrete=False)
     data = Data(d, dim_order='psr', normalise=True)
     return data
+
 
 def generate_gauss_data(n_replications=1, discrete=False):
     settings = {'discretise_method': 'equal',
@@ -86,9 +91,9 @@ def generate_gauss_data(n_replications=1, discrete=False):
     for r in range(n_replications):
         proc_1 = np.random.normal(0, 1, size=n)
         proc_2 = (covariance_1 * proc_1 + (1 - covariance_1) *
-                np.random.normal(0, 1, size=n))
+                  np.random.normal(0, 1, size=n))
         proc_3 = (covariance_2 * proc_2 + (1 - covariance_2) *
-                np.random.normal(0, 1, size=n))
+                  np.random.normal(0, 1, size=n))
         expected_mi_1 = np.log(1 / (1 - np.power(covariance_1, 2)))
         expected_mi_2 = np.log(1 / (1 - np.power(covariance_2, 2)))
         proc_1 = proc_1[(2*delay):]
@@ -108,6 +113,7 @@ def generate_gauss_data(n_replications=1, discrete=False):
             d[1, :, r] = proc_2
             d[2, :, r] = proc_3
     return d
+
 
 def analyse_discrete_data():
     """Run network inference on discrete data."""
@@ -139,6 +145,7 @@ def analyse_discrete_data():
     res = nw.analyse_network(settings=settings, data=data)
     pickle.dump(res, open('{0}discrete_results_bmi_{1}.p'.format(
         path, settings['cmi_estimator']), 'wb'))
+
 
 def analyse_continuous_data():
     """Run network inference on continuous data."""
@@ -176,6 +183,7 @@ def analyse_continuous_data():
         pickle.dump(res, open('{0}continuous_results_bmi_{1}.p'.format(
             path, estimator), 'wb'))
 
+
 def assert_results():
     for algo in ['mmi', 'mte', 'bmi', 'bte']:
         # Test continuous data:
@@ -195,6 +203,7 @@ def assert_results():
         print('\nInference algorithm: {0} (estimator: {1})'.format(
             algo, estimator))
         _print_result(res)
+
 
 def _print_result(res):
     print(res.adjacency_matrix)

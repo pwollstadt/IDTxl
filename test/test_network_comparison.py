@@ -404,6 +404,7 @@ def test_p_value_union():
     assert p[target][source] == 1.0, (
         'The p-value was not calculated correctly: {0}'.format(p[target]))
 
+
 def test_compare_links_within():
     data = Data()
     data.generate_mute_data(100, 5)
@@ -459,6 +460,7 @@ def test_compare_links_within():
                                   network=res,
                                   data=data)
 
+
 def test_tails():
     """Test one- and two-tailed testing for all stats types."""
 
@@ -470,7 +472,6 @@ def test_tails():
     res_1 = pickle.load(open(path + 'mute_results_1.p', 'rb'))
     res_2 = pickle.load(open(path + 'mute_results_2.p', 'rb'))
     res_3 = pickle.load(open(path + 'mute_results_3.p', 'rb'))
-    res_4 = pickle.load(open(path + 'mute_results_4.p', 'rb'))
 
     # comparison settings
     comp_settings = {
