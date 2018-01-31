@@ -27,6 +27,71 @@ jpype_missing = pytest.mark.skipif(
     reason="Jpype is missing, JIDT estimators are not available")
 
 
+def test_amd_data_padding():
+    """Test padding necessary for AMD devices."""
+    expected_mi, source, source_uncorr, target = _get_gauss_data()
+    cov_effective = np.cov(np.squeeze(source), np.squeeze(target))[1, 0]
+    expected_mi = math.log(1 / (1 - math.pow(cov_effective, 2)))
+
+    settings = {'debug': True}
+    est_mi = OpenCLKraskovMI(settings=settings)
+    est_cmi = OpenCLKraskovCMI(settings=settings)
+
+    # Run OpenCL estimator for various data sizes.
+    for n in [11, 13, 25, 64, 100, 128, 999, 10000, 3781, 50000]:
+        for n_chunks in [1, 3, 10, 50, 99]:
+            data_run_source = np.tile(source[:n], (n_chunks, 1))
+            data_run_target = np.tile(target[:n], (n_chunks, 1))
+            mi, dist, n_range_var1, n_range_var2 = est_mi.estimate(
+                data_run_source, data_run_target, n_chunks=n_chunks)
+            cmi, dist, n_range_var1, n_range_var2 = est_cmi.estimate(
+                data_run_source, data_run_target, n_chunks=n_chunks)
+    # Run OpenCL esitmator for various no. points and check result for
+    # correctness. Note that for smaller sample sizes the error becomes too
+    # large.
+    n_chunks = 1
+    for n in [832, 999, 10000, 3781, 50000]:
+        data_run_source = np.tile(source[:n], (n_chunks, 1))
+        data_run_target = np.tile(target[:n], (n_chunks, 1))
+        mi, dist, n_range_var1, n_range_var2 = est_mi.estimate(
+            data_run_source, data_run_target, n_chunks=n_chunks)
+        cmi, dist, n_range_var1, n_range_var2 = est_cmi.estimate(
+            data_run_source, data_run_target, n_chunks=n_chunks)
+        print('{0} points, {1} chunks: OpenCL MI result: {2:.4f} nats; '
+                'expected to be close to {3:.4f} nats for correlated '
+                'Gaussians.'.format(n, n_chunks, mi[0], expected_mi))
+        assert np.isclose(mi[0], expected_mi, atol=0.05), (
+            'MI estimation for uncorrelated Gaussians using the OpenCL '
+            'estimator failed (error larger 0.05).')
+        print('OpenCL CMI result: {0:.4f} nats; expected to be close to '
+                '{1:.4f} nats for correlated Gaussians.'.format(
+                    cmi[0], expected_mi))
+        assert np.isclose(cmi[0], expected_mi, atol=0.05), (
+            'CMI estimation for uncorrelated Gaussians using the OpenCL '
+            'estimator failed (error larger 0.05).')
+
+    # Test check for min. no. points.
+    n_chunks = 1
+    for n in [9, 10]:
+        data_run_source = np.tile(source[:n], (n_chunks, 1))
+        data_run_target = np.tile(target[:n], (n_chunks, 1))
+        with pytest.raises(RuntimeError):
+            mi, dist, n_range_var1, n_range_var2 = est_mi.estimate(
+                data_run_source, data_run_target, n_chunks=n_chunks)
+        with pytest.raises(RuntimeError):
+            cmi, dist, n_range_var1, n_range_var2 = est_cmi.estimate(
+                data_run_source, data_run_target, n_chunks=n_chunks)
+
+    # Test debugging switched off
+    settings['debug'] = False
+    mi = est_mi.estimate(source, target)
+    cmi = est_cmi.estimate(source, target)
+
+    settings['local_values'] = True
+    mi = est_mi.estimate(source, target)
+    cmi = est_cmi.estimate(source, target)
+
+
 def test_user_input():
 
     est_mi = OpenCLKraskovMI()
@@ -468,6 +533,7 @@ def test_insufficient_no_points():
 
 
 if __name__ == '__main__':
+    test_amd_data_padding()
     test_local_values()
     test_mi_correlated_gaussians_two_chunks()
     test_cmi_uncorrelated_gaussians_unequal_dims()
