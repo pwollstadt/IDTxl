@@ -31,8 +31,7 @@ def test_plot_network():
 
     # Discretise data for speed
     settings_dis = {'discretise_method': 'equal',
-                    'alph1': 5,
-                    'alph2': 5}
+                    'n_discrete_bins': 5}
     est = JidtDiscreteCMI(settings_dis)
     source_dis, target_1_dis = est._discretise_vars(var1=source, var2=target_1)
     source_dis, target_2_dis = est._discretise_vars(var1=source, var2=target_2)
@@ -43,9 +42,7 @@ def test_plot_network():
     settings = {
         'cmi_estimator': 'JidtDiscreteCMI',
         'discretise_method': 'none',
-        'alph1': 5,
-        'alph2': 5,
-        'alphc': 5,
+        'n_discrete_bins': 5,  # alphabet size of the variables analysed
         'n_perm_max_stat': 21,
         'n_perm_omnibus': 30,
         'n_perm_max_seq': 30,

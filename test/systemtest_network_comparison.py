@@ -37,10 +37,7 @@ def test_network_comparison():
             'alpha_comp': 0.26,
             'n_perm_comp': 4,
             'tail': 'two',
-            'alph1': res.settings['alph1'],
-            'alph2': res.settings['alph2'],
-            'alphc': res.settings['alphc']
-            }
+            'n_discrete_bins': res.settings['alph1']}
     comp = NetworkComparison()
 
     # Perform comparison.

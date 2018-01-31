@@ -194,17 +194,14 @@ def test_discrete_input():
 
     # Discretise data
     settings = {'discretise_method': 'equal',
-                'alph1': 5,
-                'alph2': 5}
+                'n_discrete_bins': 5}
     est = JidtDiscreteCMI(settings)
     process_dis, temp = est._discretise_vars(var1=process, var2=process)
     data = Data(process_dis, dim_order='s', normalise=False)
     settings = {
         'cmi_estimator': 'JidtDiscreteCMI',
         'discretise_method': 'none',
-        'alph1': 5,
-        'alph2': 5,
-        'alphc': 5,
+        'n_discrete_bins': 5,  # alphabet size of the variables
         'n_perm_max_stat': 21,
         'n_perm_min_stat': 21,
         'n_perm_mi': 21,

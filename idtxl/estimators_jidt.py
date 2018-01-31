@@ -459,16 +459,16 @@ class JidtDiscreteCMI(JidtDiscrete):
               incoming continuous data, can be 'max_ent' for maximum entropy
               binning, 'equal' for equal size bins, and 'none' if no binning is
               required (default='none')
-            - num_discrete_bins : int [optional] - number of discrete bins/
+            - n_discrete_bins : int [optional] - number of discrete bins/
               levels or the base of each dimension of the discrete variables
               (default=2). If set, this parameter overwrites/sets alph1, alph2
               and alphc
             - alph1 : int [optional] - number of discrete bins/levels for var1
-              (default=2, or the value set for num_discrete_bins)
+              (default=2, or the value set for n_discrete_bins)
             - alph2 : int [optional] - number of discrete bins/levels for var2
-              (default=2, or the value set for num_discrete_bins)
+              (default=2, or the value set for n_discrete_bins)
             - alphc : int [optional] - number of discrete bins/levels for
-              conditional (default=2, or the value set for num_discrete_bins)
+              conditional (default=2, or the value set for n_discrete_bins)
     """
 
     def __init__(self, settings=None):
@@ -477,10 +477,10 @@ class JidtDiscreteCMI(JidtDiscrete):
         # binary variables.
         super().__init__(settings)
         try:
-            num_discrete_bins = int(self.settings['num_discrete_bins'])
-            self.settings['alph1'] = num_discrete_bins
-            self.settings['alph2'] = num_discrete_bins
-            self.settings['alphc'] = num_discrete_bins
+            n_discrete_bins = int(self.settings['n_discrete_bins'])
+            self.settings['alph1'] = n_discrete_bins
+            self.settings['alph2'] = n_discrete_bins
+            self.settings['alphc'] = n_discrete_bins
         except KeyError:
             pass  # Do nothing and use the default for alph_* set below
         self.settings.setdefault('alph1', int(2))
@@ -620,14 +620,14 @@ class JidtDiscreteMI(JidtDiscrete):
               incoming continuous data, can be 'max_ent' for maximum entropy
               binning, 'equal' for equal size bins, and 'none' if no binning is
               required (default='none')
-            - num_discrete_bins : int [optional] - number of discrete bins/
+            - n_discrete_bins : int [optional] - number of discrete bins/
               levels or the base of each dimension of the discrete variables
               (default=2). If set, this parameter overwrites/sets alph1 and
               alph2
             - alph1 : int [optional] - number of discrete bins/levels for var1
-              (default=2, or the value set for num_discrete_bins)
+              (default=2, or the value set for n_discrete_bins)
             - alph2 : int [optional] - number of discrete bins/levels for var2
-              (default=2, or the value set for num_discrete_bins)
+              (default=2, or the value set for n_discrete_bins)
             - lag : int [optional] - time difference in samples to calculate
               the lagged MI between processes (default=0)
     """
@@ -639,9 +639,9 @@ class JidtDiscreteMI(JidtDiscrete):
         super().__init__(settings)
         self.settings.setdefault('lag', int(0))
         try:
-            num_discrete_bins = int(self.settings['num_discrete_bins'])
-            self.settings['alph1'] = num_discrete_bins
-            self.settings['alph2'] = num_discrete_bins
+            n_discrete_bins = int(self.settings['n_discrete_bins'])
+            self.settings['alph1'] = n_discrete_bins
+            self.settings['alph2'] = n_discrete_bins
         except KeyError:
             pass  # Do nothing and use the default for alph_* set below
         self.settings.setdefault('alph1', int(2))
@@ -931,11 +931,11 @@ class JidtDiscreteAIS(JidtDiscrete):
               incoming continuous data, can be 'max_ent' for maximum entropy
               binning, 'equal' for equal size bins, and 'none' if no binning is
               required (default='none')
-            - num_discrete_bins : int [optional] - number of discrete bins/
+            - n_discrete_bins : int [optional] - number of discrete bins/
               levels or the base of each dimension of the discrete variables
               (default=2). If set, this parameter overwrites/sets alph
             - alph : int [optional] - number of discrete bins/levels for var1
-              (default=2 , or the value set for num_discrete_bins)
+              (default=2 , or the value set for n_discrete_bins)
     """
 
     def __init__(self, settings):
@@ -950,8 +950,8 @@ class JidtDiscreteAIS(JidtDiscrete):
 
         # Get alphabet sizes and check if discretisation is requested
         try:
-            num_discrete_bins = int(settings['num_discrete_bins'])
-            settings['alph'] = num_discrete_bins
+            n_discrete_bins = int(settings['n_discrete_bins'])
+            settings['alph'] = n_discrete_bins
         except KeyError:
             pass  # Do nothing and use the default for alph_* set below
         settings.setdefault('alph', int(2))
@@ -1420,14 +1420,14 @@ class JidtDiscreteTE(JidtDiscrete):
               incoming continuous data, can be 'max_ent' for maximum entropy
               binning, 'equal' for equal size bins, and 'none' if no binning is
               required (default='none')
-            - num_discrete_bins : int [optional] - number of discrete bins/
+            - n_discrete_bins : int [optional] - number of discrete bins/
               levels or the base of each dimension of the discrete variables
               (default=2). If set, this parameter overwrites/sets alph1 and
               alph2
             - alph1 : int [optional] - number of discrete bins/levels for
-              source (default=2, or the value set for num_discrete_bins)
+              source (default=2, or the value set for n_discrete_bins)
             - alph2 : int [optional] - number of discrete bins/levels for
-              target (default=2, or the value set for num_discrete_bins)
+              target (default=2, or the value set for n_discrete_bins)
             - debug : bool [optional] - return debug information when calling
               JIDT (default=False)
             - local_values : bool [optional] - return local TE instead of
@@ -1443,9 +1443,9 @@ class JidtDiscreteTE(JidtDiscrete):
         # Get alphabet sizes and check if discretisation is requested. Try to
         # overwrite alphabet sizes with number of bins.
         try:
-            num_discrete_bins = int(settings['num_discrete_bins'])
-            settings['alph1'] = num_discrete_bins
-            settings['alph2'] = num_discrete_bins
+            n_discrete_bins = int(settings['n_discrete_bins'])
+            settings['alph1'] = n_discrete_bins
+            settings['alph2'] = n_discrete_bins
         except KeyError:
             # do nothing and set alphabet sizes to default below
             pass

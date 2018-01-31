@@ -135,7 +135,7 @@ def test_mi_gauss_data():
     _assert_result(mi_uncor, 0, 'JidtGaussianMI', 'CMI (uncorr., no cond.)')
 
     # Test Discrete
-    settings = {'discretise_method': 'equal', 'num_discrete_bins': 5}
+    settings = {'discretise_method': 'equal', 'n_discrete_bins': 5}
     mi_estimator = JidtDiscreteMI(settings=settings)
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
@@ -172,7 +172,7 @@ def test_cmi_gauss_data_no_cond():
     _assert_result(mi_uncor, 0, 'JidtGaussianCMI', 'CMI (uncorr., no cond.)')
 
     # Test Discrete
-    settings = {'discretise_method': 'equal', 'num_discrete_bins': 5}
+    settings = {'discretise_method': 'equal', 'n_discrete_bins': 5}
     mi_estimator = JidtDiscreteCMI(settings=settings)
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
@@ -209,7 +209,7 @@ def test_cmi_gauss_data():
     _assert_result(mi_uncor, 0, 'JidtGaussianCMI', 'CMI (uncorr.)')
 
     # Test Discrete
-    settings = {'discretise_method': 'equal', 'num_discrete_bins': 5}
+    settings = {'discretise_method': 'equal', 'n_discrete_bins': 5}
     mi_estimator = JidtDiscreteCMI(settings=settings)
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
@@ -235,7 +235,7 @@ def test_te_gauss_data():
     source2 = source2[1:]
     target = target[:-1]
     settings = {'discretise_method': 'equal',
-                'num_discrete_bins': 4,
+                'n_discrete_bins': 4,
                 'history_target': 1}
     # Test Kraskov
     mi_estimator = JidtKraskovTE(settings=settings)
@@ -274,7 +274,7 @@ def test_ais_gauss_data():
     source1, source2 = _get_ar_data()
 
     settings = {'discretise_method': 'equal',
-                'num_discrete_bins': 4,
+                'n_discrete_bins': 4,
                 'history': 2}
 
     # Test Kraskov
@@ -397,7 +397,7 @@ def test_one_two_dim_input_discrete():
     ar_src_two = np.expand_dims(ar_src_one, axis=1)
 
     settings = {'discretise_method': 'equal',
-                'num_discrete_bins': 4,
+                'n_discrete_bins': 4,
                 'history_target': 1,
                 'history': 2}
     # MI
@@ -440,7 +440,7 @@ def test_local_values():
     ar_proc, s = _get_ar_data(expand=False)
 
     settings = {'discretise_method': 'equal',
-                'num_discrete_bins': 4,
+                'n_discrete_bins': 4,
                 'history_target': 1,
                 'history': 2,
                 'local_values': True}
@@ -633,7 +633,7 @@ def test_invalid_history_parameters():
 #     source = np.random.randn(n)
 #     target = np.random.randn(n)
 
-#     settings = {'discretise_method': 'equal', 'num_discrete_bins': 4, 'history': 1,
+#     settings = {'discretise_method': 'equal', 'n_discrete_bins': 4, 'history': 1,
 #             'history_target': 1}
 #     est = JidtDiscreteAIS(settings)
 #     est = JidtDiscreteTE(settings)
@@ -659,7 +659,7 @@ def test_lagged_mi():
     target = np.array(target)
     settings = {
         'discretise_method': 'equal',
-        'num_discrete_bins': 4,
+        'n_discrete_bins': 4,
         'history': 1,
         'history_target': 1,
         'lag': 1,

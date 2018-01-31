@@ -73,8 +73,7 @@ def generate_continuous_data(n_replications=1):
 
 def generate_gauss_data(n_replications=1, discrete=False):
     settings = {'discretise_method': 'equal',
-                        'alph1': 5,
-                        'alph2': 5}
+                'n_discrete_bins': 5}
     est = JidtDiscreteCMI(settings)
     covariance_1 = 0.4
     covariance_2 = 0.3
@@ -116,9 +115,7 @@ def analyse_discrete_data():
     settings = {
         'cmi_estimator': 'JidtDiscreteCMI',
         'discretise_method': 'none',
-        'alph1': 5,
-        'alph2': 5,
-        'alphc': 5,
+        'n_discrete_bins': 5,  # alphabet size of the variables analysed
         'min_lag_sources': 1,
         'max_lag_sources': 3,
         'max_lag_target': 1}
