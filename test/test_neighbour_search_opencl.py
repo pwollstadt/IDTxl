@@ -116,7 +116,7 @@ def test_two_dim_longer_sequence():
     pointset1 = np.array(
         [[-1, 0.5, 1.1, 2, 10, 11, 10.5, -100, -50, 666],
          [-1, 0.5, 1.1, 2, 98, -9, -200, 45.3, -53, 0.1]])
-    pointset1 = np.hstack((pointset1, np.ones((2,6))*9999)).T.copy()
+    pointset1 = np.hstack((pointset1, np.ones((2, 6))*9999)).T.copy()
     pointset1 = np.tile(pointset1, (n_chunks, 1))
     pointset2 = np.ones(pointset1.shape) * 9999
 
@@ -347,7 +347,7 @@ def test_multiple_runs_two_dim():
     # Call CMI estimator with pointset2 as conditional (otherwise the MI
     # estimator is called internally and the CMI estimator is never tested).
     cmi, dist2, npoints_x, npoints_y, npoints_c = EST_CMI.estimate(
-        pointset1, pointset2, pointset2, n_chunks=n_chunks)
+        pointset1, pointset2, pointset3, n_chunks=n_chunks)
     assert np.isclose(dist2[0], 1.5), 'Distances 0 not correct.'
     assert np.isclose(dist2[1], 0.6), 'Distances 1 not correct.'
     assert np.isclose(dist2[2], 0.6), 'Distances 2 not correct.'

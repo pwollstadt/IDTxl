@@ -234,6 +234,7 @@ def test_data_type():
     assert issubclass(type(surr[0, 0, 0]), np.float), ('Realisations type is '
                                                        'not a float.')
 
+
 def test_analytical_surrogates():
     # Generate discrete test data.
     covariance = 0.4
@@ -242,7 +243,6 @@ def test_analytical_surrogates():
     source = np.random.normal(0, 1, size=n)
     target = (covariance * source + (1 - covariance) *
               np.random.normal(0, 1, size=n))
-    expected_mi = np.log(1 / (1 - np.power(covariance, 2)))
     source = source[delay:]
     target = target[:-delay]
     settings = {'discretise_method': 'equal',
@@ -267,16 +267,17 @@ def test_analytical_surrogates():
     assert res.settings.analytical_surrogates, (
         'Surrogates were not created analytically.')
 
+
 if __name__ == '__main__':
     test_analytical_surrogates()
-    # test_data_type()
+    test_data_type()
     test_network_fdr()
-    # test_find_pvalue()
-    # test_find_table_max()
-    # test_find_table_min()
-    # test_sort_table_max()
-    # test_sort_table_min()
-    # test_omnibus_test()
-    # test_max_statistic()
-    # test_min_statistic()
-    # test_max_statistic_sequential()
+    test_find_pvalue()
+    test_find_table_max()
+    test_find_table_min()
+    test_sort_table_max()
+    test_sort_table_min()
+    test_omnibus_test()
+    test_max_statistic()
+    test_min_statistic()
+    test_max_statistic_sequential()

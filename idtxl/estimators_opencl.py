@@ -141,7 +141,7 @@ class OpenCLKraskov(Estimator):
             return list(vars), n_chunks
         if chunklength <= 10:
             raise RuntimeError('Number of samples per chunk too small to '
-                               'perform neighbour searches on AMD device.' )
+                               'perform neighbour searches on AMD device.')
         # Find a padding that makes the signallength a multiple of 64. In a
         # first iteration try to cut/pad individual chunks up to a padding
         # limit (a maximum no. points that can be taken away/added). If that
@@ -168,14 +168,11 @@ class OpenCLKraskov(Estimator):
         chunklength_padded = chunklength + point_diff
         vars_padded = []
 
-
         if point_diff > 0:  # Pad data/add points
             for var in vars:
                 dim = var.shape[1]
-                padding_points = np.ones((point_diff, dim),
-                            dtype=np.float32) * np.finfo(np.float32).max
-                padding_chunk = np.ones((chunklength_padded, dim),
-                          dtype=np.float32) * np.finfo(np.float32).max
+                padding_points = np.ones((point_diff, dim), dtype=np.float32) * np.finfo(np.float32).max
+                padding_chunk = np.ones((chunklength_padded, dim), dtype=np.float32) * np.finfo(np.float32).max
 
                 var_padded = np.empty((total_length, dim), dtype=np.float32)
                 var = var.astype(np.float32)
@@ -196,8 +193,9 @@ class OpenCLKraskov(Estimator):
         if point_diff <= 0:  # Remove points
             for var in vars:
                 dim = var.shape[1]
-                padding_chunk = np.ones((chunklength_padded, dim),
-                          dtype=np.float32) * np.finfo(np.float32).max
+                padding_chunk = (
+                    np.ones((chunklength_padded, dim), dtype=np.float32) *
+                    np.finfo(np.float32).max)
 
                 var_padded = np.empty((total_length, dim), dtype=np.float32)
                 var = var.astype(np.float32)

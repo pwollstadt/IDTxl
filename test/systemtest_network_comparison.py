@@ -10,9 +10,9 @@ import os
 import pickle
 import numpy as np
 from idtxl.network_comparison import NetworkComparison
-from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
 from generate_test_data import generate_continuous_data, generate_discrete_data
+
 
 def test_network_comparison():
     """Run within/between, dependent/independent test on bivariate MI."""
@@ -48,9 +48,9 @@ def test_network_comparison():
         res = pickle.load(open('{0}discrete_results_{1}_{2}.p'.format(
             path, inference, estimator), 'rb'))
         comp_settings['cmi_estimator'] = estimator
-        for stats_type  in ['dependent', 'independent']:
+        for stats_type in ['dependent', 'independent']:
             print(('\n\n\n######### Running network comparison on {0} '
-                    'results ({1} estimator) on discrete data, {2} test.' .format(inference, estimator, stats_type)))
+                   'results ({1} estimator) on discrete data, {2} test.' .format(inference, estimator, stats_type)))
             comp_settings['stats_type'] = stats_type
 
             c_within = comp.compare_within(
@@ -68,7 +68,7 @@ def test_network_comparison():
             res = pickle.load(open('{0}continuous_results_{1}_{2}.p'.format(
                 path, inference, estimator), 'rb'))
             comp_settings['cmi_estimator'] = estimator
-            for stats_type  in ['dependent', 'independent']:
+            for stats_type in ['dependent', 'independent']:
                 print(('\n\n\n######### Running network comparison on {0} '
                        'results ({1} estimator) on continuous data, {2} test.' .format(inference, estimator, stats_type)))
                 comp_settings['stats_type'] = stats_type
@@ -81,6 +81,7 @@ def test_network_comparison():
                     data_set_a=np.array((data_cont, data_cont)),
                     data_set_b=np.array((data_dummy_cont, data_dummy_cont)))
                 _verify_test(c_within, c_between, res)
+
 
 def _verify_test(c_within, c_between, res):
     # Test values for verification
@@ -104,6 +105,7 @@ def _verify_test(c_within, c_between, res):
     assert (c_within.adjacency_matrix_diff_abs[tp] > 0).all(), (
         'Missed difference in wihin network comparison.')
 
+
 def _generate_dummy_data(data):
     """Generate noise with the same dimensions and type as a given data set."""
 
@@ -118,6 +120,7 @@ def _generate_dummy_data(data):
     else:
         raise RuntimeError('Unknown data type.')
     return data
+
 
 if __name__ == '__main__':
     test_network_comparison()

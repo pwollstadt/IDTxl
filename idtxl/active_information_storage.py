@@ -111,14 +111,16 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                              '{0}.'.format(processes))
 
         # Perform AIS estimation for each target individually.
-        results = ResultsSingleProcessAnalysis(n_nodes=data.n_processes,
-                                          n_realisations=data.n_realisations(),
-                                          normalised=data.normalise)
+        results = ResultsSingleProcessAnalysis(
+            n_nodes=data.n_processes,
+            n_realisations=data.n_realisations(),
+            normalised=data.normalise)
         for t in range(len(processes)):
             if settings['verbose']:
                 print('\n####### analysing process {0} of {1}'.format(
                                                 processes[t], processes))
-            res_single = self.analyse_single_process(settings, data, processes[t])
+            res_single = self.analyse_single_process(
+                settings, data, processes[t])
             results.combine_results(res_single)
 
         # Get no. realisations actually used for estimation from single target
@@ -330,7 +332,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             cand_real = cand_real.T.reshape(cand_real.size, 1)
 
             # Calculate the (C)MI for each candidate and the target.
-            temp_te = self._cmi_estimator.estimate_mult(
+            temp_te = self._cmi_estimator.estimate_parallel(
                                 n_chunks=len(candidate_set),
                                 re_use=['var2', 'conditional'],
                                 var1=cand_real,
@@ -410,7 +412,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 i_1 = i_2
                 i_2 += data.n_realisations(self.current_value)
 
-            temp_te = self._cmi_estimator.estimate_mult(
+            temp_te = self._cmi_estimator.estimate_parallel(
                                     n_chunks=len(self.selected_vars_sources),
                                     re_use=re_use,
                                     var1=candidate_realisations,

@@ -110,7 +110,7 @@ class NetworkInference(NetworkAnalysis):
             cand_real = cand_real.T.reshape(cand_real.size, 1)
 
             # Calculate the (C)MI for each candidate and the target.
-            temp_te = self._cmi_estimator.estimate_mult(
+            temp_te = self._cmi_estimator.estimate_parallel(
                                 n_chunks=len(candidate_set),
                                 re_use=['var2', 'conditional'],
                                 var1=cand_real,
@@ -536,7 +536,7 @@ class NetworkInferenceMultivariate(NetworkInference):
                 i_1 = i_2
                 i_2 += data.n_realisations(self.current_value)
 
-            temp_te = self._cmi_estimator.estimate_mult(
+            temp_te = self._cmi_estimator.estimate_parallel(
                                 n_chunks=len(self.selected_vars_sources),
                                 re_use=['var2'],
                                 var1=candidate_realisations,
