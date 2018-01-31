@@ -132,6 +132,8 @@ def _plot_adj_matrix(adj_matrix, mat_color='gray_r', diverging=False,
     if cbar_label == 'delay':
         cbar_label = 'delay [samples]'
         cbar_ticks = np.arange(0, max_val + 1, cbar_stepsize)
+    if cbar_label == 'p-value':
+        cbar_ticks = np.arange(0, 1.001, 0.1)
     else:
         cbar_ticks = np.arange(min_val, max_val + 0.01 * max_val,
                                cbar_stepsize)
@@ -221,12 +223,12 @@ def plot_network_comparison(results):
     _plot_adj_matrix(results.adjacency_matrix_diff_abs, mat_color='BuGn',
                      cbar_label='norm. CMI diff [a.u.]',
                      cbar_stepsize=0.1)
-    ax.set_title('CMI diff abs(A - B)', y=1.1)
+    ax.set_title('CMI diff abs (A - B)', y=1.1)
 
     ax = plt.subplot(236)
     _plot_adj_matrix(results.adjacency_matrix_pvalue, mat_color='gray',
-                     cbar_label='p-value [%]', cbar_stepsize=0.005)
-    ax.set_title('p-values', y=1.1)
+                     cbar_label='p-value', cbar_stepsize=0.05)
+    ax.set_title('p-value [%]', y=1.1)
     plt.show()
 
     return graph, fig
