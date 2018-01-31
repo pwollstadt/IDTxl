@@ -98,6 +98,12 @@ class OpenCLKraskov(Estimator):
         queue = cl.CommandQueue(context, my_gpu_devices[gpuid])
         if self.settings['debug']:
             print("Selected Device: ", my_gpu_devices[gpuid].name)
+        # Get infor if GPU is an AMD device. If so, data need to be padded
+        # before executing searches.
+        if my_gpu_devices[gpuid].vendor == 'Advanced Micro Devices, Inc.':
+            self.amd_device = True
+        else:
+            self.amd_device = False
         return my_gpu_devices, context, queue
 
     def _get_kernels(self):
@@ -114,6 +120,101 @@ class OpenCLKraskov(Estimator):
                                          np.int32, np.int32, np.int32,
                                          np.int32, None])
         return (kNN_kernel, RS_kernel)
+
+    def _pad_data(self, *vars, n_chunks):
+        """Pad data as a workaround for OpenCL bug on AMD cards.
+
+        Pad data as a workaround for OpenCL bug on AMD cards. Pad data such
+        that signal length is a multiple of 64. Together with the size of a 32
+        Bit float this results in chunks with sizes of a multiple of 256.
+
+        Note that the data has to be padded AND still consist of chunks of
+        equal size. The function uses a brute force search to find such a
+        padding: first, it checks whether a suitable length can be found by
+        adding/taking away small numbers of points from individual chunks;
+        second, if this is not sufficient, it additionally tries to add whole
+        chunks of padded points.
+        """
+        signallength = vars[0].shape[0]
+        chunklength = int(signallength / n_chunks)
+        if signallength % 64 == 0:  # return data if no padding is necessary
+            return list(vars), n_chunks
+        if chunklength <= 10:
+            raise RuntimeError('Number of samples per chunk too small to '
+                               'perform neighbour searches on AMD device.' )
+        # Find a padding that makes the signallength a multiple of 64. In a
+        # first iteration try to cut/pad individual chunks up to a padding
+        # limit (a maximum no. points that can be taken away/added). If that
+        # isn't  sufficient, add whole chunks of padding points.
+        solution = False
+        pad_limit = 5  # max. no. points that can be added/taken away
+        padding_temp = np.squeeze(np.reshape(np.array(  # paddings to test
+            [[x, -x] for x in range(pad_limit)]), (1, 2*pad_limit)))
+        add_chunks = -1
+        while solution is False:
+            add_chunks += 1  # add whole chunks
+            for point_diff in padding_temp:
+                total_length = ((add_chunks + n_chunks) *
+                                (chunklength + point_diff))
+                if total_length % 64 == 0:
+                    if self.settings['verbose']:
+                        print('adding {0} chunks and a padding of {1} points, '
+                        ' total length is now {2}'.format(
+                            add_chunks, point_diff, total_length))
+                    solution = True
+                    break
+
+        n_chunks_padded = n_chunks + add_chunks
+        chunklength_padded = chunklength + point_diff
+        vars_padded = []
+
+
+        if point_diff > 0:  # Pad data/add points
+            for var in vars:
+                dim = var.shape[1]
+                padding_points = np.ones((point_diff, dim),
+                            dtype=np.float32) * np.finfo(np.float32).max
+                padding_chunk = np.ones((chunklength_padded, dim),
+                          dtype=np.float32) * np.finfo(np.float32).max
+
+                var_padded = np.empty((total_length, dim), dtype=np.float32)
+                var = var.astype(np.float32)
+                idx = int(0)
+                idx_padded = int(0)
+                for c in range(n_chunks):
+                    var_padded[idx_padded:idx_padded + chunklength_padded, :] = np.vstack(
+                        (var[idx:idx+chunklength, :], padding_points))
+                    idx += chunklength
+                    idx_padded += chunklength_padded
+                for c in range(add_chunks):
+                    var_padded[idx_padded:idx_padded+chunklength_padded, :] = padding_chunk
+                    idx_padded += chunklength_padded
+                assert (idx_padded == total_length)
+                assert (idx == signallength)
+                vars_padded.append(var_padded)
+
+        if point_diff <= 0:  # Remove points
+            for var in vars:
+                dim = var.shape[1]
+                padding_chunk = np.ones((chunklength_padded, dim),
+                          dtype=np.float32) * np.finfo(np.float32).max
+
+                var_padded = np.empty((total_length, dim), dtype=np.float32)
+                var = var.astype(np.float32)
+                idx = int(0)
+                idx_padded = int(0)
+                for c in range(n_chunks):
+                    var_padded[idx_padded:idx_padded+chunklength_padded, :] = var[idx:idx+chunklength_padded, :]
+                    idx += chunklength
+                    idx_padded += chunklength_padded
+                for c in range(add_chunks):
+                    var_padded[idx_padded:idx_padded+chunklength_padded, :] = padding_chunk
+                    idx_padded += chunklength_padded
+                assert (idx_padded == total_length)
+                assert (idx == signallength)
+                vars_padded.append(var_padded)
+
+        return vars_padded, n_chunks_padded
 
 
 class OpenCLKraskovMI(OpenCLKraskov):
@@ -265,8 +366,15 @@ class OpenCLKraskovMI(OpenCLKraskov):
         assert var1.shape[0] == var2.shape[0]
         assert var1.shape[0] % n_chunks == 0
         self._check_number_of_points(var1.shape[0])
+        if self.amd_device:
+            vars_padded, n_chunks_padded = self._pad_data(
+                var1, var2, n_chunks=n_chunks)
+            var1 = vars_padded[0]
+            var2 = vars_padded[1]
+        else:
+            n_chunks_padded = n_chunks
         signallength = var1.shape[0]
-        chunklength = signallength // n_chunks
+        chunklength = signallength // n_chunks_padded
         var1dim = var1.shape[1]
         var2dim = var2.shape[1]
         pointdim = var1dim + var2dim
@@ -346,15 +454,13 @@ class OpenCLKraskovMI(OpenCLKraskov):
         if self.settings['local_values']:
             mi_array = -np.inf * np.ones(chunklength * n_chunks,
                                          dtype=np.float64)
-            i1 = 0
-            i2 = chunklength
+            idx = 0
             for c in range(n_chunks):
                 mi = (digamma(kraskov_k) + digamma(chunklength) - np.mean(
                        digamma(count_var1[c*chunklength:(c+1)*chunklength]+1) +
                        digamma(count_var2[c*chunklength:(c+1)*chunklength]+1)))
-                mi_array[i1:i2] = mi
-                i1 = i2
-                i2 = i1 + chunklength
+                mi_array[idx:idx+chunklength] = mi
+                idx += chunklength
 
         else:
             mi_array = -np.inf * np.ones(n_chunks, dtype=np.float64)
@@ -365,6 +471,9 @@ class OpenCLKraskovMI(OpenCLKraskov):
                 mi_array[c] = mi
 
         if self.settings['debug']:
+            distances = distances[:n_chunks * chunklength * kraskov_k]
+            count_var1 = count_var1[:n_chunks * chunklength]
+            count_var2 = count_var2[:n_chunks * chunklength]
             return mi_array, distances, count_var1, count_var2
         else:
             return mi_array
@@ -541,8 +650,16 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         assert var1.shape[0] == conditional.shape[0]
         assert var1.shape[0] % n_chunks == 0
         self._check_number_of_points(var1.shape[0])
+        if self.amd_device:
+            vars_padded, n_chunks_padded = self._pad_data(
+                var1, var2, conditional, n_chunks=n_chunks)
+            var1 = vars_padded[0]
+            var2 = vars_padded[1]
+            conditional = vars_padded[2]
+        else:
+            n_chunks_padded = n_chunks
         signallength = var1.shape[0]
-        chunklength = signallength // n_chunks
+        chunklength = signallength // n_chunks_padded
         var1dim = var1.shape[1]
         var2dim = var2.shape[1]
         conddim = conditional.shape[1]
@@ -634,16 +751,14 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         if self.settings['local_values']:
             cmi_array = -np.inf * np.ones(n_chunks * chunklength,
                                           dtype=np.float64)
-            i1 = 0
-            i2 = chunklength
+            idx = 0
             for c in range(n_chunks):
                 cmi = (digamma(kraskov_k) +
                        digamma(count_cnd[c*chunklength:(c+1)*chunklength]+1) -
                        digamma(count_src[c*chunklength:(c+1)*chunklength]+1) -
                        digamma(count_tgt[c*chunklength:(c+1)*chunklength]+1))
-                cmi_array[i1:i2] = cmi
-                i1 = i2
-                i2 = i1 + chunklength
+                cmi_array[idx:idx+chunklength] = cmi
+                idx += chunklength
 
         else:
             cmi_array = -np.inf * np.ones(n_chunks, dtype=np.float64)
@@ -655,6 +770,10 @@ class OpenCLKraskovCMI(OpenCLKraskov):
                 cmi_array[c] = cmi
 
         if self.settings['debug']:
+            distances = distances[:n_chunks * chunklength * kraskov_k]
+            count_src = count_src[:n_chunks * chunklength]
+            count_tgt = count_tgt[:n_chunks * chunklength]
+            count_cnd = count_cnd[:n_chunks * chunklength]
             return (cmi_array, distances, count_src, count_tgt, count_cnd)
         else:
             return cmi_array
