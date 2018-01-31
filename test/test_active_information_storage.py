@@ -62,7 +62,9 @@ def test_add_conditional_manually():
     """Enforce the conditioning on additional variables."""
     settings = {'cmi_estimator': 'JidtKraskovCMI',
                 'max_lag': 5,
-                'n_perm_min_stat': 21}
+                'n_perm_max_stat': 21,
+                'n_perm_min_stat': 21,
+                'n_perm_mi': 21}
     data = Data()
     data.generate_mute_data(10, 3)
     ais = ActiveInformationStorage()
@@ -90,6 +92,7 @@ def test_analyse_network():
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 21,
         'n_perm_min_stat': 21,
+        'n_perm_mi': 21,
         'max_lag': 5,
         'tau': 1}
     data = Data()
@@ -116,10 +119,11 @@ def test_single_source_storage_gaussian():
     data = Data(np.array([proc_1, proc_2]), dim_order='ps')
     settings = {
         'cmi_estimator': 'JidtKraskovCMI',
-        'n_perm_mi': 50,
         'alpha_mi': 0.05,
         'tail_mi': 'one_bigger',
         'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_mi': 21,
         'max_lag': 5,
         'tau': 1
         }
@@ -140,10 +144,11 @@ def test_compare_jidt_open_cl_estimator():
     data.generate_mute_data(1000, 2)
     settings = {
         'cmi_estimator': 'OpenCLKraskovCMI',
-        'n_perm_mi': 22,
         'alpha_mi': 0.05,
         'tail_mi': 'one_bigger',
         'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_mi': 21,
         'max_lag': 5,
         'tau': 1
         }
@@ -174,14 +179,6 @@ def test_compare_jidt_open_cl_estimator():
     else:
         assert ais_opencl_3 is ais_jidt_3, (
             'AIS results differ between OpenCl and JIDT estimator.')
-#    np.testing.assert_approx_equal(ais_opencl_2, ais_jidt_2,
-#                                   significant=3,
-#                                   err_msg=('AIS results differ between '
-#                                            'OpenCl and JIDT estimator.'))
-#    np.testing.assert_approx_equal(ais_opencl_3, ais_jidt_3,
-#                                   significant=3,
-#                                   err_msg=('AIS results differ between '
-#                                            'OpenCl and JIDT estimator.'))
 
 
 def test_discrete_input():
@@ -209,8 +206,8 @@ def test_discrete_input():
         'alph2': 5,
         'alphc': 5,
         'n_perm_max_stat': 21,
-        'n_perm_omnibus': 30,
-        'n_perm_max_seq': 30,
+        'n_perm_min_stat': 21,
+        'n_perm_mi': 21,
         'max_lag': 2}
     nw = ActiveInformationStorage()
     nw.analyse_single_process(settings=settings, data=data, process=0)
