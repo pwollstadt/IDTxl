@@ -19,9 +19,7 @@ from test_estimators_jidt import jpype_missing
 settings = {
     'cmi_estimator': 'JidtDiscreteCMI',
     'discretise_method': 'none',
-    'alph1': 5,
-    'alph2': 5,
-    'alphc': 5,
+    'n_discrete_bins': 5,  # alphabet size of the variables analysed
     'n_perm_max_stat': 21,
     'n_perm_omnibus': 30,
     'n_perm_max_seq': 30,
@@ -49,8 +47,7 @@ def test_results_network_inference():
 
     # Discretise data for speed
     settings_dis = {'discretise_method': 'equal',
-                    'alph1': 5,
-                    'alph2': 5}
+                    'n_discrete_bins': 5}
     est = JidtDiscreteCMI(settings_dis)
     source_dis, target_1_dis = est._discretise_vars(var1=source, var2=target_1)
     source_dis, target_2_dis = est._discretise_vars(var1=source, var2=target_2)
@@ -218,8 +215,7 @@ def test_delay_reconstruction():
 
     # Discretise data for speed
     settings_dis = {'discretise_method': 'equal',
-                    'alph1': 5,
-                    'alph2': 5}
+                    'n_discrete_bins': 5}
     est = JidtDiscreteCMI(settings_dis)
     source_dis, target_1_dis = est._discretise_vars(var1=source, var2=target_1)
     source_dis, target_2_dis = est._discretise_vars(var1=source, var2=target_2)
@@ -232,9 +228,7 @@ def test_delay_reconstruction():
     settings = {
         'cmi_estimator': 'JidtDiscreteCMI',
         'discretise_method': 'none',
-        'alph1': 5,
-        'alph2': 5,
-        'alphc': 5,
+        'n_discrete_bins': 5,  # alphabet size of the variables analysed
         'n_perm_max_stat': 21,
         'n_perm_omnibus': 30,
         'n_perm_max_seq': 30,
@@ -273,8 +267,7 @@ def _generate_gauss_data(covariance=0.4, n=10000, delay=1, normalise=False):
 
     # Discretise data for speed
     settings = {'discretise_method': 'equal',
-                'alph1': 5,
-                'alph2': 5}
+                'n_discrete_bins': 5}
     est = JidtDiscreteCMI(settings)
     source_dis, target_dis = est._discretise_vars(var1=source, var2=target)
     return Data(np.vstack((source_dis, target_dis)),

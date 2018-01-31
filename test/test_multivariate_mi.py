@@ -325,8 +325,7 @@ def test_discrete_input():
 
     # Discretise data
     settings = {'discretise_method': 'equal',
-                'alph1': 5,
-                'alph2': 5}
+                'n_discrete_bins': 5}
     est = JidtDiscreteCMI(settings)
     source_dis, target_dis = est._discretise_vars(var1=source, var2=target)
     data = Data(np.vstack((source_dis, target_dis)),
@@ -334,9 +333,7 @@ def test_discrete_input():
     settings = {
         'cmi_estimator': 'JidtDiscreteCMI',
         'discretise_method': 'none',
-        'alph1': 5,
-        'alph2': 5,
-        'alphc': 5,
+        'n_discrete_bins': 5,  # alphabet size of the variables analysed
         'n_perm_max_stat': 21,
         'n_perm_omnibus': 30,
         'n_perm_max_seq': 30,

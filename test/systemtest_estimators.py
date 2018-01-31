@@ -19,7 +19,7 @@ target = (covariance * source_cor +
           (1 - covariance) * np.random.normal(0, 1, size=n))
 
 # JIDT Discrete estimators
-settings = {'discretise_method': 'equal', 'num_discrete_bins': 5}
+settings = {'discretise_method': 'equal', 'n_discrete_bins': 5}
 est = JidtDiscreteCMI(settings)
 cmi = est.estimate(source_cor, target, source_uncor)
 print('Estimated CMI: {0:.5f}, expected CMI: {1:.5f}'.format(cmi, expected_mi))
