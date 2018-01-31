@@ -81,7 +81,7 @@ def test_one_dim_longer_sequence():
     n_chunks = 4
     pointset1 = np.expand_dims(
         np.array([-1, -1.2, 1, 1.1, 10, 11, 10.5, -100, -50, 666]), axis=1)
-    pointset1 = np.vstack((pointset1, np.ones((1, 6))*9999))
+    pointset1 = np.vstack((pointset1, np.ones((6, 1))*9999))
     pointset1 = np.tile(pointset1, (n_chunks, 1))
     pointset2 = np.ones(pointset1.shape) * 9999
 
@@ -362,6 +362,6 @@ if __name__ == '__main__':
     test_two_chunks_two_dim()
     test_two_chunks()
     test_three_chunks()
-    test_one_dim_longer_sequence
+    test_one_dim_longer_sequence()
     test_two_dim_longer_sequence()
     test_multiple_runs_two_dim()
