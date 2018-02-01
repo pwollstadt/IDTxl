@@ -468,10 +468,10 @@ def test_local_values():
     # Estimate local values
     settings = {'local_values': True}
     est_cmi = OpenCLKraskovCMI(settings=settings)
-    mi = est_cmi.estimate(source, target, source_uncorr, n_chunks=n_chunks)
+    cmi = est_cmi.estimate(source, target, source_uncorr, n_chunks=n_chunks)
 
     est_mi = OpenCLKraskovMI(settings=settings)
-    cmi = est_mi.estimate(source, target, n_chunks=n_chunks)
+    mi = est_mi.estimate(source, target, n_chunks=n_chunks)
 
     mi_ch1 = np.mean(mi[0:chunklength])
     mi_ch2 = np.mean(mi[chunklength:])
@@ -487,10 +487,10 @@ def test_local_values():
     cmi = est_mi.estimate(source, target, n_chunks=n_chunks)
 
     # Report results
-    print('OpenCL MI result: {0:.4f} nats (chunk 1); {1:.4f} nats (chunk 2)'
+    print('OpenCL MI result: {0:.4f} nats (chunk 1); {1:.4f} nats (chunk 2) '
           'expected to be close to {2:.4f} nats for uncorrelated '
           'Gaussians.'.format(mi_ch1, mi_ch2, expec_mi))
-    print('OpenCL CMI result: {0:.4f} nats (chunk 1); {1:.4f} nats (chunk 2)'
+    print('OpenCL CMI result: {0:.4f} nats (chunk 1); {1:.4f} nats (chunk 2) '
           'expected to be close to {2:.4f} nats for uncorrelated '
           'Gaussians.'.format(cmi_ch1, cmi_ch2, expec_mi))
 
@@ -534,8 +534,8 @@ def test_insufficient_no_points():
 
 
 if __name__ == '__main__':
-    test_amd_data_padding()
     test_local_values()
+    test_amd_data_padding()
     test_mi_correlated_gaussians_two_chunks()
     test_cmi_uncorrelated_gaussians_unequal_dims()
     test_cmi_uncorrelated_gaussians_three_dims()
