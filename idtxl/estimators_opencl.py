@@ -454,9 +454,9 @@ class OpenCLKraskovMI(OpenCLKraskov):
                                          dtype=np.float64)
             idx = 0
             for c in range(n_chunks):
-                mi = (digamma(kraskov_k) + digamma(chunklength) - np.mean(
-                       digamma(count_var1[c*chunklength:(c+1)*chunklength]+1) +
-                       digamma(count_var2[c*chunklength:(c+1)*chunklength]+1)))
+                mi = (digamma(kraskov_k) + digamma(chunklength) -
+                       digamma(count_var1[c*chunklength:(c+1)*chunklength]+1) -
+                       digamma(count_var2[c*chunklength:(c+1)*chunklength]+1))
                 mi_array[idx:idx+chunklength] = mi
                 idx += chunklength
 
