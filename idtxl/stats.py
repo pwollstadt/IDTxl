@@ -11,6 +11,99 @@ from . import idtxl_utils as utils
 VERBOSE = True
 
 
+def ais_fdr(settings=None, *results):
+    """Perform FDR-correction on results of network AIS estimation.
+
+    Perform correction of the false discovery rate (FDR) after estimation of
+    active information storage (AIS) for all processes in the network. FDR
+    correction is applied by correcting the AIS estimate's omnibus p-values for
+    individual processes/nodes in the network.
+
+    Input can be a list of partial results to combine results from parallel
+    analysis.
+
+    References:
+
+    - Genovese, C.R., Lazar, N.A., & Nichols, T. (2002). Thresholding of
+      statistical maps in functional neuroimaging using the false discovery
+      rate. Neuroimage, 15(4), 870-878.
+
+    Args:
+        settings : dict [optional]
+            parameters for statistical testing with entries:
+
+            - alpha_fdr : float [optional] - critical alpha level
+              (default=0.05)
+            - fdr_constant : int [optional] - choose one of two constants used
+              for calculating the FDR-thresholds according to Genovese (2002):
+              1 will divide alpha by 1, 2 will divide alpha by the sum_i(1/i);
+              see the paper for details on the assumptions (default=2)
+
+        results : instances of ResultsSingleProcessAnalysis
+            results of network AIS estimation, see documentation of
+            ResultsSingleProcessAnalysis()
+
+    Returns:
+        ResultsSingleProcessAnalysis object
+            input results objects pruned of non-significant estimates
+    """
+    if settings is None:
+        settings = {}
+    # Set defaults and get parameters from settings dictionary
+    alpha = settings.get('alpha_fdr', 0.05)
+    constant = settings.get('fdr_constant', 2)
+
+    # Combine results into single results dict.
+    if len(results) > 1:
+        results_comb = cp.deepcopy(results[0])
+        results_comb.combine_results(*results[1:])
+    else:
+        results_comb = cp.deepcopy(results[0])
+
+    # Collect p-values of whole processes (determined by the omnibus test).
+    pval = np.arange(0)
+    process_idx = np.arange(0).astype(int)
+    n_perm = np.arange(0).astype(int)
+    cands = []
+    for process in results_comb.processes_analysed:
+        if results_comb.single_process[process].ais_sign:
+            pval = np.append(
+                pval, results_comb.single_process[process].ais_pval)
+            process_idx = np.append(process_idx, process)
+            n_perm = np.append(
+                    n_perm, results_comb.settings.n_perm_mi)
+
+    if pval.size == 0:
+        print('No links in final results. Return ...')
+        results_comb._add_fdr(None)
+        return results_comb
+
+    sign, thresh = _perform_fdr_corretion(pval, constant, alpha)
+
+    # If the number of permutations for calculating p-values for individual
+    # variables is too low, return without performing any correction.
+    if (1 / min(n_perm)) > thresh[0]:
+        print('WARNING: Number of permutations (''n_perm_max_seq'') for at '
+              'least one target is too low to allow for FDR correction '
+              '(FDR-threshold: {0:.4f}, min. theoretically possible p-value: '
+              '{1}).'.format(thresh[0], 1 / min(n_perm)))
+        results_comb._add_fdr(None)
+        return results_comb
+
+    # Go over list of all candidates and remove non-significant results from
+    # the results object. Create a copy of the results object to leave the
+    # original intact.
+    fdr = cp.deepcopy(results_comb.single_process)
+    for s in range(sign.shape[0]):
+        if not sign[s]:
+            t = process_idx[s]
+            fdr[t].selected_vars = []
+            fdr[t].ais_pval = 1
+            fdr[t].ais_sign = False
+    results_comb._add_fdr(fdr, alpha, constant)
+    return results_comb
+
+
 def network_fdr(settings=None, *results):
     """Perform FDR-correction on results of network inference.
 
@@ -43,13 +136,13 @@ def network_fdr(settings=None, *results):
               1 will divide alpha by 1, 2 will divide alpha by the sum_i(1/i);
               see the paper for details on the assumptions (default=2)
 
-        results : list of dicts
-            network inference results from .analyse_network methods, where each
-            dict entry represents results for one target node
+        results : instances of ResultsNetworkInference
+            results of network inference, see documentation of
+            ResultsNetworkInference()
 
     Returns:
-        dict
-            input results structure pruned of non-significant links.
+        ResultsNetworkInference object
+            input object pruned of non-significant links
     """
     if settings is None:
         settings = {}
@@ -102,24 +195,7 @@ def network_fdr(settings=None, *results):
         results_comb._add_fdr(None)
         return results_comb
 
-    # Sort all p-values in ascending order.
-    sort_idx = np.argsort(pval)
-    pval.sort()
-
-    # Calculate threshold
-    n = pval.size
-    if constant == 2:  # pick the requested constant (see Genovese, p.872)
-        if n < 1000:
-            const = sum(1 / np.arange(1, n + 1))
-        else:
-            const = np.log(n) + np.e  # aprx. harmonic sum with Euler's number
-    elif constant == 1:
-        # This is less strict than the other one and corresponds to a
-        # Bonoferroni-correction for the first p-value, however, it makes more
-        # strict assumptions on the distribution of p-values, while constant 2
-        # works for any joint distribution of the p-values.
-        const = 1
-    thresh = (np.arange(1, n + 1) / n) * alpha / const
+    sign, thresh = _perform_fdr_corretion(pval, constant, alpha)
 
     # If the number of permutations for calculating p-values for individual
     # variables is too low, return without performing any correction.
@@ -131,15 +207,9 @@ def network_fdr(settings=None, *results):
         results_comb._add_fdr(None)
         return results_comb
 
-    # Compare data to threshold.
-    sign = pval <= thresh
-    if np.invert(sign).any():
-        first_false = np.where(np.invert(sign))[0][0]
-        sign[first_false:] = False  # avoids false positives due to equal pvals
-
-    # Go over list of all candidates and remove them from the results dict.
-    # Create a copy of the results dict to leave the original intact.
-    sign = sign[sort_idx]
+    # Go over list of all candidates and remove non-significant results from
+    # the results object. Create a copy of the results object to leave the
+    # original intact.
     fdr = cp.deepcopy(results_comb.single_target)
     for s in range(sign.shape[0]):
         if not sign[s]:
@@ -165,6 +235,64 @@ def network_fdr(settings=None, *results):
                     fdr[t].selected_vars_full.index(cand))
     results_comb._add_fdr(fdr, alpha, correct_by_target, constant)
     return results_comb
+
+
+def _perform_fdr_corretion(pval, constant, alpha):
+    """Calculate sequential threshold for FDR-correction.
+
+    Calculate sequential thresholds for FDR-correction of p-values. The
+    constant defines how the threshold is calculated. See Genovese (2002) for
+    details.
+
+    References:
+
+    - Genovese, C.R., Lazar, N.A., & Nichols, T. (2002). Thresholding of
+      statistical maps in functional neuroimaging using the false discovery
+      rate. Neuroimage, 15(4), 870-878.
+
+    Args:
+        pval : numpy array
+            p-values to be corrected
+        alpha : float
+            critical alpha level
+        fdr_constant : int
+            one of two constants used for calculating the FDR-thresholds
+            according to Genovese (2002): 1 will divide alpha by 1, 2 will
+            divide alpha by the sum_i(1/i); see the paper for details on the
+            assumptions (default=2)
+
+    Returns:
+        array of bools
+            significance of p-values
+        array of floats
+            FDR-thresholds for each p-value
+    """
+    # Sort all p-values in ascending order.
+    sort_idx = np.argsort(pval)
+    pval.sort()
+
+    # Calculate threshold
+    n = pval.size
+    if constant == 2:  # pick the requested constant (see Genovese, p.872)
+        if n < 1000:
+            const = sum(1 / np.arange(1, n + 1))
+        else:
+            const = np.log(n) + np.e  # aprx. harmonic sum with Euler's number
+    elif constant == 1:
+        # This is less strict than the other one and corresponds to a
+        # Bonoferroni-correction for the first p-value, however, it makes more
+        # strict assumptions on the distribution of p-values, while constant 2
+        # works for any joint distribution of the p-values.
+        const = 1
+    thresh = (np.arange(1, n + 1) / n) * alpha / const
+
+    # Compare data to threshold.
+    sign = pval <= thresh
+    if np.invert(sign).any():
+        first_false = np.where(np.invert(sign))[0][0]
+        sign[first_false:] = False  # avoids false positives due to equal pvals
+    sign = sign[sort_idx]  # restore original ordering of significance values
+    return sign, thresh
 
 
 def omnibus_test(analysis_setup, data):

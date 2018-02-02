@@ -8,9 +8,10 @@ import pytest
 import numpy as np
 from idtxl import stats
 from idtxl.multivariate_te import MultivariateTE
+from idtxl.active_information_storage import ActiveInformationStorage
 from idtxl.estimators_jidt import JidtDiscreteCMI
 from idtxl.data import Data
-from idtxl.results import ResultsNetworkInference
+from idtxl.results import ResultsNetworkInference, ResultsSingleProcessAnalysis
 
 
 def test_omnibus_test():
@@ -103,7 +104,7 @@ def test_network_fdr():
                                    sources=[1, 2], target=0)
         res_pruned = stats.network_fdr(settings, res_1, res_2)
         assert (not res_pruned.single_target[2].selected_vars_sources), (
-            'Target ')
+            'Target 2 has not been pruned from results.')
 
         for k in res_pruned.targets_analysed:
             if res_pruned.single_target[k]['selected_sources_pval'] is None:
@@ -125,6 +126,65 @@ def test_network_fdr():
     res_2.settings['n_perm_max_seq'] = 2
     res_pruned = stats.network_fdr(settings, res_1, res_2)
     assert not res_pruned.fdr_correction.adjacency_matrix.all(), (
+        'Adj. matrix should be empty no. permutations too low.')
+
+
+def test_ais_fdr():
+    settings = {'n_perm_max_seq': 1000, 'n_perm_mi': 1000}
+    process_0 = {
+        'selected_vars': [(0, 1), (0, 2), (0, 3)],
+        'ais_pval': 0.0001,
+        'ais_sign': True}
+    process_1 = {
+        'selected_vars': [(1, 0), (1, 1), (1, 2)],
+        'ais_pval': 0.031,
+        'ais_sign': True}
+    process_2 = {
+        'selected_vars': [],
+        'ais_pval': 0.41,
+        'ais_sign': False}
+    res_1 = ResultsSingleProcessAnalysis(
+        n_nodes=3, n_realisations=1000, normalised=True)
+    res_1._add_single_result(process=0, settings=settings, results=process_0)
+    res_1._add_single_result(process=1, settings=settings, results=process_1)
+    res_2 = ResultsSingleProcessAnalysis(
+        n_nodes=3, n_realisations=1000, normalised=True)
+    res_2._add_single_result(process=2, settings=settings, results=process_2)
+
+    settings = {
+        'cmi_estimator': 'JidtKraskovCMI',
+        'alpha_fdr': 0.05,
+        'max_lag': 3}
+    data = Data()
+    data.generate_mute_data(n_samples=100, n_replications=3)
+    analysis_setup = ActiveInformationStorage()
+    analysis_setup._initialise(settings=settings, data=data, process=1)
+    res_pruned = stats.ais_fdr(settings, res_1, res_2)
+    assert (not res_pruned.single_process[2].selected_vars_sources), (
+        'Process 2 has not been pruned from results.')
+
+    alpha_fdr = res_pruned.settings.alpha_fdr
+    for k in res_pruned.processes_analysed:
+        if not res_pruned.single_process[k]['ais_sign']:
+            assert (res_pruned.single_process[k]['ais_pval'] > alpha_fdr), (
+                'P-value of non-sign. AIS is not 1.')
+            assert (not res_pruned.single_process[k]['selected_vars']), (
+                'List of significant past variables is not empty')
+        else:
+            assert (res_pruned.single_process[k]['ais_pval'] < 1), (
+                'P-value of sign. AIS is not smaller 1.')
+            assert (res_pruned.single_process[k]['selected_vars']), (
+                'List of significant past variables is empty')
+
+    # Test function call for single result
+    res_pruned = stats.ais_fdr(settings, res_1)
+    print('successful call on single result dict.')
+
+    # Test None result for insufficient no. permutations
+    res_1.settings['n_perm_mi'] = 2
+    res_2.settings['n_perm_mi'] = 2
+    res_pruned = stats.ais_fdr(settings, res_1, res_2)
+    assert not res_pruned.fdr_correction.significant_processes.all(), (
         'Adj. matrix should be empty no. permutations too low.')
 
 
@@ -269,6 +329,7 @@ def test_analytical_surrogates():
 
 
 if __name__ == '__main__':
+    test_ais_fdr()
     test_analytical_surrogates()
     test_data_type()
     test_network_fdr()

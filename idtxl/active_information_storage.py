@@ -84,7 +84,15 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         Args:
             settings : dict
                 parameters for estimation and statistical testing, see
-                documentation of analyse_single_process() for details
+                documentation of analyse_single_target() for details, settings
+                can further contain
+
+                - verbose : bool [optional] - toggle console output
+                  (default=True)
+                - fdr_correction : bool [optional] - correct results on the
+                  network level, see documentation of stats.ais_fdr() for
+                  details (default=True)
+
             data : Data instance
                 raw data for analysis
             process : list of int | 'all'
@@ -100,6 +108,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         """
         # Set defaults for AIS estimation.
         settings.setdefault('verbose', True)
+        settings.setdefault('fdr_correction', True)
 
         # Check provided processes for analysis.
         if processes == 'all':
@@ -127,7 +136,11 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         # analysis.
         results.data.n_realisations = res_single.data.n_realisations
 
-        # TODO FDR-correction on the network level?
+        # Perform FDR-correction on the network level. Add FDR-corrected
+        # results as an extra field. Network_fdr/combine_results internally
+        # creates a deep copy of the results.
+        if settings['fdr_correction']:
+            results = stats.ais_fdr(settings, results)
         return results
 
     def analyse_single_process(self, settings, data, process):
