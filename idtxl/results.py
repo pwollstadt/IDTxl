@@ -111,7 +111,6 @@ class Results():
         return nx.from_numpy_matrix(
             adjacency_matrix, create_using=nx.DiGraph())
 
-
     def _export_brain_net(self, adjacency_matrix, mni_coord, file_name,
                           **kwargs):
         """Export network to BrainNet Viewer.
@@ -315,7 +314,8 @@ class ResultsSingleProcessAnalysis(Results):
         processes_analysed : list
             list of processes analyzed
         significant_processes : np array
-            indicates for each process whether AIS is significant
+            indicates for each process whether AIS is significant (equivalent
+            to the adjacency matrix returned for network inference)
         fdr_correction : dict
             FDR-corrected results, see documentation of network inference
             algorithms and stats.network_fdr
@@ -351,9 +351,14 @@ class ResultsSingleProcessAnalysis(Results):
         self.settings['alpha_fdr'] = alpha
         self.settings['fdr_correct_by_target'] = correct_by_target
         self.settings['fdr_constant'] = constant
-        # Add results of FDR-correction
+        # Add results of FDR-correction. FDR-correction can be None if
+        # correction is impossible due to the number of permutations in
+        # individual analysis being too low to allow for individual p-values
+        # to reach the FDR-thresholds. Add empty results in that case.
         if fdr is None:
             self.fdr_correction = DotDict()
+            self.fdr_correction.significant_processes = np.zeros(
+                self.data.n_nodes, dtype=bool)
         else:
             self.fdr_correction = DotDict(fdr)
             self.fdr_correction.significant_processes = np.zeros(
@@ -372,7 +377,7 @@ class ResultsSingleProcessAnalysis(Results):
         for p in update_processes:
             if fdr:
                 self.fdr_correction.significant_processes[p] = (
-                    self.fdr_correction.single_process[p].ais_sign)
+                    self.fdr_correction[p].ais_sign)
             else:
                 self.significant_processes[p] = self.single_process[p].ais_sign
 
@@ -741,7 +746,10 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
         self.settings['alpha_fdr'] = alpha
         self.settings['fdr_correct_by_target'] = correct_by_target
         self.settings['fdr_constant'] = constant
-        # Add results of FDR-correction
+        # Add results of FDR-correction. FDR-correction can be None if
+        # correction is impossible due to the number of permutations in
+        # individual analysis being too low to allow for individual p-values
+        # to reach the FDR-thresholds. Add empty results in that case.
         if fdr is None:
             self.fdr_correction = DotDict()
             self.fdr_correction['adjacency_matrix'] = np.zeros(
