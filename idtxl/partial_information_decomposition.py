@@ -127,7 +127,8 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             results.combine_results(res_single)
         # Get no. realisations actually used for estimation from single target
         # analysis.
-        results.data.n_realisations = res_single.data.n_realisations
+        results.data_properties.n_realisations = (
+            res_single.data_properties.n_realisations)
         return results
 
     def analyse_single_target(self, settings, data, target, sources):

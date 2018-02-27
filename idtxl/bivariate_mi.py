@@ -154,7 +154,8 @@ class BivariateMI(NetworkInferenceMI, NetworkInferenceBivariate):
 
         # Get no. realisations actually used for estimation from single target
         # analysis.
-        results.data.n_realisations = res_single.data.n_realisations
+        results.data_properties.n_realisations = (
+            res_single.data_properties.n_realisations)
 
         # Perform FDR-correction on the network level. Add FDR-corrected
         # results as an extra field. Network_fdr/combine_results internally
