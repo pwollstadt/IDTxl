@@ -95,7 +95,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
 
             data : Data instance
                 raw data for analysis
-            process : list of int | 'all'
+            processes : list of int | 'all'
                 index of processes (default='all');
                 if 'all', AIS is estimated for all processes;
                 if list of int, AIS is estimated for processes specified in the

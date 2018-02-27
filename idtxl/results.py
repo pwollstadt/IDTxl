@@ -73,7 +73,7 @@ class Results():
         settings : dict
             settings used for estimation of information theoretic measures and
             statistical testing
-        data : dict
+        data_properties: dict
             data properties, contains
 
                 - n_nodes : int - total number of nodes in the network
@@ -88,7 +88,7 @@ class Results():
 
     def __init__(self, n_nodes, n_realisations, normalised):
         self.settings = DotDict({})
-        self.data = DotDict({
+        self.data_properties = DotDict({
             'n_nodes': n_nodes,
             'n_realisations': n_realisations,
             'normalised': normalised
@@ -97,8 +97,8 @@ class Results():
     def _print_to_console(self, adjacency_matrix, measure):
         """Print adjacency matrix to console."""
         link_found = False
-        for s in range(self.data.n_nodes):
-            for t in range(self.data.n_nodes):
+        for s in range(self.data_properties.n_nodes):
+            for t in range(self.data_properties.n_nodes):
                 if adjacency_matrix[s, t]:
                     print('\t{0} -> {1}, {2}: {3}'.format(
                         s, t, measure, adjacency_matrix[s, t]))
@@ -192,10 +192,10 @@ class Results():
 
     def _check_result(self, process, settings):
         # Check if new result process is part of the network
-        if process > (self.data.n_nodes - 1):
+        if process > (self.data_properties.n_nodes - 1):
             raise RuntimeError('Can not add single result - process {0} is not'
                                ' in no. nodes in the data ({1}).'.format(
-                                   process, self.data.n_nodes))
+                                   process, self.data_properties.n_nodes))
         # Don't add duplicate processes
         if self._is_duplicate_process(process):
             raise RuntimeError('Can not add single result - results for target'
@@ -284,7 +284,7 @@ class ResultsSingleProcessAnalysis(Results):
         settings : dict
             settings used for estimation of information theoretic measures and
             statistical testing
-        data : dict
+        data_properties: dict
             data properties, contains
 
                 - n_nodes : int - total number of nodes in the network
@@ -313,9 +313,6 @@ class ResultsSingleProcessAnalysis(Results):
 
         processes_analysed : list
             list of processes analyzed
-        significant_processes : np array
-            indicates for each process whether AIS is significant (equivalent
-            to the adjacency matrix returned for network inference)
         fdr_correction : dict
             FDR-corrected results, see documentation of network inference
             algorithms and stats.network_fdr
@@ -326,7 +323,6 @@ class ResultsSingleProcessAnalysis(Results):
         super().__init__(n_nodes, n_realisations, normalised)
         self.single_process = {}
         self.processes_analysed = []
-        self.significant_processes = np.zeros(self.data.n_nodes, dtype=bool)
         self._add_fdr(None)
 
     @property
@@ -344,7 +340,6 @@ class ResultsSingleProcessAnalysis(Results):
         self.settings.update(DotDict(settings))
         self.single_process[process] = DotDict(results)
         self.processes_analysed = list(self.single_process.keys())
-        self._update_significant_processes(process)
 
     def _add_fdr(self, fdr, alpha=None, correct_by_target=None, constant=None):
         # Add settings of FDR-correction
@@ -357,29 +352,44 @@ class ResultsSingleProcessAnalysis(Results):
         # to reach the FDR-thresholds. Add empty results in that case.
         if fdr is None:
             self.fdr_correction = DotDict()
-            self.fdr_correction.significant_processes = np.zeros(
-                self.data.n_nodes, dtype=bool)
         else:
             self.fdr_correction = DotDict(fdr)
-            self.fdr_correction.significant_processes = np.zeros(
-                self.data.n_nodes, dtype=bool)
-            self._update_significant_processes(fdr=True)
 
-    def _update_significant_processes(self, process=None, fdr=False):
-        """Update list of processes with significant results."""
-        # If no process is given, build list from scratch, else: just update
-        # the requested process to save time.
-        if process is None:
-            update_processes = self.processes_analysed
-        else:
-            update_processes = [process]
+    def get_significant_processes(self, fdr):
+        """Return statistically-significant processes.
 
-        for p in update_processes:
-            if fdr:
-                self.fdr_correction.significant_processes[p] = (
-                    self.fdr_correction[p].ais_sign)
+        Indicates for each process whether AIS is statistically significant
+        (equivalent to the adjacency matrix returned for network inference)
+
+        Args:
+            fdr : bool
+                print FDR-corrected results, see documentation of network
+                inference algorithms and stats.network_fdr
+
+        Returns:
+            numpy array
+                Statistical significance for each process
+        """
+
+        if fdr:
+            if self.settings.fdr_correction:
+                significant_processes = np.array(
+                    [self.fdr_correction[p].ais_sign
+                     for p in self.processes_analysed],
+                    dtype=bool
+                )
             else:
-                self.significant_processes[p] = self.single_process[p].ais_sign
+                print("""WARNING: FDR correction was not performed.
+                         Returning empty array.""")
+                significant_processes = np.array([], dtype=bool)
+        else:
+            significant_processes = np.array(
+                [self.single_process[p].ais_sign
+                 for p in self.processes_analysed],
+                dtype=bool
+            )
+        
+        return significant_processes
 
 
 class ResultsNetworkAnalysis(Results):
@@ -472,7 +482,7 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
         settings : dict
             settings used for estimation of information theoretic measures and
             statistical testing
-        data : dict
+        data_properties: dict
             data properties, contains
 
                 - n_nodes : int - total number of nodes in the network
@@ -520,7 +530,7 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
     def __init__(self, n_nodes, n_realisations, normalised):
         super().__init__(n_nodes, n_realisations, normalised)
         self.adjacency_matrix = np.zeros(
-            (self.data.n_nodes, self.data.n_nodes), dtype=int)
+            (self.data_properties.n_nodes, self.data_properties.n_nodes), dtype=int)
         self._add_fdr(None)
 
     def get_target_delays(self, target, find_delay='max_te', fdr=False):
@@ -753,11 +763,11 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
         if fdr is None:
             self.fdr_correction = DotDict()
             self.fdr_correction['adjacency_matrix'] = np.zeros(
-                (self.data.n_nodes, self.data.n_nodes), dtype=int)
+                (self.data_properties.n_nodes, self.data_properties.n_nodes), dtype=int)
         else:
             self.fdr_correction = DotDict(fdr)
             self.fdr_correction.adjacency_matrix = np.zeros(
-                (self.data.n_nodes, self.data.n_nodes), dtype=int)
+                (self.data_properties.n_nodes, self.data_properties.n_nodes), dtype=int)
             self._update_adjacency_matrix(fdr=True)
 
 
@@ -775,7 +785,7 @@ class ResultsPartialInformationDecomposition(ResultsNetworkAnalysis):
         settings : dict
             settings used for estimation of information theoretic measures and
             statistical testing
-        data : dict
+        data_properties: dict
             data properties, contains
 
                 - n_nodes : int - total number of nodes in the network
@@ -816,7 +826,7 @@ class ResultsPartialInformationDecomposition(ResultsNetworkAnalysis):
     def __init__(self, n_nodes, n_realisations, normalised):
         super().__init__(n_nodes, n_realisations, normalised)
         self.adjacency_matrix = np.zeros(
-            (self.data.n_nodes, self.data.n_nodes), dtype=int)
+            (self.data_properties.n_nodes, self.data_properties.n_nodes), dtype=int)
 
     def _update_adjacency_matrix(self, target):
         sources = self.get_target_sources(target)
@@ -847,7 +857,7 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
             significant links
         adjacency_matrix_pvalue : 2D numpy array
             p-values for significant links
-        data : dict
+        data_properties: dict
             data properties, contains
 
                 - n_nodes : int - total number of nodes in the network
@@ -877,13 +887,13 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
     def __init__(self, n_nodes, n_realisations, normalised):
         super().__init__(n_nodes, n_realisations, normalised)
         self.adjacency_matrix_pvalue = np.ones(
-            (self.data.n_nodes, self.data.n_nodes), dtype=float)
+            (self.data_properties.n_nodes, self.data_properties.n_nodes), dtype=float)
         self.adjacency_matrix_comparison = np.zeros(
-            (self.data.n_nodes, self.data.n_nodes), dtype=bool)
+            (self.data_properties.n_nodes, self.data_properties.n_nodes), dtype=bool)
         self.adjacency_matrix_union = np.zeros(
-            (self.data.n_nodes, self.data.n_nodes), dtype=int)
+            (self.data_properties.n_nodes, self.data_properties.n_nodes), dtype=int)
         self.adjacency_matrix_diff_abs = np.zeros(
-            (self.data.n_nodes, self.data.n_nodes), dtype=float)
+            (self.data_properties.n_nodes, self.data_properties.n_nodes), dtype=float)
 
     def _add_results(self, union_network, results, settings):
         # Check if results have already been added to this instance.
