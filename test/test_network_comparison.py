@@ -196,8 +196,8 @@ def test_create_union_network():
 
     src_1 = [(0, 2), (0, 1)]
     src_2 = [(0, 4), (0, 5)]
-    res_0.single_target[1].selected_vars_sources = src_1
-    res_1.single_target[1].selected_vars_sources = src_2
+    res_0._single_target[1].selected_vars_sources = src_1
+    res_1._single_target[1].selected_vars_sources = src_2
 
     comp._create_union(res_0, res_1)
     ref_targets = np.array([0, 1, 2])
@@ -206,17 +206,17 @@ def test_create_union_network():
     assert np.array([
         True for i in ref_targets if i in comp.union.keys()]).all(), (
             'Not all targets contained in union network.')
-    assert comp.union['max_lag'] == res_0.single_target[1].current_value[1], (
+    assert comp.union['max_lag'] == res_0._single_target[1].current_value[1], (
         'The max. lag was not defined correctly.')
 
     src_union = comp._idx_to_lag(
-        comp.union.single_target[1]['selected_vars_sources'],
+        comp.union._single_target[1]['selected_vars_sources'],
         comp.union['max_lag'])
     assert src_union == (src_1 + src_2), (
         'Sources for target 1 were not combined correctly.')
 
     # unequal current values in single networks
-    res_0.single_target[1].current_value = (1, 7)  # the original is (1, 5)
+    res_0._single_target[1].current_value = (1, 7)  # the original is (1, 5)
     with pytest.raises(ValueError):
         comp._create_union(res_0, res_1)
 
@@ -313,7 +313,7 @@ def test_calculate_cmi_all_links():
     comp = NetworkComparison()
     comp._initialise(comp_settings)
     comp._create_union(res_0)
-    comp.union.single_target[1]['selected_vars_sources'] = [(0, 4)]
+    comp.union._single_target[1]['selected_vars_sources'] = [(0, 4)]
     cmi = comp._calculate_cmi_all_links(data)
     cmi_expected = np.log(1 / (1 - cov ** 2))
     print('correlated Gaussians: TE result {0:.4f} bits; expected to be '
@@ -406,6 +406,7 @@ def test_p_value_union():
 
 
 def test_compare_links_within():
+    """Test comparison of two links within a single network."""
     data = Data()
     data.generate_mute_data(100, 5)
 
@@ -441,14 +442,14 @@ def test_compare_links_within():
                                         network=res,
                                         data=data)
     for r in [res_indep, res_dep]:
-        assert (r.adjacency_matrix_diff_abs[link_a[0], link_a[1]] ==
-                r.adjacency_matrix_diff_abs[link_b[0], link_b[1]]), (
+        assert (r.get_adjacency_matrix('diff_abs')[link_a[0], link_a[1]] ==
+                r.get_adjacency_matrix('diff_abs')[link_b[0], link_b[1]]), (
                     'Absolute differences for link comparison not equal.')
-        assert (r.adjacency_matrix_comparison[link_a[0], link_a[1]] ==
-                r.adjacency_matrix_comparison[link_b[0], link_b[1]]), (
+        assert (r.get_adjacency_matrix('comparison')[link_a[0], link_a[1]] ==
+                r.get_adjacency_matrix('comparison')[link_b[0], link_b[1]]), (
                     'Comparison results for link comparison not equal.')
-        assert (r.adjacency_matrix_pvalue[link_a[0], link_a[1]] ==
-                r.adjacency_matrix_pvalue[link_b[0], link_b[1]]), (
+        assert (r.get_adjacency_matrix('pvalue')[link_a[0], link_a[1]] ==
+                r.get_adjacency_matrix('pvalue')[link_b[0], link_b[1]]), (
                     'P-value for link comparison not equal.')
         assert (r.targets_analysed == [link_a[1], link_b[1]]).all(), (
                 'Analysed targets are not correct.')
@@ -463,7 +464,6 @@ def test_compare_links_within():
 
 def test_tails():
     """Test one- and two-tailed testing for all stats types."""
-
     data = Data()
     data.generate_mute_data(100, 5)
 
@@ -496,8 +496,8 @@ def test_tails():
                 network_set_b=np.array((res_2, res_3)),
                 data_set_a=np.array((data, data)),
                 data_set_b=np.array((data, data)))
-            print(c_within.adjacency_matrix_pvalue)
-            print(c_between.adjacency_matrix_pvalue)
+            print(c_within.get_adjacency_matrix('pvalue'))
+            print(c_between.get_adjacency_matrix('pvalue'))
 
 
 if __name__ == '__main__':

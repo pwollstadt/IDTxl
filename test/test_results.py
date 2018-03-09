@@ -90,21 +90,21 @@ def test_results_network_inference():
 
     # Check estimated values
     for res in res_te:
-        est_te = res.single_target[1].omnibus_te
+        est_te = res._single_target[1].omnibus_te
         assert np.isclose(est_te, expected_mi, atol=0.05), (
             'Estimated TE for discrete variables is not correct. Expected: '
             '{0}, Actual results: {1}.'.format(expected_mi, est_te))
     for res in res_mi:
-        est_mi = res.single_target[1].omnibus_mi
+        est_mi = res._single_target[1].omnibus_mi
         assert np.isclose(est_mi, expected_mi, atol=0.05), (
             'Estimated TE for discrete variables is not correct. Expected: '
             '{0}, Actual results: {1}.'.format(expected_mi, est_mi))
 
-    est_te = res_network_multi_te.single_target[2].omnibus_te
+    est_te = res_network_multi_te._single_target[2].omnibus_te
     assert np.isclose(est_te, expected_mi, atol=0.05), (
         'Estimated TE for discrete variables is not correct. Expected: {0}, '
         'Actual results: {1}.'.format(expected_mi, est_te))
-    est_mi = res_network_multi_mi.single_target[2].omnibus_mi
+    est_mi = res_network_multi_mi._single_target[2].omnibus_mi
     assert np.isclose(est_mi, expected_mi, atol=0.05), (
         'Estimated TE for discrete variables is not correct. Expected: {0}, '
         'Actual results: {1}.'.format(expected_mi, est_mi))
@@ -114,23 +114,24 @@ def test_results_network_inference():
     n_realisations = n - delay - max(
         settings['max_lag_sources'], settings['max_lag_target'])
     for res in res_all:
-        assert res.data.n_nodes == n_nodes, 'Incorrect no. nodes.'
-        assert res.data.n_nodes == n_nodes, 'Incorrect no. nodes.'
-        assert res.data.n_realisations == n_realisations, (
+        assert res.data_properties.n_nodes == n_nodes, 'Incorrect no. nodes.'
+        assert res.data_properties.n_nodes == n_nodes, 'Incorrect no. nodes.'
+        assert res.data_properties.n_realisations == n_realisations, (
             'Incorrect no. realisations.')
-        assert res.data.n_realisations == n_realisations, (
+        assert res.data_properties.n_realisations == n_realisations, (
             'Incorrect no. realisations.')
-        assert res.data.normalised == normalisation, (
+        assert res.data_properties.normalised == normalisation, (
             'Incorrect value for data normalisation.')
-        assert res.data.normalised == normalisation, (
+        assert res.data_properties.normalised == normalisation, (
             'Incorrect value for data normalisation.')
-        assert res.adjacency_matrix.shape[0] == n_nodes, (
+        adj_matrix = res.get_adjacency_matrix('binary')
+        assert adj_matrix.shape[0] == n_nodes, (
             'Incorrect number of rows in adjacency matrix.')
-        assert res.adjacency_matrix.shape[1] == n_nodes, (
+        assert adj_matrix.shape[1] == n_nodes, (
             'Incorrect number of columns in adjacency matrix.')
-        assert res.adjacency_matrix.shape[0] == n_nodes, (
+        assert adj_matrix.shape[0] == n_nodes, (
             'Incorrect number of rows in adjacency matrix.')
-        assert res.adjacency_matrix.shape[1] == n_nodes, (
+        assert adj_matrix.shape[1] == n_nodes, (
             'Incorrect number of columns in adjacency matrix.')
 
 
@@ -178,14 +179,14 @@ def test_add_single_result():
     with pytest.raises(RuntimeError):
         res_network._add_single_result(target=0,
                                        settings=settings_test,
-                                       results=res_network.single_target[1])
+                                       results=res_network._single_target[1])
     # Test adding a target with additional settings, results.settings should be
     # updated
     settings_test = cp.deepcopy(res_network.settings)
     settings_test.new_setting = 'Test'
     res_network._add_single_result(target=0,
                                    settings=settings_test,
-                                   results=res_network.single_target[1])
+                                   results=res_network._single_target[1])
     assert 'new_setting' in res_network.settings.keys(), (
         'Settings dict was not updated.')
     assert res_network.settings.new_setting == 'Test', (
@@ -242,16 +243,16 @@ def test_delay_reconstruction():
         settings=settings, data=data, target=2))
     res_network.combine_results(nw.analyse_single_target(
         settings=settings, data=data, target=3))
-    print(res_network.adjacency_matrix)
-    assert res_network.adjacency_matrix[0, 1] == delay_1, (
+    print(res_network.get_adjacency_matrix('max_te_lag'))
+    assert res_network.get_adjacency_matrix('max_te_lag')[0, 1] == delay_1, (
         'Delay 1 was not reconstructed correctly.')
-    assert res_network.adjacency_matrix[0, 2] == delay_2, (
+    assert res_network.get_adjacency_matrix('max_te_lag')[0, 2] == delay_2, (
         'Delay 2 was not reconstructed correctly.')
-    assert res_network.adjacency_matrix[0, 3] == delay_3, (
+    assert res_network.get_adjacency_matrix('max_te_lag')[0, 3] == delay_3, (
         'Delay 3 was not reconstructed correctly.')
 
     for target in range(1, 4):
-        est_mi = res_network.single_target[target].omnibus_te
+        est_mi = res_network._single_target[target].omnibus_te
         assert np.isclose(est_mi, expected_mi, atol=0.05), (
             'Estimated TE for target {0} is not correct. Expected: {1}, '
             'Actual results: {2}.'.format(target, expected_mi, est_mi))
@@ -285,7 +286,7 @@ def test_console_output():
         }
     nw = MultivariateTE()
     r = nw.analyse_network(settings, data, targets='all', sources='all')
-    r.print_to_console(fdr=False)
+    r.print_edge_list(fdr=False, weights='binary')
 
 
 def test_results_network_comparison():
@@ -329,39 +330,39 @@ def test_results_network_comparison():
     for (i, res) in enumerate([res_within, res_between]):
         # Union network
         # TODO do we need the max_lag entry?
-        assert (res.adjacency_matrix_union[s, t] == 1).all(), (
+        assert (res.get_adjacency_matrix('union')[s, t] == 1).all(), (
             '{0}-test did not return correct union network links.'.format(
                 test[i]))
-        no_diff = np.extract(np.invert(res.adjacency_matrix_comparison),
-                             res.adjacency_matrix_union)
+        no_diff = np.extract(np.invert(res.get_adjacency_matrix('comparison')),
+                             res.get_adjacency_matrix('union'))
         assert (no_diff == 0).all(), (
             '{0}-test did not return 0 in union network for no links.'.format(
                 test[i]))
         # Comparison
-        assert res.adjacency_matrix_comparison[s, t].all(), (
+        assert res.get_adjacency_matrix('comparison')[s, t].all(), (
             '{0}-test did not return correct comparison results.'.format(
                 test[i]))
-        no_diff = np.extract(np.invert(res.adjacency_matrix_comparison),
-                             res.adjacency_matrix_comparison)
+        no_diff = np.extract(np.invert(res.get_adjacency_matrix('comparison')),
+                             res.get_adjacency_matrix('comparison'))
         assert (no_diff == 0).all(), (
             '{0}-test did not return 0 comparison for non-sign. links.'.format(
                 test[i]))
         # Abs. difference
-        assert (res.adjacency_matrix_diff_abs[s, t] > 0).all(), (
+        assert (res.get_adjacency_matrix('diff_abs')[s, t] > 0).all(), (
             '{0}-test did not return correct absolute differences.'.format(
                 test[i]))
-        no_diff = np.extract(np.invert(res.adjacency_matrix_comparison),
-                             res.adjacency_matrix_diff_abs)
+        no_diff = np.extract(np.invert(res.get_adjacency_matrix('comparison')),
+                             res.get_adjacency_matrix('diff_abs'))
         assert (no_diff == 0).all(), (
             '{0}-test did not return 0 difference for non-sign. links.'.format(
                 test[i]))
         # p-value
         p_max = 1 / comp_settings['n_perm_comp']
-        assert (res.adjacency_matrix_pvalue[s, t] == p_max).all(), (
+        assert (res.get_adjacency_matrix('pvalue')[s, t] == p_max).all(), (
             '{0}-test did not return correct p-value for sign. links.'.format(
                 test[i]))
-        no_diff = np.extract(np.invert(res.adjacency_matrix_comparison),
-                             res.adjacency_matrix_pvalue)
+        no_diff = np.extract(np.invert(res.get_adjacency_matrix('comparison')),
+                             res.get_adjacency_matrix('pvalue'))
         assert (no_diff == 1).all(), (
             '{0}-test did not return p-vals of 1 for non-sign. links.'.format(
                 test[i]))
@@ -386,6 +387,7 @@ def test_export_brain_net():
     labels = ['node_0', 'node_1', 'node_2', 'node_3', 'node_4']
     res_0.export_brain_net_viewer(mni_coord=mni_coord,
                                   file_name=outfile,
+                                  weights='max_te_lag',
                                   labels=labels,
                                   node_color=node_color,
                                   node_size=node_size)
@@ -408,9 +410,9 @@ def test_export_brain_net():
     res_within = comp.compare_within(
         comp_settings, res_0, res_1, data_0, data_1)
     for matrix in ['union', 'comparison', 'pvalue', 'diff_abs']:
-        res_within.export_brain_net_viewer(matrix=matrix,
-                                           mni_coord=mni_coord,
+        res_within.export_brain_net_viewer(mni_coord=mni_coord,
                                            file_name=outfile,
+                                           weights='comparison',
                                            labels=labels,
                                            node_color=node_color,
                                            node_size=node_size)
@@ -419,28 +421,29 @@ def test_export_brain_net():
     with pytest.raises(AssertionError):
         res_within._export_brain_net(adjacency_matrix=np.ones((3, 10)),
                                      mni_coord=mni_coord[:3, :],
+                                     weights='comparison',
                                      file_name=outfile)
     with pytest.raises(AssertionError):
-        res_within.export_brain_net_viewer(matrix=matrix,
-                                           mni_coord=mni_coord[:3, :],
+        res_within.export_brain_net_viewer(mni_coord=mni_coord[:3, :],
+                                           weights='comparison',
                                            file_name=outfile)
     with pytest.raises(AssertionError):
-        res_within.export_brain_net_viewer(matrix=matrix,
-                                           mni_coord=mni_coord[:, :2],
+        res_within.export_brain_net_viewer(mni_coord=mni_coord[:, :2],
+                                           weights='comparison',
                                            file_name=outfile)
     with pytest.raises(AssertionError):
-        res_within.export_brain_net_viewer(matrix=matrix,
-                                           mni_coord=mni_coord,
+        res_within.export_brain_net_viewer(mni_coord=mni_coord,
+                                           weights='comparison',
                                            file_name=outfile,
                                            labels=['node_1', 'node_2'])
     with pytest.raises(AssertionError):
-        res_within.export_brain_net_viewer(matrix=matrix,
-                                           mni_coord=mni_coord,
+        res_within.export_brain_net_viewer(mni_coord=mni_coord,
+                                           weights='comparison',
                                            file_name=outfile,
                                            node_color=np.arange(n_nodes + 1))
     with pytest.raises(AssertionError):
-        res_within.export_brain_net_viewer(matrix=matrix,
-                                           mni_coord=mni_coord,
+        res_within.export_brain_net_viewer(mni_coord=mni_coord,
+                                           weights='comparison',
                                            file_name=outfile,
                                            node_color=np.arange(n_nodes + 1))
 

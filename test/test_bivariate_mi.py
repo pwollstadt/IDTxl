@@ -258,7 +258,7 @@ def test_analyse_network():
                 'Network analysis did not run on all targets.')
     for t in targets_analysed:
         s = np.array(list(set(sources) - set([t])))
-        assert all(np.array(results.single_target[t].sources_tested) == s), (
+        assert all(np.array(results._single_target[t].sources_tested) == s), (
                     'Network analysis did not run on all sources for target '
                     '{0}'. format(t))
     # Test analysis for subset of targets
@@ -270,7 +270,7 @@ def test_analyse_network():
                 'Network analysis did not run on correct subset of targets.')
     for t in targets_analysed:
         s = np.array(list(set(sources) - set([t])))
-        assert all(np.array(results.single_target[t].sources_tested) == s), (
+        assert all(np.array(results._single_target[t].sources_tested) == s), (
                     'Network analysis did not run on all sources for target '
                     '{0}'. format(t))
 
@@ -283,7 +283,7 @@ def test_analyse_network():
     assert all(np.array(targets_analysed) == np.array(target_list)), (
                 'Network analysis did not run for all targets.')
     for t in targets_analysed:
-        assert all(results.single_target[t].sources_tested ==
+        assert all(results._single_target[t].sources_tested ==
                    np.array(source_list)), (
                         'Network analysis did not run on the correct subset '
                         'of sources for target {0}'.format(t))
@@ -322,7 +322,7 @@ def test_discrete_input():
     nw = BivariateMI()
     res = nw.analyse_single_target(settings=settings, data=data, target=1)
     assert np.isclose(
-        res.single_target[1].omnibus_mi, expected_mi, atol=0.05), (
+        res._single_target[1].omnibus_mi, expected_mi, atol=0.05), (
             'Estimated MI for discrete variables is not correct. Expected: '
             '{0}, Actual results: {1}.'.format(
                 expected_mi, res['selected_sources_mi'][0]))

@@ -103,17 +103,17 @@ def test_network_fdr():
         analysis_setup._initialise(settings=settings, data=data,
                                    sources=[1, 2], target=0)
         res_pruned = stats.network_fdr(settings, res_1, res_2)
-        assert (not res_pruned.single_target[2].selected_vars_sources), (
+        assert (not res_pruned._single_target[2].selected_vars_sources), (
             'Target 2 has not been pruned from results.')
 
         for k in res_pruned.targets_analysed:
-            if res_pruned.single_target[k]['selected_sources_pval'] is None:
+            if res_pruned._single_target[k]['selected_sources_pval'] is None:
                 assert (
-                    not res_pruned.single_target[k]['selected_vars_sources'])
+                    not res_pruned._single_target[k]['selected_vars_sources'])
             else:
                 assert (
-                    len(res_pruned.single_target[k]['selected_vars_sources']) ==
-                    len(res_pruned.single_target[k]['selected_sources_pval'])), (
+                    len(res_pruned._single_target[k]['selected_vars_sources']) ==
+                    len(res_pruned._single_target[k]['selected_sources_pval'])), (
                         'Source list and list of p-values should have '
                         'the same length.')
 
@@ -121,12 +121,14 @@ def test_network_fdr():
     res_pruned = stats.network_fdr(settings, res_1)
     print('successful call on single result dict.')
 
-    # Test None result for insufficient no. permutations
+    # Test None result for insufficient no. permutations, no FDR-corrected
+    # results (the results class throws an error if no FDR-corrected results
+    # exist).
     res_1.settings['n_perm_max_seq'] = 2
     res_2.settings['n_perm_max_seq'] = 2
     res_pruned = stats.network_fdr(settings, res_1, res_2)
-    assert not res_pruned.fdr_correction.adjacency_matrix.all(), (
-        'Adj. matrix should be empty no. permutations too low.')
+    with pytest.raises(RuntimeError):
+        res_pruned.get_adjacency_matrix('binary', fdr=True)
 
 
 def test_ais_fdr():
@@ -160,32 +162,34 @@ def test_ais_fdr():
     analysis_setup = ActiveInformationStorage()
     analysis_setup._initialise(settings=settings, data=data, process=1)
     res_pruned = stats.ais_fdr(settings, res_1, res_2)
-    assert (not res_pruned.single_process[2].selected_vars_sources), (
+    assert (not res_pruned._single_process[2].selected_vars_sources), (
         'Process 2 has not been pruned from results.')
 
     alpha_fdr = res_pruned.settings.alpha_fdr
     for k in res_pruned.processes_analysed:
-        if not res_pruned.single_process[k]['ais_sign']:
-            assert (res_pruned.single_process[k]['ais_pval'] > alpha_fdr), (
+        if not res_pruned._single_process[k]['ais_sign']:
+            assert (res_pruned._single_process[k]['ais_pval'] > alpha_fdr), (
                 'P-value of non-sign. AIS is not 1.')
-            assert (not res_pruned.single_process[k]['selected_vars']), (
+            assert (not res_pruned._single_process[k]['selected_vars']), (
                 'List of significant past variables is not empty')
         else:
-            assert (res_pruned.single_process[k]['ais_pval'] < 1), (
+            assert (res_pruned._single_process[k]['ais_pval'] < 1), (
                 'P-value of sign. AIS is not smaller 1.')
-            assert (res_pruned.single_process[k]['selected_vars']), (
+            assert (res_pruned._single_process[k]['selected_vars']), (
                 'List of significant past variables is empty')
 
     # Test function call for single result
     res_pruned = stats.ais_fdr(settings, res_1)
     print('successful call on single result dict.')
 
-    # Test None result for insufficient no. permutations
+    # Test None result for insufficient no. permutations, no FDR-corrected
+    # results (the results class throws an error if no FDR-corrected results
+    # exist).
     res_1.settings['n_perm_mi'] = 2
     res_2.settings['n_perm_mi'] = 2
     res_pruned = stats.ais_fdr(settings, res_1, res_2)
-    assert not res_pruned.fdr_correction.significant_processes.all(), (
-        'Adj. matrix should be empty no. permutations too low.')
+    with pytest.raises(RuntimeError):
+        res_pruned.get_significant_processes(fdr=True)
 
 
 def test_find_pvalue():

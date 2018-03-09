@@ -48,21 +48,22 @@ def test_plot_network():
         'n_perm_max_seq': 30,
         'min_lag_sources': 1,
         'max_lag_sources': 2,
-        'max_lag_target': 1}
+        'max_lag_target': 1,
+        'alpha_fdr': 0.5}
     nw = MultivariateTE()
 
     # Analyse a single target and the whole network
     res_single = nw.analyse_single_target(
         settings=settings, data=data, target=1)
     res_network = nw.analyse_network(settings=settings, data=data)
+    graph, fig = plot_network(res_single, 'max_te_lag', fdr=False)
+    plt.close(fig)
     for fdr in [False, True]:
-        graph, fig = plot_network(res_single, fdr=fdr)
-        plt.close(fig)
-        graph, fig = plot_network(res_network, fdr=fdr)
+        graph, fig = plot_network(res_network, 'max_te_lag', fdr=fdr)
         plt.close(fig)
         for sign_sources in [True, False]:
             graph, fig = plot_selected_vars(
-                res_network, target=1, sign_sources=True, fdr=False)
+                res_network, target=1, sign_sources=True, fdr=fdr)
             plt.close(fig)
 
 

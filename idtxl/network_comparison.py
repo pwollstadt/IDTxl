@@ -301,8 +301,8 @@ class NetworkComparison(NetworkAnalysis):
         """
         # Get lists of source and target variables. Return empty array if there
         # is no significant source variable for requested target.
-        source_vars = self.union.single_target[target]['selected_vars_sources']
-        target_vars = self.union.single_target[target]['selected_vars_target']
+        source_vars = self.union._single_target[target]['selected_vars_sources']
+        target_vars = self.union._single_target[target]['selected_vars_target']
         if not source_vars:
             return np.array([])
 
@@ -317,7 +317,7 @@ class NetworkComparison(NetworkAnalysis):
 
         # Calculate TE for each link, i.e., for a single source and the target
         if sources == 'all':
-            sources = self.union.single_target[target].sources
+            sources = self.union._single_target[target].sources
         else:
             if sources > (data.n_processes - 1):
                 raise RuntimeError('Source {0} is not in no. nodes in the '
@@ -425,19 +425,19 @@ class NetworkComparison(NetworkAnalysis):
         self.union = DotDict({})
         self.union['targets_analysed'] = targets_union
         self.union['max_lag'] = (
-            networks[0].single_target[targets_union[0]].current_value[1])
+            networks[0]._single_target[targets_union[0]].current_value[1])
 
         # Get the union of sources for each target in the union network.
-        self.union.single_target = DotDict({})
+        self.union._single_target = DotDict({})
         for t in targets_union:
-            self.union.single_target[t] = DotDict({})
-            self.union.single_target[t]['selected_vars_sources'] = []
-            self.union.single_target[t]['selected_vars_target'] = []
+            self.union._single_target[t] = DotDict({})
+            self.union._single_target[t]['selected_vars_sources'] = []
+            self.union._single_target[t]['selected_vars_target'] = []
             for nw in networks:
                 # Check if the max_lag is the same for each network going into
                 # the comparison.
                 try:
-                    lag = nw.single_target[t].current_value[1]
+                    lag = nw._single_target[t].current_value[1]
                     if self.union['max_lag'] != lag:
                         raise ValueError('Networks seem to have been analyzed '
                                          'using different lags.')
@@ -450,27 +450,27 @@ class NetworkComparison(NetworkAnalysis):
                 # selected for that target.
                 try:
                     cond_src = self._lag_to_idx(
-                        nw.single_target[t].selected_vars_sources,
+                        nw._single_target[t].selected_vars_sources,
                         self.union['max_lag'])
                 except KeyError:
                     cond_src = []
                 try:
                     cond_tgt = self._lag_to_idx(
-                        nw.single_target[t]['selected_vars_target'],
+                        nw._single_target[t]['selected_vars_target'],
                         self.union['max_lag'])
                 except KeyError:
                     cond_tgt = []
 
                 # Add conditional if it isn't already in the union network.
                 for c in cond_src:
-                    if c not in self.union.single_target[t]['selected_vars_sources']:
-                        self.union.single_target[t]['selected_vars_sources'].append(c)
+                    if c not in self.union._single_target[t]['selected_vars_sources']:
+                        self.union._single_target[t]['selected_vars_sources'].append(c)
                 for c in cond_tgt:
-                    if c not in self.union.single_target[t]['selected_vars_target']:
-                        self.union.single_target[t]['selected_vars_target'].append(c)
-            self.union.single_target[t].sources = np.unique(
+                    if c not in self.union._single_target[t]['selected_vars_target']:
+                        self.union._single_target[t]['selected_vars_target'].append(c)
+            self.union._single_target[t].sources = np.unique(
                 np.array([s[0] for s in (
-                    self.union.single_target[t]['selected_vars_sources'])]))
+                    self.union._single_target[t]['selected_vars_sources'])]))
 
     def _calculate_cmi_diff_within(self, data_a, data_b):
         """Calculate the difference in CMI between conditions within a subject.
@@ -562,7 +562,7 @@ class NetworkComparison(NetworkAnalysis):
             cmi_temp = []
 
             # if there are no sources for the current target, continue to next
-            if not self.union.single_target[t]['selected_vars_sources']:
+            if not self.union._single_target[t]['selected_vars_sources']:
                 cmi[t] = np.array(cmi_temp)
                 continue
 
@@ -609,15 +609,15 @@ class NetworkComparison(NetworkAnalysis):
             cmi_temp_a = []
             cmi_temp_b = []
             # If there are no sources for current target, continue  to the next
-            if not self.union.single_target[t]['selected_vars_sources']:
+            if not self.union._single_target[t]['selected_vars_sources']:
                 cmi_a[t] = np.array(cmi_temp_a)
                 cmi_b[t] = np.array(cmi_temp_b)
                 continue
 
             # Get full conditioning set for current target.
             idx_cond_full = (
-                self.union.single_target[t]['selected_vars_target'] +
-                self.union.single_target[t]['selected_vars_sources'])
+                self.union._single_target[t]['selected_vars_target'] +
+                self.union._single_target[t]['selected_vars_sources'])
             # Get realisations, where realisations are permuted/swapped
             # replication-wise between two data sets (e.g., from different
             # conditions)
@@ -629,11 +629,11 @@ class NetworkComparison(NetworkAnalysis):
             # Calculate CMI from each source to current target t from permuted
             # data
             n_sources = len(
-                self.union.single_target[t]['selected_vars_sources'])
+                self.union._single_target[t]['selected_vars_sources'])
             cmi_temp_a = np.zeros(n_sources)
             cmi_temp_b = np.zeros(n_sources)
             for (i, idx_source) in enumerate(
-                        self.union.single_target[t]['selected_vars_sources']):
+                        self.union._single_target[t]['selected_vars_sources']):
                 # Get realisations of current source from the set of all
                 # surrogate conditionals and calculate the CMI. Do this for
                 # both conditions.
@@ -658,10 +658,10 @@ class NetworkComparison(NetworkAnalysis):
         # The output is a dictionary with targets as keys. The entry for each
         # target is a list of mean values for each source. The order of sources
         # corresponds to the list of sources in
-        # self.union.single_target[t].sources.
+        # self.union._single_target[t].sources.
         cmi_mean = {}
         for t in self.union.targets_analysed:
-            n_sources = len(self.union.single_target[t].sources)
+            n_sources = len(self.union._single_target[t].sources)
             n_datasets = len(cmi_set)
             cmi_mean[t] = np.zeros(n_sources)
             for i_source in range(n_sources):
@@ -726,16 +726,16 @@ class NetworkComparison(NetworkAnalysis):
             surrogates_a = self._get_surrogates_target(data_a, t)
             surrogates_b = self._get_surrogates_target(data_b, t)
             self.cmi_surr[t] = np.zeros((  # save surrogates as 2D-array
-                len(self.union.single_target[t].sources),
+                len(self.union._single_target[t].sources),
                 self.settings['n_perm_comp']))
-            for (i, s) in enumerate(self.union.single_target[t].sources):
+            for (i, s) in enumerate(self.union._single_target[t].sources):
                 self.cmi_surr[t][i, :] = surrogates_a[s] - surrogates_b[s]
 
     def _get_surrogates_target(self, data, target, sources='all'):
         # Get lists of source and target variables, and the list of significant
         # sources for current target
-        source_vars = self.union.single_target[target]['selected_vars_sources']
-        target_vars = self.union.single_target[target]['selected_vars_target']
+        source_vars = self.union._single_target[target]['selected_vars_sources']
+        target_vars = self.union._single_target[target]['selected_vars_target']
         if sources == 'all':
             sources = np.unique(np.array([s[0] for s in source_vars]))
         else:
@@ -818,7 +818,7 @@ class NetworkComparison(NetworkAnalysis):
         """
         self.cmi_surr = {}
         for t in self.union.targets_analysed:
-            n_sources = len(self.union.single_target[t].sources)
+            n_sources = len(self.union._single_target[t].sources)
             self.cmi_surr[t] = np.zeros(
                 (n_sources, self.settings['n_perm_comp']))
         for p in range(self.settings['n_perm_comp']):
@@ -833,7 +833,7 @@ class NetworkComparison(NetworkAnalysis):
         self.significance = {}
         self.pvalue = {}
         for t in self.union.targets_analysed:
-            sources = self.union.single_target[t].sources
+            sources = self.union._single_target[t].sources
             if not sources.size:
                 continue
             self.significance[t] = np.zeros(len(sources), dtype=bool)
@@ -851,13 +851,13 @@ class NetworkComparison(NetworkAnalysis):
         """Clean up bevor returning."""
         # convert time indices to lags for selected variables
         for t in self.union.targets_analysed:
-            self.union.single_target[t]['selected_vars_sources'] = (
+            self.union._single_target[t]['selected_vars_sources'] = (
                 self._idx_to_lag(
-                    self.union.single_target[t]['selected_vars_sources'],
+                    self.union._single_target[t]['selected_vars_sources'],
                     self.union['max_lag']))
-            self.union.single_target[t]['selected_vars_target'] = (
+            self.union._single_target[t]['selected_vars_target'] = (
                 self._idx_to_lag(
-                    self.union.single_target[t]['selected_vars_target'],
+                    self.union._single_target[t]['selected_vars_target'],
                     self.union['max_lag']))
 
     def _get_permuted_replications(self, data_a, data_b, target):
@@ -887,8 +887,8 @@ class NetworkComparison(NetworkAnalysis):
         # union network.
         current_val = (target, self.union['max_lag'])
         idx_cond_full = (
-            self.union.single_target[target]['selected_vars_target'] +
-            self.union.single_target[target]['selected_vars_sources'])
+            self.union._single_target[target]['selected_vars_target'] +
+            self.union._single_target[target]['selected_vars_sources'])
 
         # Get realisations of the current value and the full conditioning set.
         assert data_a.n_replications == data_b.n_replications, (
@@ -1005,6 +1005,6 @@ class NetworkComparison(NetworkAnalysis):
         target = link[1]
         if target not in self.union.targets_analysed:
             return False
-        if source not in self.union.single_target[target].sources:
+        if source not in self.union._single_target[target].sources:
             return False
         return True

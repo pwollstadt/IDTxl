@@ -64,18 +64,17 @@ def ais_fdr(settings=None, *results):
     pval = np.arange(0)
     process_idx = np.arange(0).astype(int)
     n_perm = np.arange(0).astype(int)
-    cands = []
     for process in results_comb.processes_analysed:
-        if results_comb.single_process[process].ais_sign:
+        if results_comb._single_process[process].ais_sign:
             pval = np.append(
-                pval, results_comb.single_process[process].ais_pval)
+                pval, results_comb._single_process[process].ais_pval)
             process_idx = np.append(process_idx, process)
             n_perm = np.append(
                     n_perm, results_comb.settings.n_perm_mi)
 
     if pval.size == 0:
         print('No links in final results. Return ...')
-        results_comb._add_fdr(None)
+        results_comb._add_fdr(fdr=None, alpha=alpha, constant=constant)
         return results_comb
 
     sign, thresh = _perform_fdr_corretion(pval, constant, alpha)
@@ -87,13 +86,13 @@ def ais_fdr(settings=None, *results):
               'least one target is too low to allow for FDR correction '
               '(FDR-threshold: {0:.4f}, min. theoretically possible p-value: '
               '{1}).'.format(thresh[0], 1 / min(n_perm)))
-        results_comb._add_fdr(None)
+        results_comb._add_fdr(fdr=None, alpha=alpha, constant=constant)
         return results_comb
 
     # Go over list of all candidates and remove non-significant results from
     # the results object. Create a copy of the results object to leave the
     # original intact.
-    fdr = cp.deepcopy(results_comb.single_process)
+    fdr = cp.deepcopy(results_comb._single_process)
     for s in range(sign.shape[0]):
         if not sign[s]:
             t = process_idx[s]
@@ -168,31 +167,33 @@ def network_fdr(settings=None, *results):
     cands = []
     if correct_by_target:  # whole target
         for target in results_comb.targets_analysed:
-            if results_comb.single_target[target].omnibus_sign:
+            if results_comb._single_target[target].omnibus_sign:
                 pval = np.append(
-                    pval, results_comb.single_target[target].omnibus_pval)
+                    pval, results_comb._single_target[target].omnibus_pval)
                 target_idx = np.append(target_idx, target)
                 n_perm = np.append(
                         n_perm, results_comb.settings.n_perm_omnibus)
     else:  # individual variables
         for target in results_comb.targets_analysed:
-            if results_comb.single_target[target].omnibus_sign:
-                n_sign = (results_comb.single_target[target].
+            if results_comb._single_target[target].omnibus_sign:
+                n_sign = (results_comb._single_target[target].
                           selected_sources_pval.size)
                 pval = np.append(
-                    pval, (results_comb.single_target[target].
+                    pval, (results_comb._single_target[target].
                            selected_sources_pval))
                 target_idx = np.append(target_idx,
                                        np.ones(n_sign) * target).astype(int)
                 cands = (cands +
-                         (results_comb.single_target[target].
+                         (results_comb._single_target[target].
                           selected_vars_sources))
                 n_perm = np.append(
                     n_perm, results_comb.settings.n_perm_max_seq)
 
     if pval.size == 0:
         print('No links in final results. Return ...')
-        results_comb._add_fdr(None)
+        results_comb._add_fdr(
+            fdr=None, alpha=alpha, correct_by_target=correct_by_target,
+            constant=constant)
         return results_comb
 
     sign, thresh = _perform_fdr_corretion(pval, constant, alpha)
@@ -204,19 +205,21 @@ def network_fdr(settings=None, *results):
               'least one target is too low to allow for FDR correction '
               '(FDR-threshold: {0:.4f}, min. theoretically possible p-value: '
               '{1}).'.format(thresh[0], 1 / min(n_perm)))
-        results_comb._add_fdr(None)
+        results_comb._add_fdr(
+            fdr=None, alpha=alpha, correct_by_target=correct_by_target,
+            constant=constant)
         return results_comb
 
     # Go over list of all candidates and remove non-significant results from
     # the results object. Create a copy of the results object to leave the
     # original intact.
-    fdr = cp.deepcopy(results_comb.single_target)
+    fdr = cp.deepcopy(results_comb._single_target)
     for s in range(sign.shape[0]):
         if not sign[s]:
             if correct_by_target:
                 t = target_idx[s]
                 fdr[t].selected_vars_full = cp.deepcopy(
-                    results_comb.single_target[t].selected_vars_target)
+                    results_comb._single_target[t].selected_vars_target)
                 fdr[t].selected_sources_te = None
                 fdr[t].selected_sources_pval = None
                 fdr[t].selected_vars_sources = []

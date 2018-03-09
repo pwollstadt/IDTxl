@@ -1,6 +1,5 @@
 """Provide IDTxl utility functions."""
 import pprint
-import copy as cp
 import numpy as np
 
 
@@ -106,9 +105,12 @@ def autocorrelation(x):
 
 
 def discretise(a, numBins):
-    """Discretise continuous data into discrete values (with 0 as lowest)
-    by evenly partitioning the range of the data, one dimension at a time.
-    Adapted from infodynamics.utils.MatrixUtils.discretise() from JIDT by J.Lizier
+    """Discretise continuous data.
+
+    Discretise continuous data into discrete values (with 0 as lowest) by
+    evenly partitioning the range of the data, one dimension at a time.
+    Adapted from infodynamics.utils.MatrixUtils.discretise() from JIDT by
+    J. Lizier.
 
     Args:
         a : numpy array
@@ -121,7 +123,6 @@ def discretise(a, numBins):
         numpy array
             discretised data
     """
-
     num_samples = a.shape[0]
     if (len(a.shape) == 1):
         # It's a unidimensional array
@@ -132,7 +133,8 @@ def discretise(a, numBins):
         for t in range(num_samples):
             discretised_values[t] = int((a[t] - theMin) / binInterval)
             if (discretised_values[t] == numBins):
-                # This occurs for the maximum value; put it in the largest bin (base - 1)
+                # This occurs for the maximum value; put it in the largest
+                # bin (base - 1).
                 discretised_values[t] = discretised_values[t] - 1
         return discretised_values
 
@@ -141,21 +143,25 @@ def discretise(a, numBins):
     discretised_values = np.zeros([num_samples, num_dimensions], dtype=np.int_)
     for v in range(a.shape[1]):
         # Bin dimension v:
-        theMin = a[:,v].min()
-        theMax = a[:,v].max()
+        theMin = a[:, v].min()
+        theMax = a[:, v].max()
         binInterval = (theMax - theMin) / numBins
         for t in range(num_samples):
-            discretised_values[t,v] = int((a[t,v] - theMin) / binInterval)
-            if (discretised_values[t,v] == numBins):
-                # This occurs for the maximum value; put it in the largest bin (base - 1)
-                discretised_values[t,v] = discretised_values[t,v] - 1
+            discretised_values[t, v] = int((a[t, v] - theMin) / binInterval)
+            if (discretised_values[t, v] == numBins):
+                # This occurs for the maximum value; put it in the largest bin
+                # (base - 1)
+                discretised_values[t, v] = discretised_values[t, v] - 1
     return discretised_values
 
 
 def discretise_max_ent(a, numBins):
-    """Discretise continuous data into discrete values (with 0 as lowest)
-    by making a maximum entropy partitioning, one dimension at a time.
-    Adapted from infodynamics.utils.MatrixUtils.discretiseMaxEntropy() from JIDT by J.Lizier
+    """Discretise continuous data using maximum entropy partitioning.
+
+    Discretise continuous data into discrete values (with 0 as lowest) by
+    making a maximum entropy partitioning, one dimension at a time. Adapted
+    from infodynamics.utils.MatrixUtils.discretiseMaxEntropy() from JIDT by
+    J. Lizier.
 
     Args:
         a : numpy array
@@ -168,7 +174,6 @@ def discretise_max_ent(a, numBins):
         numpy array
             discretised data
     """
-
     num_samples = a.shape[0]
     if (len(a.shape) == 1):
         # It's a unidimensional array
@@ -176,7 +181,7 @@ def discretise_max_ent(a, numBins):
         cuttoff_values = np.zeros(numBins)
         sorted_copy = np.sort(a)
         for bin in range(numBins):
-            compartmentSize = int((bin+1)*(num_samples)/numBins)-1;
+            compartmentSize = int((bin + 1) * (num_samples) / numBins) - 1
             cuttoff_values[bin] = sorted_copy[compartmentSize]
         for t in range(num_samples):
             for m in range(numBins):
@@ -191,14 +196,14 @@ def discretise_max_ent(a, numBins):
     for v in range(num_dimensions):
         # Bin dimension v:
         cuttoff_values = np.zeros(numBins)
-        sorted_copy = np.sort(a[:,v])
+        sorted_copy = np.sort(a[:, v])
         for bin in range(numBins):
-            compartmentSize = int((bin+1)*(num_samples)/numBins)-1;
+            compartmentSize = int((bin + 1) * (num_samples) / numBins) - 1
             cuttoff_values[bin] = sorted_copy[compartmentSize]
         for t in range(num_samples):
             for m in range(numBins):
-                if (a[t,v] <= cuttoff_values[m]):
-                    discretised_values[t,v] = m
+                if (a[t, v] <= cuttoff_values[m]):
+                    discretised_values[t, v] = m
                     break
     return discretised_values
 
@@ -272,7 +277,9 @@ def combine_discrete_dimensions(a, numBins):
             multiplier = multiplier * numBins
             if multiplier <= 0:
                 # Multiplier has overflown
-                raise ArithmeticError('Combination of numBins and number of dimensions of a leads to overflow in making unidimensional array')
+                raise ArithmeticError(
+                    'Combination of numBins and number of dimensions of a '
+                    'leads to overflow in making unidimensional array')
         combined_values[t] = int(combined_value)
     return combined_values
 

@@ -62,7 +62,7 @@ def test_multivariate_te_corr_gaussian(estimator=None):
     # examples 1 and 2 respectively. The maximum errors were 0.093841 and
     # 0.05833172 repectively. This inspired the following error boundaries.
     expected_res = np.log(1 / (1 - np.power(cov, 2)))
-    estimated_res = results.single_target[1].omnibus_te
+    estimated_res = results._single_target[1].omnibus_te
     diff = np.abs(estimated_res - expected_res)
     print('Expected source sample: (0, 1)\nExpected target sample: (1, 1)')
     print(('Estimated TE: {0:5.4f}, analytical result: {1:5.4f}, error:'
@@ -106,19 +106,19 @@ def test_multivariate_te_lagged_copies():
     # ensures that we calculate a proper TE at any time in the algorithm).
     for t in range(2):
         results = random_analysis.analyse_single_target(settings, data, t)
-        assert len(results.single_target[t].selected_vars_full) == 1, (
+        assert len(results._single_target[t].selected_vars_full) == 1, (
                     'Conditional contains more/less than 1 variables.')
-        assert not results.single_target[t].selected_vars_sources.size, (
+        assert not results._single_target[t].selected_vars_sources.size, (
                     'Conditional sources is not empty.')
-        assert len(results.single_target[t].selected_vars_target) == 1, (
+        assert len(results._single_target[t].selected_vars_target) == 1, (
             'Conditional target contains more/less than 1 variable.')
-        assert results.single_target[t].selected_sources_pval is None, (
+        assert results._single_target[t].selected_sources_pval is None, (
             'Conditional p-value is not None.')
-        assert results.single_target[t].omnibus_pval is None, (
+        assert results._single_target[t].omnibus_pval is None, (
             'Omnibus p-value is not None.')
-        assert results.single_target[t].omnibus_sign is None, (
+        assert results._single_target[t].omnibus_sign is None, (
             'Omnibus significance is not None.')
-        assert results.single_target[t].selected_sources_te is None, (
+        assert results._single_target[t].selected_sources_te is None, (
             'Conditional TE values is not None.')
 
 
@@ -150,19 +150,19 @@ def test_multivariate_te_random():
     # ensures that we calculate a proper TE at any time in the algorithm).
     for t in range(2):
         results = random_analysis.analyse_single_target(settings, data, t)
-        assert len(results.single_target[t].selected_vars_full) == 1, (
+        assert len(results._single_target[t].selected_vars_full) == 1, (
                     'Conditional contains more/less than 1 variables.')
-        assert not results.single_target[t].selected_vars_sources.size, (
+        assert not results._single_target[t].selected_vars_sources.size, (
                     'Conditional sources is not empty.')
-        assert len(results.single_target[t].selected_vars_target) == 1, (
+        assert len(results._single_target[t].selected_vars_target) == 1, (
             'Conditional target contains more/less than 1 variable.')
-        assert results.single_target[t].selected_sources_pval is None, (
+        assert results._single_target[t].selected_sources_pval is None, (
             'Conditional p-value is not None.')
-        assert results.single_target[t].omnibus_pval is None, (
+        assert results._single_target[t].omnibus_pval is None, (
             'Omnibus p-value is not None.')
-        assert results.single_target[t].omnibus_sign is None, (
+        assert results._single_target[t].omnibus_sign is None, (
             'Omnibus significance is not None.')
-        assert results.single_target[t].selected_sources_te is None, (
+        assert results._single_target[t].selected_sources_te is None, (
             'Conditional TE values is not None.')
 
 
@@ -210,7 +210,7 @@ def test_multivariate_te_lorenz_2():
 
     # Just analyse the direction of coupling
     results = lorenz_analysis.analyse_single_target(settings, data, target=1)
-    print(results.single_target)
+    print(results._single_target)
     print(results.adjacency_matrix)
 
 

@@ -131,8 +131,8 @@ def test_single_source_storage_gaussian():
     network_analysis = ActiveInformationStorage()
     results = network_analysis.analyse_network(settings, data, processes)
     print('AIS for random normal data without memory (expected is NaN): '
-          '{0}'.format(results.single_process[1].ais))
-    assert results.single_process[1].ais is np.nan, (
+          '{0}'.format(results._single_process[1].ais))
+    assert results._single_process[1].ais is np.nan, (
         'Estimator did not return nan for memoryless data.')
 
 
@@ -159,10 +159,10 @@ def test_compare_jidt_open_cl_estimator():
     res_jidt = network_analysis.analyse_network(settings, data, processes)
     # Note that I require equality up to three digits. Results become more
     # exact for bigger data sizes, but this takes too long for a unit test.
-    ais_opencl_2 = res_opencl.single_process[2].ais
-    ais_jidt_2 = res_jidt.single_process[2].ais
-    ais_opencl_3 = res_opencl.single_process[3].ais
-    ais_jidt_3 = res_jidt.single_process[3].ais
+    ais_opencl_2 = res_opencl._single_process[2].ais
+    ais_jidt_2 = res_jidt._single_process[2].ais
+    ais_opencl_3 = res_opencl._single_process[3].ais
+    ais_jidt_3 = res_jidt._single_process[3].ais
     print('AIS for MUTE data proc 2 - opencl: {0} and jidt: {1}'.format(
         ais_opencl_2, ais_jidt_2))
     print('AIS for MUTE data proc 3 - opencl: {0} and jidt: {1}'.format(

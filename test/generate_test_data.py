@@ -94,8 +94,6 @@ def generate_gauss_data(n_replications=1, discrete=False):
                   np.random.normal(0, 1, size=n))
         proc_3 = (covariance_2 * proc_2 + (1 - covariance_2) *
                   np.random.normal(0, 1, size=n))
-        expected_mi_1 = np.log(1 / (1 - np.power(covariance_1, 2)))
-        expected_mi_2 = np.log(1 / (1 - np.power(covariance_2, 2)))
         proc_1 = proc_1[(2*delay):]
         proc_2 = proc_2[delay:-delay]
         proc_3 = proc_3[:-(2*delay)]
@@ -217,7 +215,7 @@ def _print_result(res):
 
 
 if __name__ == '__main__':
+    analyse_mute_te_data()
     analyse_discrete_data()
     analyse_continuous_data()
-    analyse_mute_te_data()
     assert_results()
