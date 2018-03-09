@@ -193,10 +193,10 @@ class NetworkAnalysis():
         return idx_list
 
     def _separate_realisations(self, idx_full, idx_single):
-        """Separate a single indexes' realisations from a set of realisations.
+        """Separate single index realisations from a set of realisations.
 
         Return the realisations of a single index and the realisations of the
-        remaining set of indexes. The function takes realisations from the
+        remaining set of indices. The function takes realisations from the
         array in self._selected_vars_realisations. This allows to reuse the
         collected realisations when pruning the conditional set after
         candidates have been included.
@@ -213,7 +213,7 @@ class NetworkAnalysis():
             numpy array
                 realisations of the variable at the single index
         """
-        # Get indidces of the remaining variables.
+        # Get indices of the remaining variables.
         idx_remaining = cp.copy(idx_full)
         idx_remaining.pop(idx_remaining.index(idx_single))
 
@@ -262,7 +262,7 @@ class NetworkAnalysis():
 
         Args:
             idx : list of tuples
-                indeces of selected variables, where each entry is a tuple
+                indices of selected variables, where each entry is a tuple
                 (idx process, idx sample), where indices are absolute values
                 with respect to entries in a data array
         """
@@ -271,7 +271,7 @@ class NetworkAnalysis():
         else:
             for i in idx:
                 self.selected_vars_full.append(i)
-        # separate indexes into source and target indixes
+        # separate indices into source and target indices
         for i in idx:
             if i[0] == self.target:
                 self.selected_vars_target.append(i)
@@ -283,7 +283,7 @@ class NetworkAnalysis():
 
         Args:
             idx : list of tuples
-                indeces of selected variables, where each entry is a tuple
+                indices of selected variables, where each entry is a tuple
                 (idx process, idx sample), where indices are absolute values
                 with respect to entries in a data array
             realisations : numpy array

@@ -81,9 +81,8 @@ class Results():
                   analysis given the settings (e.g., a high maximum lag used in
                   network inference, results in fewer data points available for
                   estimation)
-                - normalised : bool - indicates if data were normalised before
-                  estimation
-                - single
+                - normalised : bool - indicates if data were z-standardised
+                  before the estimation
     """
 
     def __init__(self, n_nodes, n_realisations, normalised):
@@ -94,22 +93,30 @@ class Results():
             'normalised': normalised
         })
 
-    def _print_to_console(self, adjacency_matrix, measure):
-        """Print adjacency matrix to console."""
+    def _print_edge_list(self, adjacency_matrix, weights):
+        """Print edge list to console."""
         link_found = False
         for s in range(self.data_properties.n_nodes):
             for t in range(self.data_properties.n_nodes):
                 if adjacency_matrix[s, t]:
-                    print('\t{0} -> {1}, {2}: {3}'.format(
-                        s, t, measure, adjacency_matrix[s, t]))
                     link_found = True
-        if not link_found:
-            print('No significant links in network.')
+                    if weights == 'binary':
+                        print('\t{0} -> {1}'.format(
+                            s, t, weights, adjacency_matrix[s, t]))
+                    else:
+                        print('\t{0} -> {1}, {2}: {3}'.format(
+                            s, t, weights, adjacency_matrix[s, t]))
 
-    def _export_to_networkx(self, adjacency_matrix):
+        if not link_found:
+            print('No significant links found in the network.')
+
+    def _export_to_networkx(self, adjacency_matrix, weights):
         """Create networkx DiGraph object from numpy adjacency matrix."""
-        return nx.from_numpy_matrix(
-            adjacency_matrix, create_using=nx.DiGraph())
+        # use 'weights' parameter (string) as networkx edge property name
+        # and use adjacency matrix entries as edge property values
+        custom_type = [(weights, type(adjacency_matrix[0, 0]))]
+        custom_npmatrix = np.matrix(adjacency_matrix, dtype=custom_type)
+        return nx.from_numpy_matrix(custom_npmatrix, create_using=nx.DiGraph())
 
     def _export_brain_net(self, adjacency_matrix, mni_coord, file_name,
                           **kwargs):
@@ -201,7 +208,7 @@ class Results():
             raise RuntimeError('Can not add single result - results for target'
                                ' or process {0} already exist.'.format(
                                    process))
-        # Dont' add results with conflicting settings
+        # Don't add results with conflicting settings
         if utils.conflicting_entries(self.settings, settings):
             raise RuntimeError(
                 'Can not add single result - analysis settings are not equal.')
@@ -227,7 +234,7 @@ class Results():
         are added to the common settings dictionary.
 
         Remove FDR-corrections from partial results before combining them. FDR-
-        correction performed on the basis of parts of the network a not valid
+        correction performed on the basis of parts of the network is not valid
         for the combined network.
 
         Args:
@@ -272,13 +279,13 @@ class Results():
 class ResultsSingleProcessAnalysis(Results):
     """Store results of single process analysis.
 
-    Provide a container for results of algorithms for the analysis of single
-    processes forming network nodes, e.g., estimation of active information
-    storage.
+    Provide a container for the results of algorithms for the analysis of
+    individual processes (nodes) in a multivariate stochastic process,
+    e.g., estimation of active information storage.
 
     Note that for convenience all dictionaries in this class can additionally
-    be accessed using dot-notation: res_network.single_target[2].omnibus_pval
-    or res_network.single_target[2].['omnibus_pval'].
+    be accessed using dot-notation: res_network.settings.cmi_estimator
+    or res_network.settings['cmi_estimator'].
 
     Attributes:
         settings : dict
@@ -292,10 +299,11 @@ class ResultsSingleProcessAnalysis(Results):
                   analysis given the settings (e.g., a high maximum lag used in
                   network inference, results in fewer data points available for
                   estimation)
-                - normalised : bool - indicates if data were normalised before
-                  estimation
-                - single
+                - normalised : bool - indicates if data were z-standardised
+                  before estimation
 
+        processes_analysed : list
+            list of analysed processes
         single_process : dict
             results for individual processes, contains for each process
 
@@ -311,8 +319,6 @@ class ResultsSingleProcessAnalysis(Results):
                 - current_value : tuple - current value used for analysis,
                   described by target and sample index in the data
 
-        processes_analysed : list
-            list of processes analyzed
         fdr_correction : dict
             FDR-corrected results, see documentation of network inference
             algorithms and stats.network_fdr
@@ -342,6 +348,7 @@ class ResultsSingleProcessAnalysis(Results):
         self.processes_analysed = list(self.single_process.keys())
 
     def _add_fdr(self, fdr, alpha=None, correct_by_target=None, constant=None):
+        """Add settings and results of FDR correction"""
         # Add settings of FDR-correction
         self.settings['alpha_fdr'] = alpha
         self.settings['fdr_correct_by_target'] = correct_by_target
@@ -355,40 +362,52 @@ class ResultsSingleProcessAnalysis(Results):
         else:
             self.fdr_correction = DotDict(fdr)
 
-    def get_significant_processes(self, fdr):
+    def single_process_key(self, process, key, fdr=False):
+        # Return required key from required single_process dictionary, dealing
+        # with the FDR at a high level
+        if process not in self.processes_analysed:
+            raise RuntimeError('No results for process {0}.'.format(process))
+        if fdr:
+            try:
+                single_process_dict = self.fdr_correction[process]
+            except AttributeError:
+                raise RuntimeError('No FDR-corrected results have been added.')
+            except KeyError:
+                raise RuntimeError(
+                    'No FDR-corrected results for process {0}.'.format(process))
+        else:
+            try:
+                single_process_dict = self.single_process[process]
+            except AttributeError:
+                raise RuntimeError('No results have been added.')
+            except KeyError:
+                raise RuntimeError(
+                    'No results for process {0}.'.format(process))
+
+        return single_process_dict[key]
+
+    def get_significant_processes(self, fdr=False):
         """Return statistically-significant processes.
 
         Indicates for each process whether AIS is statistically significant
         (equivalent to the adjacency matrix returned for network inference)
 
         Args:
-            fdr : bool
+            fdr : bool [optional]
                 print FDR-corrected results, see documentation of network
-                inference algorithms and stats.network_fdr
+                inference algorithms and stats.network_fdr (default=False)
 
         Returns:
             numpy array
                 Statistical significance for each process
         """
 
-        if fdr:
-            if self.settings.fdr_correction:
-                significant_processes = np.array(
-                    [self.fdr_correction[p].ais_sign
-                     for p in self.processes_analysed],
-                    dtype=bool
-                )
-            else:
-                print("""WARNING: FDR correction was not performed.
-                         Returning empty array.""")
-                significant_processes = np.array([], dtype=bool)
-        else:
-            significant_processes = np.array(
-                [self.single_process[p].ais_sign
+        significant_processes = np.array(
+                [self.single_process_key(process=p, key='ais_sign', fdr=fdr)
                  for p in self.processes_analysed],
                 dtype=bool
             )
-        
+
         return significant_processes
 
 
@@ -415,57 +434,45 @@ class ResultsNetworkAnalysis(Results):
         self.settings.update(DotDict(settings))
         self.single_target[target] = DotDict(results)
         self.targets_analysed = list(self.single_target.keys())
-        self._update_adjacency_matrix(target=target)
 
-    def _update_adjacency_matrix(self, target=None, fdr=False):
-        """Update adjacency matrix."""
-        # If no target is given, build adjacency matrix from scratch, else:
-        # just update the requested target to save time.
-        if target is None:
-            update_targets = self.targets_analysed
+    def single_target_key(self, target, key, fdr=False):
+        # Return required key from required single_target dictionary, dealing
+        # with the FDR at a high level
+        if target not in self.targets_analysed:
+            raise RuntimeError('No results for target {0}.'.format(target))
+        if fdr:
+            try:
+                single_target_dict = self.fdr_correction[target]
+            except AttributeError:
+                raise RuntimeError('No FDR-corrected results have been added.')
+            except KeyError:
+                raise RuntimeError(
+                    'No FDR-corrected results for target {0}.'.format(target))
         else:
-            update_targets = [target]
+            try:
+                single_target_dict = self.single_target[target]
+            except AttributeError:
+                raise RuntimeError('No results have been added.')
+            except KeyError:
+                raise RuntimeError(
+                    'No results for target {0}.'.format(target))
 
-        for t in update_targets:
-            sources = self.get_target_sources(target=t, fdr=fdr)
-            delays = self.get_target_delays(target=t, fdr=fdr)
-            if sources.size:
-                if fdr:
-                    self.fdr_correction.adjacency_matrix[sources, t] = delays
-                else:
-                    self.adjacency_matrix[sources, t] = delays
+        return single_target_dict[key]
 
     def get_target_sources(self, target, fdr=False):
-        """Return list of sources for given target.
+        """Return list of sources (parents) for given target.
 
         Args:
             target : int
                 target index
             fdr : bool [optional]
                 if True, sources are returned for FDR-corrected results
+                (default=False)
         """
-        if target not in self.targets_analysed:
-            raise RuntimeError('No results for target {0}.'.format(target))
-        if fdr:
-            try:
-                return np.unique(np.array(
-                    [s[0] for s in (self.fdr_correction[target].
-                                    selected_vars_sources)]))
-            except AttributeError:
-                raise RuntimeError('No FDR-corrected results have been added.')
-            except KeyError:
-                RuntimeError(
-                    'Didn''t find results for target {0}.'.format(target))
-        else:
-            try:
-                return np.unique(np.array(
-                    [s[0] for s in (self.single_target[target].
-                                    selected_vars_sources)]))
-            except AttributeError:
-                raise RuntimeError('No results have been added.')
-            except KeyError:
-                raise RuntimeError(
-                    'Didn''t find results for target {0}.'.format(target))
+        return np.unique(np.array(
+            [s[0] for s in (self.single_target_key(
+                target, 'selected_vars_sources', fdr))]
+        ))
 
 
 class ResultsNetworkInference(ResultsNetworkAnalysis):
@@ -475,8 +482,8 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
     MultivariateTE or Bivariate TE.
 
     Note that for convenience all dictionaries in this class can additionally
-    be accessed using dot-notation: res_network.single_target[2].omnibus_pval
-    or res_network.single_target[2].['omnibus_pval'].
+    be accessed using dot-notation: res_network.settings.cmi_estimator
+    or res_network.settings['cmi_estimator'].
 
     Attributes:
         settings : dict
@@ -490,13 +497,11 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
                   analysis given the settings (e.g., a high maximum lag used in
                   network inference, results in fewer data points available for
                   estimation)
-                - normalised : bool - indicates if data were normalised before
-                  estimation
-                - single
+                - normalised : bool - indicates if data were z-standardised
+                  before the estimation
 
-        adjacency_matrix : 2D numpy array
-            adjacency matrix describing the inferred network structure, if
-            applicable entries denote the information-transfer delay
+        targets_analysed : list
+            list of analysed targets
         single_target : dict
             results for individual targets, contains for each target
 
@@ -519,8 +524,6 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
                 - current_value : tuple - current value used for analysis,
                   described by target and sample index in the data
 
-        targets_analysed : list
-            list of targets analyzed
         fdr_correction : dict
             FDR-corrected results, see documentation of network inference
             algorithms and stats.network_fdr
@@ -529,17 +532,40 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
 
     def __init__(self, n_nodes, n_realisations, normalised):
         super().__init__(n_nodes, n_realisations, normalised)
-        self.adjacency_matrix = np.zeros(
-            (self.data_properties.n_nodes, self.data_properties.n_nodes), dtype=int)
         self._add_fdr(None)
 
-    def get_target_delays(self, target, find_delay='max_te', fdr=False):
-        """Return list of information-transfer delays for given target.
+    def _add_fdr(self, fdr, alpha=None, correct_by_target=None, constant=None):
+        """Add settings and results of FDR correction"""
+        # Add settings of FDR-correction
+        self.settings['alpha_fdr'] = alpha
+        self.settings['fdr_correct_by_target'] = correct_by_target
+        self.settings['fdr_constant'] = constant
+        # Add results of FDR-correction. FDR-correction can be None if
+        # correction is impossible due to the number of permutations in
+        # individual analysis being too low to allow for individual p-values
+        # to reach the FDR-thresholds. Add empty results in that case.
+        if fdr is None:
+            self.fdr_correction = DotDict()
+        else:
+            self.fdr_correction = DotDict(fdr)
 
-        Return a list of information-transfer delays for given target.
+    def _get_inference_measure(self, target):
+        """ """
+        if 'selected_sources_te' in self.single_target[target]:
+            return self.single_target[target].selected_sources_te
+        elif 'selected_sources_mi' in self.single_target[target]:
+            return self.single_target[target].selected_sources_mi
+        else:
+            raise KeyError('No entry with network inference measure found for '
+                           'current target')
+
+    def get_target_delays(self, target, criterion='max_te', fdr=False):
+        """Return list of information-transfer delays for a given target.
+
+        Return a list of information-transfer delays for a given target.
         Information-transfer delays are determined by the lag of the variable
-        in a sources' past that has the highest information transfer into the
-        target process. There are two ways of idendifying the variable with
+        in a source past that has the highest information transfer into the
+        target process. There are two ways of identifying the variable with
         maximum information transfer:
 
             a) use the variable with the highest absolute TE value (highest
@@ -552,7 +578,7 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
                 target index
             fdr : bool [optional]
                 print FDR-corrected results (default=False)
-            find_delay : str [optional]
+            criterion : str [optional]
                 use maximum TE value ('max_te') or p-value ('max_p') to
                 determine the source-target delay (default='max_te')
 
@@ -560,25 +586,27 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
             numpy array
                 Information-transfer delays for each source
         """
-        sources = self.get_target_sources(target, fdr)
+        
+        sources = self.get_target_sources(target=target, fdr=fdr)
         delays = np.zeros(sources.shape[0]).astype(int)
 
         # Get the source index for each past source variable of the target
-        all_vars_sources = np.array(
-            [x[0] for x in self.single_target[target].selected_vars_sources])
+        all_vars_sources = np.array([x[0] for x in self.single_target_key(
+            target=target, key='selected_vars_sources', fdr=fdr)])
         # Get the lag for each past source variable of the target
-        all_vars_lags = np.array(
-            [x[1] for x in self.single_target[target].selected_vars_sources])
+        all_vars_lags = np.array([x[1] for x in self.single_target_key(
+            target=target, key='selected_vars_sources', fdr=fdr)])
         # Get p-values and TE-values for past source variable
-        pval = self.single_target[target].selected_sources_pval
+        pval = self.single_target_key(
+            target=target, key='selected_sources_pval', fdr=fdr)
         measure = self._get_inference_measure(target)
 
         # Find delay for each source
         for (ind, s) in enumerate(sources):
-            if find_delay == 'max_p':
+            if criterion == 'max_p':
                 # Find the minimum p-value amongst the variables in source s
                 delays_ind = np.argmin(pval[all_vars_sources == s])
-            elif find_delay == 'max_te':
+            elif criterion == 'max_te':
                 # Find the maximum TE-value amongst the variables in source s
                 delays_ind = np.argmax(measure[all_vars_sources == s])
 
@@ -586,16 +614,102 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
 
         return delays
 
-    def _get_inference_measure(self, target):
-        if 'selected_sources_te' in self.single_target[target]:
-            return self.single_target[target].selected_sources_te
-        elif 'selected_sources_mi' in self.single_target[target]:
-            return self.single_target[target].selected_sources_mi
-        else:
-            raise KeyError('No entry with network inference measure found for '
-                           'current target')
+    def get_adjacency_matrix(self, weights, fdr=False):
+        """Return adjacency matrix.
 
-    def export_brain_net_viewer(self, mni_coord, file_name, **kwargs):
+        Return adjacency matrix resulting from network inference. The adjacency
+        matrix can either be generated from FDR-corrected results or
+        uncorrected results. Multiple options for the weight are available.
+
+        Args:
+            weights: str
+                can either be
+
+                - 'max_te_lag': the weights represent the source -> target
+                   lag corresponding to the maximum tranfer entropy value
+                   (see documentation for method get_target_delays for details)
+                - 'max_p_lag': the weights represent the source -> target
+                   lag corresponding to the maximum p-value
+                   (see documentation for method get_target_delays for details)
+                - 'vars_count': the weights represent the number of
+                   statistically-significant source -> target lags
+                - 'binary': return unweighted adjacency matrix with binary
+                   entries
+                   
+                   - 1 = significant information transfer;
+                   - 0 = no significant information transfer.
+
+            fdr : bool [optional]
+                use FDR-corrected results (default=False)
+        """
+
+        adjacency_matrix = np.zeros(
+            (self.data_properties.n_nodes, self.data_properties.n_nodes),
+            dtype=int)
+
+        if weights == 'max_te_lag':
+            for t in self.targets_analysed:
+                sources = self.get_target_sources(target=t, fdr=fdr)
+                delays = self.get_target_delays(target=t,
+                                                criterion='max_te',
+                                                fdr=fdr)
+                if sources.size:
+                    adjacency_matrix[sources, t] = delays
+        elif weights == 'max_p_lag':
+            for t in self.targets_analysed:
+                sources = self.get_target_sources(target=t, fdr=fdr)
+                delays = self.get_target_delays(target=t,
+                                                criterion='max_p',
+                                                fdr=fdr)
+                if sources.size:
+                    adjacency_matrix[sources, t] = delays
+        elif weights == 'vars_count':
+            for t in self.targets_analysed:
+                for s in self.single_target_key(target=t,
+                                                key='selected_vars_sources',
+                                                fdr=fdr):
+                    adjacency_matrix[s[0], t] += 1
+        elif weights == 'binary':
+            for t in self.targets_analysed:
+                for s in self.single_target_key(target=t,
+                                                key='selected_vars_sources',
+                                                fdr=fdr):
+                    adjacency_matrix[s[0], t] = 1
+        else:
+            raise RuntimeError('Invalid weights value')
+
+        return adjacency_matrix
+
+    def print_edge_list(self, weights, fdr=False):
+        """Print results of network inference to console.
+
+        Print edge list resulting from network inference to console.
+        Output may look like this:
+
+            0 -> 1, max_te_lag = 2
+            0 -> 2, max_te_lag = 3
+            0 -> 3, max_te_lag = 2
+            3 -> 4, max_te_lag = 1
+            4 -> 3, max_te_lag = 1
+
+        The edge list can either be generated from FDR-corrected results
+        or uncorrected results. Multiple options for the weight
+        are available (see documentation of method get_adjacency_matrix for
+        details).
+
+        Args:
+            weights: str
+                link weights (see documentation of method get_adjacency_matrix
+                for details)
+
+            fdr : bool [optional]
+                print FDR-corrected results (default=False)
+        """
+        adjacency_matrix = self.get_adjacency_matrix(weights=weights, fdr=fdr)
+        self._print_edge_list(adjacency_matrix, weights=weights)
+
+    def export_brain_net_viewer(self, mni_coord, file_name, weights, fdr=False,
+                                **kwargs):
         """Export network to BrainNet Viewer.
 
         Export networks to BrainNet Viewer (project home page:
@@ -618,6 +732,11 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
             file_name : str
                 file name for output files *.node and *.edge, including the
                 path to the file
+            weights : str
+                weights for the adjacency matrix (see documentation of method
+                get_adjacency_matrix for details)
+            fdr : bool [optional]
+                use FDR-corrected results (default=False)
             labels : array type of str [optional]
                 list of node labels of length n, description or label for each
                 node. Note that labels can't contain spaces (causes BrainNet to
@@ -630,32 +749,33 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
                 BrainNet gives you the option to size nodes according to the
                 values in this array (length n), see BrainNet Manual
         """
-        self._export_brain_net(self.adjacency_matrix, mni_coord, file_name,
-                               **kwargs)
+        adjacency_matrix = self.get_adjacency_matrix(weights=weights, fdr=fdr)
+        self._export_brain_net(adjacency_matrix, mni_coord, file_name,
+                               fdr=False, **kwargs)
 
-    def export_networkx_graph(self, fdr=False):
+    def export_networkx_graph(self, weights, fdr=False):
         """Generate networkx graph object for an inferred network.
 
         Generate a weighted, directed graph object from the network of inferred
         (multivariate) interactions (e.g., multivariate TE), using the networkx
-        class for directed graphs (DiGraph). The graph is weighted by the
-        reconstructed source-target delays (see documentation for method
-        get_target_delays for details).
+        class for directed graphs (DiGraph). Multiple options for the weight
+        are available (see documentation of method get_adjacency_matrix for
+        details).
 
         Args:
+            weights : str
+                weights for the adjacency matrix (see documentation of method
+                get_adjacency_matrix for details)
             fdr : bool [optional]
-                return FDR-corrected results
+                use FDR-corrected results
 
         Returns:
             DiGraph object
                 instance of a directed graph class from the networkx
                 package (DiGraph)
         """
-        if fdr:
-            return self._export_to_networkx(
-                self.fdr_correction.adjacency_matrix)
-        else:
-            return self._export_to_networkx(self.adjacency_matrix)
+        adjacency_matrix = self.get_adjacency_matrix(weights=weights, fdr=fdr)
+        return self._export_to_networkx(adjacency_matrix, weights)
 
     def export_networkx_source_graph(self, target,
                                      sign_sources=True, fdr=False):
@@ -665,7 +785,8 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
         interactions (e.g., multivariate TE) between single source variables
         and a target process using the networkx class for directed graphs
         (DiGraph). The graph shows the information transfer between individual
-        source variables and the target.
+        source variables and the target. Each node is a tuple with the
+        following format: (process index, sample index).
 
         Args:
             target : int
@@ -681,105 +802,71 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
                 instance of a directed graph class from the networkx
                 package (DiGraph)
         """
-        if target not in self.targets_analysed:
-            raise RuntimeError('No results for target {0}.'.format(target))
-        graph = nx.DiGraph()
-        # Add the target as a node. Each node is a tuple with format (process
-        # index, sample index).
-        graph.add_node(self.single_target[target].current_value)
 
-        # Get list of *all* past variables.
-        if fdr:
-            if (self.fdr_correction.adjacency_matrix == 0).all():
-                all_variables = []  # no sign. links after FDR-correction
-            else:
-                all_variables = (
-                    self.fdr_correction.single_target[target].selected_vars_sources +
-                    self.fdr_correction.single_target[target].selected_vars_target)
-        else:
-            all_variables = (
-                self.single_target[target].selected_vars_sources +
-                self.single_target[target].selected_vars_target)
+        graph = nx.DiGraph()
+
+        current_value = self.single_target_key(
+                target=target, key='current_value', fdr=fdr)
+        # Add the target as a node and add omnibus p-value as an attribute
+        # of the target node
+        graph.add_node(current_value,
+                       omnibus_te=self.single_target_key(
+                                    target=target, key='omnibus_te', fdr=fdr),
+                       omnibus_sign=self.single_target_key(
+                                    target=target, key='omnibus_sign', fdr=fdr)
+                       )
+        # Get selected source variables
+        selected_vars_sources = self.single_target_key(
+            target=target, key='selected_vars_sources', fdr=fdr)
+        # Get selected target variables
+        selected_vars_target = self.single_target_key(
+            target=target, key='selected_vars_target', fdr=fdr)
 
         if sign_sources:  # Add only significant past variables as nodes.
-            graph.add_nodes_from(all_variables)
+            graph.add_nodes_from(selected_vars_sources)
+            graph.add_nodes_from(selected_vars_target)
         else:   # Add all tested past variables as nodes.
             # Get all sample indices.
-            current_value = self.single_target[target].current_value
-            min_lag = self.settings.min_lag_sources
-            max_lag = self.settings.max_lag_sources
-            tau = self.settings.max_lag_sources
             samples_tested = np.arange(
-                current_value[1] - min_lag, current_value[1] - max_lag, -tau)
+                current_value[1] - self.settings.min_lag_sources,
+                current_value[1] - self.settings.max_lag_sources,
+                -self.settings.tau_sources)
             # Get source indices
-            sources_tested = self.single_target[target].sources_tested
+            sources_tested = self.single_target_key(
+                target=target, key='sources_tested', fdr=fdr)
             # Create tuples from source and sample indices
-            nodes = [i for i in it.product(sources_tested, samples_tested)]
-            graph.add_nodes_from(nodes)
+            tested_vars_sources = [i for i in it.product(
+                sources_tested, samples_tested)]
+            graph.add_nodes_from(tested_vars_sources)
 
-        # Add edges from significant past variables to the target. Here, one
-        # could add additional info in the future, networkx graphs support
-        # attributes for graphs, nodes, and edges.
-        for v in all_variables:
-            graph.add_edge(v, self.single_target[target].current_value)
-
+        # Add edges from selected target variables to the target.
+        for v in selected_vars_target:
+            graph.add_edge(v, current_value)
+        
+        # Get TE and p-values fro selected source variables
+        selected_sources_te = self.single_target_key(
+            target=target, key='selected_sources_te', fdr=fdr)
+        selected_sources_pval = self.single_target_key(
+            target=target, key='selected_sources_pval', fdr=fdr)
+        # Add edges from selected source variables to the target.
+        # Also add TE and p-value as edge attributes
+        for (ind, v) in enumerate(selected_vars_sources):
+            graph.add_edge(v, current_value,
+                           te=selected_sources_te[ind],
+                           pval=selected_sources_pval[ind]
+                           )
         return graph
-
-    def print_to_console(self, fdr=False):
-        """Print results of network inference to console.
-
-        Print results of network inference to console. Output looks like this:
-
-            0 -> 1, u = 2
-            0 -> 2, u = 3
-            0 -> 3, u = 2
-            3 -> 4, u = 1
-            4 -> 3, u = 1
-
-        indicating significant information transfer source -> target with an
-        information-transfer delay u (see documentation for method
-        get_target_delays for details). The network can either be plotted from
-        FDR-corrected results or uncorrected results.
-
-        Args:
-            fdr : bool [optional]
-                print FDR-corrected results (default=False)
-        """
-        if fdr:
-            adjacency_matrix = self.fdr_correction.adjacency_matrix
-        else:
-            adjacency_matrix = self.adjacency_matrix
-        self._print_to_console(adjacency_matrix, 'u')
-
-    def _add_fdr(self, fdr, alpha=None, correct_by_target=None, constant=None):
-        # Add settings of FDR-correction
-        self.settings['alpha_fdr'] = alpha
-        self.settings['fdr_correct_by_target'] = correct_by_target
-        self.settings['fdr_constant'] = constant
-        # Add results of FDR-correction. FDR-correction can be None if
-        # correction is impossible due to the number of permutations in
-        # individual analysis being too low to allow for individual p-values
-        # to reach the FDR-thresholds. Add empty results in that case.
-        if fdr is None:
-            self.fdr_correction = DotDict()
-            self.fdr_correction['adjacency_matrix'] = np.zeros(
-                (self.data_properties.n_nodes, self.data_properties.n_nodes), dtype=int)
-        else:
-            self.fdr_correction = DotDict(fdr)
-            self.fdr_correction.adjacency_matrix = np.zeros(
-                (self.data_properties.n_nodes, self.data_properties.n_nodes), dtype=int)
-            self._update_adjacency_matrix(fdr=True)
 
 
 class ResultsPartialInformationDecomposition(ResultsNetworkAnalysis):
-    """Store results of network inference.
+    """Store results of Partial Information Decomposition (PID) analysis.
 
-    Provide a container for results of network inference algorithms, e.g.,
-    MultivariateTE or Bivariate TE.
+    Provide a container for results of Partial Information Decomposition (PID)
+    algorithms.
 
     Note that for convenience all dictionaries in this class can additionally
-    be accessed using dot-notation: res_network.single_target[2].omnibus_pval
-    or res_network.single_target[2].['omnibus_pval'].
+    be accessed using dot-notation: res_pid.single_target[2].source_1
+    or res_pid.single_target[2].['source_1'].
 
     Attributes:
         settings : dict
@@ -793,9 +880,8 @@ class ResultsPartialInformationDecomposition(ResultsNetworkAnalysis):
                   analysis given the settings (e.g., a high maximum lag used in
                   network inference, results in fewer data points available for
                   estimation)
-                - normalised : bool - indicates if data were normalised before
-                  estimation
-                - single
+                - normalised : bool - indicates if data were z-standardised
+                  before the estimation
 
         single_target : dict
             results for individual targets, contains for each target
@@ -820,18 +906,11 @@ class ResultsPartialInformationDecomposition(ResultsNetworkAnalysis):
 
 
         targets_analysed : list
-            list of targets analyzed
+            list of analysed targets
     """
 
     def __init__(self, n_nodes, n_realisations, normalised):
         super().__init__(n_nodes, n_realisations, normalised)
-        self.adjacency_matrix = np.zeros(
-            (self.data_properties.n_nodes, self.data_properties.n_nodes), dtype=int)
-
-    def _update_adjacency_matrix(self, target):
-        sources = self.get_target_sources(target)
-        if sources.size:
-            self.adjacency_matrix[sources, target] = 1
 
 
 class ResultsNetworkComparison(ResultsNetworkAnalysis):
@@ -840,23 +919,14 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
     Provide a container for results of network comparison algorithms.
 
     Note that for convenience all dictionaries in this class can additionally
-    be accessed using dot-notation: res_network.single_target[2].omnibus_pval
-    or res_network.single_target[2].['omnibus_pval'].
+    be accessed using dot-notation: res_network.settings.cmi_estimator
+    or res_network.settings['cmi_estimator'].
 
     Attributes:
         settings : dict
             settings used for estimation of information theoretic measures and
             statistical testing
-        adjacency_matrix_union : 2D numpy array
-            union of networks that entered the comparison
-        adjacency_matrix_comparison : 2D numpy array
-            True for links showing significant differences in inferred
-            effective connectivity
-        adjacency_matrix_diff_abs : 2D numpy array
-            absolute differences in inferred effective connectivity for
-            significant links
-        adjacency_matrix_pvalue : 2D numpy array
-            p-values for significant links
+
         data_properties: dict
             data properties, contains
 
@@ -865,9 +935,8 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
                   analysis given the settings (e.g., a high maximum lag used in
                   network inference, results in fewer data points available for
                   estimation)
-                - normalised : bool - indicates if data were normalised before
-                  estimation
-                - single
+                - normalised : bool - indicates if data were z-standardised
+                  before the estimation
 
         single_target : dict
             results for individual targets, contains for each target
@@ -881,19 +950,11 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
         surrogate_distribution : dict
             surrogate distribution for each target
         targets_analysed : list
-            list of targets analyzed
+            list of analysed targets
     """
 
     def __init__(self, n_nodes, n_realisations, normalised):
         super().__init__(n_nodes, n_realisations, normalised)
-        self.adjacency_matrix_pvalue = np.ones(
-            (self.data_properties.n_nodes, self.data_properties.n_nodes), dtype=float)
-        self.adjacency_matrix_comparison = np.zeros(
-            (self.data_properties.n_nodes, self.data_properties.n_nodes), dtype=bool)
-        self.adjacency_matrix_union = np.zeros(
-            (self.data_properties.n_nodes, self.data_properties.n_nodes), dtype=int)
-        self.adjacency_matrix_diff_abs = np.zeros(
-            (self.data_properties.n_nodes, self.data_properties.n_nodes), dtype=float)
 
     def _add_results(self, union_network, results, settings):
         # Check if results have already been added to this instance.
@@ -906,58 +967,92 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
             self.single_target[t] = DotDict(union_network.single_target[t])
         # self.max_lag = union_network['max_lag']
         self.surrogate_distributions = results['cmi_surr']
-        self._update_adjacency_matrix(results)
+        self.ab = results['a>b']
+        self.cmi_diff_abs = results['cmi_diff_abs']
+        self.pval = results['pval']
 
-    def _update_adjacency_matrix(self, results):
-        for t in self.targets_analysed:
-            sources = self.get_target_sources(t)
-            if sources.size:
-                self.adjacency_matrix_union[sources, t] = 1
-            for (i, s) in enumerate(sources):
-                self.adjacency_matrix_comparison[s, t] = results['a>b'][t][i]
-                self.adjacency_matrix_diff_abs[s, t] = (
-                    results['cmi_diff_abs'][t][i])
-                self.adjacency_matrix_pvalue[s, t] = results['pval'][t][i]
+    def get_adjacency_matrix(self, weights='comparison'):
+        """Return adjacency matrix.
 
-    def print_to_console(self, matrix='comparison'):
+        Return adjacency matrix resulting from network inference.
+        Multiple options for the weights are available.
+
+        Args:
+            weights : str [optional]
+                can either be
+
+                - 'union': all links in the union network, i.e., all
+                  links that were tested for a difference
+
+                or return information for links with a significant difference
+
+                - 'comparison': True for links with a significant difference in
+                   inferred effective connectivity (default)
+                - 'pvalue': absolute differences in inferred effective
+                   connectivity for significant links
+                - 'diff_abs': absolute difference
+
+        """
+        if weights == 'comparison':
+            adjacency_matrix = np.zeros(
+                (self.data_properties.n_nodes, self.data_properties.n_nodes),
+                dtype=bool)
+            for t in self.targets_analysed:
+                sources = self.get_target_sources(t)
+                for (i, s) in enumerate(sources):
+                        adjacency_matrix[s, t] = self.ab[t][i]
+        elif weights == 'union':
+            adjacency_matrix = np.zeros(
+                (self.data_properties.n_nodes, self.data_properties.n_nodes),
+                dtype=int)
+            for t in self.targets_analysed:
+                sources = self.get_target_sources(t)
+                if sources.size:
+                    adjacency_matrix[sources, t] = 1
+        elif weights == 'diff_abs':
+            adjacency_matrix = np.zeros(
+                (self.data_properties.n_nodes, self.data_properties.n_nodes),
+                dtype=float)
+            for t in self.targets_analysed:
+                sources = self.get_target_sources(t)
+                for (i, s) in enumerate(sources):
+                    adjacency_matrix[s, t] = self.cmi_diff_abs[t][i]
+        elif weights == 'pvalue':
+            adjacency_matrix = np.ones(
+                (self.data_properties.n_nodes, self.data_properties.n_nodes),
+                dtype=float)
+            for t in self.targets_analysed:
+                sources = self.get_target_sources(t)
+                for (i, s) in enumerate(sources):
+                    adjacency_matrix[s, t] = self.pval[t][i]
+
+        # self._print_edge_list(adjacency_matrix, weights=weights)
+        return adjacency_matrix
+
+    def print_edge_list(self, weights='comparison'):
         """Print results of network comparison to console.
 
         Print results of network comparison to console. Output looks like this:
 
-            0 -> 1, abs_diff = 0.2
-            0 -> 2, abs_diff = 0.5
-            0 -> 3, abs_diff = 0.7
-            3 -> 4, abs_diff = 1.3
-            4 -> 3, abs_diff = 0.4
+            0 -> 1, diff_abs = 0.2
+            0 -> 2, diff_abs = 0.5
+            0 -> 3, diff_abs = 0.7
+            3 -> 4, diff_abs = 1.3
+            4 -> 3, diff_abs = 0.4
 
         indicating differences in the network inference measure for a link
         source -> target.
 
         Args:
-            matrix : str [optional]
-                can either be
-
-                - 'union': print all links in the union network, i.e., all
-                  links that were tested for a difference
-
-                or print information for links with a significant difference
-
-                - 'comparison': links with a significant difference (default)
-                - 'pvalue': print p-values for links with a significant
-                   difference
-                - 'diff_abs': print the absolute difference
+            weights : str [optional]
+                weights for the adjacency matrix (see documentation of method
+                get_adjacency_matrix for details)
         """
-        if matrix == 'comparison':
-            adjacency_matrix = self.adjacency_matrix_comparison
-        elif matrix == 'union':
-            adjacency_matrix = self.adjacency_matrix_union
-        elif matrix == 'diff_abs':
-            adjacency_matrix = self.adjacency_matrix_diff_abs
-        elif matrix == 'pvalue':
-            adjacency_matrix = self.adjacency_matrix_pvalue
-        self._print_to_console(adjacency_matrix, matrix)
+        adjacency_matrix = self.get_adjacency_matrix(weights=weights)
+        self._print_edge_list(adjacency_matrix, weights=weights)
 
-    def export_brain_net_viewer(self, matrix, mni_coord, file_name, **kwargs):
+    def export_brain_net_viewer(self, mni_coord, file_name, weights, fdr=False,
+                                **kwargs):
         """Export network to BrainNet Viewer.
 
         Export networks to BrainNet Viewer (project home page:
@@ -974,25 +1069,17 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
           e68910. https://doi.org/10.1371/journal.pone.0068910
 
         Args:
-            matrix : str [optional]
-                can either be
-
-                - 'union': print all links in the union network, i.e., all
-                  links that were tested for a difference
-
-                or print information for links with a significant difference
-
-                - 'comparison': links with a significant difference (default)
-                - 'pvalue': print p-values for links with a significant
-                   difference
-                - 'diff_abs': print the absolute difference
-
             mni_coord : numpy array
                 MNI coordinates (x,y,z) of the sources, array with size [n 3],
                 where n is the number of nodes
             file_name : str
                 file name for output files *.node and *.edge, including the
                 path to the file
+            weights : str
+                weights for the adjacency matrix (see documentation of method
+                get_adjacency_matrix for details)
+            fdr : bool [optional]
+                use FDR-corrected results (default=False)
             labels : array type of str [optional]
                 list of node labels of length n, description or label for each
                 node. Note that labels can't contain spaces (causes BrainNet to
@@ -1005,47 +1092,28 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
                 BrainNet gives you the option to size nodes according to the
                 values in this array (length n), see BrainNet Manual
         """
-        if matrix == 'comparison':
-            adjacency_matrix = self.adjacency_matrix_comparison
-        elif matrix == 'union':
-            adjacency_matrix = self.adjacency_matrix_union
-        elif matrix == 'diff_abs':
-            adjacency_matrix = self.adjacency_matrix_diff_abs
-        elif matrix == 'pvalue':
-            adjacency_matrix = self.adjacency_matrix_pvalue
+        adjacency_matrix = self.get_adjacency_matrix(weights=weights, fdr=fdr)
         self._export_brain_net(adjacency_matrix, mni_coord, file_name,
                                **kwargs)
 
-    def export_networkx_graph(self, matrix):
+    def export_networkx_graph(self, weights='comparison'):
         """Generate networkx graph object from network comparison results.
 
         Generate a weighted, directed graph object from the adjacency matrix
         representing results of network comparison, using the networkx class
-        for directed graphs (DiGraph). The graph is weighted by the
-        results requested by 'matrix'.
+        for directed graphs (DiGraph). Multiple options for the weights
+        are available (see documentation of method get_adjacency_matrix for
+        details).
 
         Args:
-            matrix : str [optional]
-                can either be
-                - 'union': print all links in the union network, i.e., all
-                  links that were tested for a difference
-                or print information for links with a significant difference
-                - 'comparison': links with a significant difference (default)
-                - 'pvalue': print p-values for links with a significant
-                   difference
-                - 'diff_abs': print the absolute difference
+            weights : str [optional]
+                weights for the adjacency matrix (see documentation of method
+                get_adjacency_matrix for details)
 
         Returns:
             DiGraph object
                 instance of a directed graph class from the networkx
                 package (DiGraph)
         """
-        if matrix == 'comparison':
-            adjacency_matrix = self.adjacency_matrix_comparison
-        elif matrix == 'union':
-            adjacency_matrix = self.adjacency_matrix_union
-        elif matrix == 'diff_abs':
-            adjacency_matrix = self.adjacency_matrix_diff_abs
-        elif matrix == 'pvalue':
-            adjacency_matrix = self.adjacency_matrix_pvalue
-        return self._export_to_networkx(adjacency_matrix)
+        adjacency_matrix = self.get_adjacency_matrix(weights=weights)
+        return self._export_to_networkx(adjacency_matrix, weights)

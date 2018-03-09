@@ -2,7 +2,7 @@
 
 The **I**nformation **D**ynamics **T**oolkit **xl** (IDTxl) in Python. IDTxl is a comprehensive software package for
 
-1. Efficient inference of networks from multivariate time series data using information theory. We utilises a greedy or iterative approach with multivariate transfer entropy for building sets of parent sources for each target node in the network. This iterative conditioning is designed to both remove redundancies and capture synergistic interactions in building each parent set. Rigorous statistical controls (based on comparison to null distributions from time-series surrogates) are used to gate parent selection and to provide automatic stopping conditions for the inference.
+1. Efficient inference of networks from multivariate time series data using information theory. We utilise a greedy or iterative approach with multivariate transfer entropy for building sets of parent sources for each target node in the network. This iterative conditioning is designed to both remove redundancies and capture synergistic interactions in building each parent set. Rigorous statistical controls (based on comparison to null distributions from time-series surrogates) are used to gate parent selection and to provide automatic stopping conditions for the inference.
 
 2. Analysis of information dynamics
 	- multivariate transfer entropy (mTE)
@@ -14,7 +14,7 @@ The **I**nformation **D**ynamics **T**oolkit **xl** (IDTxl) in Python. IDTxl is 
 To **get started** have a look at the [wiki](https://github.com/pwollstadt/IDTxl/wiki) and the [documentation](http://pwollstadt.github.io/IDTxl/).
 
 ## How to cite
-Wollstadt, Lizier, Vicente, Finn, Martinez Zarzeula, Lindner, Martinez Mediano, Novelli, Wibral, 2017. "IDTxl - The Information Dynamics Toolkit xl: a Python package for the efficient analysis of multivariate information dynamics in networks", GitHub Repository: https://github.com/pwollstadt/IDTxl.
+Wollstadt, Lizier, Vicente, Finn, Martinez Zarzuela, Lindner, Martinez Mediano, Novelli, Wibral, 2017. "IDTxl - The Information Dynamics Toolkit xl: a Python package for the efficient analysis of multivariate information dynamics in networks", GitHub Repository: https://github.com/pwollstadt/IDTxl.
 
 ## Contributors
 

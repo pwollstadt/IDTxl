@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_network(results, fdr=False):
+def plot_network(results, weights, fdr=False):
     """Plot network of multivariate TE between processes.
 
     Plot graph of the network of (multivariate) interactions between processes
@@ -14,6 +14,33 @@ def plot_network(results, fdr=False):
     Args:
         results : ResultsNetworkInference() instance
             output of an network inference algorithm
+        weights : str
+            for single network inference, it can either be
+
+                - 'max_te_lag': the weights represent the source -> target
+                   lag corresponding to the maximum tranfer entropy value
+                   (see documentation for method get_target_delays for details)
+                - 'max_p_lag': the weights represent the source -> target
+                   lag corresponding to the maximum p-value
+                   (see documentation for method get_target_delays for details)
+                - 'vars_count': the weights represent the number of
+                   statistically-significant source -> target lags
+                - 'binary': return unweighted adjacency matrix with binary
+                   entries
+                   
+                   - 1 = significant information transfer;
+                   - 0 = no significant information transfer.
+
+            for network comparison, it can either be
+
+                - 'union': all links in the union network, i.e., all
+                  links that were tested for a difference
+                - 'comparison': True for links with a significant difference in
+                   inferred effective connectivity (default)
+                - 'pvalue': absolute differences in inferred effective
+                   connectivity for significant links
+                - 'diff_abs': absolute difference
+
         fdr : bool [optional]
             print FDR-corrected results (default=False)
 
@@ -23,22 +50,22 @@ def plot_network(results, fdr=False):
         Figure
             figure handle, Figure object from the matplotlib package
     """
-    graph = results.export_networkx_graph(fdr)
+    graph = results.export_networkx_graph(weights=weights, fdr=fdr)
 
     fig = plt.figure(figsize=(10, 5))
     ax1 = plt.subplot(121)  # plot graph
-    _plot_graph(graph, ax1)
+    _plot_graph(graph, ax1, weights)
     plt.subplot(122)  # plot adjacency matrix
-    if fdr:
-        _plot_adj_matrix(results.fdr_correction.adjacency_matrix)
-    else:
-        _plot_adj_matrix(results.adjacency_matrix)
+    _plot_adj_matrix(
+        results.get_adjacency_matrix(weights, fdr),
+        cbar_label=weights)
     plt.show()
 
     return graph, fig
 
 
-def plot_selected_vars(results, target, sign_sources=True, fdr=False):
+def plot_selected_vars(results, target, sign_sources=True,
+                       display_edge_labels=False, fdr=False):
     """Plot network of a target process and single variables.
 
     Plot graph of the network of (multivariate) interactions between source
@@ -53,6 +80,8 @@ def plot_selected_vars(results, target, sign_sources=True, fdr=False):
         sign_sources : bool [optional]
             add only sources significant information contribution
             (default=True)
+        display_edge_labels : bool [optional]
+            display TE value on edge lables (default=False)
         fdr : bool [optional]
             print FDR-corrected results (default=False)
 
@@ -94,25 +123,35 @@ def plot_selected_vars(results, target, sign_sources=True, fdr=False):
     nx.draw(graph, pos=pos, with_labels=True, font_weight='bold',
             node_size=900, alpha=0.7, node_shape='s', node_color=color,
             hold=True)
+    # Optionally display edge labels showing the TE value
+    if display_edge_labels:
+        edge_labels = nx.get_edge_attributes(graph, 'te')
+        # Change format to only display 2 decimals
+        for key, value in edge_labels.items():
+            edge_labels[key] = '{0:.2g}'.format(value)
+        nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels,
+                                     font_size=10)  # font_weight='bold'
+
     plt.plot([-0.5, max_lag + 0.5], [0.5, 0.5],
              linestyle='--', linewidth=1, color='0.5')
     plt.show()
     return graph, fig
 
 
-def _plot_graph(graph, axis):
+def _plot_graph(graph, axis, weights, display_edge_labels=True):
     """Plot graph using networkx."""
     pos = nx.circular_layout(graph)
-    edge_labels = nx.get_edge_attributes(graph, 'weight')
     nx.draw_circular(graph, with_labels=True, node_size=600, alpha=1.0,
                      ax=axis, node_color='Gainsboro', hold=True, font_size=14,
                      font_weight='bold')
-    nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels,
-                                 font_size=13)  # font_weight='bold'
+    if display_edge_labels:
+        edge_labels = nx.get_edge_attributes(graph, weights)
+        nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels,
+                                     font_size=13)  # font_weight='bold'
 
 
 def _plot_adj_matrix(adj_matrix, mat_color='gray_r', diverging=False,
-                     cbar_label='delay', cbar_stepsize=1):
+                     cbar_label='', cbar_stepsize=1):
     """Plot adjacency matrix."""
     # Plot matrix, set minimum and maximum values to the same value for
     # diverging plots to center colormap at 0, i.e., 0 is plotted in white
@@ -129,10 +168,16 @@ def _plot_adj_matrix(adj_matrix, mat_color='gray_r', diverging=False,
 
     # Set the colorbar and make colorbar match the image in size using the
     # fraction and pad parameters (see https://stackoverflow.com/a/26720422).
-    if cbar_label == 'delay':
+    cbar_ticks = np.arange(0, max_val + 1, cbar_stepsize)
+    if cbar_label == 'max_te_lag':
         cbar_label = 'delay [samples]'
-        cbar_ticks = np.arange(0, max_val + 1, cbar_stepsize)
-    if cbar_label == 'p-value':
+    elif cbar_label == 'max_p_lag':
+        cbar_label = 'max p-value lag [samples]'
+    elif cbar_label == 'vars_count':
+        cbar_label = '# of selected vars'
+    elif cbar_label == 'binary':
+        cbar_label = 'Binary adjacency matrix'
+    elif cbar_label == 'p-value':
         cbar_ticks = np.arange(0, 1.001, 0.1)
     else:
         cbar_ticks = np.arange(min_val, max_val + 0.01 * max_val,
@@ -200,7 +245,7 @@ def plot_network_comparison(results):
         Figure
             figure handle, Figure object from the matplotlib package
     """
-    graph = results.export_networkx_graph(matrix='union')
+    graph = results.export_networkx_graph(weights='union')
 
     fig = plt.figure(figsize=(10, 15))
     ax1 = plt.subplot(231)  # plot union graph
