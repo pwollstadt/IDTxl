@@ -70,18 +70,6 @@ def test_amd_data_padding():
             'CMI estimation for uncorrelated Gaussians using the OpenCL '
             'estimator failed (error larger 0.05).')
 
-    # Test check for min. no. points.
-    n_chunks = 1
-    for n in [9, 10]:
-        data_run_source = np.tile(source[:n], (n_chunks, 1))
-        data_run_target = np.tile(target[:n], (n_chunks, 1))
-        with pytest.raises(RuntimeError):
-            mi, dist, n_range_var1, n_range_var2 = est_mi.estimate(
-                data_run_source, data_run_target, n_chunks=n_chunks)
-        with pytest.raises(RuntimeError):
-            cmi, dist, n_range_var1, n_range_var2 = est_cmi.estimate(
-                data_run_source, data_run_target, n_chunks=n_chunks)
-
     # Test debugging switched off
     settings['debug'] = False
     mi = est_mi.estimate(source, target)
