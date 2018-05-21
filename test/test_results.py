@@ -124,7 +124,7 @@ def test_results_network_inference():
             'Incorrect value for data normalisation.')
         assert res.data_properties.normalised == normalisation, (
             'Incorrect value for data normalisation.')
-        adj_matrix = res.get_adjacency_matrix('binary')
+        adj_matrix = res.get_adjacency_matrix('binary', fdr=False)
         assert adj_matrix.shape[0] == n_nodes, (
             'Incorrect number of rows in adjacency matrix.')
         assert adj_matrix.shape[1] == n_nodes, (
@@ -243,13 +243,11 @@ def test_delay_reconstruction():
         settings=settings, data=data, target=2))
     res_network.combine_results(nw.analyse_single_target(
         settings=settings, data=data, target=3))
-    print(res_network.get_adjacency_matrix('max_te_lag'))
-    assert res_network.get_adjacency_matrix('max_te_lag')[0, 1] == delay_1, (
-        'Delay 1 was not reconstructed correctly.')
-    assert res_network.get_adjacency_matrix('max_te_lag')[0, 2] == delay_2, (
-        'Delay 2 was not reconstructed correctly.')
-    assert res_network.get_adjacency_matrix('max_te_lag')[0, 3] == delay_3, (
-        'Delay 3 was not reconstructed correctly.')
+    adj_mat = res_network.get_adjacency_matrix('max_te_lag', fdr=False)
+    print(adj_mat)
+    assert adj_mat[0, 1] == delay_1, ('Estimate for delay 1 is not correct.')
+    assert adj_mat[0, 2] == delay_2, ('Estimate for delay 2 is not correct.')
+    assert adj_mat[0, 3] == delay_3, ('Estimate for delay 3 is not correct.')
 
     for target in range(1, 4):
         est_mi = res_network._single_target[target].omnibus_te
@@ -388,6 +386,7 @@ def test_export_brain_net():
     res_0.export_brain_net_viewer(mni_coord=mni_coord,
                                   file_name=outfile,
                                   weights='max_te_lag',
+                                  fdr=False,
                                   labels=labels,
                                   node_color=node_color,
                                   node_size=node_size)

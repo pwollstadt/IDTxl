@@ -89,7 +89,7 @@ def test_network_analysis():
                                     sources=[[1, 2], [0, 1]])
     assert 0.9 < est_tartu._single_target[2]['syn_s1_s2'] <= 1.1, (
         'Tartu estimator incorrect synergy: {0}, should approx. 1'.format(
-                                                    est_tartu[2]['syn_s1_s2']))
+                                    est_tartu._single_target[2]['syn_s1_s2']))
 
 
 @optimiser_missing

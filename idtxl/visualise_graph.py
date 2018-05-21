@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_network(results, weights, fdr=False):
+def plot_network(results, weights, fdr=True):
     """Plot network of multivariate TE between processes.
 
     Plot graph of the network of (multivariate) interactions between processes
@@ -42,7 +42,7 @@ def plot_network(results, weights, fdr=False):
                 - 'diff_abs': absolute difference
 
         fdr : bool [optional]
-            print FDR-corrected results (default=False)
+            print FDR-corrected results (default=True)
 
     Returns:
         DiGraph
@@ -65,7 +65,7 @@ def plot_network(results, weights, fdr=False):
 
 
 def plot_selected_vars(results, target, sign_sources=True,
-                       display_edge_labels=False, fdr=False):
+                       display_edge_labels=False, fdr=True):
     """Plot network of a target process and single variables.
 
     Plot graph of the network of (multivariate) interactions between source
@@ -83,7 +83,7 @@ def plot_selected_vars(results, target, sign_sources=True,
         display_edge_labels : bool [optional]
             display TE value on edge lables (default=False)
         fdr : bool [optional]
-            print FDR-corrected results (default=False)
+            print FDR-corrected results (default=True)
 
     Returns:
         DiGraph
