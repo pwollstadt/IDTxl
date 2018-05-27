@@ -479,11 +479,16 @@ class TartuPID(Estimator):
             estimation parameters (with default parameters)
 
             - verbose : bool [optional] - False
+            - cone_solver : str [optional] - which cone solver to use
+              (default='ECOS')
+            - solver_args : dict [optional] - solver arguments (default={})
     """
 
     def __init__(self, settings):
         # get estimation parameters
         settings.setdefault('verbose', False)
+        settings.setdefault('cone_solver', 'ECOS')
+        settings.setdefault('solver_args', {'keep_solver_object': False})
         self.settings = settings
 
     def is_parallel():
@@ -509,10 +514,10 @@ class TartuPID(Estimator):
         s1, s2, t, self.settings = _check_input(s1, s2, t, self.settings)
         pdf = _get_pdf_dict(s1, s2, t)
 
-        retval = synergy_tartu.pid(
-            pdf_dirty=pdf,
-            output=int(self.settings['verbose']),
-            keep_solver_object=False)
+        retval = synergy_tartu.pid(pdf_dirty=pdf,
+                                   cone_solver=self.settings['cone_solver'],
+                                   output=int(self.settings['verbose']),
+                                   **self.settings['solver_args'])
 
         results = {
             'num_err': retval['Num_err'],
