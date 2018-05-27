@@ -284,10 +284,10 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         self.results['selected_vars_sources'] = [
             self.results['source_1'][0], self.results['source_2'][0]]
         self.results['current_value'] = self.current_value
-        self.results['s1_unq_sign'] = sign_1
-        self.results['s2_unq_sign'] = sign_2
-        self.results['s1_unq_p_val'] = p_val_1
-        self.results['s2_unq_p_val'] = p_val_2
+        self.results['unq_s1_sign'] = sign_1
+        self.results['unq_s2_sign'] = sign_2
+        self.results['unq_s1_p_val'] = p_val_1
+        self.results['unq_s2_p_val'] = p_val_2
         self.results['syn_sign'] = sign_syn
         self.results['syn_p_val'] = p_val_syn
         self.results['shd_sign'] = sign_shd

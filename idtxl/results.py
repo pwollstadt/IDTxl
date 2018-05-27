@@ -931,6 +931,26 @@ class ResultsPartialInformationDecomposition(ResultsNetworkAnalysis):
     def __init__(self, n_nodes, n_realisations, normalised):
         super().__init__(n_nodes, n_realisations, normalised)
 
+    def get_single_target(self, target):
+        """Return results for a single target in the network.
+
+        See docstring of results class for details on what results are returned
+        by individual algorithms.
+
+        Args:
+            target : int
+                target id
+
+        Returns:
+            dict
+                Results for single target. Note that for convenience
+                dictionary entries can either be accessed via keywords
+                (result['selected_vars_sources']) or via dot-notation
+                (result.selected_vars_sources).
+        """
+        return super(ResultsPartialInformationDecomposition,
+                     self).get_single_target(target, fdr=False)
+
 
 class ResultsNetworkComparison(ResultsNetworkAnalysis):
     """Store results of network comparison.
