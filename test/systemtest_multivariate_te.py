@@ -62,7 +62,7 @@ def test_multivariate_te_corr_gaussian(estimator=None):
     # examples 1 and 2 respectively. The maximum errors were 0.093841 and
     # 0.05833172 repectively. This inspired the following error boundaries.
     expected_res = np.log(1 / (1 - np.power(cov, 2)))
-    estimated_res = results._single_target[1].omnibus_te
+    estimated_res = results.get_single_target(1, fdr=False).omnibus_te
     diff = np.abs(estimated_res - expected_res)
     print('Expected source sample: (0, 1)\nExpected target sample: (1, 1)')
     print(('Estimated TE: {0:5.4f}, analytical result: {1:5.4f}, error:'
@@ -106,19 +106,19 @@ def test_multivariate_te_lagged_copies():
     # ensures that we calculate a proper TE at any time in the algorithm).
     for t in range(2):
         results = random_analysis.analyse_single_target(settings, data, t)
-        assert len(results._single_target[t].selected_vars_full) == 1, (
+        assert len(results.get_single_target(t, fdr=False).selected_vars_full) == 1, (
                     'Conditional contains more/less than 1 variables.')
-        assert not results._single_target[t].selected_vars_sources.size, (
+        assert not results.get_single_target(t, fdr=False).selected_vars_sources.size, (
                     'Conditional sources is not empty.')
-        assert len(results._single_target[t].selected_vars_target) == 1, (
+        assert len(results.get_single_target(t, fdr=False).selected_vars_target) == 1, (
             'Conditional target contains more/less than 1 variable.')
-        assert results._single_target[t].selected_sources_pval is None, (
+        assert results.get_single_target(t, fdr=False).selected_sources_pval is None, (
             'Conditional p-value is not None.')
-        assert results._single_target[t].omnibus_pval is None, (
+        assert results.get_single_target(t, fdr=False).omnibus_pval is None, (
             'Omnibus p-value is not None.')
-        assert results._single_target[t].omnibus_sign is None, (
+        assert results.get_single_target(t, fdr=False).omnibus_sign is None, (
             'Omnibus significance is not None.')
-        assert results._single_target[t].selected_sources_te is None, (
+        assert results.get_single_target(t, fdr=False).selected_sources_te is None, (
             'Conditional TE values is not None.')
 
 
@@ -150,19 +150,19 @@ def test_multivariate_te_random():
     # ensures that we calculate a proper TE at any time in the algorithm).
     for t in range(2):
         results = random_analysis.analyse_single_target(settings, data, t)
-        assert len(results._single_target[t].selected_vars_full) == 1, (
+        assert len(results.get_single_target(t, fdr=False).selected_vars_full) == 1, (
                     'Conditional contains more/less than 1 variables.')
-        assert not results._single_target[t].selected_vars_sources.size, (
+        assert not results.get_single_target(t, fdr=False).selected_vars_sources.size, (
                     'Conditional sources is not empty.')
-        assert len(results._single_target[t].selected_vars_target) == 1, (
+        assert len(results.get_single_target(t, fdr=False).selected_vars_target) == 1, (
             'Conditional target contains more/less than 1 variable.')
-        assert results._single_target[t].selected_sources_pval is None, (
+        assert results.get_single_target(t, fdr=False).selected_sources_pval is None, (
             'Conditional p-value is not None.')
-        assert results._single_target[t].omnibus_pval is None, (
+        assert results.get_single_target(t, fdr=False).omnibus_pval is None, (
             'Omnibus p-value is not None.')
-        assert results._single_target[t].omnibus_sign is None, (
+        assert results.get_single_target(t, fdr=False).omnibus_sign is None, (
             'Omnibus significance is not None.')
-        assert results._single_target[t].selected_sources_te is None, (
+        assert results.get_single_target(t, fdr=False).selected_sources_te is None, (
             'Conditional TE values is not None.')
 
 
@@ -205,13 +205,13 @@ def test_multivariate_te_lorenz_2():
     settings['max_lag_sources'] = 60
     settings['min_lag_sources'] = 31
     settings['tau_sources'] = 2
-    settings['max_lag_target'] = 0
+    settings['max_lag_target'] = 1
     settings['tau_target'] = 1
 
     # Just analyse the direction of coupling
     results = lorenz_analysis.analyse_single_target(settings, data, target=1)
     print(results._single_target)
-    print(results.adjacency_matrix)
+    print(results.get_adjacency_matrix('binary'))
 
 
 def test_multivariate_te_mute():
@@ -243,7 +243,7 @@ def test_multivariate_te_mute():
                                # reuse the surrogate table from the min stats
 
     network_analysis = MultivariateTE()
-    network_analysis.analyse_network(data, settings, targets=[1, 2])
+    network_analysis.analyse_network(settings, data, targets=[1, 2])
 
 
 def test_multivariate_te_multiple_runs():
@@ -268,7 +268,7 @@ def test_multivariate_te_multiple_runs():
                                # reuse the surrogate table from the min stats
 
     network_analysis = MultivariateTE()
-    network_analysis.analyse_network(data, settings, targets=[1, 2])
+    network_analysis.analyse_network(settings, data, targets=[1, 2])
 
 
 if __name__ == '__main__':

@@ -18,9 +18,12 @@ def test_active_information_storage_opencl():
     processes = [1, 2, 3]
     network_analysis = ActiveInformationStorage()
     results = network_analysis.analyse_network(settings, data, processes)
-    print('AIS for MUTE data proc 1: {0}'.format(results[1]['ais']))
-    print('AIS for MUTE data proc 2: {0}'.format(results[2]['ais']))
-    print('AIS for MUTE data proc 3: {0}'.format(results[3]['ais']))
+    print('AIS for MUTE data proc 1: {0}'.format(
+        results.get_single_process(1, fdr=False)['ais']))
+    print('AIS for MUTE data proc 2: {0}'.format(
+        results.get_single_process(2, fdr=False)['ais']))
+    print('AIS for MUTE data proc 3: {0}'.format(
+        results.get_single_process(3, fdr=False)['ais']))
 
 
 def test_active_information_storage_jidt():
@@ -38,9 +41,12 @@ def test_active_information_storage_jidt():
     processes = [1, 2, 3]
     network_analysis = ActiveInformationStorage()
     results = network_analysis.analyse_network(settings, data, processes)
-    print('AIS for MUTE data proc 1: {0}'.format(results[1]['ais']))
-    print('AIS for MUTE data proc 2: {0}'.format(results[2]['ais']))
-    print('AIS for MUTE data proc 3: {0}'.format(results[3]['ais']))
+    print('AIS for MUTE data proc 1: {0}'.format(
+        results.get_single_process(1, fdr=False)['ais']))
+    print('AIS for MUTE data proc 2: {0}'.format(
+        results.get_single_process(2, fdr=False)['ais']))
+    print('AIS for MUTE data proc 3: {0}'.format(
+        results.get_single_process(3, fdr=False)['ais']))
 
 
 if __name__ == '__main__':

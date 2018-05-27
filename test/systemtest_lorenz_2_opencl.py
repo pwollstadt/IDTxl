@@ -29,6 +29,6 @@ res_1 = lorenz_analysis.analyse_single_target(settings, data, 1)
 runtime = time.time() - start_time
 print("---- {0} minutes".format(runtime / 60))
 
-path = '{0}output/'.format(os.path.dirname(__file__))
+path = '{0}data/'.format(os.path.dirname(__file__))
 pickle.dump(res_0, open('{0}test_lorenz_opencl_res_{1}'.format(path, 0), 'wb'))
 pickle.dump(res_1, open('{0}test_lorenz_opencl_res_{1}'.format(path, 1), 'wb'))

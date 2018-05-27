@@ -103,19 +103,19 @@ def test_multivariate_te_lagged_copies():
     # ensures that we calculate a proper TE at any time in the algorithm).
     for t in range(2):
         results = random_analysis.analyse_single_target(settings, data, t)
-        assert len(results._single_target[t].selected_vars_full) == 1, (
+        assert len(results.get_single_target(t, fdr=False).selected_vars_full) == 1, (
                     'Conditional contains more/less than 1 variables.')
-        assert not results._single_target[t].selected_vars_sources.size, (
+        assert not results.get_single_target(t, fdr=False).selected_vars_sources.size, (
                     'Conditional sources is not empty.')
-        assert len(results._single_target[t].selected_vars_target) == 1, (
+        assert len(results.get_single_target(t, fdr=False).selected_vars_target) == 1, (
             'Conditional target contains more/less than 1 variable.')
-        assert results._single_target[t].selected_sources_pval is None, (
+        assert results.get_single_target(t, fdr=False).selected_sources_pval is None, (
             'Conditional p-value is not None.')
-        assert results._single_target[t].omnibus_pval is None, (
+        assert results.get_single_target(t, fdr=False).omnibus_pval is None, (
             'Omnibus p-value is not None.')
-        assert results._single_target[t].omnibus_sign is None, (
+        assert results.get_single_target(t, fdr=False).omnibus_sign is None, (
             'Omnibus significance is not None.')
-        assert results._single_target[t].selected_sources_te is None, (
+        assert results.get_single_target(t, fdr=False).selected_sources_te is None, (
             'Conditional TE values is not None.')
 
 
@@ -148,19 +148,19 @@ def test_multivariate_te_random():
     # ensures that we calculate a proper TE at any time in the algorithm).
     for t in range(2):
         results = random_analysis.analyse_single_target(settings, data, t)
-        assert len(results._single_target[t].selected_vars_full) == 1, (
+        assert len(results.get_single_target(t, fdr=False).selected_vars_full) == 1, (
                     'Conditional contains more/less than 1 variables.')
-        assert not results._single_target[t].selected_vars_sources.size, (
+        assert not results.get_single_target(t, fdr=False).selected_vars_sources.size, (
                     'Conditional sources is not empty.')
-        assert len(results._single_target[t].selected_vars_target) == 1, (
+        assert len(results.get_single_target(t, fdr=False).selected_vars_target) == 1, (
             'Conditional target contains more/less than 1 variable.')
-        assert results._single_target[t].selected_sources_pval is None, (
+        assert results.get_single_target(t, fdr=False).selected_sources_pval is None, (
             'Conditional p-value is not None.')
-        assert results._single_target[t].omnibus_pval is None, (
+        assert results.get_single_target(t, fdr=False).omnibus_pval is None, (
             'Omnibus p-value is not None.')
-        assert results._single_target[t].omnibus_sign is None, (
+        assert results.get_single_target(t, fdr=False).omnibus_sign is None, (
             'Omnibus significance is not None.')
-        assert results._single_target[t].selected_sources_te is None, (
+        assert results.get_single_target(t, fdr=False).selected_sources_te is None, (
             'Conditional TE values is not None.')
 
 
@@ -175,7 +175,6 @@ def test_multivariate_te_lorenz_2():
         This test takes several hours and may take one to two days on some
         machines.
     """
-
     d = np.load(os.path.join(os.path.dirname(__file__),
                 'data/lorenz_2_exampledata.npy'))
     data = Data()
@@ -250,12 +249,12 @@ def test_multivariate_te_mute():
                                                   targets=[1, 2])
 
     assert (np.isclose(
-        results_eq._single_target[1].omnibus_te,
-        results_me._single_target[1].omnibus_te, rtol=0.05)), (
+        results_eq.get_single_target(1, fdr=False).omnibus_te,
+        results_me.get_single_target(1, fdr=False).omnibus_te, rtol=0.05)), (
                 'TE into first target is not equal for both binning methods.')
     assert (np.isclose(
-        results_eq._single_target[2].omnibus_te,
-        results_me._single_target[2].omnibus_te, rtol=0.05)), (
+        results_eq.get_single_target(2, fdr=False).omnibus_te,
+        results_me.get_single_target(2, fdr=False).omnibus_te, rtol=0.05)), (
                 'TE into second target is not equal for both binning methods.')
 
 
