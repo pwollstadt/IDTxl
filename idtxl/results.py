@@ -305,11 +305,6 @@ class ResultsSingleProcessAnalysis(Results):
 
         processes_analysed : list
             list of analysed processes
-
-        fdr_correction : dict
-            FDR-corrected results, see documentation of network inference
-            algorithms and stats.network_fdr
-
     """
 
     def __init__(self, n_nodes, n_realisations, normalised):
@@ -353,17 +348,17 @@ class ResultsSingleProcessAnalysis(Results):
 
         Return results for individual processes, contains for each process
 
-                - ais : float - AIS-value for current process
-                - ais_pval : float - p-value of AIS estimate
-                - ais_sign : bool - significance of AIS estimate wrt. to the
-                  alpha_mi specified in the settings
-                - selected_var : list of tuples - variables with significant
-                  information about the current value of the process that have
-                  been added to the processes past state, a variable is
-                  described by the index of the process in the data and its lag
-                  in samples
-                - current_value : tuple - current value used for analysis,
-                  described by target and sample index in the data
+            - ais : float - AIS-value for current process
+            - ais_pval : float - p-value of AIS estimate
+            - ais_sign : bool - significance of AIS estimate wrt. to the
+                alpha_mi specified in the settings
+            - selected_var : list of tuples - variables with significant
+                information about the current value of the process that have
+                been added to the processes past state, a variable is
+                described by the index of the process in the data and its lag
+                in samples
+            - current_value : tuple - current value used for analysis,
+                described by target and sample index in the data
 
         Setting fdr to True returns FDR-corrected results (Benjamini, 1995).
 
@@ -371,12 +366,12 @@ class ResultsSingleProcessAnalysis(Results):
             process : int
                 process id
             fdr : bool [optional]
-                print FDR-corrected results, see documentation of network
+                return FDR-corrected results, see documentation of network
                 inference algorithms and stats.network_fdr (default=True)
 
         Returns:
             dict
-                Results for single process. Note that for convenience
+                results for single process. Note that for convenience
                 dictionary entries can either be accessed via keywords
                 (result['selected_vars']) or via dot-notation
                 (result.selected_vars).
@@ -414,7 +409,7 @@ class ResultsSingleProcessAnalysis(Results):
 
         Args:
             fdr : bool [optional]
-                print FDR-corrected results, see documentation of network
+                return FDR-corrected results, see documentation of network
                 inference algorithms and stats.network_fdr (default=True)
 
         Returns:
@@ -455,15 +450,36 @@ class ResultsNetworkAnalysis(Results):
     def get_single_target(self, target, fdr=True):
         """Return results for a single target in the network.
 
-        See docstring of results class for details on what results are returned
-        by individual algorithms. Setting fdr to True returns FDR-corrected
-        results (Benjamini, 1995).
+        Return results for individual processes, contains for each process
+
+        Results for single targets include for each target
+
+        - omnibus_te : float - TE-value for joint information transfer from all
+          sources into the target
+        - omnibus_pval : float - p-value of omnibus information transfer into
+          the target
+        - omnibus_sign : bool - significance of omnibus information transfer
+          wrt. to the alpha_omnibus specified in the settings
+        - selected_vars_sources : list of tuples - source variables with
+          significant information about the current value
+        - selected_vars_target : list of tuples - target variables with
+          significant information about the current value
+        - selected_sources_pval : array of floats - p-value for each selected
+          variable
+        - selected_sources_te : array of floats - TE-value for each selected
+          variable
+        - sources_tested : list of int - list of sources tested for the current
+          target
+        - current_value : tuple - current value used for analysis, described by
+          target and sample index in the data
+
+        Setting fdr to True returns FDR-corrected results (Benjamini, 1995).
 
         Args:
             target : int
                 target id
             fdr : bool [optional]
-                print FDR-corrected results, see documentation of network
+                return FDR-corrected results, see documentation of network
                 inference algorithms and stats.network_fdr (default=True)
 
         Returns:
@@ -520,27 +536,6 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
     be accessed using dot-notation: res_network.settings.cmi_estimator
     or res_network.settings['cmi_estimator'].
 
-    Results for single targets include for each target
-
-        - omnibus_te : float - TE-value for joint information transfer
-            from all sources into the target
-        - omnibus_pval : float - p-value of omnibus information
-            transfer into the target
-        - omnibus_sign : bool - significance of omnibus information
-            transfer wrt. to the alpha_omnibus specified in the settings
-        - selected_vars_sources : list of tuples - source variables
-            with significant information about the current value
-        - selected_vars_target : list of tuples - target variables
-            with significant information about the current value
-        - selected_sources_pval : array of floats - p-value for each
-            selected variable
-        - selected_sources_te : array of floats - TE-value for each
-            selected variable
-        - sources_tested : list of int - list of sources tested for the
-            current target
-        - current_value : tuple - current value used for analysis,
-            described by target and sample index in the data
-
     Attributes:
         settings : dict
             settings used for estimation of information theoretic measures and
@@ -554,7 +549,7 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
                   network inference, results in fewer data points available for
                   estimation)
                 - normalised : bool - indicates if data were z-standardised
-                  before the estimation
+                  before estimation
 
         targets_analysed : list
             list of analysed targets
@@ -609,11 +604,11 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
                 use maximum TE value ('max_te') or p-value ('max_p') to
                 determine the source-target delay (default='max_te')
             fdr : bool [optional]
-                print FDR-corrected results (default=True)
+                return FDR-corrected results (default=True)
 
         Returns:
             numpy array
-                Information-transfer delays for each source
+                information-transfer delays for each source
         """
         sources = self.get_target_sources(target=target, fdr=fdr)
         delays = np.zeros(sources.shape[0]).astype(int)
@@ -668,7 +663,7 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
                    - 0 = no significant information transfer.
 
             fdr : bool [optional]
-                use FDR-corrected results (default=True)
+                return FDR-corrected results (default=True)
         """
         adjacency_matrix = np.zeros(
             (self.data_properties.n_nodes, self.data_properties.n_nodes),
@@ -725,9 +720,8 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
             weights: str
                 link weights (see documentation of method get_adjacency_matrix
                 for details)
-
             fdr : bool [optional]
-                print FDR-corrected results (default=True)
+                return FDR-corrected results (default=True)
         """
         adjacency_matrix = self.get_adjacency_matrix(weights=weights, fdr=fdr)
         self._print_edge_list(adjacency_matrix, weights=weights)
@@ -760,7 +754,7 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
                 weights for the adjacency matrix (see documentation of method
                 get_adjacency_matrix for details)
             fdr : bool [optional]
-                use FDR-corrected results (default=True)
+                return FDR-corrected results (default=True)
             labels : array type of str [optional]
                 list of node labels of length n, description or label for each
                 node. Note that labels can't contain spaces (causes BrainNet to
@@ -791,7 +785,7 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
                 weights for the adjacency matrix (see documentation of method
                 get_adjacency_matrix for details)
             fdr : bool [optional]
-                use FDR-corrected results (default=True)
+                return FDR-corrected results (default=True)
 
         Returns:
             DiGraph object
@@ -889,26 +883,6 @@ class ResultsPartialInformationDecomposition(ResultsNetworkAnalysis):
     be accessed using dot-notation: res_pid._single_target[2].source_1
     or res_pid._single_target[2].['source_1'].
 
-    Results for single targets include for each target
-
-        - source_1 : tuple - source variable 1
-        - source_2 : tuple - source variable 2
-        - s1_unq : float - unique information in source 1
-        - s2_unq : float - unique information in source 2
-        - syn_s1_s2 : float - synergistic information in sources 1
-            and 2
-        - shd_s1_s2 : float - shared information in sources 1 and 2
-        - s1_unq_sign : float - TODO
-        - s2_unq_sign : float - TODO
-        - s1_unq_p_val : float - TODO
-        - s2_unq_p_val : float - TODO
-        - syn_sign : float - TODO
-        - syn_p_val : float - TODO
-        - shd_sign : float - TODO
-        - shd_p_val : float - TODO
-        - current_value : tuple - current value used for analysis,
-            described by target and sample index in the data
-
     Attributes:
         settings : dict
             settings used for estimation of information theoretic measures and
@@ -934,8 +908,19 @@ class ResultsPartialInformationDecomposition(ResultsNetworkAnalysis):
     def get_single_target(self, target):
         """Return results for a single target in the network.
 
-        See docstring of results class for details on what results are returned
-        by individual algorithms.
+        Results for single targets include for each target
+
+        - source_1 : tuple - source variable 1
+        - source_2 : tuple - source variable 2
+        - selected_vars_sources : list of tuples - source variables used in PID
+          estimation
+        - s1_unq : float - unique information in source 1
+        - s2_unq : float - unique information in source 2
+        - syn_s1_s2 : float - synergistic information in sources 1 and 2
+        - shd_s1_s2 : float - shared information in sources 1 and 2
+        - current_value : tuple - current value used for analysis, described by
+          target and sample index in the data
+        - [estimator-specific settings]
 
         Args:
             target : int
@@ -961,12 +946,6 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
     be accessed using dot-notation: res_network.settings.cmi_estimator
     or res_network.settings['cmi_estimator'].
 
-    Results for single targets include for each target
-
-        - selected_vars_sources : numpy array - union of source variables
-        - selected_vars_target : numpy array - union of target variables
-        - sources : numpy array - list of source processes
-
     Attributes:
         settings : dict
             settings used for estimation of information theoretic measures and
@@ -984,11 +963,23 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
                   before the estimation
 
         surrogate_distribution : dict
-            surrogate distribution for each target
+            for each target, surrogate distributions used for testing of each
+            link into the target
         targets_analysed : list
             list of analysed targets
+        ab : dict
+            for each target, list of comparison results for all links into the
+            target; True if link in condition A > link in condition B
+        pval : dict
+            for each target, list of p-values for all compared links
+        cmi_diff_abs : dict
+            for each target, list of absolute difference in interaction measure
+            for all compared links
+        data_properties : dict
+            information regarding the data used for analysis
+        settings : dict
+            settings used for comparison
     """
-
     def __init__(self, n_nodes, n_realisations, normalised):
         super().__init__(n_nodes, n_realisations, normalised)
 
