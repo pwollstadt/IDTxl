@@ -254,8 +254,8 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         # [orig_pid, sign_shd,
         #  p_val_shd, sign_syn, p_val_syn] = stats.syn_shd_against_surrogates(
         #                                                                 self,
-        sign_1 = sign_2 = sign_shd = sign_syn = False
-        p_val_1 = p_val_2 = p_val_shd = p_val_syn = 1.0
+        # sign_1 = sign_2 = sign_shd = sign_syn = False
+        # p_val_1 = p_val_2 = p_val_shd = p_val_syn = 1.0
 
         target_realisations = data.get_realisations(
                                             self.current_value,
@@ -284,14 +284,14 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         self.results['selected_vars_sources'] = [
             self.results['source_1'][0], self.results['source_2'][0]]
         self.results['current_value'] = self.current_value
-        self.results['unq_s1_sign'] = sign_1
-        self.results['unq_s2_sign'] = sign_2
-        self.results['unq_s1_p_val'] = p_val_1
-        self.results['unq_s2_p_val'] = p_val_2
-        self.results['syn_sign'] = sign_syn
-        self.results['syn_p_val'] = p_val_syn
-        self.results['shd_sign'] = sign_shd
-        self.results['shd_p_val'] = p_val_shd
+        # self.results['unq_s1_sign'] = sign_1
+        # self.results['unq_s2_sign'] = sign_2
+        # self.results['unq_s1_p_val'] = p_val_1
+        # self.results['unq_s2_p_val'] = p_val_2
+        # self.results['syn_sign'] = sign_syn
+        # self.results['syn_p_val'] = p_val_syn
+        # self.results['shd_sign'] = sign_shd
+        # self.results['shd_p_val'] = p_val_shd
 
         # TODO make mi_against_surrogates in stats more generic, such that
         # it becomes an arbitrary permutation test where one arguemnt gets
