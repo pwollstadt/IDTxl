@@ -30,8 +30,6 @@ jpype_missing = pytest.mark.skipif(
 def test_amd_data_padding():
     """Test padding necessary for AMD devices."""
     expected_mi, source, source_uncorr, target = _get_gauss_data()
-    cov_effective = np.cov(np.squeeze(source), np.squeeze(target))[1, 0]
-    expected_mi = math.log(1 / (1 - math.pow(cov_effective, 2)))
 
     settings = {'debug': True}
     est_mi = OpenCLKraskovMI(settings=settings)
@@ -126,8 +124,6 @@ def test_mi_correlated_gaussians():
     jidt_est = JidtKraskovMI(settings={})
     mi_jidt = jidt_est.estimate(source, target)
 
-    cov_effective = np.cov(np.squeeze(source), np.squeeze(target))[1, 0]
-    expected_mi = math.log(1 / (1 - math.pow(cov_effective, 2)))
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
           'expected to be close to {2:.4f} nats for correlated '
           'Gaussians.'.format(mi_jidt, mi_ocl, expected_mi))
@@ -157,8 +153,6 @@ def test_cmi_no_cond_correlated_gaussians():
     jidt_est = JidtKraskovCMI(settings={})
     mi_jidt = jidt_est.estimate(source, target)
 
-    cov_effective = np.cov(np.squeeze(source), np.squeeze(target))[1, 0]
-    expected_mi = math.log(1 / (1 - math.pow(cov_effective, 2)))
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
           'expected to be close to {2:.4f} nats for correlated '
           'Gaussians.'.format(mi_jidt, mi_ocl, expected_mi))
@@ -190,8 +184,6 @@ def test_cmi_correlated_gaussians():
     jidt_est = JidtKraskovCMI(settings={})
     mi_jidt = jidt_est.estimate(source, target, source_uncorr)
 
-    cov_effective = np.cov(np.squeeze(source), np.squeeze(target))[1, 0]
-    expected_mi = math.log(1 / (1 - math.pow(cov_effective, 2)))
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
           'expected to be close to {2:.4f} nats for correlated '
           'Gaussians.'.format(mi_jidt, mi_ocl, expected_mi))
@@ -225,8 +217,6 @@ def test_mi_correlated_gaussians_two_chunks():
     mi_jidt = jidt_est.estimate(source[0:int(n_points/2), :],
                                 target[0:int(n_points/2), :])
 
-    cov_effective = np.cov(np.squeeze(source), np.squeeze(target))[1, 0]
-    expected_mi = math.log(1 / (1 - math.pow(cov_effective, 2)))
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: [{1:.4f}, {2:.4f}] '
           'nats; expected to be close to {3:.4f} nats for correlated '
           'Gaussians.'.format(mi_jidt, mi_ocl[0], mi_ocl[1], expected_mi))

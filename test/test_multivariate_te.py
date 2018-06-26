@@ -11,6 +11,7 @@ from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
 from idtxl.estimators_jidt import JidtDiscreteCMI
 from test_estimators_jidt import jpype_missing
+from idtxl.idtxl_utils import calculate_mi
 
 
 @jpype_missing
@@ -352,7 +353,8 @@ def test_discrete_input():
     source = np.random.normal(0, 1, size=n)
     target = (covariance * source + (1 - covariance) *
               np.random.normal(0, 1, size=n))
-    expected_mi = np.log(1 / (1 - np.power(covariance, 2)))
+    corr_expected = covariance / (1 * np.sqrt(covariance**2 + (1-covariance)**2))
+    expected_mi = calculate_mi(corr_expected)
     source = source[delay:]
     target = target[:-delay]
 

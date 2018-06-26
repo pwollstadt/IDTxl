@@ -310,3 +310,8 @@ def conflicting_entries(dict_1, dict_2):
                   ' ''{2}''.'.format(k, dict_1[k], dict_2[k]))
             return True
     return False
+
+
+def calculate_mi(corr):
+    """Calculate mutual information from correlation coefficient."""
+    return -0.5 * np.log(1 - corr**2)

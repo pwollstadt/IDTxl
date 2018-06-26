@@ -9,6 +9,7 @@ from idtxl.bivariate_mi import BivariateMI
 from idtxl.data import Data
 from idtxl.estimators_jidt import JidtDiscreteCMI
 from test_estimators_jidt import jpype_missing
+from idtxl.idtxl_utils import calculate_mi
 
 
 @jpype_missing
@@ -106,7 +107,6 @@ def test_bivariate_mi_one_realisation_per_replication():
     settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 21,
-        'max_lag_target': 5,
         'max_lag_sources': 5,
         'min_lag_sources': 4}
     target = 0
@@ -124,8 +124,7 @@ def test_bivariate_mi_one_realisation_per_replication():
     assert (not nw.selected_vars_sources)
     assert (not nw.selected_vars_target)
     assert ((nw._replication_index == np.arange(n_repl)).all())
-    assert (nw._current_value == (target, max(
-           settings['max_lag_sources'], settings['max_lag_target'])))
+    assert (nw._current_value == (target, settings['max_lag_sources']))
     assert (nw._current_value_realisations[:, 0] ==
             data.data[target, -1, :]).all()
 
@@ -136,8 +135,7 @@ def test_faes_method():
     settings = {'cmi_estimator': 'JidtKraskovCMI',
                 'add_conditionals': 'faes',
                 'max_lag_sources': 5,
-                'min_lag_sources': 3,
-                'max_lag_target': 7}
+                'min_lag_sources': 3}
     nw_1 = BivariateMI()
     data = Data()
     data.generate_mute_data()
@@ -154,8 +152,7 @@ def test_add_conditional_manually():
     """Enforce the conditioning on additional variables."""
     settings = {'cmi_estimator': 'JidtKraskovCMI',
                 'max_lag_sources': 5,
-                'min_lag_sources': 3,
-                'max_lag_target': 7}
+                'min_lag_sources': 3}
     nw = BivariateMI()
     data = Data()
     data.generate_mute_data()
@@ -221,12 +218,12 @@ def test_check_source_set():
 def test_define_candidates():
     """Test candidate definition from a list of procs and a list of samples."""
     target = 1
-    tau_target = 3
-    max_lag_target = 10
+    tau_sources = 3
+    max_lag_sources = 10
     current_val = (target, 10)
     procs = [target]
-    samples = np.arange(current_val[1] - 1, current_val[1] - max_lag_target,
-                        -tau_target)
+    samples = np.arange(current_val[1] - 1, current_val[1] - max_lag_sources,
+                        -tau_sources)
     nw = BivariateMI()
     candidates = nw._define_candidates(procs, samples)
     assert (1, 9) in candidates, 'Sample missing from candidates: (1, 9).'
@@ -246,8 +243,7 @@ def test_analyse_network():
         'n_perm_max_seq': 21,
         'n_perm_omnibus': 30,
         'max_lag_sources': 5,
-        'min_lag_sources': 4,
-        'max_lag_target': 5}
+        'min_lag_sources': 4}
     nw = BivariateMI()
 
     # Test all to all analysis
@@ -298,7 +294,9 @@ def test_discrete_input():
     source = np.random.normal(0, 1, size=n)
     target = (covariance * source + (1 - covariance) *
               np.random.normal(0, 1, size=n))
-    expected_mi = np.log(1 / (1 - np.power(covariance, 2)))
+    corr_expected = covariance / (
+        1 * np.sqrt(covariance**2 + (1-covariance)**2))
+    expected_mi = calculate_mi(corr_expected)
     source = source[delay:]
     target = target[:-delay]
 
@@ -317,8 +315,7 @@ def test_discrete_input():
         'n_perm_omnibus': 30,
         'n_perm_max_seq': 30,
         'min_lag_sources': 1,
-        'max_lag_sources': 2,
-        'max_lag_target': 1}
+        'max_lag_sources': 2}
     nw = BivariateMI()
     res = nw.analyse_single_target(settings=settings, data=data, target=1)
     assert np.isclose(

@@ -13,6 +13,7 @@ import numpy as np
 from idtxl.network_comparison import NetworkComparison
 from idtxl.data import Data
 from test_estimators_jidt import jpype_missing
+from idtxl.idtxl_utils import calculate_mi
 
 
 @jpype_missing
@@ -315,11 +316,12 @@ def test_calculate_cmi_all_links():
     comp._create_union(res_0)
     comp.union._single_target[1]['selected_vars_sources'] = [(0, 4)]
     cmi = comp._calculate_cmi_all_links(data)
-    cmi_expected = np.log(1 / (1 - cov ** 2))
+    corr_expected = cov / (1 * np.sqrt(cov**2 + (1-cov)**2))
+    expected_cmi = calculate_mi(corr_expected)
     print('correlated Gaussians: TE result {0:.4f} bits; expected to be '
-          '{1:0.4f} bit for the copy'.format(cmi[1][0], cmi_expected))
+          '{1:0.4f} bit for the copy'.format(cmi[1][0], expected_cmi))
     np.testing.assert_almost_equal(
-                   cmi[1][0], cmi_expected, decimal=1,
+                   cmi[1][0], expected_cmi, decimal=1,
                    err_msg='when calculating cmi for correlated Gaussians.')
 
 

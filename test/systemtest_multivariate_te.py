@@ -9,6 +9,7 @@ import random as rn
 import numpy as np
 from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
+from idtxl.idtxl_utils import calculate_mi
 
 
 def test_multivariate_te_corr_gaussian(estimator=None):
@@ -61,7 +62,8 @@ def test_multivariate_te_corr_gaussian(estimator=None):
     # 1. For 500 repetitions I got mean errors of 0.02097686 and 0.01454073 for
     # examples 1 and 2 respectively. The maximum errors were 0.093841 and
     # 0.05833172 repectively. This inspired the following error boundaries.
-    expected_res = np.log(1 / (1 - np.power(cov, 2)))
+    corr_expected = cov / (1 * np.sqrt(cov**2 + (1-cov)**2))
+    expected_res = calculate_mi(corr_expected)
     estimated_res = results.get_single_target(1, fdr=False).omnibus_te
     diff = np.abs(estimated_res - expected_res)
     print('Expected source sample: (0, 1)\nExpected target sample: (1, 1)')

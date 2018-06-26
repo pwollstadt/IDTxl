@@ -19,6 +19,7 @@ from idtxl.estimators_jidt import (JidtKraskovCMI, JidtKraskovMI,
                                    JidtDiscreteAIS, JidtDiscreteTE,
                                    JidtGaussianCMI, JidtGaussianMI,
                                    JidtGaussianAIS, JidtGaussianTE)
+from idtxl.idtxl_utils import calculate_mi
 
 package_missing = False
 try:
@@ -53,7 +54,8 @@ def _get_gauss_data(n=10000, covariance=0.4, expand=True):
     Generate two sets of random normal data, where one set has a given
     covariance and the second is uncorrelated.
     """
-    expected_mi = math.log(1 / (1 - math.pow(covariance, 2)))
+    corr_expected = covariance / (1 * np.sqrt(covariance**2 + (1-covariance)**2))
+    expected_mi = calculate_mi(corr_expected)
     src_corr = [rn.normalvariate(0, 1) for r in range(n)]  # correlated src
     src_uncorr = [rn.normalvariate(0, 1) for r in range(n)]  # uncorrelated src
     target = [sum(pair) for pair in zip(

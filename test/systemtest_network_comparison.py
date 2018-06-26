@@ -50,7 +50,7 @@ def test_network_comparison():
         comp_settings['cmi_estimator'] = estimator
         for stats_type in ['dependent', 'independent']:
             print(('\n\n\n######### Running network comparison on {0} '
-                   'results ({1} estimator) on discrete data, {2} test.' .format(inference, estimator, stats_type)))
+                   'results ({1} estimator) on discrete data, {2} test.'.format(inference, estimator, stats_type)))
             comp_settings['stats_type'] = stats_type
 
             c_within = comp.compare_within(
@@ -70,7 +70,7 @@ def test_network_comparison():
             comp_settings['cmi_estimator'] = estimator
             for stats_type in ['dependent', 'independent']:
                 print(('\n\n\n######### Running network comparison on {0} '
-                       'results ({1} estimator) on continuous data, {2} test.' .format(inference, estimator, stats_type)))
+                       'results ({1} estimator) on continuous data, {2} test.'.format(inference, estimator, stats_type)))
                 comp_settings['stats_type'] = stats_type
                 c_within = comp.compare_within(
                     comp_settings, res, res, data_cont, data_dummy_cont)
