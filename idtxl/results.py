@@ -1029,7 +1029,7 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
                 (self.data_properties.n_nodes, self.data_properties.n_nodes),
                 dtype=bool)
             for t in self.targets_analysed:
-                sources = self.get_target_sources(t, fdr=False)
+                sources = self.get_target_sources(t)
                 for (i, s) in enumerate(sources):
                         adjacency_matrix[s, t] = self.ab[t][i]
         elif weights == 'union':
@@ -1037,7 +1037,7 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
                 (self.data_properties.n_nodes, self.data_properties.n_nodes),
                 dtype=int)
             for t in self.targets_analysed:
-                sources = self.get_target_sources(t, fdr=False)
+                sources = self.get_target_sources(t)
                 if sources.size:
                     adjacency_matrix[sources, t] = 1
         elif weights == 'diff_abs':
@@ -1045,7 +1045,7 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
                 (self.data_properties.n_nodes, self.data_properties.n_nodes),
                 dtype=float)
             for t in self.targets_analysed:
-                sources = self.get_target_sources(t, fdr=False)
+                sources = self.get_target_sources(t)
                 for (i, s) in enumerate(sources):
                     adjacency_matrix[s, t] = self.cmi_diff_abs[t][i]
         elif weights == 'pvalue':
@@ -1053,7 +1053,7 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
                 (self.data_properties.n_nodes, self.data_properties.n_nodes),
                 dtype=float)
             for t in self.targets_analysed:
-                sources = self.get_target_sources(t, fdr=False)
+                sources = self.get_target_sources(t)
                 for (i, s) in enumerate(sources):
                     adjacency_matrix[s, t] = self.pval[t][i]
         else:
@@ -1083,6 +1083,44 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
         """
         adjacency_matrix = self.get_adjacency_matrix(weights=weights)
         self._print_edge_list(adjacency_matrix, weights=weights)
+
+    def get_single_target(self, target):
+        """Return results for a single target in the network.
+
+        Results for single targets include for each target
+
+        - sources : list of ints - list of sources inferred for the current
+          target (union of sources from both data sets entering the comparison)
+        - selected_vars_sources : list of tuples - source variables with
+          significant information about the current value (union of both
+          conditions)
+        - selected_vars_target : list of tuples - target variables with
+          significant information about the current value (union of both
+          conditions)
+
+        Args:
+            target : int
+                target id
+
+        Returns:
+            dict
+                Results for single target. Note that for convenience
+                dictionary entries can either be accessed via keywords
+                (result['selected_vars_sources']) or via dot-notation
+                (result.selected_vars_sources).
+        """
+        return super(ResultsNetworkComparison, self).get_single_target(
+            target, fdr=False)
+
+    def get_target_sources(self, target):
+        """Return list of sources (parents) for given target.
+
+        Args:
+            target : int
+                target index
+        """
+        v = self.get_single_target(target)['selected_vars_sources']
+        return np.unique(np.array([s[0] for s in v]))
 
     def export_brain_net_viewer(self, mni_coord, file_name, weights, **kwargs):
         """Export network to BrainNet Viewer.
