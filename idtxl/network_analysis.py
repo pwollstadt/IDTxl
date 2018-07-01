@@ -307,3 +307,127 @@ class NetworkAnalysis():
         else:
             self.selected_vars_sources.pop(
                                         self.selected_vars_sources.index(idx))
+
+    def _calculate_single_link(
+                    self, data, current_value, source_vars, target_vars=None,
+                    sources='all', conditioning='full'):
+        """Calculate dependency measure for all links into a target.
+
+        Calculate dependency measure for all links into a target. A single link
+        may consist of information that multiple past variables in a source
+        have about the target. The measure can be transfer entropy or mutual
+        information and is estimated as the joint information all selected past
+        variables from a single source have about the target.
+
+        The conditioning defines which variables are included in the
+        conditioning set when estimating a dependency measure. This can be set
+        to
+
+        - 'full' to include all selected variables (for multivariate TE this
+          includes the target's past variables and past variables from all
+          other inferred sources, for multivariate MI this includes past
+          variables from all other inferred sources) from all other inferred
+          sources and the target's past,
+        - 'target' to include variables from the target's past alone (for
+          bivariate TE estimation),
+        - 'none' for no conditioning (for bivariate MI estimation).
+
+        For transfer entropy, the information transfer is calculated
+        conditional on the target's past. For multivariate TE or MI, the
+        information (transfer) is calculated conditionally on selected
+        variables from further sources in the network.
+
+        Measures can be estimated either for 'all' sources (determined from the
+        selected source variables) or for individual sources. A list of
+        estimated values for each link (source-target combination) is returned.
+
+        Args:
+            data : Data instance
+                raw data for analysis
+            current_value : tuple
+                index of the current value used for estimation, (idx process,
+                idx sample)
+            source_vars : np array of tuples
+                array of past source variables, where one tuple describes a
+                single variable as (idx process, idx sample)
+            target_vars : np array of tuples [optional]
+                array of past target variables
+            sources : list of ints | 'all' [optional]
+                return estimates for selected sources or all sources (default)
+            conditioning : str [optional]
+                set conditioning set, 'full' for all selected variables
+                (target's and sources' past), 'target' for variables from the
+                target's past only, 'none' for no conditioning
+        """
+        # Get realisations of target variables and the current value, constant
+        # over sources. Permute current value realisations to generate
+        # surrogates if requested.
+        target_realisations = data.get_realisations(
+            current_value, target_vars)[0]
+        current_value_realisations = data.get_realisations(
+            current_value, [current_value])[0]
+
+        # Check requested sources.
+        if sources == 'all':
+            sources = [s[0] for s in source_vars]
+        else:
+            sources = np.array([sources])
+            if any(sources > (data.n_processes - 1)):
+                raise RuntimeError('At least one source {0} is not in no. '
+                                   'nodes in the data ({1}).'.format(
+                                       sources, data.n_processes))
+
+        # Allocate memory: either a multidimensional array if local values are
+        # required, or a 1D-array for averaged values for each link.
+        if self.settings['local_values']:
+            # Collect local values in a [sources x samples x replications]
+            # matrix.
+            links = np.zeros((
+                len(sources),
+                data.n_realisations_samples(current_value),
+                data.n_replications))
+        else:
+            links = np.zeros(len(sources))
+
+        # Loop over individual sources.
+        for (i, s) in enumerate(sources):
+
+            # Separate source variables in variables belonging to the current
+            # link and variables belonging to the conditioning set. Get
+            # realisations for the current link's selected source variables.
+            link_vars = [i for i in source_vars if i[0] == s]
+            conditional_vars = [i for i in source_vars if i[0] != s]
+            source_realisations, replication_ind = data.get_realisations(
+                current_value, link_vars)
+
+            # Determine which type of conditioning is requested. Check if
+            # conditional_vars is not empty.
+            if conditioning == 'full' and conditional_vars:
+                if target_realisations is None:  # use sources' pasts only
+                    conditional_realisations = data.get_realisations(
+                            current_value, conditional_vars)[0]
+                else:  # use target's and sources' past
+                    print(conditional_vars)
+                    conditional_realisations = np.hstack((
+                        data.get_realisations(
+                            current_value, conditional_vars)[0],
+                        target_realisations))
+            elif conditioning == 'target':  # use target's past only (biv. TE)
+                conditional_realisations = target_realisations
+            else:  # no conditioning (bivariate MI)
+                conditional_realisations = None
+
+            if self.settings['local_values']:
+                local_values = self._cmi_estimator.estimate(
+                    current_value_realisations,
+                    source_realisations,
+                    conditional_realisations)
+                links[i] = local_values.reshape(
+                    max(replication_ind) + 1, sum(replication_ind == 0)).T
+            else:
+                links[i] = self._cmi_estimator.estimate(
+                    current_value_realisations,
+                    source_realisations,
+                    conditional_realisations)
+
+        return links

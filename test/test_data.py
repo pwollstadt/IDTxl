@@ -94,21 +94,28 @@ def test_get_realisations():
     n = 7
     d = Data(np.arange(n + 1), 's', normalise=False)
     current_value = (0, n)
-    data = d.get_realisations(current_value, [(0, 1)])[0]
-    assert (data[0][0] == 1)
-    assert (data.shape == (1, 1))
+    realisations = d.get_realisations(current_value, [(0, 1)])[0]
+    assert (realisations[0][0] == 1)
+    assert (realisations.shape == (1, 1))
     d = Data(np.arange(n + 2), 's', normalise=False)
     current_value = (0, n)
-    data = d.get_realisations(current_value, [(0, 1)])[0]
-    assert (data[0][0] == 1)
-    assert (data[1][0] == 2)
-    assert (data.shape == (2, 1))
+    realisations = d.get_realisations(current_value, [(0, 1)])[0]
+    assert (realisations[0][0] == 1)
+    assert (realisations[1][0] == 2)
+    assert (realisations.shape == (2, 1))
+    n_realisations = 2
+    data = np.arange(10).reshape(n_realisations, 5)
+    d = Data(data, 'rs', normalise=False)
+    current_value = (0, 1)
+    realisations, ind = d.get_realisations(current_value, [(0, 0)])
+    for r in range(n_realisations):
+        assert (data[r, :-1] == np.squeeze(realisations[ind == r])).all()
 
     # Test retrieval of realisations of the current value.
     n = 7
     d = Data(np.arange(n), 's', normalise=False)
     current_value = (0, n - 1)
-    data = d.get_realisations(current_value, [current_value])[0]
+    realisations = d.get_realisations(current_value, [current_value])[0]
 
 
 def test_permute_replications():

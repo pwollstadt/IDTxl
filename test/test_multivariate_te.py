@@ -15,6 +15,58 @@ from idtxl.idtxl_utils import calculate_mi
 
 
 @jpype_missing
+def test_return_local_values():
+    """Test estimation of local values."""
+    max_lag = 5
+    data = Data()
+    data.generate_mute_data(500, 5)
+    settings = {
+        'cmi_estimator': 'JidtKraskovCMI',
+        'local_values': True,  # request calculation of local values
+        'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_max_seq': 21,
+        'n_perm_omnibus': 21,
+        'max_lag_sources': max_lag,
+        'min_lag_sources': 4,
+        'max_lag_target': max_lag}
+    target = 1
+    te = MultivariateTE()
+    results = te.analyse_network(settings, data, targets=[target])
+
+    # Test if any sources were inferred. If not, return (this may happen
+    # sometimes due to too few samples, however, a higher no. samples is not
+    # feasible for a unit test).
+    if results.get_single_target(target, fdr=False)['te'] is None:
+        return
+
+    lte = results.get_single_target(target, fdr=False)['te']
+    n_sources = len(results.get_target_sources(target, fdr=False))
+    assert type(lte) is np.ndarray, (
+        'LTE estimation did not return an array of values')
+    assert lte.shape[0] == n_sources, (
+        'Wrong dim (no. sources) in LTE estimate')
+    assert lte.shape[1] == data.n_realisations_samples((0, max_lag)), (
+        'Wrong dim (no. samples) in LTE estimate')
+    assert lte.shape[2] == data.n_replications, (
+        'Wrong dim (no. replications) in LTE estimate')
+
+    # Test for correctnes of single link TE estimation by comparing it to the
+    # omnibus TE. In this case (single source), the two should be the same.
+    settings['local_values'] = False
+    results_avg = te.analyse_network(settings, data, targets=[target])
+    if results_avg.get_single_target(target, fdr=False)['te'] is None:
+        return
+    te_single_link = results_avg.get_single_target(target, fdr=False)['te'][0]
+    te_omnibus = results_avg.get_single_target(target, fdr=False)['omnibus_te']
+    assert np.isclose(te_single_link, te_omnibus), (
+        'Single link TE is not equal to omnibus information transfer.')
+    # Compare mean local TE to average TE.
+    assert np.isclose(te_single_link, np.mean(lte)), (
+        'Single link average TE and mean LTE deviate.')
+
+
+@jpype_missing
 def test_multivariate_te_init():
     """Test instance creation for MultivariateTE class."""
     # Test error on missing estimator
@@ -409,6 +461,7 @@ def test_indices_to_lags():
 
 
 if __name__ == '__main__':
+    test_return_local_values()
     test_discrete_input()
     test_analyse_network()
     test_check_source_set()

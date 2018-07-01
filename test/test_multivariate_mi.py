@@ -15,6 +15,58 @@ from idtxl.idtxl_utils import calculate_mi
 
 
 @jpype_missing
+def test_return_local_values():
+    """Test estimation of local values."""
+    max_lag = 5
+    data = Data()
+    data.generate_mute_data(500, 5)
+    settings = {
+        'cmi_estimator': 'JidtKraskovCMI',
+        'local_values': True,  # request calculation of local values
+        'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_max_seq': 21,
+        'n_perm_omnibus': 21,
+        'max_lag_sources': max_lag,
+        'min_lag_sources': 4,
+        'max_lag_target': max_lag}
+    target = 1
+    mi = MultivariateMI()
+    results = mi.analyse_network(settings, data, targets=[target])
+
+    # Test if any sources were inferred. If not, return (this may happen
+    # sometimes due to too few samples, however, a higher no. samples is not
+    # feasible for a unit test).
+    if results.get_single_target(target, fdr=False)['mi'] is None:
+        return
+
+    lmi = results.get_single_target(target, fdr=False)['mi']
+    n_sources = len(results.get_target_sources(target, fdr=False))
+    assert type(lmi) is np.ndarray, (
+        'LMI estimation did not return an array of values')
+    assert lmi.shape[0] == n_sources, (
+        'Wrong dim (no. sources) in LMI estimate')
+    assert lmi.shape[1] == data.n_realisations_samples((0, max_lag)), (
+        'Wrong dim (no. samples) in LMI estimate')
+    assert lmi.shape[2] == data.n_replications, (
+        'Wrong dim (no. replications) in LMI estimate')
+
+    # Test for correctnes of single link MI estimation by comparing it to the
+    # omnibus MI. In this case (single source), the two should be the same.
+    settings['local_values'] = False
+    results_avg = mi.analyse_network(settings, data, targets=[target])
+    if results_avg.get_single_target(target, fdr=False)['mi'] is None:
+        return
+    mi_single_link = results_avg.get_single_target(target, fdr=False)['mi'][0]
+    mi_omnibus = results_avg.get_single_target(target, fdr=False)['omnibus_mi']
+    assert np.isclose(mi_single_link, mi_omnibus, rtol=0.00005), (
+        'Single link MI is not equal to omnibus information.')
+    # Compare mean local MI to average MI.
+    assert np.isclose(mi_single_link, np.mean(lmi), rtol=0.00005), (
+        'Single link average MI and mean LMI deviate.')
+
+
+@jpype_missing
 def test_multivariate_mi_init():
     """Test instance creation for MultivariateMI class."""
     # Test error on missing estimator
@@ -317,7 +369,8 @@ def test_discrete_input():
     source = np.random.normal(0, 1, size=n)
     target = (covariance * source + (1 - covariance) *
               np.random.normal(0, 1, size=n))
-    corr_expected = covariance / (1 * np.sqrt(covariance**2 + (1-covariance)**2))
+    corr_expected = covariance / (
+        1 * np.sqrt(covariance**2 + (1-covariance)**2))
     expected_mi = calculate_mi(corr_expected)
     source = source[delay:]
     target = target[:-delay]
@@ -372,6 +425,7 @@ def test_indices_to_lags():
 
 
 if __name__ == '__main__':
+    test_return_local_values()
     test_analyse_network()
     test_discrete_input()
     test_check_source_set()

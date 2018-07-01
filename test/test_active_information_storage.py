@@ -21,6 +21,34 @@ opencl_missing = pytest.mark.skipif(
 
 
 @jpype_missing
+def test_return_local_values():
+    """Test estimation of local values."""
+    max_lag = 5
+    settings = {
+        'cmi_estimator': 'JidtKraskovCMI',
+        'local_values': True,  # request calculation of local values
+        'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_mi': 21,
+        'max_lag': max_lag,
+        'tau': 1}
+    data = Data()
+    data.generate_mute_data(100, 3)
+    ais = ActiveInformationStorage()
+    processes = [1, 2]
+    results = ais.analyse_network(settings, data, processes)
+
+    for p in processes:
+        lais = results.get_single_process(p, fdr=False)['ais']
+        assert type(lais) is np.ndarray, (
+            'LAIS estimation did not return an array of values')
+        assert lais.shape[0] == data.n_replications, (
+            'Wrong dim (no. replications) in LAIS estimate')
+        assert lais.shape[1] == data.n_realisations_samples((0, max_lag)), (
+            'Wrong dim (no. samples) in LAIS estimate')
+
+
+@jpype_missing
 def test_ActiveInformationStorage_init():
     """Test instance creation for ActiveInformationStorage class."""
     # Test error on missing estimator
@@ -211,6 +239,7 @@ def test_discrete_input():
 
 
 if __name__ == '__main__':
+    test_return_local_values()
     test_discrete_input()
     test_analyse_network()
     test_ActiveInformationStorage_init()

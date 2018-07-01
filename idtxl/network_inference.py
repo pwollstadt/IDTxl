@@ -184,52 +184,62 @@ class NetworkInference(NetworkAnalysis):
 class NetworkInferenceMI(NetworkInference):
 
     def __init__(self):
+        self.measure = 'mi'
         super().__init__()
 
     def _initialise(self, settings, data, sources, target):
         """Check input, set initial or default values for analysis settings."""
-        # Set CMI estimator.
-        try:
-            EstimatorClass = find_estimator(settings['cmi_estimator'])
-        except KeyError:
-            raise RuntimeError('Please provide an estimator class or name!')
-        self._cmi_estimator = EstimatorClass(settings)
+        # Check analysis settings and set defaults.
+        self.settings = settings.copy()
+        self.settings.setdefault('verbose', True)
+        self.settings.setdefault('add_conditionals', None)
+        self.settings.setdefault('tau_sources', 1)
+        self.settings.setdefault('local_values', False)
 
         # Check lags and taus for multivariate embedding.
-        if 'max_lag_sources' not in settings:
+        if 'max_lag_sources' not in self.settings:
             raise RuntimeError('The maximum lag for source embedding '
                                '(''max_lag_sources'') needs to be specified.')
-        if 'min_lag_sources' not in settings:
+        if 'min_lag_sources' not in self.settings:
             raise RuntimeError('The minimum lag for source embedding '
                                '(''max_lag_sources'') needs to be specified.')
 
-        settings.setdefault('tau_sources', 1)
-
-        if (type(settings['min_lag_sources']) is not int or
-                settings['min_lag_sources'] < 0):
+        if (type(self.settings['min_lag_sources']) is not int or
+                self.settings['min_lag_sources'] < 0):
             raise RuntimeError('min_lag_sources has to be an integer >= 0.')
-        if (type(settings['max_lag_sources']) is not int or
-                settings['max_lag_sources'] < 0):
+        if (type(self.settings['max_lag_sources']) is not int or
+                self.settings['max_lag_sources'] < 0):
             raise RuntimeError('max_lag_sources has to be an integer >= 0.')
-        if (type(settings['tau_sources']) is not int or
-                settings['tau_sources'] <= 0):
+        if (type(self.settings['tau_sources']) is not int or
+                self.settings['tau_sources'] <= 0):
             raise RuntimeError('tau_sources must be an integer > 0.')
-        if settings['min_lag_sources'] > settings['max_lag_sources']:
+        if self.settings['min_lag_sources'] > self.settings['max_lag_sources']:
             raise RuntimeError('min_lag_sources ({0}) must be smaller or equal'
                                ' to max_lag_sources ({1}).'.format(
-                                   settings['min_lag_sources'],
-                                   settings['max_lag_sources']))
-        if settings['tau_sources'] > settings['max_lag_sources']:
+                                   self.settings['min_lag_sources'],
+                                   self.settings['max_lag_sources']))
+        if self.settings['tau_sources'] > self.settings['max_lag_sources']:
             raise RuntimeError('tau_sources ({0}) has to be smaller than '
                                'max_lag_sources ({1}).'.format(
-                                   settings['tau_sources'],
-                                   settings['max_lag_sources']))
+                                   self.settings['tau_sources'],
+                                   self.settings['max_lag_sources']))
 
-        # Set default settings
-        settings.setdefault('add_conditionals', None)
-        settings.setdefault('verbose', True)
-        self.settings = settings
-        # self.selected_vars_target = None
+        # Check if the user requested the estimation of local values.
+        # Internally, the estimator uses the user settings for building the
+        # non-uniform embedding, etc. Remember the user setting and set
+        # local_values to False temporarily.
+        if self.settings['local_values']:
+            self._local_values = True
+            self.settings['local_values'] = False
+        else:
+            self._local_values = False
+
+        # Set CMI estimator.
+        try:
+            EstimatorClass = find_estimator(self.settings['cmi_estimator'])
+        except KeyError:
+            raise RuntimeError('Please provide an estimator class or name!')
+        self._cmi_estimator = EstimatorClass(self.settings)
 
         # Check the provided target and sources.
         self._check_target(target, data.n_processes)
@@ -267,6 +277,7 @@ class NetworkInferenceMI(NetworkInference):
             self.pvalues_sign_sources = None
             self.mi_sign_sources = None
             self._min_stats_surr_table = None
+            self._local_values = None
 
         # Check if the user provided a list of candidates that must go into
         # the conditioning set. These will be added and used for TE estimation,
@@ -290,64 +301,75 @@ class NetworkInferenceMI(NetworkInference):
 class NetworkInferenceTE(NetworkInference):
 
     def __init__(self):
+        self.measure = 'te'
         super().__init__()
 
     def _initialise(self, settings, data, sources, target):
         """Check input, set initial or default values for analysis settings."""
-        # Set CMI estimator.
-        try:
-            EstimatorClass = find_estimator(settings['cmi_estimator'])
-        except KeyError:
-            raise RuntimeError('Please provide an estimator class or name!')
-        self._cmi_estimator = EstimatorClass(settings)
+        # Check analysis settings and set defaults.
+        self.settings = settings.copy()
+        self.settings.setdefault('verbose', True)
+        self.settings.setdefault('add_conditionals', None)
+        self.settings.setdefault('tau_target', 1)
+        self.settings.setdefault('tau_sources', 1)
+        self.settings.setdefault('local_values', False)
 
         # Check lags and taus for multivariate embedding.
-        if 'max_lag_sources' not in settings:
+        if 'max_lag_sources' not in self.settings:
             raise RuntimeError('The maximum lag for source embedding '
                                '(''max_lag_sources'') needs to be specified.')
-        if 'min_lag_sources' not in settings:
+        if 'min_lag_sources' not in self.settings:
             raise RuntimeError('The minimum lag for source embedding '
                                '(''max_lag_sources'') needs to be specified.')
+        self.settings.setdefault('max_lag_target', settings['max_lag_sources'])
 
-        settings.setdefault('tau_target', 1)
-        settings.setdefault('tau_sources', 1)
-        settings.setdefault('max_lag_target', settings['max_lag_sources'])
-
-        if (type(settings['min_lag_sources']) is not int or
-                settings['min_lag_sources'] < 0):
+        if (type(self.settings['min_lag_sources']) is not int or
+                self.settings['min_lag_sources'] < 0):
             raise RuntimeError('min_lag_sources has to be an integer >= 0.')
-        if (type(settings['max_lag_sources']) is not int or
-                settings['max_lag_sources'] < 0):
+        if (type(self.settings['max_lag_sources']) is not int or
+                self.settings['max_lag_sources'] < 0):
             raise RuntimeError('max_lag_sources has to be an integer >= 0.')
-        if (type(settings['max_lag_target']) is not int or
-                settings['max_lag_target'] <= 0):
+        if (type(self.settings['max_lag_target']) is not int or
+                self.settings['max_lag_target'] <= 0):
             raise RuntimeError('max_lag_target must be an integer > 0.')
-        if (type(settings['tau_sources']) is not int or
-                settings['tau_sources'] <= 0):
+        if (type(self.settings['tau_sources']) is not int or
+                self.settings['tau_sources'] <= 0):
             raise RuntimeError('tau_sources must be an integer > 0.')
-        if (type(settings['tau_target']) is not int or
-                settings['tau_target'] <= 0):
+        if (type(self.settings['tau_target']) is not int or
+                self.settings['tau_target'] <= 0):
             raise RuntimeError('tau_sources must be an integer > 0.')
-        if settings['min_lag_sources'] > settings['max_lag_sources']:
+        if self.settings['min_lag_sources'] > self.settings['max_lag_sources']:
             raise RuntimeError('min_lag_sources ({0}) must be smaller or equal'
                                ' to max_lag_sources ({1}).'.format(
-                                   settings['min_lag_sources'],
-                                   settings['max_lag_sources']))
-        if settings['tau_sources'] > settings['max_lag_sources']:
+                                   self.settings['min_lag_sources'],
+                                   self.settings['max_lag_sources']))
+        if self.settings['tau_sources'] > self.settings['max_lag_sources']:
             raise RuntimeError('tau_sources ({0}) has to be smaller than '
                                'max_lag_sources ({1}).'.format(
-                                   settings['tau_sources'],
-                                   settings['max_lag_sources']))
-        if settings['tau_target'] > settings['max_lag_target']:
+                                   self.settings['tau_sources'],
+                                   self.settings['max_lag_sources']))
+        if self.settings['tau_target'] > self.settings['max_lag_target']:
             raise RuntimeError('tau_target ({0}) has to be smaller than '
                                'max_lag_target ({1}).'.format(
-                                   settings['tau_target'],
-                                   settings['max_lag_target']))
+                                   self.settings['tau_target'],
+                                   self.settings['max_lag_target']))
 
-        # Set default settings
-        settings.setdefault('add_conditionals', None)
-        settings.setdefault('verbose', True)
-        self.settings = settings
+        # Check if the user requested the estimation of local values.
+        # Internally, the estimator uses the user settings for building the
+        # non-uniform embedding, etc. Remember the user setting and set
+        # local_values to False temporarily.
+        if self.settings['local_values']:
+            self._local_values = True
+            self.settings['local_values'] = False
+        else:
+            self._local_values = False
+
+        # Set CMI estimator.
+        try:
+            EstimatorClass = find_estimator(self.settings['cmi_estimator'])
+        except KeyError:
+            raise RuntimeError('Please provide an estimator class or name!')
+        self._cmi_estimator = EstimatorClass(self.settings)
 
         # Check the provided target and sources.
         self._check_target(target, data.n_processes)
@@ -388,6 +410,7 @@ class NetworkInferenceTE(NetworkInference):
             self.pvalues_sign_sources = None
             self.te_sign_sources = None
             self._min_stats_surr_table = None
+            self._local_values = False
 
         # Check if the user provided a list of candidates that must go into
         # the conditioning set. These will be added and used for TE estimation,
@@ -430,6 +453,9 @@ class NetworkInferenceTE(NetworkInference):
 
 class NetworkInferenceBivariate(NetworkInference):
 
+    def __init__(self):
+        super().__init__()
+
     def _include_source_candidates(self, data):
         """Inlcude informative candidates into the conditioning set.
 
@@ -456,7 +482,11 @@ class NetworkInferenceBivariate(NetworkInference):
                 data.get_realisations(self.current_value, candidate_set)[0])
 
         # Perform one round of sequential max statistics.
-        [s, p, stat] = stats.max_statistic_sequential(self, data)
+        if self.measure == 'te':
+            conditioning = 'target'
+        elif self.measure == 'mi':
+            conditioning = 'none'
+        [s, p, stat] = stats.max_statistic_sequential(self, data, conditioning)
 
         # Remove non-significant links from the source set
         p, stat = self._remove_non_significant(s, p, stat)
@@ -470,15 +500,34 @@ class NetworkInferenceBivariate(NetworkInference):
             self.statistic_omnibus = None
             self.sign_omnibus = False
             self.pvalue_omnibus = None
+            if self._local_values:
+                    self.settings['local_values'] = True
+            self.statistic_single_link = None
         else:
             print(self._idx_to_lag(self.selected_vars_full))
             [s, p, stat] = stats.omnibus_test(self, data)
             self.statistic_omnibus = stat
             self.sign_omnibus = s
             self.pvalue_omnibus = p
+            if self._local_values:
+                    self.settings['local_values'] = True
+            if self.measure == 'te':
+                conditioning = 'target'
+            elif self.measure == 'mi':
+                conditioning = 'none'
+            self.statistic_single_link = self._calculate_single_link(
+                    data=data,
+                    current_value=self.current_value,
+                    source_vars=self.selected_vars_sources,
+                    target_vars=self.selected_vars_target,
+                    sources='all',
+                    conditioning=conditioning)
 
 
 class NetworkInferenceMultivariate(NetworkInference):
+
+    def __init__(self):
+        super().__init__()
 
     def _include_source_candidates(self, data):
         """Test candidates in the source's past."""
@@ -578,6 +627,9 @@ class NetworkInferenceMultivariate(NetworkInference):
             self.pvalue_omnibus = None
             self.pvalues_sign_sources = None
             self.statistic_sign_sources = None
+            if self._local_values:
+                    self.settings['local_values'] = True
+            self.statistic_single_link = None
         else:
             print(self._idx_to_lag(self.selected_vars_full))
             [s, p, stat] = stats.omnibus_test(self, data)
@@ -591,8 +643,21 @@ class NetworkInferenceMultivariate(NetworkInference):
                 p, stat = self._remove_non_significant(s, p, stat)
                 self.pvalues_sign_sources = p
                 self.statistic_sign_sources = stat
+                # Calculate TE for all links in the network. Calculate local TE
+                # if requested by the user.
+                if self._local_values:
+                    self.settings['local_values'] = True
+                self.statistic_single_link = self._calculate_single_link(
+                    data=data,
+                    current_value=self.current_value,
+                    source_vars=self.selected_vars_sources,
+                    target_vars=self.selected_vars_target,
+                    sources='all')
             else:
                 self.selected_vars_sources = []
                 self.selected_vars_full = self.selected_vars_target
                 self.pvalues_sign_sources = None
                 self.statistic_sign_sources = None
+                self.statistic_single_link = None
+                if self._local_values:
+                    self.settings['local_values'] = True

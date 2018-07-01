@@ -305,56 +305,9 @@ class NetworkComparison(NetworkAnalysis):
         target_vars = self.union._single_target[target]['selected_vars_target']
         if not source_vars:
             return np.array([])
-
-        # Get realisations of target variables and the current value, constant
-        # over sources. Permute current value realisations to generate
-        # surrogates if requested.
         current_value = (target, self.union['max_lag'])
-        target_realisations = data.get_realisations(
-            current_value, target_vars)[0]
-        current_value_realisations = data.get_realisations(
-            current_value, [current_value])[0]
-
-        # Calculate TE for each link, i.e., for a single source and the target
-        if sources == 'all':
-            sources = self.union._single_target[target].sources
-        else:
-            if sources > (data.n_processes - 1):
-                raise RuntimeError('Source {0} is not in no. nodes in the '
-                                   'data ({1}).'.format(
-                                       sources, data.n_processes))
-            sources = np.array([sources])
-        te_links = np.zeros(len(sources))
-        for (i, s) in enumerate(sources):
-            # Separate selected source variables in variables belonging to the
-            # current link and variables belonging to the conditioning set
-            link_vars = [i for i in source_vars if i[0] == s]
-            conditional_vars = [i for i in source_vars if i[0] != s]
-            # Get realisations for the current link's source variables
-            source_realisations = data.get_realisations(
-                current_value, link_vars)[0]
-
-            # Get realisations for the conditioning set, consisting of
-            # remaining source variables and target realisations. Handle empty
-            # sets: these may occur if network comparison is carried out for
-            # results from MI network inference.
-            if not conditional_vars and not target_vars:
-                conditional_realisations = None
-            elif not conditional_vars and target_vars:
-                conditional_realisations = target_realisations
-            elif conditional_vars and not target_vars:
-                conditional_realisations = data.get_realisations(
-                    current_value, conditional_vars)[0]
-            elif conditional_vars and target_vars:
-                conditional_realisations = np.hstack((
-                    data.get_realisations(current_value, conditional_vars)[0],
-                    target_realisations))
-
-            te_links[i] = self._cmi_estimator.estimate(
-                current_value_realisations,
-                source_realisations,
-                conditional_realisations)
-        return te_links
+        return self._calculate_single_link(
+            data, current_value, source_vars, target_vars, sources=sources)
 
     def _check_n_replications(self, data_a, data_b):
         """Check if no. replications is sufficient request no. permutations."""

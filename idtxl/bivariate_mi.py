@@ -294,7 +294,8 @@ class BivariateMI(NetworkInferenceMI, NetworkInferenceBivariate):
                 'selected_sources_mi': self.statistic_sign_sources,
                 'omnibus_mi': self.statistic_omnibus,
                 'omnibus_pval': self.pvalue_omnibus,
-                'omnibus_sign': self.sign_omnibus
+                'omnibus_sign': self.sign_omnibus,
+                'mi': self.statistic_single_link
             })
 
         self._reset()  # remove attributes

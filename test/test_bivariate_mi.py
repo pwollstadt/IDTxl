@@ -7,9 +7,106 @@ import itertools as it
 import numpy as np
 from idtxl.bivariate_mi import BivariateMI
 from idtxl.data import Data
-from idtxl.estimators_jidt import JidtDiscreteCMI
+from idtxl.estimators_jidt import JidtDiscreteCMI, JidtKraskovMI
 from test_estimators_jidt import jpype_missing
 from idtxl.idtxl_utils import calculate_mi
+from test_estimators_jidt import _get_gauss_data
+
+
+@jpype_missing
+def test_gauss_data():
+    """Test bivariate MI estimation from correlated Gaussians."""
+    # Generate data and add a delay one one sample.
+    expected_mi, source, source_uncorr, target = _get_gauss_data()
+    source = source[1:]
+    source_uncorr = source_uncorr[1:]
+    target = target[:-1]
+    data = Data(np.hstack((source, source_uncorr, target)), dim_order='sp')
+    settings = {
+        'cmi_estimator': 'JidtKraskovCMI',
+        'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_max_seq': 21,
+        'n_perm_omnibus': 21,
+        'max_lag_sources': 2,
+        'min_lag_sources': 1}
+    nw = BivariateMI()
+    results = nw.analyse_single_target(
+        settings, data, target=2, sources=[0, 1])
+    mi = results.get_single_target(2, fdr=False)['mi'][0]
+    sources = results.get_target_sources(2, fdr=False)
+
+    # Assert that only the correlated source was detected.
+    assert len(sources) == 1, 'Wrong no. inferred sources: {0}.'.format(
+        len(sources))
+    assert sources[0] == 0, 'Wrong inferred source: {0}.'.format(sources[0])
+    # Compare BivarateMI() estimate to JIDT estimate.
+    est = JidtKraskovMI({'lag': 1})
+    jidt_mi = est.estimate(var1=source, var2=target)
+    print('Estimated TE: {0:0.6f}, estimated TE using JIDT core estimator: '
+          '{1:0.6f} (expected: {2:0.6f}).'.format(mi, jidt_mi, expected_mi))
+    assert np.isclose(mi, jidt_mi, atol=0.005), (
+        'Estimated MI {0:0.6f} differs from JIDT estimate {1:0.6f} (expected: '
+        'MI {2:0.6f}).'.format(mi, jidt_mi, expected_mi))
+
+
+@jpype_missing
+def test_return_local_values():
+    """Test estimation of local values."""
+    max_lag = 5
+    data = Data()
+    data.generate_mute_data(200, 5)
+    settings = {
+        'cmi_estimator': 'JidtKraskovCMI',
+        'local_values': True,  # request calculation of local values
+        'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_max_seq': 21,
+        'n_perm_omnibus': 21,
+        'max_lag_sources': max_lag,
+        'min_lag_sources': 4,
+        'max_lag_target': max_lag}
+    target = 1
+    mi = BivariateMI()
+    results_local = mi.analyse_network(settings, data, targets=[target])
+
+    lmi = results_local.get_single_target(target, fdr=False)['mi']
+    n_sources = len(results_local.get_target_sources(target, fdr=False))
+    assert type(lmi) is np.ndarray, (
+        'LMI estimation did not return an array of values')
+    assert lmi.shape[0] == n_sources, (
+        'Wrong dim (no. sources) in LMI estimate')
+    assert lmi.shape[1] == data.n_realisations_samples((0, max_lag)), (
+        'Wrong dim (no. samples) in LMI estimate')
+    assert lmi.shape[2] == data.n_replications, (
+        'Wrong dim (no. replications) in LMI estimate')
+
+    # Test for correctnes of single link MI estimation by comparing it to the
+    # MI between single variables and the target. For this test case where we
+    # find only one significant past variable per source, the two should be the
+    # same. Also compare single link average MI to mean local MI for each
+    # link.
+    settings['local_values'] = False
+    results_avg = mi.analyse_network(settings, data, targets=[target])
+    mi_single_link = results_avg.get_single_target(target, fdr=False)['mi']
+    mi_selected_sources = results_avg.get_single_target(
+        target, fdr=False)['selected_sources_mi']
+    sources_local = results_local.get_target_sources(target, fdr=False)
+    sources_avg = results_avg.get_target_sources(target, fdr=False)
+    assert np.isclose(mi_single_link, mi_selected_sources, atol=0.005).all(), (
+        'Single link average MI {0} and single source MI {1} deviate.'.format(
+                mi_single_link, mi_selected_sources))
+    # Check each source separately, inferred sources may differ between the two
+    # calls to analyse_network().
+    for s in list(set(sources_avg).intersection(sources_local)):
+        i1 = np.where(sources_avg == s)[0][0]
+        i2 = np.where(sources_local == s)[0][0]
+        assert np.isclose(mi_single_link[i1], np.mean(lmi[i2, :, :]), atol=0.005), (
+            'Single link average MI {0} and mean LMI {1} deviate.'.format(
+                mi_single_link[i1], np.mean(lmi[i2, :, :])))
+        assert np.isclose(mi_single_link[i1], mi_selected_sources[i1], atol=0.005), (
+            'Single link average MI {0} and single source MI {1} deviate.'.format(
+                mi_single_link[i1], mi_selected_sources[i1]))
 
 
 @jpype_missing
@@ -350,6 +447,8 @@ def test_indices_to_lags():
 
 
 if __name__ == '__main__':
+    test_gauss_data()
+    test_return_local_values()
     test_discrete_input()
     test_analyse_network()
     test_check_source_set()

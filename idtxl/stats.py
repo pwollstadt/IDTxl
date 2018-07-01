@@ -448,22 +448,34 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate):
     return significance, pvalue, surr_table
 
 
-def max_statistic_sequential(analysis_setup, data):
+def max_statistic_sequential(analysis_setup, data, conditioning='full'):
     """Perform sequential maximum statistics for a set of candidate sources.
 
-    Test if sorted transfer entropy (TE) values are significantly bigger than
-    their respective counterpart obtained from surrogates of all remanining
-    candidates: test if the biggest TE is bigger than the distribution
-    of biggest TE surrogate values; test if the 2nd biggest TE is bigger than
-    the distribution of 2nd biggest surrogate TE values; ...
-    Stop comparison if a TE value is non significant, all smaller values are
-    considered non-significant as well.
+    Test multivariate/bivariate MI/TE values against surrogates. Test highest
+    TE/MI value against distribution of highest surrogate values, second
+    highest against distribution of second highest, and so forth. Surrogates
+    are created from each candidate in the candidate set, including the
+    candidate that is currently tested. Surrogates are then sorted over
+    candidates. This is repeated n_perm_max_seq times. Stop comparison if a
+    TE/MI value is not significant compared to the distribution of surrogate
+    values of the same rank. All smaller values are considered non-significant
+    as well.
+
+    The conditional for estimation of MI/TE is taken from the current set of
+    conditional variables in the analysis setup. For multivariate MI or TE
+    surrogate creation, the full set of conditional variables is used. For
+    bivariate MI or TE surrogate creation, the conditioning set has to be
+    restricted to a subset of the current set of conditional variables: for
+    bivariate MI no conditioning set is required, for bivariate TE only the
+    past variables from the target are required (not the variables selected
+    from other relevant sources).
 
     This function will re-use the surrogate table created in the last min-stats
     round if that table is in the analysis_setup. This saves the complete
     calculation of surrogates for this statistic.
 
     Args:
+
         analysis_setup : MultivariateTE instance
             information on the current analysis, can have an optional attribute
             'settings', a dictionary with parameters for statistical testing:
@@ -478,6 +490,10 @@ def max_statistic_sequential(analysis_setup, data):
 
         data : Data instance
             raw data
+        conditioning : str [optional]
+            set conditioning set, 'full' for all selected variables (target's
+            and sources' past), 'target' for variables from the target's past
+            only, 'none' for no conditioning
 
     Returns:
         numpy array, bool
@@ -502,21 +518,54 @@ def max_statistic_sequential(analysis_setup, data):
 
     assert analysis_setup.selected_vars_sources, 'No sources to test.'
 
-    # Calculate TE for each candidate in the conditional source set and sort
-    # TE values.
+    # Check what type of conditioning is requested and allocate memory
+    # accordingly.
+    if conditioning == 'full':
+        idx_conditional = analysis_setup.selected_vars_full
+        conditional_realisations = np.empty(
+            (data.n_realisations(analysis_setup.current_value) *
+                len(analysis_setup.selected_vars_sources),
+             len(idx_conditional) - 1)).astype(data.data_type)
+    elif conditioning == 'target':
+        idx_conditional = analysis_setup.selected_vars_target
+        conditional_realisations = np.empty(
+            (data.n_realisations(analysis_setup.current_value) *
+                len(analysis_setup.selected_vars_sources),
+             len(idx_conditional))).astype(data.data_type)
+    elif conditioning == 'none':
+        idx_conditional = None
+    else:
+        raise RuntimeError(
+            'Unknown conditioning {0} for surrogate creation, should be'
+            ' ''full'', ''target'', or ''none''.'.format(conditioning))
     candidate_realisations = np.empty(
         (data.n_realisations(analysis_setup.current_value) *
          len(analysis_setup.selected_vars_sources), 1)).astype(data.data_type)
-    conditional_realisations = np.empty(
-        (data.n_realisations(analysis_setup.current_value) *
-            len(analysis_setup.selected_vars_sources),
-         len(analysis_setup.selected_vars_full) - 1)).astype(data.data_type)
+
+    # Calculate TE for each candidate in the conditional source set, i.e.,
+    # calculate the conditional MI between each candidate and the current
+    # value, conditional on all selected variables in the conditioning set.
+    # Then sort the estimated TE values.
     i_1 = 0
     i_2 = data.n_realisations(analysis_setup.current_value)
-    for conditional in analysis_setup.selected_vars_sources:
-        [temp_cond, temp_cand] = analysis_setup._separate_realisations(
-                                            analysis_setup.selected_vars_full,
-                                            conditional)
+    # Collect data for each candidate and the corresponding conditioning set.
+    for candidate in analysis_setup.selected_vars_sources:
+        if conditioning == 'full':
+            [temp_cond, temp_cand] = analysis_setup._separate_realisations(
+                                            idx_conditional,
+                                            candidate)
+        elif conditioning == 'target':
+            temp_cond = analysis_setup._selected_vars_target_realisations
+            temp_cand = data.get_realisations(
+                analysis_setup.current_value, [candidate])[0]
+        elif conditioning == 'none':
+            temp_cond = None
+            temp_cand = data.get_realisations(
+                analysis_setup.current_value, [candidate])[0]
+
+        # The following may happen if either the requested conditing is 'none'
+        # or if the conditiong set that is tested consists only of a single
+        # candidate.
         if temp_cond is None:
             conditional_realisations = None
         else:
@@ -525,48 +574,52 @@ def max_statistic_sequential(analysis_setup, data):
         i_1 = i_2
         i_2 += data.n_realisations(analysis_setup.current_value)
 
-    individual_te = analysis_setup._cmi_estimator.estimate_parallel(
+    # Calculate original statistic (multivariate/bivariate TE/MI)
+    individual_stat = analysis_setup._cmi_estimator.estimate_parallel(
                             n_chunks=len(analysis_setup.selected_vars_sources),
                             re_use=['var2'],
                             var1=candidate_realisations,
                             var2=analysis_setup._current_value_realisations,
                             conditional=conditional_realisations)
 
-    selected_vars_order = utils.argsort_descending(individual_te)
-    individual_te_sorted = utils.sort_descending(individual_te)
+    selected_vars_order = utils.argsort_descending(individual_stat)
+    individual_stat_sorted = utils.sort_descending(individual_stat)
 
-    # Re-use or create surrogate table and sort it, this saves some time
+    # Re-use surrogate table from previous pruning using min stats, if it
+    # already exists. This saves some time. Otherwise create surrogate table.
+    # Sort surrogate table.
     if (analysis_setup._min_stats_surr_table is not None and
             n_permutations <= analysis_setup._min_stats_surr_table.shape[1]):
         surr_table = analysis_setup._min_stats_surr_table[:, :n_permutations]
         assert len(analysis_setup.selected_vars_sources) == surr_table.shape[0]
     else:
         surr_table = _create_surrogate_table(
-                                        analysis_setup,
-                                        data,
-                                        analysis_setup.selected_vars_sources,
-                                        n_permutations)
+                            analysis_setup=analysis_setup,
+                            data=data,
+                            idx_test_set=analysis_setup.selected_vars_sources,
+                            n_perm=n_permutations,
+                            conditioning=conditioning)
     max_distribution = _sort_table_max(surr_table)
 
-    # Compare each TE value with the distribution of the same rank, starting
-    # with the highest TE.
-    significance = np.zeros(individual_te.shape[0]).astype(bool)
-    pvalue = np.ones(individual_te.shape[0])
-    for c in range(individual_te.shape[0]):
-        [s, p] = _find_pvalue(individual_te_sorted[c],
+    # Compare each original value with the distribution of the same rank,
+    # starting with the highest value.
+    significance = np.zeros(individual_stat.shape[0]).astype(bool)
+    pvalue = np.ones(individual_stat.shape[0])
+    for c in range(individual_stat.shape[0]):
+        [s, p] = _find_pvalue(individual_stat_sorted[c],
                               max_distribution[c, ], alpha, tail='one_bigger')
         significance[c] = s
         pvalue[c] = p
         if not s:  # break as soon as a candidate is no longer significant
             if VERBOSE:
-                print('Stopping sequential max stats at candidate with rank '
+                print('\nStopping sequential max stats at candidate with rank '
                       '{0}.'.format(c))
             break
 
     # Get back original order and return results.
     significance = significance[selected_vars_order]
     pvalue = pvalue[selected_vars_order]
-    return significance, pvalue, individual_te
+    return significance, pvalue, individual_stat
 
 
 def min_statistic(analysis_setup, data, candidate_set, te_min_candidate):
@@ -958,15 +1011,22 @@ def check_n_perm(n_perm, alpha):
                            .format(n_perm, alpha))
 
 
-def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
+def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm,
+                            conditioning='full'):
     """Create a table of surrogate MI/CMI/TE values.
 
-    Calculate MI/CMI/TE between surrogates for each source in the test
-    set and the target in the analysis setup using the current conditional in
-    the analysis setup.
+    Calculate MI/CMI/TE between surrogates for each source variable in the test
+    set and the target in the analysis setup. The conditional is taken from the
+    current set of conditional variables in the analysis setup. For
+    multivariate MI or TE surrogate creation, the full set of conditional
+    variables is used. For bivariate MI or TE surrogate creation, the
+    conditioning set has to be restricted to a subset of the current set of
+    conditional variables: for bivariate MI no conditioning set is required,
+    for bivariate TE only the past variables from the target are required (not
+    the variables selected from other relevant sources).
 
     Args:
-        analysis_setup : MultivariateTE instance
+        analysis_setup : instance of NetworkAnalysis or child class
             information on the current analysis, must contain an attribute
             settings with entry 'permute_in_time'
         data : Data instance
@@ -975,7 +1035,10 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
             list of indices indicating samples to be used as sources
         n_perm : int
             number of permutations for testing
-
+        conditioning : str [optional]
+            set conditioning set, 'full' for all selected variables (target's
+            and sources' past), 'target' for variables from the target's past
+            only, 'none' for no conditioning
     Returns:
         numpy array
             surrogate MI/CMI/TE values, dimensions: (length test set, number of
@@ -983,6 +1046,18 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
     """
     # Check which permutation type is requested by the calling function.
     permute_in_time = analysis_setup.settings['permute_in_time']
+
+    # Check what type of conditioning is requested.
+    if conditioning == 'full':
+        conditional = analysis_setup._selected_vars_realisations
+    elif conditioning == 'target':
+        conditional = analysis_setup._selected_vars_target_realisations
+    elif conditioning == 'none':
+        conditional = None
+    else:
+        raise RuntimeError(
+            'Unknown conditioning {0} for surrogate creation, should be'
+            ' ''full'', ''target'', or ''none''.'.format(conditioning))
 
     # Create surrogate table.
     if VERBOSE:
@@ -996,27 +1071,6 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
         if VERBOSE:
             print('\t{0}'.format(analysis_setup._idx_to_lag([candidate])[0]),
                   end='')
-        '''
-        surr_candidate_realisations = np.empty(
-                (data.n_realisations(analysis_setup.current_value) * n_perm,
-                1))
-        i_1 = 0
-        i_2 = data.n_realisations(analysis_setup.current_value)
-        for perm in range(n_perm):
-            # Check the permutation type for the current candidate.
-            if permute_over_replications:
-                sur_temp = data.permute_data(analysis_setup.current_value,
-                                             [candidate])[0]
-            else:
-                [real, repl_idx] = data.get_realisations(
-                                                analysis_setup.current_value,
-                                                [candidate])
-                sur_temp = _permute_realisations(real, repl_idx, perm_range)
-
-            surr_candidate_realisations[i_1:i_2, ] = sur_temp
-            i_1 = i_2
-            i_2 += data.n_realisations(analysis_setup.current_value)
-        '''
         if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
                 permute_in_time):
             # Generate the surrogates analytically
@@ -1040,9 +1094,9 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
                 analysis_setup._cmi_estimator.estimate_parallel(
                     n_chunks=n_perm,
                     re_use=['var2', 'conditional'],
-                    var1=surr_candidate_realisations,  # too long
+                    var1=surr_candidate_realisations,
                     var2=current_value_realisations,
-                    conditional=analysis_setup._selected_vars_realisations))
+                    conditional=conditional))
         idx_c += 1
 
     return surr_table
