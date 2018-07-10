@@ -816,3 +816,144 @@ class Data():
                               term_2 * x[4, n - 1, r] +
                               np.random.normal())
         self.set_data(x[:, 3:, :], 'psr')
+
+    def generate_var_data(
+        self,
+        n_samples=1000,
+        n_replications=10,
+        coupling_matrices=np.array([[[0.5, 0], [0.4, 0.5]]]),
+        noise_std=0.1
+    ):
+        """Generate VAR (vector autoregressive) time series from coupling matrices
+
+        Args:
+            n_samples : int
+                number of samples simulated for each process and replication
+            n_replications : int
+                number of replications
+            coupling_matrices : numpy array [optional]
+                coupling matrices: numpy array with dimensions
+                (VAR order, number of processes, number of processes)
+                (default = np.array([[[0.5, 0], [0.4, 0.5]]]))
+            noise_std : float [optional]
+                standard deviation of uncorrelated Gaussian noise
+                (default = 0.1)
+        """
+        order = np.shape(coupling_matrices)[0]
+        n_processes = np.shape(coupling_matrices)[1]
+        samples_transient_n = n_processes * 10
+
+        # Check stationarity based on coupling matrices
+        companion_coupling = np.zeros((
+            n_processes * order,
+            n_processes * order
+        ))
+        companion_coupling[0:n_processes, :] = np.reshape(
+            np.transpose(coupling_matrices, (1,0,2)),
+            [n_processes, n_processes * order]
+            )
+        companion_coupling[n_processes:, 0:n_processes*(order-1)] = np.eye(
+            n_processes * (order - 1)
+        )
+        is_stationary = max(np.abs(np.linalg.eigvals(companion_coupling))) < 1
+        assert(is_stationary)
+
+        # Initialise time series matrix
+        # The 3 dimensions represent (processes, samples, replications)
+        x = np.zeros((
+            n_processes,
+            order + samples_transient_n + n_samples,
+            n_replications
+        ))
+
+        # Generate (different) initial conditions for each replication:
+        # Uniformly sample from the [0,1] interval and tile as many
+        # times as order along the second dimension
+        x[:, 0:order, :] = np.tile(
+            np.random.rand(n_processes, 1, n_replications),
+            (1, order, 1)
+        )
+
+        for i_repl in range(0, n_replications):
+            for i_sample in range(order, order + samples_transient_n + n_samples):
+                for i_delay in range(1, order + 1):
+                    x[:, i_sample, i_repl] += np.dot(
+                        coupling_matrices[i_delay - 1, :, :],
+                        x[:, i_sample - i_delay, i_repl]
+                    )
+                # Add uncorrelated Gaussian noise vector
+                x[:, i_sample, i_repl] += np.random.normal(
+                    0,  # mean
+                    noise_std,
+                    x[:, i_sample, i_repl].shape
+                )
+
+        # Discard transient effects (only take end of time series)
+        self.set_data(x[:, -(n_samples + 1):-1, :], 'psr')
+
+    def generate_logistic_maps_data(
+        self,
+        n_samples=1000,
+        n_replications=10,
+        coupling_matrices=np.array([[[0.5, 0], [0.4, 0.5]]]),
+        noise_std=0.1
+    ):
+        """Generate coupled logistic maps time series from coupling matrices
+
+        Args:
+            n_samples : int
+                number of samples simulated for each process and replication
+            n_replications : int
+                number of replications
+            coupling_matrices : numpy array [optional]
+                coupling matrices: numpy array with dimensions
+                (order, number of processes, number of processes)
+                (default = np.array([[[0.5, 0], [0.4, 0.5]]]))
+            noise_std : float [optional]
+                standard deviation of uncorrelated Gaussian noise
+                (default = 0.1)
+        """
+        order = np.shape(coupling_matrices)[0]
+        n_processes = np.shape(coupling_matrices)[1]
+        samples_transient_n = n_processes * 10
+
+        # Define activation function
+        def f(x):
+            return 4 * x * (1 - x)
+
+        # Initialise time series matrix
+        # The 3 dimensions represent (processes, samples, replications)
+        x = np.zeros((
+            n_processes,
+            order + samples_transient_n + n_samples,
+            n_replications
+        ))
+
+        # Generate (different) initial conditions for each replication:
+        # Uniformly sample from the [0,1] interval and tile as many
+        # times as order along the second dimension
+        x[:, 0:order, :] = np.tile(
+            np.random.rand(n_processes, 1, n_replications),
+            (1, order, 1)
+        )
+
+        for i_repl in range(0, n_replications):
+            for i_sample in range(order, order + samples_transient_n + n_samples):
+                for i_delay in range(1, order + 1):
+                    x[:, i_sample, i_repl] += np.dot(
+                        coupling_matrices[i_delay - 1, :, :],
+                        x[:, i_sample - i_delay, i_repl]
+                    )
+                # Compute activation function
+                x[:, i_sample, i_repl] = f(x[:, i_sample, i_repl])
+                # Add uncorrelated Gaussian noise vector
+                x[:, i_sample, i_repl] += np.random.normal(
+                    0,  # mean
+                    noise_std,
+                    x[:, i_sample, i_repl].shape
+                )
+                # ensure values are in the [0, 1] range
+                x[:, i_sample, i_repl] = x[:, i_sample, i_repl] % 1
+
+        # Discard transient effects (only take end of time series)
+        self.set_data(x[:, -(n_samples + 1):-1, :], 'psr')
