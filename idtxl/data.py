@@ -816,3 +816,164 @@ class Data():
                               term_2 * x[4, n - 1, r] +
                               np.random.normal())
         self.set_data(x[:, 3:, :], 'psr')
+
+    def generate_var_data(
+        self,
+        n_samples=1000,
+        n_replications=10,
+        coefficient_matrices=np.array([[[0.5, 0], [0.4, 0.5]]]),
+        noise_std=0.1
+    ):
+        """Generate discrete-time VAR (vector autoregressive) time series.
+
+        Generate data and overwrite the instance's current data.
+
+        Args:
+            n_samples : int
+                number of samples simulated for each process and replication
+            n_replications : int
+                number of replications
+            coefficient_matrices : numpy array [optional]
+                coefficient matrices: numpy array with dimensions
+                (VAR order, number of processes, number of processes). Each
+                square coefficient matrix corresponds to a lag, starting from
+                lag=1. The total number of provided matrices implicitly
+                determines the order of the VAR process.
+                (default = np.array([[[0.5, 0], [0.4, 0.5]]]))
+            noise_std : float [optional]
+                standard deviation of uncorrelated Gaussian noise
+                (default = 0.1)
+        """
+        order = np.shape(coefficient_matrices)[0]
+        n_processes = np.shape(coefficient_matrices)[1]
+        samples_transient = n_processes * 10
+
+        # Check stability of the VAR process, which is a sufficient condition
+        # for stationarity.
+        var_reduced_form = np.zeros((
+            n_processes * order,
+            n_processes * order
+        ))
+        var_reduced_form[0:n_processes, :] = np.reshape(
+            np.transpose(coefficient_matrices, (1, 0, 2)),
+            [n_processes, n_processes * order]
+            )
+        var_reduced_form[n_processes:, 0:n_processes * (order - 1)] = np.eye(
+            n_processes * (order - 1)
+        )
+        # Condition for stability: the absolute values of all the eigenvalues
+        # of the reduced-form coefficeint matrix are smaller than 1. A stable
+        # VAR process is also stationary.
+        is_stable = max(np.abs(np.linalg.eigvals(var_reduced_form))) < 1
+        assert(is_stable)
+
+        # Initialise time series matrix. The 3 dimensions represent
+        # (processes, samples, replications). Only the last n_samples will be
+        # kept, in order to discard transient effects.
+        x = np.zeros((
+            n_processes,
+            order + samples_transient + n_samples,
+            n_replications
+        ))
+
+        # Generate (different) initial conditions for each replication:
+        # Uniformly sample from the [0,1] interval and tile as many times as
+        # the VAR process order along the second dimension.
+        x[:, 0:order, :] = np.tile(
+            np.random.rand(n_processes, 1, n_replications),
+            (1, order, 1)
+        )
+
+        # Compute time series
+        for i_repl in range(0, n_replications):
+            for i_sample in range(order, order + samples_transient + n_samples):
+                for i_delay in range(1, order + 1):
+                    x[:, i_sample, i_repl] += np.dot(
+                        coefficient_matrices[i_delay - 1, :, :],
+                        x[:, i_sample - i_delay, i_repl]
+                    )
+                # Add uncorrelated Gaussian noise vector
+                x[:, i_sample, i_repl] += np.random.normal(
+                    0,  # mean
+                    noise_std,
+                    x[:, i_sample, i_repl].shape
+                )
+
+        # Discard transient effects (only take end of time series)
+        self.set_data(x[:, -(n_samples + 1):-1, :], 'psr')
+
+    def generate_logistic_maps_data(
+        self,
+        n_samples=1000,
+        n_replications=10,
+        coefficient_matrices=np.array([[[0.5, 0], [0.4, 0.5]]]),
+        noise_std=0.1
+    ):
+        """Generate discrete-time coupled-logistic-maps time series.
+
+        Generate data and overwrite the instance's current data.
+
+        The implemented logistic map function is f(x) = 4 * x * (1 - x).
+
+        Args:
+            n_samples : int
+                number of samples simulated for each process and replication
+            n_replications : int
+                number of replications
+            coefficient_matrices : numpy array [optional]
+                coefficient matrices: numpy array with dimensions
+                (order, number of processes, number of processes). Each
+                square coefficient matrix corresponds to a lag, starting from
+                lag=1. The total number of provided matrices implicitly
+                determines the order of the stochastic process.
+                (default = np.array([[[0.5, 0], [0.4, 0.5]]]))
+            noise_std : float [optional]
+                standard deviation of uncorrelated Gaussian noise
+                (default = 0.1)
+        """
+        order = np.shape(coefficient_matrices)[0]
+        n_processes = np.shape(coefficient_matrices)[1]
+        samples_transient = n_processes * 10
+
+        # Define activation function (logistic map)
+        def f(x):
+            return 4 * x * (1 - x)
+
+        # Initialise time series matrix. The 3 dimensions represent
+        # (processes, samples, replications). Only the last n_samples will be
+        # kept, in order to discard transient effects.
+        x = np.zeros((
+            n_processes,
+            order + samples_transient + n_samples,
+            n_replications
+        ))
+
+        # Generate (different) initial conditions for each replication:
+        # Uniformly sample from the [0,1] interval and tile as many times as
+        # the stochastic process order along the second dimension.
+        x[:, 0:order, :] = np.tile(
+            np.random.rand(n_processes, 1, n_replications),
+            (1, order, 1)
+        )
+
+        # Compute time series
+        for i_repl in range(0, n_replications):
+            for i_sample in range(order, order + samples_transient + n_samples):
+                for i_delay in range(1, order + 1):
+                    x[:, i_sample, i_repl] += np.dot(
+                        coefficient_matrices[i_delay - 1, :, :],
+                        x[:, i_sample - i_delay, i_repl]
+                    )
+                # Compute activation function
+                x[:, i_sample, i_repl] = f(x[:, i_sample, i_repl])
+                # Add uncorrelated Gaussian noise vector
+                x[:, i_sample, i_repl] += np.random.normal(
+                    0,  # mean
+                    noise_std,
+                    x[:, i_sample, i_repl].shape
+                )
+                # ensure values are in the [0, 1] range
+                x[:, i_sample, i_repl] = x[:, i_sample, i_repl] % 1
+
+        # Discard transient effects (only take end of time series)
+        self.set_data(x[:, -(n_samples + 1):-1, :], 'psr')
