@@ -69,8 +69,6 @@ def plot_network(results, weights, fdr=True):
     _plot_adj_matrix(
         results.get_adjacency_matrix(weights, fdr),
         cbar_label=weights)
-    plt.show()
-
     return graph, fig
 
 
@@ -144,7 +142,6 @@ def plot_selected_vars(results, target, sign_sources=True,
 
     plt.plot([-0.5, max_lag + 0.5], [0.5, 0.5],
              linestyle='--', linewidth=1, color='0.5')
-    plt.show()
     return graph, fig
 
 
@@ -215,6 +212,10 @@ def plot_mute_graph():
         0 -> 3, u = 2 (non-linear)
         3 -> 4, u = 1
         4 -> 3, u = 1
+
+    Returns:
+        Figure
+            figure handle, Figure object from the matplotlib package
     """
     graph = nx.DiGraph()
     graph.add_nodes_from(np.arange(5))
@@ -228,18 +229,18 @@ def plot_mute_graph():
         3: np.array([2, 1]),
         4: np.array([3, 1]),
     }
-    plt.figure()
+    fig = plt.figure()
     nx.draw(graph, pos=pos, with_labels=True, node_size=900, alpha=1.0,
             node_color='cadetblue', font_weight='bold',
             edge_color=['r', 'k', 'r', 'k', 'k'], hold=True)
     nx.draw_networkx_edge_labels(graph, pos=pos)
     plt.text(2, 0.1, 'non-linear interaction in red')
-    plt.show()
     # see here for an example on how to plot edge labels:
     # http://stackoverflow.com/questions/10104700/how-to-set-networkx-edge-labels-offset-to-avoid-label-overlap
+    return fig
 
 
-def plot_network_comparison(results, weights, fdr=True):
+def plot_network_comparison(results):
     """Plot results of network comparison.
 
     Plot results of network comparison. Produces a figure with five subplots,
@@ -249,24 +250,29 @@ def plot_network_comparison(results, weights, fdr=True):
     fourth plot shows the absolute differences in CMI per link, and the fifth
     plot shows p-values for each link.
 
+    Args:
+        results : ResultsNetworkComparison() instance
+            network comparison results
+
     Returns:
         DiGraph
             instance of a directed graph class from the networkx package
         Figure
             figure handle, Figure object from the matplotlib package
     """
-    adj_matrix = results.get_adjacency_matrix(weights=weights, fdr=fdr)
+    # Get union graph.
+    adj_matrix = results.get_adjacency_matrix(weights='union')
     graph_union = io.export_networkx_graph(adj_matrix, weights='union')
 
     fig = plt.figure(figsize=(10, 15))
     ax1 = plt.subplot(231)  # plot union graph
     _plot_graph(graph_union, ax1)
-    ax = plt.subplot(232)
+    ax = plt.subplot(232)  # plot union graph adjacency matrix
     _plot_adj_matrix(results.get_adjacency_matrix('union'), mat_color='PuBu',
                      cbar_label='link in union', cbar_stepsize=1)
     ax.set_title('union network A and B', y=1.1)
 
-    ax = plt.subplot(234)
+    ax = plt.subplot(234)  # plot comparison adjacency matrix
     if results.settings.tail_comp == 'two':
         cbar_label = 'A != B'
     elif results.settings.tail_comp == 'one':
@@ -275,16 +281,14 @@ def plot_network_comparison(results, weights, fdr=True):
                      mat_color='OrRd', cbar_label=cbar_label, cbar_stepsize=1)
     ax.set_title('Comparison {0}'.format(cbar_label), y=1.1)
 
-    ax = plt.subplot(235)
+    ax = plt.subplot(235)  # plot abs. differences adjacency matrix
     _plot_adj_matrix(results.get_adjacency_matrix('diff_abs'),
                      mat_color='BuGn', cbar_label='norm. CMI diff [a.u.]',
                      cbar_stepsize=0.1)
     ax.set_title('CMI diff abs (A - B)', y=1.1)
 
-    ax = plt.subplot(236)
+    ax = plt.subplot(236) # plot p-value adjacency matrix
     _plot_adj_matrix(results.get_adjacency_matrix('pvalue'), mat_color='gray',
                      cbar_label='p-value', cbar_stepsize=0.05)
     ax.set_title('p-value [%]', y=1.1)
-    plt.show()
-
     return graph_union, fig

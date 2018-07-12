@@ -58,13 +58,12 @@ def test_plot_network():
     res_network = nw.analyse_network(settings=settings, data=data)
     graph, fig = plot_network(res_single, 'max_te_lag', fdr=False)
     plt.close(fig)
-    for fdr in [False, True]:
-        graph, fig = plot_network(res_network, 'max_te_lag', fdr=fdr)
+    graph, fig = plot_network(res_network, 'max_te_lag', fdr=False)
+    plt.close(fig)
+    for sign_sources in [True, False]:
+        graph, fig = plot_selected_vars(
+            res_network, target=1, sign_sources=True, fdr=False)
         plt.close(fig)
-        for sign_sources in [True, False]:
-            graph, fig = plot_selected_vars(
-                res_network, target=1, sign_sources=True, fdr=fdr)
-            plt.close(fig)
 
 
 def test_plot_network_comparison():

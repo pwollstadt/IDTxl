@@ -5,6 +5,7 @@ author: patricia
 from idtxl.data import Data
 from idtxl.multivariate_te import MultivariateTE
 from idtxl import visualise_graph
+import matplotlib.pyplot as plt
 
 
 def test_plot_mute_graph():
@@ -30,10 +31,13 @@ def test_visualise_multivariate_te():
                                                targets=[0, 1, 2])
     # generate graph plots
     visualise_graph.plot_selected_vars(results, target=1, sign_sources=False)
+    plt.show()
     visualise_graph.plot_network(results, fdr=False)
+    plt.show()
     visualise_graph.plot_network(results, fdr=True)
+    plt.show()
     visualise_graph.plot_selected_vars(results, target=1, sign_sources=True)
-
+    plt.show()
 
 
 if __name__ == '__main__':
