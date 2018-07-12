@@ -3,68 +3,79 @@
 Provide functions to load and save IDTxl data, provide import functions (e.g.,
 mat-files, FieldTrip) and export functions (e.g., networkx, BrainNet Viewer).
 """
-import json
+# import json
 import pickle
 import h5py
 import numpy as np
 import copy as cp
+import itertools as it
 from scipy.io import loadmat
 from .data import Data
+from . import idtxl_exceptions as ex
+try:
+    import networkx as nx
+except ImportError as err:
+    ex.package_missing(
+        err,
+        ('networkx is not available on this system. Install it from '
+         'https://pypi.python.org/pypi/networkx/2.0 to export and plot IDTxl '
+         'results in this format.'))
 
 VERBOSE = False
 
 
-def save(data, file_path):
-    """Save IDTxl data to disk.
+# def save(data, file_path):
+#     """Save IDTxl data to disk.
 
-    Save different data types to disk. Supported types are:
+#     Save different data types to disk. Supported types are:
 
-    - dictionaries with results, e.g., from MultivariateTE
-    - numpy array
-    - instance of IDTXL Data object
+#     - dictionaries with results, e.g., from MultivariateTE
+#     - numpy array
+#     - instance of IDTXL Data object
 
-    Note that while numpy arrays and Data instances are saved in binary for
-    performance, dictionaries are saved in the json format, which is human-
-    readable and also easily read into other programs (e.g., MATLAB:
-    http://undocumentedmatlab.com/blog/json-matlab-integration).
+#     Note that while numpy arrays and Data instances are saved in binary for
+#     performance, dictionaries are saved in the json format, which is human-
+#     readable and also easily read into other programs (e.g., MATLAB:
+#     http://undocumentedmatlab.com/blog/json-matlab-integration).
 
-    File extensions are
+#     File extensions are
 
-    - .txt for dictionaries (JSON file)
-    - .npy for numpy array
-    - .npz for Data instances
+#     - .txt for dictionaries (JSON file)
+#     - .npy for numpy array
+#     - .npz for Data instances
 
-    If the extension is not provided in the file_path, the function will add it
-    depending on the type of the data to be written.
+#     If the extension is not provided in the file_path, the function will add
+#     it depending on the type of the data to be written.
 
-    Args:
-        data : dict | numpy array | Data object
-            data to be saved to disk
-        file_path : string
-            string with file name (including the path)
-    """
-    # Check if a file extension is provided in the file_path. Note that the
-    # numpy save functions don't need an extension, they are added if missing.
-    if file_path.find('.', -4) == -1:
-        add_extension = True
-    else:
-        add_extension = False
+#     Args:
+#         data : dict | numpy array | Data object
+#             data to be saved to disk
+#         file_path : string
+#             string with file name (including the path)
+#     """
+#     # Check if a file extension is provided in the file_path. Note that the
+#     # numpy save functions don't need an extension, they are added if
+#     # missing.
+#     if file_path.find('.', -4) == -1:
+#         add_extension = True
+#     else:
+#         add_extension = False
 
-    if type(data) is dict:
-        if add_extension:
-            file_path = ''.join([file_path, '.txt'])
-        # JSON does not recognize numpy arrays and data types, they have to be
-        # converted before dumping them.
-        data_json = _remove_numpy(data)
-        if VERBOSE:
-            print('writing file {0}'.format(file_path))
-        with open(file_path, 'w') as outfile:
-            json.dump(obj=data_json, fp=outfile, sort_keys=True)
-    elif type(data) is np.ndarray:
-        # TODO this can't handle scalars, handle this as an exception
-        np.save(file_path, data)
-    elif type(data) is __name__.data.Data:
-        np.savez(file_path, data=data.data, normalised=data.normalise)
+#     if type(data) is dict:
+#         if add_extension:
+#             file_path = ''.join([file_path, '.txt'])
+#         # JSON does not recognize numpy arrays and data types, they have to
+#         # be converted before dumping them.
+#         data_json = _remove_numpy(data)
+#         if VERBOSE:
+#             print('writing file {0}'.format(file_path))
+#         with open(file_path, 'w') as outfile:
+#             json.dump(obj=data_json, fp=outfile, sort_keys=True)
+#     elif type(data) is np.ndarray:
+#         # TODO this can't handle scalars, handle this as an exception
+#         np.save(file_path, data)
+#     elif type(data) is __name__.data.Data:
+#         np.savez(file_path, data=data.data, normalised=data.normalise)
 
 
 def _remove_numpy(data):
@@ -82,56 +93,56 @@ def _remove_numpy(data):
     return data_json
 
 
-def load(file_path):
-    """Load IDTxl data from disk.
+# def load(file_path):
+#     """Load IDTxl data from disk.
 
-    Load different data types to disk. Supported types are:
+#     Load different data types to disk. Supported types are:
 
-    - dictionaries with results, e.g., from MultivariateTE
-    - numpy array
-    - instance of IDTXL Data object
+#     - dictionaries with results, e.g., from MultivariateTE
+#     - numpy array
+#     - instance of IDTXL Data object
 
-    File extensions are
+#     File extensions are
 
-    - .txt for dictionaries (JSON file)
-    - .npy for numpy array
-    - .npz for Data instances
+#     - .txt for dictionaries (JSON file)
+#     - .npy for numpy array
+#     - .npz for Data instances
 
-    Note that while numpy arrays and Data instances are saved in binary for
-    performance, dictionaries are saved in the json format, which is human-
-    readable and also easily read into other programs (e.g., MATLAB:
-    http://undocumentedmatlab.com/blog/json-matlab-integration).
+#     Note that while numpy arrays and Data instances are saved in binary for
+#     performance, dictionaries are saved in the json format, which is human-
+#     readable and also easily read into other programs (e.g., MATLAB:
+#     http://undocumentedmatlab.com/blog/json-matlab-integration).
 
-    Args:
-        file_path : string
-            string with file name (including the path)
+#     Args:
+#         file_path : string
+#             string with file name (including the path)
 
-    Returns:
+#     Returns:
 
-    """
-    # Check extension of provided file path, this is needed to determine the
-    # file type to be loaded.
-    ext = file_path[file_path.find('.', -4) + 1:]
-    assert len(ext) == 3, ('Could not determine file format of "file_path", '
-                           'please provide one of the following extensions: '
-                           '".txt", ".npy", ".npz".')
+#     """
+#     # Check extension of provided file path, this is needed to determine the
+#     # file type to be loaded.
+#     ext = file_path[file_path.find('.', -4) + 1:]
+#     assert len(ext) == 3, ('Could not determine file format of "file_path", '
+#                            'please provide one of the following extensions: '
+#                            '".txt", ".npy", ".npz".')
 
-    # Load data depending on the file type.
-    if ext == 'txt':  # JSON file
-        print('loading dictionary from disc')
-        # with file_path as infile:
-        with open(file_path) as json_data:
-            d = json.load(json_data)
-            # TODO convert lists to np.arrays?
-    elif ext == 'npy':  # single numpy array
-        print('loading numpy array from disc')
-        return np.load(file_path)
-    elif ext == 'npz':  # instance of IDTxl Data object
-        print('loading data object from disc')
-        f = np.load(file_path)
-        d = Data(f['data'], dim_order='psr', normalise=False)
-        d.normalise = f['normalised']
-        return d
+#     # Load data depending on the file type.
+#     if ext == 'txt':  # JSON file
+#         print('loading dictionary from disc')
+#         # with file_path as infile:
+#         with open(file_path) as json_data:
+#             d = json.load(json_data)
+#             # TODO convert lists to np.arrays?
+#     elif ext == 'npy':  # single numpy array
+#         print('loading numpy array from disc')
+#         return np.load(file_path)
+#     elif ext == 'npz':  # instance of IDTxl Data object
+#         print('loading data object from disc')
+#         f = np.load(file_path)
+#         d = Data(f['data'], dim_order='psr', normalise=False)
+#         d.normalise = f['normalised']
+#         return d
 
 
 def save_pickle(obj, name):
@@ -297,8 +308,7 @@ def import_matarray(file_name, array_name, file_version, dim_order,
     """Read Matlab hdf5 file into IDTxl.
 
     reads a matlab hdf5 file ("-v7.3' or higher, .mat) with a SINGLE
-    array inside and returns a numpy array with dimensions that
-    are channel x time x trials, using np.swapaxes where necessary
+    array inside and returns an IDTxl Data() object.
 
     Note:
         The import function squeezes the loaded mat-file, i.e., any singleton
@@ -327,17 +337,6 @@ def import_matarray(file_name, array_name, file_version, dim_order,
         Data() instance
             instance of IDTxl Data object, containing data from the 'trial'
             field
-        list of strings
-            list of channel labels, corresponding to the 'label' field
-        numpy array
-            time stamps for samples, corresponding to one entry in the 'time'
-            field
-        int
-            sampling rate, corresponding to the 'fsample' field
-
-    Created on Wed Mar 19 12:34:36 2014
-
-    @author: Michael Wibral
     """
     if file_version == 'v7.3':
         mat_file = h5py.File(file_name)
@@ -354,7 +353,7 @@ def import_matarray(file_name, array_name, file_version, dim_order,
     elif file_version in ['v4', 'v6', 'v7']:
         try:
             m = loadmat(file_name, squeeze_me=True, variable_names=array_name)
-        except NotImplementedError as err:
+        except NotImplementedError:
             raise RuntimeError('You may have provided an incorrect file '
                                'version. The mat file was probably saved as '
                                'version 7.3 (hdf5).')
@@ -366,9 +365,190 @@ def import_matarray(file_name, array_name, file_version, dim_order,
     # time steps (sampling rate of 1).
     print('Creating Data object from matlab array: {0}.'.format(array_name))
     data = Data(mat_data, dim_order=dim_order, normalise=normalise)
-    label = []
-    for n in range(data.n_processes):
-        label.append('channel_{0:03d}'.format(n))
-    fsample = 1
-    timestamps = np.arange(data.n_samples)
-    return data, label, timestamps, fsample
+    return data
+
+
+def export_networkx_graph(adjacency_matrix, weights):
+    """Export networkx graph object for an inferred network.
+
+    Export a weighted, directed graph object from the network of inferred
+    (multivariate) interactions (e.g., multivariate TE), using the networkx
+    class for directed graphs (DiGraph). Multiple options for the weight are
+    available (see documentation of method get_adjacency_matrix for details).
+
+    Args:
+        adjacency_matrix : 2D numpy array
+            adjacency matrix to be exported, returned by get_adjacency_matrix()
+            method of Results() class
+        weights : str
+            weights for the adjacency matrix (see documentation of method
+            get_adjacency_matrix for details)
+        fdr : bool [optional]
+            return FDR-corrected results (default=True)
+
+    Returns: DiGraph instance
+        directed graph of networkx package's DiGraph() class
+    """
+    # use 'weights' parameter (string) as networkx edge property name and use
+    # adjacency matrix entries as edge property values
+    custom_type = [(weights, type(adjacency_matrix[0, 0]))]
+    custom_npmatrix = np.matrix(adjacency_matrix, dtype=custom_type)
+    return nx.from_numpy_matrix(custom_npmatrix, create_using=nx.DiGraph())
+
+
+def export_networkx_source_graph(results, target, sign_sources=True, fdr=True):
+    """Export graph object of source variables for a single target.
+
+    Export graph object from the network of (multivariate) interactions (e.g.,
+    multivariate TE) between single source variables and a target process using
+    the networkx class for directed graphs (DiGraph). The graph shows the
+    information transfer between individual source variables and the target.
+    Each node is a tuple with the following format:
+    (process index, sample index).
+
+    Args:
+        results : Results() instance
+            network analysis results
+        target : int
+            target index
+        sign_sources : bool [optional]
+            add only sources significant information contribution
+            (default=True)
+        fdr : bool [optional]
+            return FDR-corrected results (default=True)
+
+    Returns:
+        DiGraph instance
+            directed graph of networkx package's DiGraph() class
+    """
+    graph = nx.DiGraph()
+
+    current_value = results.get_single_target(
+        target=target, fdr=fdr)['current_value']
+    # Add the target as a node and add omnibus p-value as an attribute
+    # of the target node
+    graph.add_node(current_value,
+                   omnibus_te=results.get_single_target(
+                                target=target, fdr=fdr)['omnibus_te'],
+                   omnibus_sign=results.get_single_target(
+                                target=target, fdr=fdr)['omnibus_te'])
+    # Get selected source variables
+    selected_vars_sources = results.get_single_target(
+        target=target, fdr=fdr)['selected_vars_sources']
+    # Get selected target variables
+    selected_vars_target = results.get_single_target(
+        target=target, fdr=fdr)['selected_vars_target']
+
+    if sign_sources:  # Add only significant past variables as nodes.
+        graph.add_nodes_from(selected_vars_sources)
+        graph.add_nodes_from(selected_vars_target)
+    else:   # Add all tested past variables as nodes.
+        # Get all sample indices.
+        samples_tested = np.arange(
+            current_value[1] - results.settings.min_lag_sources,
+            current_value[1] - results.settings.max_lag_sources,
+            -results.settings.tau_sources)
+        # Get source indices
+        sources_tested = results.get_single_target(
+            target=target, fdr=fdr)['sources_tested']
+        # Create tuples from source and sample indices
+        tested_vars_sources = [i for i in it.product(
+            sources_tested, samples_tested)]
+        graph.add_nodes_from(tested_vars_sources)
+
+    # Add edges from selected target variables to the target.
+    for v in selected_vars_target:
+        graph.add_edge(v, current_value)
+
+    # Get TE and p-values fro selected source variables
+    selected_sources_te = results.get_single_target(
+        target=target, fdr=fdr)['selected_sources_te']
+    selected_sources_pval = results.get_single_target(
+        target=target, fdr=fdr)['selected_sources_pval']
+    # Add edges from selected source variables to the target.
+    # Also add TE and p-value as edge attributes
+    for (ind, v) in enumerate(selected_vars_sources):
+        graph.add_edge(v, current_value,
+                       te=selected_sources_te[ind],
+                       pval=selected_sources_pval[ind])
+    return graph
+
+
+def export_brain_net_viewer(adjacency_matrix, mni_coord, file_name, **kwargs):
+    """Export network to BrainNet Viewer.
+
+    Export networks to BrainNet Viewer (project home page:
+    http://www.nitrc.org/projects/bnv/). BrainNet Viewer is a MATLAB
+    toolbox offering brain network visualisation (e.g., 'glass' brains).
+    The function creates text files *.node and *.edge, containing
+    information on node location (in MNI coordinates), directed edges, node
+    color and size.
+
+    References:
+
+    - Xia, M., Wang, J., & He, Y. (2013). BrainNet Viewer: A Network
+        Visualization Tool for Human Brain Connectomics. PLoS ONE 8(7):
+        e68910. https://doi.org/10.1371/journal.pone.0068910
+
+    Args:
+        adjacency_matrix : 2D numpy array
+            adjacency matrix to be exported, returned by get_adjacency_matrix()
+            method of Results() class
+        mni_coord : numpy array
+            MNI coordinates (x,y,z) of the sources, array with size [n 3],
+            where n is the number of nodes
+        file_name : str
+            file name for output files *.node and *.edge, including the
+            path to the file
+        labels : array type of str [optional]
+            list of node labels of length n, description or label for each
+            node. Note that labels can't contain spaces (causes BrainNet to
+            crash), the function will remove any spaces from labels
+            (default=no labels)
+        node_color : array type of colors [optional]
+            BrainNet gives you the option to color nodes according to the
+            values in this vector (length n), see BrainNet Manual
+        node_size : array type of int [optional]
+            BrainNet gives you the option to size nodes according to the
+            values in this array (length n), see BrainNet Manual
+    """
+    # Check input and get default settings for plotting. The default for
+    # node labels is a list of '-' (no labels).
+    n_nodes = adjacency_matrix.shape[0]
+    n_edges = np.sum(adjacency_matrix > 0)
+    labels = kwargs.get('labels', ['-' for i in range(n_nodes)])
+    node_color = kwargs.get('node_color', np.ones(n_nodes))
+    node_size = kwargs.get('node_size', np.ones(n_nodes))
+    if n_edges == 0:
+        Warning('No edges in results file. Nothing to plot.')
+    assert adjacency_matrix.shape[0] == adjacency_matrix.shape[1], (
+        'Adjacency matrix must be quadratic.')
+    assert mni_coord.shape[0] == n_nodes and mni_coord.shape[1] == 3, (
+        'MNI coordinates must have shape [n_nodes, 3].')
+    assert len(labels) == n_nodes, (
+        'Labels must have same length as no. nodes.')
+    assert len(node_color) == n_nodes, (
+        'Node colors must have same length as no. nodes.')
+    assert len(node_size) == n_nodes, (
+        'Node size must have same length as no. nodes.')
+
+    # Check, if there are blanks in the labels and delete them, otherwise
+    # BrainNet viewer chrashes
+    labels_stripped = [l.replace(" ", "") for l in labels]
+
+    # Write node file.
+    with open('{0}.node'.format(file_name), 'w') as text_file:
+        for n in range(n_nodes):
+            print('{0}\t{1}\t{2}\t'.format(*mni_coord[n, :]),
+                  file=text_file, end='')
+            print('{0}\t{1}\t'.format(node_color[n], node_size[n]),
+                  file=text_file, end='')
+            print('{0}'.format(labels_stripped[n]), file=text_file)
+
+    # Write edge file.
+    with open('{0}.edge'.format(file_name), 'w') as text_file:
+        for i in range(n_nodes):
+            for j in range(n_nodes):
+                print('{0}\t'.format(adjacency_matrix[i, j]),
+                      file=text_file, end='')
+            print('', file=text_file)

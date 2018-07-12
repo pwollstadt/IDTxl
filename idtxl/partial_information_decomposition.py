@@ -98,7 +98,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
                 [[0, 2], [1, 0]], must have the same length as targets
 
         Returns:
-            ResultsPartialInformationDecomposition object
+            ResultsPartialInformationDecomposition instance
                 results of network inference, see documentation of
                 ResultsPartialInformationDecomposition()
         """
@@ -181,7 +181,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
                 indices of the two source processes for the target
 
         Returns:
-            ResultsPartialInformationDecomposition object
+            ResultsPartialInformationDecomposition instance
                 results of network inference, see documentation of
                 ResultsPartialInformationDecomposition()
         """

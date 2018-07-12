@@ -1,5 +1,4 @@
 """Provide estimator base class for information theoretic measures."""
-import sys
 import imp
 import os
 import importlib

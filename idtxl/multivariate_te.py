@@ -125,7 +125,7 @@ class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
                 tested for the target with the same index
 
         Returns:
-            ResultsNetworkInference object
+            ResultsNetworkInference instance
                 results of network inference, see documentation of
                 ResultsNetworkInference()
         """
@@ -263,7 +263,7 @@ class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
                 target node are considered as potential sources
 
         Returns:
-            ResultsNetworkInference object
+            ResultsNetworkInference instance
                 results of network inference, see documentation of
                 ResultsNetworkInference()
         """

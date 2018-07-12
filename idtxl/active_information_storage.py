@@ -102,7 +102,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 list.
 
         Returns:
-            ResultsSingleProcessAnalysis object
+            ResultsSingleProcessAnalysis instance
                 results of network AIS estimation, see documentation of
                 ResultsSingleProcessAnalysis()
         """
@@ -196,7 +196,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 index of process
 
         Returns:
-            ResultsSingleProcessAnalysis object
+            ResultsSingleProcessAnalysis instance
                 results of AIS estimation, see documentation of
                 ResultsSingleProcessAnalysis()
         """

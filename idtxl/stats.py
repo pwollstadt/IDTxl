@@ -44,7 +44,7 @@ def ais_fdr(settings=None, *results):
             ResultsSingleProcessAnalysis()
 
     Returns:
-        ResultsSingleProcessAnalysis object
+        ResultsSingleProcessAnalysis instance
             input results objects pruned of non-significant estimates
     """
     if settings is None:
@@ -140,7 +140,7 @@ def network_fdr(settings=None, *results):
             ResultsNetworkInference()
 
     Returns:
-        ResultsNetworkInference object
+        ResultsNetworkInference instance
             input object pruned of non-significant links
     """
     if settings is None:

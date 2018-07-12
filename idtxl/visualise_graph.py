@@ -1,7 +1,16 @@
-"""Export and plot results as networkx objects."""
-import networkx as nx
+"""Plot results of network inference."""
 import numpy as np
 import matplotlib.pyplot as plt
+from . import idtxl_io as io
+from . import idtxl_exceptions as ex
+try:
+    import networkx as nx
+except ImportError as err:
+    ex.package_missing(
+        err,
+        ('networkx is not available on this system. Install it from '
+         'https://pypi.python.org/pypi/networkx/2.0 to export and plot IDTxl '
+         'results in this format.'))
 
 
 def plot_network(results, weights, fdr=True):
@@ -50,7 +59,8 @@ def plot_network(results, weights, fdr=True):
         Figure
             figure handle, Figure object from the matplotlib package
     """
-    graph = results.export_networkx_graph(weights=weights, fdr=fdr)
+    adj_matrix = results.get_adjacency_matrix(weights=weights, fdr=fdr)
+    graph = io.export_networkx_graph(adj_matrix, weights)
 
     fig = plt.figure(figsize=(10, 5))
     ax1 = plt.subplot(121)  # plot graph
@@ -91,7 +101,7 @@ def plot_selected_vars(results, target, sign_sources=True,
         Figure
             figure handle, Figure object from the matplotlib package
     """
-    graph = results.export_networkx_source_graph(target, sign_sources, fdr)
+    graph = io.export_networkx_source_graph(results, target, sign_sources, fdr)
     current_value = results._single_target[target].current_value
     max_lag = max(results.settings.max_lag_sources,
                   results.settings.max_lag_target)
@@ -229,7 +239,7 @@ def plot_mute_graph():
     # http://stackoverflow.com/questions/10104700/how-to-set-networkx-edge-labels-offset-to-avoid-label-overlap
 
 
-def plot_network_comparison(results):
+def plot_network_comparison(results, weights, fdr=True):
     """Plot results of network comparison.
 
     Plot results of network comparison. Produces a figure with five subplots,
@@ -245,7 +255,8 @@ def plot_network_comparison(results):
         Figure
             figure handle, Figure object from the matplotlib package
     """
-    graph_union = results.export_networkx_graph(weights='union')
+    adj_matrix = results.get_adjacency_matrix(weights=weights, fdr=fdr)
+    graph_union = io.export_networkx_graph(adj_matrix, weights='union')
 
     fig = plt.figure(figsize=(10, 15))
     ax1 = plt.subplot(231)  # plot union graph

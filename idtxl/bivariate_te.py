@@ -121,7 +121,7 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
                 tested for the target with the same index
 
         Returns:
-            ResultsNetworkInference object
+            ResultsNetworkInference instance
                 results of network inference, see documentation of
                 ResultsNetworkInference()
         """
@@ -182,7 +182,7 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
           nonuniform embedding technique. Phys Rev E, 83, 1–15.
           http://doi.org/10.1103/PhysRevE.83.051112
 
-       Bivariate TE is calculated in four steps:
+        Bivariate TE is calculated in four steps:
 
         (1) find all relevant samples in the target processes' own past, by
             iteratively adding candidate samples that have significant
@@ -260,7 +260,7 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
                 target node are considered as potential sources
 
         Returns:
-            ResultsNetworkInference object
+            ResultsNetworkInference instance
                 results of network inference, see documentation of
                 ResultsNetworkInference()
         """
