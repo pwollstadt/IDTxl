@@ -21,8 +21,7 @@ target = (covariance * source_cor +
           (1 - covariance) * np.random.normal(0, 1, size=n))
 
 # JIDT Discrete estimators
-print('\n## JIDT discrete estimators')
-settings = {'discretise_method': 'equal', 'n_discrete_bins': 5}
+settings = {'discretise_method': 'equal', 'num_discrete_bins': 5}
 est = JidtDiscreteCMI(settings)
 cmi = est.estimate(source_cor, target, source_uncor)
 print('Estimated CMI: {0:.5f}, expected CMI: {1:.5f}'.format(cmi, expected_mi))
@@ -39,7 +38,6 @@ ais = est.estimate(target)
 print('Estimated AIS: {0:.5f}, expected AIS: ~0'.format(ais))
 
 # JIDT Kraskov estimators
-print('\n## JIDT Kraskov estimators')
 settings = {}
 est = JidtKraskovCMI(settings)
 cmi = est.estimate(source_cor, target, source_uncor)
@@ -57,7 +55,6 @@ ais = est.estimate(target)
 print('Estimated AIS: {0:.5f}, expected AIS: ~0'.format(ais))
 
 # JIDT Gaussian estimators
-print('\n## JIDT Gaussian estimators')
 settings = {}
 est = JidtGaussianCMI(settings)
 cmi = est.estimate(source_cor, target, source_uncor)
@@ -75,7 +72,6 @@ ais = est.estimate(target)
 print('Estimated AIS: {0:.5f}, expected AIS: ~0'.format(ais))
 
 # OpenCL Kraskov estimators
-print('\n## OpenCL Kraskov estimators')
 settings = {}
 est = OpenCLKraskovCMI(settings)
 cmi = est.estimate(source_cor, target, source_uncor)
@@ -86,7 +82,6 @@ mi = est.estimate(source_cor, target)
 print('Estimated MI: {0:.5f}, expected MI: {1:.5f}'.format(mi[0], expected_mi))
 
 # Generate binary test data
-print('\n## PID estimators')
 alph_x = 2
 alph_y = 2
 alph_z = 2

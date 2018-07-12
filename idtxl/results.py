@@ -737,6 +737,7 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
         settings : dict
             settings used for comparison
     """
+
     def __init__(self, n_nodes, n_realisations, normalised):
         super().__init__(n_nodes, n_realisations, normalised)
 
