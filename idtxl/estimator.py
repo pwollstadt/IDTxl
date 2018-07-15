@@ -103,14 +103,21 @@ class Estimator(metaclass=ABCMeta):
         e.g., 2 for mutual information and 3 for a conditional mutual
         information.
 
-        Each entry in data should be a numpy array with realisations, where the
-        first axis is assumed to represent realisations over samples and
+        Each variable in vars should be a numpy array of realisations, where
+        the first axis is assumed to represent realisations over samples and
         replications, while the second axis represents the variable dimension
-        ([(samples * replications) x variable dimension]).
+        ([(n_samples * n_replications) x variable dimension]).
+
+        For parallel estimators, the first axis of each variable is assumed to
+        represent realisations for multiple chunks of realisations that are
+        then handled in parallel. Each array has size
+        [(n_samples * n_replications * n_chunks) x variable dimension]. The
+        number of chunks has to be passed as an additional parameter (see for
+        example the OpenCLKraskov() estimator).
 
         Args:
             self : instance of Estimator class
-            data: dict of numpy arrays
+            vars: numpy arrays
                 realisations of random variables
 
         Returns:
