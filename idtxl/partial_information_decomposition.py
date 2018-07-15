@@ -65,6 +65,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             >>> z = np.logical_xor(x, y).astype(int)
             >>> data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
             >>> settings = {
+            >>>     'lags_pid': [[1, 1], [3, 2], [0, 0]]
             >>>     'alpha': 0.1,
             >>>     'alph_s1': alph,
             >>>     'alph_s2': alph,
@@ -75,7 +76,6 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             >>>     'pid_estimator': 'SydneyPID'}
             >>> targets = [0, 1, 2]
             >>> sources = [[1, 2], [0, 2], [0, 1]]
-            >>> lags = [[1, 1], [3, 2], [0, 0]]
             >>> pid_analysis = PartialInformationDecomposition()
             >>> results = pid_analysis.analyse_network(settings, data, targets,
             >>>                                        sources)
@@ -86,7 +86,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
                 documentation of analyse_single_target() for details, can
                 contain
 
-                - lags : list of lists of ints [optional] - lags in samples
+                - lags_pid : list of lists of ints [optional] - lags in samples
                   between sources and target (default=[[1, 1], [1, 1] ...])
 
             data : Data instance
@@ -104,13 +104,13 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         """
         # Set defaults for PID estimation.
         settings.setdefault('verbose', True)
-        settings.setdefault('lags', np.array([[1, 1]] * len(targets)))
+        settings.setdefault('lags_pid', np.array([[1, 1]] * len(targets)))
 
         # Check inputs.
-        if not len(targets) == len(sources) == len(settings['lags']):
+        if not len(targets) == len(sources) == len(settings['lags_pid']):
             raise RuntimeError('Lists of targets, sources, and lags must have'
                                'the same lengths.')
-        list_of_lags = settings['lags']
+        list_of_lags = settings['lags_pid']
 
         # Perform PID estimation for each target individually
         results = ResultsPartialInformationDecomposition(
@@ -121,7 +121,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             if settings['verbose']:
                 print('\n####### analysing target with index {0} from list {1}'
                       .format(t, targets))
-            settings['lags'] = list_of_lags[t]
+            settings['lags_pid'] = list_of_lags[t]
             res_single = self.analyse_single_target(
                 settings, data, targets[t], sources[t])
             results.combine_results(res_single)
@@ -154,7 +154,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             >>>     'num_reps': 63,
             >>>     'max_iters': 1000,
             >>>     'pid_calc_name': 'SydneyPID',
-            >>>     'lags': [2, 3]}
+            >>>     'lags_pid': [2, 3]}
             >>> pid_analysis = PartialInformationDecomposition()
             >>> results = pid_analysis.analyse_single_target(settings=settings,
             >>>                                              data=data,
@@ -168,7 +168,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
                 - pid_estimator : str - estimator to be used for PID estimation
                   (for estimator settings see the documentation in the
                   estimators_pid modules)
-                - lags : list of ints [optional] - lags in samples between
+                - lags_pid : list of ints [optional] - lags in samples between
                   sources and target (default=[1, 1])
                 - verbose : bool [optional] - toggle console output
                   (default=True)
@@ -212,22 +212,24 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             raise RuntimeError('Estimator was not specified!')
         self._pid_estimator = EstimatorClass(settings)
 
-        settings.setdefault('lags', [1, 1])
+        settings.setdefault('lags_pid', [1, 1])
         settings.setdefault('verbose', True)
         self.settings = settings
 
         # Check if provided lags are correct and work with the number of
         # samples in the data.
-        if len(self.settings['lags']) != 2:
+        if len(self.settings['lags_pid']) != 2:
             raise RuntimeError('List of lags must have length 2.')
-        if self.settings['lags'][0] >= data.n_samples:
-            raise RuntimeError('Lag 1 ({0}) is larger than the number of '
-                               'samples in the data set ({1}).'.format(
-                                    self.settings['lags'][0], data.n_samples))
-        if self.settings['lags'][1] >= data.n_samples:
-            raise RuntimeError('Lag 2 ({0}) is larger than the number of '
-                               'samples in the data set ({1}).'.format(
-                                    self.settings['lags'][1], data.n_samples))
+        if self.settings['lags_pid'][0] >= data.n_samples:
+            raise RuntimeError(
+                'Lag 1 ({0}) is larger than the number of samples in the data '
+                'set ({1}).'.format(
+                    self.settings['lags_pid'][0], data.n_samples))
+        if self.settings['lags_pid'][1] >= data.n_samples:
+            raise RuntimeError(
+                'Lag 2 ({0}) is larger than the number of samples in the data '
+                'set ({1}).'.format(
+                    self.settings['lags_pid'][1], data.n_samples))
 
         # Check if target and sources are provided correctly.
         if type(target) is not int:
@@ -238,12 +240,12 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             raise RuntimeError('The target ({0}) should not be in the list '
                                'of sources ({1}).'.format(target, sources))
 
-        self.current_value = (target, max(self.settings['lags']))
+        self.current_value = (target, max(self.settings['lags_pid']))
         self.target = target
         # TODO works for single vars only, change to multivariate?
         self.sources = self._lag_to_idx([
-                                    (sources[0], self.settings['lags'][0]),
-                                    (sources[1], self.settings['lags'][1])])
+                                (sources[0], self.settings['lags_pid'][0]),
+                                (sources[1], self.settings['lags_pid'][1])])
 
     def _calculate_pid(self, data):
 

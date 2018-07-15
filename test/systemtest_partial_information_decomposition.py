@@ -12,7 +12,6 @@ import idtxl.idtxl_utils as utils
 
 def test_pid_xor_data():
     """Test basic calls to PID class."""
-
     n = 20
     alph = 2
     x = np.random.randint(0, alph, n)
@@ -21,11 +20,11 @@ def test_pid_xor_data():
     data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
     # Run Tartu estimator
-    settings = {'pid_estimator': 'TartuPID'}
+    settings = {'pid_estimator': 'TartuPID', 'lags_pid': [0, 0]}
     pid = PartialInformationDecomposition()
     tic = tm.time()
     est_tartu = pid.analyse_single_target(settings, data=data, target=2,
-                                          sources=[0, 1], lags=[0, 0])
+                                          sources=[0, 1])
     t_tartu = tm.time() - tic
 
     # Run Sydney estimator
@@ -38,11 +37,12 @@ def test_pid_xor_data():
         'max_unsuc_swaps_row_parm': 60,
         'num_reps': 63,
         'max_iters': 1000,
-        'pid_estimator': 'SydneyPID'}
+        'pid_estimator': 'SydneyPID',
+        'lags_pid': [0, 0]}
     pid = PartialInformationDecomposition()
     tic = tm.time()
     est_sydney = pid.analyse_single_target(settings, data=data, target=2,
-                                           sources=[0, 1], lags=[0, 0])
+                                           sources=[0, 1])
     t_sydney = tm.time() - tic
 
     print('\nResults Tartu estimator:')

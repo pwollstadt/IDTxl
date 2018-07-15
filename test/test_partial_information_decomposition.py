@@ -32,7 +32,7 @@ def test_pid_user_input():
     results = pid.analyse_network(settings=settings, data=data,
                                   targets=[0, 1, 2],
                                   sources=[[1, 3], [2, 4], [0, 1]])
-    assert np.all(results.settings['lags'] == [1, 1]), (
+    assert np.all(results.settings['lags_pid'] == [1, 1]), (
         'Lags were not set to default.')
 
     n = 20
@@ -43,25 +43,25 @@ def test_pid_user_input():
     data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
     # Test two-tailed significance test
-    settings = {'pid_estimator': 'TartuPID', 'tail': 'two', 'lags': [0, 0]}
+    settings = {'pid_estimator': 'TartuPID', 'tail': 'two', 'lags_pid': [0, 0]}
     pid = PartialInformationDecomposition()
 
     with pytest.raises(RuntimeError):  # Test incorrect number of sources
         pid.analyse_single_target(settings=settings, data=data, target=2,
                                   sources=[1, 2, 3])
-    settings['lags'] = [0, 0, 0]
+    settings['lags_pid'] = [0, 0, 0]
     with pytest.raises(RuntimeError):  # Test incorrect number of lags
         pid.analyse_single_target(settings=settings, data=data, target=2,
                                   sources=[1, 3])
-    settings['lags'] = [n * 3, 0]
+    settings['lags_pid'] = [n * 3, 0]
     with pytest.raises(RuntimeError):  # Test lag > no. samples
         pid.analyse_single_target(settings=settings, data=data, target=2,
                                   sources=[0, 1])
-    settings['lags'] = [n, 0]
+    settings['lags_pid'] = [n, 0]
     with pytest.raises(RuntimeError):  # Test lag == no. samples
         pid.analyse_single_target(settings=settings, data=data, target=2,
                                   sources=[0, 1])
-    settings['lags'] = [0, 0]
+    settings['lags_pid'] = [0, 0]
     with pytest.raises(RuntimeError):  # Test target in sources
         pid.analyse_single_target(settings=settings, data=data, target=2,
                                   sources=[2, 3])
@@ -73,7 +73,7 @@ def test_pid_user_input():
 @optimiser_missing
 def test_network_analysis():
     """Test call to network_analysis method."""
-    n = 50
+    n = 100
     alph = 2
     x = np.random.randint(0, alph, n)
     y = np.random.randint(0, alph, n)
@@ -81,9 +81,9 @@ def test_network_analysis():
     data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
     # Run Tartu estimator
-    settings = {'pid_estimator': 'TartuPID', 'tail': 'two',
-                'lags': [[0, 0], [0, 0]]}
     pid = PartialInformationDecomposition()
+    settings = {'pid_estimator': 'TartuPID', 'tail': 'two',
+                'lags_pid': [[0, 0], [0, 0]]}
     est_tartu = pid.analyse_network(settings=settings,
                                     data=data, targets=[0, 2],
                                     sources=[[1, 2], [0, 1]])
@@ -91,11 +91,28 @@ def test_network_analysis():
         'Tartu estimator incorrect synergy: {0}, should approx. 1'.format(
                                     est_tartu._single_target[2]['syn_s1_s2']))
 
+    # Run Sydney estimator
+    settings = {'pid_estimator': 'SydneyPID',
+                'alph_s1': alph,
+                'alph_s2': alph,
+                'alph_t': alph,
+                'max_unsuc_swaps_row_parm': 60,
+                'num_reps': 63,
+                'max_iters': 1000,
+                'pid_estimator': 'SydneyPID',
+                'lags_pid': [[0, 0], [0, 0]]}
+    est_sydney = pid.analyse_network(settings=settings,
+                                     data=data, targets=[0, 2],
+                                     sources=[[1, 2], [0, 1]])
+    assert 0.9 < est_sydney._single_target[2]['syn_s1_s2'] <= 1.1, (
+        'Sydney estimator incorrect synergy: {0}, should approx. 1'.format(
+                                    est_tartu._single_target[2]['syn_s1_s2']))
+
 
 @optimiser_missing
 def test_analyse_single_target():
     """Test call to network_analysis method."""
-    n = 50
+    n = 100
     alph = 2
     x = np.random.randint(0, alph, n)
     y = np.random.randint(0, alph, n)
@@ -103,10 +120,10 @@ def test_analyse_single_target():
     data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
     # Run Tartu estimator
+    pid = PartialInformationDecomposition()
     settings = {'pid_estimator': 'TartuPID',
                 'tail': 'two',
-                'lags': [0, 0]}
-    pid = PartialInformationDecomposition()
+                'lags_pid': [0, 0]}
     est_tartu = pid.analyse_single_target(settings=settings, data=data,
                                           target=2, sources=[0, 1])
     assert 0.9 < est_tartu._single_target[2]['syn_s1_s2'] <= 1.1, (
@@ -119,6 +136,27 @@ def test_analyse_single_target():
         'Tartu estimator incorrect unique s2: {0}, should approx. 0'.format(
             est_tartu._single_target[2]['unq_s2']))
 
+    # Run Sydney estimator
+    settings = {'pid_estimator': 'SydneyPID',
+                'alph_s1': alph,
+                'alph_s2': alph,
+                'alph_t': alph,
+                'max_unsuc_swaps_row_parm': 60,
+                'num_reps': 63,
+                'max_iters': 1000,
+                'pid_estimator': 'SydneyPID',
+                'lags_pid': [0, 0]}
+    est_sydney = pid.analyse_single_target(settings=settings, data=data,
+                                           target=2, sources=[0, 1])
+    assert 0.9 < est_sydney._single_target[2]['syn_s1_s2'] <= 1.1, (
+        'Sydney estimator incorrect synergy: {0}, should approx. 1'.format(
+            est_sydney._single_target[2]['syn_s1_s2']))
+    assert est_sydney._single_target[2]['unq_s1'] < 0.1, (
+        'Sydney estimator incorrect unique s1: {0}, should approx. 0'.format(
+            est_sydney._single_target[2]['unq_s1']))
+    assert est_sydney._single_target[2]['unq_s2'] < 0.1, (
+        'Sydney estimator incorrect unique s2: {0}, should approx. 0'.format(
+            est_sydney._single_target[2]['unq_s2']))
 
 if __name__ == '__main__':
     test_pid_user_input()
