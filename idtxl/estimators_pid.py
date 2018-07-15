@@ -470,9 +470,9 @@ class TartuPID(Estimator):
     - Makkeh, A., Theis, D.O., & Vicente, R. (2017). Bivariate Partial
       Information Decomposition: The Optimization Perspective. Entropy, 19(10),
       530.
-    - Makkeh, A., Theis, D.O., & Vicente, R. (2017). BROJA-2PID: A cone
-      programming based Partial Information Decomposition estimator. In prepa-
-      ration, https://github.com/Abzinger/BROJA_2PID
+    - Makkeh, A., Theis, D.O., & Vicente, R. (2018). BROJA-2PID: A cone
+      programming based Partial Information Decomposition estimator. Entropy,
+      20(271), https://github.com/Abzinger/BROJA_2PID.
 
     Args:
         settings : dict
