@@ -493,7 +493,7 @@ def test_insufficient_no_points():
         'theiler_t': 0,
         'history': 1,
         'history_target': 1,
-        'lag': 1,
+        'lag_mi': 1,
         'source_target_delay': 1}
 
     # Test first settings combination with k==N

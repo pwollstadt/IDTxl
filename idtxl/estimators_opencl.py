@@ -138,14 +138,14 @@ class OpenCLKraskovMI(OpenCLKraskov):
             - debug : bool [optional] - return intermediate results, i.e.
               neighbour counts from range searches and KNN distances
               (default=False)
-            - lag : int [optional] - time difference in samples to calculate
+            - lag_mi : int [optional] - time difference in samples to calculate
               the lagged MI between processes (default=0)
     """
 
     def __init__(self, settings=None):
         # Set default estimator settings.
         super().__init__(settings)
-        self.settings.setdefault('lag', 0)
+        self.settings.setdefault('lag_mi', 0)
 
     def estimate(self, var1, var2, n_chunks=1):
         """Estimate mutual information.
@@ -173,6 +173,10 @@ class OpenCLKraskovMI(OpenCLKraskov):
         var2 = self._ensure_two_dim_input(var2)
         assert var1.shape[0] == var2.shape[0]
         assert var1.shape[0] % n_chunks == 0
+        # Shift variables to calculate a lagged MI.
+        if self.settings['lag_mi'] > 0:
+            var1 = var1[:-self.settings['lag_mi'], :]
+            var2 = var2[self.settings['lag_mi']:, :]
         self._check_number_of_points(var1.shape[0])
         signallength = var1.shape[0]
         chunklength = signallength // n_chunks

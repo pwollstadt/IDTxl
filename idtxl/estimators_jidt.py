@@ -628,7 +628,7 @@ class JidtDiscreteMI(JidtDiscrete):
               (default=2, or the value set for n_discrete_bins)
             - alph2 : int [optional] - number of discrete bins/levels for var2
               (default=2, or the value set for n_discrete_bins)
-            - lag : int [optional] - time difference in samples to calculate
+            - lag_mi : int [optional] - time difference in samples to calculate
               the lagged MI between processes (default=0)
     """
 
@@ -637,7 +637,7 @@ class JidtDiscreteMI(JidtDiscrete):
         # number of bins for discretisation if provided, otherwise assume
         # binary variables.
         super().__init__(settings)
-        self.settings.setdefault('lag', int(0))
+        self.settings.setdefault('lag_mi', int(0))
         try:
             n_discrete_bins = int(self.settings['n_discrete_bins'])
             self.settings['alph1'] = n_discrete_bins
@@ -694,7 +694,7 @@ class JidtDiscreteMI(JidtDiscrete):
         # Initialise estimator
         max_base = int(max(np.power(self.settings['alph1'], var1_dim),
                            np.power(self.settings['alph2'], var2_dim)))
-        calc = self.CalcClass(max_base, self.settings['lag'])
+        calc = self.CalcClass(max_base, self.settings['lag_mi'])
         calc.setDebug(self.settings['debug'])
         calc.initialise()
 
@@ -762,7 +762,7 @@ class JidtKraskovMI(JidtKraskov):
             - num_threads : int | str [optional] - number of threads used for
               estimation (default='USE_ALL', note that this uses *all*
               available threads on the current machine)
-            - lag : int [optional] - time difference in samples to calculate
+            - lag_mi : int [optional] - time difference in samples to calculate
               the lagged MI between processes (default=0)
 
     Note:
@@ -781,7 +781,7 @@ class JidtKraskovMI(JidtKraskov):
         super().__init__(CalcClass, settings)
 
         # Get lag and shift second variable to account for a lag if requested
-        self.settings.setdefault('lag', 0)
+        self.settings.setdefault('lag_mi', 0)
 
     def estimate(self, var1, var2):
         """Estimate mutual information.
@@ -804,9 +804,9 @@ class JidtKraskovMI(JidtKraskov):
         var2 = self._ensure_two_dim_input(var2)
 
         # Shift variables to calculate a lagged MI.
-        if self.settings['lag'] > 0:
-            var1 = var1[:-self.settings['lag'], :]
-            var2 = var2[self.settings['lag']:, :]
+        if self.settings['lag_mi'] > 0:
+            var1 = var1[:-self.settings['lag_mi'], :]
+            var2 = var2[self.settings['lag_mi']:, :]
 
         # Check if number of points is sufficient for estimation.
         self._check_number_of_points(var1.shape[0])
@@ -1134,7 +1134,7 @@ class JidtGaussianMI(JidtGaussian):
               JIDT (default=False)
             - local_values : bool [optional] - return local TE instead of
               average TE (default=False)
-            - lag : int [optional] - time difference in samples to calculate
+            - lag_mi : int [optional] - time difference in samples to calculate
               the lagged MI between processes (default=0)
 
     Note:
@@ -1154,8 +1154,8 @@ class JidtGaussianMI(JidtGaussian):
 
         # Add lag between input variables. Setting the lag in JIDT didn't work,
         # shift variables when calling the estimate method instead.
-        self.settings.setdefault('lag', int(0))
-        # self.calc.setProperty('PROP_TIME_DIFF', str(self.settings['lag']))
+        self.settings.setdefault('lag_mi', int(0))
+        # self.calc.setProperty('PROP_TIME_DIFF', str(self.settings['lag_mi']))
 
     def estimate(self, var1, var2):
         """Estimate mutual information.
@@ -1177,9 +1177,9 @@ class JidtGaussianMI(JidtGaussian):
         var2 = self._ensure_two_dim_input(var2)
 
         # Shift variables to calculate a lagged MI.
-        if self.settings['lag'] > 0:
-            var1 = var1[:-self.settings['lag'], :]
-            var2 = var2[self.settings['lag']:, :]
+        if self.settings['lag_mi'] > 0:
+            var1 = var1[:-self.settings['lag_mi'], :]
+            var2 = var2[self.settings['lag_mi']:, :]
 
         self.calc.initialise(var1.shape[1], var2.shape[1])
         self.calc.setObservations(var1, var2)
