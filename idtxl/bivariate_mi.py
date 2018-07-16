@@ -274,7 +274,7 @@ class BivariateMI(NetworkInferenceMI, NetworkInferenceBivariate):
         if self.settings['verbose']:
             print('final source samples: {0}'.format(
                     self._idx_to_lag(self.selected_vars_sources)))
-            print('final target samples: {0}'.format(
+            print('final target samples: {0}\n\n'.format(
                     self._idx_to_lag(self.selected_vars_target)))
         results = ResultsNetworkInference(
             n_nodes=data.n_processes,

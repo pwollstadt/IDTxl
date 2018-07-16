@@ -79,7 +79,8 @@ class NetworkInference(NetworkAnalysis):
 
         self.source_set = sources
         if self.settings['verbose']:
-            print('Testing sources {0}'.format(self.source_set))
+            print('\nTarget: {0} - testing sources {1}'.format(
+                self.target, self.source_set))
 
     def _include_candidates(self, candidate_set, data):
         """Inlcude informative candidates into the conditioning set.
@@ -103,6 +104,9 @@ class NetworkInference(NetworkAnalysis):
                 True if a candidate with significant MI was found
         """
         success = False
+        if self.settings['verbose']:
+                print('candidate set: {0}'.format(
+                    self._idx_to_lag(candidate_set)))
         while candidate_set:
             # Get realisations for all candidates.
             cand_real = data.get_realisations(self.current_value,
@@ -123,9 +127,8 @@ class NetworkInference(NetworkAnalysis):
             te_max_candidate = max(temp_te)
             max_candidate = candidate_set[np.argmax(temp_te)]
             if self.settings['verbose']:
-                print('testing {0} from candidate set {1}'.format(
-                                    self._idx_to_lag([max_candidate])[0],
-                                    self._idx_to_lag(candidate_set)), end='')
+                print('testing candidate: {0} '.format(
+                    self._idx_to_lag([max_candidate])[0]), end='')
             significant = stats.max_statistic(self, data, candidate_set,
                                               te_max_candidate)[0]
 
@@ -133,8 +136,8 @@ class NetworkInference(NetworkAnalysis):
             # it is not significant break. There will be no further significant
             # sources b/c they all have lesser TE.
             if significant:
-                if self.settings['verbose']:
-                    print(' -- significant')
+                # if self.settings['verbose']:
+                #     print(' -- significant')
                 success = True
                 candidate_set.pop(np.argmax(temp_te))
                 self._append_selected_vars(
@@ -145,7 +148,6 @@ class NetworkInference(NetworkAnalysis):
                 if self.settings['verbose']:
                     print(' -- not significant')
                 break
-
         return success
 
     def _force_conditionals(self, cond, data):
@@ -440,8 +442,8 @@ class NetworkInferenceTE(NetworkInference):
         # If no candidates were found in the target's past, add at least one
         # sample so we are still calculating a proper TE.
         if not sources_found:
-            print(('No informative sources in the target''s past - ' +
-                   'adding point at t-1 in the target'))
+            print('\nNo informative sources in the target\'s past - '
+                  'adding target sample with lag 1.')
             idx = (self.current_value[0], self.current_value[1] - 1)
             realisations = data.get_realisations(self.current_value, [idx])[0]
             self._append_selected_vars([idx], realisations)
@@ -492,6 +494,9 @@ class NetworkInferenceBivariate(NetworkInference):
         self._append_selected_vars(
                 candidate_set,
                 data.get_realisations(self.current_value, candidate_set)[0])
+        if self.settings['verbose']:
+                print('candidate set: {0}\n'.format(
+                        self._idx_to_lag(candidate_set)), end='')
 
         # Perform one round of sequential max statistics.
         if self.measure == 'te':
@@ -508,7 +513,8 @@ class NetworkInferenceBivariate(NetworkInference):
     def _test_final_conditional(self, data):
         """Perform statistical test on the final conditional set."""
         if not self.selected_vars_sources:
-            print('---------------------------- no sources found')
+            if self.settings['verbose']:
+                print('no sources selected ...')
             self.statistic_omnibus = None
             self.sign_omnibus = False
             self.pvalue_omnibus = None
@@ -516,7 +522,9 @@ class NetworkInferenceBivariate(NetworkInference):
                     self.settings['local_values'] = True
             self.statistic_single_link = None
         else:
-            print(self._idx_to_lag(self.selected_vars_full))
+            if self.settings['verbose']:
+                print('selected sources: {0}'.format(
+                    self._idx_to_lag(self.selected_vars_full)))
             [s, p, stat] = stats.omnibus_test(self, data)
             self.statistic_omnibus = stat
             self.sign_omnibus = s
@@ -571,7 +579,12 @@ class NetworkInferenceMultivariate(NetworkInference):
                 raw data
         """
         # FOR LATER we don't need to test the last included in the first round
-        print(self.selected_vars_sources)
+        if self.settings['verbose']:
+            if self.selected_vars_sources:
+                print('selected candidates: {0}\ntesting candidate: '.format(
+                        self._idx_to_lag(self.selected_vars_sources)), end='')
+            else:
+                print('no sources selected, nothing to prune ...')
         while self.selected_vars_sources:
             # Find the candidate with the minimum TE into the target.
             temp_te = np.empty(len(self.selected_vars_sources))
@@ -612,10 +625,8 @@ class NetworkInferenceMultivariate(NetworkInference):
             te_min_candidate = min(temp_te)
             min_candidate = self.selected_vars_sources[np.argmin(temp_te)]
             if self.settings['verbose']:
-                print('testing {0} from candidate set {1}'.format(
-                                self._idx_to_lag([min_candidate])[0],
-                                self._idx_to_lag(self.selected_vars_sources)),
-                      end='')
+                print('{0}'.format(
+                    self._idx_to_lag([min_candidate])[0]), end='')
             [significant, p, surr_table] = stats.min_statistic(
                                               self, data,
                                               self.selected_vars_sources,
@@ -625,19 +636,20 @@ class NetworkInferenceMultivariate(NetworkInference):
             # candidate. If the minimum is significant, break, all other
             # sources will be significant as well (b/c they have higher TE).
             if not significant:
-                if self.settings['verbose']:
-                    print(' -- not significant\n')
+                # if self.settings['verbose']:
+                #     print(' -- not significant\n')
                 self._remove_selected_var(min_candidate)
             else:
                 if self.settings['verbose']:
-                    print(' -- significant\n')
+                    print(' -- significant')
                 self._min_stats_surr_table = surr_table
                 break
 
     def _test_final_conditional(self, data):
         """Perform statistical test on the final conditional set."""
         if not self.selected_vars_sources:
-            print('---------------------------- no sources found')
+            if self.settings['verbose']:
+                print('no sources selected ...')
             self.statistic_omnibus = None
             self.sign_omnibus = False
             self.pvalue_omnibus = None
@@ -647,7 +659,9 @@ class NetworkInferenceMultivariate(NetworkInference):
                     self.settings['local_values'] = True
             self.statistic_single_link = None
         else:
-            print(self._idx_to_lag(self.selected_vars_full))
+            if self.settings['verbose']:
+                print('selected sources: {0}'.format(
+                    self._idx_to_lag(self.selected_vars_full)))
             [s, p, stat] = stats.omnibus_test(self, data)
             self.statistic_omnibus = stat
             self.sign_omnibus = s

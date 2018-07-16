@@ -350,6 +350,9 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 True if a significant variable was found in the process's past.
         """
         success = False
+        if self.settings['verbose']:
+                print('testing candidate set: {0}'.format(
+                                    self._idx_to_lag(candidate_set)))
         while candidate_set:
             # Get realisations for all candidates.
             cand_real = data.get_realisations(self.current_value,
@@ -368,9 +371,8 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             te_max_candidate = max(temp_te)
             max_candidate = candidate_set[np.argmax(temp_te)]
             if self.settings['verbose']:
-                print('testing candidate {0} from candidate set {1}'.format(
-                                    self._idx_to_lag([max_candidate])[0],
-                                    self._idx_to_lag(candidate_set)), end='')
+                print('testing candidate {0} '.format(
+                                self._idx_to_lag([max_candidate])[0]), end='')
             significant = stats.max_statistic(self, data, candidate_set,
                                               te_max_candidate)[0]
 
@@ -378,8 +380,8 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             # it is not significant break. There will be no further significant
             # sources b/c they all have lesser TE.
             if significant:
-                if self.settings['verbose']:
-                    print(' -- significant')
+                # if self.settings['verbose']:
+                #     print(' -- significant')
                 success = True
                 # Remove candidate from candidate set and add it to the
                 # selected variables (used as the conditioning set).
@@ -408,6 +410,12 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 raw data
         """
         # FOR LATER we don't need to test the last included in the first round
+        if self.settings['verbose']:
+            if self.selected_vars_sources:
+                print('testing candidate set: {0}'.format(
+                        self._idx_to_lag(self.selected_vars_sources)), end='')
+            else:
+                print('no sources selected, nothing to prune ...')
         while self.selected_vars_sources:
             # Find the candidate with the minimum TE into the target.
             cond_dim = len(self.selected_vars_sources) - 1
@@ -448,10 +456,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             te_min_candidate = min(temp_te)
             min_candidate = self.selected_vars_sources[np.argmin(temp_te)]
             if self.settings['verbose']:
-                print('testing candidate {0} from candidate set {1}'.format(
-                                self._idx_to_lag([min_candidate])[0],
-                                self._idx_to_lag(self.selected_vars_sources)),
-                      end='')
+                print('{0}'.format(self._idx_to_lag([min_candidate])[0]))
             [significant, p, surr_table] = stats.min_statistic(
                                               self, data,
                                               self.selected_vars_sources,
@@ -461,8 +466,8 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             # candidate. If the minimum is significant, break, all other
             # sources will be significant as well (b/c they have higher TE).
             if not significant:
-                if self.settings['verbose']:
-                    print(' -- not significant')
+                # if self.settings['verbose']:
+                #     print(' -- not significant')
                 self._remove_selected_var(min_candidate)
             else:
                 if self.settings['verbose']:
@@ -473,7 +478,9 @@ class ActiveInformationStorage(SingleProcessAnalysis):
     def _test_final_conditional(self, data):
         """Perform statistical test on AIS using the final conditional set."""
         if self._selected_vars_full:
-            print(self._idx_to_lag(self.selected_vars_full))
+            if self.settings['verbose']:
+                print('selected sources: {0}'.format(
+                    self._idx_to_lag(self.selected_vars_full)))
             [ais, s, p] = stats.mi_against_surrogates(self, data)
 
             # If a parallel estimator was used, an array of AIS estimates is
@@ -498,6 +505,8 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             self.sign = s
             self.pvalue = p
         else:
+            if self.settings['verbose']:
+                print('no sources selected')
             if self._local_values:
                 self.settings['local_values'] = True
             self.ais = np.nan

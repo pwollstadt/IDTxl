@@ -8,8 +8,6 @@ import copy as cp
 import numpy as np
 from . import idtxl_utils as utils
 
-VERBOSE = True
-
 
 def ais_fdr(settings=None, *results):
     """Perform FDR-correction on results of network AIS estimation.
@@ -73,7 +71,7 @@ def ais_fdr(settings=None, *results):
                     n_perm, results_comb.settings.n_perm_mi)
 
     if pval.size == 0:
-        print('No links in final results. Return ...')
+        print('FDR correction: no links in final results ...\n')
         results_comb._add_fdr(fdr=None, alpha=alpha, constant=constant)
         return results_comb
 
@@ -190,7 +188,7 @@ def network_fdr(settings=None, *results):
                     n_perm, results_comb.settings.n_perm_max_seq)
 
     if pval.size == 0:
-        print('No links in final results. Return ...')
+        print('No links in final results ...')
         results_comb._add_fdr(
             fdr=None, alpha=alpha, correct_by_target=correct_by_target,
             constant=constant)
@@ -360,7 +358,7 @@ def omnibus_test(analysis_setup, data):
                             conditional=cond_target_realisations)
 
     # Create the surrogate distribution by permuting the conditional sources.
-    if VERBOSE:
+    if analysis_setup.settings['verbose']:
         print('omnibus test, n_perm: {0}'.format(n_permutations))
     if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
             permute_in_time):
@@ -388,7 +386,7 @@ def omnibus_test(analysis_setup, data):
                             conditional=cond_target_realisations)
     [significance, pvalue] = _find_pvalue(statisitc, surr_distribution,
                                           alpha, 'one_bigger')
-    if VERBOSE:
+    if analysis_setup.settings['verbose']:
         if significance:
             print(' -- significant\n')
         else:
@@ -437,6 +435,9 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate):
     alpha = analysis_setup.settings['alpha_max_stat']
     _check_permute_in_time(analysis_setup, data, n_perm)
     assert(candidate_set), 'The candidate set is empty.'
+    if analysis_setup.settings['verbose']:
+        print('maximum statistic, n_perm: {0}'.format(
+                            analysis_setup.settings['n_perm_max_stat']))
 
     surr_table = _create_surrogate_table(analysis_setup, data, candidate_set,
                                          n_perm)
@@ -515,6 +516,9 @@ def max_statistic_sequential(analysis_setup, data, conditioning='full'):
     analysis_setup.settings.setdefault('alpha_max_seq', 0.05)
     alpha = analysis_setup.settings['alpha_max_seq']
     _check_permute_in_time(analysis_setup, data, n_permutations)
+    if analysis_setup.settings['verbose']:
+        print('sequential maximum statistic, n_perm: {0}'.format(
+            n_permutations))
 
     assert analysis_setup.selected_vars_sources, 'No sources to test.'
 
@@ -611,7 +615,7 @@ def max_statistic_sequential(analysis_setup, data, conditioning='full'):
         significance[c] = s
         pvalue[c] = p
         if not s:  # break as soon as a candidate is no longer significant
-            if VERBOSE:
+            if analysis_setup.settings['verbose']:
                 print('\nStopping sequential max stats at candidate with rank '
                       '{0}.'.format(c))
             break
@@ -662,6 +666,9 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate):
     analysis_setup.settings.setdefault('alpha_min_stat', 0.05)
     alpha = analysis_setup.settings['alpha_min_stat']
     _check_permute_in_time(analysis_setup, data, n_perm)
+    if analysis_setup.settings['verbose']:
+        print('minimum statistic, n_perm: {0}'.format(
+            analysis_setup.settings['n_perm_min_stat']))
 
     assert(candidate_set), 'The candidate set is empty.'
 
@@ -712,7 +719,9 @@ def mi_against_surrogates(analysis_setup, data):
     analysis_setup.settings.setdefault('alpha_mi', 0.05)
     alpha = analysis_setup.settings['alpha_mi']
     permute_in_time = _check_permute_in_time(analysis_setup, data, n_perm)
-
+    if analysis_setup.settings['verbose']:
+        print('mi permutation test against surrogates, n_perm: {0}'.format(
+            analysis_setup.settings['n_perm_mi']))
     '''
     surr_realisations = np.empty(
                         (data.n_realisations(analysis_setup.current_value) *
@@ -848,10 +857,10 @@ def unq_against_surrogates(analysis_setup, data):
     chunk_size = int(surr_realisations.shape[0] / n_perm)
     i_1 = 0
     i_2 = chunk_size
-    if VERBOSE:
+    if analysis_setup.settings['verbose']:
             print('\nTesting unq information in s1')
     for p in range(n_perm):
-        if VERBOSE:
+        if analysis_setup.settings['verbose']:
             print('\tperm {0} of {1}'.format(p, n_perm))
         pid_est = analysis_setup._pid_estimator.estimate(
                                 settings=analysis_setup.settings,
@@ -874,10 +883,10 @@ def unq_against_surrogates(analysis_setup, data):
     chunk_size = int(surr_realisations.shape[0] / n_perm)
     i_1 = 0
     i_2 = chunk_size
-    if VERBOSE:
+    if analysis_setup.settings['verbose']:
             print('\nTesting unq information in s2')
     for p in range(n_perm):
-        if VERBOSE:
+        if analysis_setup.settings['verbose']:
             print('\tperm {0} of {1}'.format(p, n_perm))
         pid_est = analysis_setup._pid_estimator.estimate(
                                 settings=analysis_setup.settings,
@@ -970,10 +979,10 @@ def syn_shd_against_surrogates(analysis_setup, data):
     chunk_size = int(surr_realisations.shape[0] / n_perm)
     i_1 = 0
     i_2 = chunk_size
-    if VERBOSE:
+    if analysis_setup.settings['verbose']:
             print('\nTesting shd and syn information in both sources')
     for p in range(n_perm):
-        if VERBOSE:
+        if analysis_setup.settings['verbose']:
             print('\tperm {0} of {1}'.format(p, n_perm))
         pid_est = analysis_setup._pid_estimator.estimate(
                                 settings=analysis_setup.settings,
@@ -1060,17 +1069,17 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm,
             ' ''full'', ''target'', or ''none''.'.format(conditioning))
 
     # Create surrogate table.
-    if VERBOSE:
-        print('\ncreating surrogate table with {0} permutations:'.format(
-                                                                    n_perm))
-        print('\tcand.', end='')
+    # if analysis_setup.settings['verbose']:
+    #     print('\ncreating surrogate table with {0} permutations:'.format(
+    #                                                                 n_perm))
+    #     print('\tcand.', end='')
     surr_table = np.zeros((len(idx_test_set), n_perm))
     current_value_realisations = analysis_setup._current_value_realisations
     idx_c = 0
     for candidate in idx_test_set:
-        if VERBOSE:
-            print('\t{0}'.format(analysis_setup._idx_to_lag([candidate])[0]),
-                  end='')
+        # if analysis_setup.settings['verbose']:
+        #     print('\t{0}'.format(analysis_setup._idx_to_lag([candidate])[0]),
+        #           end='')
         if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
                 permute_in_time):
             # Generate the surrogates analytically
@@ -1317,7 +1326,7 @@ def _check_permute_in_time(analysis_setup, data, n_perm):
 
     if (not analysis_setup.settings['permute_in_time'] and
             not _sufficient_replications(data, n_perm)):
-        print('\n\nWARNING: Number of replications is not sufficient to '
+        print('\nWARNING: Number of replications is not sufficient to '
               'generate the desired number of surrogates. Permuting samples '
               'in time instead.')
         analysis_setup.settings['permute_in_time'] = True
