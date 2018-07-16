@@ -107,6 +107,8 @@ class NetworkInference(NetworkAnalysis):
             # Get realisations for all candidates.
             cand_real = data.get_realisations(self.current_value,
                                               candidate_set)[0]
+            # Reshape candidates to a 1D-array, where realisations for a single
+            # candidate are treated as one chunk.
             cand_real = cand_real.T.reshape(cand_real.size, 1)
 
             # Calculate the (C)MI for each candidate and the target.
@@ -182,6 +184,7 @@ class NetworkInference(NetworkAnalysis):
 
 
 class NetworkInferenceMI(NetworkInference):
+    """Parent class for mutual information network inference algorithms."""
 
     def __init__(self):
         self.measure = 'mi'
@@ -211,14 +214,18 @@ class NetworkInferenceMI(NetworkInference):
                 self.settings['max_lag_sources'] < 0):
             raise RuntimeError('max_lag_sources has to be an integer >= 0.')
         if (type(self.settings['tau_sources']) is not int or
-                self.settings['tau_sources'] <= 0):
+                self.settings['tau_sources'] < 1):
             raise RuntimeError('tau_sources must be an integer > 0.')
         if self.settings['min_lag_sources'] > self.settings['max_lag_sources']:
             raise RuntimeError('min_lag_sources ({0}) must be smaller or equal'
                                ' to max_lag_sources ({1}).'.format(
                                    self.settings['min_lag_sources'],
                                    self.settings['max_lag_sources']))
-        if self.settings['tau_sources'] > self.settings['max_lag_sources']:
+        # max_lag_sources can be 0 for MI estimation, in this case we don't
+        # require the tau to be larger than the max lag. Still, tau has to be
+        # one to later generate the candidate set via enumerating all samples.
+        if (self.settings['max_lag_sources'] > 0 and
+                self.settings['tau_sources'] > self.settings['max_lag_sources']):
             raise RuntimeError('tau_sources ({0}) has to be smaller than '
                                'max_lag_sources ({1}).'.format(
                                    self.settings['tau_sources'],
@@ -299,6 +306,7 @@ class NetworkInferenceMI(NetworkInference):
 
 
 class NetworkInferenceTE(NetworkInference):
+    """Parent class for transfer entropy network inference algorithms."""
 
     def __init__(self):
         self.measure = 'te'
@@ -333,10 +341,10 @@ class NetworkInferenceTE(NetworkInference):
                 self.settings['max_lag_target'] <= 0):
             raise RuntimeError('max_lag_target must be an integer > 0.')
         if (type(self.settings['tau_sources']) is not int or
-                self.settings['tau_sources'] <= 0):
+                self.settings['tau_sources'] < 1):
             raise RuntimeError('tau_sources must be an integer > 0.')
         if (type(self.settings['tau_target']) is not int or
-                self.settings['tau_target'] <= 0):
+                self.settings['tau_target'] < 1):
             raise RuntimeError('tau_sources must be an integer > 0.')
         if self.settings['min_lag_sources'] > self.settings['max_lag_sources']:
             raise RuntimeError('min_lag_sources ({0}) must be smaller or equal'
@@ -452,6 +460,7 @@ class NetworkInferenceTE(NetworkInference):
 
 
 class NetworkInferenceBivariate(NetworkInference):
+    """Parent class for bivariate network inference algorithms."""
 
     def __init__(self):
         super().__init__()
@@ -472,7 +481,10 @@ class NetworkInferenceBivariate(NetworkInference):
         """
         # Define candidate set and get realisations.
         procs = self.source_set
-        samples = np.arange(
+        if self.settings['max_lag_sources'] == 0:
+            samples = np.zeros(1).astype(int)
+        else:
+            samples = np.arange(
                 self.current_value[1] - self.settings['min_lag_sources'],
                 self.current_value[1] - self.settings['max_lag_sources'],
                 -self.settings['tau_sources'])
@@ -525,6 +537,7 @@ class NetworkInferenceBivariate(NetworkInference):
 
 
 class NetworkInferenceMultivariate(NetworkInference):
+    """Parent class for multivariate network inference algorithms."""
 
     def __init__(self):
         super().__init__()
@@ -532,7 +545,10 @@ class NetworkInferenceMultivariate(NetworkInference):
     def _include_source_candidates(self, data):
         """Test candidates in the source's past."""
         procs = self.source_set
-        samples = np.arange(
+        if self.settings['max_lag_sources'] == 0:
+            samples = np.zeros(1).astype(int)
+        else:
+            samples = np.arange(
                     self.current_value[1] - self.settings['min_lag_sources'],
                     self.current_value[1] - self.settings['max_lag_sources'],
                     -self.settings['tau_sources'])

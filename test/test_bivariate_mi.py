@@ -41,9 +41,9 @@ def test_gauss_data():
         len(sources))
     assert sources[0] == 0, 'Wrong inferred source: {0}.'.format(sources[0])
     # Compare BivarateMI() estimate to JIDT estimate.
-    est = JidtKraskovMI({'lag': 1})
+    est = JidtKraskovMI({'lag_mi': 1})
     jidt_mi = est.estimate(var1=source, var2=target)
-    print('Estimated TE: {0:0.6f}, estimated TE using JIDT core estimator: '
+    print('Estimated MI: {0:0.6f}, estimated MI using JIDT core estimator: '
           '{1:0.6f} (expected: {2:0.6f}).'.format(mi, jidt_mi, expected_mi))
     assert np.isclose(mi, jidt_mi, atol=0.005), (
         'Estimated MI {0:0.6f} differs from JIDT estimate {1:0.6f} (expected: '
@@ -102,11 +102,49 @@ def test_return_local_values():
         i1 = np.where(sources_avg == s)[0][0]
         i2 = np.where(sources_local == s)[0][0]
         assert np.isclose(mi_single_link[i1], np.mean(lmi[i2, :, :]), atol=0.005), (
-            'Single link average MI {0} and mean LMI {1} deviate.'.format(
+            'Single link average MI {0:0.6f} and mean LMI {1:0.6f} deviate.'.format(
                 mi_single_link[i1], np.mean(lmi[i2, :, :])))
         assert np.isclose(mi_single_link[i1], mi_selected_sources[i1], atol=0.005), (
-            'Single link average MI {0} and single source MI {1} deviate.'.format(
+            'Single link average MI {0:0.6f} and single source MI {1:0.6f} deviate.'.format(
                 mi_single_link[i1], mi_selected_sources[i1]))
+
+
+@jpype_missing
+def test_zero_lag():
+    """Test analysis for 0 lag."""
+    covariance = 0.4
+    n = 10000
+    source = np.random.normal(0, 1, size=n)
+    target = (covariance * source + (1 - covariance) *
+              np.random.normal(0, 1, size=n))
+    # expected_corr = covariance / (np.sqrt(covariance**2 + (1-covariance)**2))
+    corr = np.corrcoef(source, target)[0, 1]
+    expected_mi = -0.5 * np.log(1 - corr**2)
+
+    data = Data(np.vstack((source, target)), dim_order='ps', normalise=False)
+    settings = {
+        'cmi_estimator': 'JidtKraskovCMI',
+        'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_max_seq': 21,
+        'n_perm_omnibus': 21,
+        'max_lag_sources': 0,
+        'min_lag_sources': 0}
+    nw = BivariateMI()
+    results = nw.analyse_single_target(
+        settings, data, target=1, sources='all')
+    mi_estimator = JidtKraskovMI(settings={})
+    jidt_mi = mi_estimator.estimate(source, target)
+    omnibus_mi = results.get_single_target(1, fdr=False).omnibus_mi
+    print('Estimated omnibus MI: {0:0.6f}, estimated MI using JIDT core '
+          'estimator: {1:0.6f} (expected: {2:0.6f}).'.format(
+              omnibus_mi, jidt_mi, expected_mi))
+    assert np.isclose(omnibus_mi, jidt_mi, rtol=0.05), (
+        'Zero-lag omnibus MI ({0:0.6f}) differs from JIDT estimate ({1:0.6f}).'.format(
+                omnibus_mi, jidt_mi))
+    assert np.isclose(omnibus_mi, expected_mi, rtol=0.05), (
+        'Zero-lag omnibus MI ({0:0.6f}) differs from expected MI ({1:0.6f}).'.format(
+                omnibus_mi, expected_mi))
 
 
 @jpype_missing
@@ -447,6 +485,7 @@ def test_indices_to_lags():
 
 
 if __name__ == '__main__':
+    test_zero_lag()
     test_gauss_data()
     test_return_local_values()
     test_discrete_input()
