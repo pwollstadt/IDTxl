@@ -81,29 +81,43 @@ def test_return_local_values():
     lmi = results.get_single_target(target, fdr=False)['mi']
     n_sources = len(results.get_target_sources(target, fdr=False))
     assert type(lmi) is np.ndarray, (
-        'LMI estimation did not return an array of values')
+        'LMI estimation did not return an array of values: {0}'.format(
+                lmi))
     assert lmi.shape[0] == n_sources, (
-        'Wrong dim (no. sources) in LMI estimate')
+        'Wrong dim (no. sources) in LMI estimate: {0}'.format(lmi.shape))
     assert lmi.shape[1] == data.n_realisations_samples((0, max_lag)), (
-        'Wrong dim (no. samples) in LMI estimate')
+        'Wrong dim (no. samples) in LMI estimate: {0}'.format(lmi.shape))
     assert lmi.shape[2] == data.n_replications, (
-        'Wrong dim (no. replications) in LMI estimate')
+        'Wrong dim (no. replications) in LMI estimate: {0}'.format(lmi.shape))
 
     # Test for correctnes of single link MI estimation by comparing it to the
     # omnibus MI. In this case (single source), the two should be the same.
+    # Skip assertion if more than one source was inferred (this happens
+    # sometime due to random data and low no. permutations for statistical
+    # testing in unit tests).
     settings['local_values'] = False
     results_avg = mi.analyse_network(settings, data, targets=[target])
     if results_avg.get_single_target(target, fdr=False)['mi'] is None:
         return
-    mi_single_link = results_avg.get_single_target(target, fdr=False)['mi'][0]
+    mi_single_link = results_avg.get_single_target(target, fdr=False)['mi']
     mi_omnibus = results_avg.get_single_target(target, fdr=False)['omnibus_mi']
-    assert np.isclose(mi_single_link, mi_omnibus, rtol=0.00005), (
-        'Single link MI ({0:.6f}) is not equal to omnibus information '
-        '({1:.6f}).'.format(mi_single_link, mi_omnibus))
-    # Compare mean local MI to average MI.
-    assert np.isclose(mi_single_link, np.mean(lmi), rtol=0.00005), (
-        'Single link average MI ({0:.6f}) and mean LMI ({1:.6f}) '
-        ' deviate.'.format(mi_single_link, np.mean(lmi)))
+    sources_local = results.get_target_sources(target, fdr=False)
+    sources_avg = results_avg.get_target_sources(target, fdr=False)
+    if len(sources_avg) == 1:
+        print('Compare single link and omnibus MI.')
+        assert np.isclose(mi_single_link, mi_omnibus, rtol=0.00005), (
+            'Single link MI ({0:.6f}) is not equal to omnibus information '
+            '({1:.6f}).'.format(mi_single_link[0], mi_omnibus))
+    # Check if average and mean local values are the same. Test each source
+    # separately. Inferred sources may differ between the two calls to
+    # analyse_network() due to low number of surrogates used in unit testing.
+    for s in list(set(sources_avg).intersection(sources_local)):
+        print('Compare average and local values.')
+        i1 = np.where(sources_avg == s)[0][0]
+        i2 = np.where(sources_local == s)[0][0]
+        assert np.isclose(mi_single_link[i1], np.mean(lmi[i2, :, :]), rtol=0.00005), (
+            'Single link average MI ({0:.6f}) and mean LMI ({1:.6f}) '
+            ' deviate.'.format(mi_single_link, np.mean(lmi)))
 
 
 @jpype_missing

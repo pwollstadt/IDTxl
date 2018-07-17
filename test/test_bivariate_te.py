@@ -80,13 +80,13 @@ def test_return_local_values():
     lte = results_local.get_single_target(target, fdr=False)['te']
     n_sources = len(results_local.get_target_sources(target, fdr=False))
     assert type(lte) is np.ndarray, (
-        'LTE estimation did not return an array of values')
+        'LTE estimation did not return an array of values: {0}'.format(lte))
     assert lte.shape[0] == n_sources, (
-        'Wrong dim (no. sources) in LTE estimate')
+        'Wrong dim (no. sources) in LTE estimate: {0}'.format(lte.shape))
     assert lte.shape[1] == data.n_realisations_samples((0, max_lag)), (
-        'Wrong dim (no. samples) in LTE estimate')
+        'Wrong dim (no. samples) in LTE estimate: {0}'.format(lte.shape))
     assert lte.shape[2] == data.n_replications, (
-        'Wrong dim (no. replications) in LTE estimate')
+        'Wrong dim (no. replications) in LTE estimate: {0}'.format(lte.shape))
 
     # Test for correctnes of single link TE estimation by comparing it to the
     # TE between single variables and the target. For this test case where we
@@ -103,18 +103,24 @@ def test_return_local_values():
     assert np.isclose(te_single_link, te_selected_sources, atol=0.005).all(), (
         'Single link average TE {0} and single source TE {1} deviate.'.format(
                 te_single_link, te_selected_sources))
-    # Check each source separately, inferred sources may differ between the two
-    # calls to analyse_network().
-    for s in list(set(sources_avg).intersection(sources_local)):
-        i1 = np.where(sources_avg == s)[0][0]
-        i2 = np.where(sources_local == s)[0][0]
-        assert np.isclose(te_single_link[i1], np.mean(lte[i2, :, :]), atol=0.005), (
-            'Single link average TE {0} and mean LTE {1} deviate for source {2}.'.format(
-                te_single_link[i1], np.mean(lte[i2, :, :]), s))
-        assert np.isclose(te_single_link[i1], te_selected_sources[i1], atol=0.005), (
-            'Single link average TE {0} and single source TE {1} deviate.'.format(
-                te_single_link[i1], te_selected_sources[i1]))
-
+    # Check if average and local values are the same. Make sure target pasts
+    # are the same and test each source separately. Inferred source and target
+    # may differ between the two calls to analyse_network() due to random data
+    # and low number of surrogates used in unit testing. Different no. inferred
+    # past variables will also lead to differences in estimates.
+    if (results_avg.get_single_target(target, fdr=False).selected_vars_target ==
+            results_local.get_single_target(target, fdr=False).selected_vars_target):
+        print('Compare average and local values.')
+        for s in list(set(sources_avg).intersection(sources_local)):
+            i1 = np.where(sources_avg == s)[0][0]
+            i2 = np.where(sources_local == s)[0][0]
+            assert np.isclose(te_single_link[i1], np.mean(lte[i2, :, :]), atol=0.005), (
+                'Single link average TE {0:.6f} and mean LTE {1:.6f} deviate for '
+                'source {2}.'.format(
+                    te_single_link[i1], np.mean(lte[i2, :, :]), s))
+            assert np.isclose(te_single_link[i1], te_selected_sources[i1], atol=0.005), (
+                'Single link average TE {0:.6f} and single source TE {1:.6f} '
+                'deviate.'.format(te_single_link[i1], te_selected_sources[i1]))
 
 @jpype_missing
 def test_bivariate_te_init():

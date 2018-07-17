@@ -43,13 +43,13 @@ def test_return_local_values():
     lte = results.get_single_target(target, fdr=False)['te']
     n_sources = len(results.get_target_sources(target, fdr=False))
     assert type(lte) is np.ndarray, (
-        'LTE estimation did not return an array of values')
+        'LTE estimation did not return an array of values: {0}'.format(lte))
     assert lte.shape[0] == n_sources, (
-        'Wrong dim (no. sources) in LTE estimate')
+        'Wrong dim (no. sources) in LTE estimate: {0}'.format(lte.shape))
     assert lte.shape[1] == data.n_realisations_samples((0, max_lag)), (
-        'Wrong dim (no. samples) in LTE estimate')
+        'Wrong dim (no. samples) in LTE estimate: {0}'.format(lte.shape))
     assert lte.shape[2] == data.n_replications, (
-        'Wrong dim (no. replications) in LTE estimate')
+        'Wrong dim (no. replications) in LTE estimate: {0}'.format(lte.shape))
 
     # Test for correctnes of single link TE estimation by comparing it to the
     # omnibus TE. In this case (single source), the two should be the same.

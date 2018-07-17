@@ -41,11 +41,13 @@ def test_return_local_values():
     for p in processes:
         lais = results.get_single_process(p, fdr=False)['ais']
         assert type(lais) is np.ndarray, (
-            'LAIS estimation did not return an array of values')
+            'LAIS estimation did not return an array of values: {0}'.format(
+                lais))
         assert lais.shape[0] == data.n_replications, (
-            'Wrong dim (no. replications) in LAIS estimate')
+            'Wrong dim (no. replications) in LAIS estimate: {0}'.format(
+                lais.shape))
         assert lais.shape[1] == data.n_realisations_samples((0, max_lag)), (
-            'Wrong dim (no. samples) in LAIS estimate')
+            'Wrong dim (no. samples) in LAIS estimate: {0}'.format(lais.shape))
 
 
 @jpype_missing

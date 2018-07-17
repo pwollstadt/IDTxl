@@ -73,13 +73,17 @@ def test_return_local_values():
     lmi = results_local.get_single_target(target, fdr=False)['mi']
     n_sources = len(results_local.get_target_sources(target, fdr=False))
     assert type(lmi) is np.ndarray, (
-        'LMI estimation did not return an array of values')
+        'LMI estimation did not return an array of values: {0}'.format(
+                lmi))
     assert lmi.shape[0] == n_sources, (
-        'Wrong dim (no. sources) in LMI estimate')
+        'Wrong dim (no. sources) in LMI estimate: {0}'.format(
+                lmi.shape))
     assert lmi.shape[1] == data.n_realisations_samples((0, max_lag)), (
-        'Wrong dim (no. samples) in LMI estimate')
+        'Wrong dim (no. samples) in LMI estimate {0}'.format(
+                lmi.shape))
     assert lmi.shape[2] == data.n_replications, (
-        'Wrong dim (no. replications) in LMI estimate')
+        'Wrong dim (no. replications) in LMI estimate {0}'.format(
+                lmi.shape))
 
     # Test for correctnes of single link MI estimation by comparing it to the
     # MI between single variables and the target. For this test case where we
@@ -96,8 +100,10 @@ def test_return_local_values():
     assert np.isclose(mi_single_link, mi_selected_sources, atol=0.005).all(), (
         'Single link average MI {0} and single source MI {1} deviate.'.format(
                 mi_single_link, mi_selected_sources))
-    # Check each source separately, inferred sources may differ between the two
-    # calls to analyse_network().
+    # Check if average and local values are the same. Test each source
+    # separately. Inferred sources may differ between the two calls to
+    # analyse_network() due to low number of surrogates used in unit testing.
+    print('Compare average and local values.')
     for s in list(set(sources_avg).intersection(sources_local)):
         i1 = np.where(sources_avg == s)[0][0]
         i2 = np.where(sources_local == s)[0][0]
