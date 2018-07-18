@@ -100,7 +100,9 @@ def plot_selected_vars(results, target, sign_sources=True,
             figure handle, Figure object from the matplotlib package
     """
     graph = io.export_networkx_source_graph(results, target, sign_sources, fdr)
-    current_value = results._single_target[target].current_value
+    # Replace time index of current value to be consistent with lag-notation
+    # in plot.
+    current_value = (results._single_target[target].current_value[0], 0)
     max_lag = max(results.settings.max_lag_sources,
                   results.settings.max_lag_target)
 

@@ -307,8 +307,8 @@ def import_matarray(file_name, array_name, file_version, dim_order,
                     normalise=True):
     """Read Matlab hdf5 file into IDTxl.
 
-    reads a matlab hdf5 file ("-v7.3' or higher, .mat) with a SINGLE
-    array inside and returns an IDTxl Data() object.
+    reads a matlab hdf5 file ("-v7.3' or higher, .mat) or non-hdf5 files with a
+    SINGLE array inside and returns an IDTxl Data() object.
 
     Note:
         The import function squeezes the loaded mat-file, i.e., any singleton
@@ -412,7 +412,7 @@ def export_networkx_source_graph(results, target, sign_sources=True, fdr=True):
         target : int
             target index
         sign_sources : bool [optional]
-            add only sources significant information contribution
+            add only sources with significant information contribution
             (default=True)
         fdr : bool [optional]
             return FDR-corrected results (default=True)
@@ -423,8 +423,13 @@ def export_networkx_source_graph(results, target, sign_sources=True, fdr=True):
     """
     graph = nx.DiGraph()
 
-    current_value = results.get_single_target(
-        target=target, fdr=fdr)['current_value']
+    # Replace time index of current value to be consistent with lag-notation
+    # in exported graph. Remember the current value's index to later define the
+    # proper candidate set.
+    current_value = (results.get_single_target(
+        target=target, fdr=fdr)['current_value'][0], 0)
+    idx_current_value = results.get_single_target(
+        target=target, fdr=fdr)['current_value'][1]
     # Add the target as a node and add omnibus p-value as an attribute
     # of the target node
     graph.add_node(current_value,
@@ -443,10 +448,10 @@ def export_networkx_source_graph(results, target, sign_sources=True, fdr=True):
         graph.add_nodes_from(selected_vars_sources)
         graph.add_nodes_from(selected_vars_target)
     else:   # Add all tested past variables as nodes.
-        # Get all sample indices.
+        # Get all sample indices using the current value's actual index.
         samples_tested = np.arange(
-            current_value[1] - results.settings.min_lag_sources,
-            current_value[1] - results.settings.max_lag_sources,
+            idx_current_value - results.settings.min_lag_sources,
+            idx_current_value - results.settings.max_lag_sources,
             -results.settings.tau_sources)
         # Get source indices
         sources_tested = results.get_single_target(
