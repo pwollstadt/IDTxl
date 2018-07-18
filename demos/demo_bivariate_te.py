@@ -2,6 +2,7 @@
 from idtxl.bivariate_te import BivariateTE
 from idtxl.data import Data
 from idtxl.visualise_graph import plot_network
+import matplotlib.pyplot as plt
 
 # a) Generate test data
 data = Data()
@@ -19,3 +20,4 @@ results = network_analysis.analyse_network(settings=settings, data=data)
 # d) Plot inferred network to console and via matplotlib
 results.print_edge_list(weights='max_te_lag', fdr=False)
 plot_network(results=results, weights='max_te_lag', fdr=False)
+plt.show()
