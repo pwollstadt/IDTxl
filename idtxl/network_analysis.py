@@ -407,7 +407,6 @@ class NetworkAnalysis():
                     conditional_realisations = data.get_realisations(
                             current_value, conditional_vars)[0]
                 else:  # use target's and sources' past
-                    print(conditional_vars)
                     conditional_realisations = np.hstack((
                         data.get_realisations(
                             current_value, conditional_vars)[0],

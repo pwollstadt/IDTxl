@@ -581,8 +581,8 @@ class NetworkInferenceMultivariate(NetworkInference):
         # FOR LATER we don't need to test the last included in the first round
         if self.settings['verbose']:
             if self.selected_vars_sources:
-                print('selected candidates: {0}\ntesting candidate: '.format(
-                        self._idx_to_lag(self.selected_vars_sources)), end='')
+                print('selected candidates: {0}'.format(
+                        self._idx_to_lag(self.selected_vars_sources)))
             else:
                 print('no sources selected, nothing to prune ...')
         while self.selected_vars_sources:
@@ -625,7 +625,7 @@ class NetworkInferenceMultivariate(NetworkInference):
             te_min_candidate = min(temp_te)
             min_candidate = self.selected_vars_sources[np.argmin(temp_te)]
             if self.settings['verbose']:
-                print('{0}'.format(
+                print('testing candidate: {0} '.format(
                     self._idx_to_lag([min_candidate])[0]), end='')
             [significant, p, surr_table] = stats.min_statistic(
                                               self, data,

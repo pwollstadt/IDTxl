@@ -65,7 +65,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             >>> z = np.logical_xor(x, y).astype(int)
             >>> data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
             >>> settings = {
-            >>>     'lags_pid': [[1, 1], [3, 2], [0, 0]]
+            >>>     'lags_pid': [[1, 1], [3, 2], [0, 0]],
             >>>     'alpha': 0.1,
             >>>     'alph_s1': alph,
             >>>     'alph_s2': alph,
