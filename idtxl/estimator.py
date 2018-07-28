@@ -282,11 +282,16 @@ class Estimator(metaclass=ABCMeta):
                 # return the estimate directly.
                 return [self.estimate(**data)]
 
-            # Find the number of samples
-            n_samples_total = None
+            # Find the number of samples, check that all data to be sliced into
+            # chunks has the same number of samples.
+            n_samples_total = []
             for v in slice_vars:
                 if data[v] is not None:
-                    n_samples_total = data[v].shape[0]
+                    n_samples_total.append(data[v].shape[0])
+            assert (np.array(n_samples_total) == n_samples_total[0]).all(), (
+                'No. realisations should be the same for all variables: '
+                '{0}'.format(n_samples_total))
+            n_samples_total = n_samples_total[0]
             assert n_samples_total is not None, (
                 'All variables provided for estimation are empty.')
             assert n_samples_total % n_chunks == 0, (
@@ -302,12 +307,19 @@ class Estimator(metaclass=ABCMeta):
             results = np.empty((n_chunks))
             for i in range(n_chunks):
                 chunk_data = {}
+                # Slice data into single chunks
                 for v in slice_vars:  # NOTE: I am consciously not creating a deep copy here to save memory
                     if data[v] is not None:
                         chunk_data[v] = data[v][idx_1:idx_2, :]
                     else:
                         chunk_data[v] = data[v]
+                # Collect data that is reused over chunks.
                 for v in re_use:
+                    if data[v] is not None:
+                        assert data[v].shape[0] == chunk_size, (
+                            'No. samples in variable {0} ({1}) is not equal '
+                            'to chunk size ({2}).'.format(
+                                v, data[v].shape[0], chunk_size))
                     chunk_data[v] = data[v]
                 results[i] = self.estimate(**chunk_data)
                 idx_1 = idx_2
