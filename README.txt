@@ -10,7 +10,7 @@ functionality to estimate the following measures:
     - multivariate mutual information (MI)
     - bivariate TE/GC
     - bivariate MI
-3) For analysis of node dynamics:
+2) For analysis of node dynamics:
     - active information storage (AIS)
     - partial information decomposition (PID)
 
