@@ -7,6 +7,7 @@ import random as rn
 import numpy as np
 from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
+from test_estimators_jidt import _get_gauss_data
 from idtxl.idtxl_utils import calculate_mi
 
 
@@ -28,18 +29,19 @@ def test_multivariate_te_corr_gaussian():
         This test runs considerably faster than other system tests.
         This produces strange small values for non-coupled sources.  TODO
     """
-    n = 1000
     cov = 0.4
-    source = [rn.normalvariate(0, 1) for r in range(n)]
-    target = [sum(pair) for pair in zip(
-        [cov * y for y in source],
-        [(1 - cov) * y for y in [rn.normalvariate(0, 1) for r in range(n)]])]
-    # Cast everything to numpy so the idtxl estimator understands it.
-    source = np.expand_dims(np.array(source), axis=1)
-    target = np.expand_dims(np.array(target), axis=1)
+    expected_mi, source1, source2, target = _get_gauss_data(covariance=cov)
+    # n = 1000
+    # source = [rn.normalvariate(0, 1) for r in range(n)]
+    # target = [sum(pair) for pair in zip(
+    #     [cov * y for y in source],
+    #     [(1 - cov) * y for y in [rn.normalvariate(0, 1) for r in range(n)]])]
+    # # Cast everything to numpy so the idtxl estimator understands it.
+    # source = np.expand_dims(np.array(source), axis=1)
+    # target = np.expand_dims(np.array(target), axis=1)
 
     data = Data(normalise=True)
-    data.set_data(np.vstack((source[1:].T, target[:-1].T)), 'ps')
+    data.set_data(np.vstack((source1[1:].T, target[:-1].T)), 'ps')
     settings = {
         'cmi_estimator': 'JidtDiscreteCMI',
         'discretise_method': 'max_ent',
@@ -52,7 +54,11 @@ def test_multivariate_te_corr_gaussian():
         'n_perm_max_seq': 21,
         }
     random_analysis = MultivariateTE()
-    results = random_analysis.analyse_single_target(settings, data, 1)
+    results_max_ent = random_analysis.analyse_single_target(settings, data, 1)
+
+    settings['discretise_method'] = 'equal'
+    settings['n_discrete_bins'] = 5
+    results_equal = random_analysis.analyse_single_target(settings, data, 1)
 
     # Assert that there are significant conditionals from the source for target
     # 1. For 500 repetitions I got mean errors of 0.02097686 and 0.01454073 for
@@ -60,16 +66,27 @@ def test_multivariate_te_corr_gaussian():
     # 0.05833172 repectively. This inspired the following error boundaries.
     corr_expected = cov / (1 * np.sqrt(cov**2 + (1-cov)**2))
     expected_res = calculate_mi(corr_expected)
-    estimated_res = results._single_target[1].omnibus_te
-    diff = np.abs(estimated_res - expected_res)
+    estimated_res_max_ent = results_max_ent.get_single_target(1, fdr=False)['te'][0]
+    estimated_res_equal = results_equal.get_single_target(1, fdr=False)['te'][0]
+    diff_max_ent = np.abs(estimated_res_max_ent - expected_res)
+    diff_equal = np.abs(estimated_res_equal - expected_res)
     print('Expected source sample: (0, 1)\nExpected target sample: (1, 1)')
-    print(('Estimated TE: {0:5.4f}, analytical result: {1:5.4f}, error:'
-           '{2:2.2f} % ').format(estimated_res, expected_res,
-                                 diff / expected_res))
-    assert (diff < 0.1), ('Multivariate TE calculation for correlated '
-                          'Gaussians failed (error larger 0.1: {0}, expected: '
-                          '{1}, actual: {2}).'.format(
-                              diff, expected_res, results['cond_sources_te']))
+    print(('Max. entropy binning - estimated TE: {0:5.4f}, analytical result: '
+           '{1:5.4f}, error: {2:2.2f} % ').format(
+               estimated_res_max_ent, expected_res, diff_max_ent / expected_res))
+    print(('Equal binning - estimated TE: {0:5.4f}, analytical result: '
+           '{1:5.4f}, error: {2:2.2f} % ').format(
+               estimated_res_equal, expected_res, diff_equal / expected_res))
+    assert diff_max_ent < 0.1, (
+        'Multivariate TE calculation for correlated Gaussians using '
+        'discretised data with max. entropy binning failed (error larger 0.1: '
+        '{0}, expected: {1}, actual: {2}).'.format(
+            diff_max_ent, expected_res, results_max_ent['cond_sources_te']))
+    assert diff_equal < 0.1, (
+        'Multivariate TE calculation for correlated Gaussians using '
+        'discretised data with equal binning failed (error larger 0.1: {0}, '
+        'expected: {1}, actual: {2}).'.format(
+            diff_max_ent, expected_res, results_max_ent['cond_sources_te']))
 
 
 def test_multivariate_te_lagged_copies():
