@@ -21,10 +21,10 @@ authors:
  - name: Conor Finn
    orcid: 0000-0001-8542-4205
    affiliation: "2, 4"
- - name: Mario Martinez Zarzuela
+ - name: Mario Martinez-Zarzuela
    orcid: 0000-0002-6866-3316
    affiliation: 5
- - name: Pedro Martinez Mediano
+ - name: Pedro Mediano
    orcid: 0000-0003-1789-5894
    affiliation: 6
  - name: Leonardo Novelli
@@ -32,7 +32,7 @@ authors:
    affiliation: 2
  - name: Michael Wibral
    orcid: 0000-0001-8010-5862
-   affiliation: "1, 6, 7"
+   affiliation: "1, 7, 8"
 affiliations:
  - name: MEG Unit , Brain Imaging Center, Goethe-University Frankfurt, Fankfurt am Main, Germany
    index: 1
@@ -48,7 +48,8 @@ affiliations:
    index: 6
  - name: Max Planck Institute for Dynamics and Self-Organization, Göttingen, Germany
    index: 7
- - name: Campus institute for Dynamics of Biological Networks, Georg-August Universität, Göttingen, Germany
+ - name: Campus Institute for Dynamics of Biological Networks, Georg-August Universität, Göttingen, Germany
+   index: 8
 date: 7 July 2018
 bibliography: paper.bib
 ---
