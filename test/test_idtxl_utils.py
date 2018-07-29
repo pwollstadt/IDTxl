@@ -1,9 +1,4 @@
-"""Unit tests for IDTxl utilities module.
-
-Created on Thu Apr  7 12:16:23 2016
-
-@author: patricia
-"""
+"""Unit tests for IDTxl utilities module."""
 import numpy as np
 from idtxl import idtxl_utils as utils
 

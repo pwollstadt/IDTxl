@@ -1,9 +1,4 @@
-"""Provide results class for IDTxl network analysis.
-
-Created on Wed Sep 20 18:37:27 2017
-
-@author: patricia
-"""
+"""Provide results class for IDTxl network analysis."""
 import copy as cp
 import numpy as np
 from . import idtxl_utils as utils

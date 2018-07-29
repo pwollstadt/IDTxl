@@ -241,7 +241,7 @@ class JidtDiscrete(JidtEstimator):
         as per the estimate method for this estimator.
 
         Args:
-            data : dict of numpy arrays
+            data : numpy arrays
                 realisations of random variables required for the calculation
                 (varies between estimators, e.g. 2 variables for MI, 3 for
                 CMI). Formatted as per the estimate method for this estimator.
@@ -261,7 +261,7 @@ class JidtDiscrete(JidtEstimator):
         Args:
             n_perms : int [optional]
                 number of permutations (default=200)
-            data : dict of numpy arrays
+            data : numpy arrays
                 realisations of random variables required for the calculation
                 (varies between estimators, e.g. 2 variables for MI, 3 for
                 CMI). Formatted as per the estimate method for this estimator.
@@ -315,7 +315,7 @@ class JidtGaussian(JidtEstimator):
         as per the estimate method for this estimator.
 
         Args:
-            data : dict of numpy arrays
+            data : numpy arrays
                 realisations of random variables required for the calculation
                 (varies between estimators, e.g. 2 variables for MI, 3 for
                 CMI). Formatted as per the estimate method for this estimator.
@@ -330,12 +330,14 @@ class JidtGaussian(JidtEstimator):
 
     def estimate_surrogates_analytic(self, n_perm=200, **data):
         """Estimate the surrogate distribution analytically.
+
         This method must be implemented because this class'
         is_analytic_null_estimator() method returns true
 
         Args:
-            n_perms : number of permutations (default 200)
-            data : array of numpy arrays
+            n_perms : int
+                number of permutations (default=200)
+            data : numpy arrays
                 realisations of random variables required for the calculation
                 (varies between estimators, e.g. 2 variables for MI, 3 for
                 CMI). Formatted as per estimate_parallel for this estimator.
@@ -1630,8 +1632,9 @@ def common_estimate_surrogates_analytic(estimator, n_perm=200, **data):
     Args:
         estimator : a JidtEstimator object, which returns True to a call to
             its is_analytic_null_estimator() method
-        n_perms : number of permutations (default 200)
-        data : array of numpy arrays
+        n_perms : int
+            number of permutations (default=200)
+        data : numpy arrays
             realisations of random variables required for the calculation
             (varies between estimators, e.g. 2 variables for MI, 3 for CMI)
 

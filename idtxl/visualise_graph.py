@@ -209,15 +209,16 @@ def plot_mute_graph():
     on the MuTE toolbox (Montalto, PLOS ONE, 2014, eq. 14). The
     network consists of five autoregressive (AR) processes with model
     orders 2 and les and the following (non-linear) couplings:
-        0 -> 1, u = 2
-        0 -> 2, u = 3
-        0 -> 3, u = 2 (non-linear)
-        3 -> 4, u = 1
-        4 -> 3, u = 1
+
+        >>> 0 -> 1, u = 2
+        >>> 0 -> 2, u = 3
+        >>> 0 -> 3, u = 2 (non-linear)
+        >>> 3 -> 4, u = 1
+        >>> 4 -> 3, u = 1
 
     Returns:
-        Figure
-            figure handle, Figure object from the matplotlib package
+        Figure handle
+            Figure object from the matplotlib package
     """
     graph = nx.DiGraph()
     graph.add_nodes_from(np.arange(5))

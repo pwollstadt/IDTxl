@@ -4,10 +4,6 @@ This module provides unit tests for JIDT estimators.
 
 Unit tests are adapted from the JIDT demos:
     https://github.com/jlizier/jidt/raw/master/demos/python/
-
-Created on Thu Jun 1 2017
-
-@author: patricia
 """
 import math
 import pytest

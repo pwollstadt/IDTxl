@@ -1,13 +1,11 @@
-"""Estimate bivariate transfer entropy.
+"""Perform network inference using multivarate transfer entropy.
 
-Calculate bivariate transfer entropy (TE) using the maximum statistic.
-
-Created on Wed Apr 06 17:58:31 2016
+Estimate multivariate transfer entropy (TE) for network inference using a
+greedy approach with maximum statistics to generate a non-uniform embedding
+(Faes, 2011; Lizier, 2012).
 
 Note:
     Written for Python 3.4+
-
-@author: patricia
 """
 from .network_inference import NetworkInferenceTE, NetworkInferenceBivariate
 from .stats import network_fdr
@@ -78,8 +76,9 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
         network or between selected sources and targets.
 
         Note:
-            For a detailed description see the documentation of the
-            analyse_single_target() method of this class and the references.
+            For a detailed description of the algorithm and settings see
+            documentation of the analyse_single_target() method and references
+            in the class docstring.
 
         Example:
 
@@ -175,13 +174,6 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
         processes and the target process. Uses bivariate, non-uniform embedding
         found through information maximisation.
 
-        References:
-
-        - Faes, L., Nollo, G., & Porta, A. (2011). Information-based detection
-          of nonlinear Granger causality in multivariate processes via a
-          nonuniform embedding technique. Phys Rev E, 83, 1–15.
-          http://doi.org/10.1103/PhysRevE.83.051112
-
         Bivariate TE is calculated in four steps:
 
         (1) find all relevant samples in the target processes' own past, by
@@ -193,6 +185,10 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
         (3) statistics on the final set of sources (test for over-all transfer
             between the final conditional set and the current value, and for
             significant transfer of all individual samples in the set)
+
+        Note:
+            For a further description of the algorithm see references in the
+            class docstring.
 
         Example:
 

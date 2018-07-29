@@ -1,8 +1,4 @@
 """Parent class for network inference and network comparison.
-
-Created on Mon Mar  7 18:13:27 2016
-
-@author: patricia
 """
 import copy as cp
 import itertools as it
@@ -358,6 +354,10 @@ class NetworkAnalysis():
                 set conditioning set, 'full' for all selected variables
                 (target's and sources' past), 'target' for variables from the
                 target's past only, 'none' for no conditioning
+
+        Returns:
+            numpy array
+                estimate of dependency measure for each link
         """
         # Get realisations of target variables and the current value, constant
         # over sources. Permute current value realisations to generate

@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Mar 25 13:46:09 2016
-
-@author: patricia
-"""
+"""Unit tests for stats module."""
 import pytest
 import numpy as np
 from idtxl import stats

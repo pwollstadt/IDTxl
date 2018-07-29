@@ -1,13 +1,11 @@
-"""Estimate bivariate mutual information.
+"""Perform network inference using bivarate mutual information.
 
-Calculate bivariate mutual information (MI) using the maximum statistic.
-
-Created on Wed Apr 06 17:58:31 2016
+Estimate bivariate mutual information (MI) for network inference using a
+greedy approach with maximum statistics to generate a non-uniform embedding
+(Faes, 2011; Lizier, 2012).
 
 Note:
     Written for Python 3.4+
-
-@author: patricia
 """
 from .network_inference import NetworkInferenceMI, NetworkInferenceBivariate
 from .stats import network_fdr
@@ -72,8 +70,9 @@ class BivariateMI(NetworkInferenceMI, NetworkInferenceBivariate):
         network or between selected sources and targets.
 
         Note:
-            For a detailed description see the documentation of the
-            analyse_single_target() method of this class and the references.
+            For a detailed description of the algorithm and settings see
+            documentation of the analyse_single_target() method and references
+            in the class docstring.
 
         Example:
 
@@ -171,13 +170,6 @@ class BivariateMI(NetworkInferenceMI, NetworkInferenceBivariate):
         processes and the target process. Uses bivariate, non-uniform embedding
         found through information maximisation
 
-        References:
-
-        - Faes, L., Nollo, G., & Porta, A. (2011). Information-based detection
-          of nonlinear Granger causality in multivariate processes via a
-          nonuniform embedding technique. Phys Rev E, 83, 1–15.
-          http://doi.org/10.1103/PhysRevE.83.051112 Bivariate
-
         MI is calculated in two steps:
 
         (1) find all relevant samples in a single source processes' past, by
@@ -187,6 +179,10 @@ class BivariateMI(NetworkInferenceMI, NetworkInferenceBivariate):
         (2) statistics on the final set of sources (test for over-all transfer
             between the final conditional set and the current value, and for
             significant transfer of all individual samples in the set)
+
+        Note:
+            For a further description of the algorithm see references in the
+            class docstring.
 
         Example:
 

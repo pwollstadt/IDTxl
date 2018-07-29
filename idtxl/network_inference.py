@@ -1,9 +1,4 @@
-"""Parent class for all network inference.
-
-Created on Mon Mar  7 18:13:27 2016
-
-@author: patricia
-"""
+"""Parent class for all network inference."""
 import numpy as np
 from .network_analysis import NetworkAnalysis
 from .estimator import find_estimator

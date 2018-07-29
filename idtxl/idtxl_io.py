@@ -197,8 +197,6 @@ def import_fieldtrip(file_name, ft_struct_name, file_version, normalise=True):
             field
         int
             sampling rate, corresponding to the 'fsample' field
-
-    @author: Michael Wibral
     """
     if file_version != "v7.3":
         raise RuntimeError('At present only m-files in format 7.3 are '
@@ -485,15 +483,15 @@ def export_brain_net_viewer(adjacency_matrix, mni_coord, file_name, **kwargs):
     Export networks to BrainNet Viewer (project home page:
     http://www.nitrc.org/projects/bnv/). BrainNet Viewer is a MATLAB
     toolbox offering brain network visualisation (e.g., 'glass' brains).
-    The function creates text files *.node and *.edge, containing
-    information on node location (in MNI coordinates), directed edges, node
-    color and size.
+    The function creates text files [file_name].node and [file_name].edge,
+    containing information on node location (in MNI coordinates), directed
+    edges, node color and size.
 
     References:
 
     - Xia, M., Wang, J., & He, Y. (2013). BrainNet Viewer: A Network
-        Visualization Tool for Human Brain Connectomics. PLoS ONE 8(7):
-        e68910. https://doi.org/10.1371/journal.pone.0068910
+      Visualization Tool for Human Brain Connectomics. PLoS ONE 8(7):e68910.
+      https://doi.org/10.1371/journal.pone.0068910
 
     Args:
         adjacency_matrix : 2D numpy array
@@ -503,8 +501,7 @@ def export_brain_net_viewer(adjacency_matrix, mni_coord, file_name, **kwargs):
             MNI coordinates (x,y,z) of the sources, array with size [n 3],
             where n is the number of nodes
         file_name : str
-            file name for output files *.node and *.edge, including the
-            path to the file
+            file name for output files including the file path
         labels : array type of str [optional]
             list of node labels of length n, description or label for each
             node. Note that labels can't contain spaces (causes BrainNet to

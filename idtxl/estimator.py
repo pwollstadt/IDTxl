@@ -41,7 +41,7 @@ def find_estimator(est):
     search for class with that name in IDTxl and return it.
 
     Args:
-        est : int | Class
+        est : str | Class
             name of an estimator class implemented in IDTxl or custom estimator
             class
 
@@ -116,7 +116,8 @@ class Estimator(metaclass=ABCMeta):
         example the OpenCLKraskov() estimator).
 
         Args:
-            self : instance of Estimator class
+            self : Estimator class instance
+                estimator
             vars: numpy arrays
                 realisations of random variables
 
@@ -142,9 +143,8 @@ class Estimator(metaclass=ABCMeta):
     def is_analytic_null_estimator(self):
         """Indicate if estimator supports analytic surrogates.
 
-        Return true if the estimator implements
-        estimate_surrogates_analytic(self, n_perm, **data) where data is
-        formatted as per the estimate method for this estimator.
+        Return true if the estimator implements estimate_surrogates_analytic()
+        where data is formatted as per the estimate method for this estimator.
 
         Returns:
             bool
@@ -247,12 +247,13 @@ class Estimator(metaclass=ABCMeta):
         data for re-use.
 
         Args:
-            self : instance of Estimator class
+            self : Estimator class instance
+                estimator
             n_chunks : int [optional]
                 number of data chunks (default=1)
             re_use : list of keys [optional}
                 realisatins to be re-used (default=None)
-            data: dict of numpy arrays
+            data: numpy arrays
                 realisations of random variables
 
         Returns:

@@ -1,12 +1,10 @@
 """Analysis of AIS in a network of processes.
 
 Analysis of active information storage (AIS) in individual processes of a
-network. The algorithm uses non-uniform embedding as described in Faes ???.
+network. The algorithm uses non-uniform embedding as described in Faes (2011).
 
 Note:
     Written for Python 3.4+
-
-@author: patricia
 """
 import numpy as np
 from . import stats
@@ -33,6 +31,10 @@ class ActiveInformationStorage(SingleProcessAnalysis):
       (2014). Local active information storage as a tool to understand
       distributed neural information processing. Front Neuroinf, 8, 1.
       http://doi.org/10.3389/fninf.2014.00001
+    - Faes, L., Nollo, G., & Porta, A. (2011). Information-based detection
+      of nonlinear Granger causality in multivariate processes via a
+      nonuniform embedding technique. Phys Rev E, 83, 1–15.
+      http://doi.org/10.1103/PhysRevE.83.051112
 
     Attributes:
         process_set : list
@@ -62,8 +64,9 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         the network.
 
         Note:
-            For a detailed description see the documentation of the
-            analyse_single_process() method of this class and the references.
+            For a detailed description of the algorithm and settings see
+            documentation of the analyse_single_process() method and
+            references in the class docstring.
 
         Example:
 
@@ -151,16 +154,20 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         Uses non-uniform embedding found through information maximisation. This
         is done in three steps (see Lizier and Faes for details):
 
-        (1) find all relevant samples in the processes' own past, by
+        (1) Find all relevant samples in the processes' own past, by
             iteratively adding candidate samples that have significant
             conditional mutual information (CMI) with the current value
             (conditional on all samples that were added previously)
-        (3) prune the final conditional set by testing the CMI between each
+        (2) Prune the final conditional set by testing the CMI between each
             sample in the final set and the current value, conditional on all
             other samples in the final set
-        (4) calculate AIS using the final set of candidates as the past state
+        (3) Calculate AIS using the final set of candidates as the past state
             (calculate MI between samples in the past and the current value);
             test for statistical significance using a permutation test
+
+        Note:
+            For a further description of the algorithm see references in the
+            class docstring.
 
         Args:
             settings : dict

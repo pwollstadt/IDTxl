@@ -2,8 +2,6 @@
 
 This module provides unit/system tests for network comparison between and
 within subjects.
-
-@author: patricia
 """
 import os
 import pickle

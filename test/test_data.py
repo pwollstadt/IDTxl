@@ -1,9 +1,4 @@
-"""Test data class.
-
-Created on Mon Apr  4 16:36:41 2016
-
-@author: patricia
-"""
+"""Test data class."""
 import pytest
 import numpy as np
 from idtxl.data import Data
@@ -11,6 +6,7 @@ import idtxl.idtxl_utils as utils
 
 
 def test_data_properties():
+    """Test data properties attributes."""
     n = 10
     d = Data(np.arange(n), 's', normalise=False)
     real_time = d.n_realisations_samples()

@@ -1,14 +1,11 @@
-"""Estimate multivarate mutual information.
+"""Perform network inference using multivarate mutual information.
 
-Created on Thu Mar 10 14:24:31 2016
-
-Iterative greedy algorithm for multivariate network inference using mutual
-information. For details see Lizier 2012 and Faes 2011.
+Estimate multivariate mutual information (MI) for network inference using a
+greedy approach with maximum statistics to generate a non-uniform embedding
+(Faes, 2011; Lizier, 2012).
 
 Note:
     Written for Python 3.4+
-
-@author: patricia
 """
 from .stats import network_fdr
 from .network_inference import NetworkInferenceMI, NetworkInferenceMultivariate
@@ -71,8 +68,9 @@ class MultivariateMI(NetworkInferenceMI, NetworkInferenceMultivariate):
         network or between selected sources and targets.
 
         Note:
-            For a detailed description see the documentation of the
-            analyse_single_target() method of this class and the references.
+            For a detailed description of the algorithm and settings see
+            documentation of the analyse_single_target() method and references
+            in the class docstring.
 
         Example:
 
@@ -176,28 +174,21 @@ class MultivariateMI(NetworkInferenceMI, NetworkInferenceMultivariate):
         and the target process. Uses multivariate, non-uniform embedding found
         through information maximisation .
 
-        References:
-
-        - Lizier, J. T., & Rubinov, M. (2012). Multivariate construction of
-        effective computational networks from observational data. Max Planck
-        Institute: Preprint. Retrieved from
-        http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf
-        - Faes, L., Nollo, G., & Porta, A. (2011). Information-based detection
-        of nonlinear Granger causality in multivariate processes via a
-        nonuniform embedding technique. Phys Rev E, 83, 1–15.
-        http://doi.org/10.1103/PhysRevE.83.051112
-
         Multivariate MI is calculated in four steps (see Lizier and Faes for
         details):
 
-        (1) find all relevant samples in the source processes' past, by
+        Note:
+            For a further description of the algorithm see references in the
+            class docstring.
+
+        (1) Find all relevant samples in the source processes' past, by
             iteratively adding candidate samples that have significant
             conditional mutual information (CMI) with the current value
             (conditional on all samples that were added previously)
-        (2) prune the final conditional set by testing the CMI between each
+        (2) Prune the final conditional set by testing the CMI between each
             sample in the final set and the current value, conditional on all
             other samples in the final set
-        (3) statistics on the final set of sources (test for over-all transfer
+        (3) Statistics on the final set of sources (test for over-all transfer
             between the final conditional set and the current value, and for
             significant transfer of all individual samples in the set)
 

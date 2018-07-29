@@ -2,10 +2,6 @@
 
 This module provides unit tests for OpenCL estimators. Estimators are tested
 against JIDT estimators.
-
-Created on Thu Jun 1 2017
-
-@author: patricia
 """
 import math
 import pytest

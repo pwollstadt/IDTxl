@@ -1,9 +1,4 @@
-"""Provide unit tests for PID estimators.
-
-Created on Mon Apr 11 21:51:56 2016
-
-@author: wibral
-"""
+"""Provide unit tests for PID estimators."""
 import time as tm
 import numpy as np
 import pytest

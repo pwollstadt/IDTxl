@@ -1,9 +1,5 @@
-"""System test for multivariate TE using the discrete JIDT estimator.
-
-@author: patricia
-"""
+"""System test for multivariate TE using the discrete JIDT estimator."""
 import os
-import random as rn
 import numpy as np
 from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data

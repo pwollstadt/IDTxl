@@ -298,6 +298,19 @@ class NetworkComparison(NetworkAnalysis):
         If sources is set to 'all', a list of information transfer values is
         returned. If sources is set to a single source index, the information
         transfer from this source to the target is returned.
+
+        Args:
+            data : Data instance
+                raw data for analysis
+            target : int
+                index of target process
+            sources : list of ints | 'all' [optional]
+                return estimates for links from selected or all sources into
+                the target (default='all')
+
+        Returns:
+            numpy array
+                information transfer estimate for each link
         """
         # Get lists of source and target variables. Return empty array if there
         # is no significant source variable for requested target.

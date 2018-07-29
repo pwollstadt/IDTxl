@@ -1,9 +1,4 @@
-"""Provide statistics functions.
-
-Created on Mon Mar  7 18:13:27 2016
-
-@author: patricia
-"""
+"""Provide statistics functions."""
 import copy as cp
 import numpy as np
 from . import idtxl_utils as utils

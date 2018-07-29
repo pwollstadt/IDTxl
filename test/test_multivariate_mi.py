@@ -1,9 +1,4 @@
-"""Provide unit tests for multivariate MI estimation.
-
-Created on Fri Mar 25 12:22:14 2016
-
-@author: patricia
-"""
+"""Provide unit tests for multivariate MI estimation."""
 import pytest
 import itertools as it
 import numpy as np

@@ -1,14 +1,11 @@
-"""Estimate multivarate transfer entropy.
+"""Perform network inference using multivarate transfer entropy.
 
-Created on Thu Mar 10 14:24:31 2016
-
-Iterative greedy algorithm for multivariate network inference using transfer
-entropy. For details see Lizier 2012 and Faes 2011.
+Estimate multivariate transfer entropy (TE) for network inference using a
+greedy approach with maximum statistics to generate a non-uniform embedding
+(Faes, 2011; Lizier, 2012).
 
 Note:
     Written for Python 3.4+
-
-@author: patricia
 """
 from .network_inference import NetworkInferenceTE, NetworkInferenceMultivariate
 from .stats import network_fdr
@@ -41,6 +38,7 @@ class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
       http://doi.org/10.1103/PhysRevE.83.051112
 
     Attributes:
+
         source_set : list
             indices of source processes tested for their influence on the
             target
@@ -79,11 +77,11 @@ class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
         network or between selected sources and targets.
 
         Note:
-            For a detailed description see the documentation of the
-            analyse_single_target() method of this class and the references.
+            For a detailed description of the algorithm and settings see
+            documentation of the analyse_single_target() method and references
+            in the class docstring.
 
         Example:
-
             >>> data = Data()
             >>> data.generate_mute_data(100, 5)
             >>> settings = {
@@ -178,11 +176,8 @@ class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
 
         Find multivariate transfer entropy (TE) between all source processes
         and the target process. Uses multivariate, non-uniform embedding found
-        through information maximisation (see Faes et al., 2011, Phys Rev E 83,
-        051112 and Lizier & Rubinov, 2012, Max Planck Institute: Preprint.
-        Retrieved from
-        http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf). Multivariate
-        TE is calculated in four steps (see Lizier and Faes for details):
+        through information maximisation. Multivariate TE is calculated in four
+        steps:
 
         (1) find all relevant samples in the target processes' own past, by
             iteratively adding candidate samples that have significant
@@ -196,6 +191,10 @@ class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
         (4) statistics on the final set of sources (test for over-all transfer
             between the final conditional set and the current value, and for
             significant transfer of all individual samples in the set)
+
+        Note:
+            For a further description of the algorithm see references in the
+            class docstring.
 
         Example:
 

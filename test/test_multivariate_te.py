@@ -1,9 +1,4 @@
-"""Provide unit tests for multivariate TE estimation.
-
-Created on Fri Mar 25 12:22:14 2016
-
-@author: patricia
-"""
+"""Provide unit tests for multivariate TE estimation."""
 import pytest
 import itertools as it
 import numpy as np

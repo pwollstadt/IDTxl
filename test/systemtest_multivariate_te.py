@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Apr  4 10:41:33 2016
-
-@author: patricia
-"""
+"""System test for multivariate TE using the JIDT Kraskov estimator."""
 import os
 import random as rn
 import numpy as np

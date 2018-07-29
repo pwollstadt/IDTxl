@@ -4,8 +4,6 @@ Estimate PID for two source and one target process using different estimators.
 
 Note:
     Written for Python 3.4+
-
-@author: patricia
 """
 import numpy as np
 from .single_process_analysis import SingleProcessAnalysis
@@ -53,8 +51,9 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         the network.
 
         Note:
-            For a detailed description and references see the documentation of
-            the analyse_single_target() method of this class.
+            For a detailed description of the algorithm and settings see
+            documentation of the analyse_single_target() method and
+            references in the class docstring.
 
         Example:
 
@@ -137,6 +136,10 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         Estimate partial information decomposition (PID) for a target node in
         the network.
 
+        Note:
+            For a description of the algorithm and the method see references in
+            the class and estimator docstrings.
+
         Example:
 
             >>> n = 20
@@ -161,9 +164,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             >>>                                              target=0,
             >>>                                              sources=[1, 2])
 
-        Args:
-            settings : dict
-                parameters for estimator use and statistics:
+        Args: settings : dict parameters for estimator use and statistics:
 
                 - pid_estimator : str - estimator to be used for PID estimation
                   (for estimator settings see the documentation in the
@@ -180,10 +181,9 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             sources : list of ints
                 indices of the two source processes for the target
 
-        Returns:
-            ResultsPartialInformationDecomposition instance
-                results of network inference, see documentation of
-                ResultsPartialInformationDecomposition()
+        Returns: ResultsPartialInformationDecomposition instance results of
+            network inference, see documentation of
+            ResultsPartialInformationDecomposition()
         """
         # Check input and initialise values for analysis.
         self._initialise(settings, data, target, sources)

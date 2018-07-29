@@ -1,9 +1,4 @@
-"""Provide data structures for IDTxl analysis.
-
-Created on Mon Mar  7 18:13:27 2016
-
-@author: patricia
-"""
+"""Provide data structures for IDTxl analysis."""
 import numpy as np
 from . import idtxl_utils as utils
 
@@ -209,13 +204,19 @@ class Data():
         shuffling, data blocks are permuted over replications while their
         temporal order stays intact within replications:
 
-        orig:
-            repl. index:   1 1 1 1 2 2 2 2 3 3 3 3 4 4 4 4 5 5 5 5 6 6 6 6 ...
-            sample index:  1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 ...
+        Original data:
+            +--------------+---------+---------+---------+---------+---------+-----+
+            | repl. ind.   | 1 1 1 1 | 2 2 2 2 | 3 3 3 3 | 4 4 4 4 | 5 5 5 5 | ... |
+            +--------------+---------+---------+---------+---------+---------+-----+
+            | sample index | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | ... |
+            +--------------+---------+---------+---------+---------+---------+-----+
 
-        shuffled:
-            repl. index:   3 3 3 3 1 1 1 1 4 4 4 4 6 6 6 6 2 2 2 2 5 5 5 5 ...
-            sample index:  1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 ...
+        Shuffled data:
+            +--------------+---------+---------+---------+---------+---------+-----+
+            | repl. ind.   | 3 3 3 3 | 1 1 1 1 | 4 4 4 4 | 2 2 2 2 | 5 5 5 5 | ... |
+            +--------------+---------+---------+---------+---------+---------+-----+
+            | sample index | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | ... |
+            +--------------+---------+---------+---------+---------+---------+-----+
 
         Args:
             idx_list: list of tuples
@@ -307,13 +308,19 @@ class Data():
         replications while their temporal order stays intact within
         replications:
 
-        orig:
-            repl. index:   1 1 1 1 2 2 2 2 3 3 3 3 4 4 4 4 5 5 5 5 6 6 6 6 ...
-            sample index:  1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 ...
+        Original data:
+            +---------------+---------+---------+---------+---------+---------+-----+
+            | repl. index:  | 1 1 1 1 | 2 2 2 2 | 3 3 3 3 | 4 4 4 4 | 5 5 5 5 | ... |
+            +---------------+---------+---------+---------+---------+---------+-----+
+            | sample index: | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | ... |
+            +---------------+---------+---------+---------+---------+---------+-----+
 
-        shuffled:
-            repl. index:   3 3 3 3 1 1 1 1 4 4 4 4 6 6 6 6 2 2 2 2 5 5 5 5 ...
-            sample index:  1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 ...
+        Shuffled data:
+            +---------------+---------+---------+---------+---------+---------+-----+
+            | repl. index:  | 3 3 3 3 | 1 1 1 1 | 4 4 4 4 | 2 2 2 2 | 5 5 5 5 | ... |
+            +---------------+---------+---------+---------+---------+---------+-----+
+            | sample index: | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | ... |
+            +---------------+---------+---------+---------+---------+---------+-----+
 
         If the current_value is provided, data are returned from an offset
         specified by the index wrt the current_value.
@@ -378,25 +385,40 @@ class Data():
         entry specified by 'process'. Realisations are permuted according to
         the settings specified in perm_settings:
 
-        original data:
-            rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3 ...
-            sample: 1 2 3 4 5 6 7 8  1 2 3 4 5 6 7 8  1 2 3 4 5 6 7 8 ...
+        Original data:
+            +--------------+-----------------+-----------------+-----------------+-----+
+            | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |
+            +--------------+-----------------+-----------------+-----------------+-----+
+            | sample index | 1 2 3 4 5 6 7 8 | 1 2 3 4 5 6 7 8 | 1 2 3 4 5 6 7 8 | ... |
+            +--------------+-----------------+-----------------+-----------------+-----+
 
-        circular shift (default) by 2, 6, and 4 samples:
-            rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3  ...
-            sample: 7 8 1 2 3 4 5 6  3 4 5 6 7 8 1 2  5 6 7 8 1 2 3 4  ...
+        Circular shift by 2, 6, and 4 samples:
+            +--------------+-----------------+-----------------+-----------------+-----+
+            | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |
+            +--------------+-----------------+-----------------+-----------------+-----+
+            | sample index | 7 8 1 2 3 4 5 6 | 3 4 5 6 7 8 1 2 | 5 6 7 8 1 2 3 4 | ... |
+            +--------------+-----------------+-----------------+-----------------+-----+
 
-        permute blocks of 3 samples:
-            rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3 ...
-            sample: 4 5 6 7 8 1 2 3  1 2 3 7 8 4 5 6  7 8 4 5 6 1 2 3 ...
+        Permute blocks of 3 samples:
+            +--------------+-----------------+-----------------+-----------------+-----+
+            | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |
+            +--------------+-----------------+-----------------+-----------------+-----+
+            | sample index | 4 5 6 7 8 1 2 3 | 1 2 3 7 8 4 5 6 | 7 8 4 5 6 1 2 3 | ... |
+            +--------------+-----------------+-----------------+-----------------+-----+
 
-        permute data locally within a range of 4 samples:
-            rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3 ...
-            sample: 1 2 4 3 8 5 6 7  4 1 2 3 5 7 8 6  3 1 2 4 8 5 6 7 ...
+        Permute data locally within a range of 4 samples:
+            +--------------+-----------------+-----------------+-----------------+-----+
+            | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |
+            +--------------+-----------------+-----------------+-----------------+-----+
+            | sample index | 1 2 4 3 8 5 6 7 | 4 1 2 3 5 7 8 6 | 3 1 2 4 8 5 6 7 | ... |
+            +--------------+-----------------+-----------------+-----------------+-----+
 
-        random permutation:
-            rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3  ...
-            sample: 4 2 5 7 1 3 2 6  7 5 3 4 2 1 8 5  1 2 4 3 6 8 7 5  ...
+        Random permutation:
+            +--------------+-----------------+-----------------+-----------------+-----+
+            | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |
+            +--------------+-----------------+-----------------+-----------------+-----+
+            | sample index | 4 2 5 7 1 3 2 6 | 7 5 3 4 2 1 8 5 | 1 2 4 3 6 8 7 5 | ... |
+            +--------------+-----------------+-----------------+-----------------+-----+
 
         Permuting samples is the fall-back option for surrogate creation if the
         number of replications is too small to allow for a sufficient number of
@@ -421,15 +443,19 @@ class Data():
                   number of samples):
 
                     - if perm_type == 'circular':
-                      'max_shift': int
-                          the maximum number of samples for shifting
-                          (default=n/2)
+
+                      'max_shift' : int
+                        the maximum number of samples for shifting
+                        (default=n/2)
                     - if perm_type == 'block':
+
                       'block_size' : int
-                          no. samples per block (default=n/10)
+                        no. samples per block (default=n/10)
                       'perm_range' : int
                           range in which blocks can be swapped (default=max)
+
                     - if perm_type == 'local':
+
                       'perm_range' : int
                           range in samples over which realisations can be
                           permuted (default=n/10)
@@ -463,13 +489,20 @@ class Data():
         have the form (process index, sample index). Realisations are permuted
         block-wise by permuting the order of replications:
 
-        original data:
-            rep.:   1 1 1 1  2 2 2 2  3 3 3 3  4 4 4 4  5 5 5 5  6 6 6 6 ...
-            sample: 1 2 3 4  1 2 3 4  1 2 3 4  1 2 3 4  1 2 3 4  1 2 3 4 ...
+        Original data:
+            +--------------+---------+---------+---------+---------+---------+-----+
+            | repl. ind.   | 1 1 1 1 | 2 2 2 2 | 3 3 3 3 | 4 4 4 4 | 5 5 5 5 | ... |
+            +--------------+---------+---------+---------+---------+---------+-----+
+            | sample index | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | ... |
+            +--------------+---------+---------+---------+---------+---------+-----+
 
-        permuted data:
-            rep.:   3 3 3 3  1 1 1 1  4 4 4 4  6 6 6 6  2 2 2 2  5 5 5 5 ...
-            sample: 1 2 3 4  1 2 3 4  1 2 3 4  1 2 3 4  1 2 3 4  1 2 3 4 ...
+        Permuted data:
+            +--------------+---------+---------+---------+---------+---------+-----+
+            | repl. ind.   | 3 3 3 3 | 1 1 1 1 | 4 4 4 4 | 2 2 2 2 | 5 5 5 5 | ... |
+            +--------------+---------+---------+---------+---------+---------+-----+
+            | sample index | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | ... |
+            +--------------+---------+---------+---------+---------+---------+-----+
+
 
         Args:
             current_value : tuple
@@ -512,26 +545,40 @@ class Data():
         each replication, samples are shuffled following the same permutation
         pattern:
 
-        original data:
-            rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3 ...
-            sample: 1 2 3 4 5 6 7 8  1 2 3 4 5 6 7 8  1 2 3 4 5 6 7 8 ...
+        Original data:
+            +--------------+-----------------+-----------------+-----------------+-----+
+            | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |
+            +--------------+-----------------+-----------------+-----------------+-----+
+            | sample index | 1 2 3 4 5 6 7 8 | 1 2 3 4 5 6 7 8 | 1 2 3 4 5 6 7 8 | ... |
+            +--------------+-----------------+-----------------+-----------------+-----+
 
-        circular shift by a random number of samples (default), e.g. for four
-        samples:
-            rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3  ...
-            sample: 5 6 7 8 1 2 3 4  5 6 7 8 1 2 3 4  5 6 7 8 1 2 3 4  ...
+        Circular shift by a random number of samples, e.g. 4 samples:
+            +--------------+-----------------+-----------------+-----------------+-----+
+            | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |
+            +--------------+-----------------+-----------------+-----------------+-----+
+            | sample index | 5 6 7 8 1 2 3 4 | 5 6 7 8 1 2 3 4 | 5 6 7 8 1 2 3 4 | ... |
+            +--------------+-----------------+-----------------+-----------------+-----+
 
-        permute blocks of 3 samples:
-            rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3 ...
-            sample: 4 5 6 7 8 1 2 3  4 5 6 7 8 1 2 3  4 5 6 7 8 1 2 3 ...
+        Permute blocks of 3 samples:
+            +--------------+-----------------+-----------------+-----------------+-----+
+            | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |
+            +--------------+-----------------+-----------------+-----------------+-----+
+            | sample index | 4 5 6 7 8 1 2 3 | 4 5 6 7 8 1 2 3 | 4 5 6 7 8 1 2 3 | ... |
+            +--------------+-----------------+-----------------+-----------------+-----+
 
-        permute data locally within a range of 4 samples:
-            rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3 ...
-            sample: 1 2 4 3 8 5 6 7  1 2 4 3 8 5 6 7  1 2 4 3 8 5 6 7 ...
+        Permute data locally within a range of 4 samples:
+            +--------------+-----------------+-----------------+-----------------+-----+
+            | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |
+            +--------------+-----------------+-----------------+-----------------+-----+
+            | sample index | 1 2 4 3 8 5 6 7 | 1 2 4 3 8 5 6 7 | 1 2 4 3 8 5 6 7 | ... |
+            +--------------+-----------------+-----------------+-----------------+-----+
 
-        random permutation:
-            rep.:   1 1 1 1 1 1 1 1  2 2 2 2 2 2 2 2  3 3 3 3 3 3 3 3  ...
-            sample: 4 2 5 7 1 3 2 6  4 2 5 7 1 3 2 6  4 2 5 7 1 3 2 6  ...
+        Random permutation:
+            +--------------+-----------------+-----------------+-----------------+-----+
+            | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |
+            +--------------+-----------------+-----------------+-----------------+-----+
+            | sample index | 4 2 5 7 1 3 2 6 | 4 2 5 7 1 3 2 6 | 4 2 5 7 1 3 2 6 | ... |
+            +--------------+-----------------+-----------------+-----------------+-----+
 
         Args:
             current_value : tuple
@@ -545,8 +592,8 @@ class Data():
                   permutation type, can be
 
                     - 'random': swaps samples at random,
-                    - 'circular': shifts time series by a random
-                      number of samples
+                    - 'circular': shifts time series by a random number of
+                      samples
                     - 'block': swaps blocks of samples,
                     - 'local': swaps samples within a given range, or
 
@@ -554,19 +601,24 @@ class Data():
                   number of samples):
 
                     - if perm_type == 'circular':
-                      'max_shift': int
-                          the maximum number of samples for shifting
-                          (e.g., number of samples / 2)
+
+                      'max_shift' : int
+                        the maximum number of samples for shifting
+                        (e.g., number of samples / 2)
+
                     - if perm_type == 'block':
+
                       'block_size' : int
-                          no. samples per block (e.g., number of samples / 10)
+                        no. samples per block (e.g., number of samples / 10)
                       'perm_range' : int
-                          range in which blocks can be swapped (e.g., number
-                          of samples / block_size)
+                        range in which blocks can be swapped (e.g., number
+                        of samples / block_size)
+
                     - if perm_type == 'local':
+
                       'perm_range' : int
-                          range in samples over which realisations can be
-                          permuted (e.g., number of samples / 10)
+                        range in samples over which realisations can be
+                        permuted (e.g., number of samples / 10)
 
         Returns:
             numpy array
@@ -579,9 +631,10 @@ class Data():
             TypeError if idx_realisations is not a list
 
         Note:
-            This permutation scheme is the fall-back option if the number of
-            replications is too small to allow a sufficient number of
-            permutations for the generation of surrogate data.
+            This permutation scheme is the fall-back option if surrogate data
+            can not be created by shuffling replications because the number of
+            replications is too small to generate the requested number of
+            permutations.
         """
         [realisations, replication_idx] = self.get_realisations(current_value,
                                                                 idx_list)

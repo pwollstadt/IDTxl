@@ -1,10 +1,6 @@
 """Test NetworkAnalysis.
 
 This module provides unit tests for the NetworkAnalysis class.
-
-Created on Tue Aug 02 04:47:01 2016
-
-@author: patricia
 """
 import pytest
 import numpy as np

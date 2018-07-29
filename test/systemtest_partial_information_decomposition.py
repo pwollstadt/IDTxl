@@ -1,7 +1,4 @@
-"""Provide unit tests for high-level PID estimation.
-
-@author: patricia
-"""
+"""Provide unit tests for high-level PID estimation."""
 import time as tm
 import numpy as np
 from idtxl.partial_information_decomposition import (
