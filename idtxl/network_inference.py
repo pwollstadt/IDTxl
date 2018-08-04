@@ -518,7 +518,7 @@ class NetworkInferenceBivariate(NetworkInference):
             self.statistic_single_link = None
         else:
             if self.settings['verbose']:
-                print('selected sources: {0}'.format(
+                print('selected variables: {0}'.format(
                     self._idx_to_lag(self.selected_vars_full)))
             [s, p, stat] = stats.omnibus_test(self, data)
             self.statistic_omnibus = stat
@@ -655,7 +655,7 @@ class NetworkInferenceMultivariate(NetworkInference):
             self.statistic_single_link = None
         else:
             if self.settings['verbose']:
-                print('selected sources: {0}'.format(
+                print('selected variables: {0}'.format(
                     self._idx_to_lag(self.selected_vars_full)))
             [s, p, stat] = stats.omnibus_test(self, data)
             self.statistic_omnibus = stat

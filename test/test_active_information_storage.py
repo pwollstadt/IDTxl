@@ -40,6 +40,8 @@ def test_return_local_values():
 
     for p in processes:
         lais = results.get_single_process(p, fdr=False)['ais']
+        if lais is np.nan:
+            continue
         assert type(lais) is np.ndarray, (
             'LAIS estimation did not return an array of values: {0}'.format(
                 lais))

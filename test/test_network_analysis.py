@@ -5,6 +5,122 @@ This module provides unit tests for the NetworkAnalysis class.
 import pytest
 import numpy as np
 from idtxl.network_analysis import NetworkAnalysis
+from idtxl.data import Data
+from test_estimators_jidt import _get_gauss_data
+from idtxl.estimators_jidt import JidtKraskovCMI, JidtKraskovMI
+
+
+def test_calculate_single_link():
+    """Test calculation of single link (conditional) MI and TE."""
+
+    expected_mi, source, source_uncorr, target = _get_gauss_data()
+    source = source[1:]
+    source_uncorr = source_uncorr[1:]
+    target = target[:-1]
+    data = Data(np.hstack((source, source_uncorr, target)), dim_order='sp')
+
+    n = NetworkAnalysis()
+    n._cmi_estimator = JidtKraskovCMI(settings={})
+    n.settings = {
+        'local_values': False
+    }
+    current_value = (2, 1)
+
+    # Test single link estimation for a single and multiple sources for
+    # cases: no target vars, source vars/no source vars (tests if the
+    # conditioning set is built correctly for conditioning='full').
+    source_realisations = data.get_realisations(current_value, [(0, 0)])[0]
+    current_value_realisations = data.get_realisations(
+        current_value, [current_value])[0]
+    expected_mi = n._cmi_estimator.estimate(
+        current_value_realisations, source_realisations)
+    # cond. on second source
+    cond_realisations = data.get_realisations(current_value, [(1, 0)])[0]
+    expected_mi_cond1 = n._cmi_estimator.estimate(
+        current_value_realisations, source_realisations, cond_realisations)
+
+    for sources in ['all', [0]]:
+        for conditioning in ['full', 'target', 'none']:
+            for source_vars in [[(0, 0)], [(0, 0), (1, 0)]]:
+                mi = n._calculate_single_link(
+                    data, current_value, source_vars, target_vars=None,
+                    sources=sources, conditioning=conditioning)
+                if mi.shape[0] > 1:  # array for source='all'
+                    mi = mi[0]
+
+                if source_vars == [(0, 0)]:  # no conditioning
+                    assert np.isclose(mi, expected_mi, rtol=0.05), (
+                        'Estimated single-link MI ({0}) differs from expected '
+                        'MI ({1}).'.format(mi, expected_mi))
+                else:
+                    if conditioning == 'full':  # cond. on second source
+                        assert np.isclose(mi, expected_mi_cond1, rtol=0.05), (
+                            'Estimated single-link MI ({0}) differs from '
+                            'expected MI ({1}).'.format(mi, expected_mi_cond1))
+                    else:  # no conditioning
+                        assert np.isclose(mi, expected_mi, rtol=0.05), (
+                            'Estimated single-link MI ({0}) differs from '
+                            'expected MI ({1}).'.format(mi, expected_mi))
+
+        # Test single link estimation for a single and multiple sources for
+        # cases: target vars/no target vars, source vars (tests if the
+        # conditioning set is built correctly for conditioning='full').
+        cond_realisations = np.hstack((  # cond. on second source and target
+            data.get_realisations(current_value, [(1, 0)])[0],
+            data.get_realisations(current_value, [(2, 0)])[0]
+            ))
+        expected_mi_cond2 = n._cmi_estimator.estimate(
+            current_value_realisations, source_realisations, cond_realisations)
+        # cond. on target
+        cond_realisations = data.get_realisations(current_value, [(2, 0)])[0]
+        expected_mi_cond3 = n._cmi_estimator.estimate(
+            current_value_realisations, source_realisations, cond_realisations)
+
+        for target_vars in [None, [(2, 0)]]:
+            for conditioning in ['full', 'target', 'none']:
+                mi = n._calculate_single_link(
+                    data, current_value, source_vars=[(0, 0), (1, 0)],
+                    target_vars=target_vars, sources=sources,
+                    conditioning=conditioning)
+                if mi.shape[0] > 1:  # array for source='all'
+                    mi = mi[0]
+
+                if conditioning == 'none':  # no conditioning
+                    assert np.isclose(mi, expected_mi, rtol=0.05), (
+                        'Estimated single-link MI ({0}) differs from expected '
+                        'MI ({1}).'.format(mi, expected_mi))
+                else:
+                    # target only
+                    if target_vars is not None and conditioning == 'target':
+                        assert np.isclose(mi, expected_mi_cond3, rtol=0.05), (
+                            'Estimated single-link MI ({0}) differs from '
+                            'expected MI ({1}).'.format(mi, expected_mi_cond3))
+                    # target and 2nd source
+                    if target_vars is not None and conditioning == 'full':
+                        assert np.isclose(mi, expected_mi_cond2, rtol=0.05), (
+                            'Estimated single-link MI ({0}) differs from '
+                            'expected MI ({1}).'.format(mi, expected_mi_cond2))
+                    # target is None, condition on second target
+                    else:
+                        if conditioning == 'full':
+                            assert np.isclose(mi, expected_mi_cond1, rtol=0.05), (
+                                'Estimated single-link MI ({0}) differs from expected '
+                                'MI ({1}).'.format(mi, expected_mi_cond1))
+
+    # Test requested sources not in source vars
+    with pytest.raises(RuntimeError):
+        mi = n._calculate_single_link(
+            data, current_value, source_vars=[(0, 0), (3, 0)],
+            target_vars=None, sources=4, conditioning='full')
+    # Test source vars not in data/processes
+    with pytest.raises(IndexError):
+        mi = n._calculate_single_link(
+            data, current_value, source_vars=[(0, 0), (10, 0)],
+            target_vars=None, sources='all', conditioning='full')
+    # Test unknown conditioning
+    with pytest.raises(RuntimeError):
+        mi = n._calculate_single_link(
+            data, current_value, source_vars=[(0, 0)], conditioning='test')
 
 
 def test_separate_realisations():
@@ -62,6 +178,7 @@ def test_lag_to_idx():
 
 
 if __name__ == '__main__':
+    test_calculate_single_link()
     test_idx_to_lag()
     test_lag_to_idx()
     test_separate_realisations()

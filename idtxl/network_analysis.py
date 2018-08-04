@@ -371,9 +371,11 @@ class NetworkAnalysis():
         if sources == 'all':
             sources = [s[0] for s in source_vars]
         else:
-            sources = np.array([sources])
+            if type(sources) is int:  # handle integer inputs
+                sources = [sources]
+            sources = np.array(sources)
             if any(sources > (data.n_processes - 1)):
-                raise RuntimeError('At least one source {0} is not in no. '
+                raise RuntimeError('At least one source ({0}) is not in no. '
                                    'nodes in the data ({1}).'.format(
                                        sources, data.n_processes))
 
@@ -400,21 +402,31 @@ class NetworkAnalysis():
             source_realisations, replication_ind = data.get_realisations(
                 current_value, link_vars)
 
-            # Determine which type of conditioning is requested. Check if
-            # conditional_vars is not empty.
-            if conditioning == 'full' and conditional_vars:
-                if target_realisations is None:  # use sources' pasts only
+            # Determine which type of conditioning is requested.
+            if conditioning == 'full':
+                if target_realisations is None:
+                    # Use sources' pasts only, returns None if conditional vars
+                    # is empty.
                     conditional_realisations = data.get_realisations(
                             current_value, conditional_vars)[0]
-                else:  # use target's and sources' past
-                    conditional_realisations = np.hstack((
-                        data.get_realisations(
-                            current_value, conditional_vars)[0],
-                        target_realisations))
+                else:
+                    # Use target's and sources' past, check if conditional vars
+                    # is not empty, otherwise np.hstack crashes.
+                    if conditional_vars:
+                        conditional_realisations = np.hstack((
+                            data.get_realisations(
+                                current_value, conditional_vars)[0],
+                            target_realisations))
+                    else:   # use target's past only
+                        conditional_realisations = target_realisations
+
             elif conditioning == 'target':  # use target's past only (biv. TE)
                 conditional_realisations = target_realisations
-            else:  # no conditioning (bivariate MI)
+            elif conditioning == 'none':  # no conditioning (bivariate MI)
                 conditional_realisations = None
+            else:
+                raise RuntimeError('Unknown conditioning: {0}.'.format(
+                    conditioning))
 
             if self.settings['local_values']:
                 local_values = self._cmi_estimator.estimate(
