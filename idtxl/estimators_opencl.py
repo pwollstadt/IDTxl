@@ -115,6 +115,16 @@ class OpenCLKraskov(Estimator):
                                          np.int32, None])
         return (kNN_kernel, RS_kernel)
 
+    def _get_max_mem(self):
+        """Return max. GPU main memory available for computation."""
+        if 'max_mem' in self.settings:
+            return self.settings['max_mem']
+        elif 'max_mem_frac' in self.settings:
+            return self.settings['max_mem_frac'] * self.devices[
+                                    self.settings['gpuid']].global_mem_size
+        else:
+            return 0.9 * self.devices[self.settings['gpuid']].global_mem_size
+
 
 class OpenCLKraskovMI(OpenCLKraskov):
     """Calculate mutual information with OpenCL Kraskov implementation.
@@ -189,12 +199,7 @@ class OpenCLKraskovMI(OpenCLKraskov):
         mem_dist = self.sizeof_float * chunklength * kraskov_k
         mem_ncnt = 2 * self.sizeof_int * chunklength
         mem_chunk = mem_data + mem_dist + mem_ncnt
-
-        if 'max_mem' in self.settings:
-            max_mem = self.settings['max_mem']
-        else:
-            max_mem = 0.9 * self.devices[
-                                    self.settings['gpuid']].global_mem_size
+        max_mem = self._get_max_mem()
 
         max_chunks_per_run = np.floor(max_mem/mem_chunk).astype(int)
         chunks_per_run = min(max_chunks_per_run, n_chunks)
@@ -289,6 +294,17 @@ class OpenCLKraskovMI(OpenCLKraskov):
                                      size=pointset.shape)
         if not pointset.dtype == np.float32:
             pointset = pointset.astype(np.float32)
+
+        if self.settings['debug']:
+            # Print memory requirements after padding
+            mem_data_pad = (self.sizeof_float *
+                            pointset.shape[0] * pointset.shape[1])
+            mem_dist = (self.sizeof_float * signallength_padded *
+                        self.settings['kraskov_k'])
+            mem_ncnt = 2 * self.sizeof_int * signallength_padded
+            mem_total = mem_data_pad + mem_dist + mem_ncnt
+            print('Memory req. after padding: {0:.5f} MB.'.format(
+                      mem_total / 1024 / 1024))
 
         # Set OpenCL kernel launch parameters
         if chunklength < self.devices[
@@ -466,12 +482,7 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         mem_dist = self.sizeof_float * chunklength * kraskov_k
         mem_ncnt = 2 * self.sizeof_int * chunklength
         mem_chunk = mem_data + mem_dist + mem_ncnt
-
-        if 'max_mem' in self.settings:
-            max_mem = self.settings['max_mem']
-        else:
-            max_mem = 0.9 * self.devices[
-                                    self.settings['gpuid']].global_mem_size
+        max_mem = self._get_max_mem()
 
         max_chunks_per_run = np.floor(max_mem/mem_chunk).astype(int)
         chunks_per_run = min(max_chunks_per_run, n_chunks)
@@ -580,6 +591,17 @@ class OpenCLKraskovCMI(OpenCLKraskov):
                                      size=pointset.shape)
         if not pointset.dtype == np.float32:
             pointset = pointset.astype(np.float32)
+
+        if self.settings['debug']:
+            # Print memory requirements after padding
+            mem_data_pad = (self.sizeof_float *
+                            pointset.shape[0] * pointset.shape[1])
+            mem_dist = (self.sizeof_float * signallength_padded *
+                        self.settings['kraskov_k'])
+            mem_ncnt = 2 * self.sizeof_int * signallength_padded
+            mem_total = mem_data_pad + mem_dist + mem_ncnt
+            print('Memory req. after padding: {0:.5f} MB.'.format(
+                      mem_total / 1024 / 1024))
 
         # Set OpenCL kernel launch parameters
         if chunklength < self.devices[
