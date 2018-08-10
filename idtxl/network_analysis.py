@@ -389,7 +389,7 @@ class NetworkAnalysis():
 
         # Check requested sources.
         if sources == 'all':
-            sources = [s[0] for s in source_vars]
+            sources = np.unique([s[0] for s in source_vars])
         else:
             if type(sources) is int:  # handle integer inputs
                 sources = [sources]
