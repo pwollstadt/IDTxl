@@ -452,7 +452,7 @@ class NetworkInferenceBivariate(NetworkInference):
         else:
             samples = np.arange(
                 self.current_value[1] - self.settings['min_lag_sources'],
-                self.current_value[1] - self.settings['max_lag_sources'],
+                self.current_value[1] - self.settings['max_lag_sources'] - 1,
                 -self.settings['tau_sources'])
         candidate_set = self._define_candidates(procs, samples)
         self._append_selected_vars(
@@ -517,9 +517,9 @@ class NetworkInferenceMultivariate(NetworkInference):
             samples = np.zeros(1).astype(int)
         else:
             samples = np.arange(
-                    self.current_value[1] - self.settings['min_lag_sources'],
-                    self.current_value[1] - self.settings['max_lag_sources'],
-                    -self.settings['tau_sources'])
+                self.current_value[1] - self.settings['min_lag_sources'],
+                self.current_value[1] - self.settings['max_lag_sources'] - 1,
+                -self.settings['tau_sources'])
         candidates = self._define_candidates(procs, samples)
         # Possible extension in the future: include non-selected target
         # candidates as further candidates, # they may get selected due to
