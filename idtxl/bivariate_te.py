@@ -176,15 +176,22 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
 
         Bivariate TE is calculated in four steps:
 
-        (1) find all relevant samples in the target processes' own past, by
-            iteratively adding candidate samples that have significant
+        (1) find all relevant variables in the target processes' own past, by
+            iteratively adding candidate variables that have significant
             conditional mutual information (CMI) with the current value
-            (conditional on all samples that were added previously)
-        (2) find all relevant samples in the single source processes' pasts
-            (again by finding all candidates with significant CMI)
-        (3) statistics on the final set of sources (test for over-all transfer
+            (conditional on all variables that were added previously)
+        (2) find all relevant variables in the single source processes' pasts
+            (again by finding all candidates with significant CMI); treat each
+            potential source process separately, i.e., the CMI is calculated
+            with respect to already selected variables from the target's past
+            and from the current processes' past only
+        (3) prune the final conditional set for each link (i.e., each
+            process-target pairing): test the CMI between each variable in
+            the final set and the current value, conditional on all other
+            variables in the final set of the current link
+        (4) statistics on the final set of sources (test for over-all transfer
             between the final conditional set and the current value, and for
-            significant transfer of all individual samples in the set)
+            significant transfer of all individual variables in the set)
 
         Note:
             For a further description of the algorithm see references in the
@@ -268,7 +275,9 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
         self._include_target_candidates(data)
         print('\n---------------------------- (2) include source candidates')
         self._include_source_candidates(data)
-        print('\n---------------------------- (3) omnibus test')
+        print('\n---------------------------- (3) prune cadidates')
+        self._prune_candidates(data)
+        print('\n---------------------------- (4) final statistics')
         self._test_final_conditional(data)
 
         # Clean up and return results.

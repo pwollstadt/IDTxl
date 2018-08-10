@@ -12,6 +12,7 @@ from idtxl.network_comparison import NetworkComparison
 from idtxl.data import Data
 from test_estimators_jidt import jpype_missing
 from idtxl.idtxl_utils import calculate_mi
+from test_estimators_jidt import _get_gauss_data
 
 
 @jpype_missing
@@ -287,15 +288,12 @@ def test_get_permuted_replications():
 @jpype_missing
 def test_calculate_cmi_all_links():
     """Test if the CMI is estimated correctly."""
-    data = Data()
-    n = 1000
-    cov = 0.4
-    source = [rn.normalvariate(0, 1) for r in range(n)]  # correlated src
-    target = [0] + [sum(pair) for pair in zip(
-        [cov * y for y in source[0:n - 1]],
-        [(1 - cov) * y for y in
-            [rn.normalvariate(0, 1) for r in range(n - 1)]])]
-    data.set_data(np.vstack((source, target)), 'ps')
+    expected_mi, source, source_uncorr, target = _get_gauss_data()
+    source = source[1:]
+    source_uncorr = source_uncorr[1:]
+    target = target[:-1]
+    data = Data(np.hstack((source, target)),
+                dim_order='sp', normalise=False)
     res_0 = np.load(os.path.join(os.path.dirname(__file__),
                     'data/mute_results_0.p'))
     comp_settings = {
@@ -312,15 +310,15 @@ def test_calculate_cmi_all_links():
     comp = NetworkComparison()
     comp._initialise(comp_settings)
     comp._create_union(res_0)
+    # Set selected variable to the source, one sample in the past of the
+    # current_value (1, 5).
     comp.union._single_target[1]['selected_vars_sources'] = [(0, 4)]
     cmi = comp._calculate_cmi_all_links(data)
-    corr_expected = cov / (1 * np.sqrt(cov**2 + (1-cov)**2))
-    expected_cmi = calculate_mi(corr_expected)
     print('correlated Gaussians: TE result {0:.4f} bits; expected to be '
-          '{1:0.4f} bit for the copy'.format(cmi[1][0], expected_cmi))
-    np.testing.assert_almost_equal(
-                   cmi[1][0], expected_cmi, decimal=1,
-                   err_msg='when calculating cmi for correlated Gaussians.')
+          '{1:0.4f} bit for the copy'.format(cmi[1][0], expected_mi))
+    assert np.isclose(cmi[1][0], expected_mi, atol=0.05), (
+        'Estimated TE {0:0.6f} differs from expected TE {1:0.6f}.'.format(
+            cmi[1][0], expected_mi))
 
 
 @jpype_missing
@@ -501,12 +499,13 @@ def test_tails():
 
 
 if __name__ == '__main__':
-    test_tails()
-    test_compare_links_within()
-    test_network_comparison_use_cases()
-    test_p_value_union()
-    test_create_union_network()
-    test_assertions()
-    test_calculate_mean()
-    test_calculate_cmi_all_links()
-    test_get_permuted_replications()
+    while True:
+        test_calculate_cmi_all_links()
+    # test_tails()
+    # test_compare_links_within()
+    # test_network_comparison_use_cases()
+    # test_p_value_union()
+    # test_create_union_network()
+    # test_assertions()
+    # test_calculate_mean()
+    # test_get_permuted_replications()

@@ -347,7 +347,7 @@ def omnibus_test(analysis_setup, data):
                                     ._selected_vars_target_realisations)
     else:
         cond_target_realisations = None
-    statisitc = analysis_setup._cmi_estimator.estimate(
+    statistic = analysis_setup._cmi_estimator.estimate(
                             var1=cond_source_realisations,
                             var2=analysis_setup._current_value_realisations,
                             conditional=cond_target_realisations)
@@ -379,17 +379,18 @@ def omnibus_test(analysis_setup, data):
                             var1=surr_cond_real,
                             var2=analysis_setup._current_value_realisations,
                             conditional=cond_target_realisations)
-    [significance, pvalue] = _find_pvalue(statisitc, surr_distribution,
+    [significance, pvalue] = _find_pvalue(statistic, surr_distribution,
                                           alpha, 'one_bigger')
     if analysis_setup.settings['verbose']:
         if significance:
             print(' -- significant\n')
         else:
             print(' -- not significant\n')
-    return significance, pvalue, statisitc
+    return significance, pvalue, statistic
 
 
-def max_statistic(analysis_setup, data, candidate_set, te_max_candidate):
+def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
+                  conditional=None):
     """Perform maximum statistics for one candidate source.
 
     Test if a transfer entropy value is significantly bigger than the maximum
@@ -414,6 +415,11 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate):
             list of indices of remaning candidates
         te_max_candidate : float
             transfer entropy value to be tested
+        conditional : numpy array [optional]
+            realisations of conditional, 2D numpy array where array dimensions
+            represent [realisations x variable dimension] (per default all
+            already selected source and target variables from the
+            analysis_setup are used)
 
     Returns:
         bool
@@ -435,7 +441,7 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate):
                             analysis_setup.settings['n_perm_max_stat']))
 
     surr_table = _create_surrogate_table(analysis_setup, data, candidate_set,
-                                         n_perm)
+                                         n_perm, conditional)
     max_distribution = _find_table_max(surr_table)
     [significance, pvalue] = _find_pvalue(statistic=te_max_candidate,
                                           distribution=max_distribution,
@@ -444,7 +450,7 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate):
     return significance, pvalue, surr_table
 
 
-def max_statistic_sequential(analysis_setup, data, conditioning='full'):
+def max_statistic_sequential(analysis_setup, data):
     """Perform sequential maximum statistics for a set of candidate sources.
 
     Test multivariate/bivariate MI/TE values against surrogates. Test highest
@@ -486,10 +492,6 @@ def max_statistic_sequential(analysis_setup, data, conditioning='full'):
 
         data : Data instance
             raw data
-        conditioning : str [optional]
-            set conditioning set, 'full' for all selected variables (target's
-            and sources' past), 'target' for variables from the target's past
-            only, 'none' for no conditioning
 
     Returns:
         numpy array, bool
@@ -517,26 +519,11 @@ def max_statistic_sequential(analysis_setup, data, conditioning='full'):
 
     assert analysis_setup.selected_vars_sources, 'No sources to test.'
 
-    # Check what type of conditioning is requested and allocate memory
-    # accordingly.
-    if conditioning == 'full':
-        idx_conditional = analysis_setup.selected_vars_full
-        conditional_realisations = np.empty(
-            (data.n_realisations(analysis_setup.current_value) *
-                len(analysis_setup.selected_vars_sources),
-             len(idx_conditional) - 1)).astype(data.data_type)
-    elif conditioning == 'target':
-        idx_conditional = analysis_setup.selected_vars_target
-        conditional_realisations = np.empty(
-            (data.n_realisations(analysis_setup.current_value) *
-                len(analysis_setup.selected_vars_sources),
-             len(idx_conditional))).astype(data.data_type)
-    elif conditioning == 'none':
-        idx_conditional = None
-    else:
-        raise RuntimeError(
-            'Unknown conditioning {0} for surrogate creation, should be'
-            ' ''full'', ''target'', or ''none''.'.format(conditioning))
+    idx_conditional = analysis_setup.selected_vars_full
+    conditional_realisations = np.empty(
+        (data.n_realisations(analysis_setup.current_value) *
+            len(analysis_setup.selected_vars_sources),
+            len(idx_conditional) - 1)).astype(data.data_type)
     candidate_realisations = np.empty(
         (data.n_realisations(analysis_setup.current_value) *
          len(analysis_setup.selected_vars_sources), 1)).astype(data.data_type)
@@ -549,26 +536,19 @@ def max_statistic_sequential(analysis_setup, data, conditioning='full'):
     i_2 = data.n_realisations(analysis_setup.current_value)
     # Collect data for each candidate and the corresponding conditioning set.
     for candidate in analysis_setup.selected_vars_sources:
-        if conditioning == 'full':
-            [temp_cond, temp_cand] = analysis_setup._separate_realisations(
+        [temp_cond, temp_cand] = analysis_setup._separate_realisations(
                                             idx_conditional,
                                             candidate)
-        elif conditioning == 'target':
-            temp_cond = analysis_setup._selected_vars_target_realisations
-            temp_cand = data.get_realisations(
-                analysis_setup.current_value, [candidate])[0]
-        elif conditioning == 'none':
-            temp_cond = None
-            temp_cand = data.get_realisations(
-                analysis_setup.current_value, [candidate])[0]
 
         # The following may happen if either the requested conditing is 'none'
         # or if the conditiong set that is tested consists only of a single
         # candidate.
         if temp_cond is None:
             conditional_realisations = None
+            re_use = ['var2', 'conditional']
         else:
             conditional_realisations[i_1:i_2, ] = temp_cond
+            re_use = ['var2']
         candidate_realisations[i_1:i_2, ] = temp_cand
         i_1 = i_2
         i_2 += data.n_realisations(analysis_setup.current_value)
@@ -576,7 +556,7 @@ def max_statistic_sequential(analysis_setup, data, conditioning='full'):
     # Calculate original statistic (multivariate/bivariate TE/MI)
     individual_stat = analysis_setup._cmi_estimator.estimate_parallel(
                             n_chunks=len(analysis_setup.selected_vars_sources),
-                            re_use=['var2'],
+                            re_use=re_use,
                             var1=candidate_realisations,
                             var2=analysis_setup._current_value_realisations,
                             conditional=conditional_realisations)
@@ -596,8 +576,7 @@ def max_statistic_sequential(analysis_setup, data, conditioning='full'):
                             analysis_setup=analysis_setup,
                             data=data,
                             idx_test_set=analysis_setup.selected_vars_sources,
-                            n_perm=n_permutations,
-                            conditioning=conditioning)
+                            n_perm=n_permutations)
     max_distribution = _sort_table_max(surr_table)
 
     # Compare each original value with the distribution of the same rank,
@@ -621,7 +600,196 @@ def max_statistic_sequential(analysis_setup, data, conditioning='full'):
     return significance, pvalue, individual_stat
 
 
-def min_statistic(analysis_setup, data, candidate_set, te_min_candidate):
+def max_statistic_sequential_bivariate(analysis_setup, data):
+    """Perform sequential maximum statistics for a set of candidate sources.
+
+    Test multivariate/bivariate MI/TE values against surrogates. Test highest
+    TE/MI value against distribution of highest surrogate values, second
+    highest against distribution of second highest, and so forth. Surrogates
+    are created from each candidate in the candidate set, including the
+    candidate that is currently tested. Surrogates are then sorted over
+    candidates. This is repeated n_perm_max_seq times. Stop comparison if a
+    TE/MI value is not significant compared to the distribution of surrogate
+    values of the same rank. All smaller values are considered non-significant
+    as well.
+
+    The conditional for estimation of MI/TE is taken from the current set of
+    conditional variables in the analysis setup. For multivariate MI or TE
+    surrogate creation, the full set of conditional variables is used. For
+    bivariate MI or TE surrogate creation, the conditioning set has to be
+    restricted to a subset of the current set of conditional variables: for
+    bivariate MI no conditioning set is required, for bivariate TE only the
+    past variables from the target are required (not the variables selected
+    from other relevant sources).
+
+    This function will re-use the surrogate table created in the last min-stats
+    round if that table is in the analysis_setup. This saves the complete
+    calculation of surrogates for this statistic.
+
+    Args:
+
+        analysis_setup : MultivariateTE instance
+            information on the current analysis, can have an optional attribute
+            'settings', a dictionary with parameters for statistical testing:
+
+            - n_perm_max_seq : int [optional] - number of permutations
+              (default='n_perm_min_stat'|500)
+            - alpha_max_seq : float [optional] - critical alpha level
+              (default=0.05)
+            - permute_in_time : bool [optional] - generate surrogates by
+              shuffling samples in time instead of shuffling whole replications
+              (default=False)
+
+        data : Data instance
+            raw data
+
+    Returns:
+        numpy array, bool
+            statistical significance of each source
+        numpy array, float
+            the test's p-values for each source
+        numpy array, float
+            TE values for individual sources
+    """
+    try:
+        n_permutations = analysis_setup.settings['n_perm_max_seq']
+    except KeyError:
+        try:  # use the same n_perm as for min_stats if surr table is reused
+            n_permutations = analysis_setup._min_stats_surr_table.shape[1]
+            analysis_setup.settings['n_perm_max_seq'] = n_permutations
+        except AttributeError:  # is surr table is None, use default
+            analysis_setup.settings['n_perm_max_seq'] = 500
+            n_permutations = analysis_setup.settings['n_perm_max_seq']
+    analysis_setup.settings.setdefault('alpha_max_seq', 0.05)
+    alpha = analysis_setup.settings['alpha_max_seq']
+    _check_permute_in_time(analysis_setup, data, n_permutations)
+    if analysis_setup.settings['verbose']:
+        print('sequential maximum statistic, n_perm: {0}'.format(
+            n_permutations))
+
+    assert analysis_setup.selected_vars_sources, 'No sources to test.'
+
+    # Check if target variables were selected to distinguish between TE and MI
+    # analysis.
+    if len(analysis_setup._selected_vars_target) == 0:
+        conditional_realisations_target = None
+    else:
+        conditional_realisations_target = analysis_setup._selected_vars_target_realisations
+
+    # Test all selected sources separately. This way, the conditioning
+    # uses past variables from the current source only (opposed to past
+    # variables from all sources as in multivariate network inference).
+    significant_sources = np.unique(
+            [s[0] for s in analysis_setup.selected_vars_sources])
+    significance = np.zeros(
+        len(analysis_setup.selected_vars_sources)).astype(bool)
+    pvalue = np.ones(len(analysis_setup.selected_vars_sources))
+    stat = np.zeros(len(analysis_setup.selected_vars_sources))
+    for source in significant_sources:
+        # Find selected past variables for current source
+        source_vars = [s for s in analysis_setup.selected_vars_sources if
+                       s[0] == source]
+
+        # Determine length of conditioning set and allocate memory.
+        idx_conditional = source_vars.copy()
+        if conditional_realisations_target is not None:
+            idx_conditional += analysis_setup.selected_vars_target
+        conditional_realisations = np.empty(
+            (data.n_realisations(analysis_setup.current_value) *
+                len(source_vars),
+                len(idx_conditional) - 1)).astype(data.data_type)
+        candidate_realisations = np.empty(
+            (data.n_realisations(analysis_setup.current_value) *
+                len(source_vars), 1)).astype(data.data_type)
+
+        # Calculate TE/MI for each candidate in the conditional source set,
+        # i.e., calculate the conditional MI between each candidate and the
+        # current value, conditional on all selected variables in the
+        # conditioning set. Then sort the estimated TE/MI values.
+        i_1 = 0
+        i_2 = data.n_realisations(analysis_setup.current_value)
+        # Collect data for each candidate and the corresponding conditioning set.
+        for candidate in source_vars:
+            temp_cond = data.get_realisations(
+                        analysis_setup.current_value,
+                        set(source_vars).difference(set([candidate])))[0]
+            temp_cand = data.get_realisations(
+                        analysis_setup.current_value, [candidate])[0]
+            # The following may happen if either the requested conditing is 'none'
+            # or if the conditiong set that is tested consists only of a single
+            # candidate.
+            if temp_cond is None:
+                conditional_realisations = conditional_realisations_target
+                re_use = ['var2', 'conditional']
+            else:
+                re_use = ['var2']
+                if conditional_realisations_target is None:
+                    conditional_realisations[i_1:i_2, ] = temp_cond
+                else:
+                    conditional_realisations[i_1:i_2, ] = np.hstack((
+                        temp_cond, conditional_realisations_target))
+            candidate_realisations[i_1:i_2, ] = temp_cand
+            i_1 = i_2
+            i_2 += data.n_realisations(analysis_setup.current_value)
+
+        # Calculate original statistic (multivariate/bivariate TE/MI)
+        individual_stat = analysis_setup._cmi_estimator.estimate_parallel(
+                            n_chunks=len(source_vars),
+                            re_use=re_use,
+                            var1=candidate_realisations,
+                            var2=analysis_setup._current_value_realisations,
+                            conditional=conditional_realisations)
+
+        selected_vars_order = utils.argsort_descending(individual_stat)
+        individual_stat_sorted = utils.sort_descending(individual_stat)
+
+        # Don't re-use surrogate table from previous pruning using min stats
+        # like for the multivariate algorithm. There is no longer a global
+        # min_stats including all sources variables, but a separate table per
+        # source.
+        conditional_realisations_sources = data.get_realisations(
+                    analysis_setup.current_value, source_vars)[0]
+        if conditional_realisations_target is None:
+            conditional_realisations = conditional_realisations_sources
+        else:
+            conditional_realisations = np.hstack((
+                conditional_realisations_sources,
+                conditional_realisations_target))
+        surr_table = _create_surrogate_table(
+                        analysis_setup=analysis_setup,
+                        data=data,
+                        idx_test_set=analysis_setup.selected_vars_sources,
+                        n_perm=n_permutations,
+                        conditional=conditional_realisations)
+        max_distribution = _sort_table_max(surr_table)
+
+        # Compare each original value with the distribution of the same rank,
+        # starting with the highest value.
+        for c in range(individual_stat.shape[0]):
+            [s, p] = _find_pvalue(individual_stat_sorted[c],
+                                  max_distribution[c, ],
+                                  alpha, tail='one_bigger')
+            # Write results into an array with the same order as the set of
+            # selected sources from all process. Find the currently tested
+            # variable and its index in the list of all selected variables.
+            current_var = source_vars[selected_vars_order[c]]
+            for ind, v in enumerate(analysis_setup.selected_vars_sources):
+                if v == current_var:
+                    break
+            significance[ind] = s
+            pvalue[ind] = p
+            stat[ind] = individual_stat_sorted[c]
+            if not s:  # break as soon as a candidate is no longer significant
+                if analysis_setup.settings['verbose']:
+                    print('\nStopping sequential max stats at candidate with '
+                          'rank {0}.'.format(c))
+                break
+
+    return significance, pvalue, stat
+
+
+def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
+                  conditional=None):
     """Perform minimum statistics for one candidate source.
 
     Test if a transfer entropy value is significantly bigger than the minimum
@@ -646,6 +814,11 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate):
             list of indices of remaning candidates
         te_min_candidate : float
             transfer entropy value to be tested
+        conditional : numpy array [optional]
+            realisations of conditional, 2D numpy array where array dimensions
+            represent [realisations x variable dimension] (per default all
+            already selected source and target variables from the
+            analysis_setup are used)
 
     Returns:
         bool
@@ -668,7 +841,7 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate):
     assert(candidate_set), 'The candidate set is empty.'
 
     surr_table = _create_surrogate_table(analysis_setup, data, candidate_set,
-                                         n_perm)
+                                         n_perm, conditional)
     min_distribution = _find_table_min(surr_table)
     [significance, pvalue] = _find_pvalue(statistic=te_min_candidate,
                                           distribution=min_distribution,
@@ -1016,7 +1189,7 @@ def check_n_perm(n_perm, alpha):
 
 
 def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm,
-                            conditioning='full'):
+                            conditional=None):
     """Create a table of surrogate MI/CMI/TE values.
 
     Calculate MI/CMI/TE between surrogates for each source variable in the test
@@ -1039,10 +1212,11 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm,
             list of indices indicating samples to be used as sources
         n_perm : int
             number of permutations for testing
-        conditioning : str [optional]
-            set conditioning set, 'full' for all selected variables (target's
-            and sources' past), 'target' for variables from the target's past
-            only, 'none' for no conditioning
+        conditional : numpy array [optional]
+            realisations of conditional, 2D numpy array where array dimensions
+            represent [realisations x variable dimension] (per default all
+            already selected source and target variables from the
+            analysis_setup are used)
     Returns:
         numpy array
             surrogate MI/CMI/TE values, dimensions: (length test set, number of
@@ -1052,16 +1226,8 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm,
     permute_in_time = analysis_setup.settings['permute_in_time']
 
     # Check what type of conditioning is requested.
-    if conditioning == 'full':
+    if conditional is None:
         conditional = analysis_setup._selected_vars_realisations
-    elif conditioning == 'target':
-        conditional = analysis_setup._selected_vars_target_realisations
-    elif conditioning == 'none':
-        conditional = None
-    else:
-        raise RuntimeError(
-            'Unknown conditioning {0} for surrogate creation, should be'
-            ' ''full'', ''target'', or ''none''.'.format(conditioning))
 
     # Create surrogate table.
     # if analysis_setup.settings['verbose']:
@@ -1085,7 +1251,7 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm,
                     var1=data.get_realisations(analysis_setup.current_value,
                                                [candidate])[0],
                     var2=current_value_realisations,
-                    conditional=analysis_setup._selected_vars_realisations))
+                    conditional=conditional))
         else:
             analysis_setup.settings['analytical_surrogates'] = False
             surr_candidate_realisations = _get_surrogates(

@@ -445,8 +445,7 @@ class NetworkInferenceBivariate(NetworkInference):
             data : Data instance
                 raw data
         """
-        # Define candidate set and get realisations.
-        procs = self.source_set
+        # Define samples for candidate sets.
         if self.settings['max_lag_sources'] == 0:
             samples = np.zeros(1).astype(int)
         else:
@@ -454,25 +453,211 @@ class NetworkInferenceBivariate(NetworkInference):
                 self.current_value[1] - self.settings['min_lag_sources'],
                 self.current_value[1] - self.settings['max_lag_sources'] - 1,
                 -self.settings['tau_sources'])
-        candidate_set = self._define_candidates(procs, samples)
-        self._append_selected_vars(
-                candidate_set,
-                data.get_realisations(self.current_value, candidate_set)[0])
+
+        # Check if target variables were selected to distinguish between TE
+        # and MI analysis.
+        if len(self._selected_vars_target) == 0:
+            conditional_realisations_target = None
+        else:
+            conditional_realisations_target = (
+                self._selected_vars_target_realisations)
+
+        # Iterate over all potential sources in the analysis. This way, the
+        # conditioning uses past variables from the current source only
+        # (opposed to past variables from all sources as in multivariate
+        # network inference).
+        success = False
+        for source in self.source_set:
+            candidate_set = self._define_candidates([source], samples)
+            if self.settings['verbose']:
+                    print('candidate set current source: {0}\n'.format(
+                            self._idx_to_lag(candidate_set)), end='')
+
+            # Initialise conditional realisations. This gets updated if sources
+            # are selected in the iterative conditioning.
+            conditional_realisations = conditional_realisations_target
+
+            while candidate_set:
+                # Get realisations for all candidates.
+                cand_real = data.get_realisations(self.current_value,
+                                                  candidate_set)[0]
+                # Reshape candidates to a 1D-array, where realisations for a
+                # single candidate are treated as one chunk.
+                cand_real = cand_real.T.reshape(cand_real.size, 1)
+
+                # Calculate the (C)MI for each candidate and the target.
+                temp_te = self._cmi_estimator.estimate_parallel(
+                                n_chunks=len(candidate_set),
+                                re_use=['var2', 'conditional'],
+                                var1=cand_real,
+                                var2=self._current_value_realisations,
+                                conditional=conditional_realisations)
+
+                # Test max CMI for significance with maximum statistics.
+                te_max_candidate = max(temp_te)
+                max_candidate = candidate_set[np.argmax(temp_te)]
+                if self.settings['verbose']:
+                    print('testing candidate: {0} '.format(
+                        self._idx_to_lag([max_candidate])[0]), end='')
+                significant = stats.max_statistic(
+                    self, data, candidate_set,
+                    te_max_candidate, conditional_realisations)[0]
+
+                # If the max is significant move it from the candidate set to
+                # the set of selected sources and test the next candidate. If
+                # it is not significant break. There will be no further
+                # significant sources b/c they all have lesser TE.
+                if significant:
+                    success = True
+                    candidate_set.pop(np.argmax(temp_te))
+                    candidate_realisations = data.get_realisations(
+                        self.current_value, [max_candidate])[0]
+                    self._append_selected_vars(
+                            [max_candidate], candidate_realisations)
+                    # Update conditioning set for max. statistics in the next
+                    # round.
+                    if conditional_realisations is None:
+                        conditional_realisations = candidate_realisations
+                    else:
+                        conditional_realisations = np.hstack((
+                            conditional_realisations, candidate_realisations))
+                else:
+                    if self.settings['verbose']:
+                        print(' -- not significant')
+                    break
+        return success
+
+    def _prune_candidates(self, data):
+        """Remove uninformative candidates from the final conditional set.
+
+        For each sample in the final conditioning set, check if it is
+        informative about the current value given all other samples in the
+        final set. If a sample is not informative, it is removed from the
+        final set.
+
+        Args:
+            data : Data instance
+                raw data
+        """
+        # FOR LATER we don't need to test the last included in the first round
         if self.settings['verbose']:
-                print('candidate set: {0}\n'.format(
-                        self._idx_to_lag(candidate_set)), end='')
+            if not self.selected_vars_sources:
+                print('no sources selected, nothing to prune ...')
 
-        # Perform one round of sequential max statistics.
-        if self.measure == 'te':
-            conditioning = 'target'
-        elif self.measure == 'mi':
-            conditioning = 'none'
-        [s, p, stat] = stats.max_statistic_sequential(self, data, conditioning)
+        # Check if target variables were selected to distinguish between TE
+        # and MI analysis.
+        if len(self._selected_vars_target) == 0:
+            conditional_realisations_target = None
+            cond_target_dim = 0
+        else:
+            conditional_realisations_target = (
+                self._selected_vars_target_realisations)
+            cond_target_dim = conditional_realisations_target.shape[1]
+        # Prune all selected sources separately. This way, the conditioning
+        # uses past variables from the current source only (opposed to past
+        # variables from all sources as in multivariate network inference).
+        significant_sources = np.unique(
+            [s[0] for s in self.selected_vars_sources])
+        for source in significant_sources:
+            # Find selected past variables for current source
+            print('selected vars sources {0}'.format(self.selected_vars_sources))
+            source_vars = [s for s in self.selected_vars_sources if
+                           s[0] == source]
+            print('selected candidates current source: {0}'.format(
+                        self._idx_to_lag(source_vars)))
+            # If only a single variable was selected for the current source, no
+            # pruning is necessary. The minimum statistic would be equal to the
+            # maximum statistic for this variable.
+            if len(source_vars) == 1:
+                if self.settings['verbose']:
+                        print(' -- significant')
+                continue
 
-        # Remove non-significant links from the source set
-        p, stat = self._remove_non_significant(s, p, stat)
-        self.pvalues_sign_sources = p
-        self.statistic_sign_sources = stat
+            # Find the candidate with the minimum TE/MI into the target.
+            while source_vars:
+                # Allocate memory, collect realisations, and calculate TE/MI
+                # in parallel for all selected variables in the current
+                # process.
+                temp_te = np.empty(len(source_vars))
+                cond_dim = cond_target_dim + len(source_vars) - 1
+                candidate_realisations = np.empty(
+                    (data.n_realisations(self.current_value) *
+                     len(source_vars), 1)).astype(data.data_type)
+                conditional_realisations = np.empty(
+                    (data.n_realisations(self.current_value) *
+                     len(source_vars),
+                     cond_dim)).astype(data.data_type)
+
+                i_1 = 0
+                i_2 = data.n_realisations(self.current_value)
+                for candidate in source_vars:
+                    temp_cond = data.get_realisations(
+                        self.current_value,
+                        set(source_vars).difference(set([candidate])))[0]
+                    temp_cand = data.get_realisations(
+                        self.current_value, [candidate])[0]
+
+                    if temp_cond is None:
+                        conditional_realisations = conditional_realisations_target
+                        re_use = ['var2', 'conditional']
+                    else:
+                        re_use = ['var2']
+                        if conditional_realisations_target is None:
+                            conditional_realisations[i_1:i_2, ] = temp_cond
+                        else:
+                            conditional_realisations[i_1:i_2, ] = np.hstack((
+                                temp_cond, conditional_realisations_target))
+                    candidate_realisations[i_1:i_2, ] = temp_cand
+                    i_1 = i_2
+                    i_2 += data.n_realisations(self.current_value)
+
+                temp_te = self._cmi_estimator.estimate_parallel(
+                                    n_chunks=len(source_vars),
+                                    re_use=re_use,
+                                    var1=candidate_realisations,
+                                    var2=self._current_value_realisations,
+                                    conditional=conditional_realisations)
+
+                # Find variable with minimum MI/TE. Test min TE/MI for
+                # significance with minimum statistics. Build conditioning set
+                # for minimum statistics by removing the minimum candidate.
+                te_min_candidate = min(temp_te)
+                min_candidate = source_vars[np.argmin(temp_te)]
+                if self.settings['verbose']:
+                    print('testing candidate: {0} '.format(
+                        self._idx_to_lag([min_candidate])[0]), end='')
+
+                remaining_candidates = set(source_vars).difference(
+                    set([min_candidate]))
+                conditional_realisations_sources = data.get_realisations(
+                        self.current_value, remaining_candidates)[0]
+                if conditional_realisations_target is None:
+                    conditional_realisations = conditional_realisations_sources
+                elif conditional_realisations_sources is None:
+                    conditional_realisations = conditional_realisations_target
+                else:
+                    conditional_realisations = np.hstack((
+                        conditional_realisations_target,
+                        conditional_realisations_sources))
+                [significant, p, surr_table] = stats.min_statistic(
+                                                self, data,
+                                                source_vars,
+                                                te_min_candidate,
+                                                conditional_realisations)
+
+                # Remove the minimum it is not significant and test the next
+                # min. candidate. If the minimum is significant, break. All
+                # other sources will be significant as well (b/c they have
+                # higher TE/MI).
+                if not significant:
+                    self._remove_selected_var(min_candidate)
+                    source_vars.pop(np.argmin(temp_te))
+                    if len(source_vars) == 0:
+                        print('No remaining candidates after pruning.')
+                else:
+                    if self.settings['verbose']:
+                        print(' -- significant')
+                    break
 
     def _test_final_conditional(self, data):
         """Perform statistical test on the final conditional set."""
@@ -482,6 +667,8 @@ class NetworkInferenceBivariate(NetworkInference):
             self.statistic_omnibus = None
             self.sign_omnibus = False
             self.pvalue_omnibus = None
+            self.pvalues_sign_sources = None
+            self.statistic_sign_sources = None
             self.statistic_single_link = None
         else:
             if self.settings['verbose']:
@@ -491,17 +678,31 @@ class NetworkInferenceBivariate(NetworkInference):
             self.statistic_omnibus = stat
             self.sign_omnibus = s
             self.pvalue_omnibus = p
-            if self.measure == 'te':
-                conditioning = 'target'
-            elif self.measure == 'mi':
-                conditioning = 'none'
-            self.statistic_single_link = self._calculate_single_link(
-                    data=data,
-                    current_value=self.current_value,
-                    source_vars=self.selected_vars_sources,
-                    target_vars=self.selected_vars_target,
-                    sources='all',
-                    conditioning=conditioning)
+            # Test individual links if the omnibus test is significant using
+            # the sequential max stats. Remove non-significant links.
+            if self.sign_omnibus:
+                [s, p, stat] = stats.max_statistic_sequential_bivariate(
+                    self, data)
+                p, stat = self._remove_non_significant(s, p, stat)
+                self.pvalues_sign_sources = p
+                self.statistic_sign_sources = stat
+                if self.measure == 'te':
+                    conditioning = 'target'
+                elif self.measure == 'mi':
+                    conditioning = 'none'
+                self.statistic_single_link = self._calculate_single_link(
+                        data=data,
+                        current_value=self.current_value,
+                        source_vars=self.selected_vars_sources,
+                        target_vars=self.selected_vars_target,
+                        sources='all',
+                        conditioning=conditioning)
+            else:
+                self.selected_vars_sources = []
+                self.selected_vars_full = self.selected_vars_target
+                self.pvalues_sign_sources = None
+                self.statistic_sign_sources = None
+                self.statistic_single_link = None
 
 
 class NetworkInferenceMultivariate(NetworkInference):
@@ -545,6 +746,13 @@ class NetworkInferenceMultivariate(NetworkInference):
                         self._idx_to_lag(self.selected_vars_sources)))
             else:
                 print('no sources selected, nothing to prune ...')
+        # If only a single variable was selected, no pruning is necessary. The
+        # minimum statistic would be equal to the maximum statistic for this
+        # variable.
+        if len(self.selected_vars_sources) == 1:
+            if self.settings['verbose']:
+                print(' -- significant')
+            return
         while self.selected_vars_sources:
             # Find the candidate with the minimum TE into the target.
             temp_te = np.empty(len(self.selected_vars_sources))
@@ -568,29 +776,39 @@ class NetworkInferenceMultivariate(NetworkInference):
                                                     candidate)
                 if temp_cond is None:
                     conditional_realisations = None
+                    re_use = ['var2', 'conditional']
                 else:
                     conditional_realisations[i_1:i_2, ] = temp_cond
+                    re_use = ['var2']
                 candidate_realisations[i_1:i_2, ] = temp_cand
                 i_1 = i_2
                 i_2 += data.n_realisations(self.current_value)
 
             temp_te = self._cmi_estimator.estimate_parallel(
                                 n_chunks=len(self.selected_vars_sources),
-                                re_use=['var2'],
+                                re_use=re_use,
                                 var1=candidate_realisations,
                                 var2=self._current_value_realisations,
                                 conditional=conditional_realisations)
 
-            # Test min TE for significance with minimum statistics.
+            # Find variable with minimum MI/TE. Test min TE/MI for significance
+            # with minimum statistics. Build conditioning set for minimum
+            # statistics by removing the minimum candidate.
             te_min_candidate = min(temp_te)
             min_candidate = self.selected_vars_sources[np.argmin(temp_te)]
             if self.settings['verbose']:
                 print('testing candidate: {0} '.format(
                     self._idx_to_lag([min_candidate])[0]), end='')
+
+            remaining_candidates = set(self.selected_vars_full).difference(
+                    set([min_candidate]))
+            conditional_realisations = data.get_realisations(
+                        self.current_value, remaining_candidates)[0]
             [significant, p, surr_table] = stats.min_statistic(
                                               self, data,
                                               self.selected_vars_sources,
-                                              te_min_candidate)
+                                              te_min_candidate,
+                                              conditional_realisations)
 
             # Remove the minimum it is not significant and test the next min.
             # candidate. If the minimum is significant, break, all other
@@ -599,6 +817,8 @@ class NetworkInferenceMultivariate(NetworkInference):
                 # if self.settings['verbose']:
                 #     print(' -- not significant\n')
                 self._remove_selected_var(min_candidate)
+                if len(self.selected_vars_sources) == 0:
+                        print('No remaining candidates after pruning.')
             else:
                 if self.settings['verbose']:
                     print(' -- significant')
@@ -633,12 +853,17 @@ class NetworkInferenceMultivariate(NetworkInference):
                 self.statistic_sign_sources = stat
                 # Calculate TE for all links in the network. Calculate local TE
                 # if requested by the user.
+                if self.measure == 'te':
+                    conditioning = 'target'
+                elif self.measure == 'mi':
+                    conditioning = 'none'
                 self.statistic_single_link = self._calculate_single_link(
                     data=data,
                     current_value=self.current_value,
                     source_vars=self.selected_vars_sources,
                     target_vars=self.selected_vars_target,
-                    sources='all')
+                    sources='all',
+                    conditioning=conditioning)
             else:
                 self.selected_vars_sources = []
                 self.selected_vars_full = self.selected_vars_target

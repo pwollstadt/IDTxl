@@ -170,15 +170,22 @@ class BivariateMI(NetworkInferenceMI, NetworkInferenceBivariate):
         processes and the target process. Uses bivariate, non-uniform embedding
         found through information maximisation
 
-        MI is calculated in two steps:
+        MI is calculated in three steps:
 
-        (1) find all relevant samples in a single source processes' past, by
-            iteratively adding candidate samples that have significant
+        (1) find all relevant variables in a single source processes' past, by
+            iteratively adding candidate variables that have significant
             conditional mutual information (CMI) with the current value
-            (conditional on all samples that were added previously)
-        (2) statistics on the final set of sources (test for over-all transfer
+            (conditional on all variables that were added previously)
+        (2) prune the final conditional set for each link (i.e., each
+            process-target pairing): test the CMI between each variable in
+            the final set and the current value, conditional on all other
+            variables in the final set of the current link; treat each
+            potential source process separately, i.e., the CMI is calculated
+            with respect to already selected variables the current processes'
+            past only
+        (3) statistics on the final set of sources (test for over-all transfer
             between the final conditional set and the current value, and for
-            significant transfer of all individual samples in the set)
+            significant transfer of all individual variables in the set)
 
         Note:
             For a further description of the algorithm see references in the
@@ -263,7 +270,9 @@ class BivariateMI(NetworkInferenceMI, NetworkInferenceBivariate):
         # Main algorithm.
         print('\n---------------------------- (1) include source candidates')
         self._include_source_candidates(data)
-        print('\n---------------------------- (2) omnibus test')
+        print('\n---------------------------- (2) prune cadidates')
+        self._prune_candidates(data)
+        print('\n---------------------------- (3) final statistics')
         self._test_final_conditional(data)
 
         # Clean up and return results.

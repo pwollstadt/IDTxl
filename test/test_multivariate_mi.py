@@ -12,13 +12,14 @@ from test_estimators_jidt import _get_gauss_data
 
 @jpype_missing
 def test_gauss_data():
-    """Test bivariate MI estimation from correlated Gaussians."""
+    """Test multivariate MI estimation from correlated Gaussians."""
     # Generate data and add a delay one one sample.
     expected_mi, source, source_uncorr, target = _get_gauss_data()
     source = source[1:]
     source_uncorr = source_uncorr[1:]
     target = target[:-1]
-    data = Data(np.hstack((source, source_uncorr, target)), dim_order='sp')
+    data = Data(np.hstack((source, source_uncorr, target)),
+                dim_order='sp', normalise=False)
     settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 21,
@@ -37,14 +38,18 @@ def test_gauss_data():
     assert len(sources) == 1, 'Wrong no. inferred sources: {0}.'.format(
         len(sources))
     assert sources[0] == 0, 'Wrong inferred source: {0}.'.format(sources[0])
-    # Compare BivarateMI() estimate to JIDT estimate.
-    est = JidtKraskovMI({'lag_mi': 1})
-    jidt_mi = est.estimate(var1=source, var2=target)
+    # Compare BivarateMI() estimate to JIDT estimate. Mimick realisations used
+    # internally by the algorithm.
+    est = JidtKraskovMI({'lag_mi': 0, 'normalise': False})
+    jidt_mi = est.estimate(var1=source[1:-1], var2=target[2:])
     print('Estimated MI: {0:0.6f}, estimated MI using JIDT core estimator: '
           '{1:0.6f} (expected: {2:0.6f}).'.format(mi, jidt_mi, expected_mi))
     assert np.isclose(mi, jidt_mi, atol=0.005), (
         'Estimated MI {0:0.6f} differs from JIDT estimate {1:0.6f} (expected: '
         'MI {2:0.6f}).'.format(mi, jidt_mi, expected_mi))
+    assert np.isclose(mi, expected_mi, atol=0.05), (
+        'Estimated MI {0:0.6f} differs from expected MI {1:0.6f}.'.format(
+            mi, expected_mi))
 
 
 @jpype_missing
@@ -55,6 +60,7 @@ def test_return_local_values():
     data.generate_mute_data(500, 5)
     settings = {
         'cmi_estimator': 'JidtKraskovCMI',
+        'noise_level': 0,
         'local_values': True,  # request calculation of local values
         'n_perm_max_stat': 21,
         'n_perm_min_stat': 21,
@@ -63,21 +69,27 @@ def test_return_local_values():
         'max_lag_sources': max_lag,
         'min_lag_sources': 4,
         'max_lag_target': max_lag}
-    target = 1
+    target = 3
+    sources = [0, 4]
     mi = MultivariateMI()
-    results = mi.analyse_network(settings, data, targets=[target])
+    results = mi.analyse_single_target(
+        settings, data, target=target, sources=sources)
+    settings['local_values'] = False
+    results_avg = mi.analyse_single_target(
+        settings, data, target=target, sources=sources)
 
     # Test if any sources were inferred. If not, return (this may happen
     # sometimes due to too few samples, however, a higher no. samples is not
     # feasible for a unit test).
     if results.get_single_target(target, fdr=False)['mi'] is None:
         return
+    if results_avg.get_single_target(target, fdr=False)['mi'] is None:
+        return
 
     lmi = results.get_single_target(target, fdr=False)['mi']
     n_sources = len(results.get_target_sources(target, fdr=False))
     assert type(lmi) is np.ndarray, (
-        'LMI estimation did not return an array of values: {0}'.format(
-                lmi))
+        'LMI estimation did not return an array of values: {0}'.format(lmi))
     assert lmi.shape[0] == n_sources, (
         'Wrong dim (no. sources) in LMI estimate: {0}'.format(lmi.shape))
     assert lmi.shape[1] == data.n_realisations_samples((0, max_lag)), (
@@ -85,49 +97,34 @@ def test_return_local_values():
     assert lmi.shape[2] == data.n_replications, (
         'Wrong dim (no. replications) in LMI estimate: {0}'.format(lmi.shape))
 
-    # Test for correctnes of single link MI estimation by comparing it to the
-    # omnibus MI. In this case (single source), the two should be the same.
-    # Skip assertion if more than one source was inferred (this happens
-    # sometime due to random data and low no. permutations for statistical
-    # testing in unit tests).
-    settings['local_values'] = False
-    results_avg = mi.analyse_network(settings, data, targets=[target])
-    if results_avg.get_single_target(target, fdr=False)['mi'] is None:
-        return
+    # Check if average and mean local values are the same. Test each source
+    # separately. Inferred sources and variables may differ between the two
+    # calls to analyse_single_target() due to low number of surrogates used in
+    # unit testing.
     mi_single_link = results_avg.get_single_target(target, fdr=False)['mi']
-    mi_omnibus = results_avg.get_single_target(target, fdr=False)['omnibus_mi']
     sources_local = results.get_target_sources(target, fdr=False)
     sources_avg = results_avg.get_target_sources(target, fdr=False)
-    if len(sources_avg) == 1:
-        print('Compare single link and omnibus MI.')
-        assert np.isclose(mi_single_link, mi_omnibus, rtol=0.00005), (
-            'Single link MI ({0:.6f}) is not equal to omnibus information '
-            '({1:.6f}).'.format(mi_single_link[0], mi_omnibus))
-    # Check if average and mean local values are the same. Test each source
-    # separately. Inferred sources may differ between the two calls to
-    # analyse_network() due to low number of surrogates used in unit testing.
     for s in list(set(sources_avg).intersection(sources_local)):
-        print('Compare average and local values.')
         i1 = np.where(sources_avg == s)[0][0]
         i2 = np.where(sources_local == s)[0][0]
+        # Skip comparison if inferred variables differ between links.
+        vars_local = [v for v in results.get_single_target(target, fdr=False).selected_vars_sources if v[0] == s]
+        vars_avg = [v for v in results_avg.get_single_target(target, fdr=False).selected_vars_sources if v[0] == s]
+        if vars_local != vars_avg:
+            continue
+        print('Compare average ({0:.4f}) and local values ({1:.4f}).'.format(
+            mi_single_link[i1], np.mean(lmi[i2, :, :])))
         assert np.isclose(mi_single_link[i1], np.mean(lmi[i2, :, :]), rtol=0.00005), (
             'Single link average MI ({0:.6f}) and mean LMI ({1:.6f}) '
-            ' deviate.'.format(mi_single_link, np.mean(lmi)))
+            ' deviate.'.format(mi_single_link[i1], np.mean(lmi[i2, :, :])))
 
 
 @jpype_missing
 def test_zero_lag():
     """Test analysis for 0 lag."""
-    covariance = 0.4
-    n = 10000
-    source = np.random.normal(0, 1, size=n)
-    target = (covariance * source + (1 - covariance) *
-              np.random.normal(0, 1, size=n))
-    # expected_corr = covariance / (np.sqrt(covariance**2 + (1-covariance)**2))
-    corr = np.corrcoef(source, target)[0, 1]
-    expected_mi = -0.5 * np.log(1 - corr**2)
-
-    data = Data(np.vstack((source, target)), dim_order='ps', normalise=False)
+    expected_mi, source, source_uncorr, target = _get_gauss_data()
+    data = Data(np.hstack((source, target)),
+                dim_order='sp', normalise=False)
     settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 21,
@@ -139,18 +136,18 @@ def test_zero_lag():
     nw = MultivariateMI()
     results = nw.analyse_single_target(
         settings, data, target=1, sources='all')
-    mi_estimator = JidtKraskovMI(settings={})
+    mi_estimator = JidtKraskovMI(settings={'normalise': False})
     jidt_mi = mi_estimator.estimate(source, target)
     omnibus_mi = results.get_single_target(1, fdr=False).omnibus_mi
     print('Estimated omnibus MI: {0:0.6f}, estimated MI using JIDT core '
           'estimator: {1:0.6f} (expected: {2:0.6f}).'.format(
               omnibus_mi, jidt_mi, expected_mi))
-    assert np.isclose(omnibus_mi, jidt_mi, rtol=0.05), (
-        'Zero-lag omnibus MI ({0:0.6f}) differs from JIDT estimate ({1:0.6f}).'.format(
-                omnibus_mi, jidt_mi))
-    assert np.isclose(omnibus_mi, expected_mi, rtol=0.05), (
-        'Zero-lag omnibus MI ({0:0.6f}) differs from expected MI ({1:0.6f}).'.format(
-                omnibus_mi, expected_mi))
+    assert np.isclose(omnibus_mi, jidt_mi, atol=0.005), (
+        'Zero-lag omnibus MI ({0:0.6f}) differs from JIDT estimate '
+        '({1:0.6f}).'.format(omnibus_mi, jidt_mi))
+    assert np.isclose(omnibus_mi, expected_mi, atol=0.05), (
+        'Zero-lag omnibus MI ({0:0.6f}) differs from expected MI '
+        '({1:0.6f}).'.format(omnibus_mi, expected_mi))
 
 
 @jpype_missing

@@ -4,9 +4,56 @@ import itertools as it
 import numpy as np
 from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
-from idtxl.estimators_jidt import JidtDiscreteCMI
+from idtxl.estimators_jidt import JidtDiscreteCMI, JidtKraskovTE
 from test_estimators_jidt import jpype_missing
 from idtxl.idtxl_utils import calculate_mi
+from test_estimators_jidt import _get_gauss_data
+
+
+@jpype_missing
+def test_gauss_data():
+    """Test multivariate TE estimation from correlated Gaussians."""
+    # Generate data and add a delay one one sample.
+    expected_mi, source, source_uncorr, target = _get_gauss_data()
+    source = source[1:]
+    source_uncorr = source_uncorr[1:]
+    target = target[:-1]
+    data = Data(np.hstack((source, source_uncorr, target)),
+                dim_order='sp', normalise=False)
+    settings = {
+        'cmi_estimator': 'JidtKraskovCMI',
+        'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_max_seq': 21,
+        'n_perm_omnibus': 21,
+        'max_lag_sources': 2,
+        'min_lag_sources': 1}
+    nw = MultivariateTE()
+    results = nw.analyse_single_target(
+        settings, data, target=2, sources=[0, 1])
+    te = results.get_single_target(2, fdr=False)['te'][0]
+    sources = results.get_target_sources(2, fdr=False)
+
+    # Assert that only the correlated source was detected.
+    assert len(sources) == 1, 'Wrong no. inferred sources: {0}.'.format(
+        len(sources))
+    assert sources[0] == 0, 'Wrong inferred source: {0}.'.format(sources[0])
+    # Compare BivarateMI() estimate to JIDT estimate. Mimick realisations used
+    # internally by the algorithm.
+    est = JidtKraskovTE({
+        'history_target': 1,
+        'history_source': 1,
+        'source_target_delay': 1,
+        'normalise': False})
+    jidt_cmi = est.estimate(source=source, target=target)
+    print('Estimated MI: {0:0.6f}, estimated MI using JIDT core estimator: '
+          '{1:0.6f} (expected: {2:0.6f}).'.format(te, jidt_cmi, expected_mi))
+    assert np.isclose(te, jidt_cmi, atol=0.005), (
+        'Estimated MI {0:0.6f} differs from JIDT estimate {1:0.6f} (expected: '
+        'MI {2:0.6f}).'.format(te, jidt_cmi, expected_mi))
+    assert np.isclose(te, expected_mi, atol=0.05), (
+        'Estimated TE {0:0.6f} differs from expected TE {1:0.6f}.'.format(
+            te, expected_mi))
 
 
 @jpype_missing
@@ -17,6 +64,7 @@ def test_return_local_values():
     data.generate_mute_data(500, 5)
     settings = {
         'cmi_estimator': 'JidtKraskovCMI',
+        'noise_level': 0,
         'local_values': True,  # request calculation of local values
         'n_perm_max_stat': 21,
         'n_perm_min_stat': 21,
@@ -25,14 +73,21 @@ def test_return_local_values():
         'max_lag_sources': max_lag,
         'min_lag_sources': 4,
         'max_lag_target': max_lag}
-    target = 1
+    target = 3
+    sources = [0, 4]
     te = MultivariateTE()
-    results = te.analyse_network(settings, data, targets=[target])
+    results = te.analyse_single_target(
+        settings, data, target=target, sources=sources)
+    settings['local_values'] = False
+    results_avg = te.analyse_single_target(
+        settings, data, target=target, sources=sources)
 
     # Test if any sources were inferred. If not, return (this may happen
     # sometimes due to too few samples, however, a higher no. samples is not
     # feasible for a unit test).
     if results.get_single_target(target, fdr=False)['te'] is None:
+        return
+    if results_avg.get_single_target(target, fdr=False)['te'] is None:
         return
 
     lte = results.get_single_target(target, fdr=False)['te']
@@ -46,19 +101,26 @@ def test_return_local_values():
     assert lte.shape[2] == data.n_replications, (
         'Wrong dim (no. replications) in LTE estimate: {0}'.format(lte.shape))
 
-    # Test for correctnes of single link TE estimation by comparing it to the
-    # omnibus TE. In this case (single source), the two should be the same.
-    settings['local_values'] = False
-    results_avg = te.analyse_network(settings, data, targets=[target])
-    if results_avg.get_single_target(target, fdr=False)['te'] is None:
-        return
-    te_single_link = results_avg.get_single_target(target, fdr=False)['te'][0]
-    te_omnibus = results_avg.get_single_target(target, fdr=False)['omnibus_te']
-    assert np.isclose(te_single_link, te_omnibus), (
-        'Single link TE is not equal to omnibus information transfer.')
-    # Compare mean local TE to average TE.
-    assert np.isclose(te_single_link, np.mean(lte)), (
-        'Single link average TE and mean LTE deviate.')
+    # Check if average and mean local values are the same. Test each source
+    # separately. Inferred sources and variables may differ between the two
+    # calls to analyse_single_target() due to low number of surrogates used in
+    # unit testing.
+    te_single_link = results_avg.get_single_target(target, fdr=False)['te']
+    sources_local = results.get_target_sources(target, fdr=False)
+    sources_avg = results_avg.get_target_sources(target, fdr=False)
+    for s in list(set(sources_avg).intersection(sources_local)):
+        i1 = np.where(sources_avg == s)[0][0]
+        i2 = np.where(sources_local == s)[0][0]
+        # Skip comparison if inferred variables differ between links.
+        vars_local = [v for v in results_avg.get_single_target(target, fdr=False).selected_vars_sources if v[0] == s]
+        vars_avg = [v for v in results.get_single_target(target, fdr=False).selected_vars_sources if v[0] == s]
+        if vars_local != vars_avg:
+            continue
+        print('Compare average ({0:.4f}) and local values ({1:.4f}).'.format(
+            te_single_link[i1], np.mean(lte[i2, :, :])))
+        assert np.isclose(te_single_link[i1], np.mean(lte[i2, :, :]), rtol=0.00005), (
+            'Single link average MI ({0:.6f}) and mean LMI ({1:.6f}) '
+            ' deviate.'.format(te_single_link[i1], np.mean(lte[i2, :, :])))
 
 
 @jpype_missing

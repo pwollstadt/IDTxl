@@ -7,7 +7,7 @@ import itertools as it
 import numpy as np
 from idtxl.bivariate_te import BivariateTE
 from idtxl.data import Data
-from idtxl.estimators_jidt import JidtDiscreteCMI, JidtKraskovCMI
+from idtxl.estimators_jidt import JidtDiscreteCMI, JidtKraskovCMI, JidtKraskovTE
 from test_estimators_jidt import jpype_missing
 from idtxl.idtxl_utils import calculate_mi
 from test_estimators_jidt import _get_gauss_data
@@ -21,14 +21,15 @@ def test_gauss_data():
     source = source[1:]
     source_uncorr = source_uncorr[1:]
     target = target[:-1]
-    data = Data(np.hstack((source, source_uncorr, target)), dim_order='sp')
+    data = Data(np.hstack((source, source_uncorr, target)),
+                dim_order='sp', normalise=False)
     settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 21,
         'n_perm_min_stat': 21,
         'n_perm_max_seq': 21,
         'n_perm_omnibus': 21,
-        'max_lag_sources': 2,
+        'max_lag_sources': 1,
         'min_lag_sources': 1,
         'max_lag_target': 1}
     nw = BivariateTE()
@@ -42,19 +43,20 @@ def test_gauss_data():
         len(sources))
     assert sources[0] == 0, 'Wrong inferred source: {0}.'.format(sources[0])
     # Compare BivarateTE() estimate to JIDT estimate.
-    current_value = (2, 2)
-    source_vars = results.get_single_target(2, False)['selected_vars_sources']
-    target_vars = results.get_single_target(2, False)['selected_vars_target']
-    var1 = data.get_realisations(current_value, source_vars)[0]
-    var2 = data.get_realisations(current_value, [current_value])[0]
-    cond = data.get_realisations(current_value, target_vars)[0]
-    est = JidtKraskovCMI({})
-    jidt_cmi = est.estimate(var1=var1, var2=var2, conditional=cond)
+    est = JidtKraskovTE({
+        'history_target': 1,
+        'history_source': 1,
+        'source_target_delay': 1,
+        'normalise': False})
+    jidt_cmi = est.estimate(source=source, target=target)
     print('Estimated TE: {0:0.6f}, estimated TE using JIDT core estimator: '
-          '{1:0.6f} (expected: {2:0.6f}).'.format(te, jidt_cmi, expected_mi))
+          '{1:0.6f} (expected: ~ {2:0.6f}).'.format(te, jidt_cmi, expected_mi))
     assert np.isclose(te, jidt_cmi, atol=0.005), (
         'Estimated TE {0:0.6f} differs from JIDT estimate {1:0.6f} (expected: '
         'TE {2:0.6f}).'.format(te, jidt_cmi, expected_mi))
+    assert np.isclose(te, expected_mi, atol=0.05), (
+        'Estimated TE {0:0.6f} differs from expected TE {1:0.6f}.'.format(
+            te, expected_mi))
 
 
 @jpype_missing
@@ -71,13 +73,15 @@ def test_return_local_values():
         'n_perm_max_seq': 21,
         'n_perm_omnibus': 21,
         'max_lag_sources': max_lag,
-        'min_lag_sources': 4,
+        'min_lag_sources': max_lag,
         'max_lag_target': max_lag}
     target = 2
     te = BivariateTE()
     results_local = te.analyse_network(settings, data, targets=[target])
 
     lte = results_local.get_single_target(target, fdr=False)['te']
+    if lte is None:
+        return
     n_sources = len(results_local.get_target_sources(target, fdr=False))
     assert type(lte) is np.ndarray, (
         'LTE estimation did not return an array of values: {0}'.format(lte))
@@ -381,6 +385,7 @@ def test_analyse_network():
     settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
         'n_perm_max_seq': 21,
         'n_perm_omnibus': 30,
         'max_lag_sources': 5,
@@ -468,6 +473,26 @@ def test_discrete_input():
                 expected_mi, res._single_target[1].omnibus_te))
 
 
+@jpype_missing
+def test_mute_data():
+    """Test estimation from MuTE data."""
+    max_lag = 3
+    data = Data()
+    data.generate_mute_data(200, 5)
+    settings = {
+        'cmi_estimator': 'JidtKraskovCMI',
+        'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_max_seq': 21,
+        'n_perm_omnibus': 21,
+        'max_lag_sources': max_lag,
+        'min_lag_sources': 1,
+        'max_lag_target': max_lag}
+    target = 2
+    te = BivariateTE()
+    te.analyse_network(settings, data, targets=[target])
+
+
 def test_include_target_candidates():
     pass
 
@@ -493,8 +518,9 @@ def test_indices_to_lags():
 
 
 if __name__ == '__main__':
-    test_gauss_data()
+    test_mute_data()
     test_return_local_values()
+    test_gauss_data()
     test_discrete_input()
     test_analyse_network()
     test_check_source_set()

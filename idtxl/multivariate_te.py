@@ -179,18 +179,18 @@ class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
         through information maximisation. Multivariate TE is calculated in four
         steps:
 
-        (1) find all relevant samples in the target processes' own past, by
-            iteratively adding candidate samples that have significant
+        (1) find all relevant variables in the target processes' own past, by
+            iteratively adding candidate variables that have significant
             conditional mutual information (CMI) with the current value
-            (conditional on all samples that were added previously)
-        (2) find all relevant samples in the source processes' pasts (again
+            (conditional on all variables that were added previously)
+        (2) find all relevant variables in the source processes' pasts (again
             by finding all candidates with significant CMI)
         (3) prune the final conditional set by testing the CMI between each
-            sample in the final set and the current value, conditional on all
-            other samples in the final set
+            variable in the final set and the current value, conditional on all
+            other variables in the final set
         (4) statistics on the final set of sources (test for over-all transfer
             between the final conditional set and the current value, and for
-            significant transfer of all individual samples in the set)
+            significant transfer of all individual variables in the set)
 
         Note:
             For a further description of the algorithm see references in the
