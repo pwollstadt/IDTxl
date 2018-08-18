@@ -62,9 +62,6 @@ def test_estimate_parallel():
         'Results for first chunk differ from serial estimate.')
     assert mi_parallel1[1] == mi, (
         'Results for second chunk differ from serial estimate.')
-    assert np.isclose(mi, expected_mi, rtol=0.05), (
-        'Estimated ({0}) and expected ({1}) MI differ.'.format(
-            mi, expected_mi))
 
     # Check if a single chunk is returned if all variables are defined as
     # reusable.
@@ -75,9 +72,6 @@ def test_estimate_parallel():
             var2=target)
     assert len(mi_parallel3) == 1, (
         'Single chunk data returned more than one estimate.')
-    assert np.isclose(mi_parallel3[0], expected_mi, rtol=0.05), (
-        'Estimated ({0}) and expected ({1}) MI differ.'.format(
-            mi_parallel3[0], expected_mi))
 
     # Check assertion for incorrect number of samples in data to be reused in
     # parallel estimator.
