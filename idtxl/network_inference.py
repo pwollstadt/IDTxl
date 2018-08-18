@@ -201,7 +201,7 @@ class NetworkInferenceMI(NetworkInference):
                                '(''max_lag_sources'') needs to be specified.')
         if 'min_lag_sources' not in self.settings:
             raise RuntimeError('The minimum lag for source embedding '
-                               '(''max_lag_sources'') needs to be specified.')
+                               '(''min_lag_sources'') needs to be specified.')
 
         if (type(self.settings['min_lag_sources']) is not int or
                 self.settings['min_lag_sources'] < 0):
