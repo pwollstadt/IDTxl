@@ -63,6 +63,8 @@ class SydneyPID(Estimator):
               loop. However, this hard limit is (practically) never used as it
               should always hit the soft limit defined above (parameter may be
               removed in the future).
+            - verbose : bool [optional] - print output to console
+              (default=False)
     """
     def __init__(self, settings):
         try:
@@ -100,6 +102,7 @@ class SydneyPID(Estimator):
             print('"max_iters" is missing from the settings dictionary.')
             raise
         self.settings = settings.copy()
+        self.settings.setdefault('verbose', False)
 
     def is_parallel():
         return False
@@ -478,7 +481,8 @@ class TartuPID(Estimator):
         settings : dict
             estimation parameters (with default parameters)
 
-            - verbose : bool [optional] - False
+            - verbose : bool [optional] - print output to console
+              (default=False)
             - cone_solver : str [optional] - which cone solver to use
               (default='ECOS')
             - solver_args : dict [optional] - solver arguments (default={})
