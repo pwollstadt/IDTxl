@@ -53,8 +53,11 @@ class OpenCLKraskov(Estimator):
               in KNN and range searches (default=0)
             - noise_level : float [optional] - random noise added to the data
               (default=1e-8)
-            - debug : bool [optional] - return intermediate results, i.e.
-              neighbour counts from range searches and KNN distances
+            - debug : bool [optional] - calculate intermediate results, i.e.
+              neighbour counts from range searches and KNN distances, print
+              debug output to console (default=False)
+            - return_counts : bool [optional] - return intermediate results,
+              i.e. neighbour counts from range searches and KNN distances
               (default=False)
     """
 
@@ -67,10 +70,15 @@ class OpenCLKraskov(Estimator):
         settings.setdefault('noise_level', np.float32(1e-8))
         settings.setdefault('local_values', False)
         settings.setdefault('debug', False)
+        settings.setdefault('return_counts', False)
         settings.setdefault('verbose', True)
         self.settings = settings
         self.sizeof_float = int(np.dtype(np.float32).itemsize)
         self.sizeof_int = int(np.dtype(np.int32).itemsize)
+
+        if self.settings['return_counts'] and not self.settings['debug']:
+            raise RuntimeError(
+                'Set debug option to True to return neighbor counts.')
 
         # Get kernel and devices.
         self.devices, self.context, self.queue = self._get_device(
@@ -148,6 +156,9 @@ class OpenCLKraskovMI(OpenCLKraskov):
             - debug : bool [optional] - return intermediate results, i.e.
               neighbour counts from range searches and KNN distances
               (default=False)
+            - return_counts : bool [optional] - return intermediate results,
+              i.e. neighbour counts from range searches and KNN distances
+              (default=False)
             - lag_mi : int [optional] - time difference in samples to calculate
               the lagged MI between processes (default=0)
     """
@@ -176,6 +187,9 @@ class OpenCLKraskovMI(OpenCLKraskov):
             float | numpy array
                 average MI over all samples or local MI for individual
                 samples if 'local_values'=True
+            numpy arrays
+                distances and neighborhood counts for var1 and var2 if
+                debug=True and return_counts=True
         """
         # Prepare data: check if variable realisations are passed as 1D or 2D
         # arrays and have equal no. observations.
@@ -236,7 +250,7 @@ class OpenCLKraskovMI(OpenCLKraskov):
             else:
                 mi_array = np.concatenate((mi_array, results))
 
-        if self.settings['debug']:
+        if self.settings['return_counts']:
             return mi_array, distances, count_var1, count_var2
         else:
             return mi_array
@@ -426,6 +440,9 @@ class OpenCLKraskovCMI(OpenCLKraskov):
             - debug : bool [optional] - return intermediate results, i.e.
               neighbour counts from range searches and KNN distances
               (default=False)
+            - return_counts : bool [optional] - return intermediate results,
+              i.e. neighbour counts from range searches and KNN distances
+              (default=False)
     """
 
     def __init__(self, settings=None):
@@ -455,6 +472,9 @@ class OpenCLKraskovCMI(OpenCLKraskov):
             float | numpy array
                 average CMI over all samples or local CMI for individual
                 samples if 'local_values'=True
+            numpy arrays
+                distances and neighborhood counts for var1 and var2 if
+                debug=True and return_counts=True
         """
         # Return MI if no conditional is provided
         if conditional is None:
@@ -521,7 +541,7 @@ class OpenCLKraskovCMI(OpenCLKraskov):
             else:
                 cmi_array = np.concatenate((cmi_array, results))
 
-        if self.settings['debug']:
+        if self.settings['return_counts']:
             return cmi_array, distances, count_var1, count_var2, count_cond
         else:
             return cmi_array

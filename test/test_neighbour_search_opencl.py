@@ -14,8 +14,10 @@ pytest.importorskip('pyopencl')
 
 settings = {'theiler_t': 0,
             'kraskov_k': 1,
+            'noise_level': 0,
             'gpu_id': 0,
             'debug': True,
+            'return_counts': True,
             'verbose': True}
 
 EST_MI = OpenCLKraskovMI(settings)
@@ -324,6 +326,7 @@ def test_multiple_runs_two_dim():
         'knn_k': 1,
         'gpu_id': 0,
         'debug': True,
+        'return_counts': True,
         'max_mem': 5 * 1024 * 1024}
     EST_MI = OpenCLKraskovMI(settings)
     EST_CMI = OpenCLKraskovCMI(settings)
