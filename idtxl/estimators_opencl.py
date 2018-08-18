@@ -64,15 +64,15 @@ class OpenCLKraskov(Estimator):
     def __init__(self, settings=None):
         # Get defaults for estimator settings
         settings = self._check_settings(settings)
-        settings.setdefault('gpuid', int(0))
-        settings.setdefault('kraskov_k', int(4))
-        settings.setdefault('theiler_t', int(0))
-        settings.setdefault('noise_level', np.float32(1e-8))
-        settings.setdefault('local_values', False)
-        settings.setdefault('debug', False)
-        settings.setdefault('return_counts', False)
-        settings.setdefault('verbose', True)
-        self.settings = settings
+        self.settings = settings.copy()
+        self.settings.setdefault('gpuid', int(0))
+        self.settings.setdefault('kraskov_k', int(4))
+        self.settings.setdefault('theiler_t', int(0))
+        self.settings.setdefault('noise_level', np.float32(1e-8))
+        self.settings.setdefault('local_values', False)
+        self.settings.setdefault('debug', False)
+        self.settings.setdefault('return_counts', False)
+        self.settings.setdefault('verbose', True)
         self.sizeof_float = int(np.dtype(np.float32).itemsize)
         self.sizeof_int = int(np.dtype(np.int32).itemsize)
 
@@ -304,8 +304,9 @@ class OpenCLKraskovMI(OpenCLKraskov):
             [var2, 999999 + 0.1 * np.random.rand(pad_size, var2dim)])
         pointset = np.hstack((pad_var1, pad_var2)).T.copy()
         signallength_padded = signallength + pad_size
-        pointset += np.random.normal(scale=self.settings['noise_level'],
-                                     size=pointset.shape)
+        if self.settings['noise_level'] > 0:
+            pointset += np.random.normal(scale=self.settings['noise_level'],
+                                         size=pointset.shape)
         if not pointset.dtype == np.float32:
             pointset = pointset.astype(np.float32)
 
@@ -607,8 +608,9 @@ class OpenCLKraskovCMI(OpenCLKraskov):
             [conditional, 999999 + 0.1 * np.random.rand(pad_size, conddim)])
         pointset = np.hstack((pad_var1, pad_conditional, pad_var2)).T.copy()
         signallength_padded = signallength + pad_size
-        pointset += np.random.normal(scale=self.settings['noise_level'],
-                                     size=pointset.shape)
+        if self.settings['noise_level'] > 0:
+            pointset += np.random.normal(scale=self.settings['noise_level'],
+                                         size=pointset.shape)
         if not pointset.dtype == np.float32:
             pointset = pointset.astype(np.float32)
 
@@ -725,6 +727,6 @@ class OpenCLKraskovCMI(OpenCLKraskov):
                 cmi_array[c] = cmi
 
         if self.settings['debug']:
-            return (cmi_array, distances, count_src, count_tgt, count_cnd)
+            return cmi_array, distances, count_src, count_tgt, count_cnd
         else:
             return cmi_array

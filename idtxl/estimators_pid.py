@@ -99,7 +99,7 @@ class SydneyPID(Estimator):
         except KeyError:
             print('"max_iters" is missing from the settings dictionary.')
             raise
-        self.settings = settings
+        self.settings = settings.copy()
 
     def is_parallel():
         return False
@@ -486,10 +486,10 @@ class TartuPID(Estimator):
 
     def __init__(self, settings):
         # get estimation parameters
-        settings.setdefault('verbose', False)
-        settings.setdefault('cone_solver', 'ECOS')
-        settings.setdefault('solver_args', {'keep_solver_object': False})
-        self.settings = settings
+        self.settings = settings.copy()
+        self.settings.setdefault('verbose', False)
+        self.settings.setdefault('cone_solver', 'ECOS')
+        self.settings.setdefault('solver_args', {'keep_solver_object': False})
 
     def is_parallel():
         return False

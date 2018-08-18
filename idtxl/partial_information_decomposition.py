@@ -212,9 +212,9 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             raise RuntimeError('Estimator was not specified!')
         self._pid_estimator = EstimatorClass(settings)
 
-        settings.setdefault('lags_pid', [1, 1])
-        settings.setdefault('verbose', True)
-        self.settings = settings
+        self.settings = settings.copy()
+        self.settings.setdefault('lags_pid', [1, 1])
+        self.settings.setdefault('verbose', True)
 
         # Check if provided lags are correct and work with the number of
         # samples in the data.

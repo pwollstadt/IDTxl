@@ -50,10 +50,9 @@ class JidtEstimator(Estimator):
 
     def __init__(self, settings=None):
         """Set default estimator settings."""
-        settings = self._check_settings(settings)
         settings.setdefault('local_values', False)
         settings.setdefault('debug', False)
-        self.settings = settings
+        self.settings = settings.copy()
 
     def _start_jvm(self):
         """Start JAVA virtual machine if it is not running."""
@@ -62,26 +61,27 @@ class JidtEstimator(Estimator):
             jp.startJVM(jp.getDefaultJVMPath(), '-ea', ('-Djava.class.path=' +
                                                         jar_location))
 
-    def _set_te_defaults(self):
+    def _set_te_defaults(self, settings):
         """Set defaults for transfer entropy estimation."""
         try:
-            history_target = self.settings['history_target']
+            history_target = settings['history_target']
         except KeyError:
             raise RuntimeError('No target history was provided for TE '
                                'estimation.')
-        self.settings.setdefault('history_source', history_target)
-        self.settings.setdefault('tau_target', 1)
-        self.settings.setdefault('tau_source', 1)
-        self.settings.setdefault('source_target_delay', 1)
+        settings.setdefault('history_source', history_target)
+        settings.setdefault('tau_target', 1)
+        settings.setdefault('tau_source', 1)
+        settings.setdefault('source_target_delay', 1)
 
-        assert type(self.settings['tau_target']) is int, (
+        assert type(settings['tau_target']) is int, (
             'Target tau has to be an integer.')
-        assert type(self.settings['tau_source']) is int, (
+        assert type(settings['tau_source']) is int, (
             'Source tau has to be an integer.')
-        assert type(self.settings['history_target']) is int, (
+        assert type(settings['history_target']) is int, (
             'Target history has to be an integer.')
-        assert type(self.settings['history_source']) is int, (
+        assert type(settings['history_source']) is int, (
             'Source history has to be an integer.')
+        return settings
 
     def is_parallel(self):
         return False
@@ -124,12 +124,12 @@ class JidtKraskov(JidtEstimator):
     def __init__(self, CalcClass, settings=None):
 
         # Set default estimator settings.
+        settings.setdefault('kraskov_k', str(4))
+        settings.setdefault('normalise', 'false')
+        settings.setdefault('theiler_t', str(0))
+        settings.setdefault('noise_level', 1e-8)
+        settings.setdefault('num_threads', 'USE_ALL')
         super().__init__(settings)
-        self.settings.setdefault('kraskov_k', str(4))
-        self.settings.setdefault('normalise', 'false')
-        self.settings.setdefault('theiler_t', str(0))
-        self.settings.setdefault('noise_level', 1e-8)
-        self.settings.setdefault('num_threads', 'USE_ALL')
 
         # Set properties of JIDT's estimator object.
         self.calc = CalcClass()
@@ -180,8 +180,8 @@ class JidtDiscrete(JidtEstimator):
     """
 
     def __init__(self, settings):
+        settings.setdefault('discretise_method', 'none')
         super().__init__(settings)
-        self.settings.setdefault('discretise_method', 'none')
 
     def _discretise_vars(self, var1, var2, conditional=None):
         # Discretise variables if requested. Otherwise assert data are discrete
@@ -387,6 +387,7 @@ class JidtKraskovCMI(JidtKraskov):
     """
 
     def __init__(self, settings=None):
+        settings = self._check_settings(settings)
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
         CalcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
@@ -474,20 +475,21 @@ class JidtDiscreteCMI(JidtDiscrete):
     """
 
     def __init__(self, settings=None):
+        settings = self._check_settings(settings)
         # Set default alphabet sizes. Try to overwrite alphabet sizes with
         # number of bins for discretisation if provided, otherwise assume
         # binary variables.
-        super().__init__(settings)
         try:
-            n_discrete_bins = int(self.settings['n_discrete_bins'])
-            self.settings['alph1'] = n_discrete_bins
-            self.settings['alph2'] = n_discrete_bins
-            self.settings['alphc'] = n_discrete_bins
+            n_discrete_bins = int(settings['n_discrete_bins'])
+            settings['alph1'] = n_discrete_bins
+            settings['alph2'] = n_discrete_bins
+            settings['alphc'] = n_discrete_bins
         except KeyError:
             pass  # Do nothing and use the default for alph_* set below
-        self.settings.setdefault('alph1', int(2))
-        self.settings.setdefault('alph2', int(2))
-        self.settings.setdefault('alphc', int(2))
+        settings.setdefault('alph1', int(2))
+        settings.setdefault('alph2', int(2))
+        settings.setdefault('alphc', int(2))
+        super().__init__(settings)
 
         # Start JAVA virtual machine and create JAVA object. Add JAVA object to
         # instance, the discrete estimator requires the variable dimensions
@@ -635,6 +637,7 @@ class JidtDiscreteMI(JidtDiscrete):
     """
 
     def __init__(self, settings=None):
+        settings = self._check_settings(settings)
         # Set default alphabet sizes. Try to overwrite alphabet sizes with
         # number of bins for discretisation if provided, otherwise assume
         # binary variables.
@@ -776,6 +779,7 @@ class JidtKraskovMI(JidtKraskov):
     """
 
     def __init__(self, settings=None):
+        settings = self._check_settings(settings)
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
         CalcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
@@ -868,9 +872,8 @@ class JidtKraskovAIS(JidtKraskov):
     """
 
     def __init__(self, settings):
+        settings = self._check_settings(settings)
         # Check for history for AIS estimation.
-        if type(settings) is not dict:
-            raise TypeError('settings should be a dictionary.')
         try:
             settings['history']
         except KeyError:
@@ -941,8 +944,7 @@ class JidtDiscreteAIS(JidtDiscrete):
     """
 
     def __init__(self, settings):
-        if type(settings) is not dict:
-            raise TypeError('settings should be a dictionary.')
+        settings = self._check_settings(settings)
         try:
             settings['history']
         except KeyError:
@@ -1080,9 +1082,8 @@ class JidtGaussianAIS(JidtGaussian):
     """
 
     def __init__(self, settings):
+        settings = self._check_settings(settings)
         # Check for history for AIS estimation.
-        if type(settings) is not dict:
-            raise TypeError('settings should be a dictionary.')
         try:
             settings['history']
         except KeyError:
@@ -1148,6 +1149,7 @@ class JidtGaussianMI(JidtGaussian):
     """
 
     def __init__(self, settings=None):
+        settings = self._check_settings(settings)
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
         CalcClass = (jp.JPackage('infodynamics.measures.continuous.gaussian').
@@ -1223,6 +1225,7 @@ class JidtGaussianCMI(JidtGaussian):
     """
 
     def __init__(self, settings=None):
+        settings = self._check_settings(settings)
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
         CalcClass = (jp.JPackage('infodynamics.measures.continuous.gaussian').
@@ -1350,14 +1353,15 @@ class JidtKraskovTE(JidtKraskov):
     """
 
     def __init__(self, settings):
+        settings = self._check_settings(settings)
         # Start JAVA virtual machine.
         self._start_jvm()
         CalcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
                      TransferEntropyCalculatorKraskov)
+        # Get embedding and delay parameters.
+        settings = self._set_te_defaults(settings)
         super().__init__(CalcClass, settings)
 
-        # Get embedding and delay parameters.
-        self._set_te_defaults()
 
     def estimate(self, source, target):
         """Estimate transfer entropy from a source to a target variable.
@@ -1437,10 +1441,9 @@ class JidtDiscreteTE(JidtDiscrete):
     """
 
     def __init__(self, settings):
-        super().__init__(settings)
-
+        settings = self._check_settings(settings)
         # Get embedding and delay parameters.
-        self._set_te_defaults()
+        settings = self._set_te_defaults(settings)
 
         # Get alphabet sizes and check if discretisation is requested. Try to
         # overwrite alphabet sizes with number of bins.
@@ -1451,8 +1454,9 @@ class JidtDiscreteTE(JidtDiscrete):
         except KeyError:
             # do nothing and set alphabet sizes to default below
             pass
-        self.settings.setdefault('alph1', int(2))
-        self.settings.setdefault('alph2', int(2))
+        settings.setdefault('alph1', int(2))
+        settings.setdefault('alph2', int(2))
+        super().__init__(settings)
 
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
@@ -1582,14 +1586,14 @@ class JidtGaussianTE(JidtGaussian):
     """
 
     def __init__(self, settings):
+        settings = self._check_settings(settings)
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
         CalcClass = (jp.JPackage('infodynamics.measures.continuous.gaussian').
                      TransferEntropyCalculatorGaussian)
-        super().__init__(CalcClass, settings)
-
         # Get embedding and delay parameters.
-        self._set_te_defaults()
+        settings = self._set_te_defaults(settings)
+        super().__init__(CalcClass, settings)
 
     def estimate(self, source, target):
         """Estimate transfer entropy from a source to a target variable.
