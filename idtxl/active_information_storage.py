@@ -258,22 +258,8 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                                '.'.format(self.settings['tau'],
                                           self.settings['max_lag']))
 
-        # Check if the user requested the estimation of local values.
-        # Internally, the estimator uses the user settings for building the
-        # non-uniform embedding, etc. Remember the user setting and set
-        # local_values to False temporarily.
-        if self.settings['local_values']:
-            self._local_values = True
-            self.settings['local_values'] = False
-        else:
-            self._local_values = False
-
         # Set CMI estimator.
-        try:
-            EstimatorClass = find_estimator(self.settings['cmi_estimator'])
-        except KeyError:
-            raise RuntimeError('Please provide an estimator class or name!')
-        self._cmi_estimator = EstimatorClass(self.settings)
+        self._set_cmi_estimator()
 
         # Initialise class attributes.
         self._min_stats_surr_table = None
@@ -317,7 +303,6 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             self.sign = False
             self.ais = None
             self._min_stats_surr_table = None
-            self._local_values = False
 
         # Check if the user provided a list of candidates that must go into
         # the conditioning set. These will be added and used for TE estimation,
@@ -496,11 +481,10 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 assert ais.shape[0] == 1, 'AIS result is not a scalar.'
                 ais = ais[0]
 
-            if self._local_values:
-                self.settings['local_values'] = True
+            if self.settings['local_values']:
                 replication_ind = data.get_realisations(
                     self.current_value, self._selected_vars_sources)[1]
-                local_ais = self._cmi_estimator.estimate(
+                local_ais = self._cmi_estimator_local.estimate(
                                 var1=self._current_value_realisations,
                                 var2=self._selected_vars_realisations,
                                 conditional=None)
@@ -514,8 +498,6 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         else:
             if self.settings['verbose']:
                 print('no sources selected')
-            if self._local_values:
-                self.settings['local_values'] = True
             self.ais = np.nan
             self.sign = False
             self.pvalue = 1.0

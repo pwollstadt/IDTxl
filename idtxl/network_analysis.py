@@ -3,6 +3,7 @@
 import copy as cp
 import itertools as it
 import numpy as np
+from .estimator import find_estimator
 from . import idtxl_utils as utils
 
 
@@ -187,6 +188,25 @@ class NetworkAnalysis():
                 raise IndexError('Sample lag larger than current value.')
             idx_list[lag_list.index(c)] = (c[0], current_value_sample - c[1])
         return idx_list
+
+    def _set_cmi_estimator(self):
+        """Check and set requested CMI estimator."""
+        # Set CMI estimator. Check if the user requested the estimation of
+        # local values. If so, initialise a local estimator additionally to the
+        # average estimator. Internally, the average estimator is used for
+        # building the non-uniform embedding, etc. The local estimator is used
+        # to estimate single-link MI/TE or single-process AIS in the end.
+        try:
+            EstimatorClass = find_estimator(self.settings['cmi_estimator'])
+        except KeyError:
+            raise RuntimeError('Please provide an estimator class or name!')
+        if self.settings['local_values']:
+            self.settings['local_values'] = False
+            self._cmi_estimator = EstimatorClass(self.settings)
+            self.settings['local_values'] = True
+            self._cmi_estimator_local = EstimatorClass(self.settings)
+        else:
+            self._cmi_estimator = EstimatorClass(self.settings)
 
     def _separate_realisations(self, idx_full, idx_single):
         """Separate single index realisations from a set of realisations.
@@ -429,7 +449,7 @@ class NetworkAnalysis():
                     conditioning))
 
             if self.settings['local_values']:
-                local_values = self._cmi_estimator.estimate(
+                local_values = self._cmi_estimator_local.estimate(
                     current_value_realisations,
                     source_realisations,
                     conditional_realisations)
