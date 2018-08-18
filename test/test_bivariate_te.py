@@ -363,15 +363,33 @@ def test_check_source_set():
 def test_define_candidates():
     """Test candidate definition from a list of procs and a list of samples."""
     target = 1
-    tau_target = 3
-    max_lag_target = 10
+    tau_sources = 3
+    max_lag_sources = 10
     current_val = (target, 10)
     procs = [target]
-    samples = np.arange(current_val[1] - 1, current_val[1] - max_lag_target,
-                        -tau_target)
+    samples = np.arange(current_val[1] - 1, current_val[1] - max_lag_sources,
+                        -tau_sources)
+    # Test if candidates that are added manually to the conditioning set are
+    # removed from the candidate set.
     nw = BivariateTE()
-    candidates = nw._define_candidates(procs, samples)
-    assert (1, 9) in candidates, 'Sample missing from candidates: (1, 9).'
+    settings = [
+        {'add_conditionals': None},
+        {'add_conditionals': (2, 3)},
+        {'add_conditionals': [(2, 3), (4, 1)]}]
+    for s in settings:
+        nw.settings = s
+        candidates = nw._define_candidates(procs, samples)
+        assert (1, 9) in candidates, 'Sample missing from candidates: (1, 9).'
+        assert (1, 6) in candidates, 'Sample missing from candidates: (1, 6).'
+        assert (1, 3) in candidates, 'Sample missing from candidates: (1, 3).'
+
+    settings = [
+        {'add_conditionals': [(1, 9)]},
+        {'add_conditionals': [(1, 9), (2, 3), (4, 1)]}]
+    for s in settings:
+        nw.settings = s
+        candidates = nw._define_candidates(procs, samples)
+    assert (1, 9) not in candidates, 'Sample missing from candidates: (1, 9).'
     assert (1, 6) in candidates, 'Sample missing from candidates: (1, 6).'
     assert (1, 3) in candidates, 'Sample missing from candidates: (1, 3).'
 
@@ -476,7 +494,7 @@ def test_discrete_input():
 @jpype_missing
 def test_mute_data():
     """Test estimation from MuTE data."""
-    max_lag = 3
+    max_lag = 5
     data = Data()
     data.generate_mute_data(200, 5)
     settings = {
@@ -487,6 +505,7 @@ def test_mute_data():
         'n_perm_omnibus': 21,
         'max_lag_sources': max_lag,
         'min_lag_sources': 1,
+        'add_conditionals': [(1, 3), (1, 2)],
         'max_lag_target': max_lag}
     target = 2
     te = BivariateTE()

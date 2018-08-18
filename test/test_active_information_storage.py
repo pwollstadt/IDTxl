@@ -242,7 +242,43 @@ def test_discrete_input():
     nw.analyse_single_process(settings=settings, data=data, process=0)
 
 
+@jpype_missing
+def test_define_candidates():
+    """Test candidate definition from a list of procs and a list of samples."""
+    target = 1
+    tau_target = 3
+    max_lag_target = 10
+    current_val = (target, 10)
+    procs = [target]
+    samples = np.arange(current_val[1] - 1, current_val[1] - max_lag_target,
+                        -tau_target)
+    # Test if candidates that are added manually to the conditioning set are
+    # removed from the candidate set.
+    nw = ActiveInformationStorage()
+    settings = [
+        {'add_conditionals': None},
+        {'add_conditionals': (2, 3)},
+        {'add_conditionals': [(2, 3), (4, 1)]}]
+    for s in settings:
+        nw.settings = s
+        candidates = nw._define_candidates(procs, samples)
+        assert (1, 9) in candidates, 'Sample missing from candidates: (1, 9).'
+        assert (1, 6) in candidates, 'Sample missing from candidates: (1, 6).'
+        assert (1, 3) in candidates, 'Sample missing from candidates: (1, 3).'
+
+    settings = [
+        {'add_conditionals': [(1, 9)]},
+        {'add_conditionals': [(1, 9), (2, 3), (4, 1)]}]
+    for s in settings:
+        nw.settings = s
+        candidates = nw._define_candidates(procs, samples)
+    assert (1, 9) not in candidates, 'Sample missing from candidates: (1, 9).'
+    assert (1, 6) in candidates, 'Sample missing from candidates: (1, 6).'
+    assert (1, 3) in candidates, 'Sample missing from candidates: (1, 3).'
+
+
 if __name__ == '__main__':
+    test_define_candidates()
     test_return_local_values()
     test_discrete_input()
     test_analyse_network()

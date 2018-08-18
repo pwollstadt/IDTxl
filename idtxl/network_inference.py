@@ -151,8 +151,8 @@ class NetworkInference(NetworkAnalysis):
             # that _define_candidates returns tuples with absolute indices and
             # not lags.
             if cond == 'faes':
-                cond = self._define_candidates(self.source_set,
-                                               [self.current_value[1]])
+                cond = self._build_variable_list(self.source_set,
+                                                 [self.current_value[1]])
                 self._append_selected_vars(
                         cond,
                         data.get_realisations(self.current_value, cond)[0])

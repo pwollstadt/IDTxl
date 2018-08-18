@@ -257,6 +257,11 @@ class NetworkAnalysis():
     def _define_candidates(self, processes, samples):
         """Build a list of candidate indices.
 
+        Build a list of candidate indices. Note that variables that were
+        manually added to the conditioning set via the 'add_conditionals'
+        setting are removed from the candidate set if both sets are not
+        disjoint.
+
         Args:
             processes : list of int
                 process indices
@@ -268,9 +273,37 @@ class NetworkAnalysis():
             candidate and has the form (process index, sample index), indices
             are absolute values with respect to some data array.
         """
-        candidate_set = []
+        candidate_set = self._build_variable_list(processes, samples)
+        # Remove candidates that were already manullay added to the
+        # conditioning set via the 'add_conditionals' setting. Otherwise the
+        # candidates get tested in the inclusion step.
+        candidate_set = self._remove_forced_conditionals(candidate_set)
+        return candidate_set
+
+    def _build_variable_list(self, processes, samples):
+        """Build a list of variable tuples with (process index, sample index).
+
+        Args:
+            processes : list of int
+                process indices
+            samples: list of int
+                sample indices
+
+        Returns:
+            a list of variable tuples
+        """
+        var_list = []
         for idx in it.product(processes, samples):
-            candidate_set.append(idx)
+            var_list.append(idx)
+        return var_list
+
+    def _remove_forced_conditionals(self, candidate_set):
+        """Remove enforced conditioning variables from candidate set."""
+        if self.settings['add_conditionals'] is not None:
+            cond = self.settings['add_conditionals']
+            if type(cond) is tuple:  # easily add single variable
+                cond = [cond]
+            candidate_set = list(set(candidate_set).difference(set(cond)))
         return candidate_set
 
     def _append_selected_vars_idx(self, idx):
