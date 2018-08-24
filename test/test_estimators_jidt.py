@@ -721,20 +721,11 @@ def test_insufficient_no_points():
 @jpype_missing
 def test_discrete_mi_memerror():
     """Test exception handling for memory exhausted exceptions."""
-    settings = {'num_discrete_bins': 2}
     var1, var2 = _get_mem_binary_data()
     
-    # Check that we instantiate correctly for a small history:
-    caughtException = False
-    try:
-        mi_estimator = JidtDiscreteMI(settings=settings)
-        mi_estimator.estimate(var1, var2)
-    except ex.JidtOutOfMemoryError:
-        caughtException = True
-    assert not(caughtException), 'Unable to instantiate MI calculator with 2 bins'
     # Check that we catch instantiation error for an enormous history:
     caughtException = False
-    settings['n_discrete_bins'] = 1000000000;
+    settings = {'n_discrete_bins': 1000000000};
     result = -1;
     try:
         mi_estimator = JidtDiscreteMI(settings=settings)
@@ -744,6 +735,17 @@ def test_discrete_mi_memerror():
         caughtException = True
         print('ex.JidtOutOfMemoryError caught as required')
     assert caughtException, 'No exception instantiating MI calculator with 10^18 bins'
+    # Check that we instantiate correctly for a small history, even after
+    #  the error encountered above:
+    caughtException = False
+    settings = {'n_discrete_bins': 2}
+    try:
+        mi_estimator = JidtDiscreteMI(settings=settings)
+        mi_estimator.estimate(var1, var2)
+        print('Subsequent JIDT calculation worked OK')
+    except ex.JidtOutOfMemoryError:
+        caughtException = True
+    assert not(caughtException), 'Unable to instantiate MI calculator with 2 bins'
 
 
 if __name__ == '__main__':
