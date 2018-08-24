@@ -524,6 +524,10 @@ class JidtDiscreteCMI(JidtDiscrete):
                 JIDT calculator that was used here. Only returned if
                 return_calc was set.
 
+        Raises:
+            ex.JidtOutOfMemoryError
+                Raised when JIDT object cannot be instantiated due to mem error
+
         """
         # Calculate an MI if no conditional was provided
         if (conditional is None) or (self.settings['alphc'] == 0):
@@ -555,9 +559,21 @@ class JidtDiscreteCMI(JidtDiscrete):
 
         # We have a non-trivial conditional, so make a proper conditional MI
         # calculation
-        calc = self.CalcClass(int(np.power(self.settings['alph1'], var1_dim)),
-                              int(np.power(self.settings['alph2'], var2_dim)),
-                              int(np.power(self.settings['alphc'], cond_dim)))
+        alph1_base = int(np.power(self.settings['alph1'], var1_dim))
+        alph2_base = int(np.power(self.settings['alph2'], var2_dim))
+        cond_base = int(np.power(self.settings['alphc'], cond_dim))
+        try:
+            calc = self.CalcClass(alph1_base, alph2_base, cond_base)
+        except jp.JavaException:
+            # Only possible exception that can be raised here
+            #  (if all bases >= 2) is a Java OutOfMemoryException:
+            assert(alph1_base >= 2)
+            assert(alph2_base >= 2)
+            assert(cond_base >= 2)
+            raise ex.JidtOutOfMemoryError('Cannot instantiate JIDT CMI '
+                'discrete estimator with alph1_base = ' + str(alph1_base) +
+                ', alph2_base = ' + str(alph2_base) + ', cond_base = ' +
+                str(cond_base) + '. Try re-running increasing Java heap size')
         calc.setDebug(self.settings['debug'])
         calc.initialise()
         # Unfortunately no faster way to pass numpy arrays in than this list
@@ -681,6 +697,10 @@ class JidtDiscreteMI(JidtDiscrete):
             Java object
                 JIDT calculator that was used here. Only returned if
                 return_calc was set.
+
+        Raises:
+            ex.JidtOutOfMemoryError
+                Raised when JIDT object cannot be instantiated due to mem error
         """
         # Check and remember the no. dimensions for each variable before
         # collapsing them into univariate arrays later.
@@ -699,7 +719,15 @@ class JidtDiscreteMI(JidtDiscrete):
         # Initialise estimator
         max_base = int(max(np.power(self.settings['alph1'], var1_dim),
                            np.power(self.settings['alph2'], var2_dim)))
-        calc = self.CalcClass(max_base, self.settings['lag_mi'])
+        try:
+            calc = self.CalcClass(max_base, self.settings['lag_mi'])
+        except jp.JavaException:
+            # Only possible exception that can be raised here
+            #  (if max_base >= 2) is a Java OutOfMemoryException:
+            assert(max_base >= 2)
+            raise ex.JidtOutOfMemoryError('Cannot instantiate JIDT MI '
+                'discrete estimator with max_base = ' + str(max_base) +
+                 '. Try re-running increasing Java heap size')
         calc.setDebug(self.settings['debug'])
         calc.initialise()
 

@@ -11,6 +11,7 @@ from . import stats
 from .single_process_analysis import SingleProcessAnalysis
 from .estimator import find_estimator
 from .results import ResultsSingleProcessAnalysis
+from . import idtxl_exceptions as ex
 
 
 class ActiveInformationStorage(SingleProcessAnalysis):
@@ -352,22 +353,45 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             cand_real = cand_real.T.reshape(cand_real.size, 1)
 
             # Calculate the (C)MI for each candidate and the target.
-            temp_te = self._cmi_estimator.estimate_parallel(
+            try:
+                temp_te = self._cmi_estimator.estimate_parallel(
                                 n_chunks=len(candidate_set),
                                 re_use=['var2', 'conditional'],
                                 var1=cand_real,
                                 var2=self._current_value_realisations,
                                 conditional=self._selected_vars_realisations)
-
+            except ex.AlgorithmExhaustedError as aee:
+                # The algorithm cannot continue here, so
+                #  we'll terminate the search for more candidates,
+                #  though those identified already remain valid
+                print('AlgorithmExhaustedError encountered in '
+                    'estimations: ' + aee.message)
+                print('Halting current estimation set.')
+                # For now we don't need a stack trace:
+                # traceback.print_tb(aee.__traceback__)
+                break
+            
             # Test max CMI for significance with maximum statistics.
             te_max_candidate = max(temp_te)
             max_candidate = candidate_set[np.argmax(temp_te)]
             if self.settings['verbose']:
                 print('testing candidate {0} '.format(
                                 self._idx_to_lag([max_candidate])[0]), end='')
-            significant = stats.max_statistic(self, data, candidate_set,
+            significant = False
+            try:
+                significant = stats.max_statistic(self, data, candidate_set,
                                               te_max_candidate)[0]
-
+            except ex.AlgorithmExhaustedError as aee:
+                # The algorithm cannot continue here, so
+                #  we'll terminate the check on the max stats and not let the
+                #  source pass
+                print('AlgorithmExhaustedError encountered in '
+                    'estimations: ' + aee.message)
+                print('Halting max stats and further selection for target.')
+                # For now we don't need a stack trace:
+                # traceback.print_tb(aee.__traceback__)
+                break
+            
             # If the max is significant keep it and test the next candidate. If
             # it is not significant break. There will be no further significant
             # sources b/c they all have lesser TE.
@@ -437,22 +461,46 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 i_1 = i_2
                 i_2 += data.n_realisations(self.current_value)
 
-            temp_te = self._cmi_estimator.estimate_parallel(
+            try:
+                temp_te = self._cmi_estimator.estimate_parallel(
                                     n_chunks=len(self.selected_vars_sources),
                                     re_use=re_use,
                                     var1=candidate_realisations,
                                     var2=self._current_value_realisations,
                                     conditional=conditional_realisations)
+            except ex.AlgorithmExhaustedError as aee:
+                    # The algorithm cannot continue here, so
+                    #  we'll terminate the pruning check,
+                    #  assuming that we need not prune any more
+                    print('AlgorithmExhaustedError encountered in '
+                        'estimations: ' + aee.message)
+                    print('Halting current pruning and allowing others to'
+                        ' remain.')
+                    # For now we don't need a stack trace:
+                    # traceback.print_tb(aee.__traceback__)
+                    break
 
             # Test min TE for significance with minimum statistics.
             te_min_candidate = min(temp_te)
             min_candidate = self.selected_vars_sources[np.argmin(temp_te)]
             if self.settings['verbose']:
                 print('{0}'.format(self._idx_to_lag([min_candidate])[0]))
-            [significant, p, surr_table] = stats.min_statistic(
+            try:
+                [significant, p, surr_table] = stats.min_statistic(
                                               self, data,
                                               self.selected_vars_sources,
                                               te_min_candidate)
+            except ex.AlgorithmExhaustedError as aee:
+                # The algorithm cannot continue here, so
+                #  we'll terminate the min statistics
+                #  assuming that we need not prune any more
+                print('AlgorithmExhaustedError encountered in '
+                    'estimations: ' + aee.message)
+                print('Halting current pruning and allowing others to'
+                    ' remain.')
+                # For now we don't need a stack trace:
+                # traceback.print_tb(aee.__traceback__)
+                break
 
             # Remove the minimum it is not significant and test the next min.
             # candidate. If the minimum is significant, break, all other
@@ -473,7 +521,19 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             if self.settings['verbose']:
                 print('selected sources: {0}'.format(
                     self._idx_to_lag(self.selected_vars_full)))
-            [ais, s, p] = stats.mi_against_surrogates(self, data)
+            try:
+                [ais, s, p] = stats.mi_against_surrogates(self, data)
+            except ex.AlgorithmExhaustedError as aee:
+                # The algorithm cannot continue here, so
+                #  we'll set the results to zero
+                print('AlgorithmExhaustedError encountered in '
+                    'estimations: ' + aee.message)
+                print('Halting AIS final conditional test and setting to not significant.')
+                # For now we don't need a stack trace:
+                # traceback.print_tb(aee.__traceback__)
+                ais = 0
+                s = False
+                p = 1
 
             # If a parallel estimator was used, an array of AIS estimates is
             # returned. Make the output uniform for both estimator types.
@@ -484,10 +544,25 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             if self.settings['local_values']:
                 replication_ind = data.get_realisations(
                     self.current_value, self._selected_vars_sources)[1]
-                local_ais = self._cmi_estimator_local.estimate(
+                try:
+                    local_ais = self._cmi_estimator_local.estimate(
                                 var1=self._current_value_realisations,
                                 var2=self._selected_vars_realisations,
                                 conditional=None)
+                except ex.AlgorithmExhaustedError as aee:
+                    # The algorithm cannot continue here, so
+                    #  we'll set the results to zero
+                    print('AlgorithmExhaustedError encountered in '
+                        'final local AIS estimations: ' + aee.message)
+                    print('Setting all local results to zero (but leaving'
+                        ' surrogate statistical test results)')
+                    # For now we don't need a stack trace:
+                    # traceback.print_tb(aee.__traceback__)
+                    # Return local AIS values of all zeros:
+                    #  (length gleaned from line below)
+                    local_ais = np.zeros(
+                        (max(replication_ind) + 1)*sum(replication_ind == 0));
+
                 # Reshape local AIS to a [replications x samples] matrix.
                 self.ais = local_ais.reshape(
                     max(replication_ind) + 1, sum(replication_ind == 0))

@@ -16,6 +16,7 @@ from idtxl.estimators_jidt import (JidtKraskovCMI, JidtKraskovMI,
                                    JidtGaussianCMI, JidtGaussianMI,
                                    JidtGaussianAIS, JidtGaussianTE)
 from idtxl.idtxl_utils import calculate_mi
+import idtxl.idtxl_exceptions as ex
 
 package_missing = False
 try:
@@ -717,6 +718,34 @@ def test_insufficient_no_points():
     with pytest.raises(RuntimeError): est.estimate(source1)
 
 
+@jpype_missing
+def test_discrete_mi_memerror():
+    """Test exception handling for memory exhausted exceptions."""
+    settings = {'num_discrete_bins': 2}
+    var1, var2 = _get_mem_binary_data()
+    
+    # Check that we instantiate correctly for a small history:
+    caughtException = False
+    try:
+        mi_estimator = JidtDiscreteMI(settings=settings)
+        mi_estimator.estimate(var1, var2)
+    except ex.JidtOutOfMemoryError:
+        caughtException = True
+    assert not(caughtException), 'Unable to instantiate MI calculator with 2 bins'
+    # Check that we catch instantiation error for an enormous history:
+    caughtException = False
+    settings['n_discrete_bins'] = 1000000000;
+    result = -1;
+    try:
+        mi_estimator = JidtDiscreteMI(settings=settings)
+        result = mi_estimator.estimate(var1, var2)
+        print('Result of MI calc (which should not have completed) was ', result);
+    except ex.JidtOutOfMemoryError:
+        caughtException = True
+        print('ex.JidtOutOfMemoryError caught as required')
+    assert caughtException, 'No exception instantiating MI calculator with 10^18 bins'
+
+
 if __name__ == '__main__':
     test_insufficient_no_points()
     test_lagged_mi()
@@ -734,3 +763,4 @@ if __name__ == '__main__':
     test_cmi_gauss_data()
     test_cmi_gauss_data_no_cond()
     test_mi_gauss_data()
+    test_discrete_mi_memerror()

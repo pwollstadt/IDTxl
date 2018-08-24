@@ -6,6 +6,7 @@ import inspect
 from pprint import pprint
 from abc import ABCMeta, abstractmethod
 import numpy as np
+from . import idtxl_exceptions as ex
 
 MODULE_EXTENSIONS = ('.py')  # ('.py', '.pyc', '.pyo')
 ESTIMATOR_PREFIX = ('estimators_')
@@ -259,6 +260,10 @@ class Estimator(metaclass=ABCMeta):
         Returns:
             numpy array
                 estimated values for each chunk
+                
+        Raises:
+            ex.AlgorithmExhaustedError
+                Raised from self.estimate() when calculation cannot be made
         """
         assert n_chunks > 0, 'n_chunks must be positive.'
         if re_use is None:
