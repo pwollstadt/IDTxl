@@ -447,7 +447,7 @@ def test_local_values():
     # MI - Discrete
     mi_estimator = JidtDiscreteMI(settings=settings)
     mi = mi_estimator.estimate(source, target)
-    _assert_result(np.mean(mi), expected_mi, 'JidtDiscreteMI', 'MI')
+    _assert_result(np.mean(mi), expected_mi, 'JidtDiscreteMI', 'MI', 0.08) # More variability here
     assert type(mi) is np.ndarray, 'Local values are not a numpy array.'
 
     # MI - Gaussian
@@ -465,7 +465,7 @@ def test_local_values():
     # CMI - Discrete
     cmi_estimator = JidtDiscreteCMI(settings=settings)
     mi = cmi_estimator.estimate(source, target)
-    _assert_result(np.mean(mi), expected_mi, 'JidtDiscreteCMI', 'CMI')
+    _assert_result(np.mean(mi), expected_mi, 'JidtDiscreteCMI', 'CMI', 0.08) # More variability here
     assert type(mi) is np.ndarray, 'Local values are not a numpy array.'
 
     # MI - Gaussian
@@ -483,7 +483,7 @@ def test_local_values():
     # TE - Discrete
     te_estimator = JidtDiscreteTE(settings=settings)
     mi = te_estimator.estimate(source[1:], target[:-1])
-    _assert_result(np.mean(mi), expected_mi, 'JidtDiscreteTE', 'TE')
+    _assert_result(np.mean(mi), expected_mi, 'JidtDiscreteTE', 'TE', 0.08) # More variability here
     assert type(mi) is np.ndarray, 'Local values are not a numpy array.'
 
     # TE - Gaussian
