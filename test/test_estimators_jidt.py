@@ -138,8 +138,8 @@ def test_mi_gauss_data():
     mi_estimator = JidtDiscreteMI(settings=settings)
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
-    _assert_result(mi_cor, expected_mi, 'JidtDiscreteMI', 'CMI (no cond.)')
-    _assert_result(mi_uncor, 0, 'JidtDiscreteMI', 'CMI (uncorr., no cond.)')
+    _assert_result(mi_cor, expected_mi, 'JidtDiscreteMI', 'CMI (no cond.)', 0.08) # More variability here
+    _assert_result(mi_uncor, 0, 'JidtDiscreteMI', 'CMI (uncorr., no cond.)', 0.08) # More variability here
 
 
 @jpype_missing
@@ -175,8 +175,8 @@ def test_cmi_gauss_data_no_cond():
     mi_estimator = JidtDiscreteCMI(settings=settings)
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
-    _assert_result(mi_cor, expected_mi, 'JidtDiscreteCMI', 'CMI (no cond.)')
-    _assert_result(mi_uncor, 0, 'JidtDiscreteCMI', 'CMI (uncorr., no cond.)')
+    _assert_result(mi_cor, expected_mi, 'JidtDiscreteCMI', 'CMI (no cond.)', 0.08) # More variability here
+    _assert_result(mi_uncor, 0, 'JidtDiscreteCMI', 'CMI (uncorr., no cond.)', 0.08) # More variability here
 
 
 @jpype_missing
@@ -212,8 +212,8 @@ def test_cmi_gauss_data():
     mi_estimator = JidtDiscreteCMI(settings=settings)
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
-    _assert_result(mi_cor, expected_mi, 'JidtDiscreteCMI', 'CMI (corr.)')
-    _assert_result(mi_uncor, 0, 'JidtDiscreteCMI', 'CMI (uncorr.)')
+    _assert_result(mi_cor, expected_mi, 'JidtDiscreteCMI', 'CMI (corr.)', 0.08) # More variability here
+    _assert_result(mi_uncor, 0, 'JidtDiscreteCMI', 'CMI (uncorr.)', 0.08) # More variability here
 
 
 @jpype_missing
@@ -254,8 +254,8 @@ def test_te_gauss_data():
     mi_estimator = JidtDiscreteTE(settings=settings)
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
-    _assert_result(mi_cor, expected_mi, 'JidtDiscreteTE', 'TE (corr.)')
-    _assert_result(mi_uncor, 0, 'JidtDiscreteTE', 'TE (uncorr.)')
+    _assert_result(mi_cor, expected_mi, 'JidtDiscreteTE', 'TE (corr.)', 0.08) # More variability here
+    _assert_result(mi_uncor, 0, 'JidtDiscreteTE', 'TE (uncorr.)', 0.08) # More variability here
 
 
 @jpype_missing
@@ -402,25 +402,25 @@ def test_one_two_dim_input_discrete():
     # MI
     mi_estimator = JidtDiscreteMI(settings=settings)
     mi_cor_one = mi_estimator.estimate(src_one, target_one)
-    _assert_result(mi_cor_one, expected_mi, 'JidtDiscreteMI', 'MI')
+    _assert_result(mi_cor_one, expected_mi, 'JidtDiscreteMI', 'MI', 0.08) # More variability here
     mi_cor_two = mi_estimator.estimate(src_two, target_two)
-    _assert_result(mi_cor_two, expected_mi, 'JidtDiscreteMI', 'MI')
+    _assert_result(mi_cor_two, expected_mi, 'JidtDiscreteMI', 'MI', 0.08) # More variability here
     _compare_result(mi_cor_one, mi_cor_two,
                     'JidtDiscreteMI one dim', 'JidtDiscreteMI two dim', 'MI')
     # CMI
     cmi_estimator = JidtDiscreteCMI(settings=settings)
     mi_cor_one = cmi_estimator.estimate(src_one, target_one)
-    _assert_result(mi_cor_one, expected_mi, 'JidtDiscreteCMI', 'CMI')
+    _assert_result(mi_cor_one, expected_mi, 'JidtDiscreteCMI', 'CMI', 0.08) # More variability here
     mi_cor_two = cmi_estimator.estimate(src_two, target_two)
-    _assert_result(mi_cor_two, expected_mi, 'JidtDiscreteCMI', 'CMI')
+    _assert_result(mi_cor_two, expected_mi, 'JidtDiscreteCMI', 'CMI', 0.08) # More variability here
     _compare_result(mi_cor_one, mi_cor_two,
                     'JidtDiscreteMI one dim', 'JidtDiscreteMI two dim', 'CMI')
     # TE
     te_estimator = JidtDiscreteTE(settings=settings)
     mi_cor_one = te_estimator.estimate(src_one[1:], target_one[:-1])
-    _assert_result(mi_cor_one, expected_mi, 'JidtDiscreteTE', 'TE')
+    _assert_result(mi_cor_one, expected_mi, 'JidtDiscreteTE', 'TE', 0.08) # More variability here
     mi_cor_two = te_estimator.estimate(src_one[1:], target_one[:-1])
-    _assert_result(mi_cor_two, expected_mi, 'JidtDiscreteTE', 'TE')
+    _assert_result(mi_cor_two, expected_mi, 'JidtDiscreteTE', 'TE', 0.08) # More variability here
     _compare_result(mi_cor_one, mi_cor_two,
                     'JidtDiscreteMI one dim', 'JidtDiscreteMI two dim', 'TE')
     # AIS
