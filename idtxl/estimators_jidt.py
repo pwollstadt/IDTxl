@@ -717,16 +717,19 @@ class JidtDiscreteMI(JidtDiscrete):
         var2 = utils.combine_discrete_dimensions(var2, self.settings['alph2'])
 
         # Initialise estimator
-        max_base = int(max(np.power(self.settings['alph1'], var1_dim),
-                           np.power(self.settings['alph2'], var2_dim)))
+        base_for_var1 = int(np.power(self.settings['alph1'], var1_dim))
+        base_for_var2 = int(np.power(self.settings['alph2'], var2_dim))
         try:
-            calc = self.CalcClass(max_base, self.settings['lag_mi'])
+            calc = self.CalcClass(base_for_var1, base_for_var2,
+                                    self.settings['lag_mi'])
         except jp.JavaException:
             # Only possible exception that can be raised here
-            #  (if max_base >= 2) is a Java OutOfMemoryException:
-            assert(max_base >= 2)
+            #  (if base_for_var* >= 2) is a Java OutOfMemoryException:
+            assert(base_for_var1 >= 2)
+            assert(base_for_var2 >= 2)
             raise ex.JidtOutOfMemoryError('Cannot instantiate JIDT MI '
-                'discrete estimator with max_base = ' + str(max_base) +
+                'discrete estimator with bases = ' + str(base_for_var1) +
+                 ' and ' + str(base_for_var2) +
                  '. Try re-running increasing Java heap size')
         calc.setDebug(self.settings['debug'])
         calc.initialise()
