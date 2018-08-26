@@ -1017,6 +1017,11 @@ class JidtDiscreteAIS(JidtDiscrete):
             Java object
                 JIDT calculator that was used here. Only returned if
                 return_calc was set.
+
+        Raises:
+            ex.JidtOutOfMemoryError
+                Raised when JIDT object cannot be instantiated due to mem error
+
         """
         process = self._ensure_one_dim_input(process)
 
@@ -1038,8 +1043,17 @@ class JidtDiscreteAIS(JidtDiscrete):
         else:
             pass  # don't discretise at all, assume data to be discrete
 
-        # And finally make the TE calculation:
-        calc = self.CalcClass(self.settings['alph'], self.settings['history'])
+        # And finally make the AIS calculation:
+        try:
+            calc = self.CalcClass(self.settings['alph'], self.settings['history'])
+        except jp.JavaException:
+            # Only possible exception that can be raised here
+            #  (if self.settings['alph'] >= 2) is a Java OutOfMemoryException:
+            assert(self.settings['alph'] >= 2)
+            raise ex.JidtOutOfMemoryError('Cannot instantiate JIDT AIS '
+                'discrete estimator with alph = ' + str(self.settings['alph']) +
+                 ' and history = ' + str(self.settings['history']) +
+                 '. Try re-running increasing Java heap size')
         calc.initialise()
         # Unfortunately no faster way to pass numpy arrays in than this list
         # conversion
@@ -1516,6 +1530,11 @@ class JidtDiscreteTE(JidtDiscrete):
             Java object
                 JIDT calculator that was used here. Only returned if
                 return_calc was set.
+
+        Raises:
+            ex.JidtOutOfMemoryError
+                Raised when JIDT object cannot be instantiated due to mem error
+
         """
         source = self._ensure_one_dim_input(source)
         target = self._ensure_one_dim_input(target)
@@ -1525,12 +1544,22 @@ class JidtDiscreteTE(JidtDiscrete):
 
         # And finally make the TE calculation:
         max_base = max(self.settings['alph1'], self.settings['alph2'])
-        calc = self.CalcClass(max_base,
+        try:
+            calc = self.CalcClass(max_base,
                               self.settings['history_target'],
                               self.settings['tau_target'],
                               self.settings['history_source'],
                               self.settings['tau_source'],
                               self.settings['source_target_delay'])
+        except jp.JavaException:
+            # Only possible exception that can be raised here
+            #  (if max_base >= 2) is a Java OutOfMemoryException:
+            assert(max_base >= 2)
+            raise ex.JidtOutOfMemoryError('Cannot instantiate JIDT TE '
+                'discrete estimator with max_base = ' + str(max_base) +
+                 ' and history_target = ' + str(self.settings['history_target']) +
+                 ' and history_source = ' + str(self.settings['history_source']) +
+                 '. Try re-running increasing Java heap size')
         calc.initialise()
         # Unfortunately no faster way to pass numpy arrays in than this list
         # conversion
