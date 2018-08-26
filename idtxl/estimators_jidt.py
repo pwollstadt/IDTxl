@@ -126,6 +126,11 @@ class JidtKraskov(JidtEstimator):
             - num_threads : int | str [optional] - number of threads used for
               estimation (default='USE_ALL', note that this uses *all*
               available threads on the current machine)
+            - algorithm_num : int [optional] - which Kraskov algorithm (1 or 2)
+              to use (default=1). Only applied at this method for TE and AIS
+              (is already applied for MI/CMI). Note that default algorithm of 1
+              here is different to the default ALG_NUM argument for the JIDT
+              AIS KSG estimator.
     """
 
     def __init__(self, CalcClass, settings=None):
@@ -136,11 +141,16 @@ class JidtKraskov(JidtEstimator):
         settings.setdefault('theiler_t', str(0))
         settings.setdefault('noise_level', 1e-8)
         settings.setdefault('num_threads', 'USE_ALL')
+        settings.setdefault('algorithm_num', 1)
+        assert type(settings['algorithm_num']) is int, (
+            'Algorithm number must be an integer.')
+        assert (settings['algorithm_num'] == 1) or (settings['algorithm_num'] == 2), (
+            'Algorithm number must be 1 or 2')
         super().__init__(settings)
 
         # Set properties of JIDT's estimator object.
         self.calc = CalcClass()
-        self.calc.setProperty('PROP_KRASKOV_ALG_NUM', str(1))
+        self.calc.setProperty('ALG_NUM', str(self.settings['algorithm_num']))
         self.calc.setProperty('NORMALISE',
                               str(self.settings['normalise']).lower())
         self.calc.setProperty('k', str(self.settings['kraskov_k']))
@@ -384,7 +394,8 @@ class JidtKraskovCMI(JidtKraskov):
             - num_threads : int | str [optional] - number of threads used for
               estimation (default='USE_ALL', note that this uses *all*
               available threads on the current machine)
-
+            - algorithm_num : int [optional] - which Kraskov algorithm (1 or 2)
+              to use (default=1)
     Note:
         Some technical details: JIDT normalises over realisations, IDTxl
         normalises over raw data once, outside the CMI estimator to save
@@ -397,8 +408,17 @@ class JidtKraskovCMI(JidtKraskov):
         settings = self._check_settings(settings)
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
-        CalcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
+        settings.setdefault('algorithm_num', 1)
+        assert type(settings['algorithm_num']) is int, (
+            'Algorithm number must be an integer.')
+        assert (settings['algorithm_num'] == 1) or (settings['algorithm_num'] == 2), (
+            'Algorithm number must be 1 or 2')
+        if (settings['algorithm_num'] == 1):
+            CalcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
                      ConditionalMutualInfoCalculatorMultiVariateKraskov1)
+        else:
+            CalcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
+                     ConditionalMutualInfoCalculatorMultiVariateKraskov2)
         super().__init__(CalcClass, settings)
 
     def estimate(self, var1, var2, conditional=None):
@@ -805,6 +825,8 @@ class JidtKraskovMI(JidtKraskov):
             - num_threads : int | str [optional] - number of threads used for
               estimation (default='USE_ALL', note that this uses *all*
               available threads on the current machine)
+            - algorithm_num : int [optional] - which Kraskov algorithm (1 or 2)
+              to use (default=1)
             - lag_mi : int [optional] - time difference in samples to calculate
               the lagged MI between processes (default=0)
 
@@ -820,8 +842,17 @@ class JidtKraskovMI(JidtKraskov):
         settings = self._check_settings(settings)
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
-        CalcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
+        settings.setdefault('algorithm_num', 1)
+        assert type(settings['algorithm_num']) is int, (
+            'Algorithm number must be an integer.')
+        assert (settings['algorithm_num'] == 1) or (settings['algorithm_num'] == 2), (
+            'Algorithm number must be 1 or 2')
+        if (settings['algorithm_num'] == 1):
+            CalcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
                      MutualInfoCalculatorMultiVariateKraskov1)
+        else:
+            CalcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
+                     MutualInfoCalculatorMultiVariateKraskov2)
         super().__init__(CalcClass, settings)
 
         # Get lag and shift second variable to account for a lag if requested
@@ -900,7 +931,8 @@ class JidtKraskovAIS(JidtKraskov):
             - num_threads : int | str [optional] - number of threads used for
               estimation (default='USE_ALL', note that this uses *all*
               available threads on the current machine)
-
+            - algorithm_num : int [optional] - which Kraskov algorithm (1 or 2)
+              to use (default=1)
     Note:
         Some technical details: JIDT normalises over realisations, IDTxl
         normalises over raw data once, outside the AIS estimator to save
@@ -1397,6 +1429,8 @@ class JidtKraskovTE(JidtKraskov):
               JIDT (default=False)
             - local_values : bool [optional] - return local TE instead of
               average TE (default=False)
+            - algorithm_num : int [optional] - which Kraskov algorithm (1 or 2)
+              to use (default=1)
 
     Note:
         Some technical details: JIDT normalises over realisations, IDTxl
