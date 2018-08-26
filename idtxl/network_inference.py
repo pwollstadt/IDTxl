@@ -793,7 +793,7 @@ class NetworkInferenceBivariate(NetworkInference):
                     print('Halting final_conditional estimations')
                     # For now we don't need a stack trace:
                     # traceback.print_tb(aee.__traceback__)
-                    self.statistic_single_link = 
+                    self.statistic_single_link = \
                         np.zeros(len(self.selected_vars_sources))
             else:
                 self.selected_vars_sources = []
@@ -1013,7 +1013,7 @@ class NetworkInferenceMultivariate(NetworkInference):
                     print('Halting final_conditional estimations')
                     # For now we don't need a stack trace:
                     # traceback.print_tb(aee.__traceback__)
-                    self.statistic_single_link = 
+                    self.statistic_single_link = \
                         np.zeros(len(self.selected_vars_sources))
             else:
                 self.selected_vars_sources = []
