@@ -81,6 +81,13 @@ class JidtEstimator(Estimator):
             'Target history has to be an integer.')
         assert type(settings['history_source']) is int, (
             'Source history has to be an integer.')
+        assert type(settings['source_target_delay']) is int, (
+            'Source-target delay has to be an integer.')
+        assert settings['tau_target'] >= 1, 'Target tau must be >= 1'
+        assert settings['tau_source'] >= 1, 'Source tau must be >= 1'
+        assert settings['history_target'] >= 0, 'Target history must be >= 0'
+        assert settings['history_source'] >= 1, 'Source history must be >= 1'
+        assert settings['source_target_delay'] >= 0, 'Source-target delay must be >= 0'
         return settings
 
     def is_parallel(self):
@@ -958,7 +965,7 @@ class JidtDiscreteAIS(JidtDiscrete):
             set estimator parameters:
 
             - history : int - number of samples in the target's past used as
-              embedding
+              embedding (>= 0)
             - debug : bool [optional] - return debug information when calling
               JIDT (default=False)
             - local_values : bool [optional] - return local TE instead of
@@ -969,9 +976,9 @@ class JidtDiscreteAIS(JidtDiscrete):
               required (default='none')
             - n_discrete_bins : int [optional] - number of discrete bins/
               levels or the base of each dimension of the discrete variables
-              (default=2). If set, this parameter overwrites/sets alph
+              (default=2). If set, this parameter overwrites/sets alph. (>= 2)
             - alph : int [optional] - number of discrete bins/levels for var1
-              (default=2 , or the value set for n_discrete_bins)
+              (default=2 , or the value set for n_discrete_bins). (>= 2)
     """
 
     def __init__(self, settings):
@@ -982,14 +989,16 @@ class JidtDiscreteAIS(JidtDiscrete):
             raise RuntimeError('No history was provided for AIS estimation.')
         assert type(settings['history']) is int, (
                                             'History has to be an integer.')
+        assert settings['history'] >= 0, 'History must be >= 0'
 
         # Get alphabet sizes and check if discretisation is requested
         try:
             n_discrete_bins = int(settings['n_discrete_bins'])
             settings['alph'] = n_discrete_bins
         except KeyError:
-            pass  # Do nothing and use the default for alph_* set below
+            pass  # Do nothing and use the default for alph set below
         settings.setdefault('alph', int(2))
+        assert settings['alph'] >= 2, 'Number of bins must be >= 2'
 
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
@@ -1457,16 +1466,16 @@ class JidtDiscreteTE(JidtDiscrete):
             sets estimation parameters:
 
             - history_target : int - number of samples in the target's past
-              used as embedding
+              used as embedding. (>= 0)
             - history_source  : int [optional] - number of samples in the
               source's past used as embedding (default=same as the target
-              history)
+              history). (>= 1)
             - tau_source : int [optional] - source's embedding delay
-              (default=1)
+              (default=1). (>= 1)
             - tau_target : int [optional] - target's embedding delay
-              (default=1)
+              (default=1). (>= 1)
             - source_target_delay : int [optional] - information transfer delay
-              between source and target (default=1)
+              between source and target (default=1) (>= 0)
             - discretise_method : str [optional] - if and how to discretise
               incoming continuous data, can be 'max_ent' for maximum entropy
               binning, 'equal' for equal size bins, and 'none' if no binning is
@@ -1474,11 +1483,11 @@ class JidtDiscreteTE(JidtDiscrete):
             - n_discrete_bins : int [optional] - number of discrete bins/
               levels or the base of each dimension of the discrete variables
               (default=2). If set, this parameter overwrites/sets alph1 and
-              alph2
+              alph2. (>= 2)
             - alph1 : int [optional] - number of discrete bins/levels for
-              source (default=2, or the value set for n_discrete_bins)
+              source (default=2, or the value set for n_discrete_bins). (>= 2)
             - alph2 : int [optional] - number of discrete bins/levels for
-              target (default=2, or the value set for n_discrete_bins)
+              target (default=2, or the value set for n_discrete_bins). (>= 2)
             - debug : bool [optional] - return debug information when calling
               JIDT (default=False)
             - local_values : bool [optional] - return local TE instead of
@@ -1501,6 +1510,12 @@ class JidtDiscreteTE(JidtDiscrete):
             pass
         settings.setdefault('alph1', int(2))
         settings.setdefault('alph2', int(2))
+        assert type(settings['alph1']) is int, (
+            'Num discrete levels for source has to be an integer.')
+        assert type(settings['alph2']) is int, (
+            'Num discrete levels for target has to be an integer.')
+        assert settings['alph1'] >= 2, 'Num discrete levels for source must be >= 2'
+        assert settings['alph2'] >= 2, 'Num discrete levels for target must be >= 2'
         super().__init__(settings)
 
         # Start JAVA virtual machine and create JAVA object.
