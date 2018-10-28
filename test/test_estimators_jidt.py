@@ -9,6 +9,7 @@ import math
 import pytest
 import random as rn
 import numpy as np
+from scipy.special import digamma
 from idtxl.estimators_jidt import (JidtKraskovCMI, JidtKraskovMI,
                                    JidtKraskovAIS, JidtKraskovTE,
                                    JidtDiscreteCMI, JidtDiscreteMI,
@@ -16,6 +17,7 @@ from idtxl.estimators_jidt import (JidtKraskovCMI, JidtKraskovMI,
                                    JidtGaussianCMI, JidtGaussianMI,
                                    JidtGaussianAIS, JidtGaussianTE)
 from idtxl.idtxl_utils import calculate_mi
+import idtxl.idtxl_exceptions as ex
 
 package_missing = False
 try:
@@ -137,8 +139,8 @@ def test_mi_gauss_data():
     mi_estimator = JidtDiscreteMI(settings=settings)
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
-    _assert_result(mi_cor, expected_mi, 'JidtDiscreteMI', 'CMI (no cond.)')
-    _assert_result(mi_uncor, 0, 'JidtDiscreteMI', 'CMI (uncorr., no cond.)')
+    _assert_result(mi_cor, expected_mi, 'JidtDiscreteMI', 'CMI (no cond.)', 0.08) # More variability here
+    _assert_result(mi_uncor, 0, 'JidtDiscreteMI', 'CMI (uncorr., no cond.)', 0.08) # More variability here
 
 
 @jpype_missing
@@ -174,8 +176,8 @@ def test_cmi_gauss_data_no_cond():
     mi_estimator = JidtDiscreteCMI(settings=settings)
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
-    _assert_result(mi_cor, expected_mi, 'JidtDiscreteCMI', 'CMI (no cond.)')
-    _assert_result(mi_uncor, 0, 'JidtDiscreteCMI', 'CMI (uncorr., no cond.)')
+    _assert_result(mi_cor, expected_mi, 'JidtDiscreteCMI', 'CMI (no cond.)', 0.08) # More variability here
+    _assert_result(mi_uncor, 0, 'JidtDiscreteCMI', 'CMI (uncorr., no cond.)', 0.08) # More variability here
 
 
 @jpype_missing
@@ -211,8 +213,8 @@ def test_cmi_gauss_data():
     mi_estimator = JidtDiscreteCMI(settings=settings)
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
-    _assert_result(mi_cor, expected_mi, 'JidtDiscreteCMI', 'CMI (corr.)')
-    _assert_result(mi_uncor, 0, 'JidtDiscreteCMI', 'CMI (uncorr.)')
+    _assert_result(mi_cor, expected_mi, 'JidtDiscreteCMI', 'CMI (corr.)', 0.08) # More variability here
+    _assert_result(mi_uncor, 0, 'JidtDiscreteCMI', 'CMI (uncorr.)', 0.08) # More variability here
 
 
 @jpype_missing
@@ -253,8 +255,8 @@ def test_te_gauss_data():
     mi_estimator = JidtDiscreteTE(settings=settings)
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
-    _assert_result(mi_cor, expected_mi, 'JidtDiscreteTE', 'TE (corr.)')
-    _assert_result(mi_uncor, 0, 'JidtDiscreteTE', 'TE (uncorr.)')
+    _assert_result(mi_cor, expected_mi, 'JidtDiscreteTE', 'TE (corr.)', 0.08) # More variability here
+    _assert_result(mi_uncor, 0, 'JidtDiscreteTE', 'TE (uncorr.)', 0.08) # More variability here
 
 
 @jpype_missing
@@ -401,25 +403,25 @@ def test_one_two_dim_input_discrete():
     # MI
     mi_estimator = JidtDiscreteMI(settings=settings)
     mi_cor_one = mi_estimator.estimate(src_one, target_one)
-    _assert_result(mi_cor_one, expected_mi, 'JidtDiscreteMI', 'MI')
+    _assert_result(mi_cor_one, expected_mi, 'JidtDiscreteMI', 'MI', 0.08) # More variability here
     mi_cor_two = mi_estimator.estimate(src_two, target_two)
-    _assert_result(mi_cor_two, expected_mi, 'JidtDiscreteMI', 'MI')
+    _assert_result(mi_cor_two, expected_mi, 'JidtDiscreteMI', 'MI', 0.08) # More variability here
     _compare_result(mi_cor_one, mi_cor_two,
                     'JidtDiscreteMI one dim', 'JidtDiscreteMI two dim', 'MI')
     # CMI
     cmi_estimator = JidtDiscreteCMI(settings=settings)
     mi_cor_one = cmi_estimator.estimate(src_one, target_one)
-    _assert_result(mi_cor_one, expected_mi, 'JidtDiscreteCMI', 'CMI')
+    _assert_result(mi_cor_one, expected_mi, 'JidtDiscreteCMI', 'CMI', 0.08) # More variability here
     mi_cor_two = cmi_estimator.estimate(src_two, target_two)
-    _assert_result(mi_cor_two, expected_mi, 'JidtDiscreteCMI', 'CMI')
+    _assert_result(mi_cor_two, expected_mi, 'JidtDiscreteCMI', 'CMI', 0.08) # More variability here
     _compare_result(mi_cor_one, mi_cor_two,
                     'JidtDiscreteMI one dim', 'JidtDiscreteMI two dim', 'CMI')
     # TE
     te_estimator = JidtDiscreteTE(settings=settings)
     mi_cor_one = te_estimator.estimate(src_one[1:], target_one[:-1])
-    _assert_result(mi_cor_one, expected_mi, 'JidtDiscreteTE', 'TE')
+    _assert_result(mi_cor_one, expected_mi, 'JidtDiscreteTE', 'TE', 0.08) # More variability here
     mi_cor_two = te_estimator.estimate(src_one[1:], target_one[:-1])
-    _assert_result(mi_cor_two, expected_mi, 'JidtDiscreteTE', 'TE')
+    _assert_result(mi_cor_two, expected_mi, 'JidtDiscreteTE', 'TE', 0.08) # More variability here
     _compare_result(mi_cor_one, mi_cor_two,
                     'JidtDiscreteMI one dim', 'JidtDiscreteMI two dim', 'TE')
     # AIS
@@ -446,7 +448,7 @@ def test_local_values():
     # MI - Discrete
     mi_estimator = JidtDiscreteMI(settings=settings)
     mi = mi_estimator.estimate(source, target)
-    _assert_result(np.mean(mi), expected_mi, 'JidtDiscreteMI', 'MI')
+    _assert_result(np.mean(mi), expected_mi, 'JidtDiscreteMI', 'MI', 0.08) # More variability here
     assert type(mi) is np.ndarray, 'Local values are not a numpy array.'
 
     # MI - Gaussian
@@ -464,7 +466,7 @@ def test_local_values():
     # CMI - Discrete
     cmi_estimator = JidtDiscreteCMI(settings=settings)
     mi = cmi_estimator.estimate(source, target)
-    _assert_result(np.mean(mi), expected_mi, 'JidtDiscreteCMI', 'CMI')
+    _assert_result(np.mean(mi), expected_mi, 'JidtDiscreteCMI', 'CMI', 0.08) # More variability here
     assert type(mi) is np.ndarray, 'Local values are not a numpy array.'
 
     # MI - Gaussian
@@ -482,7 +484,7 @@ def test_local_values():
     # TE - Discrete
     te_estimator = JidtDiscreteTE(settings=settings)
     mi = te_estimator.estimate(source[1:], target[:-1])
-    _assert_result(np.mean(mi), expected_mi, 'JidtDiscreteTE', 'TE')
+    _assert_result(np.mean(mi), expected_mi, 'JidtDiscreteTE', 'TE', 0.08) # More variability here
     assert type(mi) is np.ndarray, 'Local values are not a numpy array.'
 
     # TE - Gaussian
@@ -717,6 +719,78 @@ def test_insufficient_no_points():
     with pytest.raises(RuntimeError): est.estimate(source1)
 
 
+@jpype_missing
+def test_discrete_mi_memerror():
+    """Test exception handling for memory exhausted exceptions."""
+    var1, var2 = _get_mem_binary_data()
+    
+    # Check that we catch instantiation error for an enormous history:
+    caughtException = False
+    settings = {'n_discrete_bins': 1000000000};
+    result = -1;
+    try:
+        mi_estimator = JidtDiscreteMI(settings=settings)
+        result = mi_estimator.estimate(var1, var2)
+        print('Result of MI calc (which should not have completed) was ', result);
+    except ex.JidtOutOfMemoryError:
+        caughtException = True
+        print('ex.JidtOutOfMemoryError caught as required')
+    assert caughtException, 'No exception instantiating MI calculator with 10^18 bins'
+    # Check that we instantiate correctly for a small history, even after
+    #  the error encountered above:
+    caughtException = False
+    settings = {'n_discrete_bins': 2}
+    try:
+        mi_estimator = JidtDiscreteMI(settings=settings)
+        mi_estimator.estimate(var1, var2)
+        print('Subsequent JIDT calculation worked OK')
+    except ex.JidtOutOfMemoryError:
+        caughtException = True
+    assert not(caughtException), 'Unable to instantiate MI calculator with 2 bins'
+
+
+def test_jidt_kraskov_alg1And2():
+    """ Test that JIDT estimate changes properly when we change KSG algorithm """
+    n = 100;
+    source = [sum(pair) for pair in zip(
+                        [y for y in range(n)],
+                        [rn.normalvariate(0, 0.000001) for r in range(n)])]
+    source = np.array(source)
+    target = np.array(source) # Target copies source on purpose
+    # We've generated simple data 0:99, plus a little noise to ensure
+    #  we only even get K nearest neighbours in each space.
+    # So result should be:
+    settings = {
+        'lag': 0,
+        'kraskov_k': 4,
+        'noise_level': 0,
+        'algorithm_num': 1}
+    for k in range(4,16):
+        settings['kraskov_k'] = k;
+        settings['algorithm_num'] = 1;
+        est1 = JidtKraskovMI(settings)
+        mi_alg1 = est1.estimate(source, target)
+        # Neighbour counts n_x and n_y will be k-1 because they are
+        #  *strictly* within the boundary
+        expected_alg1 = digamma(k) - 2*digamma((k-1)+1) + digamma(n);
+        _compare_result(mi_alg1, expected_alg1, 'JidtDiscreteMI_alg1', 'Analytic',
+                    'MI', tol=0.00001)
+        settings['algorithm_num'] = 2;
+        est2 = JidtKraskovMI(settings)
+        mi_alg2 = est2.estimate(source, target)
+        expected_alg2 = digamma(k) - 1/k - 2*digamma(k) + digamma(n);
+        _compare_result(mi_alg2, expected_alg2, 'JidtDiscreteMI_alg2', 'Analytic',
+                    'MI', tol=0.00001)
+        # And now check that it doesn't work for algorithm "3"
+        settings['algorithm_num'] = 3;
+        caughtAssertionError = False;
+        try:
+            est3 = JidtKraskovMI(settings);
+        except AssertionError:
+            caughtAssertionError = True;
+        assert caughtAssertionError, 'Assertion error not raised for KSG algorithm 3 request'
+
+
 if __name__ == '__main__':
     test_insufficient_no_points()
     test_lagged_mi()
@@ -734,3 +808,5 @@ if __name__ == '__main__':
     test_cmi_gauss_data()
     test_cmi_gauss_data_no_cond()
     test_mi_gauss_data()
+    test_discrete_mi_memerror()
+    test_jidt_kraskov_alg1And2()

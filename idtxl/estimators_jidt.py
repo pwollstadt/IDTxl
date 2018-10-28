@@ -81,6 +81,13 @@ class JidtEstimator(Estimator):
             'Target history has to be an integer.')
         assert type(settings['history_source']) is int, (
             'Source history has to be an integer.')
+        assert type(settings['source_target_delay']) is int, (
+            'Source-target delay has to be an integer.')
+        assert settings['tau_target'] >= 1, 'Target tau must be >= 1'
+        assert settings['tau_source'] >= 1, 'Source tau must be >= 1'
+        assert settings['history_target'] >= 0, 'Target history must be >= 0'
+        assert settings['history_source'] >= 1, 'Source history must be >= 1'
+        assert settings['source_target_delay'] >= 0, 'Source-target delay must be >= 0'
         return settings
 
     def is_parallel(self):
@@ -119,6 +126,11 @@ class JidtKraskov(JidtEstimator):
             - num_threads : int | str [optional] - number of threads used for
               estimation (default='USE_ALL', note that this uses *all*
               available threads on the current machine)
+            - algorithm_num : int [optional] - which Kraskov algorithm (1 or 2)
+              to use (default=1). Only applied at this method for TE and AIS
+              (is already applied for MI/CMI). Note that default algorithm of 1
+              here is different to the default ALG_NUM argument for the JIDT
+              AIS KSG estimator.
     """
 
     def __init__(self, CalcClass, settings=None):
@@ -129,11 +141,16 @@ class JidtKraskov(JidtEstimator):
         settings.setdefault('theiler_t', str(0))
         settings.setdefault('noise_level', 1e-8)
         settings.setdefault('num_threads', 'USE_ALL')
+        settings.setdefault('algorithm_num', 1)
+        assert type(settings['algorithm_num']) is int, (
+            'Algorithm number must be an integer.')
+        assert (settings['algorithm_num'] == 1) or (settings['algorithm_num'] == 2), (
+            'Algorithm number must be 1 or 2')
         super().__init__(settings)
 
         # Set properties of JIDT's estimator object.
         self.calc = CalcClass()
-        self.calc.setProperty('PROP_KRASKOV_ALG_NUM', str(1))
+        self.calc.setProperty('ALG_NUM', str(self.settings['algorithm_num']))
         self.calc.setProperty('NORMALISE',
                               str(self.settings['normalise']).lower())
         self.calc.setProperty('k', str(self.settings['kraskov_k']))
@@ -377,7 +394,8 @@ class JidtKraskovCMI(JidtKraskov):
             - num_threads : int | str [optional] - number of threads used for
               estimation (default='USE_ALL', note that this uses *all*
               available threads on the current machine)
-
+            - algorithm_num : int [optional] - which Kraskov algorithm (1 or 2)
+              to use (default=1)
     Note:
         Some technical details: JIDT normalises over realisations, IDTxl
         normalises over raw data once, outside the CMI estimator to save
@@ -390,8 +408,17 @@ class JidtKraskovCMI(JidtKraskov):
         settings = self._check_settings(settings)
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
-        CalcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
+        settings.setdefault('algorithm_num', 1)
+        assert type(settings['algorithm_num']) is int, (
+            'Algorithm number must be an integer.')
+        assert (settings['algorithm_num'] == 1) or (settings['algorithm_num'] == 2), (
+            'Algorithm number must be 1 or 2')
+        if (settings['algorithm_num'] == 1):
+            CalcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
                      ConditionalMutualInfoCalculatorMultiVariateKraskov1)
+        else:
+            CalcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
+                     ConditionalMutualInfoCalculatorMultiVariateKraskov2)
         super().__init__(CalcClass, settings)
 
     def estimate(self, var1, var2, conditional=None):
@@ -524,6 +551,10 @@ class JidtDiscreteCMI(JidtDiscrete):
                 JIDT calculator that was used here. Only returned if
                 return_calc was set.
 
+        Raises:
+            ex.JidtOutOfMemoryError
+                Raised when JIDT object cannot be instantiated due to mem error
+
         """
         # Calculate an MI if no conditional was provided
         if (conditional is None) or (self.settings['alphc'] == 0):
@@ -555,9 +586,21 @@ class JidtDiscreteCMI(JidtDiscrete):
 
         # We have a non-trivial conditional, so make a proper conditional MI
         # calculation
-        calc = self.CalcClass(int(np.power(self.settings['alph1'], var1_dim)),
-                              int(np.power(self.settings['alph2'], var2_dim)),
-                              int(np.power(self.settings['alphc'], cond_dim)))
+        alph1_base = int(np.power(self.settings['alph1'], var1_dim))
+        alph2_base = int(np.power(self.settings['alph2'], var2_dim))
+        cond_base = int(np.power(self.settings['alphc'], cond_dim))
+        try:
+            calc = self.CalcClass(alph1_base, alph2_base, cond_base)
+        except jp.JavaException:
+            # Only possible exception that can be raised here
+            #  (if all bases >= 2) is a Java OutOfMemoryException:
+            assert(alph1_base >= 2)
+            assert(alph2_base >= 2)
+            assert(cond_base >= 2)
+            raise ex.JidtOutOfMemoryError('Cannot instantiate JIDT CMI '
+                'discrete estimator with alph1_base = ' + str(alph1_base) +
+                ', alph2_base = ' + str(alph2_base) + ', cond_base = ' +
+                str(cond_base) + '. Try re-running increasing Java heap size')
         calc.setDebug(self.settings['debug'])
         calc.initialise()
         # Unfortunately no faster way to pass numpy arrays in than this list
@@ -681,6 +724,10 @@ class JidtDiscreteMI(JidtDiscrete):
             Java object
                 JIDT calculator that was used here. Only returned if
                 return_calc was set.
+
+        Raises:
+            ex.JidtOutOfMemoryError
+                Raised when JIDT object cannot be instantiated due to mem error
         """
         # Check and remember the no. dimensions for each variable before
         # collapsing them into univariate arrays later.
@@ -697,9 +744,20 @@ class JidtDiscreteMI(JidtDiscrete):
         var2 = utils.combine_discrete_dimensions(var2, self.settings['alph2'])
 
         # Initialise estimator
-        max_base = int(max(np.power(self.settings['alph1'], var1_dim),
-                           np.power(self.settings['alph2'], var2_dim)))
-        calc = self.CalcClass(max_base, self.settings['lag_mi'])
+        base_for_var1 = int(np.power(self.settings['alph1'], var1_dim))
+        base_for_var2 = int(np.power(self.settings['alph2'], var2_dim))
+        try:
+            calc = self.CalcClass(base_for_var1, base_for_var2,
+                                    self.settings['lag_mi'])
+        except jp.JavaException:
+            # Only possible exception that can be raised here
+            #  (if base_for_var* >= 2) is a Java OutOfMemoryException:
+            assert(base_for_var1 >= 2)
+            assert(base_for_var2 >= 2)
+            raise ex.JidtOutOfMemoryError('Cannot instantiate JIDT MI '
+                'discrete estimator with bases = ' + str(base_for_var1) +
+                 ' and ' + str(base_for_var2) +
+                 '. Try re-running increasing Java heap size')
         calc.setDebug(self.settings['debug'])
         calc.initialise()
 
@@ -767,6 +825,8 @@ class JidtKraskovMI(JidtKraskov):
             - num_threads : int | str [optional] - number of threads used for
               estimation (default='USE_ALL', note that this uses *all*
               available threads on the current machine)
+            - algorithm_num : int [optional] - which Kraskov algorithm (1 or 2)
+              to use (default=1)
             - lag_mi : int [optional] - time difference in samples to calculate
               the lagged MI between processes (default=0)
 
@@ -782,8 +842,17 @@ class JidtKraskovMI(JidtKraskov):
         settings = self._check_settings(settings)
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
-        CalcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
+        settings.setdefault('algorithm_num', 1)
+        assert type(settings['algorithm_num']) is int, (
+            'Algorithm number must be an integer.')
+        assert (settings['algorithm_num'] == 1) or (settings['algorithm_num'] == 2), (
+            'Algorithm number must be 1 or 2')
+        if (settings['algorithm_num'] == 1):
+            CalcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
                      MutualInfoCalculatorMultiVariateKraskov1)
+        else:
+            CalcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
+                     MutualInfoCalculatorMultiVariateKraskov2)
         super().__init__(CalcClass, settings)
 
         # Get lag and shift second variable to account for a lag if requested
@@ -862,7 +931,8 @@ class JidtKraskovAIS(JidtKraskov):
             - num_threads : int | str [optional] - number of threads used for
               estimation (default='USE_ALL', note that this uses *all*
               available threads on the current machine)
-
+            - algorithm_num : int [optional] - which Kraskov algorithm (1 or 2)
+              to use (default=1)
     Note:
         Some technical details: JIDT normalises over realisations, IDTxl
         normalises over raw data once, outside the AIS estimator to save
@@ -927,7 +997,7 @@ class JidtDiscreteAIS(JidtDiscrete):
             set estimator parameters:
 
             - history : int - number of samples in the target's past used as
-              embedding
+              embedding (>= 0)
             - debug : bool [optional] - return debug information when calling
               JIDT (default=False)
             - local_values : bool [optional] - return local TE instead of
@@ -938,9 +1008,9 @@ class JidtDiscreteAIS(JidtDiscrete):
               required (default='none')
             - n_discrete_bins : int [optional] - number of discrete bins/
               levels or the base of each dimension of the discrete variables
-              (default=2). If set, this parameter overwrites/sets alph
+              (default=2). If set, this parameter overwrites/sets alph. (>= 2)
             - alph : int [optional] - number of discrete bins/levels for var1
-              (default=2 , or the value set for n_discrete_bins)
+              (default=2 , or the value set for n_discrete_bins). (>= 2)
     """
 
     def __init__(self, settings):
@@ -951,14 +1021,16 @@ class JidtDiscreteAIS(JidtDiscrete):
             raise RuntimeError('No history was provided for AIS estimation.')
         assert type(settings['history']) is int, (
                                             'History has to be an integer.')
+        assert settings['history'] >= 0, 'History must be >= 0'
 
         # Get alphabet sizes and check if discretisation is requested
         try:
             n_discrete_bins = int(settings['n_discrete_bins'])
             settings['alph'] = n_discrete_bins
         except KeyError:
-            pass  # Do nothing and use the default for alph_* set below
+            pass  # Do nothing and use the default for alph set below
         settings.setdefault('alph', int(2))
+        assert settings['alph'] >= 2, 'Number of bins must be >= 2'
 
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
@@ -986,6 +1058,11 @@ class JidtDiscreteAIS(JidtDiscrete):
             Java object
                 JIDT calculator that was used here. Only returned if
                 return_calc was set.
+
+        Raises:
+            ex.JidtOutOfMemoryError
+                Raised when JIDT object cannot be instantiated due to mem error
+
         """
         process = self._ensure_one_dim_input(process)
 
@@ -1007,8 +1084,17 @@ class JidtDiscreteAIS(JidtDiscrete):
         else:
             pass  # don't discretise at all, assume data to be discrete
 
-        # And finally make the TE calculation:
-        calc = self.CalcClass(self.settings['alph'], self.settings['history'])
+        # And finally make the AIS calculation:
+        try:
+            calc = self.CalcClass(self.settings['alph'], self.settings['history'])
+        except jp.JavaException:
+            # Only possible exception that can be raised here
+            #  (if self.settings['alph'] >= 2) is a Java OutOfMemoryException:
+            assert(self.settings['alph'] >= 2)
+            raise ex.JidtOutOfMemoryError('Cannot instantiate JIDT AIS '
+                'discrete estimator with alph = ' + str(self.settings['alph']) +
+                 ' and history = ' + str(self.settings['history']) +
+                 '. Try re-running increasing Java heap size')
         calc.initialise()
         # Unfortunately no faster way to pass numpy arrays in than this list
         # conversion
@@ -1343,6 +1429,8 @@ class JidtKraskovTE(JidtKraskov):
               JIDT (default=False)
             - local_values : bool [optional] - return local TE instead of
               average TE (default=False)
+            - algorithm_num : int [optional] - which Kraskov algorithm (1 or 2)
+              to use (default=1)
 
     Note:
         Some technical details: JIDT normalises over realisations, IDTxl
@@ -1412,16 +1500,16 @@ class JidtDiscreteTE(JidtDiscrete):
             sets estimation parameters:
 
             - history_target : int - number of samples in the target's past
-              used as embedding
+              used as embedding. (>= 0)
             - history_source  : int [optional] - number of samples in the
               source's past used as embedding (default=same as the target
-              history)
+              history). (>= 1)
             - tau_source : int [optional] - source's embedding delay
-              (default=1)
+              (default=1). (>= 1)
             - tau_target : int [optional] - target's embedding delay
-              (default=1)
+              (default=1). (>= 1)
             - source_target_delay : int [optional] - information transfer delay
-              between source and target (default=1)
+              between source and target (default=1) (>= 0)
             - discretise_method : str [optional] - if and how to discretise
               incoming continuous data, can be 'max_ent' for maximum entropy
               binning, 'equal' for equal size bins, and 'none' if no binning is
@@ -1429,11 +1517,11 @@ class JidtDiscreteTE(JidtDiscrete):
             - n_discrete_bins : int [optional] - number of discrete bins/
               levels or the base of each dimension of the discrete variables
               (default=2). If set, this parameter overwrites/sets alph1 and
-              alph2
+              alph2. (>= 2)
             - alph1 : int [optional] - number of discrete bins/levels for
-              source (default=2, or the value set for n_discrete_bins)
+              source (default=2, or the value set for n_discrete_bins). (>= 2)
             - alph2 : int [optional] - number of discrete bins/levels for
-              target (default=2, or the value set for n_discrete_bins)
+              target (default=2, or the value set for n_discrete_bins). (>= 2)
             - debug : bool [optional] - return debug information when calling
               JIDT (default=False)
             - local_values : bool [optional] - return local TE instead of
@@ -1456,6 +1544,12 @@ class JidtDiscreteTE(JidtDiscrete):
             pass
         settings.setdefault('alph1', int(2))
         settings.setdefault('alph2', int(2))
+        assert type(settings['alph1']) is int, (
+            'Num discrete levels for source has to be an integer.')
+        assert type(settings['alph2']) is int, (
+            'Num discrete levels for target has to be an integer.')
+        assert settings['alph1'] >= 2, 'Num discrete levels for source must be >= 2'
+        assert settings['alph2'] >= 2, 'Num discrete levels for target must be >= 2'
         super().__init__(settings)
 
         # Start JAVA virtual machine and create JAVA object.
@@ -1485,6 +1579,11 @@ class JidtDiscreteTE(JidtDiscrete):
             Java object
                 JIDT calculator that was used here. Only returned if
                 return_calc was set.
+
+        Raises:
+            ex.JidtOutOfMemoryError
+                Raised when JIDT object cannot be instantiated due to mem error
+
         """
         source = self._ensure_one_dim_input(source)
         target = self._ensure_one_dim_input(target)
@@ -1494,12 +1593,22 @@ class JidtDiscreteTE(JidtDiscrete):
 
         # And finally make the TE calculation:
         max_base = max(self.settings['alph1'], self.settings['alph2'])
-        calc = self.CalcClass(max_base,
+        try:
+            calc = self.CalcClass(max_base,
                               self.settings['history_target'],
                               self.settings['tau_target'],
                               self.settings['history_source'],
                               self.settings['tau_source'],
                               self.settings['source_target_delay'])
+        except jp.JavaException:
+            # Only possible exception that can be raised here
+            #  (if max_base >= 2) is a Java OutOfMemoryException:
+            assert(max_base >= 2)
+            raise ex.JidtOutOfMemoryError('Cannot instantiate JIDT TE '
+                'discrete estimator with max_base = ' + str(max_base) +
+                 ' and history_target = ' + str(self.settings['history_target']) +
+                 ' and history_source = ' + str(self.settings['history_source']) +
+                 '. Try re-running increasing Java heap size')
         calc.initialise()
         # Unfortunately no faster way to pass numpy arrays in than this list
         # conversion

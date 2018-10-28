@@ -2,6 +2,7 @@
 import numpy as np
 from .network_analysis import NetworkAnalysis
 from . import stats
+from . import idtxl_exceptions as ex
 
 
 class NetworkInference(NetworkAnalysis):
@@ -110,12 +111,23 @@ class NetworkInference(NetworkAnalysis):
             cand_real = cand_real.T.reshape(cand_real.size, 1)
 
             # Calculate the (C)MI for each candidate and the target.
-            temp_te = self._cmi_estimator.estimate_parallel(
+            try:
+                temp_te = self._cmi_estimator.estimate_parallel(
                                 n_chunks=len(candidate_set),
                                 re_use=['var2', 'conditional'],
                                 var1=cand_real,
                                 var2=self._current_value_realisations,
                                 conditional=self._selected_vars_realisations)
+            except ex.AlgorithmExhaustedError as aee:
+                # The algorithm cannot continue here, so
+                #  we'll terminate the search for more candidates,
+                #  though those identified already remain valid
+                print('AlgorithmExhaustedError encountered in '
+                    'estimations: ' + aee.message)
+                print('Halting current estimation set.')
+                # For now we don't need a stack trace:
+                # traceback.print_tb(aee.__traceback__)
+                break
 
             # Test max CMI for significance with maximum statistics.
             te_max_candidate = max(temp_te)
@@ -123,8 +135,19 @@ class NetworkInference(NetworkAnalysis):
             if self.settings['verbose']:
                 print('testing candidate: {0} '.format(
                     self._idx_to_lag([max_candidate])[0]), end='')
-            significant = stats.max_statistic(self, data, candidate_set,
+            try:
+                significant = stats.max_statistic(self, data, candidate_set,
                                               te_max_candidate)[0]
+            except ex.AlgorithmExhaustedError as aee:
+                # The algorithm cannot continue here, so
+                #  we'll terminate the check of significance for this candidate,
+                #  though those identified already remain valid
+                print('AlgorithmExhaustedError encountered in '
+                    'estimations: ' + aee.message)
+                print('Halting candidate max stats test')
+                # For now we don't need a stack trace:
+                # traceback.print_tb(aee.__traceback__)
+                break
 
             # If the max is significant keep it and test the next candidate. If
             # it is not significant break. There will be no further significant
@@ -486,22 +509,44 @@ class NetworkInferenceBivariate(NetworkInference):
                 cand_real = cand_real.T.reshape(cand_real.size, 1)
 
                 # Calculate the (C)MI for each candidate and the target.
-                temp_te = self._cmi_estimator.estimate_parallel(
+                try:
+                    temp_te = self._cmi_estimator.estimate_parallel(
                                 n_chunks=len(candidate_set),
                                 re_use=['var2', 'conditional'],
                                 var1=cand_real,
                                 var2=self._current_value_realisations,
                                 conditional=conditional_realisations)
-
+                except ex.AlgorithmExhaustedError as aee:
+                    # The algorithm cannot continue here, so
+                    #  we'll terminate the search for more candidates,
+                    #  though those identified already remain valid
+                    print('AlgorithmExhaustedError encountered in '
+                        'estimations: ' + aee.message)
+                    print('Halting current estimation set.')
+                    # For now we don't need a stack trace:
+                    # traceback.print_tb(aee.__traceback__)
+                    break
+                    
                 # Test max CMI for significance with maximum statistics.
                 te_max_candidate = max(temp_te)
                 max_candidate = candidate_set[np.argmax(temp_te)]
                 if self.settings['verbose']:
                     print('testing candidate: {0} '.format(
                         self._idx_to_lag([max_candidate])[0]), end='')
-                significant = stats.max_statistic(
-                    self, data, candidate_set,
-                    te_max_candidate, conditional_realisations)[0]
+                try:
+                    significant = stats.max_statistic(
+                        self, data, candidate_set,
+                        te_max_candidate, conditional_realisations)[0]
+                except ex.AlgorithmExhaustedError as aee:
+                    # The algorithm cannot continue here, so
+                    #  we'll terminate the significance check for this candidate,
+                    #  though those identified already remain valid
+                    print('AlgorithmExhaustedError encountered in '
+                        'estimations: ' + aee.message)
+                    print('Halting candidate max stats test')
+                    # For now we don't need a stack trace:
+                    # traceback.print_tb(aee.__traceback__)
+                    break
 
                 # If the max is significant move it from the candidate set to
                 # the set of selected sources and test the next candidate. If
@@ -611,13 +656,25 @@ class NetworkInferenceBivariate(NetworkInference):
                     i_1 = i_2
                     i_2 += data.n_realisations(self.current_value)
 
-                temp_te = self._cmi_estimator.estimate_parallel(
+                try:
+                    temp_te = self._cmi_estimator.estimate_parallel(
                                     n_chunks=len(source_vars),
                                     re_use=re_use,
                                     var1=candidate_realisations,
                                     var2=self._current_value_realisations,
                                     conditional=conditional_realisations)
-
+                except ex.AlgorithmExhaustedError as aee:
+                    # The algorithm cannot continue here, so
+                    #  we'll terminate the pruning check,
+                    #  assuming that we need not prune any more
+                    print('AlgorithmExhaustedError encountered in '
+                        'estimations: ' + aee.message)
+                    print('Halting current pruning and allowing others to'
+                        ' remain.')
+                    # For now we don't need a stack trace:
+                    # traceback.print_tb(aee.__traceback__)
+                    break
+                
                 # Find variable with minimum MI/TE. Test min TE/MI for
                 # significance with minimum statistics. Build conditioning set
                 # for minimum statistics by removing the minimum candidate.
@@ -639,12 +696,24 @@ class NetworkInferenceBivariate(NetworkInference):
                     conditional_realisations = np.hstack((
                         conditional_realisations_target,
                         conditional_realisations_sources))
-                [significant, p, surr_table] = stats.min_statistic(
+                try:
+                    [significant, p, surr_table] = stats.min_statistic(
                                                 self, data,
                                                 source_vars,
                                                 te_min_candidate,
                                                 conditional_realisations)
-
+                except ex.AlgorithmExhaustedError as aee:
+                    # The algorithm cannot continue here, so
+                    #  we'll terminate the pruning check,
+                    #  assuming that we need not prune any more
+                    print('AlgorithmExhaustedError encountered in '
+                        'estimations: ' + aee.message)
+                    print('Halting current pruning and allowing others to'
+                        ' remain.')
+                    # For now we don't need a stack trace:
+                    # traceback.print_tb(aee.__traceback__)
+                    break
+                
                 # Remove the minimum it is not significant and test the next
                 # min. candidate. If the minimum is significant, break. All
                 # other sources will be significant as well (b/c they have
@@ -674,13 +743,28 @@ class NetworkInferenceBivariate(NetworkInference):
             if self.settings['verbose']:
                 print('selected variables: {0}'.format(
                     self._idx_to_lag(self.selected_vars_full)))
-            [s, p, stat] = stats.omnibus_test(self, data)
+            try:
+                [s, p, stat] = stats.omnibus_test(self, data)
+            except ex.AlgorithmExhaustedError as aee:
+                # The algorithm cannot continue here, so
+                #  we'll set the results to zero
+                print('AlgorithmExhaustedError encountered in '
+                    'estimations: ' + aee.message)
+                print('Halting omnibus test and setting to not significant.')
+                # For now we don't need a stack trace:
+                # traceback.print_tb(aee.__traceback__)
+                stat = 0
+                s = False
+                p = 1
             self.statistic_omnibus = stat
             self.sign_omnibus = s
             self.pvalue_omnibus = p
             # Test individual links if the omnibus test is significant using
             # the sequential max stats. Remove non-significant links.
             if self.sign_omnibus:
+                # If there is an ex.AlgorithmExhaustedError exception inside
+                #  max_stats_sequential, it will catch it and return
+                #  everything as not significant:
                 [s, p, stat] = stats.max_statistic_sequential_bivariate(
                     self, data)
                 p, stat = self._remove_non_significant(s, p, stat)
@@ -690,13 +774,27 @@ class NetworkInferenceBivariate(NetworkInference):
                     conditioning = 'target'
                 elif self.measure == 'mi':
                     conditioning = 'none'
-                self.statistic_single_link = self._calculate_single_link(
+                try:
+                    self.statistic_single_link = self._calculate_single_link(
                         data=data,
                         current_value=self.current_value,
                         source_vars=self.selected_vars_sources,
                         target_vars=self.selected_vars_target,
                         sources='all',
                         conditioning=conditioning)
+                except ex.AlgorithmExhaustedError as aee:
+                    # The algorithm cannot continue here, so
+                    #  we'll terminate the computation of single link stats.
+                    #  Since max stats sequential etc all passed up to here,
+                    #  it seems ok to let everything through still but
+                    #  just write a 0 for final values
+                    print('AlgorithmExhaustedError encountered in '
+                        'final_conditional estimations: ' + aee.message)
+                    print('Halting final_conditional estimations')
+                    # For now we don't need a stack trace:
+                    # traceback.print_tb(aee.__traceback__)
+                    self.statistic_single_link = \
+                        np.zeros(len(self.selected_vars_sources))
             else:
                 self.selected_vars_sources = []
                 self.selected_vars_full = self.selected_vars_target
@@ -784,12 +882,24 @@ class NetworkInferenceMultivariate(NetworkInference):
                 i_1 = i_2
                 i_2 += data.n_realisations(self.current_value)
 
-            temp_te = self._cmi_estimator.estimate_parallel(
+            try:
+                temp_te = self._cmi_estimator.estimate_parallel(
                                 n_chunks=len(self.selected_vars_sources),
                                 re_use=re_use,
                                 var1=candidate_realisations,
                                 var2=self._current_value_realisations,
                                 conditional=conditional_realisations)
+            except ex.AlgorithmExhaustedError as aee:
+                # The algorithm cannot continue here, so
+                #  we'll terminate the pruning check,
+                #  assuming that we need not prune any more
+                print('AlgorithmExhaustedError encountered in '
+                    'estimations: ' + aee.message)
+                print('Halting current pruning and allowing others to'
+                    ' remain.')
+                # For now we don't need a stack trace:
+                # traceback.print_tb(aee.__traceback__)
+                break
 
             # Find variable with minimum MI/TE. Test min TE/MI for significance
             # with minimum statistics. Build conditioning set for minimum
@@ -804,11 +914,23 @@ class NetworkInferenceMultivariate(NetworkInference):
                     set([min_candidate]))
             conditional_realisations = data.get_realisations(
                         self.current_value, remaining_candidates)[0]
-            [significant, p, surr_table] = stats.min_statistic(
+            try:
+                [significant, p, surr_table] = stats.min_statistic(
                                               self, data,
                                               self.selected_vars_sources,
                                               te_min_candidate,
                                               conditional_realisations)
+            except ex.AlgorithmExhaustedError as aee:
+                # The algorithm cannot continue here, so
+                #  we'll terminate the pruning check,
+                #  assuming that we need not prune any more
+                print('AlgorithmExhaustedError encountered in '
+                    'estimations: ' + aee.message)
+                print('Halting current pruning and allowing others to'
+                    ' remain.')
+                # For now we don't need a stack trace:
+                # traceback.print_tb(aee.__traceback__)
+                break
 
             # Remove the minimum it is not significant and test the next min.
             # candidate. If the minimum is significant, break, all other
@@ -840,13 +962,28 @@ class NetworkInferenceMultivariate(NetworkInference):
             if self.settings['verbose']:
                 print('selected variables: {0}'.format(
                     self._idx_to_lag(self.selected_vars_full)))
-            [s, p, stat] = stats.omnibus_test(self, data)
+            try:
+                [s, p, stat] = stats.omnibus_test(self, data)
+            except ex.AlgorithmExhaustedError as aee:
+                # The algorithm cannot continue here, so
+                #  we'll set the results to zero
+                print('AlgorithmExhaustedError encountered in '
+                    'estimations: ' + aee.message)
+                print('Halting omnibus test and setting to not significant.')
+                # For now we don't need a stack trace:
+                # traceback.print_tb(aee.__traceback__)
+                stat = 0
+                s = False
+                p = 1
             self.statistic_omnibus = stat
             self.sign_omnibus = s
             self.pvalue_omnibus = p
             # Test individual links if the omnibus test is significant using
             # the sequential max stats. Remove non-significant links.
             if self.sign_omnibus:
+                # If there is an ex.AlgorithmExhaustedError exception inside
+                #  max_stats_sequential, it will catch it and return
+                #  everything as not significant:
                 [s, p, stat] = stats.max_statistic_sequential(self, data)
                 p, stat = self._remove_non_significant(s, p, stat)
                 self.pvalues_sign_sources = p
@@ -857,13 +994,27 @@ class NetworkInferenceMultivariate(NetworkInference):
                     conditioning = 'target'
                 elif self.measure == 'mi':
                     conditioning = 'none'
-                self.statistic_single_link = self._calculate_single_link(
-                    data=data,
-                    current_value=self.current_value,
-                    source_vars=self.selected_vars_sources,
-                    target_vars=self.selected_vars_target,
-                    sources='all',
-                    conditioning=conditioning)
+                try:
+                    self.statistic_single_link = self._calculate_single_link(
+                        data=data,
+                        current_value=self.current_value,
+                        source_vars=self.selected_vars_sources,
+                        target_vars=self.selected_vars_target,
+                        sources='all',
+                        conditioning=conditioning)
+                except ex.AlgorithmExhaustedError as aee:
+                    # The algorithm cannot continue here, so
+                    #  we'll terminate the computation of single link stats.
+                    #  Since max stats sequential etc all passed up to here,
+                    #  it seems ok to let everything through still but
+                    #  just write a 0 for final values
+                    print('AlgorithmExhaustedError encountered in '
+                        'final_conditional estimations: ' + aee.message)
+                    print('Halting final_conditional estimations')
+                    # For now we don't need a stack trace:
+                    # traceback.print_tb(aee.__traceback__)
+                    self.statistic_single_link = \
+                        np.zeros(len(self.selected_vars_sources))
             else:
                 self.selected_vars_sources = []
                 self.selected_vars_full = self.selected_vars_target

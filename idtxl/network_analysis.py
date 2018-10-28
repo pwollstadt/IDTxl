@@ -411,6 +411,10 @@ class NetworkAnalysis():
         Returns:
             numpy array
                 estimate of dependency measure for each link
+                
+        Raises:
+            ex.AlgorithmExhaustedError
+                Raised from estimate() when calculation cannot be made
         """
         # Get realisations of target variables and the current value, constant
         # over sources. Permute current value realisations to generate

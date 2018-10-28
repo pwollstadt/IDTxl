@@ -2,6 +2,7 @@
 import copy as cp
 import numpy as np
 from . import idtxl_utils as utils
+from . import idtxl_exceptions as ex
 
 
 def ais_fdr(settings=None, *results):
@@ -324,6 +325,10 @@ def omnibus_test(analysis_setup, data):
         float
             the estimated test statisic, i.e., the information transfer from
             all sources into the target
+
+    Raises:
+        ex.AlgorithmExhaustedError
+            Raised from estimate() calls when calculation cannot be made
     """
     # Set defaults and get parameters from settings dictionary
     analysis_setup.settings.setdefault('n_perm_omnibus', 500)
@@ -428,6 +433,10 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
             the test's p-value
         numpy array
             surrogate table
+
+    Raises:
+        ex.AlgorithmExhaustedError
+            Raised from _create_surrogate_table() when calculation cannot be made
     """
     # Set defaults and get parameters from settings dictionary
     analysis_setup.settings.setdefault('n_perm_max_stat', 200)
@@ -554,12 +563,27 @@ def max_statistic_sequential(analysis_setup, data):
         i_2 += data.n_realisations(analysis_setup.current_value)
 
     # Calculate original statistic (multivariate/bivariate TE/MI)
-    individual_stat = analysis_setup._cmi_estimator.estimate_parallel(
+    try:
+        individual_stat = analysis_setup._cmi_estimator.estimate_parallel(
                             n_chunks=len(analysis_setup.selected_vars_sources),
                             re_use=re_use,
                             var1=candidate_realisations,
                             var2=analysis_setup._current_value_realisations,
                             conditional=conditional_realisations)
+    except ex.AlgorithmExhaustedError as aee:
+        # The aglorithm cannot continue here, so
+        #  we'll terminate the max sequential stats test,
+        #  and declare all not significant
+        print('AlgorithmExhaustedError encountered in '
+            'estimations: ' + aee.message)
+        print('Stopping sequential max stats at candidate with rank 0')
+        # For now we don't need a stack trace:
+        # traceback.print_tb(aee.__traceback__)
+        # Return (signficance, pvalue, TEs):
+        return \
+            (np.zeros(len(analysis_setup.selected_vars_sources)).astype(bool),
+            np.ones(len(analysis_setup.selected_vars_sources)),
+            np.zeros(len(analysis_setup.selected_vars_sources)))
 
     selected_vars_order = utils.argsort_descending(individual_stat)
     individual_stat_sorted = utils.sort_descending(individual_stat)
@@ -572,11 +596,26 @@ def max_statistic_sequential(analysis_setup, data):
         surr_table = analysis_setup._min_stats_surr_table[:, :n_permutations]
         assert len(analysis_setup.selected_vars_sources) == surr_table.shape[0]
     else:
-        surr_table = _create_surrogate_table(
+        try:
+            surr_table = _create_surrogate_table(
                             analysis_setup=analysis_setup,
                             data=data,
                             idx_test_set=analysis_setup.selected_vars_sources,
                             n_perm=n_permutations)
+        except ex.AlgorithmExhaustedError as aee:
+            # The aglorithm cannot continue here, so
+            #  we'll terminate the max sequential stats test,
+            #  and declare all not significant
+            print('AlgorithmExhaustedError encountered in '
+                'estimations: ' + aee.message)
+            print('Stopping sequential max stats at candidate with rank 0')
+            # For now we don't need a stack trace:
+            # traceback.print_tb(aee.__traceback__)
+            # Return (signficance, pvalue, TEs):
+            return \
+                (np.zeros(len(analysis_setup.selected_vars_sources)).astype(bool),
+                np.ones(len(analysis_setup.selected_vars_sources)),
+                np.zeros(len(analysis_setup.selected_vars_sources)))
     max_distribution = _sort_table_max(surr_table)
 
     # Compare each original value with the distribution of the same rank,
@@ -733,12 +772,27 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
             i_2 += data.n_realisations(analysis_setup.current_value)
 
         # Calculate original statistic (multivariate/bivariate TE/MI)
-        individual_stat = analysis_setup._cmi_estimator.estimate_parallel(
+        try:
+            individual_stat = analysis_setup._cmi_estimator.estimate_parallel(
                             n_chunks=len(source_vars),
                             re_use=re_use,
                             var1=candidate_realisations,
                             var2=analysis_setup._current_value_realisations,
                             conditional=conditional_realisations)
+        except ex.AlgorithmExhaustedError as aee:
+            # The aglorithm cannot continue here, so
+            #  we'll terminate the max sequential stats test,
+            #  and declare all not significant
+            print('AlgorithmExhaustedError encountered in '
+                'estimations: ' + aee.message)
+            print('Stopping sequential max stats at candidate with rank 0')
+            # For now we don't need a stack trace:
+            # traceback.print_tb(aee.__traceback__)
+            # Return (signficance, pvalue, TEs):
+            return \
+                (np.zeros(len(analysis_setup.selected_vars_sources)).astype(bool),
+                np.ones(len(analysis_setup.selected_vars_sources)),
+                np.zeros(len(analysis_setup.selected_vars_sources)))
 
         selected_vars_order = utils.argsort_descending(individual_stat)
         individual_stat_sorted = utils.sort_descending(individual_stat)
@@ -755,12 +809,27 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
             conditional_realisations = np.hstack((
                 conditional_realisations_sources,
                 conditional_realisations_target))
-        surr_table = _create_surrogate_table(
+        try:
+            surr_table = _create_surrogate_table(
                         analysis_setup=analysis_setup,
                         data=data,
                         idx_test_set=analysis_setup.selected_vars_sources,
                         n_perm=n_permutations,
                         conditional=conditional_realisations)
+        except ex.AlgorithmExhaustedError as aee:
+            # The algorithm cannot continue here, so
+            #  we'll terminate the max sequential stats test,
+            #  and declare all not significant
+            print('AlgorithmExhaustedError encountered in '
+                'estimations: ' + aee.message)
+            print('Stopping sequential max stats at candidate with rank 0')
+            # For now we don't need a stack trace:
+            # traceback.print_tb(aee.__traceback__)
+            # Return (signficance, pvalue, TEs):
+            return \
+                (np.zeros(len(analysis_setup.selected_vars_sources)).astype(bool),
+                np.ones(len(analysis_setup.selected_vars_sources)),
+                np.zeros(len(analysis_setup.selected_vars_sources)))
         max_distribution = _sort_table_max(surr_table)
 
         # Compare each original value with the distribution of the same rank,
@@ -827,6 +896,10 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
             the test's p-value
         numpy array
             surrogate table
+
+    Raises:
+        ex.AlgorithmExhaustedError
+            Raised from _create_surrogate_table() when calculation cannot be made
     """
     # Set defaults and get parameters from settings dictionary
     analysis_setup.settings.setdefault('n_perm_min_stat', 500)
@@ -881,6 +954,10 @@ def mi_against_surrogates(analysis_setup, data):
             statistical significance
         float
             p_value for estimated MI value
+
+    Raises:
+        ex.AlgorithmExhaustedError
+            Raised from estimate() methods when calculation cannot be made
     """
     analysis_setup.settings.setdefault('n_perm_mi', 500)
     n_perm = analysis_setup.settings['n_perm_mi']
@@ -1221,6 +1298,10 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm,
         numpy array
             surrogate MI/CMI/TE values, dimensions: (length test set, number of
             surrogates)
+
+    Raises:
+        ex.AlgorithmExhaustedError
+            Raised from estimate_parallel() when calculation cannot be made
     """
     # Check which permutation type is requested by the calling function.
     permute_in_time = analysis_setup.settings['permute_in_time']
