@@ -17,6 +17,7 @@ docs/_build
 *.log
 *.swp
 .directory
+.DS_store
 .cache
 .spyderproject
 .spyderworkspace

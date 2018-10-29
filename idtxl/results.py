@@ -59,7 +59,7 @@ class Results():
         settings : dict
             settings used for estimation of information theoretic measures and
             statistical testing
-        data_properties: dict
+        data_properties : dict
             data properties, contains
 
                 - n_nodes : int - total number of nodes in the network
@@ -183,14 +183,19 @@ class ResultsSingleProcessAnalysis(Results):
     e.g., estimation of active information storage.
 
     Note that for convenience all dictionaries in this class can additionally
-    be accessed using dot-notation: res_network.settings.cmi_estimator
-    or res_network.settings['cmi_estimator'].
+    be accessed using dot-notation: 
+
+    >>> res_network.settings.cmi_estimator
+    
+    or 
+    
+    >>> res_network.settings['cmi_estimator'].
 
     Attributes:
         settings : dict
             settings used for estimation of information theoretic measures and
             statistical testing
-        data_properties: dict
+        data_properties : dict
             data properties, contains
 
                 - n_nodes : int - total number of nodes in the network
@@ -431,14 +436,19 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
     MultivariateTE or Bivariate TE.
 
     Note that for convenience all dictionaries in this class can additionally
-    be accessed using dot-notation: res_network.settings.cmi_estimator
-    or res_network.settings['cmi_estimator'].
+    be accessed using dot-notation: 
+    
+    >>> res_network.settings.cmi_estimator
+    
+    or 
+
+    >>> res_network.settings['cmi_estimator'].
 
     Attributes:
         settings : dict
             settings used for estimation of information theoretic measures and
             statistical testing
-        data_properties: dict
+        data_properties : dict
             data properties, contains
 
                 - n_nodes : int - total number of nodes in the network
@@ -543,7 +553,7 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
         uncorrected results. Multiple options for the weight are available.
 
         Args:
-            weights: str
+            weights : str
                 can either be
 
                 - 'max_te_lag': the weights represent the source -> target
@@ -603,11 +613,11 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
         Print edge list resulting from network inference to console.
         Output may look like this:
 
-            0 -> 1, max_te_lag = 2
-            0 -> 2, max_te_lag = 3
-            0 -> 3, max_te_lag = 2
-            3 -> 4, max_te_lag = 1
-            4 -> 3, max_te_lag = 1
+            >>> 0 -> 1, max_te_lag = 2
+            >>> 0 -> 2, max_te_lag = 3
+            >>> 0 -> 3, max_te_lag = 2
+            >>> 3 -> 4, max_te_lag = 1
+            >>> 4 -> 3, max_te_lag = 1
 
         The edge list can either be generated from FDR-corrected results
         or uncorrected results. Multiple options for the weight
@@ -615,7 +625,7 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
         details).
 
         Args:
-            weights: str
+            weights : str
                 link weights (see documentation of method get_adjacency_matrix
                 for details)
             fdr : bool [optional]
@@ -632,14 +642,19 @@ class ResultsPartialInformationDecomposition(ResultsNetworkAnalysis):
     algorithms.
 
     Note that for convenience all dictionaries in this class can additionally
-    be accessed using dot-notation: res_pid._single_target[2].source_1
-    or res_pid._single_target[2].['source_1'].
+    be accessed using dot-notation: 
+    
+    >>> res_pid._single_target[2].source_1
+    
+    or 
+    
+    >>> res_pid._single_target[2].['source_1'].
 
     Attributes:
         settings : dict
             settings used for estimation of information theoretic measures and
             statistical testing
-        data_properties: dict
+        data_properties : dict
             data properties, contains
 
                 - n_nodes : int - total number of nodes in the network
@@ -703,7 +718,7 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
             settings used for estimation of information theoretic measures and
             statistical testing
 
-        data_properties: dict
+        data_properties : dict
             data properties, contains
 
                 - n_nodes : int - total number of nodes in the network
@@ -820,11 +835,11 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
 
         Print results of network comparison to console. Output looks like this:
 
-            0 -> 1, diff_abs = 0.2
-            0 -> 2, diff_abs = 0.5
-            0 -> 3, diff_abs = 0.7
-            3 -> 4, diff_abs = 1.3
-            4 -> 3, diff_abs = 0.4
+            >>> 0 -> 1, diff_abs = 0.2
+            >>> 0 -> 2, diff_abs = 0.5
+            >>> 0 -> 3, diff_abs = 0.7
+            >>> 3 -> 4, diff_abs = 1.3
+            >>> 4 -> 3, diff_abs = 0.4
 
         indicating differences in the network inference measure for a link
         source -> target.

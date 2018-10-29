@@ -34,8 +34,8 @@ class Data():
         >>> data_2.set_data(data_new, 's')
 
     Note:
-        Realisations are stored as attribute 'data'. This can't be set
-        directly, but only via the method 'set_data'
+        Realisations are stored as attribute 'data'. This can only be set via 
+        the 'set_data()' method.
 
     Args:
         data : numpy array [optional]
