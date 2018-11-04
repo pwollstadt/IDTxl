@@ -1,3 +1,4 @@
 include COPYING.txt
 include idtxl/infodynamics.jar
-include test/data/ABA04_Up_10-140Hz_v7_3.mat
+recursive-include test/data *
+recursive-include docs *

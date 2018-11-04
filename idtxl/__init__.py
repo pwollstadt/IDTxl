@@ -26,4 +26,4 @@ computing engines for both GPU and CPU platforms. Written for Python3.4.3+.
 # from .data import Data
 # from .multivariate_te import MultivariateTE
 
-# TODO add everything that should be callable by the user.
+# TODO add everything that should be callable by the user?

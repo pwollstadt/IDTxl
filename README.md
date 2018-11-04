@@ -17,10 +17,10 @@ functionality to estimate the following measures:
 IDTxl implements estimators for discrete and continuous data with parallel
 computing engines for both GPU and CPU platforms. Written for Python3.4.3+.
 
-To **get started** have a look at the [wiki](https://github.com/pwollstadt/IDTxl/wiki) and the [documentation](http://pwollstadt.github.io/IDTxl/).
+To **get started** have a look at the [wiki](https://github.com/pwollstadt/IDTxl/wiki) and the [documentation](http://pwollstadt.github.io/IDTxl/). For further discussions, join [IDTxl's google group](https://groups.google.com/forum/#!forum/idtxl).
 
 ## How to cite
-Wollstadt, Lizier, Vicente, Finn, Martinez-Zarzuela, Mediano, Novelli, Wibral, 2018. "IDTxl - The Information Dynamics Toolkit xl: a Python package for the efficient analysis of multivariate information dynamics in networks", GitHub Repository: https://github.com/pwollstadt/IDTxl.
+P. Wollstadt, J. T. Lizier, R. Vicente, C. Finn, M. Martinez-Zarzuela, P. Mediano, L. Novelli, M. Wibral (2018). _IDTxl: The Information Dynamics Toolkit xl: a Python package for the efficient analysis of multivariate information dynamics in networks._ ArXiv preprint: https://arxiv.org/abs/1807.10459.
 
 ## Contributors
 
