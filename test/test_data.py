@@ -165,6 +165,13 @@ def test_permute_samples():
     n = 20
     data = Data(np.arange(n), 's', normalise=False)
 
+    # Test unkown permutation type
+    with pytest.raises(ValueError):
+        settings = {'perm_type': 'test'}
+        perm = data.permute_samples(current_value=(0, 0),
+                                    idx_list=[(0, 0)],
+                                    perm_settings=settings)[0]
+
     # Test random permutation
     settings = {'perm_type': 'random'}
     perm = data.permute_samples(current_value=(0, 0),
@@ -249,8 +256,29 @@ def test_permute_samples():
         data.permute_samples(current_value=current_value,
                              idx_list=l,
                              perm_settings=perm_settings)
+    perm_settings['block_size'] = -1
+    with pytest.raises(TypeError):
+        data.permute_samples(current_value=current_value,
+                             idx_list=l,
+                             perm_settings=perm_settings)
+    perm_settings['perm_range'] = -1
+    with pytest.raises(TypeError):
+        data.permute_samples(current_value=current_value,
+                             idx_list=l,
+                             perm_settings=perm_settings)
     perm_settings['perm_type'] = 'circular'
     perm_settings['max_shift'] = 3.5
+    with pytest.raises(TypeError):
+        data.permute_samples(current_value=current_value,
+                             idx_list=l,
+                             perm_settings=perm_settings)
+    perm_settings['max_shift'] = -1
+    with pytest.raises(TypeError):
+        data.permute_samples(current_value=current_value,
+                             idx_list=l,
+                             perm_settings=perm_settings)
+    perm_settings['perm_type'] = 'local'
+    perm_settings['max_shift'] = -1
     with pytest.raises(TypeError):
         data.permute_samples(current_value=current_value,
                              idx_list=l,

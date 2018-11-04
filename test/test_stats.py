@@ -7,6 +7,7 @@ from idtxl.active_information_storage import ActiveInformationStorage
 from idtxl.estimators_jidt import JidtDiscreteCMI
 from idtxl.data import Data
 from idtxl.results import ResultsNetworkInference, ResultsSingleProcessAnalysis
+from test_estimators_jidt import _get_gauss_data
 
 
 def test_omnibus_test():
@@ -295,21 +296,16 @@ def test_data_type():
 
 
 def test_analytical_surrogates():
-    # Generate discrete test data.
-    covariance = 0.4
-    n = 10000
-    delay = 1
-    source = np.random.normal(0, 1, size=n)
-    target = (covariance * source + (1 - covariance) *
-              np.random.normal(0, 1, size=n))
-    source = source[delay:]
-    target = target[:-delay]
+    # Test generation of analytical surrogates.
+    # Generate data and discretise it such that we can use analytical
+    # surrogates.
+    expected_mi, source1, source2, target = _get_gauss_data(covariance=0.4)
     settings = {'discretise_method': 'equal',
                 'n_discrete_bins': 5}
     est = JidtDiscreteCMI(settings)
-    source_dis, target_dis = est._discretise_vars(var1=source, var2=target)
-    data = Data(np.vstack((source_dis, target_dis)),
-                dim_order='ps', normalise=False)
+    source_dis, target_dis = est._discretise_vars(var1=source1, var2=target)
+    data = Data(np.hstack((source_dis, target_dis)),
+                dim_order='sp', normalise=False)
     settings = {
         'cmi_estimator': 'JidtDiscreteCMI',
         'n_discrete_bins': 5,  # alphabet size of the variables analysed
@@ -323,6 +319,8 @@ def test_analytical_surrogates():
         }
     nw = MultivariateTE()
     res = nw.analyse_single_target(settings, data, target=1)
+    # Check if generation of analytical surrogates is documented in the
+    # settings.
     assert res.settings.analytical_surrogates, (
         'Surrogates were not created analytically.')
 

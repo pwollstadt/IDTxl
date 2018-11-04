@@ -682,23 +682,23 @@ class Data():
 
         elif perm_type == 'circular':
             max_shift = perm_settings['max_shift']
-            if type(max_shift) is not int:
-                raise TypeError(' ''max_shift'' has to be an int.')
+            if type(max_shift) is not int or max_shift < 1:
+                raise TypeError(' ''max_shift'' has to be an int > 0.')
             perm = self._circular_shift(n_samples, max_shift)[0]
 
         elif perm_type == 'block':
             block_size = perm_settings['block_size']
             perm_range = perm_settings['perm_range']
-            if type(block_size) is not int:
-                raise TypeError(' ''block_size'' has to be an int.')
-            if type(perm_range) is not int:
-                raise TypeError(' ''perm_range'' has to be an int.')
+            if type(block_size) is not int or block_size < 1:
+                raise TypeError(' ''block_size'' has to be an int > 0.')
+            if type(perm_range) is not int or perm_range < 1:
+                raise TypeError(' ''perm_range'' has to be an int > 0.')
             perm = self._swap_blocks(n_samples, block_size, perm_range)
 
         elif perm_type == 'local':
             perm_range = perm_settings['perm_range']
-            if type(perm_range) is not int:
-                raise TypeError(' ''perm_range'' has to be an int.')
+            if type(perm_range) is not int or perm_range < 1:
+                raise TypeError(' ''perm_range'' has to be an int > 0.')
             perm = self._swap_local(n_samples, perm_range)
 
         else:
