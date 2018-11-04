@@ -275,7 +275,7 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
         self._include_target_candidates(data)
         print('\n---------------------------- (2) include source candidates')
         self._include_source_candidates(data)
-        print('\n---------------------------- (3) prune cadidates')
+        print('\n---------------------------- (3) prune candidates')
         self._prune_candidates(data)
         print('\n---------------------------- (4) final statistics')
         self._test_final_conditional(data)
