@@ -532,7 +532,41 @@ def test_insufficient_no_points():
     with pytest.raises(RuntimeError): est.estimate(source1, target, target)
 
 
+@jpype_missing
+def test_multi_gpu():
+    """Test use of multiple GPUs."""
+    expected_mi, source, source_uncorr, target = _get_gauss_data()
+    settings = {'debug': True, 'return_counts': True}
+
+    # Get no. available devices on current platform.
+    device_list, _, _ = OpenCLKraskovCMI()._get_device(gpuid=0)
+    print(device_list)
+    n_devices = len(device_list)
+
+    # Try initialising estimator with unavailable GPU ID
+    with pytest.raises(RuntimeError):
+        settings['gpuid'] = n_devices + 1
+        OpenCLKraskovCMI(settings=settings)
+
+    # Run OpenCL estimator on available device with highest available ID.
+    settings['gpuid'] = n_devices - 1
+    ocl_est = OpenCLKraskovCMI(settings=settings)
+
+    (mi_ocl, dist, n_range_var1,
+     n_range_var2, n_range_cond) = ocl_est.estimate(source, target,
+                                                    source_uncorr)
+
+    mi_ocl = mi_ocl[0]
+    print('Expected MI: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
+          'expected to be close to 0 nats for uncorrelated '
+          'Gaussians.'.format(expected_mi, mi_ocl))
+    assert np.isclose(mi_ocl, expected_mi, atol=0.05), (
+                        'MI estimation for uncorrelated Gaussians using the '
+                        'OpenCL estimator failed (error larger 0.05).')
+
+
 if __name__ == '__main__':
+    test_multi_gpu()
     test_debug_setting()
     test_local_values()
     test_amd_data_padding()

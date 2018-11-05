@@ -103,6 +103,10 @@ class OpenCLKraskov(Estimator):
             raise RuntimeError('No OpenCL GPU device found.')
         my_gpu_devices = platform.get_devices(device_type=cl.device_type.GPU)
         context = cl.Context(devices=my_gpu_devices)
+        if gpuid > len(my_gpu_devices)-1:
+            raise RuntimeError(
+                'No device with gpuid {0} (available device IDs: {1}).'.format(
+                    gpuid, np.arange(len(my_gpu_devices))))
         queue = cl.CommandQueue(context, my_gpu_devices[gpuid])
         if self.settings['debug']:
             print("Selected Device: ", my_gpu_devices[gpuid].name)
