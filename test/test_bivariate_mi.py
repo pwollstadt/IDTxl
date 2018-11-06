@@ -137,6 +137,7 @@ def test_zero_lag():
         'n_perm_min_stat': 21,
         'n_perm_max_seq': 21,
         'n_perm_omnibus': 21,
+        'tau_sources': 0,  # this is not required, but shouldn't throw an error if provided
         'max_lag_sources': 0,
         'min_lag_sources': 0}
     nw = BivariateMI()

@@ -233,8 +233,8 @@ class NetworkInferenceMI(NetworkInference):
                 self.settings['max_lag_sources'] < 0):
             raise RuntimeError('max_lag_sources has to be an integer >= 0.')
         if (type(self.settings['tau_sources']) is not int or
-                self.settings['tau_sources'] < 1):
-            raise RuntimeError('tau_sources must be an integer > 0.')
+                self.settings['tau_sources'] < 0):
+            raise RuntimeError('tau_sources must be an integer >= 0.')
         if self.settings['min_lag_sources'] > self.settings['max_lag_sources']:
             raise RuntimeError('min_lag_sources ({0}) must be smaller or equal'
                                ' to max_lag_sources ({1}).'.format(
@@ -345,8 +345,8 @@ class NetworkInferenceTE(NetworkInference):
                 self.settings['max_lag_target'] <= 0):
             raise RuntimeError('max_lag_target must be an integer > 0.')
         if (type(self.settings['tau_sources']) is not int or
-                self.settings['tau_sources'] < 1):
-            raise RuntimeError('tau_sources must be an integer > 0.')
+                self.settings['tau_sources'] < 0):
+            raise RuntimeError('tau_sources must be an integer >= 0.')
         if (type(self.settings['tau_target']) is not int or
                 self.settings['tau_target'] < 1):
             raise RuntimeError('tau_sources must be an integer > 0.')
@@ -526,7 +526,7 @@ class NetworkInferenceBivariate(NetworkInference):
                     # For now we don't need a stack trace:
                     # traceback.print_tb(aee.__traceback__)
                     break
-                    
+
                 # Test max CMI for significance with maximum statistics.
                 te_max_candidate = max(temp_te)
                 max_candidate = candidate_set[np.argmax(temp_te)]
@@ -674,7 +674,7 @@ class NetworkInferenceBivariate(NetworkInference):
                     # For now we don't need a stack trace:
                     # traceback.print_tb(aee.__traceback__)
                     break
-                
+
                 # Find variable with minimum MI/TE. Test min TE/MI for
                 # significance with minimum statistics. Build conditioning set
                 # for minimum statistics by removing the minimum candidate.
@@ -713,7 +713,7 @@ class NetworkInferenceBivariate(NetworkInference):
                     # For now we don't need a stack trace:
                     # traceback.print_tb(aee.__traceback__)
                     break
-                
+
                 # Remove the minimum it is not significant and test the next
                 # min. candidate. If the minimum is significant, break. All
                 # other sources will be significant as well (b/c they have
