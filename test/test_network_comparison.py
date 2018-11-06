@@ -347,7 +347,11 @@ def test_calculate_mean():
     for t in comp.union.targets_analysed:
         assert (cmi_mean[t] == cmi[t]).all(), ('Error in mean of CMI for '
                                                'target {0}'.format(t))
-
+        if len(cmi[t]) == 0:  # skip if no links in results
+            continue
+        assert (cmi_mean[t] == cmi[t][0]).all(), (
+            'Error in mean of CMI for target {0} - actual: ({1}), expected: '
+            '({2})'.format(t, cmi_mean[t], cmi[t][0]))
 
 @jpype_missing
 def test_p_value_union():
@@ -499,13 +503,12 @@ def test_tails():
 
 
 if __name__ == '__main__':
-    while True:
-        test_calculate_cmi_all_links()
-    # test_tails()
-    # test_compare_links_within()
-    # test_network_comparison_use_cases()
-    # test_p_value_union()
-    # test_create_union_network()
-    # test_assertions()
-    # test_calculate_mean()
-    # test_get_permuted_replications()
+    test_calculate_cmi_all_links()
+    test_tails()
+    test_compare_links_within()
+    test_network_comparison_use_cases()
+    test_p_value_union()
+    test_create_union_network()
+    test_assertions()
+    test_calculate_mean()
+    test_get_permuted_replications()
