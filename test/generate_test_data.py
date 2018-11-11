@@ -215,7 +215,7 @@ def _print_result(res):
 
 
 if __name__ == '__main__':
-    analyse_mute_te_data()
     analyse_discrete_data()
+    analyse_mute_te_data()
     analyse_continuous_data()
     assert_results()

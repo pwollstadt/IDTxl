@@ -85,24 +85,23 @@ def test_network_comparison():
 
 def _verify_test(c_within, c_between, res):
     # Test values for verification
-    p = 0.25  # max. attainable p-value
-    tp = res.adjacency_matrix > 0  # get true positives
-    print(c_within.adjacency_matrix_union)
-    assert (c_between.adjacency_matrix_union[tp] == 1).all(), (
+    tp = res.get_adjacency_matrix('binary') > 0  # get true positives
+    print(c_within.get_adjacency_matrix('union'))
+    assert (c_between.get_adjacency_matrix('union')[tp] == 1).all(), (
         'Missing union link in between network comparison.')
-    assert (c_within.adjacency_matrix_union[tp] == 1).all(), (
+    assert (c_within.get_adjacency_matrix('union')[tp] == 1).all(), (
         'Missing union link in wihin network comparison.')
-    assert (c_between.adjacency_matrix_pvalue[tp] < 1).all(), (
+    assert (c_between.get_adjacency_matrix('pvalue')[tp] < 1).all(), (
         'Wrong p-value in between network comparison.')
-    assert (c_within.adjacency_matrix_pvalue[tp] < 1).all(), (
+    assert (c_within.get_adjacency_matrix('pvalue')[tp] < 1).all(), (
         'Wrong p-value in wihin network comparison.')
     # assert (c_between.adjacency_matrix_comparison[tp]).all(), (
     #     'Wrong comparison in between network comparison.')
     # assert (c_within.adjacency_matrix_comparison[tp]).all(), (
     #     'Wrong comparison in wihin network comparison.')
-    assert (c_between.adjacency_matrix_diff_abs[tp] > 0).all(), (
+    assert (c_between.get_adjacency_matrix('diff_abs')[tp] > 0).all(), (
         'Missed difference in between network comparison.')
-    assert (c_within.adjacency_matrix_diff_abs[tp] > 0).all(), (
+    assert (c_within.get_adjacency_matrix('diff_abs')[tp] > 0).all(), (
         'Missed difference in wihin network comparison.')
 
 

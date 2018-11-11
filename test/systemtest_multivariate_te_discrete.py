@@ -7,7 +7,7 @@ from test_estimators_jidt import _get_gauss_data
 from idtxl.idtxl_utils import calculate_mi
 
 
-def test_multivariate_te_corr_gaussian():
+def test_multivariate_te_corr_gaussian(estimator=None):
     """Test multivariate TE estimation on correlated Gaussians.
 
     Run the multivariate TE algorithm on two sets of random Gaussian data with
@@ -25,6 +25,9 @@ def test_multivariate_te_corr_gaussian():
         This test runs considerably faster than other system tests.
         This produces strange small values for non-coupled sources.  TODO
     """
+    if estimator is None:
+        estimator = 'JidtKraskovCMI'
+
     cov = 0.4
     expected_mi, source1, source2, target = _get_gauss_data(covariance=cov)
     # n = 1000
@@ -39,7 +42,7 @@ def test_multivariate_te_corr_gaussian():
     data = Data(normalise=True)
     data.set_data(np.vstack((source1[1:].T, target[:-1].T)), 'ps')
     settings = {
-        'cmi_estimator': 'JidtDiscreteCMI',
+        'cmi_estimator': estimator,
         'discretise_method': 'max_ent',
         'max_lag_sources': 5,
         'min_lag_sources': 1,
@@ -120,7 +123,7 @@ def test_multivariate_te_lagged_copies():
         results = random_analysis.analyse_single_target(settings, data, t)
         assert len(results.get_single_target(t, fdr=False).selected_vars_full) == 1, (
                     'Conditional contains more/less than 1 variables.')
-        assert not results.get_single_target(t, fdr=False).selected_vars_sources.size, (
+        assert not results.get_single_target(t, fdr=False).selected_vars_sources, (
                     'Conditional sources is not empty.')
         assert len(results.get_single_target(t, fdr=False).selected_vars_target) == 1, (
             'Conditional target contains more/less than 1 variable.')
@@ -151,6 +154,7 @@ def test_multivariate_te_random():
     settings = {
         'cmi_estimator': 'JidtDiscreteCMI',
         'discretise_method': 'max_ent',
+        'min_lag_sources': 1,
         'max_lag_sources': 5,
         'n_perm_max_stat': 200,
         'n_perm_min_stat': 200,
@@ -165,7 +169,7 @@ def test_multivariate_te_random():
         results = random_analysis.analyse_single_target(settings, data, t)
         assert len(results.get_single_target(t, fdr=False).selected_vars_full) == 1, (
                     'Conditional contains more/less than 1 variables.')
-        assert not results.get_single_target(t, fdr=False).selected_vars_sources.size, (
+        assert not results.get_single_target(t, fdr=False).selected_vars_sources, (
                     'Conditional sources is not empty.')
         assert len(results.get_single_target(t, fdr=False).selected_vars_target) == 1, (
             'Conditional target contains more/less than 1 variable.')
@@ -223,7 +227,7 @@ def test_multivariate_te_lorenz_2():
     # Just analyse the coupled direction
     results = lorenz_analysis.analyse_single_target(settings, data, 1)
     print(results._single_target)
-    print(results.adjacency_matrix)
+    print(results.get_adjacency_matrix(weights='binary', fdr=False))
 
 
 def test_multivariate_te_mute():
@@ -263,19 +267,29 @@ def test_multivariate_te_mute():
     results_eq = network_analysis.analyse_network(settings, data,
                                                   targets=[1, 2])
 
-    assert (np.isclose(
-        results_eq.get_single_target(1, fdr=False).omnibus_te,
-        results_me.get_single_target(1, fdr=False).omnibus_te, rtol=0.05)), (
-                'TE into first target is not equal for both binning methods.')
-    assert (np.isclose(
-        results_eq.get_single_target(2, fdr=False).omnibus_te,
-        results_me.get_single_target(2, fdr=False).omnibus_te, rtol=0.05)), (
-                'TE into second target is not equal for both binning methods.')
+    for t in [1, 2]:
+        print('Target {0}: equal binning: {1}, max. ent. binning: {2}'.format(
+            t,
+            results_eq.get_single_target(t, fdr=False).omnibus_te,
+            results_me.get_single_target(t, fdr=False).omnibus_te
+        ))
+        # Skip comparison of estimates if analyses returned different source
+        # sets. This will always lead to different estimates.
+        if (results_eq.get_single_target(t, fdr=False).selected_vars_sources ==
+                results_me.get_single_target(t, fdr=False).selected_vars_sources):
+            assert (np.isclose(
+                results_eq.get_single_target(1, fdr=False).omnibus_te,
+                results_me.get_single_target(1, fdr=False).omnibus_te,
+                rtol=0.05)), ('Target {0}: unequl results for both binning '
+                              'methods.'.format(t))
+        else:
+            continue
 
 
 if __name__ == '__main__':
     test_multivariate_te_lorenz_2()
     test_multivariate_te_mute()
     test_multivariate_te_random()
+    test_multivariate_te_lagged_copies()
     test_multivariate_te_corr_gaussian()
     test_multivariate_te_corr_gaussian('OpenCLKraskovCMI')

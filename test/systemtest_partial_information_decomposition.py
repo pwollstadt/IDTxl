@@ -9,7 +9,7 @@ import idtxl.idtxl_utils as utils
 
 def test_pid_xor_data():
     """Test basic calls to PID class."""
-    n = 20
+    n = 100
     alph = 2
     x = np.random.randint(0, alph, n)
     y = np.random.randint(0, alph, n)
@@ -43,9 +43,9 @@ def test_pid_xor_data():
     t_sydney = tm.time() - tic
 
     print('\nResults Tartu estimator:')
-    utils.print_dict(est_tartu)
+    utils.print_dict(est_tartu.get_single_target(2))
     print('\nResults Sydney estimator:')
-    utils.print_dict(est_sydney)
+    utils.print_dict(est_sydney.get_single_target(2))
 
     print('\nLogical XOR')
     print('Estimator            Sydney\t\tTartu\n')

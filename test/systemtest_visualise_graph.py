@@ -30,13 +30,22 @@ def test_visualise_multivariate_te():
     results = network_analysis.analyse_network(settings, data,
                                                targets=[0, 1, 2])
     # generate graph plots
-    visualise_graph.plot_selected_vars(results, target=1, sign_sources=False)
+    try:
+        visualise_graph.plot_selected_vars(
+            results, target=1, sign_sources=False, fdr=True)
+        plt.show()
+    except RuntimeError:
+        print('No FDR-corrected results.')
+    try:
+        visualise_graph.plot_network(results, weights='binary', fdr=True)
+        plt.show()
+    except RuntimeError:
+        print('No FDR-corrected results.')
+
+    visualise_graph.plot_network(results, weights='binary', fdr=False)
     plt.show()
-    visualise_graph.plot_network(results, fdr=False)
-    plt.show()
-    visualise_graph.plot_network(results, fdr=True)
-    plt.show()
-    visualise_graph.plot_selected_vars(results, target=1, sign_sources=True)
+    visualise_graph.plot_selected_vars(
+        results, target=1, sign_sources=True, fdr=False)
     plt.show()
 
 

@@ -105,7 +105,7 @@ def test_multivariate_te_lagged_copies():
         results = random_analysis.analyse_single_target(settings, data, t)
         assert len(results.get_single_target(t, fdr=False).selected_vars_full) == 1, (
                     'Conditional contains more/less than 1 variables.')
-        assert not results.get_single_target(t, fdr=False).selected_vars_sources.size, (
+        assert not results.get_single_target(t, fdr=False).selected_vars_sources, (
                     'Conditional sources is not empty.')
         assert len(results.get_single_target(t, fdr=False).selected_vars_target) == 1, (
             'Conditional target contains more/less than 1 variable.')
@@ -136,6 +136,7 @@ def test_multivariate_te_random():
     settings = {
         'cmi_estimator':  'JidtKraskovCMI',
         'max_lag_sources': 5,
+        'min_lag_sources': 1,
         'n_perm_max_stat': 200,
         'n_perm_min_stat': 200,
         'n_perm_omnibus': 500,
@@ -149,7 +150,7 @@ def test_multivariate_te_random():
         results = random_analysis.analyse_single_target(settings, data, t)
         assert len(results.get_single_target(t, fdr=False).selected_vars_full) == 1, (
                     'Conditional contains more/less than 1 variables.')
-        assert not results.get_single_target(t, fdr=False).selected_vars_sources.size, (
+        assert not results.get_single_target(t, fdr=False).selected_vars_sources, (
                     'Conditional sources is not empty.')
         assert len(results.get_single_target(t, fdr=False).selected_vars_target) == 1, (
             'Conditional target contains more/less than 1 variable.')
@@ -208,7 +209,7 @@ def test_multivariate_te_lorenz_2():
     # Just analyse the direction of coupling
     results = lorenz_analysis.analyse_single_target(settings, data, target=1)
     print(results._single_target)
-    print(results.get_adjacency_matrix('binary'))
+    print(results.get_adjacency_matrix('binary', fdr=False))
 
 
 def test_multivariate_te_mute():
@@ -272,6 +273,7 @@ if __name__ == '__main__':
     test_multivariate_te_mute()
     test_multivariate_te_lorenz_2()
     test_multivariate_te_random()
+    test_multivariate_te_lagged_copies()
     test_multivariate_te_multiple_runs()
     test_multivariate_te_corr_gaussian()
     test_multivariate_te_corr_gaussian('OpenCLKraskovCMI')

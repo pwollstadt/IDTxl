@@ -5,7 +5,7 @@ import numpy as np
 import time as tm
 from bitstring import BitArray, Bits
 # import estimators_fast_pid as epid
-from idtxl.set_estimator import Estimator_pid
+from idtxl.estimators_pid import SydneyPID
 
 # LOGICAL AND
 alph_x = 2
@@ -18,19 +18,17 @@ x = np.random.randint(0, alph_x, n)
 y = np.random.randint(0, alph_y, n)
 z = np.logical_and(x, y).astype(int)
 
-cfg = {
+settings = {
     'alph_s1': alph_x,
     'alph_s2': alph_y,
     'alph_t': alph_z,
     'max_unsuc_swaps_row_parm': 3,
     'num_reps': 63,
-    'max_iters': 10000
-}
-
-pid_sydney = Estimator_pid('pid_sydney')
+    'max_iters': 10000}
 
 tic = tm.time()
-est = pid_sydney.estimate(x, y, z, cfg)
+pid_sydney = SydneyPID(settings)
+est = pid_sydney.estimate(x, y, z)
 toc = tm.time()
 
 print('\n\nLOGICAL AND')
@@ -43,7 +41,7 @@ print('Synergy s1_s2       ', est['syn_s1_s2'])
 # LOGICAL XOR
 z = np.logical_xor(x, y).astype(int)
 
-cfg = {
+settings = {
     'alph_s1': alph_x,
     'alph_s2': alph_y,
     'alph_t': alph_z,
@@ -53,7 +51,8 @@ cfg = {
 }
 
 tic = tm.time()
-est = pid_sydney.estimate(x, y, z, cfg)
+pid_sydney = SydneyPID(settings)
+est = pid_sydney.estimate(x, y, z)
 toc = tm.time()
 
 print('\nPID evaluation       {:.3f} seconds\n'.format(toc - tic))
@@ -65,7 +64,7 @@ print('Synergy s1_s2       ', est['syn_s1_s2'])
 # SINGLE INPUT COPY
 z = x
 
-cfg = {
+settings = {
     'alph_s1': alph_x,
     'alph_s2': alph_y,
     'alph_t': alph_z,
@@ -75,7 +74,8 @@ cfg = {
 }
 
 tic = tm.time()
-est = pid_sydney.estimate(x, y, z, cfg)
+pid_sydney = SydneyPID(settings)
+est = pid_sydney.estimate(x, y, z)
 toc = tm.time()
 
 print('\nPID evaluation       {:.3f} seconds\n'.format(toc - tic))
@@ -102,6 +102,7 @@ def parity(bytestring):
 
     return par
 
+
 x = np.zeros((n,), dtype=np.int)
 y = np.zeros((n,), dtype=np.int)
 z = np.zeros((n,), dtype=np.int)
@@ -115,7 +116,7 @@ alph_x = 2
 alph_y = 4
 alph_z = 2
 
-cfg = {
+settings = {
     'alph_s1': alph_x,
     'alph_s2': alph_y,
     'alph_t': alph_z,
@@ -125,7 +126,8 @@ cfg = {
 }
 
 tic = tm.time()
-est = pid_sydney.estimate(x, y, z, cfg)
+pid_sydney = SydneyPID(settings)
+est = pid_sydney.estimate(x, y, z)
 toc = tm.time()
 
 print('\n\nPARITY')
