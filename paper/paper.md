@@ -61,7 +61,7 @@ open source Python toolbox for effective network inference from multivariate
 time series using information theory, available from GitHub
 (https://github.com/pwollstadt/IDTxl).
 
-Information theory [@Shannon1948,@MacKay2003,@Cover2006] is the mathematical
+Information theory [@Shannon1948;@MacKay2003;@Cover2006] is the mathematical
 theory of information and its transmission over communication channels.
 Information theory provides quantitative measures of the information content of
 a single random variable (entropy) and of the information shared between two
@@ -92,7 +92,7 @@ accounting for all relevant sources of a target, are required. An exhaustive
 multivariate approach is computationally intractable, even for a small number
 of potential sources in the data. Thus, a suitable approximate approach is
 needed. Although such approaches have been proposed (e.g.,
-[@Lizier2012,@Faes2011]) and first software implementations exist
+[@Lizier2012;@Faes2011]) and first software implementations exist
 [@Montalto2014], there is no current implementation that deals with the
 practical problems that arise in multivariate TE estimation. These problems
 include the control of statistical errors that arise from testing multiple
@@ -104,7 +104,7 @@ the selection of relevant sources and providing methods for automatic parameter
 selection. To estimate multivariate TE, IDTxl utilises a greedy or iterative
 approach that builds sets of parent sources for each target node in the network
 through maximisation of a conditional mutual information criterion
-[@Lizier2012,@Faes2011]. This iterative conditioning is designed to both
+[@Lizier2012;@Faes2011]. This iterative conditioning is designed to both
 removes redundancies and capture synergistic interactions in building each
 parent set. The conditioning thus automatically constructs a non-uniform,
 multivariate embedding of potential sources [@Faes2011] and optimizes
@@ -119,7 +119,7 @@ bivariate transfer entropy), and provides measures to study the dynamics of
 various information flows on the inferred networks. These measures include
 active information storage (AIS) [@Lizier2012lais] for the analysis of
 information storage within network nodes, and partial information decomposition
-(PID) [@Williams2010,@Bertschinger2014,@Makkeh2018] for the analysis of
+(PID) [@Williams2010;@Bertschinger2014;@Makkeh2018] for the analysis of
 synergistic, redundant, and unique information two source nodes have about one
 target node. Where applicable, IDTxl provides the option to return local
 variants of estimated measures [@Lizier2014Local]. Also, tools are included for
