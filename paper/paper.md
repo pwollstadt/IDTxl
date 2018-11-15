@@ -78,7 +78,7 @@ that measures the directed information transfer between time series of a source
 and a target variable. TE has become popular in many scientific disciplines to
 infer dependencies and whole networks from data. Notable application domains
 include neuroscience [@Wibral2014] and dynamical systems analysis
-[@Lizier2014FrameworkCAs] (see [@Bossomaier2016] for an introduction to TE and
+[@Lizier2014FrameworkCAs] (see @Bossomaier2016 for an introduction to TE and
 a comprehensive discussion of its application). In the majority of the
 applications, TE is used in a bivariate fashion, where information transfer is
 quantified between all source-target pairs. In a multivariate setting, however,
@@ -92,7 +92,7 @@ accounting for all relevant sources of a target, are required. An exhaustive
 multivariate approach is computationally intractable, even for a small number
 of potential sources in the data. Thus, a suitable approximate approach is
 needed. Although such approaches have been proposed (e.g.,
-[@Lizier2012;@Faes2011]) and first software implementations exist
+@Lizier2012 and @Faes2011) and first software implementations exist
 [@Montalto2014], there is no current implementation that deals with the
 practical problems that arise in multivariate TE estimation. These problems
 include the control of statistical errors that arise from testing multiple
@@ -129,8 +129,8 @@ or conditions in neural recordings.
 The toolkit is highly flexible, providing various information-theoretic
 estimators for the user to select from; these handle both discrete and
 continuous time-series data, and allow choices, e.g. using linear Gaussian
-estimators (i.e. Granger causality [@Granger1969]) for speed versus nonlinear
-estimators (e.g. Kraskov-Stoegbauer-Grassberger [@Kraskov2004]) for accuracy
+estimators (i.e. Granger causality, @Granger1969) for speed versus nonlinear
+estimators (e.g. Kraskov-Stoegbauer-Grassberger, @Kraskov2004) for accuracy
 (see the [IDTxl homepage](https://github.com/pwollstadt/IDTxl) for details).
 Further, estimator implementations for both CPU and GPU compute platforms are
 provided, which offer parallel computing engines for efficiency. IDTxl provides
