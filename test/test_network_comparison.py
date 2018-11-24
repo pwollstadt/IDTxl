@@ -444,14 +444,17 @@ def test_compare_links_within():
                                         network=res,
                                         data=data)
     for r in [res_indep, res_dep]:
-        assert (r.get_adjacency_matrix('diff_abs')[link_a[0], link_a[1]] ==
-                r.get_adjacency_matrix('diff_abs')[link_b[0], link_b[1]]), (
+        adj_mat_diff = r.get_adjacency_matrix('diff_abs')
+        adj_mat_comp = r.get_adjacency_matrix('comparison')
+        adj_mat_pval = r.get_adjacency_matrix('pvalue')
+        assert (adj_mat_diff._weight_matrix[link_a[0], link_a[1]] ==
+                adj_mat_diff._weight_matrix[link_b[0], link_b[1]]), (
                     'Absolute differences for link comparison not equal.')
-        assert (r.get_adjacency_matrix('comparison')[link_a[0], link_a[1]] ==
-                r.get_adjacency_matrix('comparison')[link_b[0], link_b[1]]), (
+        assert (adj_mat_comp._weight_matrix[link_a[0], link_a[1]] ==
+                adj_mat_comp._weight_matrix[link_b[0], link_b[1]]), (
                     'Comparison results for link comparison not equal.')
-        assert (r.get_adjacency_matrix('pvalue')[link_a[0], link_a[1]] ==
-                r.get_adjacency_matrix('pvalue')[link_b[0], link_b[1]]), (
+        assert (adj_mat_pval._weight_matrix[link_a[0], link_a[1]] ==
+                adj_mat_pval._weight_matrix[link_b[0], link_b[1]]), (
                     'P-value for link comparison not equal.')
         assert (r.targets_analysed == [link_a[1], link_b[1]]).all(), (
                 'Analysed targets are not correct.')
@@ -498,8 +501,10 @@ def test_tails():
                 network_set_b=np.array((res_2, res_3)),
                 data_set_a=np.array((data, data)),
                 data_set_b=np.array((data, data)))
-            print(c_within.get_adjacency_matrix('pvalue'))
-            print(c_between.get_adjacency_matrix('pvalue'))
+            adj_mat_within = c_within.get_adjacency_matrix('pvalue')
+            adj_mat_within.print_matrix()
+            adj_mat_between = c_between.get_adjacency_matrix('pvalue')
+            adj_mat_between.print_matrix()
 
 
 if __name__ == '__main__':

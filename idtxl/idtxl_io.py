@@ -375,7 +375,7 @@ def export_networkx_graph(adjacency_matrix, weights):
     available (see documentation of method get_adjacency_matrix for details).
 
     Args:
-        adjacency_matrix : 2D numpy array
+        adjacency_matrix : AdjacencyMatrix instances
             adjacency matrix to be exported, returned by get_adjacency_matrix()
             method of Results() class
         weights : str
@@ -389,9 +389,9 @@ def export_networkx_graph(adjacency_matrix, weights):
     """
     # use 'weights' parameter (string) as networkx edge property name and use
     # adjacency matrix entries as edge property values
-    custom_type = [(weights, type(adjacency_matrix[0, 0]))]
-    custom_npmatrix = np.matrix(adjacency_matrix, dtype=custom_type)
-    return nx.from_numpy_matrix(custom_npmatrix, create_using=nx.DiGraph())
+    G = nx.DiGraph()
+    G.add_weighted_edges_from(adjacency_matrix.get_edge_list(), weights)
+    return G
 
 
 def export_networkx_source_graph(results, target, sign_sources=True, fdr=True):
@@ -410,7 +410,7 @@ def export_networkx_source_graph(results, target, sign_sources=True, fdr=True):
         target : int
             target index
         sign_sources : bool [optional]
-            add only sources with significant information contribution
+            add sources with significant information contribution only
             (default=True)
         fdr : bool [optional]
             return FDR-corrected results (default=True)
@@ -494,7 +494,7 @@ def export_brain_net_viewer(adjacency_matrix, mni_coord, file_name, **kwargs):
       https://doi.org/10.1371/journal.pone.0068910
 
     Args:
-        adjacency_matrix : 2D numpy array
+        adjacency_matrix : AdjacencyMatrix instance
             adjacency matrix to be exported, returned by get_adjacency_matrix()
             method of Results() class
         mni_coord : numpy array
@@ -516,15 +516,13 @@ def export_brain_net_viewer(adjacency_matrix, mni_coord, file_name, **kwargs):
     """
     # Check input and get default settings for plotting. The default for
     # node labels is a list of '-' (no labels).
-    n_nodes = adjacency_matrix.shape[0]
-    n_edges = np.sum(adjacency_matrix > 0)
+    n_nodes = adjacency_matrix.n_nodes()
+    n_edges = adjacency_matrix.n_edges()
     labels = kwargs.get('labels', ['-' for i in range(n_nodes)])
     node_color = kwargs.get('node_color', np.ones(n_nodes))
     node_size = kwargs.get('node_size', np.ones(n_nodes))
     if n_edges == 0:
         Warning('No edges in results file. Nothing to plot.')
-    assert adjacency_matrix.shape[0] == adjacency_matrix.shape[1], (
-        'Adjacency matrix must be quadratic.')
     assert mni_coord.shape[0] == n_nodes and mni_coord.shape[1] == 3, (
         'MNI coordinates must have shape [n_nodes, 3].')
     assert len(labels) == n_nodes, (
@@ -551,6 +549,6 @@ def export_brain_net_viewer(adjacency_matrix, mni_coord, file_name, **kwargs):
     with open('{0}.edge'.format(file_name), 'w') as text_file:
         for i in range(n_nodes):
             for j in range(n_nodes):
-                print('{0}\t'.format(adjacency_matrix[i, j]),
+                print('{0}\t'.format(adjacency_matrix._edge_matrix[i, j]),
                       file=text_file, end='')
             print('', file=text_file)

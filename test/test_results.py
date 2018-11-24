@@ -6,6 +6,7 @@ from tempfile import TemporaryFile
 import itertools as it
 import copy as cp
 import numpy as np
+from idtxl.results import AdjacencyMatrix
 from idtxl.multivariate_te import MultivariateTE
 from idtxl.bivariate_te import BivariateTE
 from idtxl.multivariate_mi import MultivariateMI
@@ -128,13 +129,13 @@ def test_results_network_inference():
         assert res.data_properties.normalised == normalisation, (
             'Incorrect value for data normalisation.')
         adj_matrix = res.get_adjacency_matrix('binary', fdr=False)
-        assert adj_matrix.shape[0] == n_nodes, (
+        assert adj_matrix._edge_matrix.shape[0] == n_nodes, (
             'Incorrect number of rows in adjacency matrix.')
-        assert adj_matrix.shape[1] == n_nodes, (
+        assert adj_matrix._edge_matrix.shape[1] == n_nodes, (
             'Incorrect number of columns in adjacency matrix.')
-        assert adj_matrix.shape[0] == n_nodes, (
+        assert adj_matrix._edge_matrix.shape[0] == n_nodes, (
             'Incorrect number of rows in adjacency matrix.')
-        assert adj_matrix.shape[1] == n_nodes, (
+        assert adj_matrix._edge_matrix.shape[1] == n_nodes, (
             'Incorrect number of columns in adjacency matrix.')
 
 
@@ -249,10 +250,13 @@ def test_delay_reconstruction():
     res_network.combine_results(nw.analyse_single_target(
         settings=settings, data=data, target=3))
     adj_mat = res_network.get_adjacency_matrix('max_te_lag', fdr=False)
-    print(adj_mat)
-    assert adj_mat[0, 1] == delay_1, ('Estimate for delay 1 is not correct.')
-    assert adj_mat[0, 2] == delay_2, ('Estimate for delay 2 is not correct.')
-    assert adj_mat[0, 3] == delay_3, ('Estimate for delay 3 is not correct.')
+    adj_mat.print_matrix()
+    assert adj_mat._weight_matrix[0, 1] == delay_1, (
+        'Estimate for delay 1 is not correct.')
+    assert adj_mat._weight_matrix[0, 2] == delay_2, (
+        'Estimate for delay 2 is not correct.')
+    assert adj_mat._weight_matrix[0, 3] == delay_3, (
+        'Estimate for delay 3 is not correct.')
 
     for target in range(1, 4):
         est_mi = res_network._single_target[target].omnibus_te
@@ -331,50 +335,103 @@ def test_results_network_comparison():
     t = [1, 2]
     test = ['Within', 'Between']
     for (i, res) in enumerate([res_within, res_between]):
+        # Get adjacency matrices.
+        adj_matrix_union = res.get_adjacency_matrix('union')
+        adj_matrix_comp = res.get_adjacency_matrix('comparison')
+        adj_matrix_diff = res.get_adjacency_matrix('diff_abs')
+        adj_matrix_pval = res.get_adjacency_matrix('pvalue')
+
+        # Test all adjacency matrices for non-zero entries at compared edges
+        # and zero/False entries otherwise.
+
         # Union network
         # TODO do we need the max_lag entry?
-        assert (res.get_adjacency_matrix('union')[s, t] == 1).all(), (
+        assert adj_matrix_union._edge_matrix[s, t].all(), (
             '{0}-test did not return correct union network links.'.format(
                 test[i]))
-        no_diff = np.extract(np.invert(res.get_adjacency_matrix('comparison')),
-                             res.get_adjacency_matrix('union'))
-        assert (no_diff == 0).all(), (
-            '{0}-test did not return 0 in union network for no links.'.format(
-                test[i]))
         # Comparison
-        assert res.get_adjacency_matrix('comparison')[s, t].all(), (
+        assert adj_matrix_comp._edge_matrix[s, t].all(), (
             '{0}-test did not return correct comparison results.'.format(
                 test[i]))
-        no_diff = np.extract(np.invert(res.get_adjacency_matrix('comparison')),
-                             res.get_adjacency_matrix('comparison'))
-        assert (no_diff == 0).all(), (
+        no_diff = np.extract(np.invert(adj_matrix_union._edge_matrix),
+                             adj_matrix_comp._edge_matrix)
+        assert not no_diff.any(), (
             '{0}-test did not return 0 comparison for non-sign. links.'.format(
                 test[i]))
         # Abs. difference
-        assert (res.get_adjacency_matrix('diff_abs')[s, t] > 0).all(), (
+        assert (adj_matrix_diff._edge_matrix[s, t]).all(), (
             '{0}-test did not return correct absolute differences.'.format(
                 test[i]))
-        no_diff = np.extract(np.invert(res.get_adjacency_matrix('comparison')),
-                             res.get_adjacency_matrix('diff_abs'))
-        assert (no_diff == 0).all(), (
+        no_diff = np.extract(np.invert(adj_matrix_union._edge_matrix),
+                             adj_matrix_diff._edge_matrix)
+        assert not no_diff.any(), (
             '{0}-test did not return 0 difference for non-sign. links.'.format(
                 test[i]))
         # p-value
         p_max = 1 / comp_settings['n_perm_comp']
-        assert (res.get_adjacency_matrix('pvalue')[s, t] == p_max).all(), (
+        assert (adj_matrix_pval._weight_matrix[s, t] == p_max).all(), (
             '{0}-test did not return correct p-value for sign. links.'.format(
                 test[i]))
-        no_diff = np.extract(np.invert(res.get_adjacency_matrix('comparison')),
-                             res.get_adjacency_matrix('pvalue'))
-        assert (no_diff == 1).all(), (
+        no_diff = np.extract(np.invert(adj_matrix_union._edge_matrix),
+                             adj_matrix_pval._edge_matrix)
+        assert not no_diff.any(), (
             '{0}-test did not return p-vals of 1 for non-sign. links.'.format(
                 test[i]))
 
 
+def test_adjacency_matrix():
+    # Test AdjacencyMatrix class
+    n_nodes = 5
+    adj_mat = AdjacencyMatrix(n_nodes, int)
+    # Test adding single edge
+    edge = (0, 1)
+    weight = 1
+    adj_mat.add_edge(edge[0], edge[1], weight)
+    assert adj_mat._weight_matrix[edge[0], edge[1]] == weight, (
+        'Weighted edge was not added.')
+    assert adj_mat._edge_matrix[edge[0], edge[1]], (
+        'Edge was not added.')
+    with pytest.raises(TypeError):
+        adj_mat.add_edge(0, 2, 3.5)
+    # Test adding edge list
+    i_list = [1, 1, 2, 4, 0]
+    j_list = [2, 3, 0, 3, 3]
+    weights = [2, 3, 4, 5, 6]
+    adj_mat.add_edge_list(i_list, j_list, weights)
+    for i in range(len(i_list)):
+        assert adj_mat._weight_matrix[i_list[i], j_list[i]] == weights[i], (
+            'Weighted edge was not added.')
+        assert adj_mat._edge_matrix[i_list[i], j_list[i]], (
+            'Edge was not added.')
+    adj_mat.add_edge_list(np.array(i_list), j_list, weights)
+
+    # Test getting list of edges
+    adj_mat.get_edge_list()
+
+    # Test comparison of entry types
+    a = AdjacencyMatrix(n_nodes, weight_type=bool)
+    a.add_edge(0, 1, True)
+    for t in [int, np.int, np.int32, np.int64]:
+        a = AdjacencyMatrix(n_nodes, weight_type=t)
+        a.add_edge(0, 1, int(1))
+        a.add_edge(0, 1, np.int(1))
+        a.add_edge(0, 1, np.int32(1))
+        a.add_edge(0, 1, np.int64(1))
+    for t in [float, np.float, np.float32, np.float64]:
+        a = AdjacencyMatrix(n_nodes, weight_type=t)
+        a.add_edge(0, 1, float(1))
+        a.add_edge(0, 1, np.float(1))
+        a.add_edge(0, 1, np.float32(1))
+        a.add_edge(0, 1, np.float64(1))
+    with pytest.raises(TypeError):
+        AdjacencyMatrix(n_nodes, weight_type=(2, 3))
+
+
 if __name__ == '__main__':
+    test_adjacency_matrix()
+    test_console_output()
     test_results_network_inference()
     test_results_network_comparison()
-    test_console_output()
     test_pickle_results()
     test_delay_reconstruction()
     test_combine_results()

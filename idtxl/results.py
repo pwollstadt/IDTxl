@@ -1,7 +1,12 @@
 """Provide results class for IDTxl network analysis."""
+import sys
+import warnings
 import copy as cp
 import numpy as np
 from . import idtxl_utils as utils
+
+warnings.simplefilter(action='ignore', category=FutureWarning)
+MIN_INT = -sys.maxsize - 1  # minimum integer for initializing adj. matrix
 
 
 class DotDict(dict):
@@ -49,6 +54,77 @@ class DotDict(dict):
         # self.__dict__ = self
 
 
+class AdjacencyMatrix():
+    """Adjacency matrix representing inferred networks.
+
+    Attributes:  TODO
+        is_edge : bool
+            matrix of edges in the network
+        weights : int | float | bool
+            weight for each edge
+    """
+    def __init__(self, n_nodes, weight_type):
+        self._edge_matrix = np.zeros((n_nodes, n_nodes), dtype=bool)
+        self._weight_matrix = np.zeros((n_nodes, n_nodes), dtype=weight_type)
+        if np.issubdtype(weight_type, np.integer):
+            self._weight_type = np.integer
+        elif np.issubdtype(weight_type, np.float):
+            self._weight_type = np.float
+        elif weight_type is bool:
+            self._weight_type = weight_type
+        else:
+            raise RuntimeError('Unknown weight data type {0}.'.format(
+                weight_type))
+
+    def n_nodes(self):
+        """Return number of nodes."""
+        return self._edge_matrix.shape[0]
+
+    def n_edges(self):
+        return self._edge_matrix.sum()
+
+    def add_edge(self, i, j, weight):
+        """Add weighted edge (i, j) to adjacency matrix."""
+        if not np.issubdtype(type(weight), self._weight_type):
+            raise TypeError(
+                'Can not add weight of type {0} to adjacency matrix of type '
+                '{1}.'.format(type(weight), self._weight_type))
+        self._edge_matrix[i, j] = True
+        self._weight_matrix[i, j] = weight
+
+    def add_edge_list(self, i_list, j_list, weights):
+        """Add multiple weighted edges (i, j) to adjacency matrix."""
+        if len(i_list) != len(j_list):
+            raise RuntimeError(
+                'Lists with edge indices must be of same length.')
+        if len(i_list) != len(weights):
+            raise RuntimeError(
+                'Edge weights must have same length as edge indices.')
+        for i, j, weight in zip(i_list, j_list, weights):
+            self.add_edge(i, j, weight)
+
+    def print_matrix(self):
+        """Print weight and edge matrix."""
+        print(self._edge_matrix)
+        print(self._weight_matrix)
+
+    def get_edge_list(self):
+        """Return list of weighted edges.
+
+        Returns
+            list of tuples
+                each entry represents one edge in the graph: (i, j, weight)
+        """
+        edge_list = np.zeros(self.n_edges(), dtype=object)  # list of tuples
+        ind = 0
+        for i in range(self.n_nodes()):
+            for j in range(self.n_nodes()):
+                if self._edge_matrix[i, j]:
+                    edge_list[ind] = (i, j, self._weight_matrix[i, j])
+                    ind += 1
+        return edge_list
+
+
 class Results():
     """Parent class for results of network analysis algorithms.
 
@@ -81,19 +157,15 @@ class Results():
 
     def _print_edge_list(self, adjacency_matrix, weights):
         """Print edge list to console."""
-        link_found = False
-        for s in range(self.data_properties.n_nodes):
-            for t in range(self.data_properties.n_nodes):
-                if adjacency_matrix[s, t]:
-                    link_found = True
-                    if weights == 'binary':
-                        print('\t{0} -> {1}'.format(
-                            s, t, weights, adjacency_matrix[s, t]))
-                    else:
-                        print('\t{0} -> {1}, {2}: {3}'.format(
-                            s, t, weights, adjacency_matrix[s, t]))
-
-        if not link_found:
+        edge_list = adjacency_matrix.get_edge_list()
+        if edge_list.size > 0:
+            for e in edge_list:
+                if weights == 'binary':
+                    print('\t{0} -> {1}'.format(e[0], e[1]))
+                else:
+                    print('\t{0} -> {1}, {2}: {3}'.format(
+                        e[0], e[1], weights, e[2]))
+        else:
             print('No significant links found in the network.')
 
     def _check_result(self, process, settings):
@@ -183,12 +255,12 @@ class ResultsSingleProcessAnalysis(Results):
     e.g., estimation of active information storage.
 
     Note that for convenience all dictionaries in this class can additionally
-    be accessed using dot-notation: 
+    be accessed using dot-notation:
 
     >>> res_network.settings.cmi_estimator
-    
-    or 
-    
+
+    or
+
     >>> res_network.settings['cmi_estimator'].
 
     Attributes:
@@ -436,11 +508,11 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
     MultivariateTE or Bivariate TE.
 
     Note that for convenience all dictionaries in this class can additionally
-    be accessed using dot-notation: 
-    
+    be accessed using dot-notation:
+
     >>> res_network.settings.cmi_estimator
-    
-    or 
+
+    or
 
     >>> res_network.settings['cmi_estimator'].
 
@@ -572,10 +644,11 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
 
             fdr : bool [optional]
                 return FDR-corrected results (default=True)
+
+        Returns:
+            AdjacencyMatrix instance
         """
-        adjacency_matrix = np.zeros(
-            (self.data_properties.n_nodes, self.data_properties.n_nodes),
-            dtype=int)
+        adjacency_matrix = AdjacencyMatrix(self.data_properties.n_nodes, int)
 
         if weights == 'max_te_lag':
             for t in self.targets_analysed:
@@ -583,26 +656,38 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
                 delays = self.get_target_delays(target=t,
                                                 criterion='max_te',
                                                 fdr=fdr)
-                if sources.size:
-                    adjacency_matrix[sources, t] = delays
+                adjacency_matrix.add_edge_list(
+                    sources, np.ones(len(sources), dtype=int) * t, delays)
         elif weights == 'max_p_lag':
             for t in self.targets_analysed:
                 sources = self.get_target_sources(target=t, fdr=fdr)
                 delays = self.get_target_delays(target=t,
                                                 criterion='max_p',
                                                 fdr=fdr)
-                if sources.size:
-                    adjacency_matrix[sources, t] = delays
+                adjacency_matrix.add_edge_list(
+                    sources, np.ones(len(sources), dtype=int) * t, delays)
         elif weights == 'vars_count':
             for t in self.targets_analysed:
                 single_result = self.get_single_target(target=t, fdr=fdr)
-                for s in single_result.selected_vars_sources:
-                    adjacency_matrix[s[0], t] += 1
+                sources = np.zeros(len(single_result.selected_vars_sources))
+                weights = np.zeros(len(single_result.selected_vars_sources))
+                for i, s in enumerate(single_result.selected_vars_sources):
+                    sources[i] = s[0]
+                    weights[i] += 1
+                adjacency_matrix.add_edge_list(
+                    sources, np.ones(len(sources), dtype=int) * t, weights)
         elif weights == 'binary':
             for t in self.targets_analysed:
                 single_result = self.get_single_target(target=t, fdr=fdr)
-                for s in single_result.selected_vars_sources:
-                    adjacency_matrix[s[0], t] = 1
+                sources = np.zeros(
+                    len(single_result.selected_vars_sources), dtype=int)
+                weights = np.zeros(
+                    len(single_result.selected_vars_sources), dtype=int)
+                for i, s in enumerate(single_result.selected_vars_sources):
+                    sources[i] = s[0]
+                    weights[i] = 1
+                adjacency_matrix.add_edge_list(
+                    sources, np.ones(len(sources), dtype=int) * t, weights)
         else:
             raise RuntimeError('Invalid weights value')
         return adjacency_matrix
@@ -642,12 +727,12 @@ class ResultsPartialInformationDecomposition(ResultsNetworkAnalysis):
     algorithms.
 
     Note that for convenience all dictionaries in this class can additionally
-    be accessed using dot-notation: 
-    
+    be accessed using dot-notation:
+
     >>> res_pid._single_target[2].source_1
-    
-    or 
-    
+
+    or
+
     >>> res_pid._single_target[2].['source_1'].
 
     Attributes:
@@ -787,43 +872,43 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
                    connectivity for significant links
                 - 'diff_abs': absolute difference
 
+        Returns:
+            AdjacencyMatrix instance
         """
         # Note: right now, the network comparison work on the uncorrected
         # networks only. This may have to change in the future, in which case
         # the value for 'fdr' when accessing single target results or adjacency
         # matrices has to be taken from the analysis settings.
         if weights == 'comparison':
-            adjacency_matrix = np.zeros(
-                (self.data_properties.n_nodes, self.data_properties.n_nodes),
-                dtype=bool)
+            adjacency_matrix = AdjacencyMatrix(
+                self.data_properties.n_nodes, int)
             for t in self.targets_analysed:
                 sources = self.get_target_sources(t)
-                for (i, s) in enumerate(sources):
-                        adjacency_matrix[s, t] = self.ab[t][i]
+                for i, s in enumerate(sources):
+                    adjacency_matrix.add_edge(s, t, int(self.ab[t][i]))
         elif weights == 'union':
-            adjacency_matrix = np.zeros(
-                (self.data_properties.n_nodes, self.data_properties.n_nodes),
-                dtype=int)
+            adjacency_matrix = AdjacencyMatrix(
+                self.data_properties.n_nodes, int)
             for t in self.targets_analysed:
                 sources = self.get_target_sources(t)
-                if sources.size:
-                    adjacency_matrix[sources, t] = 1
+                adjacency_matrix.add_edge_list(
+                    sources, np.ones(len(sources), dtype=int) * t,
+                    np.ones(len(sources), dtype=int))
         elif weights == 'diff_abs':
-            adjacency_matrix = np.zeros(
-                (self.data_properties.n_nodes, self.data_properties.n_nodes),
-                dtype=float)
+            adjacency_matrix = AdjacencyMatrix(
+                self.data_properties.n_nodes, float)
             for t in self.targets_analysed:
                 sources = self.get_target_sources(t)
                 for (i, s) in enumerate(sources):
-                    adjacency_matrix[s, t] = self.cmi_diff_abs[t][i]
+                    print(self.cmi_diff_abs)
+                    adjacency_matrix.add_edge(s, t, self.cmi_diff_abs[t][i])
         elif weights == 'pvalue':
-            adjacency_matrix = np.ones(
-                (self.data_properties.n_nodes, self.data_properties.n_nodes),
-                dtype=float)
+            adjacency_matrix = AdjacencyMatrix(
+                self.data_properties.n_nodes, float)
             for t in self.targets_analysed:
                 sources = self.get_target_sources(t)
                 for (i, s) in enumerate(sources):
-                    adjacency_matrix[s, t] = self.pval[t][i]
+                    adjacency_matrix.add_edge(s, t, self.pval[t][i])
         else:
             raise RuntimeError('Invalid weights value')
 

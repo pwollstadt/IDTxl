@@ -97,10 +97,6 @@ def test_export_brain_net():
                                    node_size=node_size)
 
     # Test input checks.
-    with pytest.raises(AssertionError):  # test for square adj. matrix
-        io.export_brain_net_viewer(adjacency_matrix=np.ones((3, 10)),
-                                   mni_coord=mni_coord[:3, :],
-                                   file_name=outfile)
     with pytest.raises(AssertionError):  # no. entries in mni matrix
         io.export_brain_net_viewer(adjacency_matrix=adj_matrix,
                                    mni_coord=mni_coord[:3, :],

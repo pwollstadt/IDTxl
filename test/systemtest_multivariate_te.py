@@ -209,7 +209,8 @@ def test_multivariate_te_lorenz_2():
     # Just analyse the direction of coupling
     results = lorenz_analysis.analyse_single_target(settings, data, target=1)
     print(results._single_target)
-    print(results.get_adjacency_matrix('binary', fdr=False))
+    adj_matrix = results.get_adjacency_matrix(weights='binary', fdr=False)
+    adj_matrix.print_matrix()
 
 
 def test_multivariate_te_mute():
