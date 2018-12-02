@@ -55,14 +55,7 @@ class DotDict(dict):
 
 
 class AdjacencyMatrix():
-    """Adjacency matrix representing inferred networks.
-
-    Attributes:  TODO
-        is_edge : bool
-            matrix of edges in the network
-        weights : int | float | bool
-            weight for each edge
-    """
+    """Adjacency matrix representing inferred networks."""
     def __init__(self, n_nodes, weight_type):
         self._edge_matrix = np.zeros((n_nodes, n_nodes), dtype=bool)
         self._weight_matrix = np.zeros((n_nodes, n_nodes), dtype=weight_type)
