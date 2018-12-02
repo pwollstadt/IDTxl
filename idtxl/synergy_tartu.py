@@ -47,9 +47,6 @@ def p_vidx(i):
 def q_vidx(i):
     return 3*i+2
 
-class BROJA_2PID_Exception(Exception):
-    pass
-
 
 class Solve_w_ECOS:
     # (c) Abdullah Makkeh, Dirk Oliver Theis
