@@ -129,8 +129,8 @@ class NetworkComparison(NetworkAnalysis):
             settings=self.settings,
             union_network=self.union,
             results={
-                'cmi_diff_abs': {link_a[1]: [np.abs(self.cmi_diff)],
-                                 link_b[1]: [np.abs(self.cmi_diff)]},
+                'cmi_diff_abs': {link_a[1]: np.abs(self.cmi_diff),
+                                 link_b[1]: np.abs(self.cmi_diff)},
                 'a>b': {link_a[1]: [te_a > te_b], link_b[1]: [te_a > te_b]},
                 'pval': {link_a[1]: [pvalue], link_b[1]: [pvalue]},
                 'cmi_surr': self.cmi_surr,

@@ -85,24 +85,21 @@ def test_network_comparison():
 
 def _verify_test(c_within, c_between, res):
     # Test values for verification
-    tp = res.get_adjacency_matrix('binary') > 0  # get true positives
-    print(c_within.get_adjacency_matrix('union'))
-    assert (c_between.get_adjacency_matrix('union')[tp] == 1).all(), (
-        'Missing union link in between network comparison.')
-    assert (c_within.get_adjacency_matrix('union')[tp] == 1).all(), (
-        'Missing union link in wihin network comparison.')
-    assert (c_between.get_adjacency_matrix('pvalue')[tp] < 1).all(), (
-        'Wrong p-value in between network comparison.')
-    assert (c_within.get_adjacency_matrix('pvalue')[tp] < 1).all(), (
-        'Wrong p-value in wihin network comparison.')
-    # assert (c_between.adjacency_matrix_comparison[tp]).all(), (
-    #     'Wrong comparison in between network comparison.')
-    # assert (c_within.adjacency_matrix_comparison[tp]).all(), (
-    #     'Wrong comparison in wihin network comparison.')
-    assert (c_between.get_adjacency_matrix('diff_abs')[tp] > 0).all(), (
-        'Missed difference in between network comparison.')
-    assert (c_within.get_adjacency_matrix('diff_abs')[tp] > 0).all(), (
-        'Missed difference in wihin network comparison.')
+    # Get true positives.
+    adj_mat_binary = res.get_adjacency_matrix('binary')
+    tp = adj_mat_binary._edge_matrix
+
+    for comp, comp_type in zip([c_between, c_within], ['between', 'within']):
+        adj_mat_union = comp.get_adjacency_matrix('union')
+        adj_mat_pval = comp.get_adjacency_matrix('pvlaue')
+        adj_mat_diff = comp.get_adjacency_matrix('diff_abs')
+        print(adj_mat_union._weight_matrix)
+        assert (adj_mat_union._edge_matrix[tp]).all(), (
+            'Missing union link in {} network comparison.'.format(comp_type))
+        assert (adj_mat_pval._weight_matrix[tp] < 1).all(), (
+            'Wrong p-value in {} network comparison.'.format(comp_type))
+        assert (adj_mat_diff._edge_matrix[tp] > 0).all(), (
+            'Missed difference in {} network comparison.'.format(comp_type))
 
 
 def _generate_dummy_data(data):

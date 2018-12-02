@@ -34,7 +34,7 @@ class Data():
         >>> data_2.set_data(data_new, 's')
 
     Note:
-        Realisations are stored as attribute 'data'. This can only be set via 
+        Realisations are stored as attribute 'data'. This can only be set via
         the 'set_data()' method.
 
     Args:
@@ -828,15 +828,25 @@ class Data():
 
         Generate example data and overwrite the instance's current data. The
         network is used as an example the paper on the MuTE toolbox (Montalto,
-        PLOS ONE, 2014, eq. 14). The network consists of five autoregressive
-        (AR) processes with model orders 2 and the following (non-linear)
-        couplings:
+        PLOS ONE, 2014, eq. 14) and was orginially proposed by Baccala &
+        Sameshima (2001). The network consists of five autoregressive (AR)
+        processes with model orders 2 and the following (non-linear) couplings:
 
         0 -> 1, u = 2 (non-linear)
         0 -> 2, u = 3
         0 -> 3, u = 2 (non-linear)
         3 -> 4, u = 1
         4 -> 3, u = 1
+
+        References:
+
+        - Montalto, A., Faes, L., & Marinazzo, D. (2014) MuTE: A MATLAB toolbox
+          to compare established and novel estimators of the multivariate
+          transfer entropy. PLoS ONE 9(10): e109462.
+          https://doi.org/10.1371/journal.pone.0109462
+        - Baccala, L.A. & Sameshima, K. (2001). Partial directed coherence: a
+          new concept in neural structure determination. Biol Cybern 84:
+          463–474. https://doi.org/10.1007/PL00007990
 
         Args:
             n_samples : int

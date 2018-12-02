@@ -5,7 +5,6 @@ as proposed in
 
 Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., & Ay, N. (2014). Quantifying
 Unique Information. Entropy, 16(4), 2161–2183. http://doi.org/10.3390/e16042161
-
 """
 import numpy as np
 from . import synergy_tartu
@@ -17,9 +16,9 @@ from .estimator import Estimator
 class SydneyPID(Estimator):
     """Estimate partial information decomposition of discrete variables.
 
-    Fast implementation of the partial information decomposition (PID)
-    estimator for discrete data. The estimator does not require JAVA or GPU
-    modules to run.
+    Fast implementation of the BROJA partial information decomposition (PID)
+    estimator for discrete data (Bertschinger, 2014). The estimator does not
+    require JAVA or GPU modules to run.
 
     The estimator finds shared information, unique information and
     synergistic information between the two inputs s1 and s2 with respect to
@@ -33,6 +32,12 @@ class SydneyPID(Estimator):
     which actually does the virtualised swapping, keeping the changes if the
     CMI decreases; and an outer loop which decreases the size of the
     probability mass increment the virtualised swapping utilises.
+
+    References
+
+    - Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., & Ay, N. (2014).
+      Quantifying unique information. Entropy, 16(4), 2161–2183.
+      http://doi.org/10.3390/e16042161
 
     Args:
         settings : dict

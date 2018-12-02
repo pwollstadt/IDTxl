@@ -86,7 +86,7 @@ def plot_selected_vars(results, target, sign_sources=True,
         target : int
             index of target process
         sign_sources : bool [optional]
-            add only sources significant information contribution
+            plot sources with significant information contribution only
             (default=True)
         display_edge_labels : bool [optional]
             display TE value on edge lables (default=False)
@@ -167,13 +167,16 @@ def _plot_adj_matrix(adj_matrix, mat_color='gray_r', diverging=False,
     # https://stackoverflow.com/questions/25500541/
     # matplotlib-bwr-colormap-always-centered-on-zero
     if diverging:
-        max_val = np.max(abs(adj_matrix))
+        max_val = np.max(abs(adj_matrix._weight_matrix))
         min_val = -max_val
     else:
-        max_val = np.max(adj_matrix)
-        min_val = -np.min(adj_matrix)
-    plt.imshow(adj_matrix, cmap=mat_color, interpolation='nearest',
-               vmin=min_val, vmax=max_val)
+        max_val = np.max(adj_matrix._weight_matrix)
+        min_val = -np.min(adj_matrix._weight_matrix)
+
+    adj_matrix_masked = np.ma.masked_where(
+        np.invert(adj_matrix._edge_matrix), adj_matrix._weight_matrix)
+    plt.imshow(adj_matrix_masked, cmap=mat_color,
+               interpolation='nearest', vmin=min_val, vmax=max_val)
 
     # Set the colorbar and make colorbar match the image in size using the
     # fraction and pad parameters (see https://stackoverflow.com/a/26720422).
@@ -187,7 +190,8 @@ def _plot_adj_matrix(adj_matrix, mat_color='gray_r', diverging=False,
     elif cbar_label == 'binary':
         cbar_label = 'Binary adjacency matrix'
     elif cbar_label == 'p-value':
-        cbar_ticks = np.arange(0, 1.001, 0.1)
+        # cbar_ticks = np.arange(0, 1.001, 0.1)
+        cbar_ticks = np.arange(0, max_val * 1.01, max_val / 5)
     else:
         cbar_ticks = np.arange(min_val, max_val + 0.01 * max_val,
                                cbar_stepsize)
@@ -195,8 +199,8 @@ def _plot_adj_matrix(adj_matrix, mat_color='gray_r', diverging=False,
     cbar.set_label(cbar_label, rotation=90)
 
     # Set x- and y-ticks.
-    plt.xticks(np.arange(adj_matrix.shape[1]))
-    plt.yticks(np.arange(adj_matrix.shape[0]))
+    plt.xticks(np.arange(adj_matrix.n_nodes()))
+    plt.yticks(np.arange(adj_matrix.n_nodes()))
     ax = plt.gca()
     ax.xaxis.tick_top()
     return cbar
@@ -280,18 +284,21 @@ def plot_network_comparison(results):
         cbar_label = 'A != B'
     elif results.settings.tail_comp == 'one':
         cbar_label = 'A > B'
-    _plot_adj_matrix(results.get_adjacency_matrix('comparison').astype(int),
+    adj_matrix_comparison = results.get_adjacency_matrix('comparison')
+    _plot_adj_matrix(adj_matrix_comparison,
                      mat_color='OrRd', cbar_label=cbar_label, cbar_stepsize=1)
     ax.set_title('Comparison {0}'.format(cbar_label), y=1.1)
 
     ax = plt.subplot(235)  # plot abs. differences adjacency matrix
-    _plot_adj_matrix(results.get_adjacency_matrix('diff_abs'),
+    adj_matrix_diff = results.get_adjacency_matrix('diff_abs')
+    _plot_adj_matrix(adj_matrix_diff,
                      mat_color='BuGn', cbar_label='norm. CMI diff [a.u.]',
                      cbar_stepsize=0.1)
     ax.set_title('CMI diff abs (A - B)', y=1.1)
 
-    ax = plt.subplot(236) # plot p-value adjacency matrix
-    _plot_adj_matrix(results.get_adjacency_matrix('pvalue'), mat_color='gray',
-                     cbar_label='p-value', cbar_stepsize=0.05)
+    ax = plt.subplot(236)  # plot p-value adjacency matrix
+    adj_matrix_pval = results.get_adjacency_matrix('pvalue')
+    _plot_adj_matrix(adj_matrix_pval, mat_color='Greys',
+                     cbar_label='p-value')
     ax.set_title('p-value [%]', y=1.1)
     return graph_union, fig
