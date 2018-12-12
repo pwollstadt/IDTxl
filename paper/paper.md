@@ -34,9 +34,9 @@ authors:
    orcid: 0000-0001-8010-5862
    affiliation: "1, 7, 8"
 affiliations:
- - name: MEG Unit , Brain Imaging Center, Goethe-University Frankfurt, Fankfurt am Main, Germany
+ - name: MEG Unit, Brain Imaging Center, Goethe-University Frankfurt, Fankfurt am Main, Germany
    index: 1
- - name: Centre for Complex Systems, Faculty of Engineering and IT, The Univeristy of Sydney, Sydney, Australia
+ - name: Centre for Complex Systems, Faculty of Engineering and IT, The University of Sydney, Sydney, Australia
    index: 2
  - name: Computational Neuroscience Lab, Institute of Computer Science, Tartu, Estonia
    index: 3
