@@ -534,7 +534,8 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 #  we'll set the results to zero
                 print('AlgorithmExhaustedError encountered in '
                       'estimations: ' + aee.message)
-                print('Halting AIS final conditional test and setting to not significant.')
+                print('Halting AIS final conditional test and setting to not '
+                      'significant.')
                 # For now we don't need a stack trace:
                 # traceback.print_tb(aee.__traceback__)
                 ais = 0

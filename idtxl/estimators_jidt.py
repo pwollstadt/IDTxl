@@ -87,7 +87,8 @@ class JidtEstimator(Estimator):
         assert settings['tau_source'] >= 1, 'Source tau must be >= 1'
         assert settings['history_target'] >= 0, 'Target history must be >= 0'
         assert settings['history_source'] >= 1, 'Source history must be >= 1'
-        assert settings['source_target_delay'] >= 0, 'Source-target delay must be >= 0'
+        assert settings['source_target_delay'] >= 0, (
+            'Source-target delay must be >= 0')
         return settings
 
     def is_parallel(self):
@@ -1556,8 +1557,10 @@ class JidtDiscreteTE(JidtDiscrete):
             'Num discrete levels for source has to be an integer.')
         assert type(settings['alph2']) is int, (
             'Num discrete levels for target has to be an integer.')
-        assert settings['alph1'] >= 2, 'Num discrete levels for source must be >= 2'
-        assert settings['alph2'] >= 2, 'Num discrete levels for target must be >= 2'
+        assert settings['alph1'] >= 2, (
+            'Num discrete levels for source must be >= 2')
+        assert settings['alph2'] >= 2, (
+            'Num discrete levels for target must be >= 2')
         super().__init__(settings)
 
         # Start JAVA virtual machine and create JAVA object.
