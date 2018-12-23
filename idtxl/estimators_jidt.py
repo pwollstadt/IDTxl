@@ -87,7 +87,8 @@ class JidtEstimator(Estimator):
         assert settings['tau_source'] >= 1, 'Source tau must be >= 1'
         assert settings['history_target'] >= 0, 'Target history must be >= 0'
         assert settings['history_source'] >= 1, 'Source history must be >= 1'
-        assert settings['source_target_delay'] >= 0, 'Source-target delay must be >= 0'
+        assert settings['source_target_delay'] >= 0, (
+            'Source-target delay must be >= 0')
         return settings
 
     def is_parallel(self):
@@ -597,10 +598,11 @@ class JidtDiscreteCMI(JidtDiscrete):
             assert(alph1_base >= 2)
             assert(alph2_base >= 2)
             assert(cond_base >= 2)
-            raise ex.JidtOutOfMemoryError('Cannot instantiate JIDT CMI '
-                'discrete estimator with alph1_base = ' + str(alph1_base) +
-                ', alph2_base = ' + str(alph2_base) + ', cond_base = ' +
-                str(cond_base) + '. Try re-running increasing Java heap size')
+            raise ex.JidtOutOfMemoryError(
+                'Cannot instantiate JIDT CMI discrete estimator with '
+                'alph1_base = {0}, alph2_base = {1}, cond_base = {2). Try '
+                're-running increasing Java heap size'.format(
+                    alph1_base, alph2_base, cond_base))
         calc.setDebug(self.settings['debug'])
         calc.initialise()
         # Unfortunately no faster way to pass numpy arrays in than this list
@@ -748,16 +750,16 @@ class JidtDiscreteMI(JidtDiscrete):
         base_for_var2 = int(np.power(self.settings['alph2'], var2_dim))
         try:
             calc = self.CalcClass(base_for_var1, base_for_var2,
-                                    self.settings['lag_mi'])
+                                  self.settings['lag_mi'])
         except jp.JavaException:
             # Only possible exception that can be raised here
             #  (if base_for_var* >= 2) is a Java OutOfMemoryException:
             assert(base_for_var1 >= 2)
             assert(base_for_var2 >= 2)
-            raise ex.JidtOutOfMemoryError('Cannot instantiate JIDT MI '
-                'discrete estimator with bases = ' + str(base_for_var1) +
-                 ' and ' + str(base_for_var2) +
-                 '. Try re-running increasing Java heap size')
+            raise ex.JidtOutOfMemoryError(
+                'Cannot instantiate JIDT MI discrete estimator with '
+                'bases = {0} and {1}. Try re-running increasing Java heap '
+                'size.'.format(base_for_var1, base_for_var2))
         calc.setDebug(self.settings['debug'])
         calc.initialise()
 
@@ -1086,15 +1088,17 @@ class JidtDiscreteAIS(JidtDiscrete):
 
         # And finally make the AIS calculation:
         try:
-            calc = self.CalcClass(self.settings['alph'], self.settings['history'])
+            calc = self.CalcClass(
+                self.settings['alph'], self.settings['history'])
         except jp.JavaException:
             # Only possible exception that can be raised here
             #  (if self.settings['alph'] >= 2) is a Java OutOfMemoryException:
             assert(self.settings['alph'] >= 2)
-            raise ex.JidtOutOfMemoryError('Cannot instantiate JIDT AIS '
-                'discrete estimator with alph = ' + str(self.settings['alph']) +
-                 ' and history = ' + str(self.settings['history']) +
-                 '. Try re-running increasing Java heap size')
+            raise ex.JidtOutOfMemoryError(
+                'Cannot instantiate JIDT AIS discrete estimator with alph = '
+                '{0} and history = {1}. Try re-running increasing Java heap '
+                'size.'.format(
+                    self.settings['alph'], self.settings['history']))
         calc.initialise()
         # Unfortunately no faster way to pass numpy arrays in than this list
         # conversion
@@ -1450,7 +1454,6 @@ class JidtKraskovTE(JidtKraskov):
         settings = self._set_te_defaults(settings)
         super().__init__(CalcClass, settings)
 
-
     def estimate(self, source, target):
         """Estimate transfer entropy from a source to a target variable.
 
@@ -1548,8 +1551,10 @@ class JidtDiscreteTE(JidtDiscrete):
             'Num discrete levels for source has to be an integer.')
         assert type(settings['alph2']) is int, (
             'Num discrete levels for target has to be an integer.')
-        assert settings['alph1'] >= 2, 'Num discrete levels for source must be >= 2'
-        assert settings['alph2'] >= 2, 'Num discrete levels for target must be >= 2'
+        assert settings['alph1'] >= 2, (
+            'Num discrete levels for source must be >= 2')
+        assert settings['alph2'] >= 2, (
+            'Num discrete levels for target must be >= 2')
         super().__init__(settings)
 
         # Start JAVA virtual machine and create JAVA object.
@@ -1595,20 +1600,21 @@ class JidtDiscreteTE(JidtDiscrete):
         max_base = max(self.settings['alph1'], self.settings['alph2'])
         try:
             calc = self.CalcClass(max_base,
-                              self.settings['history_target'],
-                              self.settings['tau_target'],
-                              self.settings['history_source'],
-                              self.settings['tau_source'],
-                              self.settings['source_target_delay'])
+                                  self.settings['history_target'],
+                                  self.settings['tau_target'],
+                                  self.settings['history_source'],
+                                  self.settings['tau_source'],
+                                  self.settings['source_target_delay'])
         except jp.JavaException:
             # Only possible exception that can be raised here
             #  (if max_base >= 2) is a Java OutOfMemoryException:
             assert(max_base >= 2)
-            raise ex.JidtOutOfMemoryError('Cannot instantiate JIDT TE '
-                'discrete estimator with max_base = ' + str(max_base) +
-                 ' and history_target = ' + str(self.settings['history_target']) +
-                 ' and history_source = ' + str(self.settings['history_source']) +
-                 '. Try re-running increasing Java heap size')
+            raise ex.JidtOutOfMemoryError(
+                'Cannot instantiate JIDT TE '
+                'discrete estimator with max_base = {0} and history_target = '
+                '{1} and history_source = {2}. Try re-running increasing Java '
+                'heap size'.format(max_base, self.settings['history_target'],
+                                   self.settings['history_source']))
         calc.initialise()
         # Unfortunately no faster way to pass numpy arrays in than this list
         # conversion

@@ -9,7 +9,6 @@ Note:
 import numpy as np
 from . import stats
 from .single_process_analysis import SingleProcessAnalysis
-from .estimator import find_estimator
 from .results import ResultsSingleProcessAnalysis
 from . import idtxl_exceptions as ex
 
@@ -365,12 +364,12 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 #  we'll terminate the search for more candidates,
                 #  though those identified already remain valid
                 print('AlgorithmExhaustedError encountered in '
-                    'estimations: ' + aee.message)
+                      'estimations: ' + aee.message)
                 print('Halting current estimation set.')
                 # For now we don't need a stack trace:
                 # traceback.print_tb(aee.__traceback__)
                 break
-            
+
             # Test max CMI for significance with maximum statistics.
             te_max_candidate = max(temp_te)
             max_candidate = candidate_set[np.argmax(temp_te)]
@@ -379,19 +378,19 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                                 self._idx_to_lag([max_candidate])[0]), end='')
             significant = False
             try:
-                significant = stats.max_statistic(self, data, candidate_set,
-                                              te_max_candidate)[0]
+                significant = stats.max_statistic(
+                    self, data, candidate_set, te_max_candidate)[0]
             except ex.AlgorithmExhaustedError as aee:
                 # The algorithm cannot continue here, so
                 #  we'll terminate the check on the max stats and not let the
                 #  source pass
                 print('AlgorithmExhaustedError encountered in '
-                    'estimations: ' + aee.message)
+                      'estimations: ' + aee.message)
                 print('Halting max stats and further selection for target.')
                 # For now we don't need a stack trace:
                 # traceback.print_tb(aee.__traceback__)
                 break
-            
+
             # If the max is significant keep it and test the next candidate. If
             # it is not significant break. There will be no further significant
             # sources b/c they all have lesser TE.
@@ -473,9 +472,9 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                     #  we'll terminate the pruning check,
                     #  assuming that we need not prune any more
                     print('AlgorithmExhaustedError encountered in '
-                        'estimations: ' + aee.message)
+                          'estimations: ' + aee.message)
                     print('Halting current pruning and allowing others to'
-                        ' remain.')
+                          ' remain.')
                     # For now we don't need a stack trace:
                     # traceback.print_tb(aee.__traceback__)
                     break
@@ -495,9 +494,9 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 #  we'll terminate the min statistics
                 #  assuming that we need not prune any more
                 print('AlgorithmExhaustedError encountered in '
-                    'estimations: ' + aee.message)
+                      'estimations: ' + aee.message)
                 print('Halting current pruning and allowing others to'
-                    ' remain.')
+                      ' remain.')
                 # For now we don't need a stack trace:
                 # traceback.print_tb(aee.__traceback__)
                 break
@@ -527,8 +526,9 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 # The algorithm cannot continue here, so
                 #  we'll set the results to zero
                 print('AlgorithmExhaustedError encountered in '
-                    'estimations: ' + aee.message)
-                print('Halting AIS final conditional test and setting to not significant.')
+                      'estimations: ' + aee.message)
+                print('Halting AIS final conditional test and setting to not '
+                      'significant.')
                 # For now we don't need a stack trace:
                 # traceback.print_tb(aee.__traceback__)
                 ais = 0
@@ -553,15 +553,15 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                     # The algorithm cannot continue here, so
                     #  we'll set the results to zero
                     print('AlgorithmExhaustedError encountered in '
-                        'final local AIS estimations: ' + aee.message)
+                          'final local AIS estimations: ' + aee.message)
                     print('Setting all local results to zero (but leaving'
-                        ' surrogate statistical test results)')
+                          ' surrogate statistical test results)')
                     # For now we don't need a stack trace:
                     # traceback.print_tb(aee.__traceback__)
                     # Return local AIS values of all zeros:
                     #  (length gleaned from line below)
                     local_ais = np.zeros(
-                        (max(replication_ind) + 1)*sum(replication_ind == 0));
+                        (max(replication_ind) + 1)*sum(replication_ind == 0))
 
                 # Reshape local AIS to a [replications x samples] matrix.
                 self.ais = local_ais.reshape(
