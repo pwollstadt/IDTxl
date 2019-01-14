@@ -303,7 +303,8 @@ class NetworkAnalysis():
             cond = self.settings['add_conditionals']
             if type(cond) is tuple:  # easily add single variable
                 cond = [cond]
-            candidate_set = list(set(candidate_set).difference(set(cond)))
+            cond_idx = self._lag_to_idx(cond)            
+            candidate_set = list(set(candidate_set).difference(set(cond_idx)))
         return candidate_set
 
     def _append_selected_vars_idx(self, idx):

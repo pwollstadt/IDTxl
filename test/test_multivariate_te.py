@@ -368,26 +368,27 @@ def test_define_candidates():
     # Test if candidates that are added manually to the conditioning set are
     # removed from the candidate set.
     nw = MultivariateTE()
+    nw.current_value = current_val
     settings = [
         {'add_conditionals': None},
         {'add_conditionals': (2, 3)},
-        {'add_conditionals': [(2, 3), (4, 1)]}]
+        {'add_conditionals': [(2, 3), (4, 1)]},
+        {'add_conditionals': [(1, 9)]},
+        {'add_conditionals': [(1, 9), (2, 3), (4, 1)]}]
     for s in settings:
         nw.settings = s
         candidates = nw._define_candidates(procs, samples)
         assert (1, 9) in candidates, 'Sample missing from candidates: (1, 9).'
         assert (1, 6) in candidates, 'Sample missing from candidates: (1, 6).'
         assert (1, 3) in candidates, 'Sample missing from candidates: (1, 3).'
-
-    settings = [
-        {'add_conditionals': [(1, 9)]},
-        {'add_conditionals': [(1, 9), (2, 3), (4, 1)]}]
-    for s in settings:
-        nw.settings = s
-        candidates = nw._define_candidates(procs, samples)
-    assert (1, 9) not in candidates, 'Sample missing from candidates: (1, 9).'
-    assert (1, 6) in candidates, 'Sample missing from candidates: (1, 6).'
-    assert (1, 3) in candidates, 'Sample missing from candidates: (1, 3).'
+        if s['add_conditionals'] is not None:
+            if type(s['add_conditionals']) is tuple:
+                cond_ind = nw._lag_to_idx([s['add_conditionals']])
+            else:
+                cond_ind = nw._lag_to_idx(s['add_conditionals'])
+            for c in cond_ind:
+                assert c not in candidates, (
+                    'Sample added erronously to candidates: {}.'.format(c))
 
 
 @jpype_missing
