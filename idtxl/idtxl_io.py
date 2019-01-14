@@ -6,6 +6,7 @@ mat-files, FieldTrip) and export functions (e.g., networkx, BrainNet Viewer).
 # import json
 import pickle
 import h5py
+import networkx as nx
 import numpy as np
 import copy as cp
 import itertools as it
