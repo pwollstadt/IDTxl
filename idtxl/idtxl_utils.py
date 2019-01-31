@@ -289,8 +289,12 @@ def equal_dicts(dict_1, dict_2):
     if dict_1.keys() != dict_2.keys():
         return False
     for k in dict_1.keys():
-        if dict_1[k] != dict_2[k]:
-            return False
+        if isinstance(dict_1[k], (list, np.ndarray)):
+            if (dict_1[k] != dict_2[k]).any():
+                return False
+        else:
+            if dict_1[k] != dict_2[k]:
+                return False
     return True
 
 

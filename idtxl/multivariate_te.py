@@ -147,6 +147,10 @@ class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
                                                'sources have to have the same '
                                                'same length')
 
+        # Check and set defaults for checkpointing.
+        settings = self._set_checkpointing_defaults(
+            settings, data, sources, targets)
+
         # Perform TE estimation for each target individually
         results = ResultsNetworkInference(n_nodes=data.n_processes,
                                           n_realisations=data.n_realisations(),
@@ -251,6 +255,12 @@ class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
                   Data.permute_samples() for further settings (default=False)
                 - verbose : bool [optional] - toggle console output
                   (default=True)
+                - write_ckp : bool [optional] - enable checkpointing, writes
+                  analysis state to disk every time a variable is selected;
+                  resume crashed analysis using
+                  network_analysis.resume_checkpoint() (default=False)
+                - filename_ckp : str [optional] - checkpoint file name (without
+                  extension) (default='./idtxl_checkpoint')
 
             data : Data instance
                 raw data for analysis

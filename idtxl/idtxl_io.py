@@ -3,10 +3,11 @@
 Provide functions to load and save IDTxl data, provide import functions (e.g.,
 mat-files, FieldTrip) and export functions (e.g., networkx, BrainNet Viewer).
 """
-# import json
+import json
 import pickle
 import h5py
 import networkx as nx
+from pprint import pprint
 import numpy as np
 import copy as cp
 import itertools as it
@@ -22,72 +23,58 @@ except ImportError as err:
          'https://pypi.python.org/pypi/networkx/2.0 to export and plot IDTxl '
          'results in this format.'))
 
-VERBOSE = False
+DEBUG = False
 
 
-# def save(data, file_path):
-#     """Save IDTxl data to disk.
+def save_json(d, file_path):
+    """Save dictionary to disk as JSON file.
 
-#     Save different data types to disk. Supported types are:
+    Writes dictionary to disk at the specified file path.
 
-#     - dictionaries with results, e.g., from MultivariateTE
-#     - numpy array
-#     - instance of IDTXL Data object
+    Args:
+        d : dict
+            dictionary to be written to disk
+        file_path : str
+            path to file (including extension)
 
-#     Note that while numpy arrays and Data instances are saved in binary for
-#     performance, dictionaries are saved in the json format, which is human-
-#     readable and also easily read into other programs (e.g., MATLAB:
-#     http://undocumentedmatlab.com/blog/json-matlab-integration).
+    Note: JSON does not recognize numpy data types, those are converted to
+    basic Python data types first.
+    """
+    data_json = _remove_numpy(d)
+    with open(file_path, 'w') as outfile:
+        json.dump(obj=data_json, fp=outfile, sort_keys=True)
 
-#     File extensions are
 
-#     - .txt for dictionaries (JSON file)
-#     - .npy for numpy array
-#     - .npz for Data instances
+def load_json(file_path):
+    """Load dictionary saved as JSON file from disk.
 
-#     If the extension is not provided in the file_path, the function will add
-#     it depending on the type of the data to be written.
+    Args:
+        file_path : str
+            path to file (including extension)
+    Returns:
+        dict
 
-#     Args:
-#         data : dict | numpy array | Data object
-#             data to be saved to disk
-#         file_path : string
-#             string with file name (including the path)
-#     """
-#     # Check if a file extension is provided in the file_path. Note that the
-#     # numpy save functions don't need an extension, they are added if
-#     # missing.
-#     if file_path.find('.', -4) == -1:
-#         add_extension = True
-#     else:
-#         add_extension = False
-
-#     if type(data) is dict:
-#         if add_extension:
-#             file_path = ''.join([file_path, '.txt'])
-#         # JSON does not recognize numpy arrays and data types, they have to
-#         # be converted before dumping them.
-#         data_json = _remove_numpy(data)
-#         if VERBOSE:
-#             print('writing file {0}'.format(file_path))
-#         with open(file_path, 'w') as outfile:
-#             json.dump(obj=data_json, fp=outfile, sort_keys=True)
-#     elif type(data) is np.ndarray:
-#         # TODO this can't handle scalars, handle this as an exception
-#         np.save(file_path, data)
-#     elif type(data) is __name__.data.Data:
-#         np.savez(file_path, data=data.data, normalised=data.normalise)
+    Note: JSON does not recognize numpy data structures and types. Numpy arrays
+    and data types (float, int) are thus converted to Python types and lists.
+    The loaded dictionary may thus contain different data types than the saved
+    one.
+    """
+    with open(file_path) as infile:
+        d = json.load(infile)
+    if DEBUG:
+        pprint(d)
+    return d
 
 
 def _remove_numpy(data):
-    """Remove all numpy data structures and types from dictionary.
+    """Replace numpy data types with basic Python types in a dictionary.
 
     JSON can not handle numpy types and data structures, they have to be
-    convertedto native python types first.
+    converted to native python types first.
     """
     data_json = cp.copy(data)
     for k in data_json.keys():
-        if VERBOSE:
+        if DEBUG:
             print('{0}, type: {1}'.format(data_json[k], type(data_json[k])))
         if type(data_json[k]) is np.ndarray:
             data_json[k] = data_json[k].tolist()
@@ -153,13 +140,13 @@ def save_pickle(obj, name):
         pickle.HIGHEST_PROTOCOL is a binary format, which may be inconvenient,
         but is good for performance. Protocol 0 is a text format.
     """
-    with open(name + '.pkl', 'wb') as f:
+    with open(name, 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
 
 def load_pickle(name):
     """Load objects that have been saved using Python's pickle module."""
-    with open(name + '.pkl', 'rb') as f:
+    with open(name, 'rb') as f:
         return pickle.load(f)
 
 
@@ -255,7 +242,7 @@ def _ft_import_label(file_name, ft_struct_name):
     ft_struct = ft_file[ft_struct_name]
     ft_label = ft_struct['label']
 
-    if VERBOSE:
+    if DEBUG:
         print('Converting FT labels to python list of strings')
 
     label = []
@@ -279,7 +266,7 @@ def _ft_import_time(file_name, ft_struct_name):
     ft_file = h5py.File(file_name)
     ft_struct = ft_file[ft_struct_name]
     ft_time = ft_struct['time']
-    if VERBOSE:
+    if DEBUG:
         print('Converting FT time cell array to numpy array')
 
     np_timeaxis_tmp = np.array(ft_file[ft_time[0][0]])
@@ -297,7 +284,7 @@ def _ft_fsample_2_float(file_name, ft_struct_name):
     ft_struct = ft_file[ft_struct_name]
     FTfsample = ft_struct['fsample']
     fsample = int(FTfsample[0])
-    if VERBOSE:
+    if DEBUG:
         print('Converting FT fsample array (1x1) to numpy array (1x1)')
     return fsample
 
