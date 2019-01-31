@@ -13,7 +13,6 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Helper functions" href="idtxl_helper.html" />
@@ -1623,9 +1622,9 @@ Unique Information. Entropy, 16(4), 2161–2183. <a class="reference external" h
 <dt>
 <em class="property">class </em><code class="descclassname">idtxl.estimators_pid.</code><code class="descname">SydneyPID</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#SydneyPID"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Estimate partial information decomposition of discrete variables.</p>
-<p>Fast implementation of the partial information decomposition (PID)
-estimator for discrete data. The estimator does not require JAVA or GPU
-modules to run.</p>
+<p>Fast implementation of the BROJA partial information decomposition (PID)
+estimator for discrete data (Bertschinger, 2014). The estimator does not
+require JAVA or GPU modules to run.</p>
 <p>The estimator finds shared information, unique information and
 synergistic information between the two inputs s1 and s2 with respect to
 the output t.</p>
@@ -1637,6 +1636,12 @@ the PID. The virtualised swaps stage contains two loops. An inner loop
 which actually does the virtualised swapping, keeping the changes if the
 CMI decreases; and an outer loop which decreases the size of the
 probability mass increment the virtualised swapping utilises.</p>
+<p>References</p>
+<ul class="simple">
+<li>Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., &amp; Ay, N. (2014).
+Quantifying unique information. Entropy, 16(4), 2161–2183.
+<a class="reference external" href="http://doi.org/10.3390/e16042161">http://doi.org/10.3390/e16042161</a></li>
+</ul>
 <dl class="docutils">
 <dt>Args:</dt>
 <dd><dl class="first last docutils">
@@ -1877,7 +1882,7 @@ chunk is one independent data set.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
     </div>
   </body>
 </html>

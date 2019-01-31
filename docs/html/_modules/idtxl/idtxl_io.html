@@ -13,7 +13,6 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -52,6 +51,7 @@
 <span class="c1"># import json</span>
 <span class="kn">import</span> <span class="nn">pickle</span>
 <span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">copy</span> <span class="k">as</span> <span class="nn">cp</span>
 <span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">it</span>
@@ -421,7 +421,7 @@
 <span class="sd">    available (see documentation of method get_adjacency_matrix for details).</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        adjacency_matrix : 2D numpy array</span>
+<span class="sd">        adjacency_matrix : AdjacencyMatrix instances</span>
 <span class="sd">            adjacency matrix to be exported, returned by get_adjacency_matrix()</span>
 <span class="sd">            method of Results() class</span>
 <span class="sd">        weights : str</span>
@@ -435,9 +435,9 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># use &#39;weights&#39; parameter (string) as networkx edge property name and use</span>
     <span class="c1"># adjacency matrix entries as edge property values</span>
-    <span class="n">custom_type</span> <span class="o">=</span> <span class="p">[(</span><span class="n">weights</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">adjacency_matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))]</span>
-    <span class="n">custom_npmatrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">adjacency_matrix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">custom_type</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy_matrix</span><span class="p">(</span><span class="n">custom_npmatrix</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">())</span></div>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_weighted_edges_from</span><span class="p">(</span><span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">get_edge_list</span><span class="p">(),</span> <span class="n">weights</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span></div>
 
 
 <div class="viewcode-block" id="export_networkx_source_graph"><a class="viewcode-back" href="../../idtxl.html#idtxl.idtxl_io.export_networkx_source_graph">[docs]</a><span class="k">def</span> <span class="nf">export_networkx_source_graph</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">sign_sources</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -456,7 +456,7 @@
 <span class="sd">        target : int</span>
 <span class="sd">            target index</span>
 <span class="sd">        sign_sources : bool [optional]</span>
-<span class="sd">            add only sources with significant information contribution</span>
+<span class="sd">            add sources with significant information contribution only</span>
 <span class="sd">            (default=True)</span>
 <span class="sd">        fdr : bool [optional]</span>
 <span class="sd">            return FDR-corrected results (default=True)</span>
@@ -540,7 +540,7 @@
 <span class="sd">      https://doi.org/10.1371/journal.pone.0068910</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        adjacency_matrix : 2D numpy array</span>
+<span class="sd">        adjacency_matrix : AdjacencyMatrix instance</span>
 <span class="sd">            adjacency matrix to be exported, returned by get_adjacency_matrix()</span>
 <span class="sd">            method of Results() class</span>
 <span class="sd">        mni_coord : numpy array</span>
@@ -562,15 +562,13 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Check input and get default settings for plotting. The default for</span>
     <span class="c1"># node labels is a list of &#39;-&#39; (no labels).</span>
-    <span class="n">n_nodes</span> <span class="o">=</span> <span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">n_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">adjacency_matrix</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">n_nodes</span> <span class="o">=</span> <span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">()</span>
+    <span class="n">n_edges</span> <span class="o">=</span> <span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">n_edges</span><span class="p">()</span>
     <span class="n">labels</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;-&#39;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">)])</span>
     <span class="n">node_color</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;node_color&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">))</span>
     <span class="n">node_size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;node_size&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">n_edges</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="ne">Warning</span><span class="p">(</span><span class="s1">&#39;No edges in results file. Nothing to plot.&#39;</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span>
-        <span class="s1">&#39;Adjacency matrix must be quadratic.&#39;</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">mni_coord</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">n_nodes</span> <span class="ow">and</span> <span class="n">mni_coord</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="p">(</span>
         <span class="s1">&#39;MNI coordinates must have shape [n_nodes, 3].&#39;</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">==</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="p">(</span>
@@ -597,7 +595,7 @@
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">.edge&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_name</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">text_file</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">):</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="se">\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">adjacency_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]),</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="se">\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">_edge_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]),</span>
                       <span class="n">file</span><span class="o">=</span><span class="n">text_file</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">text_file</span><span class="p">)</span></div>
 </pre></div>
@@ -638,7 +636,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
     </div>
   </body>
 </html>

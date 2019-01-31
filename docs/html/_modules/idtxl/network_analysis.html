@@ -13,7 +13,6 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -349,7 +348,8 @@
             <span class="n">cond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;add_conditionals&#39;</span><span class="p">]</span>
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">cond</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">tuple</span><span class="p">:</span>  <span class="c1"># easily add single variable</span>
                 <span class="n">cond</span> <span class="o">=</span> <span class="p">[</span><span class="n">cond</span><span class="p">]</span>
-            <span class="n">candidate_set</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">candidate_set</span><span class="p">)</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">cond</span><span class="p">)))</span>
+            <span class="n">cond_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lag_to_idx</span><span class="p">(</span><span class="n">cond</span><span class="p">)</span>            
+            <span class="n">candidate_set</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">candidate_set</span><span class="p">)</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">cond_idx</span><span class="p">)))</span>
         <span class="k">return</span> <span class="n">candidate_set</span>
 
     <span class="k">def</span> <span class="nf">_append_selected_vars_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
@@ -583,7 +583,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
     </div>
   </body>
 </html>

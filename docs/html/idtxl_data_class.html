@@ -13,7 +13,6 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Algorithms for network inference" href="idtxl_network_inference.html" />
@@ -153,14 +152,24 @@ determines the order of the stochastic process.
 <dd><p>Generate example data for a 5-process network.</p>
 <p>Generate example data and overwrite the instance’s current data. The
 network is used as an example the paper on the MuTE toolbox (Montalto,
-PLOS ONE, 2014, eq. 14). The network consists of five autoregressive
-(AR) processes with model orders 2 and the following (non-linear)
-couplings:</p>
+PLOS ONE, 2014, eq. 14) and was orginially proposed by Baccala &amp;
+Sameshima (2001). The network consists of five autoregressive (AR)
+processes with model orders 2 and the following (non-linear) couplings:</p>
 <p>0 -&gt; 1, u = 2 (non-linear)
 0 -&gt; 2, u = 3
 0 -&gt; 3, u = 2 (non-linear)
 3 -&gt; 4, u = 1
 4 -&gt; 3, u = 1</p>
+<p>References:</p>
+<ul class="simple">
+<li>Montalto, A., Faes, L., &amp; Marinazzo, D. (2014) MuTE: A MATLAB toolbox
+to compare established and novel estimators of the multivariate
+transfer entropy. PLoS ONE 9(10): e109462.
+<a class="reference external" href="https://doi.org/10.1371/journal.pone.0109462">https://doi.org/10.1371/journal.pone.0109462</a></li>
+<li>Baccala, L.A. &amp; Sameshima, K. (2001). Partial directed coherence: a
+new concept in neural structure determination. Biol Cybern 84:
+463–474. <a class="reference external" href="https://doi.org/10.1007/PL00007990">https://doi.org/10.1007/PL00007990</a></li>
+</ul>
 <dl class="docutils">
 <dt>Args:</dt>
 <dd><dl class="first last docutils">
@@ -953,7 +962,7 @@ permutations for the generation of surrogate data.</dd>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
     </div>
   </body>
 </html>

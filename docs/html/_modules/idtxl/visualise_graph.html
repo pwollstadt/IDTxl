@@ -13,7 +13,6 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -132,7 +131,7 @@
 <span class="sd">        target : int</span>
 <span class="sd">            index of target process</span>
 <span class="sd">        sign_sources : bool [optional]</span>
-<span class="sd">            add only sources significant information contribution</span>
+<span class="sd">            plot sources with significant information contribution only</span>
 <span class="sd">            (default=True)</span>
 <span class="sd">        display_edge_labels : bool [optional]</span>
 <span class="sd">            display TE value on edge lables (default=False)</span>
@@ -213,13 +212,16 @@
     <span class="c1"># https://stackoverflow.com/questions/25500541/</span>
     <span class="c1"># matplotlib-bwr-colormap-always-centered-on-zero</span>
     <span class="k">if</span> <span class="n">diverging</span><span class="p">:</span>
-        <span class="n">max_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">))</span>
+        <span class="n">max_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">_weight_matrix</span><span class="p">))</span>
         <span class="n">min_val</span> <span class="o">=</span> <span class="o">-</span><span class="n">max_val</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">max_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">)</span>
-        <span class="n">min_val</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">mat_color</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">,</span>
-               <span class="n">vmin</span><span class="o">=</span><span class="n">min_val</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">max_val</span><span class="p">)</span>
+        <span class="n">max_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">_weight_matrix</span><span class="p">)</span>
+        <span class="n">min_val</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">_weight_matrix</span><span class="p">)</span>
+
+    <span class="n">adj_matrix_masked</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">_edge_matrix</span><span class="p">),</span> <span class="n">adj_matrix</span><span class="o">.</span><span class="n">_weight_matrix</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">adj_matrix_masked</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">mat_color</span><span class="p">,</span>
+               <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="n">min_val</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">max_val</span><span class="p">)</span>
 
     <span class="c1"># Set the colorbar and make colorbar match the image in size using the</span>
     <span class="c1"># fraction and pad parameters (see https://stackoverflow.com/a/26720422).</span>
@@ -233,7 +235,8 @@
     <span class="k">elif</span> <span class="n">cbar_label</span> <span class="o">==</span> <span class="s1">&#39;binary&#39;</span><span class="p">:</span>
         <span class="n">cbar_label</span> <span class="o">=</span> <span class="s1">&#39;Binary adjacency matrix&#39;</span>
     <span class="k">elif</span> <span class="n">cbar_label</span> <span class="o">==</span> <span class="s1">&#39;p-value&#39;</span><span class="p">:</span>
-        <span class="n">cbar_ticks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.001</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="c1"># cbar_ticks = np.arange(0, 1.001, 0.1)</span>
+        <span class="n">cbar_ticks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_val</span> <span class="o">*</span> <span class="mf">1.01</span><span class="p">,</span> <span class="n">max_val</span> <span class="o">/</span> <span class="mi">5</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">cbar_ticks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span> <span class="o">+</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">max_val</span><span class="p">,</span>
                                <span class="n">cbar_stepsize</span><span class="p">)</span>
@@ -241,8 +244,8 @@
     <span class="n">cbar</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="n">cbar_label</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
 
     <span class="c1"># Set x- and y-ticks.</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">()))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">()))</span>
     <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">tick_top</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">cbar</span>
@@ -326,19 +329,22 @@
         <span class="n">cbar_label</span> <span class="o">=</span> <span class="s1">&#39;A != B&#39;</span>
     <span class="k">elif</span> <span class="n">results</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">tail_comp</span> <span class="o">==</span> <span class="s1">&#39;one&#39;</span><span class="p">:</span>
         <span class="n">cbar_label</span> <span class="o">=</span> <span class="s1">&#39;A &gt; B&#39;</span>
-    <span class="n">_plot_adj_matrix</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">get_adjacency_matrix</span><span class="p">(</span><span class="s1">&#39;comparison&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span>
+    <span class="n">adj_matrix_comparison</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_adjacency_matrix</span><span class="p">(</span><span class="s1">&#39;comparison&#39;</span><span class="p">)</span>
+    <span class="n">_plot_adj_matrix</span><span class="p">(</span><span class="n">adj_matrix_comparison</span><span class="p">,</span>
                      <span class="n">mat_color</span><span class="o">=</span><span class="s1">&#39;OrRd&#39;</span><span class="p">,</span> <span class="n">cbar_label</span><span class="o">=</span><span class="n">cbar_label</span><span class="p">,</span> <span class="n">cbar_stepsize</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Comparison </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cbar_label</span><span class="p">),</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.1</span><span class="p">)</span>
 
     <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">235</span><span class="p">)</span>  <span class="c1"># plot abs. differences adjacency matrix</span>
-    <span class="n">_plot_adj_matrix</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">get_adjacency_matrix</span><span class="p">(</span><span class="s1">&#39;diff_abs&#39;</span><span class="p">),</span>
+    <span class="n">adj_matrix_diff</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_adjacency_matrix</span><span class="p">(</span><span class="s1">&#39;diff_abs&#39;</span><span class="p">)</span>
+    <span class="n">_plot_adj_matrix</span><span class="p">(</span><span class="n">adj_matrix_diff</span><span class="p">,</span>
                      <span class="n">mat_color</span><span class="o">=</span><span class="s1">&#39;BuGn&#39;</span><span class="p">,</span> <span class="n">cbar_label</span><span class="o">=</span><span class="s1">&#39;norm. CMI diff [a.u.]&#39;</span><span class="p">,</span>
                      <span class="n">cbar_stepsize</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;CMI diff abs (A - B)&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.1</span><span class="p">)</span>
 
-    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">236</span><span class="p">)</span> <span class="c1"># plot p-value adjacency matrix</span>
-    <span class="n">_plot_adj_matrix</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">get_adjacency_matrix</span><span class="p">(</span><span class="s1">&#39;pvalue&#39;</span><span class="p">),</span> <span class="n">mat_color</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span>
-                     <span class="n">cbar_label</span><span class="o">=</span><span class="s1">&#39;p-value&#39;</span><span class="p">,</span> <span class="n">cbar_stepsize</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">236</span><span class="p">)</span>  <span class="c1"># plot p-value adjacency matrix</span>
+    <span class="n">adj_matrix_pval</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_adjacency_matrix</span><span class="p">(</span><span class="s1">&#39;pvalue&#39;</span><span class="p">)</span>
+    <span class="n">_plot_adj_matrix</span><span class="p">(</span><span class="n">adj_matrix_pval</span><span class="p">,</span> <span class="n">mat_color</span><span class="o">=</span><span class="s1">&#39;Greys&#39;</span><span class="p">,</span>
+                     <span class="n">cbar_label</span><span class="o">=</span><span class="s1">&#39;p-value&#39;</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;p-value [%]&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.1</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">graph_union</span><span class="p">,</span> <span class="n">fig</span></div>
 </pre></div>
@@ -379,7 +385,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
     </div>
   </body>
 </html>

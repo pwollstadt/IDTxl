@@ -13,7 +13,6 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -45,9 +44,14 @@
             
   <h1>Source code for idtxl.results</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Provide results class for IDTxl network analysis.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">copy</span> <span class="k">as</span> <span class="nn">cp</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">idtxl_utils</span> <span class="k">as</span> <span class="n">utils</span>
+
+<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">FutureWarning</span><span class="p">)</span>
+<span class="n">MIN_INT</span> <span class="o">=</span> <span class="o">-</span><span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># minimum integer for initializing adj. matrix</span>
 
 
 <div class="viewcode-block" id="DotDict"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.DotDict">[docs]</a><span class="k">class</span> <span class="nc">DotDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
@@ -95,6 +99,70 @@
         <span class="c1"># self.__dict__ = self</span>
 
 
+<div class="viewcode-block" id="AdjacencyMatrix"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.AdjacencyMatrix">[docs]</a><span class="k">class</span> <span class="nc">AdjacencyMatrix</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Adjacency matrix representing inferred networks.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">weight_type</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_edge_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_weight_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">weight_type</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">weight_type</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_weight_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">weight_type</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_weight_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span>
+        <span class="k">elif</span> <span class="n">weight_type</span> <span class="ow">is</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_weight_type</span> <span class="o">=</span> <span class="n">weight_type</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unknown weight data type </span><span class="si">{0}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">weight_type</span><span class="p">))</span>
+
+<div class="viewcode-block" id="AdjacencyMatrix.n_nodes"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.AdjacencyMatrix.n_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">n_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return number of nodes.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="AdjacencyMatrix.n_edges"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.AdjacencyMatrix.n_edges">[docs]</a>    <span class="k">def</span> <span class="nf">n_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_matrix</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="AdjacencyMatrix.add_edge"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.AdjacencyMatrix.add_edge">[docs]</a>    <span class="k">def</span> <span class="nf">add_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">weight</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add weighted edge (i, j) to adjacency matrix.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">weight</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight_type</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s1">&#39;Can not add weight of type </span><span class="si">{0}</span><span class="s1"> to adjacency matrix of type &#39;</span>
+                <span class="s1">&#39;</span><span class="si">{1}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">weight</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight_type</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_edge_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_weight_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">weight</span></div>
+
+<div class="viewcode-block" id="AdjacencyMatrix.add_edge_list"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.AdjacencyMatrix.add_edge_list">[docs]</a>    <span class="k">def</span> <span class="nf">add_edge_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i_list</span><span class="p">,</span> <span class="n">j_list</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add multiple weighted edges (i, j) to adjacency matrix.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">i_list</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">j_list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s1">&#39;Lists with edge indices must be of same length.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">i_list</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">weights</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s1">&#39;Edge weights must have same length as edge indices.&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">weight</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">i_list</span><span class="p">,</span> <span class="n">j_list</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AdjacencyMatrix.print_matrix"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.AdjacencyMatrix.print_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">print_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Print weight and edge matrix.&quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_edge_matrix</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_weight_matrix</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AdjacencyMatrix.get_edge_list"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.AdjacencyMatrix.get_edge_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_edge_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return list of weighted edges.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">            list of tuples</span>
+<span class="sd">                each entry represents one edge in the graph: (i, j, weight)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">edge_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_edges</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>  <span class="c1"># list of tuples</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">()):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">()):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]:</span>
+                    <span class="n">edge_list</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
+                    <span class="n">ind</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">edge_list</span></div></div>
+
+
 <div class="viewcode-block" id="Results"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.Results">[docs]</a><span class="k">class</span> <span class="nc">Results</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;Parent class for results of network analysis algorithms.</span>
 
@@ -127,19 +195,15 @@
 
     <span class="k">def</span> <span class="nf">_print_edge_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adjacency_matrix</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Print edge list to console.&quot;&quot;&quot;</span>
-        <span class="n">link_found</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">adjacency_matrix</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">]:</span>
-                    <span class="n">link_found</span> <span class="o">=</span> <span class="kc">True</span>
-                    <span class="k">if</span> <span class="n">weights</span> <span class="o">==</span> <span class="s1">&#39;binary&#39;</span><span class="p">:</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="si">{0}</span><span class="s1"> -&gt; </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                            <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">adjacency_matrix</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">]))</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="si">{0}</span><span class="s1"> -&gt; </span><span class="si">{1}</span><span class="s1">, </span><span class="si">{2}</span><span class="s1">: </span><span class="si">{3}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                            <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">adjacency_matrix</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">]))</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">link_found</span><span class="p">:</span>
+        <span class="n">edge_list</span> <span class="o">=</span> <span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">get_edge_list</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">edge_list</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edge_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">weights</span> <span class="o">==</span> <span class="s1">&#39;binary&#39;</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="si">{0}</span><span class="s1"> -&gt; </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="si">{0}</span><span class="s1"> -&gt; </span><span class="si">{1}</span><span class="s1">, </span><span class="si">{2}</span><span class="s1">: </span><span class="si">{3}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">weights</span><span class="p">,</span> <span class="n">e</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No significant links found in the network.&#39;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
@@ -229,12 +293,12 @@
 <span class="sd">    e.g., estimation of active information storage.</span>
 
 <span class="sd">    Note that for convenience all dictionaries in this class can additionally</span>
-<span class="sd">    be accessed using dot-notation: </span>
+<span class="sd">    be accessed using dot-notation:</span>
 
 <span class="sd">    &gt;&gt;&gt; res_network.settings.cmi_estimator</span>
-<span class="sd">    </span>
-<span class="sd">    or </span>
-<span class="sd">    </span>
+
+<span class="sd">    or</span>
+
 <span class="sd">    &gt;&gt;&gt; res_network.settings[&#39;cmi_estimator&#39;].</span>
 
 <span class="sd">    Attributes:</span>
@@ -482,11 +546,11 @@
 <span class="sd">    MultivariateTE or Bivariate TE.</span>
 
 <span class="sd">    Note that for convenience all dictionaries in this class can additionally</span>
-<span class="sd">    be accessed using dot-notation: </span>
-<span class="sd">    </span>
+<span class="sd">    be accessed using dot-notation:</span>
+
 <span class="sd">    &gt;&gt;&gt; res_network.settings.cmi_estimator</span>
-<span class="sd">    </span>
-<span class="sd">    or </span>
+
+<span class="sd">    or</span>
 
 <span class="sd">    &gt;&gt;&gt; res_network.settings[&#39;cmi_estimator&#39;].</span>
 
@@ -618,10 +682,11 @@
 
 <span class="sd">            fdr : bool [optional]</span>
 <span class="sd">                return FDR-corrected results (default=True)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AdjacencyMatrix instance</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">adjacency_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
-            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">),</span>
-            <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">adjacency_matrix</span> <span class="o">=</span> <span class="n">AdjacencyMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">weights</span> <span class="o">==</span> <span class="s1">&#39;max_te_lag&#39;</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets_analysed</span><span class="p">:</span>
@@ -629,26 +694,38 @@
                 <span class="n">delays</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_delays</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
                                                 <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;max_te&#39;</span><span class="p">,</span>
                                                 <span class="n">fdr</span><span class="o">=</span><span class="n">fdr</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">sources</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
-                    <span class="n">adjacency_matrix</span><span class="p">[</span><span class="n">sources</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">delays</span>
+                <span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">add_edge_list</span><span class="p">(</span>
+                    <span class="n">sources</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="o">*</span> <span class="n">t</span><span class="p">,</span> <span class="n">delays</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">weights</span> <span class="o">==</span> <span class="s1">&#39;max_p_lag&#39;</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets_analysed</span><span class="p">:</span>
                 <span class="n">sources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_sources</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="n">fdr</span><span class="p">)</span>
                 <span class="n">delays</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_delays</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
                                                 <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;max_p&#39;</span><span class="p">,</span>
                                                 <span class="n">fdr</span><span class="o">=</span><span class="n">fdr</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">sources</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
-                    <span class="n">adjacency_matrix</span><span class="p">[</span><span class="n">sources</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">delays</span>
+                <span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">add_edge_list</span><span class="p">(</span>
+                    <span class="n">sources</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="o">*</span> <span class="n">t</span><span class="p">,</span> <span class="n">delays</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">weights</span> <span class="o">==</span> <span class="s1">&#39;vars_count&#39;</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets_analysed</span><span class="p">:</span>
                 <span class="n">single_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_single_target</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="n">fdr</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">single_result</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">:</span>
-                    <span class="n">adjacency_matrix</span><span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">t</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">sources</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">single_result</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">))</span>
+                <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">single_result</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">single_result</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">):</span>
+                    <span class="n">sources</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">add_edge_list</span><span class="p">(</span>
+                    <span class="n">sources</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="o">*</span> <span class="n">t</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">weights</span> <span class="o">==</span> <span class="s1">&#39;binary&#39;</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets_analysed</span><span class="p">:</span>
                 <span class="n">single_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_single_target</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="n">fdr</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">single_result</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">:</span>
-                    <span class="n">adjacency_matrix</span><span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">sources</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">single_result</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+                <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">single_result</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">single_result</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">):</span>
+                    <span class="n">sources</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">add_edge_list</span><span class="p">(</span>
+                    <span class="n">sources</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="o">*</span> <span class="n">t</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Invalid weights value&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">adjacency_matrix</span></div>
@@ -688,12 +765,12 @@
 <span class="sd">    algorithms.</span>
 
 <span class="sd">    Note that for convenience all dictionaries in this class can additionally</span>
-<span class="sd">    be accessed using dot-notation: </span>
-<span class="sd">    </span>
+<span class="sd">    be accessed using dot-notation:</span>
+
 <span class="sd">    &gt;&gt;&gt; res_pid._single_target[2].source_1</span>
-<span class="sd">    </span>
-<span class="sd">    or </span>
-<span class="sd">    </span>
+
+<span class="sd">    or</span>
+
 <span class="sd">    &gt;&gt;&gt; res_pid._single_target[2].[&#39;source_1&#39;].</span>
 
 <span class="sd">    Attributes:</span>
@@ -833,43 +910,43 @@
 <span class="sd">                   connectivity for significant links</span>
 <span class="sd">                - &#39;diff_abs&#39;: absolute difference</span>
 
+<span class="sd">        Returns:</span>
+<span class="sd">            AdjacencyMatrix instance</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Note: right now, the network comparison work on the uncorrected</span>
         <span class="c1"># networks only. This may have to change in the future, in which case</span>
         <span class="c1"># the value for &#39;fdr&#39; when accessing single target results or adjacency</span>
         <span class="c1"># matrices has to be taken from the analysis settings.</span>
         <span class="k">if</span> <span class="n">weights</span> <span class="o">==</span> <span class="s1">&#39;comparison&#39;</span><span class="p">:</span>
-            <span class="n">adjacency_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
-                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">),</span>
-                <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+            <span class="n">adjacency_matrix</span> <span class="o">=</span> <span class="n">AdjacencyMatrix</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets_analysed</span><span class="p">:</span>
                 <span class="n">sources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_sources</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
-                <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sources</span><span class="p">):</span>
-                        <span class="n">adjacency_matrix</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sources</span><span class="p">):</span>
+                    <span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="n">i</span><span class="p">]))</span>
         <span class="k">elif</span> <span class="n">weights</span> <span class="o">==</span> <span class="s1">&#39;union&#39;</span><span class="p">:</span>
-            <span class="n">adjacency_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
-                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">),</span>
-                <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+            <span class="n">adjacency_matrix</span> <span class="o">=</span> <span class="n">AdjacencyMatrix</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets_analysed</span><span class="p">:</span>
                 <span class="n">sources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_sources</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">sources</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
-                    <span class="n">adjacency_matrix</span><span class="p">[</span><span class="n">sources</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">add_edge_list</span><span class="p">(</span>
+                    <span class="n">sources</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="o">*</span> <span class="n">t</span><span class="p">,</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">))</span>
         <span class="k">elif</span> <span class="n">weights</span> <span class="o">==</span> <span class="s1">&#39;diff_abs&#39;</span><span class="p">:</span>
-            <span class="n">adjacency_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
-                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">),</span>
-                <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">adjacency_matrix</span> <span class="o">=</span> <span class="n">AdjacencyMatrix</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets_analysed</span><span class="p">:</span>
                 <span class="n">sources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_sources</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
                 <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sources</span><span class="p">):</span>
-                    <span class="n">adjacency_matrix</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmi_diff_abs</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cmi_diff_abs</span><span class="p">)</span>
+                    <span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmi_diff_abs</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
         <span class="k">elif</span> <span class="n">weights</span> <span class="o">==</span> <span class="s1">&#39;pvalue&#39;</span><span class="p">:</span>
-            <span class="n">adjacency_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span>
-                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">),</span>
-                <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">adjacency_matrix</span> <span class="o">=</span> <span class="n">AdjacencyMatrix</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets_analysed</span><span class="p">:</span>
                 <span class="n">sources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_sources</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
                 <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sources</span><span class="p">):</span>
-                    <span class="n">adjacency_matrix</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pval</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pval</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Invalid weights value&#39;</span><span class="p">)</span>
 
@@ -973,7 +1050,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
     </div>
   </body>
 </html>

@@ -13,7 +13,6 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -279,8 +278,8 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;max_lag_sources&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;max_lag_sources has to be an integer &gt;= 0.&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tau_sources&#39;</span><span class="p">])</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">int</span> <span class="ow">or</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tau_sources&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;tau_sources must be an integer &gt; 0.&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tau_sources&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;tau_sources must be an integer &gt;= 0.&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;min_lag_sources&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;max_lag_sources&#39;</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;min_lag_sources (</span><span class="si">{0}</span><span class="s1">) must be smaller or equal&#39;</span>
                                <span class="s1">&#39; to max_lag_sources (</span><span class="si">{1}</span><span class="s1">).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -378,7 +377,7 @@
                                <span class="s1">&#39;(&#39;&#39;max_lag_sources&#39;&#39;) needs to be specified.&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;min_lag_sources&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;The minimum lag for source embedding &#39;</span>
-                               <span class="s1">&#39;(&#39;&#39;max_lag_sources&#39;&#39;) needs to be specified.&#39;</span><span class="p">)</span>
+                               <span class="s1">&#39;(&#39;&#39;min_lag_sources&#39;&#39;) needs to be specified.&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;max_lag_target&#39;</span><span class="p">,</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;max_lag_sources&#39;</span><span class="p">])</span>
 
         <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;min_lag_sources&#39;</span><span class="p">])</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">int</span> <span class="ow">or</span>
@@ -391,8 +390,8 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;max_lag_target&#39;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;max_lag_target must be an integer &gt; 0.&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tau_sources&#39;</span><span class="p">])</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">int</span> <span class="ow">or</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tau_sources&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;tau_sources must be an integer &gt; 0.&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tau_sources&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;tau_sources must be an integer &gt;= 0.&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tau_target&#39;</span><span class="p">])</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">int</span> <span class="ow">or</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tau_target&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;tau_sources must be an integer &gt; 0.&#39;</span><span class="p">)</span>
@@ -572,7 +571,7 @@
                     <span class="c1"># For now we don&#39;t need a stack trace:</span>
                     <span class="c1"># traceback.print_tb(aee.__traceback__)</span>
                     <span class="k">break</span>
-                    
+
                 <span class="c1"># Test max CMI for significance with maximum statistics.</span>
                 <span class="n">te_max_candidate</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">temp_te</span><span class="p">)</span>
                 <span class="n">max_candidate</span> <span class="o">=</span> <span class="n">candidate_set</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">temp_te</span><span class="p">)]</span>
@@ -720,7 +719,7 @@
                     <span class="c1"># For now we don&#39;t need a stack trace:</span>
                     <span class="c1"># traceback.print_tb(aee.__traceback__)</span>
                     <span class="k">break</span>
-                
+
                 <span class="c1"># Find variable with minimum MI/TE. Test min TE/MI for</span>
                 <span class="c1"># significance with minimum statistics. Build conditioning set</span>
                 <span class="c1"># for minimum statistics by removing the minimum candidate.</span>
@@ -759,7 +758,7 @@
                     <span class="c1"># For now we don&#39;t need a stack trace:</span>
                     <span class="c1"># traceback.print_tb(aee.__traceback__)</span>
                     <span class="k">break</span>
-                
+
                 <span class="c1"># Remove the minimum it is not significant and test the next</span>
                 <span class="c1"># min. candidate. If the minimum is significant, break. All</span>
                 <span class="c1"># other sources will be significant as well (b/c they have</span>
@@ -1105,7 +1104,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
     </div>
   </body>
 </html>

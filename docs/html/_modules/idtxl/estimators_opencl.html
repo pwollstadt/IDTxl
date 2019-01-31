@@ -13,7 +13,6 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -149,6 +148,10 @@
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;No OpenCL GPU device found.&#39;</span><span class="p">)</span>
         <span class="n">my_gpu_devices</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">get_devices</span><span class="p">(</span><span class="n">device_type</span><span class="o">=</span><span class="n">cl</span><span class="o">.</span><span class="n">device_type</span><span class="o">.</span><span class="n">GPU</span><span class="p">)</span>
         <span class="n">context</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Context</span><span class="p">(</span><span class="n">devices</span><span class="o">=</span><span class="n">my_gpu_devices</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">gpuid</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">my_gpu_devices</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s1">&#39;No device with gpuid </span><span class="si">{0}</span><span class="s1"> (available device IDs: </span><span class="si">{1}</span><span class="s1">).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">gpuid</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">my_gpu_devices</span><span class="p">))))</span>
         <span class="n">queue</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">CommandQueue</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">my_gpu_devices</span><span class="p">[</span><span class="n">gpuid</span><span class="p">])</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Selected Device: &quot;</span><span class="p">,</span> <span class="n">my_gpu_devices</span><span class="p">[</span><span class="n">gpuid</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -814,7 +817,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
     </div>
   </body>
 </html>

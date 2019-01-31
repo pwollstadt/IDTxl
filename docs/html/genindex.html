@@ -14,7 +14,6 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -73,6 +72,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="idtxl.html#idtxl.active_information_storage.ActiveInformationStorage">ActiveInformationStorage (class in idtxl.active_information_storage)</a>
 </li>
+      <li><a href="idtxl.html#idtxl.results.AdjacencyMatrix.add_edge">add_edge() (idtxl.results.AdjacencyMatrix method)</a>
+</li>
+      <li><a href="idtxl.html#idtxl.results.AdjacencyMatrix.add_edge_list">add_edge_list() (idtxl.results.AdjacencyMatrix method)</a>
+</li>
+      <li><a href="idtxl.html#idtxl.results.AdjacencyMatrix">AdjacencyMatrix (class in idtxl.results)</a>
+</li>
       <li><a href="idtxl.html#idtxl.stats.ais_fdr">ais_fdr() (in module idtxl.stats)</a>
 </li>
       <li><a href="idtxl.html#idtxl.idtxl_exceptions.AlgorithmExhaustedError">AlgorithmExhaustedError</a>
@@ -123,7 +128,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="idtxl.html#idtxl.bivariate_te.BivariateTE">BivariateTE (class in idtxl.bivariate_te)</a>
 </li>
-      <li><a href="idtxl.html#idtxl.idtxl_exceptions.BROJA_2PID_Exception">BROJA_2PID_Exception</a>, <a href="idtxl.html#idtxl.synergy_tartu.BROJA_2PID_Exception">[1]</a>
+      <li><a href="idtxl.html#idtxl.idtxl_exceptions.BROJA_2PID_Exception">BROJA_2PID_Exception</a>
 </li>
   </ul></td>
 </tr></table>
@@ -295,6 +300,8 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="idtxl.html#idtxl.results.AdjacencyMatrix.get_edge_list">get_edge_list() (idtxl.results.AdjacencyMatrix method)</a>
+</li>
       <li><a href="idtxl.html#idtxl.data.Data.get_realisations">get_realisations() (idtxl.data.Data method)</a>
 </li>
       <li><a href="idtxl.html#idtxl.results.ResultsSingleProcessAnalysis.get_significant_processes">get_significant_processes() (idtxl.results.ResultsSingleProcessAnalysis method)</a>
@@ -495,6 +502,10 @@
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="idtxl.html#idtxl.results.AdjacencyMatrix.n_edges">n_edges() (idtxl.results.AdjacencyMatrix method)</a>
+</li>
+      <li><a href="idtxl.html#idtxl.results.AdjacencyMatrix.n_nodes">n_nodes() (idtxl.results.AdjacencyMatrix method)</a>
+</li>
       <li><a href="idtxl.html#idtxl.data.Data.n_realisations">n_realisations() (idtxl.data.Data method)</a>
 </li>
       <li><a href="idtxl.html#idtxl.data.Data.n_realisations_repl">n_realisations_repl() (idtxl.data.Data method)</a>
@@ -503,10 +514,10 @@
 </li>
       <li><a href="idtxl.html#idtxl.stats.network_fdr">network_fdr() (in module idtxl.stats)</a>
 </li>
-      <li><a href="idtxl.html#idtxl.network_analysis.NetworkAnalysis">NetworkAnalysis (class in idtxl.network_analysis)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="idtxl.html#idtxl.network_analysis.NetworkAnalysis">NetworkAnalysis (class in idtxl.network_analysis)</a>
+</li>
       <li><a href="idtxl.html#idtxl.network_comparison.NetworkComparison">NetworkComparison (class in idtxl.network_comparison)</a>
 </li>
       <li><a href="idtxl.html#idtxl.network_inference.NetworkInference">NetworkInference (class in idtxl.network_inference)</a>
@@ -555,10 +566,10 @@
 </li>
       <li><a href="idtxl.html#idtxl.visualise_graph.plot_mute_graph">plot_mute_graph() (in module idtxl.visualise_graph)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="idtxl.html#idtxl.visualise_graph.plot_network">plot_network() (in module idtxl.visualise_graph)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="idtxl.html#idtxl.visualise_graph.plot_network_comparison">plot_network_comparison() (in module idtxl.visualise_graph)</a>
 </li>
       <li><a href="idtxl.html#idtxl.visualise_graph.plot_selected_vars">plot_selected_vars() (in module idtxl.visualise_graph)</a>
@@ -571,6 +582,8 @@
         <li><a href="idtxl.html#idtxl.results.ResultsNetworkInference.print_edge_list">(idtxl.results.ResultsNetworkInference method)</a>
 </li>
       </ul></li>
+      <li><a href="idtxl.html#idtxl.results.AdjacencyMatrix.print_matrix">print_matrix() (idtxl.results.AdjacencyMatrix method)</a>
+</li>
       <li><a href="idtxl.html#idtxl.results.ResultsSingleProcessAnalysis.processes_analysed">processes_analysed (idtxl.results.ResultsSingleProcessAnalysis attribute)</a>
 </li>
       <li><a href="idtxl.html#idtxl.synergy_tartu.Solve_w_ECOS.provide_marginals">provide_marginals() (idtxl.synergy_tartu.Solve_w_ECOS method)</a>
@@ -709,7 +722,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
     </div>
   </body>
 </html>

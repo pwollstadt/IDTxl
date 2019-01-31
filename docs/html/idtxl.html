@@ -13,7 +13,6 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Helper functions" href="idtxl_helper.html" />
@@ -831,14 +830,24 @@ determines the order of the stochastic process.
 <dd><p>Generate example data for a 5-process network.</p>
 <p>Generate example data and overwrite the instance’s current data. The
 network is used as an example the paper on the MuTE toolbox (Montalto,
-PLOS ONE, 2014, eq. 14). The network consists of five autoregressive
-(AR) processes with model orders 2 and the following (non-linear)
-couplings:</p>
+PLOS ONE, 2014, eq. 14) and was orginially proposed by Baccala &amp;
+Sameshima (2001). The network consists of five autoregressive (AR)
+processes with model orders 2 and the following (non-linear) couplings:</p>
 <p>0 -&gt; 1, u = 2 (non-linear)
 0 -&gt; 2, u = 3
 0 -&gt; 3, u = 2 (non-linear)
 3 -&gt; 4, u = 1
 4 -&gt; 3, u = 1</p>
+<p>References:</p>
+<ul class="simple">
+<li>Montalto, A., Faes, L., &amp; Marinazzo, D. (2014) MuTE: A MATLAB toolbox
+to compare established and novel estimators of the multivariate
+transfer entropy. PLoS ONE 9(10): e109462.
+<a class="reference external" href="https://doi.org/10.1371/journal.pone.0109462">https://doi.org/10.1371/journal.pone.0109462</a></li>
+<li>Baccala, L.A. &amp; Sameshima, K. (2001). Partial directed coherence: a
+new concept in neural structure determination. Biol Cybern 84:
+463–474. <a class="reference external" href="https://doi.org/10.1007/PL00007990">https://doi.org/10.1007/PL00007990</a></li>
+</ul>
 <dl class="docutils">
 <dt>Args:</dt>
 <dd><dl class="first last docutils">
@@ -3331,9 +3340,9 @@ Unique Information. Entropy, 16(4), 2161–2183. <a class="reference external" h
 <em class="property">class </em><code class="descclassname">idtxl.estimators_pid.</code><code class="descname">SydneyPID</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#SydneyPID"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.estimators_pid.SydneyPID" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#idtxl.estimator.Estimator" title="idtxl.estimator.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">idtxl.estimator.Estimator</span></code></a></p>
 <p>Estimate partial information decomposition of discrete variables.</p>
-<p>Fast implementation of the partial information decomposition (PID)
-estimator for discrete data. The estimator does not require JAVA or GPU
-modules to run.</p>
+<p>Fast implementation of the BROJA partial information decomposition (PID)
+estimator for discrete data (Bertschinger, 2014). The estimator does not
+require JAVA or GPU modules to run.</p>
 <p>The estimator finds shared information, unique information and
 synergistic information between the two inputs s1 and s2 with respect to
 the output t.</p>
@@ -3345,6 +3354,12 @@ the PID. The virtualised swaps stage contains two loops. An inner loop
 which actually does the virtualised swapping, keeping the changes if the
 CMI decreases; and an outer loop which decreases the size of the
 probability mass increment the virtualised swapping utilises.</p>
+<p>References</p>
+<ul class="simple">
+<li>Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., &amp; Ay, N. (2014).
+Quantifying unique information. Entropy, 16(4), 2161–2183.
+<a class="reference external" href="http://doi.org/10.3390/e16042161">http://doi.org/10.3390/e16042161</a></li>
+</ul>
 <dl class="docutils">
 <dt>Args:</dt>
 <dd><dl class="first last docutils">
@@ -3584,7 +3599,7 @@ Visualization Tool for Human Brain Connectomics. PLoS ONE 8(7):e68910.
 <dl class="docutils">
 <dt>Args:</dt>
 <dd><dl class="first last docutils">
-<dt>adjacency_matrix <span class="classifier-delimiter">:</span> <span class="classifier">2D numpy array</span></dt>
+<dt>adjacency_matrix <span class="classifier-delimiter">:</span> <span class="classifier">AdjacencyMatrix instance</span></dt>
 <dd>adjacency matrix to be exported, returned by get_adjacency_matrix()
 method of Results() class</dd>
 <dt>mni_coord <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
@@ -3619,7 +3634,7 @@ available (see documentation of method get_adjacency_matrix for details).</p>
 <dl class="docutils">
 <dt>Args:</dt>
 <dd><dl class="first last docutils">
-<dt>adjacency_matrix <span class="classifier-delimiter">:</span> <span class="classifier">2D numpy array</span></dt>
+<dt>adjacency_matrix <span class="classifier-delimiter">:</span> <span class="classifier">AdjacencyMatrix instances</span></dt>
 <dd>adjacency matrix to be exported, returned by get_adjacency_matrix()
 method of Results() class</dd>
 <dt>weights <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
@@ -3652,7 +3667,7 @@ Each node is a tuple with the following format:
 <dt>target <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
 <dd>target index</dd>
 <dt>sign_sources <span class="classifier-delimiter">:</span> <span class="classifier">bool [optional]</span></dt>
-<dd>add only sources with significant information contribution
+<dd>add sources with significant information contribution only
 (default=True)</dd>
 <dt>fdr <span class="classifier-delimiter">:</span> <span class="classifier">bool [optional]</span></dt>
 <dd>return FDR-corrected results (default=True)</dd>
@@ -4998,6 +5013,56 @@ ResultsPartialInformationDecomposition()</dd>
 <span id="idtxl-results-module"></span><h2>idtxl.results module<a class="headerlink" href="#module-idtxl.results" title="Permalink to this headline">¶</a></h2>
 <p>Provide results class for IDTxl network analysis.</p>
 <dl class="class">
+<dt id="idtxl.results.AdjacencyMatrix">
+<em class="property">class </em><code class="descclassname">idtxl.results.</code><code class="descname">AdjacencyMatrix</code><span class="sig-paren">(</span><em>n_nodes</em>, <em>weight_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/results.html#AdjacencyMatrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.results.AdjacencyMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Adjacency matrix representing inferred networks.</p>
+<dl class="method">
+<dt id="idtxl.results.AdjacencyMatrix.add_edge">
+<code class="descname">add_edge</code><span class="sig-paren">(</span><em>i</em>, <em>j</em>, <em>weight</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/results.html#AdjacencyMatrix.add_edge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.results.AdjacencyMatrix.add_edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add weighted edge (i, j) to adjacency matrix.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="idtxl.results.AdjacencyMatrix.add_edge_list">
+<code class="descname">add_edge_list</code><span class="sig-paren">(</span><em>i_list</em>, <em>j_list</em>, <em>weights</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/results.html#AdjacencyMatrix.add_edge_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.results.AdjacencyMatrix.add_edge_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add multiple weighted edges (i, j) to adjacency matrix.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="idtxl.results.AdjacencyMatrix.get_edge_list">
+<code class="descname">get_edge_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/results.html#AdjacencyMatrix.get_edge_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.results.AdjacencyMatrix.get_edge_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return list of weighted edges.</p>
+<dl class="docutils">
+<dt>Returns</dt>
+<dd><dl class="first last docutils">
+<dt>list of tuples</dt>
+<dd>each entry represents one edge in the graph: (i, j, weight)</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="idtxl.results.AdjacencyMatrix.n_edges">
+<code class="descname">n_edges</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/results.html#AdjacencyMatrix.n_edges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.results.AdjacencyMatrix.n_edges" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="idtxl.results.AdjacencyMatrix.n_nodes">
+<code class="descname">n_nodes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/results.html#AdjacencyMatrix.n_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.results.AdjacencyMatrix.n_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return number of nodes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="idtxl.results.AdjacencyMatrix.print_matrix">
+<code class="descname">print_matrix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/results.html#AdjacencyMatrix.print_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.results.AdjacencyMatrix.print_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print weight and edge matrix.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="idtxl.results.DotDict">
 <em class="property">class </em><code class="descclassname">idtxl.results.</code><code class="descname">DotDict</code><a class="reference internal" href="_modules/idtxl/results.html#DotDict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.results.DotDict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></p>
@@ -5239,6 +5304,8 @@ links that were tested for a difference</li>
 </dd>
 </dl>
 </dd>
+<dt>Returns:</dt>
+<dd>AdjacencyMatrix instance</dd>
 </dl>
 </dd></dl>
 
@@ -5403,6 +5470,8 @@ uncorrected results. Multiple options for the weight are available.</p>
 <dd>return FDR-corrected results (default=True)</dd>
 </dl>
 </dd>
+<dt>Returns:</dt>
+<dd>AdjacencyMatrix instance</dd>
 </dl>
 </dd></dl>
 
@@ -6209,12 +6278,6 @@ shuffling samples in time instead of shuffling whole replications
 </div>
 <div class="section" id="module-idtxl.synergy_tartu">
 <span id="idtxl-synergy-tartu-module"></span><h2>idtxl.synergy_tartu module<a class="headerlink" href="#module-idtxl.synergy_tartu" title="Permalink to this headline">¶</a></h2>
-<dl class="exception">
-<dt id="idtxl.synergy_tartu.BROJA_2PID_Exception">
-<em class="property">exception </em><code class="descclassname">idtxl.synergy_tartu.</code><code class="descname">BROJA_2PID_Exception</code><a class="reference internal" href="_modules/idtxl/synergy_tartu.html#BROJA_2PID_Exception"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.synergy_tartu.BROJA_2PID_Exception" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
-</dd></dl>
-
 <dl class="function">
 <dt id="idtxl.synergy_tartu.I_X_Y">
 <code class="descclassname">idtxl.synergy_tartu.</code><code class="descname">I_X_Y</code><span class="sig-paren">(</span><em>p</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/synergy_tartu.html#I_X_Y"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.synergy_tartu.I_X_Y" title="Permalink to this definition">¶</a></dt>
@@ -6466,7 +6529,7 @@ graphs (DiGraph) internally. Plots a network and reduced adjacency matrix.</p>
 <dt>target <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
 <dd>index of target process</dd>
 <dt>sign_sources <span class="classifier-delimiter">:</span> <span class="classifier">bool [optional]</span></dt>
-<dd>add only sources significant information contribution
+<dd>plot sources with significant information contribution only
 (default=True)</dd>
 <dt>display_edge_labels <span class="classifier-delimiter">:</span> <span class="classifier">bool [optional]</span></dt>
 <dd>display TE value on edge lables (default=False)</dd>
@@ -6598,7 +6661,7 @@ computing engines for both GPU and CPU platforms. Written for Python3.4.3+.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
     </div>
   </body>
 </html>

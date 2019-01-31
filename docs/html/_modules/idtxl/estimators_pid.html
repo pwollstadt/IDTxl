@@ -13,7 +13,6 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -51,7 +50,6 @@
 
 <span class="sd">Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., &amp; Ay, N. (2014). Quantifying</span>
 <span class="sd">Unique Information. Entropy, 16(4), 2161–2183. http://doi.org/10.3390/e16042161</span>
-
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">synergy_tartu</span>
@@ -63,9 +61,9 @@
 <div class="viewcode-block" id="SydneyPID"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_pid.SydneyPID">[docs]</a><span class="k">class</span> <span class="nc">SydneyPID</span><span class="p">(</span><span class="n">Estimator</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Estimate partial information decomposition of discrete variables.</span>
 
-<span class="sd">    Fast implementation of the partial information decomposition (PID)</span>
-<span class="sd">    estimator for discrete data. The estimator does not require JAVA or GPU</span>
-<span class="sd">    modules to run.</span>
+<span class="sd">    Fast implementation of the BROJA partial information decomposition (PID)</span>
+<span class="sd">    estimator for discrete data (Bertschinger, 2014). The estimator does not</span>
+<span class="sd">    require JAVA or GPU modules to run.</span>
 
 <span class="sd">    The estimator finds shared information, unique information and</span>
 <span class="sd">    synergistic information between the two inputs s1 and s2 with respect to</span>
@@ -79,6 +77,12 @@
 <span class="sd">    which actually does the virtualised swapping, keeping the changes if the</span>
 <span class="sd">    CMI decreases; and an outer loop which decreases the size of the</span>
 <span class="sd">    probability mass increment the virtualised swapping utilises.</span>
+
+<span class="sd">    References</span>
+
+<span class="sd">    - Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., &amp; Ay, N. (2014).</span>
+<span class="sd">      Quantifying unique information. Entropy, 16(4), 2161–2183.</span>
+<span class="sd">      http://doi.org/10.3390/e16042161</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        settings : dict</span>
@@ -701,7 +705,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
     </div>
   </body>
 </html>
