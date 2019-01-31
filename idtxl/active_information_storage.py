@@ -122,6 +122,10 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             raise ValueError('Processes were not specified correctly: '
                              '{0}.'.format(processes))
 
+        # Check and set defaults for checkpointing.
+        self.settings = self._set_checkpointing_defaults(
+            settings, data, [], processes)
+
         # Perform AIS estimation for each target individually.
         results = ResultsSingleProcessAnalysis(
             n_nodes=data.n_processes,
@@ -196,6 +200,12 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                   further settings (default=False)
                 - verbose : bool [optional] - toggle console output
                   (default=True)
+                - write_ckp : bool [optional] - enable checkpointing, writes
+                  analysis state to disk every time a variable is selected;
+                  resume crashed analysis using
+                  network_analysis.resume_checkpoint() (default=False)
+                - filename_ckp : str [optional] - checkpoint file name (without
+                  extension) (default='./idtxl_checkpoint')
 
             data : Data instance
                 raw data for analysis
@@ -292,6 +302,10 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         # Check the permutation type and no. permutations requested by the
         # user. This tests if there is sufficient data to do all tests.
         # surrogates.check_permutations(self, data)
+
+        # Check and set defaults for checkpointing.
+        self.settings = self._set_checkpointing_defaults(
+            self.settings, data, [], process)
 
         # Reset all attributes to inital values if the instance has been used
         # before.

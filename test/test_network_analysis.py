@@ -7,7 +7,7 @@ import numpy as np
 from idtxl.network_analysis import NetworkAnalysis
 from idtxl.data import Data
 from test_estimators_jidt import _get_gauss_data
-from idtxl.estimators_jidt import JidtKraskovCMI, JidtKraskovMI
+from idtxl.estimators_jidt import JidtKraskovCMI
 
 
 def test_calculate_single_link():
@@ -177,7 +177,23 @@ def test_lag_to_idx():
         n._idx_to_lag(idx_list)
 
 
+def test_write_checkpoint():
+    # Test writing of checkpoints for network analysis
+    filename_ckp = 'test_checkpoint'
+    nw = NetworkAnalysis()
+
+    with pytest.raises(RuntimeError):
+        nw._update_checkpoint(filename_ckp)
+    nw._write_checkpoint_data()
+
+def test_enforce_conditioning_vars():
+    # Test if tuples, lists, dicts, and 'faes' vars are added correctly!
+    # Check if tests already exist
+    # Test if source and target vars are added to the correct lists
+
+
 if __name__ == '__main__':
+    test_write_checkpoint()
     test_calculate_single_link()
     test_idx_to_lag()
     test_lag_to_idx()

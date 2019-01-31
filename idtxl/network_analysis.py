@@ -1,10 +1,16 @@
 """Parent class for network inference and network comparison.
 """
+import os.path
+from datetime import datetime
+from shutil import copyfile
+from pprint import pprint
+import ast
 import copy as cp
 import itertools as it
 import numpy as np
 from .estimator import find_estimator
 from . import idtxl_utils as utils
+from . import idtxl_io as io
 
 
 class NetworkAnalysis():
@@ -303,7 +309,12 @@ class NetworkAnalysis():
             cond = self.settings['add_conditionals']
             if type(cond) is tuple:  # easily add single variable
                 cond = [cond]
-            cond_idx = self._lag_to_idx(cond)            
+            elif type(cond) is dict:  # add conditioning variables per target
+                try:
+                    cond = cond[self.target]
+                except KeyError:
+                    return  # no additional variables for the current target
+            cond_idx = self._lag_to_idx(cond)
             candidate_set = list(set(candidate_set).difference(set(cond_idx)))
         return candidate_set
 
@@ -412,7 +423,7 @@ class NetworkAnalysis():
         Returns:
             numpy array
                 estimate of dependency measure for each link
-                
+
         Raises:
             ex.AlgorithmExhaustedError
                 Raised from estimate() when calculation cannot be made
@@ -500,3 +511,143 @@ class NetworkAnalysis():
                     conditional_realisations)
 
         return links
+
+    def _set_checkpointing_defaults(self, settings, data, sources, target):
+        """Set defaults for writing analysis checkpoints."""
+        settings.setdefault('write_ckp', False)
+        if settings['write_ckp']:
+            settings.setdefault('filename_ckp', './idtxl_checkpoint')
+            filename_ckp = '{0}.ckp'.format(settings['filename_ckp'])
+            if not os.path.isfile(filename_ckp):
+                self._initialise_checkpoint(settings, data, sources, target)
+            return settings
+        else:
+            return settings
+
+    def _initialise_checkpoint(self, settings, data, sources, targets):
+        """Write first checkpoint file, data, and settings to disk.
+
+        Called once at the beggining of an analysis using checkpointing. Write
+        data and analysis settings to disk. This needs to be done only once.
+        Initialise checkpoint file: write header with time stamp, path to data
+        and settings, and targets and sources to be analysed. The checkpoint
+        file is updated during the analyis.
+        """
+        # Check if targets is an int, convert to array.
+        if type(targets) is int:
+            targets = [targets]
+        # Write data to disk.
+        io.save_pickle(data,
+                       '{0}.dat'.format(settings['filename_ckp']))
+        # Write settings to disk.
+        io.save_json(settings,
+                     '{0}.json'.format(settings['filename_ckp']))
+
+        # Initialise checkpoint file for later updates.
+        filename_ckp = '{0}.ckp'.format(settings['filename_ckp'])
+        with open(filename_ckp, 'w') as text_file:
+            text_file.write('IDTxl checkpoint file.\n')
+            timestamp = datetime.now()
+            text_file.write('{:%Y-%m-%d %H:%M:%S}\n'.format(timestamp))
+            text_file.write('Raw data path: {}.dat\n'.format(
+                os.path.abspath(settings['filename_ckp'])))
+            text_file.write('Settings path: {}.json\n'.format(
+                os.path.abspath(settings['filename_ckp'])))
+            text_file.write('Targets to be analyzed: {}\n'.format(targets))
+            text_file.write('Sources to be analyzed: {}\n\n'.format(sources))
+            text_file.write(
+                'Selected variables (target: [sources]: [selected variables]):'
+                '\n{}'.format(targets[0]))
+
+    def _write_checkpoint(self):
+        """Write checkpoint to disk.
+
+        Write checkpoint to disk. The checkpoint contains variables already
+        selected by network analysis algorithms. To recover from a checkpoint
+        use the 'recover_checkpoint()‘ method.
+
+        Note: IDTxl will always keep the current (*.ckp) and the previous
+        version (*.ckp.old) of the checkpoint file to ensure a recoverable
+        state even if writing of the current checkpoint fails.
+        """
+        filename_ckp = '{0}.ckp'.format(self.settings['filename_ckp'])
+
+        # Check if a checkpoint file already exists. If yes,
+        #   1. make a copy using the same file name plus the .old extension
+        #      (overwriting the last *.ckp.old file);
+        #   2. update current checkpoint file.
+        if os.path.isfile(filename_ckp):
+            copyfile(filename_ckp, '{}.old'.format(filename_ckp))
+            self._update_checkpoint(filename_ckp)
+        else:
+            raise RuntimeError('Could not find checkpoint file for updating. '
+                               'Initialise checkpoint first.')
+
+    def _update_checkpoint(self, filename_ckp):
+        """Update existing checkpoint file.
+
+        Add the last selected variable to the *.ckp file while keeping the
+        path to data and settings. Overwrite time stamp in header.
+        """
+        # We don't expect these files to become very big. Hence, it is the
+        # easiest to load the whole file into a data structure and then write
+        # it back (https://stackoverflow.com/a/328007). Alternatively, we can
+        # just add the last selected variable as a tuple -> then we have to
+        # make sure, the last selected candidate always ends up at the end of
+        # the selected candidates list.
+
+        # Write time stamp and info
+        timestamp = datetime.now()
+        # Convert absolute indices to lags with respect to the current value.
+        selected_variables = self._idx_to_lag(self.selected_vars_full,
+                                              self.current_value[1])
+        # Read file as list of lines and replace first and last line. Write
+        # modified file back to disk.
+        lines = open(filename_ckp, 'r').readlines()
+        lines[1] = '{:%Y-%m-%d %H:%M:%S}\n'.format(timestamp)
+        if int(lines[-1][0]) == self.target:
+            lines[-1] = '{0}: {1}: {2}\n'.format(
+                self.target, self.source_set, selected_variables)
+        else:
+            lines.append('{0}: {1}: {2}\n'.format(
+                self.target, self.source_set, selected_variables))
+        open(filename_ckp, 'w').writelines(lines)
+
+    def resume_checkpoint(self, file_path):
+        """Resume analysis from a checkpoint saved to disk.
+
+        Args:
+            file_path : str
+                path to checkpoint file (excluding extension: *.ckp)
+        """
+        # Read checkpoint
+        lines = open('{}.ckp'.format(file_path), 'r').readlines()
+        timestamp = lines[1]
+        data_path = lines[2].split(':')[1].strip()
+        settings_path = lines[3].split(':')[1].strip()
+        targets = ast.literal_eval(lines[4].split(':')[1].strip())
+        sources = ast.literal_eval(lines[5].split(':')[1].strip())
+        selected_variables = {}  # vars as lags wrt. the current value
+        for l in range(8, len(lines)):
+            result = [x.strip() for x in lines[l].split(':')]
+            # Format: target - sources analyzed - selected variables
+            selected_variables[int(result[0])] = ast.literal_eval(result[2])
+
+        # Load settings and data
+        data = io.load_pickle(data_path)
+        settings = io.load_json(settings_path)
+
+        verbose = settings.get('verbose', True)
+        if verbose:
+            print('Resuming analysis from file {}.ckp, saved {}'.format(
+                file_path, timestamp))
+            print('Selected variables per target:')
+            pprint(selected_variables)
+
+        # Add already selected candidates as conditionals to be added to the
+        # settings dict. Note that the time stamp in the selected variables
+        # list is a lag wrt. the current value. This format is also expected by
+        # the method that manually adds conditionals.
+        settings['add_conditionals'] = selected_variables
+
+        return data, settings, targets, sources

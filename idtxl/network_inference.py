@@ -161,6 +161,8 @@ class NetworkInference(NetworkAnalysis):
                         [max_candidate],
                         data.get_realisations(self.current_value,
                                               [max_candidate])[0])
+                if self.settings['write_ckp']:
+                    self._write_checkpoint()
             else:
                 if self.settings['verbose']:
                     print(' -- not significant')
@@ -168,7 +170,25 @@ class NetworkInference(NetworkAnalysis):
         return success
 
     def _force_conditionals(self, cond, data):
-        """Enforce a given conditioning set."""
+        """Enforce a given conditioning set.
+
+        Manually add variables to the conditioning set before analysis. Added
+        variables are not tested in the inclusion step of the algorithm, but
+        are tested in the pruning step and may be removed there. Source and
+        target past and current variables can be included.
+
+        Args:
+            cond : str | dict | list | tuple
+                variables added to the conditioning set, 'faes' adds all source
+                variables with zero-lag to condition out shared information due
+                to instantaneous mixing, a dict can contain a list of variables
+                for each target ({target ind: [(source ind, lag), ...]}), a list
+                of the same variables added for each target ([(source ind, lag),
+                ...]), a tuple with a single variable that is added for each
+                target
+            data : Data instance
+                input data
+        """
         if type(cond) is str:
             # Get realisations and indices of source variables with lag 0. Note
             # that _define_candidates returns tuples with absolute indices and
@@ -184,6 +204,11 @@ class NetworkInference(NetworkAnalysis):
             # lags to absolute sample indices and add variables.
             if type(cond) is tuple:  # easily add single variable
                 cond = [cond]
+            elif type(cond) is dict:  # add conditioning variables per target
+                try:
+                    cond = cond[self.target]
+                except KeyError:
+                    return  # no additional variables for the current target
             print('Adding the following variables to the conditioning set: '
                   '{0}.'.format(cond))
             cond_idx = self._lag_to_idx(cond)
@@ -277,6 +302,11 @@ class NetworkInferenceMI(NetworkInference):
         # Check the permutation type and no. permutations requested by the
         # user. This tests if there is sufficient data to do all tests.
         # surrogates.check_permutations(self, data)
+
+        # Check and set defaults for checkpointing. If requested, initialise
+        # checkpointing.
+        self.settings = self._set_checkpointing_defaults(
+            self.settings, data, sources, target)
 
         # Reset all attributes to inital values if the instance of
         # MultivariateTE has been used before.
@@ -395,6 +425,11 @@ class NetworkInferenceTE(NetworkInference):
         # Check the permutation type and no. permutations requested by the
         # user. This tests if there is sufficient data to do all tests.
         # surrogates.check_permutations(self, data)
+
+        # Check and set defaults for checkpointing. If requested, initialise
+        # checkpointing.
+        self.settings = self._set_checkpointing_defaults(
+            self.settings, data, sources, target)
 
         # Reset all attributes to inital values if the instance of
         # MultivariateTE has been used before.
@@ -566,6 +601,9 @@ class NetworkInferenceBivariate(NetworkInference):
                     else:
                         conditional_realisations = np.hstack((
                             conditional_realisations, candidate_realisations))
+
+                    if self.settings['write_ckp']:
+                        self._write_checkpoint()
                 else:
                     if self.settings['verbose']:
                         print(' -- not significant')
@@ -724,6 +762,8 @@ class NetworkInferenceBivariate(NetworkInference):
                     source_vars.pop(np.argmin(temp_te))
                     if len(source_vars) == 0:
                         print('No remaining candidates after pruning.')
+                    if self.settings['write_ckp']:
+                        self._write_checkpoint()
                 else:
                     if self.settings['verbose']:
                         print(' -- significant')
@@ -942,6 +982,8 @@ class NetworkInferenceMultivariate(NetworkInference):
                 self._remove_selected_var(min_candidate)
                 if len(self.selected_vars_sources) == 0:
                         print('No remaining candidates after pruning.')
+                if self.settings['write_ckp']:
+                    self._write_checkpoint()
             else:
                 if self.settings['verbose']:
                     print(' -- significant')

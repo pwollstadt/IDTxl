@@ -1,12 +1,15 @@
 """Unit tests for IDTxl I/O functions."""
 import os
+import tempfile
 import pickle
 import pytest
 import numpy as np
 from pkg_resources import resource_filename
 from idtxl import idtxl_io as io
+from idtxl import idtxl_utils as utils
 from idtxl.data import Data
 from idtxl.network_comparison import NetworkComparison
+from idtxl.multivariate_te import MultivariateTE
 
 # Generate data and load network inference results.
 n_nodes = 5
@@ -24,10 +27,10 @@ comp_settings = {
         'stats_type': 'independent',
         'n_perm_max_stat': 50,
         'n_perm_min_stat': 50,
-        'n_perm_omnibus': 200,
+        'n_perm_omnibus': 50,
         'n_perm_max_seq': 50,
         'alpha_comp': 0.26,
-        'n_perm_comp': 200,
+        'n_perm_comp': 50,
         'tail': 'two',
         'permute_in_time': True,
         'perm_type': 'random'
@@ -245,7 +248,51 @@ def test_import_matarray():
             normalise=False)
 
 
+def test_save_json():
+    # Test writing dictionaries to JSON files
+    data = Data()
+    data.generate_mute_data(n_samples=100, n_replications=1)
+    settings = {
+        'cmi_estimator': 'JidtKraskovCMI',
+        'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_max_seq': 21,
+        'n_perm_omnibus': 21,
+        'max_lag_sources': 2,
+        'min_lag_sources': 1}
+    target = 1
+    sources = [0]
+    nw = MultivariateTE()
+    nw._initialise(settings, data, sources, target)
+    nw._include_target_candidates(data)
+    nw._include_source_candidates(data)
+    nw._prune_candidates(data)
+    nw._test_final_conditional(data)
+
+    fd, file_path = tempfile.mkstemp()
+    try:
+        # Save settings after running multivariate TE estimation with minimal
+        # settings.
+        _save_load_json(nw.settings, file_path)
+        # Add numpy array
+        nw.settings['y_test_array'] = np.arange(10)
+        _save_load_json(nw.settings, file_path)
+        # Add numpy float
+        nw.settings['z_test_float'] = np.float64(10)
+        _save_load_json(nw.settings, file_path)
+    finally:
+        os.remove(file_path)
+
+
+def _save_load_json(data, file_path):
+    # Helper function to test if dumped JSON data can be recovered correctly
+    io.save_json(data, file_path)
+    d = io.load_json(file_path)
+    assert utils.equal_dicts(data, d)
+
+
 if __name__ == '__main__':
+    test_save_json()
     test_export_brain_net()
     test_export_networkx()
     test_import_matarray()
