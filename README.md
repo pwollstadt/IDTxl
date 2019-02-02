@@ -44,6 +44,7 @@ This project has been supported by funding through:
 
 - Universities Australia - Deutscher Akademischer Austauschdienst (German Academic Exchange Service) UA-DAAD Australia-Germany Joint Research Co-operation grant "Measuring neural information synthesis and its impairment", Wibral, Lizier, Priesemann, Wollstadt, Finn, 2016-17
 - Australian Research Council Discovery Early Career Researcher Award (DECRA) "Relating function of complex networks to structure using information theory", Lizier, 2016-19
+- Deutsche Forschungsgemeinschaft (DFG) Grant CRC 1193 C04, Wibral
 
 ## Key References
 + Multivariate transfer entropy: *Lizier & Rubinov, 2012, Preprint, Technical Report 25/2012,
