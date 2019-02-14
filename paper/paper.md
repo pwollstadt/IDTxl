@@ -1,6 +1,5 @@
 ---
-title: 'IDTxl: The Information Dynamics Toolkit xl: a Python package for the
-efficient analysis of multivariate information dynamics in networks'
+title: 'IDTxl: The Information Dynamics Toolkit xl: a Python package for the efficient analysis of multivariate information dynamics in networks'
 tags:
   - information theory
   - network inference
