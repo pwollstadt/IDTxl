@@ -535,6 +535,70 @@ def test_separate_realisations():
 def test_indices_to_lags():
     pass
 
+def test_checkpoint():
+
+    """Test method for full network analysis."""
+    n_processes = 5  # the MuTE network has 5 nodes
+    data = Data()
+    data.generate_mute_data(10, 5)
+    filename_ckp = './my_checkpoint'
+    settings = {
+        'cmi_estimator': 'JidtKraskovCMI',
+        'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_max_seq': 21,
+        'n_perm_omnibus': 21,
+        'max_lag_sources': 5,
+        'min_lag_sources': 4,
+        'max_lag_target': 5,
+        'write_ckp': True,
+        'filename_ckp': filename_ckp}
+    nw_0 = MultivariateTE()
+
+    # Test all to all analysis
+    results = nw_0.analyse_network(
+        settings, data, targets='all', sources='all')
+    targets_analysed = results.targets_analysed
+    sources = np.arange(n_processes)
+    assert all(np.array(targets_analysed) == np.arange(n_processes)), (
+                'Network analysis did not run on all targets.')
+    for t in results.targets_analysed:
+        s = np.array(list(set(sources) - set([t])))
+        assert all(np.array(results._single_target[t].sources_tested) == s), (
+                    'Network analysis did not run on all sources for target '
+                    '{0}'. format(t))
+    # Test analysis for subset of targets
+    target_list = [1, 2, 3]
+    results = nw_0.analyse_network(
+        settings, data, targets=target_list, sources='all')
+    targets_analysed = results.targets_analysed
+    assert all(np.array(targets_analysed) == np.array(target_list)), (
+                'Network analysis did not run on correct subset of targets.')
+    for t in results.targets_analysed:
+        s = np.array(list(set(sources) - set([t])))
+        assert all(np.array(results._single_target[t].sources_tested) == s), (
+                    'Network analysis did not run on all sources for target '
+                    '{0}'. format(t))
+
+    # Test analysis for subset of sources
+    source_list = [1, 2, 3]
+    target_list = [0, 4]
+    results = nw_0.analyse_network(settings, data, targets=target_list,
+                                   sources=source_list)
+
+    targets_analysed = results.targets_analysed
+    assert all(np.array(targets_analysed) == np.array(target_list)), (
+                'Network analysis did not run for all targets.')
+    for t in results.targets_analysed:
+        assert all(results._single_target[t].sources_tested ==
+                   np.array(source_list)), (
+                        'Network analysis did not run on the correct subset '
+                        'of sources for target {0}'.format(t))
+
+    os.remove('{0}.ckp'.format(filename_ckp))
+    os.remove('{0}.ckp.old'.format(filename_ckp))
+    os.remove('{0}.dat'.format(filename_ckp))
+    os.remove('{0}.json'.format(filename_ckp))
 
 if __name__ == '__main__':
     test_return_local_values()
@@ -547,3 +611,4 @@ if __name__ == '__main__':
     test_add_conditional_manually()
     test_check_source_set()
     test_define_candidates()
+    test_checkpoint()
