@@ -420,11 +420,12 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                         [max_candidate],
                         data.get_realisations(self.current_value,
                                               [max_candidate])[0])
+                if self.settings['write_ckp']:
+                    self._write_checkpoint()
             else:
                 if self.settings['verbose']:
                     print(' -- not significant')
                 break
-
         return success
 
     def _prune_candidates(self, data):
@@ -529,6 +530,8 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 # if self.settings['verbose']:
                 #     print(' -- not significant')
                 self._remove_selected_var(min_candidate)
+                if self.settings['write_ckp']:
+                    self._write_checkpoint()
             else:
                 if self.settings['verbose']:
                     print(' -- significant')
