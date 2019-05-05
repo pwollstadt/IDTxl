@@ -1,0 +1,34 @@
+
+Things to keep in mind:
+
+(1) CUDA knn- and range-search expect a different input orientation of point
+sets. Instead of [points/realisations x dim], we need [dim x
+points/realisations].
+
+(2) The CUDA range search does a smaller/equal distance when looking for
+points, which is not what we want (we need strictly smaller). To handle this,
+we subtract a machine epsilon from the distances found in the knn search to get
+only points smaller than the distance. This doesn't seem to solve the problem
+fully. See the test_cmi_uncorrelated_gaussians_unequal_dims() test in
+test_estimators_cuda.py: CUDA and OpenCL implementations return slightly
+different neighbour counts for multidimensional Gaussian data. This could be
+investigated further.
+
+(3) There seems to be a problem with simultaneously instantiating OpenCL and
+CUDA estimators on the same machine (gives an out of host memory error) for
+newer Ubuntu versions. Also JIDT returned a segmentation fault with no further
+info after the OpenCL estimator was run (i.e., using the JIDT estimator, OpenCL
+estimator, and then JIDT again). I didn't thoroughly debug this. Maybe Joe
+knows how to get more information on why the JVM fails. I observed this under
+
+Ubuntu 18.04.2 LTS
+4.15.0-48-generic
+openjdk 11.0.2 2019-01-15
+OpenJDK Runtime Environment (build 11.0.2+9-Ubuntu-3ubuntu118.04.3)
+OpenJDK 64-Bit Server VM (build 11.0.2+9-Ubuntu-3ubuntu118.04.3, mixed mode, sharing)
+
+
+(4) I used Python's logging module to debug the code. See the setup_loggin()
+function in the idtxl_utils module for an example of how to set up the logger.
+In the long run, we should consider using logging throughout the module because
+it allows for more flexibility than print statements.

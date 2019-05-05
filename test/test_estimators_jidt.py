@@ -723,7 +723,7 @@ def test_insufficient_no_points():
 def test_discrete_mi_memerror():
     """Test exception handling for memory exhausted exceptions."""
     var1, var2 = _get_mem_binary_data()
-    
+
     # Check that we catch instantiation error for an enormous history:
     caughtException = False
     settings = {'n_discrete_bins': 1000000000};
@@ -751,7 +751,7 @@ def test_discrete_mi_memerror():
 
 def test_jidt_kraskov_alg1And2():
     """ Test that JIDT estimate changes properly when we change KSG algorithm """
-    n = 100;
+    n = 100
     source = [sum(pair) for pair in zip(
                         [y for y in range(n)],
                         [rn.normalvariate(0, 0.000001) for r in range(n)])]

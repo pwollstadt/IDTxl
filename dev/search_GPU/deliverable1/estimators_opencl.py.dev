@@ -1,7 +1,7 @@
 import logging
 from pkg_resources import resource_filename
 import numpy as np
-from idtxl.estimators_gpu import GPUKraskov
+from idtxl.estimator_gpu import GPUKraskov
 from . import idtxl_exceptions as ex
 try:
     import pyopencl as cl
@@ -9,8 +9,6 @@ except ImportError as err:
     ex.package_missing(err, 'PyOpenCl is not available on this system. Install'
                             ' it using pip or the package manager to use '
                             'OpenCL-powered CMI estimation.')
-
-logger = logging.getLogger(__name__)
 
 
 class OpenCLKraskov(GPUKraskov):
@@ -64,12 +62,13 @@ class OpenCLKraskov(GPUKraskov):
     """
 
     def __init__(self, settings=None):
-        super().__init__(settings)  # set defaults
+        super().__init__(settings)  # chesks input and sets defaults
+
         # Get kernel and devices.
         self.devices, self.context, self.queue = self._get_device(
                                                         self.settings['gpuid'])
-        self.kernel_location = resource_filename(
-            __name__, 'gpuKnnKernelNoIdx.cl')
+        self.kernel_location = resource_filename(__name__,
+                                                 'gpuKnnKernelNoIdx.cl')
         self.kNN_kernel, self.RS_kernel = self._get_kernels()
 
     def _get_device(self, gpuid):
@@ -87,8 +86,7 @@ class OpenCLKraskov(GPUKraskov):
                 'No device with gpuid {0} (available device IDs: {1}).'.format(
                     gpuid, np.arange(len(my_gpu_devices))))
         queue = cl.CommandQueue(context, my_gpu_devices[gpuid])
-        if self.settings['debug']:
-            print("Selected Device: ", my_gpu_devices[gpuid].name)
+        logging.debug("Selected Device: {}".format(my_gpu_devices[gpuid].name))
         return my_gpu_devices, context, queue
 
     def _get_kernels(self):
@@ -137,7 +135,8 @@ class OpenCLKraskovMI(OpenCLKraskov):
     """
 
     def __init__(self, settings=None):
-        super().__init__(settings)  # set defaults
+        # Set default estimator settings.
+        super().__init__(settings)
         self.settings.setdefault('lag_mi', 0)
 
     def estimate(self, var1, var2, n_chunks=1):
@@ -163,50 +162,7 @@ class OpenCLKraskovMI(OpenCLKraskov):
                 distances and neighborhood counts for var1 and var2 if
                 debug=True and return_counts=True
         """
-        # Prepare data: check if variable realisations are passed as 1D or 2D
-        # arrays and have equal no. observations.
-        data_checked = self._prepare_data(n_chunks, var1=var1, var2=var2)
-        var1 = data_checked['var1']
-        var2 = data_checked['var2']
-        var1, var2 = self._add_mi_lag(var1, var2)
-
-        # Check memory requirements and calculate no. chunks that fit into GPU
-        # main memory for a single run.
-        signallength = var1.shape[0]
-        chunklength = signallength // n_chunks
-        var1dim = var1.shape[1]
-        var2dim = var2.shape[1]
-        chunks_per_run = self._get_chunks_per_run(
-            n_chunks=n_chunks,
-            dim_pointset=var1dim + var2dim,
-            chunklength=chunklength)
-
-        mi_array = np.array([])
-        if self.settings['debug']:
-            distances = np.array([])
-            count_var1 = np.array([])
-            count_var2 = np.array([])
-
-        for r in range(0, n_chunks, chunks_per_run):
-            startidx = r*chunklength
-            stopidx = min(r+chunks_per_run, n_chunks)*chunklength
-            subset1 = var1[startidx:stopidx, :]
-            subset2 = var2[startidx:stopidx, :]
-            n_chunks_current_run = subset1.shape[0] // chunklength
-            results = self._estimate_single_run(subset1, subset2,
-                                                n_chunks_current_run)
-            if self.settings['debug']:
-                mi_array = np.concatenate((mi_array,   results[0]))
-                distances = np.concatenate((distances,  results[1]))
-                count_var1 = np.concatenate((count_var1, results[2]))
-                count_var2 = np.concatenate((count_var2, results[3]))
-            else:
-                mi_array = np.concatenate((mi_array, results))
-
-        if self.settings['return_counts']:
-            return mi_array, distances, count_var1, count_var2
-        else:
-            return mi_array
+        return self._estimate_mi(var1, var2, n_chunks)
 
     def _estimate_single_run(self, var1, var2, n_chunks=1):
         """Estimate mutual information in a single GPU run.
@@ -231,9 +187,13 @@ class OpenCLKraskovMI(OpenCLKraskov):
                 average MI over all samples or local MI for individual
                 samples if 'local_values'=True
         """
-        assert var1.shape[0] == var2.shape[0], 'Unequal no. realisations.'
-        assert var1.shape[0] % n_chunks == 0, (
-            'No. samples not divisible by no. chunks')
+        # Prepare data and add noise: check if variable realisations are passed
+        # as 1D or 2D arrays and have equal no. observations.
+        data_checked = self._prepare_data(n_chunks, var1=var1, var2=var2)
+        var1 = data_checked['var1']
+        var2 = data_checked['var2']
+        logging.debug(type(var1[0, 0]))
+        logging.debug(var1.dtype)
 
         signallength = var1.shape[0]
         chunklength = signallength // n_chunks
@@ -246,16 +206,16 @@ class OpenCLKraskovMI(OpenCLKraskov):
         pad_size = (int(np.ceil(signallength/pad_target)) * pad_target -
                     signallength)
         pad_var1 = np.vstack(
-            [var1, 999999 + 0.1 * np.random.rand(pad_size, var1dim)])
+            [var1, 999999 + 0.1 * np.random.rand(pad_size, var1dim)]).astype(np.float32)
         pad_var2 = np.vstack(
-            [var2, 999999 + 0.1 * np.random.rand(pad_size, var2dim)])
+            [var2, 999999 + 0.1 * np.random.rand(pad_size, var2dim)]).astype(np.float32)
         pointset = np.hstack((pad_var1, pad_var2)).T.copy()
         signallength_padded = signallength + pad_size
         if self.settings['noise_level'] > 0:
             pointset += np.random.normal(scale=self.settings['noise_level'],
                                          size=pointset.shape)
-        if not pointset.dtype == np.float32:
-            pointset = pointset.astype(np.float32)
+        assert pointset.dtype == np.float32, (
+            'GPU input data is not of type float32.')
 
         if self.settings['debug']:
             # Print memory requirements after padding
@@ -265,8 +225,9 @@ class OpenCLKraskovMI(OpenCLKraskov):
                         self.settings['kraskov_k'])
             mem_ncnt = 2 * self.sizeof_int * signallength_padded
             mem_total = mem_data_pad + mem_dist + mem_ncnt
-            print('Memory req. after padding: {0:.5f} MB.'.format(
-                      mem_total / 1024 / 1024))
+            logging.debug(
+                'Memory req. after padding: {0:.5f} MB.'.format(
+                    mem_total / 1024 / 1024))
 
         # Set OpenCL kernel launch parameters
         if chunklength < self.devices[
@@ -343,11 +304,7 @@ class OpenCLKraskovMI(OpenCLKraskov):
             n_chunks, chunklength, count_var1, count_var2)
 
         if self.settings['debug']:
-            logger.debug('signallength: {}'.format(signallength))
-            return (mi_array,
-                    distances[:signallength],  # don't return padding
-                    count_var1[:signallength],
-                    count_var2[:signallength])
+            return mi_array, distances, count_var1, count_var2
         else:
             return mi_array
 
@@ -382,7 +339,12 @@ class OpenCLKraskovCMI(OpenCLKraskov):
     """
 
     def __init__(self, settings=None):
-        super().__init__(settings)  # set defaults
+        super().__init__(settings)
+        # self.mi_est = OpenCLKraskovMI(settings)
+
+    def _return_mi(self, var1, var2, n_chunks):
+        est_mi = OpenCLKraskovMI(self.settings)
+        return est_mi.estimate(var1, var2, n_chunks)
 
     def estimate(self, var1, var2, conditional=None, n_chunks=1):
         """Estimate conditional mutual information.
@@ -412,62 +374,9 @@ class OpenCLKraskovCMI(OpenCLKraskov):
                 distances and neighborhood counts for var1 and var2 if
                 debug=True and return_counts=True
         """
-        # Return MI if no conditional is provided
-        if conditional is None:
-            est_mi = OpenCLKraskovMI(self.settings)
-            return est_mi.estimate(var1, var2, n_chunks)
+        return self._estimate_cmi(var1, var2, conditional, n_chunks)
 
-        # Prepare data: check if variable realisations are passed as 1D or 2D
-        # arrays and have equal no. observations.
-        data_checked = self._prepare_data(
-            n_chunks, var1=var1, var2=var2, conditional=conditional)
-        var1 = data_checked['var1']
-        var2 = data_checked['var2']
-        conditional = data_checked['conditional']
-
-        # Check memory requirements and calculate no. chunks that fit into GPU
-        # main memory for a single run.
-        signallength = var1.shape[0]
-        chunklength = signallength // n_chunks
-        var1dim = var1.shape[1]
-        var2dim = var2.shape[1]
-        conddim = conditional.shape[1]
-        chunks_per_run = self._get_chunks_per_run(
-            n_chunks=n_chunks,
-            dim_pointset=var1dim + var2dim + conddim,
-            chunklength=chunklength)
-
-        cmi_array = np.array([])
-        if self.settings['debug']:
-            distances = np.array([])
-            count_var1 = np.array([])
-            count_var2 = np.array([])
-            count_cond = np.array([])
-
-        for r in range(0, n_chunks, chunks_per_run):
-            startidx = r*chunklength
-            stopidx = min(r+chunks_per_run, n_chunks)*chunklength
-            subset1 = var1[startidx:stopidx, :]
-            subset2 = var2[startidx:stopidx, :]
-            subset3 = conditional[startidx:stopidx, :]
-            n_chunks_current_run = subset1.shape[0] // chunklength
-            results = self._estimate_single_run(subset1, subset2, subset3,
-                                                n_chunks_current_run)
-            if self.settings['debug']:
-                cmi_array = np.concatenate((cmi_array,  results[0]))
-                distances = np.concatenate((distances,  results[1]))
-                count_var1 = np.concatenate((count_var1, results[2]))
-                count_var2 = np.concatenate((count_var2, results[3]))
-                count_cond = np.concatenate((count_cond, results[4]))
-            else:
-                cmi_array = np.concatenate((cmi_array, results))
-
-        if self.settings['return_counts']:
-            return cmi_array, distances, count_var1, count_var2, count_cond
-        else:
-            return cmi_array
-
-    def _estimate_single_run(self, var1, var2, conditional=None, n_chunks=1):
+    def _estimate_single_run(self, var1, var2, conditional, n_chunks=1):
         """Estimate conditional mutual information in a single GPU run.
 
         This method should not be called directly, only inside estimate()
@@ -495,16 +404,13 @@ class OpenCLKraskovCMI(OpenCLKraskov):
                 average CMI over all samples or local CMI for individual
                 samples if 'local_values'=True
         """
-        # Return MI if no conditional is provided
-        if conditional is None:
-            est_mi = OpenCLKraskovMI(self.settings)
-            return est_mi.estimate(var1, var2, n_chunks)
-
-        assert var1.shape[0] == var2.shape[0], 'Unequal no. realisations.'
-        assert var1.shape[0] == conditional.shape[0], (
-            'Unequal no. realisations.')
-        assert var1.shape[0] % n_chunks == 0, (
-            'No. samples not divisible by no. chunks')
+        # Prepare data and add noise: check if variable realisations are passed
+        # as 1D or 2D arrays and have equal no. observations.
+        data_checked = self._prepare_data(
+            n_chunks, var1=var1, var2=var2, conditional=conditional)
+        var1 = data_checked['var1']
+        var2 = data_checked['var2']
+        conditional = data_checked['conditional']
 
         signallength = var1.shape[0]
         chunklength = signallength // n_chunks
@@ -518,11 +424,11 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         pad_size = (int(np.ceil(signallength/pad_target)) * pad_target -
                     signallength)
         pad_var1 = np.vstack(
-            [var1, 999999 + 0.1 * np.random.rand(pad_size, var1dim)])
+            [var1, 999999 + 0.1 * np.random.rand(pad_size, var1dim)]).astype(np.float32)
         pad_var2 = np.vstack(
-            [var2, 999999 + 0.1 * np.random.rand(pad_size, var2dim)])
+            [var2, 999999 + 0.1 * np.random.rand(pad_size, var2dim)]).astype(np.float32)
         pad_conditional = np.vstack(
-            [conditional, 999999 + 0.1 * np.random.rand(pad_size, conddim)])
+            [conditional, 999999 + 0.1 * np.random.rand(pad_size, conddim)]).astype(np.float32)
         pointset = np.hstack((pad_var1, pad_conditional, pad_var2)).T.copy()
         signallength_padded = signallength + pad_size
         if self.settings['noise_level'] > 0:
@@ -530,15 +436,8 @@ class OpenCLKraskovCMI(OpenCLKraskov):
                                          size=pointset.shape)
         if not pointset.dtype == np.float32:
             pointset = pointset.astype(np.float32)
-
-        logger.debug('pointset shape (dim x n_points): {}, type: {}'.format(
-            (pointdim, signallength), pointset.dtype))
-        logger.debug('marginal 1 shape (dim x n_points): {}, type: {}'.format(
-            var1dim + conddim, signallength))
-        logger.debug('marginal 2 shape (dim x n_points): {}, type: {}'.format(
-            var2dim + conddim, signallength))
-        logger.debug('marginal 3 shape (dim x n_points): {}, type: {}'.format(
-            conddim, signallength))
+        logging.debug('pointset shape (dim x n_points): {}, type: {}'.format(
+            pointset.shape, pointset.dtype))
 
         if self.settings['debug']:
             # Print memory requirements after padding
@@ -548,8 +447,8 @@ class OpenCLKraskovCMI(OpenCLKraskov):
                         self.settings['kraskov_k'])
             mem_ncnt = 2 * self.sizeof_int * signallength_padded
             mem_total = mem_data_pad + mem_dist + mem_ncnt
-            print('Memory req. after padding: {0:.5f} MB.'.format(
-                      mem_total / 1024 / 1024))
+            logging.debug('Memory req. after padding: {0:.5f} MB.'.format(
+                mem_total / 1024 / 1024))
 
         # Set OpenCL kernel launch parameters
         if chunklength < self.devices[
@@ -630,15 +529,15 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         d_npointsrange_y.release()
         d_npointsrange_z.release()
 
+        logging.debug(count_cnd)
+        logging.debug(count_src)
+        logging.debug(count_tgt)
+
         # Calculate and sum digammas
         cmi_array = self._calculate_cmi(
             n_chunks, chunklength, count_cnd, count_src, count_tgt)
 
         if self.settings['debug']:
-            return (cmi_array,
-                    distances[:signallength],  # don't return padding
-                    count_cnd[:signallength],
-                    count_src[:signallength],
-                    count_tgt[:signallength])
+            return cmi_array, distances, count_src, count_tgt, count_cnd
         else:
             return cmi_array

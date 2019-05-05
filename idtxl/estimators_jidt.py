@@ -1,4 +1,5 @@
 """Provide JIDT estimators."""
+import logging
 from pkg_resources import resource_filename
 import numpy as np
 from abc import abstractmethod
@@ -58,8 +59,10 @@ class JidtEstimator(Estimator):
         """Start JAVA virtual machine if it is not running."""
         jar_location = resource_filename(__name__, 'infodynamics.jar')
         if not jp.isJVMStarted():
-            jp.startJVM(jp.getDefaultJVMPath(), '-ea', ('-Djava.class.path=' +
-                                                        jar_location))
+            jp.startJVM(jp.getDefaultJVMPath(), '-ea',
+                        ('-Djava.class.path=' + jar_location))
+            logging.debug('Starting JVM at path {} - JIDT jar location: {} State: {}'.format(
+                jp.getDefaultJVMPath(), jar_location, jp.isThreadAttachedToJVM()))
 
     def _set_te_defaults(self, settings):
         """Set defaults for transfer entropy estimation."""
@@ -462,8 +465,11 @@ class JidtKraskovCMI(JidtKraskov):
         # Check if number of points is sufficient for estimation.
         self._check_number_of_points(var1.shape[0])
 
+        logging.debug('Initialising JIDT code with dims {}, {}, {}'.format(
+            var1.shape[1], var2.shape[1], cond.shape[1]))
         self.calc.initialise(var1.shape[1], var2.shape[1], cond.shape[1])
         self.calc.setObservations(var1, var2, cond)
+        logging.debug('Calling JIDT code')
         if self.settings['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
         else:
@@ -886,9 +892,12 @@ class JidtKraskovMI(JidtKraskov):
         # Check if number of points is sufficient for estimation.
         self._check_number_of_points(var1.shape[0])
 
+        logging.debug('Initialising JIDT code with dims {}, {}'.format(
+            var1.shape[1], var2.shape[1]))
         self.calc.initialise(var1.shape[1], var2.shape[1])
         self.calc.setObservations(var1, var2)
 
+        logging.debug('Calling JIDT code')
         if self.settings['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
         else:
@@ -1449,7 +1458,6 @@ class JidtKraskovTE(JidtKraskov):
         # Get embedding and delay parameters.
         settings = self._set_te_defaults(settings)
         super().__init__(CalcClass, settings)
-
 
     def estimate(self, source, target):
         """Estimate transfer entropy from a source to a target variable.

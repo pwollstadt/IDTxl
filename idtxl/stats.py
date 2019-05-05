@@ -79,7 +79,7 @@ def ais_fdr(settings=None, *results):
         print('WARNING: Number of permutations (''n_perm_max_seq'') for at '
               'least one target is too low to allow for FDR correction '
               '(FDR-threshold: {0:.4f}, min. theoretically possible p-value: '
-              '{1}).'.format(thresh[0], 1 / min(n_perm)))
+              '{1:.4f}).'.format(thresh[0], 1 / min(n_perm)))
         results_comb._add_fdr(fdr=None, alpha=alpha, constant=constant)
         return results_comb
 

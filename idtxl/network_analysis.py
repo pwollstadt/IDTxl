@@ -1,5 +1,6 @@
 """Parent class for network inference and network comparison.
 """
+import logging
 import copy as cp
 import itertools as it
 import numpy as np
@@ -198,6 +199,7 @@ class NetworkAnalysis():
         # to estimate single-link MI/TE or single-process AIS in the end.
         try:
             EstimatorClass = find_estimator(self.settings['cmi_estimator'])
+            logging.debug('Estimator class: {}'.format(EstimatorClass))
         except KeyError:
             raise RuntimeError('Please provide an estimator class or name!')
         if self.settings['local_values']:
@@ -303,7 +305,7 @@ class NetworkAnalysis():
             cond = self.settings['add_conditionals']
             if type(cond) is tuple:  # easily add single variable
                 cond = [cond]
-            cond_idx = self._lag_to_idx(cond)            
+            cond_idx = self._lag_to_idx(cond)
             candidate_set = list(set(candidate_set).difference(set(cond_idx)))
         return candidate_set
 
@@ -412,7 +414,7 @@ class NetworkAnalysis():
         Returns:
             numpy array
                 estimate of dependency measure for each link
-                
+
         Raises:
             ex.AlgorithmExhaustedError
                 Raised from estimate() when calculation cannot be made

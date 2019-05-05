@@ -8,6 +8,8 @@ from idtxl.estimators_jidt import JidtDiscreteCMI, JidtKraskovTE
 from test_estimators_jidt import jpype_missing
 from idtxl.idtxl_utils import calculate_mi
 from test_estimators_jidt import _get_gauss_data
+from test_estimators_cuda import cuda_missing
+from test_active_information_storage import opencl_missing
 
 
 @jpype_missing
@@ -511,6 +513,95 @@ def test_discrete_input():
             '{0}, Actual results: {1}.'.format(
                 expected_mi, res._single_target[1].omnibus_te))
 
+@jpype_missing
+@opencl_missing
+def test_compare_jidt_open_cl_estimator():
+    """Compare results from OpenCl and JIDT estimators for mTE calculation."""
+    data = Data()
+    data.generate_mute_data(1000, 2)
+    settings = {
+        'cmi_estimator': 'OpenCLKraskovCMI',
+        'alpha_mi': 0.05,
+        'tail_mi': 'one_bigger',
+        'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_mi': 21,
+        'max_lag': 5,
+        'tau': 1
+        }
+    processes = [2, 3]
+    network_analysis = MultivariateTE()
+    res_opencl = network_analysis.analyse_network(settings, data, processes)
+    settings['cmi_estimator'] = 'JidtKraskovCMI'
+    res_jidt = network_analysis.analyse_network(settings, data, processes)
+    # Note that I require equality up to three digits. Results become more
+    # exact for bigger data sizes, but this takes too long for a unit test.
+    mte_opencl_2 = res_opencl._single_target[2].te
+    mte_jidt_2 = res_jidt._single_target[2].te
+    mte_opencl_3 = res_opencl._single_target[3].te
+    mte_jidt_3 = res_jidt._single_target[3].te
+    print('mTE for MUTE data proc 2 - opencl: {0:.4f} - jidt: {1:.4f}'.format(
+        mte_opencl_2, mte_jidt_2))
+    print('mTE for MUTE data proc 3 - opencl: {0:.4f} - jidt: {1:.4f}'.format(
+        mte_opencl_3, mte_jidt_3))
+    if not (mte_opencl_2 is np.nan or mte_jidt_2 is np.nan):
+        assert (mte_opencl_2 - mte_jidt_2) < 0.05, (
+            'mTE results differ between OpenCl and JIDT estimator.')
+    else:
+        assert mte_opencl_2 is mte_jidt_2, (
+            'mTE results differ between OpenCl and JIDT estimator.')
+    if not (mte_opencl_3 is np.nan or mte_jidt_3 is np.nan):
+        assert (mte_opencl_3 - mte_jidt_3) < 0.05, (
+            'mTE results differ between OpenCl and JIDT estimator.')
+    else:
+        assert mte_opencl_3 is mte_jidt_3, (
+            'mTE results differ between OpenCl and JIDT estimator.')
+
+
+@jpype_missing
+@cuda_missing
+def test_compare_jidt_cuda_estimator():
+    """Compare results from CUDA and JIDT estimators for mTE calculation."""
+    data = Data()
+    data.generate_mute_data(1000, 2)
+    settings = {
+        'cmi_estimator': 'CudaKraskovCMI',
+        'alpha_mi': 0.05,
+        'tail_mi': 'one_bigger',
+        'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_mi': 21,
+        'max_lag': 5,
+        'tau': 1
+        }
+    processes = [2, 3]
+    network_analysis = MultivariateTE()
+    res_cuda = network_analysis.analyse_network(settings, data, processes)
+    settings['cmi_estimator'] = 'JidtKraskovCMI'
+    res_jidt = network_analysis.analyse_network(settings, data, processes)
+    # Note that I require equality up to three digits. Results become more
+    # exact for bigger data sizes, but this takes too long for a unit test.
+    mte_cuda_2 = res_cuda._single_target[2].te
+    mte_jidt_2 = res_jidt._single_target[2].te
+    mte_cuda_3 = res_cuda._single_target[3].te
+    mte_jidt_3 = res_jidt._single_target[3].te
+    print('mTE for MUTE data proc 2 - cuda: {0:.4f} - jidt: {1:.4f}'.format(
+        mte_cuda_2, mte_jidt_2))
+    print('mTE for MUTE data proc 3 - cuda: {0:.4f} - jidt: {1:.4f}'.format(
+        mte_cuda_3, mte_jidt_3))
+    if not (mte_cuda_2 is np.nan or mte_jidt_2 is np.nan):
+        assert (mte_cuda_2 - mte_jidt_2) < 0.05, (
+            'mTE results differ between CUDA and JIDT estimator.')
+    else:
+        assert mte_cuda_2 is mte_jidt_2, (
+            'mTE results differ between CUDA and JIDT estimator.')
+    if not (mte_cuda_3 is np.nan or mte_jidt_3 is np.nan):
+        assert (mte_cuda_3 - mte_jidt_3) < 0.05, (
+            'mTE results differ between CUDA and JIDT estimator.')
+    else:
+        assert mte_cuda_3 is mte_jidt_3, (
+            'mTE results differ between CUDA and JIDT estimator.')
+
 
 def test_include_target_candidates():
     pass
@@ -547,3 +638,5 @@ if __name__ == '__main__':
     test_add_conditional_manually()
     test_check_source_set()
     test_define_candidates()
+    test_compare_jidt_open_cl_estimator()
+    test_compare_jidt_cuda_estimator()

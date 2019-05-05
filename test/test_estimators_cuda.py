@@ -1,21 +1,30 @@
-"""Test OpenCL estimators.
+"""Test CUDA estimators.
 
-This module provides unit tests for OpenCL estimators. Estimators are tested
+This module provides unit tests for CUDA estimators. Estimators are tested
 against JIDT estimators.
 """
 import logging
 import pytest
 import numpy as np
+from idtxl.estimators_cuda import CudaKraskovMI, CudaKraskovCMI
 from idtxl.estimators_opencl import OpenCLKraskovMI, OpenCLKraskovCMI
 from idtxl.estimators_jidt import JidtKraskovMI, JidtKraskovCMI
 from test_estimators_jidt import _get_gauss_data, jpype_missing
-from idtxl.idtxl_utils import setup_logging
-
+from test_active_information_storage import opencl_missing
+from idtxl.idtxl_utils import setup_logging, get_cuda_lib
 
 setup_logging(logging_level=logging.DEBUG)
 
-# Skip test module if opencl is missing
-pytest.importorskip('pyopencl')
+package_missing = False
+try:
+    print('getting CUDA libraries')
+    get_cuda_lib()
+except OSError as err:
+    package_missing = True
+    print("CUDA is missing, CUDA GPU estimators are not available")
+cuda_missing = pytest.mark.skipif(
+    package_missing,
+    reason="CUDA is missing, CUDA GPU estimators are not available")
 
 
 def test_debug_setting():
@@ -23,81 +32,26 @@ def test_debug_setting():
     settings = {'debug': False, 'return_counts': True}
     # Estimators should raise an error if returning of neighborhood counts is
     # requested without the debugging option being set.
-    with pytest.raises(RuntimeError): OpenCLKraskovMI(settings=settings)
-    with pytest.raises(RuntimeError): OpenCLKraskovCMI(settings=settings)
+    with pytest.raises(RuntimeError): CudaKraskovMI(settings=settings)
+    with pytest.raises(RuntimeError): CudaKraskovCMI(settings=settings)
 
     settings['debug'] = True
-    est = OpenCLKraskovMI(settings=settings)
+    est = CudaKraskovMI(settings=settings)
     res = est.estimate(np.arange(10), np.arange(10))
     assert len(res) == 4, (
         'Requesting debugging output from MI estimator did not return the '
         'correct no. values.')
-    est = OpenCLKraskovCMI(settings=settings)
+    est = CudaKraskovCMI(settings=settings)
     res = est.estimate(np.arange(10), np.arange(10), np.arange(10))
     assert len(res) == 5, (
         'Requesting debugging output from CMI estimator did not return the '
         'correct no. values.')
 
 
-def test_amd_data_padding():
-    """Test padding necessary for AMD devices."""
-    expected_mi, source, source_uncorr, target = _get_gauss_data()
-
-    settings = {'debug': True, 'return_counts': True}
-    est_mi = OpenCLKraskovMI(settings=settings)
-    est_cmi = OpenCLKraskovCMI(settings=settings)
-
-    # Run OpenCL estimator for various data sizes.
-    for n in [11, 13, 25, 64, 100, 128, 999, 10000, 3781, 50000]:
-        for n_chunks in [1, 3, 10, 50, 99]:
-            data_run_source = np.tile(source[:n], (n_chunks, 1))
-            data_run_target = np.tile(target[:n], (n_chunks, 1))
-            mi, dist, n_range_var1, n_range_var2 = est_mi.estimate(
-                data_run_source, data_run_target, n_chunks=n_chunks)
-            cmi, dist, n_range_var1, n_range_var2 = est_cmi.estimate(
-                data_run_source, data_run_target, n_chunks=n_chunks)
-    # Run OpenCL esitmator for various no. points and check result for
-    # correctness. Note that for smaller sample sizes the error becomes too
-    # large.
-    n_chunks = 1
-    for n in [832, 999, 10000, 3781, 50000]:
-        data_run_source = np.tile(source[:n], (n_chunks, 1))
-        data_run_target = np.tile(target[:n], (n_chunks, 1))
-        mi, dist, n_range_var1, n_range_var2 = est_mi.estimate(
-            data_run_source, data_run_target, n_chunks=n_chunks)
-        cmi, dist, n_range_var1, n_range_var2 = est_cmi.estimate(
-            data_run_source, data_run_target, n_chunks=n_chunks)
-        print('{0} points, {1} chunks: OpenCL MI result: {2:.4f} nats; '
-              'expected to be close to {3:.4f} nats for correlated '
-              'Gaussians.'.format(n, n_chunks, mi[0], expected_mi))
-        assert np.isclose(mi[0], expected_mi, atol=0.05), (
-            'MI estimation for uncorrelated Gaussians using the OpenCL '
-            'estimator failed (error larger 0.05).')
-        print('OpenCL CMI result: {0:.4f} nats; expected to be close to '
-              '{1:.4f} nats for correlated Gaussians.'.format(
-                    cmi[0], expected_mi))
-        assert np.isclose(cmi[0], expected_mi, atol=0.05), (
-            'CMI estimation for uncorrelated Gaussians using the OpenCL '
-            'estimator failed (error larger 0.05).')
-
-    # Test debugging switched off
-    settings = {'debug': False, 'return_counts': False}
-    est_mi = OpenCLKraskovMI(settings=settings)
-    est_cmi = OpenCLKraskovCMI(settings=settings)
-    mi = est_mi.estimate(source, target)
-    cmi = est_cmi.estimate(source, target)
-
-    settings['local_values'] = True
-    est_mi = OpenCLKraskovMI(settings=settings)
-    est_cmi = OpenCLKraskovCMI(settings=settings)
-    mi = est_mi.estimate(source, target)
-    cmi = est_cmi.estimate(source, target)
-
-
 def test_user_input():
 
-    est_mi = OpenCLKraskovMI()
-    est_cmi = OpenCLKraskovCMI()
+    est_mi = CudaKraskovMI()
+    est_cmi = CudaKraskovCMI()
     N = 1000
 
     # Unequal variable dimensions.
@@ -130,28 +84,28 @@ def test_mi_correlated_gaussians():
     """Test estimators on correlated Gaussian data."""
     expected_mi, source, source_uncorr, target = _get_gauss_data()
 
-    # Run OpenCL estimator.
+    # Run CUDA estimator.
     settings = {'debug': True, 'return_counts': True}
-    ocl_est = OpenCLKraskovMI(settings=settings)
-    mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(source, target)
+    est_cuda = CudaKraskovMI(settings=settings)
+    mi_cuda, dist, n_range_var1, n_range_var2 = est_cuda.estimate(source, target)
 
-    mi_ocl = mi_ocl[0]
+    mi_cuda = mi_cuda[0]
     # Run JIDT estimator.
-    jidt_est = JidtKraskovMI(settings={})
-    mi_jidt = jidt_est.estimate(source, target)
+    est_jidt = JidtKraskovMI(settings={})
+    mi_jidt = est_jidt.estimate(source, target)
 
-    print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
+    print('JIDT MI result: {0:.4f} nats; CUDA MI result: {1:.4f} nats; '
           'expected to be close to {2:.4f} nats for correlated '
-          'Gaussians.'.format(mi_jidt, mi_ocl, expected_mi))
+          'Gaussians.'.format(mi_jidt, mi_cuda, expected_mi))
     assert np.isclose(mi_jidt, expected_mi, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'JIDT estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl, expected_mi, atol=0.05), (
+    assert np.isclose(mi_cuda, expected_mi, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl, mi_jidt, atol=0.0001), (
+                        'CUDA estimator failed (error larger 0.05).')
+    assert np.isclose(mi_cuda, mi_jidt, atol=0.0001), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
+                        'CUDA estimator failed (error larger 0.05).')
 
 
 @jpype_missing
@@ -159,28 +113,28 @@ def test_cmi_no_cond_correlated_gaussians():
     """Test estimators on correlated Gaussian data without conditional."""
     expected_mi, source, source_uncorr, target = _get_gauss_data()
 
-    # Run OpenCL estimator.
+    # Run CUDA estimator.
     settings = {'debug': True, 'return_counts': True}
-    ocl_est = OpenCLKraskovCMI(settings=settings)
-    mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(source, target)
+    est_cuda = CudaKraskovCMI(settings=settings)
+    mi_cuda, dist, n_range_var1, n_range_var2 = est_cuda.estimate(source, target)
 
-    mi_ocl = mi_ocl[0]
+    mi_cuda = mi_cuda[0]
     # Run JIDT estimator.
-    jidt_est = JidtKraskovCMI(settings={})
-    mi_jidt = jidt_est.estimate(source, target)
+    est_jidt = JidtKraskovCMI(settings={})
+    mi_jidt = est_jidt.estimate(source, target)
 
-    print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
+    print('JIDT MI result: {0:.4f} nats; CUDA MI result: {1:.4f} nats; '
           'expected to be close to {2:.4f} nats for correlated '
-          'Gaussians.'.format(mi_jidt, mi_ocl, expected_mi))
+          'Gaussians.'.format(mi_jidt, mi_cuda, expected_mi))
     assert np.isclose(mi_jidt, expected_mi, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'JIDT estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl, expected_mi, atol=0.05), (
+    assert np.isclose(mi_cuda, expected_mi, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl, mi_jidt, atol=0.0001), (
+                        'CUDA estimator failed (error larger 0.05).')
+    assert np.isclose(mi_cuda, mi_jidt, atol=0.0001), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
+                        'CUDA estimator failed (error larger 0.05).')
 
 
 @jpype_missing
@@ -188,30 +142,30 @@ def test_cmi_correlated_gaussians():
     """Test estimators on correlated Gaussian data with conditional."""
     expected_mi, source, source_uncorr, target = _get_gauss_data()
 
-    # Run OpenCL estimator.
+    # Run CUDA estimator.
     settings = {'debug': True, 'return_counts': True}
-    ocl_est = OpenCLKraskovCMI(settings=settings)
-    (mi_ocl, dist, n_range_var1,
-     n_range_var2, n_range_cond) = ocl_est.estimate(source, target,
+    est_cuda = CudaKraskovCMI(settings=settings)
+    (mi_cuda, dist, n_range_var1,
+     n_range_var2, n_range_cond) = est_cuda.estimate(source, target,
                                                     source_uncorr)
 
-    mi_ocl = mi_ocl[0]
+    mi_cuda = mi_cuda[0]
     # Run JIDT estimator.
-    jidt_est = JidtKraskovCMI(settings={})
-    mi_jidt = jidt_est.estimate(source, target, source_uncorr)
+    est_jidt = JidtKraskovCMI(settings={})
+    mi_jidt = est_jidt.estimate(source, target, source_uncorr)
 
-    print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
+    print('JIDT MI result: {0:.4f} nats; CUDA MI result: {1:.4f} nats; '
           'expected to be close to {2:.4f} nats for correlated '
-          'Gaussians.'.format(mi_jidt, mi_ocl, expected_mi))
+          'Gaussians.'.format(mi_jidt, mi_cuda, expected_mi))
     assert np.isclose(mi_jidt, expected_mi, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'JIDT estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl, expected_mi, atol=0.05), (
+    assert np.isclose(mi_cuda, expected_mi, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl, mi_jidt, atol=0.0001), (
+                        'CUDA estimator failed (error larger 0.05).')
+    assert np.isclose(mi_cuda, mi_jidt, atol=0.0001), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
+                        'CUDA estimator failed (error larger 0.05).')
 
 
 @jpype_missing
@@ -220,37 +174,37 @@ def test_mi_correlated_gaussians_two_chunks():
     expected_mi, source, source_uncorr, target = _get_gauss_data(n=20000)
     n_points = source.shape[0]
 
-    # Run OpenCL estimator.
+    # Run CUDA estimator.
     n_chunks = 2
     settings = {'debug': True, 'return_counts': True}
-    ocl_est = OpenCLKraskovMI(settings=settings)
-    mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(
+    est_cuda = CudaKraskovMI(settings=settings)
+    mi_cuda, dist, n_range_var1, n_range_var2 = est_cuda.estimate(
                                                             source, target,
                                                             n_chunks=n_chunks)
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovMI(settings={})
-    mi_jidt = jidt_est.estimate(source[0:int(n_points/2), :],
+    est_jidt = JidtKraskovMI(settings={})
+    mi_jidt = est_jidt.estimate(source[0:int(n_points/2), :],
                                 target[0:int(n_points/2), :])
 
-    print('JIDT MI result: {0:.4f} nats; OpenCL MI result: [{1:.4f}, {2:.4f}] '
+    print('JIDT MI result: {0:.4f} nats; CUDA MI result: [{1:.4f}, {2:.4f}] '
           'nats; expected to be close to {3:.4f} nats for correlated '
-          'Gaussians.'.format(mi_jidt, mi_ocl[0], mi_ocl[1], expected_mi))
+          'Gaussians.'.format(mi_jidt, mi_cuda[0], mi_cuda[1], expected_mi))
     assert np.isclose(mi_jidt, expected_mi, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'JIDT estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl[0], expected_mi, atol=0.05), (
+    assert np.isclose(mi_cuda[0], expected_mi, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl[0], mi_jidt, atol=0.05), (
+                        'CUDA estimator failed (error larger 0.05).')
+    assert np.isclose(mi_cuda[0], mi_jidt, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl[1], mi_jidt, atol=0.05), (
+                        'CUDA estimator failed (error larger 0.05).')
+    assert np.isclose(mi_cuda[1], mi_jidt, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl[0], mi_ocl[1], atol=0.05), (
+                        'CUDA estimator failed (error larger 0.05).')
+    assert np.isclose(mi_cuda[0], mi_cuda[1], atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
+                        'CUDA estimator failed (error larger 0.05).')
 
 
 @jpype_missing
@@ -260,28 +214,28 @@ def test_mi_uncorrelated_gaussians():
     var1 = np.random.randn(n_obs, 1)
     var2 = np.random.randn(n_obs, 1)
 
-    # Run OpenCL estimator.
+    # Run CUDA estimator.
     settings = {'debug': True, 'return_counts': True}
-    ocl_est = OpenCLKraskovMI(settings=settings)
-    mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(var1, var2)
-    mi_ocl = mi_ocl[0]
+    est_cuda = CudaKraskovMI(settings=settings)
+    mi_cuda, dist, n_range_var1, n_range_var2 = est_cuda.estimate(var1, var2)
+    mi_cuda = mi_cuda[0]
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovMI(settings={})
-    mi_jidt = jidt_est.estimate(var1, var2)
+    est_jidt = JidtKraskovMI(settings={})
+    mi_jidt = est_jidt.estimate(var1, var2)
 
-    print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
+    print('JIDT MI result: {0:.4f} nats; CUDA MI result: {1:.4f} nats; '
           'expected to be close to 0 nats for uncorrelated '
-          'Gaussians.'.format(mi_jidt, mi_ocl))
+          'Gaussians.'.format(mi_jidt, mi_cuda))
     assert np.isclose(mi_jidt, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'JIDT estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl, 0, atol=0.05), (
+    assert np.isclose(mi_cuda, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl, mi_jidt, atol=0.0001), (
+                        'CUDA estimator failed (error larger 0.05).')
+    assert np.isclose(mi_cuda, mi_jidt, atol=0.0001), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
+                        'CUDA estimator failed (error larger 0.05).')
 
 
 @jpype_missing
@@ -292,29 +246,29 @@ def test_cmi_uncorrelated_gaussians():
     var2 = np.random.randn(n_obs, 1)
     var3 = np.random.randn(n_obs, 1)
 
-    # Run OpenCL estimator.
+    # Run CUDA estimator.
     settings = {'debug': True, 'return_counts': True}
-    ocl_est = OpenCLKraskovCMI(settings=settings)
-    (mi_ocl, dist, n_range_var1,
-     n_range_var2, n_range_var3) = ocl_est.estimate(var1, var2, var3)
-    mi_ocl = mi_ocl[0]
+    est_cuda = CudaKraskovCMI(settings=settings)
+    (mi_cuda, dist, n_range_var1,
+     n_range_var2, n_range_var3) = est_cuda.estimate(var1, var2, var3)
+    mi_cuda = mi_cuda[0]
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovCMI(settings={})
-    mi_jidt = jidt_est.estimate(var1, var2, var3)
+    est_jidt = JidtKraskovCMI(settings={})
+    mi_jidt = est_jidt.estimate(var1, var2, var3)
 
-    print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
+    print('JIDT MI result: {0:.4f} nats; CUDA MI result: {1:.4f} nats; '
           'expected to be close to 0 nats for uncorrelated '
-          'Gaussians.'.format(mi_jidt, mi_ocl))
+          'Gaussians.'.format(mi_jidt, mi_cuda))
     assert np.isclose(mi_jidt, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'JIDT estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl, 0, atol=0.05), (
+    assert np.isclose(mi_cuda, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl, mi_jidt, atol=0.0001), (
+                        'CUDA estimator failed (error larger 0.05).')
+    assert np.isclose(mi_cuda, mi_jidt, atol=0.0001), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
+                        'CUDA estimator failed (error larger 0.05).')
 
 
 @jpype_missing
@@ -325,28 +279,28 @@ def test_mi_uncorrelated_gaussians_three_dims():
     var1 = np.random.randn(n_obs, dim)
     var2 = np.random.randn(n_obs, dim)
 
-    # Run OpenCL estimator.
+    # Run CUDA estimator.
     settings = {'debug': True, 'return_counts': True}
-    ocl_est = OpenCLKraskovMI(settings=settings)
-    mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(var1, var2)
-    mi_ocl = mi_ocl[0]
+    est_cuda = CudaKraskovMI(settings=settings)
+    mi_cuda, dist, n_range_var1, n_range_var2 = est_cuda.estimate(var1, var2)
+    mi_cuda = mi_cuda[0]
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovMI(settings={})
-    mi_jidt = jidt_est.estimate(var1, var2)
+    est_jidt = JidtKraskovMI(settings={})
+    mi_jidt = est_jidt.estimate(var1, var2)
 
-    print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
+    print('JIDT MI result: {0:.4f} nats; CUDA MI result: {1:.4f} nats; '
           'expected to be close to 0 nats for uncorrelated '
-          'Gaussians.'.format(mi_jidt, mi_ocl))
+          'Gaussians.'.format(mi_jidt, mi_cuda))
     assert np.isclose(mi_jidt, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'JIDT estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl, 0, atol=0.05), (
+    assert np.isclose(mi_cuda, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl, mi_jidt, atol=0.0001), (
+                        'CUDA estimator failed (error larger 0.05).')
+    assert np.isclose(mi_cuda, mi_jidt, atol=0.0001), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
+                        'CUDA estimator failed (error larger 0.05).')
 
 
 @jpype_missing
@@ -358,47 +312,47 @@ def test_cmi_uncorrelated_gaussians_three_dims():
     var2 = np.random.randn(n_obs, dim)
     var3 = np.random.randn(n_obs, dim)
 
-    # Run OpenCL estimator.
+    # Run CUDA estimator.
     settings = {'debug': True, 'return_counts': True}
-    ocl_est = OpenCLKraskovCMI(settings=settings)
-    mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(var1, var2)
-    mi_ocl = mi_ocl[0]
+    est_cuda = CudaKraskovCMI(settings=settings)
+    mi_cuda, dist, n_range_var1, n_range_var2 = est_cuda.estimate(var1, var2)
+    mi_cuda = mi_cuda[0]
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovCMI(settings={})
-    mi_jidt = jidt_est.estimate(var1, var2)
+    est_jidt = JidtKraskovCMI(settings={})
+    mi_jidt = est_jidt.estimate(var1, var2)
 
-    print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
+    print('JIDT MI result: {0:.4f} nats; CUDA MI result: {1:.4f} nats; '
           'expected to be close to 0 nats for uncorrelated '
-          'Gaussians.'.format(mi_jidt, mi_ocl))
+          'Gaussians.'.format(mi_jidt, mi_cuda))
     assert np.isclose(mi_jidt, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'JIDT estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl, 0, atol=0.05), (
+    assert np.isclose(mi_cuda, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl, mi_jidt, atol=0.0001), (
+                        'CUDA estimator failed (error larger 0.05).')
+    assert np.isclose(mi_cuda, mi_jidt, atol=0.0001), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
+                        'CUDA estimator failed (error larger 0.05).')
 
     # Run with conditional
-    (mi_ocl, dist, n_range_var1,
-     n_range_var2, n_range_var3) = ocl_est.estimate(var1, var2, var3)
-    mi_ocl = mi_ocl[0]
-    mi_jidt = jidt_est.estimate(var1, var2, var3)
+    (mi_cuda, dist, n_range_var1,
+     n_range_var2, n_range_var3) = est_cuda.estimate(var1, var2, var3)
+    mi_cuda = mi_cuda[0]
+    mi_jidt = est_jidt.estimate(var1, var2, var3)
 
-    print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
+    print('JIDT MI result: {0:.4f} nats; CUDA MI result: {1:.4f} nats; '
           'expected to be close to 0 nats for uncorrelated '
-          'Gaussians.'.format(mi_jidt, mi_ocl))
+          'Gaussians.'.format(mi_jidt, mi_cuda))
     assert np.isclose(mi_jidt, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'JIDT estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl, 0, atol=0.05), (
+    assert np.isclose(mi_cuda, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl, mi_jidt, atol=0.0001), (
+                        'CUDA estimator failed (error larger 0.05).')
+    assert np.isclose(mi_cuda, mi_jidt, atol=0.0001), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
+                        'CUDA estimator failed (error larger 0.05).')
 
 
 @jpype_missing
@@ -409,51 +363,52 @@ def test_cmi_uncorrelated_gaussians_unequal_dims():
     var2 = np.random.randn(n_obs, 5)
     var3 = np.random.randn(n_obs, 7)
 
-    # Run OpenCL estimator.
+    def _print_results(mi_jidt, mi_ocl, mi_cuda):
+
+        logging.debug('Unequal neighbor counts: {}'.format(
+            (mi_ocl[2][:n_obs] != mi_cuda[2][:n_obs]).sum()))
+        ind = np.where(mi_ocl[2][:n_obs] - mi_cuda[2][:n_obs])[0]
+        logging.debug('counts OpenCL: {}'.format(mi_ocl[2][ind]))  # count conditional
+        logging.debug('counts CUDA: {}'.format(mi_cuda[2][ind]))
+        logging.debug('count diff {}:'.format(mi_ocl[2][ind] - mi_cuda[2][ind]))
+        # print(mi_ocl[1][ind])  # distances
+        # print(mi_cuda[1][ind])
+
+        print('JIDT result: {0:.4f} nats; OpenCL result: {1:.4f} nats; '
+              'CUDA result: {2:.4f} nats;'
+              'expected to be close to 0 nats for uncorrelated '
+              'Gaussians.'.format(mi_jidt, mi_ocl[0][0], mi_cuda[0][0]))
+        assert np.isclose(mi_jidt, 0, atol=0.05), (
+            'Estimation for uncorrelated Gaussians using the JIDT estimator '
+            'failed (error larger 0.05).')
+        assert np.isclose(mi_cuda[0][0], 0, atol=0.05), (
+            'Estimation for uncorrelated Gaussians using the CUDA estimator '
+            'failed (error larger 0.05).')
+        assert np.isclose(mi_cuda[0][0], mi_jidt, atol=0.0001), (
+            'Estimation for uncorrelated Gaussians using the CUDA estimator '
+            'failed (error larger 0.05).')
+
     settings = {'debug': True, 'return_counts': True}
-    ocl_est = OpenCLKraskovCMI(settings=settings)
-    mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(var1, var2)
-    mi_ocl = mi_ocl[0]
 
-    # Run JIDT estimator.
-    jidt_est = JidtKraskovCMI(settings={})
-    mi_jidt = jidt_est.estimate(var1, var2)
+    est_cuda = CudaKraskovCMI(settings)
+    est_ocl = OpenCLKraskovCMI(settings)
+    est_jidt = JidtKraskovCMI(settings={})
 
-    print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
-          'expected to be close to 0 nats for uncorrelated '
-          'Gaussians.'.format(mi_jidt, mi_ocl))
-    assert np.isclose(mi_jidt, 0, atol=0.05), (
-                        'MI estimation for uncorrelated Gaussians using the '
-                        'JIDT estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl, 0, atol=0.05), (
-                        'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl, mi_jidt, atol=0.0001), (
-                        'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
+    # Run estimators without conditional.
+    mi_cuda = est_cuda.estimate(var1, var2)
+    mi_ocl = est_ocl.estimate(var1, var2)
+    mi_jidt = est_jidt.estimate(var1, var2)
+    _print_results(mi_jidt, mi_ocl, mi_cuda)
 
     # Run estimation with conditionals.
-    (mi_ocl, dist, n_range_var1,
-     n_range_var2, n_range_var3) = ocl_est.estimate(var1, var2, var3)
-    mi_ocl = mi_ocl[0]
-    mi_jidt = jidt_est.estimate(var1, var2, var3)
-
-    print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
-          'expected to be close to 0 nats for uncorrelated '
-          'Gaussians.'.format(mi_jidt, mi_ocl))
-    assert np.isclose(mi_jidt, 0, atol=0.05), (
-                        'MI estimation for uncorrelated Gaussians using the '
-                        'JIDT estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl, 0, atol=0.05), (
-                        'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
-    assert np.isclose(mi_ocl, mi_jidt, atol=0.0001), (
-                        'MI estimation for uncorrelated Gaussians using the '
-                        'OpenCL estimator failed (error larger 0.05).')
+    mi_cuda = est_cuda.estimate(var1, var2, var3)
+    mi_ocl = est_ocl.estimate(var1, var2, var3)
+    mi_jidt = est_jidt.estimate(var1, var2, var3)
+    _print_results(mi_jidt, mi_ocl, mi_cuda)
 
 
 def test_local_values():
-    """Test estimation of local MI and CMI using OpenCL estimators."""
+    """Test estimation of local MI and CMI using CUDA estimators."""
     # Get data
     n_chunks = 2
     expec_mi, source, source_uncorr, target = _get_gauss_data(n=20000)
@@ -461,10 +416,10 @@ def test_local_values():
 
     # Estimate local values
     settings = {'local_values': True}
-    est_cmi = OpenCLKraskovCMI(settings=settings)
+    est_cmi = CudaKraskovCMI(settings=settings)
     cmi = est_cmi.estimate(source, target, source_uncorr, n_chunks=n_chunks)
 
-    est_mi = OpenCLKraskovMI(settings=settings)
+    est_mi = CudaKraskovMI(settings=settings)
     mi = est_mi.estimate(source, target, n_chunks=n_chunks)
 
     mi_ch1 = np.mean(mi[0:chunklength])
@@ -474,17 +429,17 @@ def test_local_values():
 
     # Estimate non-local values for comparison
     settings = {'local_values': False}
-    est_cmi = OpenCLKraskovCMI(settings=settings)
+    est_cmi = CudaKraskovCMI(settings=settings)
     mi = est_cmi.estimate(source, target, source_uncorr, n_chunks=n_chunks)
 
-    est_mi = OpenCLKraskovMI(settings=settings)
+    est_mi = CudaKraskovMI(settings=settings)
     cmi = est_mi.estimate(source, target, n_chunks=n_chunks)
 
     # Report results
-    print('OpenCL MI result: {0:.4f} nats (chunk 1); {1:.4f} nats (chunk 2) '
+    print('CUDA MI result: {0:.4f} nats (chunk 1); {1:.4f} nats (chunk 2) '
           'expected to be close to {2:.4f} nats for uncorrelated '
           'Gaussians.'.format(mi_ch1, mi_ch2, expec_mi))
-    print('OpenCL CMI result: {0:.4f} nats (chunk 1); {1:.4f} nats (chunk 2) '
+    print('CUDA CMI result: {0:.4f} nats (chunk 1); {1:.4f} nats (chunk 2) '
           'expected to be close to {2:.4f} nats for uncorrelated '
           'Gaussians.'.format(cmi_ch1, cmi_ch2, expec_mi))
 
@@ -513,17 +468,17 @@ def test_insufficient_no_points():
         'source_target_delay': 1}
 
     # Test first settings combination with k==N
-    est = OpenCLKraskovMI(settings)
+    est = CudaKraskovMI(settings)
     with pytest.raises(RuntimeError): est.estimate(source1, target)
-    est = OpenCLKraskovCMI(settings)
+    est = CudaKraskovCMI(settings)
     with pytest.raises(RuntimeError): est.estimate(source1, target, target)
 
     # Test a second combination with a Theiler-correction != 0
-    settings['theiler_t'] = 1
-    settings['kraskov_k'] = 2
-    est = OpenCLKraskovMI(settings)
+    est_mi = CudaKraskovMI(settings)
+    est_mi.settings['theiler_t'] = 1
+    est_mi.settings['kraskov_k'] = 2
     with pytest.raises(RuntimeError): est.estimate(source1, target)
-    est = OpenCLKraskovCMI(settings)
+    est = CudaKraskovCMI(settings)
     with pytest.raises(RuntimeError): est.estimate(source1, target, target)
 
 
@@ -534,42 +489,67 @@ def test_multi_gpu():
     settings = {'debug': True, 'return_counts': True}
 
     # Get no. available devices on current platform.
-    device_list, _, _ = OpenCLKraskovCMI()._get_device(gpuid=0)
-    print('Device list: {}'.format(device_list))
-    n_devices = len(device_list)
+    cmi_est = CudaKraskovCMI(settings=settings)
+    n_devices = len(cmi_est.devices)
 
     # Try initialising estimator with unavailable GPU ID
     with pytest.raises(RuntimeError):
         settings['gpuid'] = n_devices + 1
-        OpenCLKraskovCMI(settings=settings)
+        CudaKraskovCMI(settings=settings)
 
-    # Run OpenCL estimator on available device with highest available ID.
+    # Run CUDA estimator on available device with highest available ID.
     settings['gpuid'] = n_devices - 1
-    ocl_est = OpenCLKraskovCMI(settings=settings)
+    est_cuda = CudaKraskovCMI(settings=settings)
 
-    (mi_ocl, dist, n_range_var1,
-     n_range_var2, n_range_cond) = ocl_est.estimate(source, target,
+    (mi_cuda, dist, n_range_var1,
+     n_range_var2, n_range_cond) = est_cuda.estimate(source, target,
                                                     source_uncorr)
 
-    mi_ocl = mi_ocl[0]
-    print('Expected MI: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
+    mi_cuda = mi_cuda[0]
+    print('Expected MI: {0:.4f} nats; CUDA MI result: {1:.4f} nats; '
           'expected to be close to 0 nats for uncorrelated '
-          'Gaussians.'.format(expected_mi, mi_ocl))
+          'Gaussians.'.format(expected_mi, mi_cuda))
+    assert np.isclose(mi_cuda, expected_mi, atol=0.05), (
+                        'MI estimation for uncorrelated Gaussians using the '
+                        'CUDA estimator failed (error larger 0.05).')
+
+
+@opencl_missing
+def test_compare_to_cuda():
+    # Compare CUDA estimates against OpenCL
+    expected_mi, source, source_uncorr, target = _get_gauss_data()
+
+    # Run OpenCL estimator.
+    est_ocl = OpenCLKraskovMI(settings={})
+    mi_ocl = est_ocl.estimate(source, target)[0]
+    # Run CUDA estimator.
+    est_cuda = CudaKraskovMI(settings={})
+    mi_cuda = est_cuda.estimate(source, target)[0]
+
+    print('CUDA MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
+          'expected to be close to {2:.4f} nats for correlated '
+          'Gaussians.'.format(mi_cuda, mi_ocl, expected_mi))
+    assert np.isclose(mi_cuda, expected_mi, atol=0.05), (
+                        'MI estimation for uncorrelated Gaussians using the '
+                        'CUDA estimator failed (error larger 0.05).')
     assert np.isclose(mi_ocl, expected_mi, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.05).')
+    assert np.isclose(mi_cuda, mi_ocl, atol=0.0001), (
+                        'MI estimation for uncorrelated Gaussians using the '
+                        'CUDA estimator failed (error larger 0.05).')
 
 
 if __name__ == '__main__':
-    test_cmi_no_cond_correlated_gaussians()
+    test_compare_to_cuda()
+    test_cmi_uncorrelated_gaussians_unequal_dims()
     test_multi_gpu()
     test_debug_setting()
     test_local_values()
-    test_amd_data_padding()
     test_mi_correlated_gaussians_two_chunks()
-    test_cmi_uncorrelated_gaussians_unequal_dims()
     test_cmi_uncorrelated_gaussians_three_dims()
     test_cmi_uncorrelated_gaussians()
+    test_cmi_no_cond_correlated_gaussians()
     test_cmi_correlated_gaussians()
     test_user_input()
     test_mi_correlated_gaussians()

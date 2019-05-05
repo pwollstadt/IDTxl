@@ -5,7 +5,7 @@ import numpy as np
 from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
 from idtxl.idtxl_utils import calculate_mi
-
+from test_active_information_storage import opencl_missing
 
 def test_multivariate_te_corr_gaussian(estimator=None):
     """Test multivariate TE estimation on correlated Gaussians.
@@ -245,6 +245,7 @@ def test_multivariate_te_mute():
     network_analysis.analyse_network(settings, data, targets=[1, 2])
 
 
+@opencl_missing
 def test_multivariate_te_multiple_runs():
     """Test TE estimation using multiple runs on the GPU.
 

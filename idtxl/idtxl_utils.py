@@ -1,6 +1,82 @@
 """Provide IDTxl utility functions."""
 import pprint
+import logging
+import logging.config
+import ctypes
+# from pkg_resources import resource_filename
+# import json
+import copy as cp
 import numpy as np
+
+
+def setup_logging(config_path=None, logging_level=logging.INFO):
+    # if config_path is None:
+    #     config_path = resource_filename(__name__, 'logging.json')
+    # with open(config_path, 'rt') as f:
+    #     config = json.load(f)
+    # logging.config.dictConfig(config)
+    logging.basicConfig(
+        format='%(asctime)s - %(levelname)-4s  [%(filename)s:%(funcName)20s():l %(lineno)d] %(message)s',
+        datefmt='%Y-%m-%d:%H:%M:%S',
+        level=logging_level)
+
+
+def get_cuda_lib():
+    libnames = ('libcuda.so', 'libcuda.dylib', 'cuda.dll')
+    for libname in libnames:
+        try:
+            return ctypes.CDLL(libname)
+        except OSError:
+            continue
+        else:
+            break
+    else:
+        raise OSError("could not load any of: " + ' '.join(libnames))
+
+
+class DotDict(dict):
+    """Dictionary with dot-notation access to values.
+
+    Provides the same functionality as a regular dict, but also allows
+    accessing values using dot-notation.
+
+    Example:
+
+        >>> from idtxl.results import DotDict
+        >>> d = DotDict({'a': 1, 'b': 2})
+        >>> d.a
+        >>> # Out: 1
+        >>> d['a']
+        >>> # Out: 1
+    """
+
+    __getattr__ = dict.get
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
+
+    def __dir__(self):
+        """Return dictionary keys as list of attributes."""
+        return self.keys()
+
+    def __deepcopy__(self, memo):
+        """Provide deep copy capabilities.
+
+        Following a fix described here:
+        https://github.com/aparo/pyes/pull/115/commits/d2076b385c38d6d00cebfe0df7b0d1ba8df934bc
+        """
+        dot_dict_copy = DotDict([
+            (cp.deepcopy(k, memo),
+             cp.deepcopy(v, memo)) for k, v in self.items()])
+        return dot_dict_copy
+
+    def __getstate__(self):
+        # For pickling the object
+        return self
+
+    def __setstate__(self, state):
+        # For un-pickling the object
+        self.update(state)
+        # self.__dict__ = self
 
 
 def swap_chars(s, i_1, i_2):
@@ -315,3 +391,4 @@ def conflicting_entries(dict_1, dict_2):
 def calculate_mi(corr):
     """Calculate mutual information from correlation coefficient."""
     return -0.5 * np.log(1 - corr**2)
+

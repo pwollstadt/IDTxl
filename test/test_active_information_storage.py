@@ -9,6 +9,8 @@ from idtxl.data import Data
 from idtxl.active_information_storage import ActiveInformationStorage
 from idtxl.estimators_jidt import JidtDiscreteCMI
 from test_estimators_jidt import jpype_missing
+from idtxl.idtxl_utils import get_cuda_lib
+
 
 package_missing = False
 try:
@@ -17,7 +19,16 @@ except ImportError as err:
     package_missing = True
 opencl_missing = pytest.mark.skipif(
     package_missing,
-    reason="Jpype is missing, JIDT estimators are not available")
+    reason="OpenCL is missing, OpenCL estimators are not available")
+
+package_missing = False
+try:
+    get_cuda_lib()
+except OSError as err:
+    package_missing = True
+cuda_missing = pytest.mark.skipif(
+    package_missing,
+    reason="CUDA is missing, CUDA GPU estimators are not available")
 
 
 @jpype_missing
@@ -195,9 +206,9 @@ def test_compare_jidt_open_cl_estimator():
     ais_jidt_2 = res_jidt._single_process[2].ais
     ais_opencl_3 = res_opencl._single_process[3].ais
     ais_jidt_3 = res_jidt._single_process[3].ais
-    print('AIS for MUTE data proc 2 - opencl: {0} and jidt: {1}'.format(
+    print('AIS for MUTE data proc 2 - opencl: {0:.4f} - jidt: {1:.4f}'.format(
         ais_opencl_2, ais_jidt_2))
-    print('AIS for MUTE data proc 3 - opencl: {0} and jidt: {1}'.format(
+    print('AIS for MUTE data proc 3 - opencl: {0:.4f} - jidt: {1:.4f}'.format(
         ais_opencl_3, ais_jidt_3))
     if not (ais_opencl_2 is np.nan or ais_jidt_2 is np.nan):
         assert (ais_opencl_2 - ais_jidt_2) < 0.05, (
@@ -211,6 +222,51 @@ def test_compare_jidt_open_cl_estimator():
     else:
         assert ais_opencl_3 is ais_jidt_3, (
             'AIS results differ between OpenCl and JIDT estimator.')
+
+
+@jpype_missing
+@cuda_missing
+def test_compare_jidt_cuda_estimator():
+    """Compare results from CUDA and JIDT estimators for AIS calculation."""
+    data = Data()
+    data.generate_mute_data(1000, 2)
+    settings = {
+        'cmi_estimator': 'CudaKraskovCMI',
+        'alpha_mi': 0.05,
+        'tail_mi': 'one_bigger',
+        'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_mi': 21,
+        'max_lag': 5,
+        'tau': 1
+        }
+    processes = [2, 3]
+    network_analysis = ActiveInformationStorage()
+    res_cuda = network_analysis.analyse_network(settings, data, processes)
+    settings['cmi_estimator'] = 'JidtKraskovCMI'
+    res_jidt = network_analysis.analyse_network(settings, data, processes)
+    # Note that I require equality up to three digits. Results become more
+    # exact for bigger data sizes, but this takes too long for a unit test.
+    ais_cuda_2 = res_cuda._single_process[2].ais
+    ais_jidt_2 = res_jidt._single_process[2].ais
+    ais_cuda_3 = res_cuda._single_process[3].ais
+    ais_jidt_3 = res_jidt._single_process[3].ais
+    print('AIS for MUTE data proc 2 - cuda: {0:.4f} - jidt: {1:.4f}'.format(
+        ais_cuda_2, ais_jidt_2))
+    print('AIS for MUTE data proc 3 - cuda: {0:.4f} - jidt: {1:.4f}'.format(
+        ais_cuda_3, ais_jidt_3))
+    if not (ais_cuda_2 is np.nan or ais_jidt_2 is np.nan):
+        assert (ais_cuda_2 - ais_jidt_2) < 0.05, (
+            'AIS results differ between CUDA and JIDT estimator.')
+    else:
+        assert ais_cuda_2 is ais_jidt_2, (
+            'AIS results differ between CUDA and JIDT estimator.')
+    if not (ais_cuda_3 is np.nan or ais_jidt_3 is np.nan):
+        assert (ais_cuda_3 - ais_jidt_3) < 0.05, (
+            'AIS results differ between CUDA and JIDT estimator.')
+    else:
+        assert ais_cuda_3 is ais_jidt_3, (
+            'AIS results differ between CUDA and JIDT estimator.')
 
 
 def test_discrete_input():
@@ -286,3 +342,4 @@ if __name__ == '__main__':
     test_ActiveInformationStorage_init()
     test_single_source_storage_gaussian()
     test_compare_jidt_open_cl_estimator()
+    test_compare_jidt_cuda_estimator()

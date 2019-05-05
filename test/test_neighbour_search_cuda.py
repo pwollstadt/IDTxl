@@ -1,4 +1,4 @@
-"""Provide unit tests for neighbour searches using OpenCl GPU-code.
+"""Provide unit tests for neighbour searches using CUDA GPU-code.
 
 Tests are based on unit tests by Pedro Mediano
 
@@ -8,33 +8,63 @@ measures/continuous/kraskov/cuda
 import logging
 import pytest
 import numpy as np
-from idtxl.estimators_opencl import OpenCLKraskovMI, OpenCLKraskovCMI
-from idtxl.idtxl_utils import setup_logging
+from idtxl.estimators_cuda import CudaKraskovMI, CudaKraskovCMI
+from idtxl.estimators_opencl import OpenCLKraskovCMI
+from idtxl.estimators_jidt import JidtKraskovCMI
+from idtxl.idtxl_utils import setup_logging, get_cuda_lib
+from test_active_information_storage import opencl_missing
+from test_estimators_jidt import jpype_missing
 
+
+package_missing = False
+try:
+    get_cuda_lib()
+    cuda_available = True
+except OSError as err:
+    package_missing = True
+    cuda_available = False
+cuda_missing = pytest.mark.skipif(
+    package_missing,
+    reason="CUDA is missing, CUDA GPU estimators are not available")
+try:
+    import pyopencl
+    opencl_available = True
+except ImportError as err:
+    opencl_available = False
 
 setup_logging(logging_level=logging.DEBUG)
 
-# Skip test module if pyopencl is not installed
-pytest.importorskip('pyopencl')
-
+# Set up estimators used by test functions.
 settings = {'theiler_t': 0,
             'kraskov_k': 1,
             'noise_level': 0,
             'gpu_id': 0,
+            'num_threads': 1,
             'debug': True,
             'return_counts': True,
             'verbose': True}
-EST_MI = OpenCLKraskovMI(settings)
-EST_CMI = OpenCLKraskovCMI(settings)
+if cuda_available:
+    EST_MI = CudaKraskovMI(settings)
+    EST_CMI = CudaKraskovCMI(settings)
+else:
+    print('CUDA missing')
+if opencl_available:
+    EST_CMI_OCL = OpenCLKraskovCMI(settings)
+    EST_CMI_JIDT = JidtKraskovCMI(settings)
+else:
+    print('OpenCL missing')
 
 
+@opencl_missing
+@jpype_missing
 def test_knn_one_dim():
     """Test kNN search in 1D."""
     n_chunks = 16
     pointset1 = np.expand_dims(np.array([-1, -1.2, 1, 1.1]), axis=1)
-    pointset2 = np.expand_dims(np.array([99, 99, 99, 99]), axis=1)  # dummy
+    pointset2 = np.expand_dims(np.array([90, 90, 90, 90]), axis=1)  # dummy
     pointset1 = np.tile(pointset1, (n_chunks, 1))
     pointset2 = np.tile(pointset2, (n_chunks, 1))
+    logging.debug('pointset1 shape: {}'.format(pointset1.shape))
     # Call MI estimator
     mi, dist1, npoints_x, npoints_y = EST_MI.estimate(
         pointset1, pointset2, n_chunks=n_chunks)
@@ -51,6 +81,33 @@ def test_knn_one_dim():
     assert np.isclose(dist2[1], 0.2), 'Distance 1 not correct.'
     assert np.isclose(dist2[2], 0.1), 'Distance 2 not correct.'
     assert np.isclose(dist2[3], 0.1), 'Distance 3 not correct.'
+
+    cmi_ocl, dist, npoints_x, npoints_y, npoints_c = EST_CMI_OCL.estimate(
+        pointset1, pointset2, pointset2, n_chunks=n_chunks)
+
+    cmi_jidt = EST_CMI_JIDT.estimate(
+        pointset1.astype(np.float64),
+        pointset2.astype(np.float64),
+        pointset2.astype(np.float64))
+
+    logging.debug('CMI (CUDA): {}, CMI (OpenCL): {} CMI (JIDT): {}'.format(
+        cmi[0], cmi_ocl[0], cmi_jidt))
+    assert cmi[0] == cmi_ocl[0], 'CUDA and OpenCL CMI estimates not the same.'
+
+
+def test_knn_one_dim_simple():
+    """Test kNN search in 1D."""
+    # Input dim by n_points as expected by CUDA neighbor-search functions.
+    pointset1 = np.array(
+        [[-1, -1.2, 1, 1.1], [99, 99, 99, 99]], dtype=np.float32)
+    logging.debug('pointset1 shape: {}'.format(pointset1.shape))
+
+    ind, dist = EST_MI.knn_search(
+        pointset1, pointset1, settings['kraskov_k'], settings['theiler_t'])
+    assert np.isclose(dist[0], 0.2), 'Distance 0 not correct.'
+    assert np.isclose(dist[1], 0.2), 'Distance 1 not correct.'
+    assert np.isclose(dist[2], 0.1), 'Distance 2 not correct.'
+    assert np.isclose(dist[3], 0.1), 'Distance 3 not correct.'
 
 
 def test_knn_two_dim():
@@ -332,10 +389,10 @@ def test_multiple_runs_two_dim():
         'debug': True,
         'return_counts': True,
         'max_mem': 5 * 1024 * 1024}
-    EST_MI = OpenCLKraskovMI(settings)
-    EST_CMI = OpenCLKraskovCMI(settings)
+    EST_MI = CudaKraskovMI(settings)
+    EST_CMI = CudaKraskovCMI(settings)
 
-    n_chunks = 50000
+    n_chunks = 5000
     pointset1 = np.array(
         [[-1, 0.5, 1.1, 2, 10, 11, 10.5, -100, -50, 666, 9999, 9999],
          [-1, 0.5, 1.1, 2, 98, -9, -200, 45.3, -53, 0.1, 9999, 9999]]).T.copy()
@@ -361,9 +418,46 @@ def test_multiple_runs_two_dim():
     assert np.isclose(dist2[3], 0.9), 'Distances 3 not correct.'
 
 
+@opencl_missing
+def test_range_search():
+    """Test neighbour counts returned by range search."""
+    n_chunks = 1
+    pointset1 = np.expand_dims(np.array([-1, -1.2, 1, 1.1]), axis=1)
+    pointset2 = np.expand_dims(np.array([90, 90, 90, 90]), axis=1)  # dummy
+    pointset1 = np.tile(pointset1, (n_chunks, 1))
+    pointset2 = np.tile(pointset2, (n_chunks, 1))
+    logging.debug('pointset1 shape: {}'.format(pointset1.shape))
+
+    # Call MI estimators
+    mi_ocl, dist_ocl, npoints_x_ocl, npoints_y_ocl = EST_CMI_OCL.estimate(
+         pointset1, pointset2, n_chunks=n_chunks)
+    mi, dist1, npoints_x, npoints_y = EST_MI.estimate(
+        pointset1, pointset2, n_chunks=n_chunks)
+    assert (npoints_x_ocl == npoints_x).all(), (
+        'Neighbour counts for Var 1 not identical.')
+    assert (npoints_y_ocl == npoints_y).all(), (
+        'Neighbour counts for Var 2 not identical.')
+
+    # Call CMI estimator with pointset2 as conditional (otherwise the MI
+    # estimator is called internally and the CMI estimator is never tested).
+    (cmi_ocl, dist_ocl, npoints_x_ocl,
+     npoints_y_ocl, npoints_c_ocl) = EST_CMI_OCL.estimate(
+         pointset1, pointset2, pointset2, n_chunks=n_chunks)
+    cmi, dist2, npoints_x, npoints_y, npoints_c, = EST_CMI.estimate(
+        pointset1, pointset2, pointset2, n_chunks=n_chunks)
+    assert (npoints_x_ocl == npoints_x).all(), (
+        'Neighbour counts for marginal space 1 not identical.')
+    assert (npoints_y_ocl == npoints_y).all(), (
+        'Neighbour counts for marginal space 2 not identical.')
+    assert (npoints_c_ocl == npoints_c).all(), (
+        'Neighbour counts for marginal space 3 not identical.')
+
+
 if __name__ == '__main__':
+    test_range_search()
     test_random_data()
     test_knn_one_dim()
+    test_knn_one_dim_simple()
     test_knn_two_dim()
     test_two_chunks_odd_dim()
     test_two_chunks_two_dim()

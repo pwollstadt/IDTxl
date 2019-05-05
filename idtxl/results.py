@@ -1,57 +1,12 @@
 """Provide results class for IDTxl network analysis."""
 import sys
 import warnings
-import copy as cp
 import numpy as np
 from . import idtxl_utils as utils
+from idtxl.idtxl_utils import DotDict
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 MIN_INT = -sys.maxsize - 1  # minimum integer for initializing adj. matrix
-
-
-class DotDict(dict):
-    """Dictionary with dot-notation access to values.
-
-    Provides the same functionality as a regular dict, but also allows
-    accessing values using dot-notation.
-
-    Example:
-
-        >>> from idtxl.results import DotDict
-        >>> d = DotDict({'a': 1, 'b': 2})
-        >>> d.a
-        >>> # Out: 1
-        >>> d['a']
-        >>> # Out: 1
-    """
-
-    __getattr__ = dict.get
-    __setattr__ = dict.__setitem__
-    __delattr__ = dict.__delitem__
-
-    def __dir__(self):
-        """Return dictionary keys as list of attributes."""
-        return self.keys()
-
-    def __deepcopy__(self, memo):
-        """Provide deep copy capabilities.
-
-        Following a fix described here:
-        https://github.com/aparo/pyes/pull/115/commits/d2076b385c38d6d00cebfe0df7b0d1ba8df934bc
-        """
-        dot_dict_copy = DotDict([
-            (cp.deepcopy(k, memo),
-             cp.deepcopy(v, memo)) for k, v in self.items()])
-        return dot_dict_copy
-
-    def __getstate__(self):
-        # For pickling the object
-        return self
-
-    def __setstate__(self, state):
-        # For un-pickling the object
-        self.update(state)
-        # self.__dict__ = self
 
 
 class AdjacencyMatrix():
