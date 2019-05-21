@@ -16,3 +16,5 @@ done
 rm my_checkpoint.ckp
 rm my_checkpoint.dat
 rm my_checkpoint.json
+rm $cmp
+rm $file
