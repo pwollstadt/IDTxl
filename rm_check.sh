@@ -8,9 +8,8 @@ end=".ckp"
 until [ $counter -gt 100 ]
 do
 	rm $file$counter$end
-	counter=$((counter+1))
-
 	rm $cmp$counter
+	counter=$((counter+1))
 done
 
 rm my_checkpoint.ckp
