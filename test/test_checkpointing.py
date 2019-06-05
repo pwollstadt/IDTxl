@@ -99,17 +99,13 @@ def test_checkpoint_equal():
     filename_ckp = './my_checkpoint'
     filepath = "test/save_all_checkpoints.sh"
     # Running Script to save all Checkpoints
-    # PROBLEM: CANNOT START SUBPROCESS PROPERLY
-    #os.system("sh " + filepath + " " + filename_ckp  + ".ckp.old")
-    #subprocess.Popen("sh " + filepath + " " + filename_ckp  + ".ckp.old")
     subprocess.Popen(['./' + filepath, filename_ckp  + ".ckp.old"])
-    #subprocess.Popen(["bash", "test/save_all_checkpoints.sh")
+
     """Test resuming from manually generated checkpoint."""
     # Generate test data
     data = Data()
     data.generate_mute_data(n_samples=1000, n_replications=5)
 
-    # Running Script to save all Checkpoints
 
     # Initialise analysis object and define settings
     network_analysis = MultivariateTE()
@@ -140,24 +136,16 @@ def test_checkpoint_equal():
     data, settings, targets, sources = network_analysis_res.resume_checkpoint(
         filename_ckp)
 
-
-    # Test if variables were added correctly
-    for i in range(len(targets)):
-        network_analysis_res._initialise(settings, data, sources, targets[i])
-        assert network_analysis_res.selected_vars_full == add_vars[i], (
-            'Variables were not added correctly for target {0}.'.format(
-                targets[i]))
-
     results = network_analysis_res.analyse_network(
         settings=settings, data=data, targets=targets, sources=sources)
 
+    # Closing running script which saves all checkpoints seperately
     os.system("ps -ef | grep save_all_checkpoints.sh | grep -v grep | awk '{print $2}' | xargs kill")
-
-
     proc = subprocess.Popen(["ls -dq *my_checkpoint.ckp.old* | wc -l "], stdout=subprocess.PIPE, shell=True)
     (out, err) = proc.communicate()
     checkpoints = int(out)
 
+    #Resuming Analysis from every checkpoint created
     os.system("mv my_checkpoint.ckp cmp_checkpoint.ckp")
     for i in range(1, checkpoints + 1):
         check = './my_checkpoint.ckp.old'
