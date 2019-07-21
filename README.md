@@ -1,3 +1,5 @@
+[![DOI](http://joss.theoj.org/papers/10.21105/joss.01081/status.svg)](https://doi.org/10.21105/joss.01081)
+
 # IDTxl
 
 The **I**nformation **D**ynamics **T**oolkit **xl** (IDTxl) is a comprehensive software
@@ -20,12 +22,12 @@ computing engines for both GPU and CPU platforms. Written for Python3.4.3+.
 To **get started** have a look at the [wiki](https://github.com/pwollstadt/IDTxl/wiki) and the [documentation](http://pwollstadt.github.io/IDTxl/). For further discussions, join [IDTxl's google group](https://groups.google.com/forum/#!forum/idtxl).
 
 ## How to cite
-P. Wollstadt, J. T. Lizier, R. Vicente, C. Finn, M. Martinez-Zarzuela, P. Mediano, L. Novelli, M. Wibral (2018). _IDTxl: The Information Dynamics Toolkit xl: a Python package for the efficient analysis of multivariate information dynamics in networks._ ArXiv preprint: https://arxiv.org/abs/1807.10459.
+P. Wollstadt, J. T. Lizier, R. Vicente, C. Finn, M. Martinez-Zarzuela, P. Mediano, L. Novelli, M. Wibral (2018). _IDTxl: The Information Dynamics Toolkit xl: a Python package for the efficient analysis of multivariate information dynamics in networks._ Journal of Open Source Software, 4(34), 1081. [https://doi.org/10.21105/joss.01081](https://doi.org/10.21105/joss.01081).
 
 ## Contributors
 
 - [Patricia Wollstadt](http://patriciawollstadt.de/), Brain Imaging Center, MEG Unit, Goethe-University, Frankfurt, Germany
-- Michael Wibral, Campus Institute for Dynamics of Biological Networks, Georg August University, Göttingen, Germany
+- [Michael Wibral](http://www.michael-wibral.de/), Campus Institute for Dynamics of Biological Networks, Georg August University, Göttingen, Germany
 - [Joseph T. Lizier](http://lizier.me/joseph/), Centre for Complex Systems, The University of Sydney, Sydney, Australia
 - [Raul Vicente](http://neuro.cs.ut.ee/people/), Computational Neuroscience Lab, Institute of Computer Science, University of Tartu, Tartu, Estonia
 - Conor Finn, Centre for Complex Systems, The University of Sydney, Sydney, Australia
