@@ -50,9 +50,11 @@ This project has been supported by funding through:
 + Multivariate transfer entropy: *Lizier & Rubinov, 2012, Preprint, Technical Report 25/2012,
 Max Planck Institute for Mathematics in the Sciences. Available from:
 http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf*
-+ Kraskov estimator: *Kraskov et al., 2004, Phys Rev E 69, 066138*
-+ Nonuniform embedding: *Faes et al., 2011, Phys Rev E 83, 051112*
-+ Faes' compensated transfer entropy: *Faes et al., 2013, Entropy 15, 198-219*
++ Hierarchical statistical testing for multivariate transfer entropy estimation: [*Novelli et al., 2019, Network Neurosci 3(3)*](https://www.mitpressjournals.org/doi/full/10.1162/netn_a_00092)
++ Kraskov estimator: [*Kraskov et al., 2004, Phys Rev E 69, 066138*](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.69.066138)
++ Nonuniform embedding: [*Faes et al., 2011, Phys Rev E 83, 051112*](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.83.051112)
++ Faes' compensated transfer entropy: [*Faes et al., 2013, Entropy 15, 198-219*](https://www.mdpi.com/1099-4300/15/1/198)
 + PID: *Williams & Beer, 2010, arXiv preprint: http://arxiv.org/abs/1004.2515*
-+ PID estimators: *Bertschinger et al., 2014, Entropy, 16(4); Makkeh et al., 2017, Entropy, 19(10),
-  Makkeh et al., 2018, Entropy, 20(271)*
++ PID estimators: *[Bertschinger et al., 2014, Entropy, 16(4)](https://www.mdpi.com/1099-4300/16/4/2161); 
+[Makkeh et al., 2017, Entropy, 19(10)](https://www.mdpi.com/1099-4300/19/10/530);
+[Makkeh et al., 2018, Entropy, 20(271)](https://www.mdpi.com/1099-4300/20/4/271)*
