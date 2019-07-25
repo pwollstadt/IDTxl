@@ -595,7 +595,7 @@ class JidtDiscreteCMI(JidtDiscrete):
         cond_base = int(np.power(self.settings['alphc'], cond_dim))
         try:
             self.calc.initialise(alph1_base, alph2_base, cond_base)
-        except jp.JavaException:
+        except: # Handles both jp.JException (JPype v0.7) and jp.JavaException (JPype < v0.7)
             # Only possible exception that can be raised here
             #  (if all bases >= 2) is a Java OutOfMemoryException:
             assert(alph1_base >= 2)
@@ -753,7 +753,7 @@ class JidtDiscreteMI(JidtDiscrete):
         try:
             self.calc.initialise(base_for_var1, base_for_var2,
                                     self.settings['lag_mi'])
-        except jp.JavaException:
+        except: # Handles both jp.JException (JPype v0.7) and jp.JavaException (JPype < v0.7)
             # Only possible exception that can be raised here
             #  (if base_for_var* >= 2) is a Java OutOfMemoryException:
             assert(base_for_var1 >= 2)
@@ -1091,7 +1091,7 @@ class JidtDiscreteAIS(JidtDiscrete):
         # And finally make the AIS calculation:
         try:
             self.calc.initialise(self.settings['alph'], self.settings['history'])
-        except jp.JavaException:
+        except: # Handles both jp.JException (JPype v0.7) and jp.JavaException (JPype < v0.7)
             # Only possible exception that can be raised here
             #  (if self.settings['alph'] >= 2) is a Java OutOfMemoryException:
             assert(self.settings['alph'] >= 2)
@@ -1605,7 +1605,7 @@ class JidtDiscreteTE(JidtDiscrete):
                               self.settings['history_source'],
                               self.settings['tau_source'],
                               self.settings['source_target_delay'])
-        except jp.JavaException:
+        except: # Handles both jp.JException (JPype v0.7) and jp.JavaException (JPype < v0.7)
             # Only possible exception that can be raised here
             #  (if max_base >= 2) is a Java OutOfMemoryException:
             assert(max_base >= 2)
