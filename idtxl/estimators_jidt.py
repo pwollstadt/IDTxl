@@ -519,11 +519,16 @@ class JidtDiscreteCMI(JidtDiscrete):
         super().__init__(settings)
 
         # Start JAVA virtual machine and create JAVA object. Add JAVA object to
-        # instance, the discrete estimator requires the variable dimensions
-        # upon instantiation.
+        # instance
         self._start_jvm()
-        self.CalcClass = (jp.JPackage('infodynamics.measures.discrete').
+        CalcClass = (jp.JPackage('infodynamics.measures.discrete').
                           ConditionalMutualInformationCalculatorDiscrete)
+        self.calc = CalcClass()
+        self.calc.setDebug(self.settings['debug'])
+
+        # Keep a reference to an MI calculator if we need to use it
+        #  (memory used here is minimal, and better than recreating it each time)
+        self.mi_calc = JidtDiscreteMI(self.settings)
 
     def estimate(self, var1, var2, conditional=None, return_calc=False):
         """Estimate conditional mutual information.
@@ -558,10 +563,9 @@ class JidtDiscreteCMI(JidtDiscrete):
         """
         # Calculate an MI if no conditional was provided
         if (conditional is None) or (self.settings['alphc'] == 0):
-            est = JidtDiscreteMI(self.settings)
             # Return value will be just the estimate if return_calc is False,
             #  or estimate plus the JIDT MI calculator if return_calc is True:
-            return est.estimate(var1, var2, return_calc)
+            return self.mi_calc.estimate(var1, var2, return_calc)
         else:
             assert(conditional.size != 0), 'Conditional Array is empty.'
 
@@ -590,7 +594,7 @@ class JidtDiscreteCMI(JidtDiscrete):
         alph2_base = int(np.power(self.settings['alph2'], var2_dim))
         cond_base = int(np.power(self.settings['alphc'], cond_dim))
         try:
-            calc = self.CalcClass(alph1_base, alph2_base, cond_base)
+            self.calc.initialise(alph1_base, alph2_base, cond_base)
         except jp.JavaException:
             # Only possible exception that can be raised here
             #  (if all bases >= 2) is a Java OutOfMemoryException:
@@ -601,23 +605,21 @@ class JidtDiscreteCMI(JidtDiscrete):
                 'discrete estimator with alph1_base = ' + str(alph1_base) +
                 ', alph2_base = ' + str(alph2_base) + ', cond_base = ' +
                 str(cond_base) + '. Try re-running increasing Java heap size')
-        calc.setDebug(self.settings['debug'])
-        calc.initialise()
         # Unfortunately no faster way to pass numpy arrays in than this list
         # conversion
-        calc.addObservations(jp.JArray(jp.JInt, 1)(var1.tolist()),
+        self.calc.addObservations(jp.JArray(jp.JInt, 1)(var1.tolist()),
                              jp.JArray(jp.JInt, 1)(var2.tolist()),
                              jp.JArray(jp.JInt, 1)(conditional.tolist()))
         if self.settings['local_values']:
-            result = np.array(calc.computeLocalFromPreviousObservations(
+            result = np.array(self.calc.computeLocalFromPreviousObservations(
                 jp.JArray(jp.JInt, 1)(var1.tolist()),
                 jp.JArray(jp.JInt, 1)(var2.tolist()),
                 jp.JArray(jp.JInt, 1)(conditional.tolist())
                 ))
         else:
-            result = calc.computeAverageLocalOfObservations()
+            result = self.calc.computeAverageLocalOfObservations()
         if return_calc:
-            return (result, calc)
+            return (result, self.calc)
         else:
             return result
 
@@ -696,11 +698,13 @@ class JidtDiscreteMI(JidtDiscrete):
         self.settings.setdefault('alph2', int(2))
 
         # Start JAVA virtual machine and create JAVA object. Add JAVA object to
-        # instance, the discrete estimator requires the variable dimensions
-        # upon instantiation.
+        # instance.
         self._start_jvm()
-        self.CalcClass = (jp.JPackage('infodynamics.measures.discrete').
+        CalcClass = (jp.JPackage('infodynamics.measures.discrete').
                           MutualInformationCalculatorDiscrete)
+        self.calc = CalcClass()
+        self.calc.setDebug(self.settings['debug'])
+        
 
     def estimate(self, var1, var2, return_calc=False):
         """Estimate mutual information.
@@ -747,7 +751,7 @@ class JidtDiscreteMI(JidtDiscrete):
         base_for_var1 = int(np.power(self.settings['alph1'], var1_dim))
         base_for_var2 = int(np.power(self.settings['alph2'], var2_dim))
         try:
-            calc = self.CalcClass(base_for_var1, base_for_var2,
+            self.calc.initialise(base_for_var1, base_for_var2,
                                     self.settings['lag_mi'])
         except jp.JavaException:
             # Only possible exception that can be raised here
@@ -758,21 +762,19 @@ class JidtDiscreteMI(JidtDiscrete):
                 'discrete estimator with bases = ' + str(base_for_var1) +
                  ' and ' + str(base_for_var2) +
                  '. Try re-running increasing Java heap size')
-        calc.setDebug(self.settings['debug'])
-        calc.initialise()
 
         # Unfortunately no faster way to pass numpy arrays in than this list
         # conversion
-        calc.addObservations(jp.JArray(jp.JInt, 1)(var1.tolist()),
+        self.calc.addObservations(jp.JArray(jp.JInt, 1)(var1.tolist()),
                              jp.JArray(jp.JInt, 1)(var2.tolist()))
         if self.settings['local_values']:
-            result = np.array(calc.computeLocalFromPreviousObservations(
+            result = np.array(self.calc.computeLocalFromPreviousObservations(
                 jp.JArray(jp.JInt, 1)(var1.tolist()),
                 jp.JArray(jp.JInt, 1)(var2.tolist())))
         else:
-            result = calc.computeAverageLocalOfObservations()
+            result = self.calc.computeAverageLocalOfObservations()
         if return_calc:
-            return (result, calc)
+            return (result, self.calc)
         else:
             return result
 
@@ -1034,8 +1036,10 @@ class JidtDiscreteAIS(JidtDiscrete):
 
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
-        self.CalcClass = (jp.JPackage('infodynamics.measures.discrete').
+        CalcClass = (jp.JPackage('infodynamics.measures.discrete').
                           ActiveInformationCalculatorDiscrete)
+        self.calc = CalcClass()
+        self.calc.setDebug(self.settings['debug'])
         super().__init__(settings)
 
     def estimate(self, process, return_calc=False):
@@ -1086,7 +1090,7 @@ class JidtDiscreteAIS(JidtDiscrete):
 
         # And finally make the AIS calculation:
         try:
-            calc = self.CalcClass(self.settings['alph'], self.settings['history'])
+            self.calc.initialise(self.settings['alph'], self.settings['history'])
         except jp.JavaException:
             # Only possible exception that can be raised here
             #  (if self.settings['alph'] >= 2) is a Java OutOfMemoryException:
@@ -1095,17 +1099,16 @@ class JidtDiscreteAIS(JidtDiscrete):
                 'discrete estimator with alph = ' + str(self.settings['alph']) +
                  ' and history = ' + str(self.settings['history']) +
                  '. Try re-running increasing Java heap size')
-        calc.initialise()
         # Unfortunately no faster way to pass numpy arrays in than this list
         # conversion
-        calc.addObservations(jp.JArray(jp.JInt, 1)(process.tolist()))
+        self.calc.addObservations(jp.JArray(jp.JInt, 1)(process.tolist()))
         if self.settings['local_values']:
-            result = np.array(calc.computeLocalFromPreviousObservations(
+            result = np.array(self.calc.computeLocalFromPreviousObservations(
                                     jp.JArray(jp.JInt, 1)(process.tolist())))
         else:
-            result = calc.computeAverageLocalOfObservations()
+            result = self.calc.computeAverageLocalOfObservations()
         if return_calc:
-            return (result, calc)
+            return (result, self.calc)
         else:
             return result
 
@@ -1554,8 +1557,10 @@ class JidtDiscreteTE(JidtDiscrete):
 
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
-        self.CalcClass = (jp.JPackage('infodynamics.measures.discrete').
+        CalcClass = (jp.JPackage('infodynamics.measures.discrete').
                           TransferEntropyCalculatorDiscrete)
+        self.calc = CalcClass()
+        self.calc.setDebug(self.settings['debug'])
 
     def estimate(self, source, target, return_calc=False):
         """Estimate transfer entropy from a source to a target variable.
@@ -1594,7 +1599,7 @@ class JidtDiscreteTE(JidtDiscrete):
         # And finally make the TE calculation:
         max_base = max(self.settings['alph1'], self.settings['alph2'])
         try:
-            calc = self.CalcClass(max_base,
+            self.calc.initialise(max_base,
                               self.settings['history_target'],
                               self.settings['tau_target'],
                               self.settings['history_source'],
@@ -1609,19 +1614,18 @@ class JidtDiscreteTE(JidtDiscrete):
                  ' and history_target = ' + str(self.settings['history_target']) +
                  ' and history_source = ' + str(self.settings['history_source']) +
                  '. Try re-running increasing Java heap size')
-        calc.initialise()
         # Unfortunately no faster way to pass numpy arrays in than this list
         # conversion
-        calc.addObservations(jp.JArray(jp.JInt, 1)(source.tolist()),
+        self.calc.addObservations(jp.JArray(jp.JInt, 1)(source.tolist()),
                              jp.JArray(jp.JInt, 1)(target.tolist()))
         if self.settings['local_values']:
-            result = np.array(calc.computeLocalFromPreviousObservations(
+            result = np.array(self.calc.computeLocalFromPreviousObservations(
                 jp.JArray(jp.JInt, 1)(source.tolist()),
                 jp.JArray(jp.JInt, 1)(target.tolist())))
         else:
-            result = calc.computeAverageLocalOfObservations()
+            result = self.calc.computeAverageLocalOfObservations()
         if return_calc:
-            return (result, calc)
+            return (result, self.calc)
         else:
             return result
 
