@@ -517,7 +517,7 @@ def max_statistic_sequential(analysis_setup, data):
             analysis_setup.settings['n_perm_max_seq'] = (
                 analysis_setup.settings['n_perm_min_stat'])
             n_permutations = analysis_setup.settings['n_perm_max_seq']
-        except AttributeError:  # is surr table is None, use default
+        except KeyError:  # is surr table is None, use default
             analysis_setup.settings['n_perm_max_seq'] = 500
             n_permutations = analysis_setup.settings['n_perm_max_seq']
     analysis_setup.settings.setdefault('alpha_max_seq', 0.05)
