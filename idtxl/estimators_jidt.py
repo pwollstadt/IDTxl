@@ -463,7 +463,7 @@ class JidtKraskovCMI(JidtKraskov):
         self._check_number_of_points(var1.shape[0])
 
         self.calc.initialise(var1.shape[1], var2.shape[1], cond.shape[1])
-        self.calc.setObservations(var1, var2, cond)
+        self.calc.setObservations2D(var1, var2, cond)
         if self.settings['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
         else:
@@ -889,7 +889,7 @@ class JidtKraskovMI(JidtKraskov):
         self._check_number_of_points(var1.shape[0])
 
         self.calc.initialise(var1.shape[1], var2.shape[1])
-        self.calc.setObservations(var1, var2)
+        self.calc.setObservations2D(var1, var2)
 
         if self.settings['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
@@ -1275,7 +1275,7 @@ class JidtGaussianMI(JidtGaussian):
             var2 = var2[self.settings['lag_mi']:, :]
 
         self.calc.initialise(var1.shape[1], var2.shape[1])
-        self.calc.setObservations(var1, var2)
+        self.calc.setObservations2D(var1, var2)
         if self.settings['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
         else:
@@ -1361,7 +1361,7 @@ class JidtGaussianCMI(JidtGaussian):
                 var1.shape[0], cond.shape[0]))
 
         self.calc.initialise(var1.shape[1], var2.shape[1], cond.shape[1])
-        self.calc.setObservations(var1, var2, cond)
+        self.calc.setObservations2D(var1, var2, cond)
         if self.settings['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
         else:
