@@ -260,7 +260,7 @@ class Estimator(metaclass=ABCMeta):
         Returns:
             numpy array
                 estimated values for each chunk
-                
+
         Raises:
             ex.AlgorithmExhaustedError
                 Raised from self.estimate() when calculation cannot be made

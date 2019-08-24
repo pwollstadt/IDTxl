@@ -414,11 +414,13 @@ class JidtKraskovCMI(JidtKraskov):
         assert (settings['algorithm_num'] == 1) or (settings['algorithm_num'] == 2), (
             'Algorithm number must be 1 or 2')
         if (settings['algorithm_num'] == 1):
-            CalcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
-                     ConditionalMutualInfoCalculatorMultiVariateKraskov1)
+            CalcClass = (
+                jp.JPackage('infodynamics.measures.continuous.kraskov').
+                ConditionalMutualInfoCalculatorMultiVariateKraskov1)
         else:
-            CalcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
-                     ConditionalMutualInfoCalculatorMultiVariateKraskov2)
+            CalcClass = (
+                jp.JPackage('infodynamics.measures.continuous.kraskov').
+                ConditionalMutualInfoCalculatorMultiVariateKraskov2)
         super().__init__(CalcClass, settings)
 
     def estimate(self, var1, var2, conditional=None):
@@ -463,7 +465,7 @@ class JidtKraskovCMI(JidtKraskov):
         self._check_number_of_points(var1.shape[0])
 
         self.calc.initialise(var1.shape[1], var2.shape[1], cond.shape[1])
-        self.calc.setObservations(var1, var2, cond)
+        self.calc.setObservations2D(var1, var2, cond)
         if self.settings['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
         else:
@@ -519,11 +521,16 @@ class JidtDiscreteCMI(JidtDiscrete):
         super().__init__(settings)
 
         # Start JAVA virtual machine and create JAVA object. Add JAVA object to
-        # instance, the discrete estimator requires the variable dimensions
-        # upon instantiation.
+        # instance
         self._start_jvm()
-        self.CalcClass = (jp.JPackage('infodynamics.measures.discrete').
-                          ConditionalMutualInformationCalculatorDiscrete)
+        CalcClass = (jp.JPackage('infodynamics.measures.discrete').
+                     ConditionalMutualInformationCalculatorDiscrete)
+        self.calc = CalcClass()
+        self.calc.setDebug(self.settings['debug'])
+
+        # Keep a reference to an MI calculator if we need to use it (memory
+        # used here is minimal, and better than recreating it each time)
+        self.mi_calc = JidtDiscreteMI(self.settings)
 
     def estimate(self, var1, var2, conditional=None, return_calc=False):
         """Estimate conditional mutual information.
@@ -558,10 +565,9 @@ class JidtDiscreteCMI(JidtDiscrete):
         """
         # Calculate an MI if no conditional was provided
         if (conditional is None) or (self.settings['alphc'] == 0):
-            est = JidtDiscreteMI(self.settings)
             # Return value will be just the estimate if return_calc is False,
             #  or estimate plus the JIDT MI calculator if return_calc is True:
-            return est.estimate(var1, var2, return_calc)
+            return self.mi_calc.estimate(var1, var2, return_calc)
         else:
             assert(conditional.size != 0), 'Conditional Array is empty.'
 
@@ -590,34 +596,33 @@ class JidtDiscreteCMI(JidtDiscrete):
         alph2_base = int(np.power(self.settings['alph2'], var2_dim))
         cond_base = int(np.power(self.settings['alphc'], cond_dim))
         try:
-            calc = self.CalcClass(alph1_base, alph2_base, cond_base)
-        except jp.JavaException:
-            # Only possible exception that can be raised here
-            #  (if all bases >= 2) is a Java OutOfMemoryException:
+            self.calc.initialise(alph1_base, alph2_base, cond_base)
+        except:
+            # Handles both jp.JException (JPype v0.7) and jp.JavaException
+            # (JPype < v0.7). Only possible exception that can be raised here
+            # (if all bases >= 2) is a Java OutOfMemoryException:
             assert(alph1_base >= 2)
             assert(alph2_base >= 2)
             assert(cond_base >= 2)
-            raise ex.JidtOutOfMemoryError('Cannot instantiate JIDT CMI '
-                'discrete estimator with alph1_base = ' + str(alph1_base) +
-                ', alph2_base = ' + str(alph2_base) + ', cond_base = ' +
-                str(cond_base) + '. Try re-running increasing Java heap size')
-        calc.setDebug(self.settings['debug'])
-        calc.initialise()
+            raise ex.JidtOutOfMemoryError(
+                'Cannot instantiate JIDT CMI discrete estimator with '
+                'alph1_base = {}, alph2_base = {}, cond_base = {}. Try '
+                're-running increasing Java heap size.'.format(
+                    alph1_base, alph2_base, cond_base))
         # Unfortunately no faster way to pass numpy arrays in than this list
         # conversion
-        calc.addObservations(jp.JArray(jp.JInt, 1)(var1.tolist()),
-                             jp.JArray(jp.JInt, 1)(var2.tolist()),
-                             jp.JArray(jp.JInt, 1)(conditional.tolist()))
+        self.calc.addObservations(jp.JArray(jp.JInt, 1)(var1.tolist()),
+                                  jp.JArray(jp.JInt, 1)(var2.tolist()),
+                                  jp.JArray(jp.JInt, 1)(conditional.tolist()))
         if self.settings['local_values']:
-            result = np.array(calc.computeLocalFromPreviousObservations(
+            result = np.array(self.calc.computeLocalFromPreviousObservations(
                 jp.JArray(jp.JInt, 1)(var1.tolist()),
                 jp.JArray(jp.JInt, 1)(var2.tolist()),
-                jp.JArray(jp.JInt, 1)(conditional.tolist())
-                ))
+                jp.JArray(jp.JInt, 1)(conditional.tolist())))
         else:
-            result = calc.computeAverageLocalOfObservations()
+            result = self.calc.computeAverageLocalOfObservations()
         if return_calc:
-            return (result, calc)
+            return (result, self.calc)
         else:
             return result
 
@@ -696,11 +701,12 @@ class JidtDiscreteMI(JidtDiscrete):
         self.settings.setdefault('alph2', int(2))
 
         # Start JAVA virtual machine and create JAVA object. Add JAVA object to
-        # instance, the discrete estimator requires the variable dimensions
-        # upon instantiation.
+        # instance.
         self._start_jvm()
-        self.CalcClass = (jp.JPackage('infodynamics.measures.discrete').
-                          MutualInformationCalculatorDiscrete)
+        CalcClass = (jp.JPackage('infodynamics.measures.discrete').
+                     MutualInformationCalculatorDiscrete)
+        self.calc = CalcClass()
+        self.calc.setDebug(self.settings['debug'])
 
     def estimate(self, var1, var2, return_calc=False):
         """Estimate mutual information.
@@ -747,32 +753,31 @@ class JidtDiscreteMI(JidtDiscrete):
         base_for_var1 = int(np.power(self.settings['alph1'], var1_dim))
         base_for_var2 = int(np.power(self.settings['alph2'], var2_dim))
         try:
-            calc = self.CalcClass(base_for_var1, base_for_var2,
-                                    self.settings['lag_mi'])
-        except jp.JavaException:
-            # Only possible exception that can be raised here
-            #  (if base_for_var* >= 2) is a Java OutOfMemoryException:
+            self.calc.initialise(base_for_var1, base_for_var2,
+                                 self.settings['lag_mi'])
+        except:
+            # Handles both jp.JException (JPype v0.7) and jp.JavaException
+            # (JPype < v0.7). Only possible exception that can be raised here
+            # (if base_for_var* >= 2) is a Java OutOfMemoryException:
             assert(base_for_var1 >= 2)
             assert(base_for_var2 >= 2)
-            raise ex.JidtOutOfMemoryError('Cannot instantiate JIDT MI '
-                'discrete estimator with bases = ' + str(base_for_var1) +
-                 ' and ' + str(base_for_var2) +
-                 '. Try re-running increasing Java heap size')
-        calc.setDebug(self.settings['debug'])
-        calc.initialise()
+            raise ex.JidtOutOfMemoryError(
+                'Cannot instantiate JIDT MI discrete estimator with bases = {}'
+                ' and {}. Try re-running increasing Java heap size.'.format(
+                    base_for_var1, base_for_var2))
 
         # Unfortunately no faster way to pass numpy arrays in than this list
         # conversion
-        calc.addObservations(jp.JArray(jp.JInt, 1)(var1.tolist()),
-                             jp.JArray(jp.JInt, 1)(var2.tolist()))
+        self.calc.addObservations(jp.JArray(jp.JInt, 1)(var1.tolist()),
+                                  jp.JArray(jp.JInt, 1)(var2.tolist()))
         if self.settings['local_values']:
-            result = np.array(calc.computeLocalFromPreviousObservations(
+            result = np.array(self.calc.computeLocalFromPreviousObservations(
                 jp.JArray(jp.JInt, 1)(var1.tolist()),
                 jp.JArray(jp.JInt, 1)(var2.tolist())))
         else:
-            result = calc.computeAverageLocalOfObservations()
+            result = self.calc.computeAverageLocalOfObservations()
         if return_calc:
-            return (result, calc)
+            return (result, self.calc)
         else:
             return result
 
@@ -849,10 +854,10 @@ class JidtKraskovMI(JidtKraskov):
             'Algorithm number must be 1 or 2')
         if (settings['algorithm_num'] == 1):
             CalcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
-                     MutualInfoCalculatorMultiVariateKraskov1)
+                         MutualInfoCalculatorMultiVariateKraskov1)
         else:
             CalcClass = (jp.JPackage('infodynamics.measures.continuous.kraskov').
-                     MutualInfoCalculatorMultiVariateKraskov2)
+                         MutualInfoCalculatorMultiVariateKraskov2)
         super().__init__(CalcClass, settings)
 
         # Get lag and shift second variable to account for a lag if requested
@@ -887,7 +892,7 @@ class JidtKraskovMI(JidtKraskov):
         self._check_number_of_points(var1.shape[0])
 
         self.calc.initialise(var1.shape[1], var2.shape[1])
-        self.calc.setObservations(var1, var2)
+        self.calc.setObservations2D(var1, var2)
 
         if self.settings['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
@@ -1031,12 +1036,14 @@ class JidtDiscreteAIS(JidtDiscrete):
             pass  # Do nothing and use the default for alph set below
         settings.setdefault('alph', int(2))
         assert settings['alph'] >= 2, 'Number of bins must be >= 2'
+        super().__init__(settings)
 
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
-        self.CalcClass = (jp.JPackage('infodynamics.measures.discrete').
-                          ActiveInformationCalculatorDiscrete)
-        super().__init__(settings)
+        CalcClass = (jp.JPackage('infodynamics.measures.discrete').
+                     ActiveInformationCalculatorDiscrete)
+        self.calc = CalcClass()
+        self.calc.setDebug(self.settings['debug'])
 
     def estimate(self, process, return_calc=False):
         """Estimate active information storage.
@@ -1086,26 +1093,28 @@ class JidtDiscreteAIS(JidtDiscrete):
 
         # And finally make the AIS calculation:
         try:
-            calc = self.CalcClass(self.settings['alph'], self.settings['history'])
-        except jp.JavaException:
-            # Only possible exception that can be raised here
-            #  (if self.settings['alph'] >= 2) is a Java OutOfMemoryException:
+            self.calc.initialise(
+                self.settings['alph'], self.settings['history'])
+        except:
+            # Handles both jp.JException (JPype v0.7) and jp.JavaException
+            # (JPype < v0.7). Only possible exception that can be raised here
+            # (if self.settings['alph'] >= 2) is a Java OutOfMemoryException:
             assert(self.settings['alph'] >= 2)
-            raise ex.JidtOutOfMemoryError('Cannot instantiate JIDT AIS '
-                'discrete estimator with alph = ' + str(self.settings['alph']) +
-                 ' and history = ' + str(self.settings['history']) +
-                 '. Try re-running increasing Java heap size')
-        calc.initialise()
+            raise ex.JidtOutOfMemoryError(
+                'Cannot instantiate JIDT AIS discrete estimator with alph = {}'
+                ' and history = {}. Try re-running increasing Java heap '
+                'size.'.format(
+                    self.settings['alph'], self.settings['history']))
         # Unfortunately no faster way to pass numpy arrays in than this list
         # conversion
-        calc.addObservations(jp.JArray(jp.JInt, 1)(process.tolist()))
+        self.calc.addObservations(jp.JArray(jp.JInt, 1)(process.tolist()))
         if self.settings['local_values']:
-            result = np.array(calc.computeLocalFromPreviousObservations(
+            result = np.array(self.calc.computeLocalFromPreviousObservations(
                                     jp.JArray(jp.JInt, 1)(process.tolist())))
         else:
-            result = calc.computeAverageLocalOfObservations()
+            result = self.calc.computeAverageLocalOfObservations()
         if return_calc:
-            return (result, calc)
+            return (result, self.calc)
         else:
             return result
 
@@ -1272,7 +1281,7 @@ class JidtGaussianMI(JidtGaussian):
             var2 = var2[self.settings['lag_mi']:, :]
 
         self.calc.initialise(var1.shape[1], var2.shape[1])
-        self.calc.setObservations(var1, var2)
+        self.calc.setObservations2D(var1, var2)
         if self.settings['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
         else:
@@ -1358,7 +1367,7 @@ class JidtGaussianCMI(JidtGaussian):
                 var1.shape[0], cond.shape[0]))
 
         self.calc.initialise(var1.shape[1], var2.shape[1], cond.shape[1])
-        self.calc.setObservations(var1, var2, cond)
+        self.calc.setObservations2D(var1, var2, cond)
         if self.settings['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
         else:
@@ -1449,7 +1458,6 @@ class JidtKraskovTE(JidtKraskov):
         # Get embedding and delay parameters.
         settings = self._set_te_defaults(settings)
         super().__init__(CalcClass, settings)
-
 
     def estimate(self, source, target):
         """Estimate transfer entropy from a source to a target variable.
@@ -1554,8 +1562,10 @@ class JidtDiscreteTE(JidtDiscrete):
 
         # Start JAVA virtual machine and create JAVA object.
         self._start_jvm()
-        self.CalcClass = (jp.JPackage('infodynamics.measures.discrete').
-                          TransferEntropyCalculatorDiscrete)
+        CalcClass = (jp.JPackage('infodynamics.measures.discrete').
+                     TransferEntropyCalculatorDiscrete)
+        self.calc = CalcClass()
+        self.calc.setDebug(self.settings['debug'])
 
     def estimate(self, source, target, return_calc=False):
         """Estimate transfer entropy from a source to a target variable.
@@ -1594,34 +1604,37 @@ class JidtDiscreteTE(JidtDiscrete):
         # And finally make the TE calculation:
         max_base = max(self.settings['alph1'], self.settings['alph2'])
         try:
-            calc = self.CalcClass(max_base,
-                              self.settings['history_target'],
-                              self.settings['tau_target'],
-                              self.settings['history_source'],
-                              self.settings['tau_source'],
-                              self.settings['source_target_delay'])
-        except jp.JavaException:
-            # Only possible exception that can be raised here
-            #  (if max_base >= 2) is a Java OutOfMemoryException:
+            self.calc.initialise(max_base,
+                                 self.settings['history_target'],
+                                 self.settings['tau_target'],
+                                 self.settings['history_source'],
+                                 self.settings['tau_source'],
+                                 self.settings['source_target_delay'])
+        except:
+            # Handles both jp.JException (JPype v0.7) and jp.JavaException
+            # (JPype < v0.7). Only possible exception that can be raised here
+            # (if max_base >= 2) is a Java OutOfMemoryException:
             assert(max_base >= 2)
-            raise ex.JidtOutOfMemoryError('Cannot instantiate JIDT TE '
-                'discrete estimator with max_base = ' + str(max_base) +
-                 ' and history_target = ' + str(self.settings['history_target']) +
-                 ' and history_source = ' + str(self.settings['history_source']) +
-                 '. Try re-running increasing Java heap size')
-        calc.initialise()
+            raise ex.JidtOutOfMemoryError(
+                'Cannot instantiate JIDT TE discrete estimator with max_base ='
+                ' {} and history_target = {} and history_source = {}. Try '
+                're-running increasing Java heap size.'.format(
+                    max_base,
+                    self.settings['history_target'],
+                    self.settings['history_source']))
         # Unfortunately no faster way to pass numpy arrays in than this list
         # conversion
-        calc.addObservations(jp.JArray(jp.JInt, 1)(source.tolist()),
-                             jp.JArray(jp.JInt, 1)(target.tolist()))
+        self.calc.addObservations(
+            jp.JArray(jp.JInt, 1)(source.tolist()),
+            jp.JArray(jp.JInt, 1)(target.tolist()))
         if self.settings['local_values']:
-            result = np.array(calc.computeLocalFromPreviousObservations(
+            result = np.array(self.calc.computeLocalFromPreviousObservations(
                 jp.JArray(jp.JInt, 1)(source.tolist()),
                 jp.JArray(jp.JInt, 1)(target.tolist())))
         else:
-            result = calc.computeAverageLocalOfObservations()
+            result = self.calc.computeAverageLocalOfObservations()
         if return_calc:
-            return (result, calc)
+            return (result, self.calc)
         else:
             return result
 
