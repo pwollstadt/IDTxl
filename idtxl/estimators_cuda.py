@@ -1,7 +1,6 @@
 import logging
 from pkg_resources import resource_filename
 import ctypes
-from ctypes import *
 import numpy as np
 from idtxl.estimators_gpu import GPUKraskov
 from idtxl.idtxl_utils import DotDict, get_cuda_lib
@@ -125,17 +124,27 @@ class CudaKraskov(GPUKraskov):
         """Get knn search function pointer from shared library."""
         dll = ctypes.CDLL(self.shared_library_path, mode=ctypes.RTLD_GLOBAL)
         func = dll.cudaFindKnnSetGPU
-        func.argtypes = [POINTER(c_int32), POINTER(c_float), POINTER(c_float), POINTER(c_float), c_int, c_int, c_int, c_int, c_int, c_int]
+        func.argtypes = [
+            ctypes.POINTER(ctypes.c_int32),  # indexes
+            ctypes.POINTER(ctypes.c_float),  # distances
+            ctypes.POINTER(ctypes.c_float),  # pointset
+            ctypes.POINTER(ctypes.c_float),  # queryset
+            ctypes.c_int,  # kraskov_k
+            ctypes.c_int,  # theiler
+            ctypes.c_int,  # n_chunks
+            ctypes.c_int,  # pointdim
+            ctypes.c_int,  # signallength
+            ctypes.c_int]  # gpuid
         return func
 
     def cudaFindKnnSetGPU(self, indexes, distances, pointset, queryset, kth,
                           theiler_t, nchunks, pointsdim, signallengthpergpu,
                           gpuid):
         """Wrapper for CUDA knn search to handle type conversions."""
-        indexes_p = indexes.ctypes.data_as(POINTER(c_int32))
-        distances_p = distances.ctypes.data_as(POINTER(c_float))
-        pointset_p = pointset.ctypes.data_as(POINTER(c_float))
-        queryset_p = queryset.ctypes.data_as(POINTER(c_float))
+        indexes_p = indexes.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))
+        distances_p = distances.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
+        pointset_p = pointset.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
+        queryset_p = queryset.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
 
         bool = self.__cudaFindKnnSetGPU(
             indexes_p, distances_p, pointset_p, queryset_p, kth, theiler_t,
@@ -177,17 +186,27 @@ class CudaKraskov(GPUKraskov):
         """Get range search function pointer from shared library."""
         dll = ctypes.CDLL(self.shared_library_path, mode=ctypes.RTLD_GLOBAL)
         func = dll.cudaFindRSAllSetGPU
-        func.argtypes = [POINTER(c_int32), POINTER(c_float), POINTER(c_float), POINTER(c_float), c_int, c_int, c_int, c_int, c_int]
+        func.argtypes = [
+            ctypes.POINTER(ctypes.c_int32),  # n_neighbors
+            ctypes.POINTER(ctypes.c_float),  # pointset
+            ctypes.POINTER(ctypes.c_float),  # queryset
+            ctypes.POINTER(ctypes.c_float),  # distances
+            ctypes.c_int,  # theiler
+            ctypes.c_int,  # n_chunks
+            ctypes.c_int,  # pointdim
+            ctypes.c_int,  # signallength
+            ctypes.c_int]  # gpuid
         return func
 
     def cudaFindRSAllSetGPU(self, npointsrange, pointset, queryset, vecradius,
                             theiler_t, nchunkspergpu, pointsdim,
                             datalengthpergpu, gpuid):
         """Wrapper for CUDA range search to handle type conversions."""
-        npointsrange_p = npointsrange.ctypes.data_as(POINTER(c_int32))
-        pointset_p = pointset.ctypes.data_as(POINTER(c_float))
-        queryset_p = queryset.ctypes.data_as(POINTER(c_float))
-        vecradius_p = vecradius.ctypes.data_as(POINTER(c_float))
+        npointsrange_p = npointsrange.ctypes.data_as(
+            ctypes.POINTER(ctypes.c_int32))
+        pointset_p = pointset.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
+        queryset_p = queryset.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
+        vecradius_p = vecradius.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
 
         bool = self.__cudaFindRSAllSetGPU(
             npointsrange_p, pointset_p, queryset_p, vecradius_p, theiler_t,
@@ -560,11 +579,14 @@ class CudaKraskovCMI(CudaKraskov):
         logger.debug('shape pointset: {}'.format(pointset.shape))
         if self.settings['noise_level'] > 0:
             pointset += np.random.normal(
-                scale=self.settings['noise_level'], size=pointset.shape)
+                scale=self.settings['noise_level'],
+                size=pointset.shape)
             pointset_var1cond += np.random.normal(
-                scale=self.settings['noise_level'], size=pointset_var1cond.shape)
+                scale=self.settings['noise_level'],
+                size=pointset_var1cond.shape)
             pointset_condvar2 += np.random.normal(
-                scale=self.settings['noise_level'], size=pointset_condvar2.shape)
+                scale=self.settings['noise_level'],
+                size=pointset_condvar2.shape)
 
         # Perform kNN- and range-search
         indexes, distances = self.knn_search(

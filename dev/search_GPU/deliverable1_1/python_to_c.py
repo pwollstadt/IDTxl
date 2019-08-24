@@ -29,15 +29,15 @@ __cudaFindKnnSetGPU = get_cudaFindKnnSetGPU()
 
 # convenient python wrapper for __cudaFindKnnSetGPU
 # it does all job with types convertation
-# from python ones to C++ ones 
-def cudaFindKnnSetGPU(indexes, distances, pointset, queryset, kth, thelier, nchunks, pointsdim, signallengthpergpu, gpuid):
+# from python ones to C++ ones
+def cudaFindKnnSetGPU(indexes, distances, pointset, queryset, kth, theiler, nchunks, pointsdim, signallengthpergpu, gpuid):
     indexes_p = indexes.ctypes.data_as(POINTER(c_int32))
     distances_p = distances.ctypes.data_as(POINTER(c_float))
     pointset_p = pointset.ctypes.data_as(POINTER(c_float))
     queryset_p = queryset.ctypes.data_as(POINTER(c_float))
 
-    bool = __cudaFindKnnSetGPU(indexes_p, distances_p, pointset_p, queryset_p, kth, thelier, nchunks, pointsdim, signallengthpergpu, gpuid)
-    
+    bool = __cudaFindKnnSetGPU(indexes_p, distances_p, pointset_p, queryset_p, kth, theiler, nchunks, pointsdim, signallengthpergpu, gpuid)
+
     return bool
 
 '''
@@ -56,15 +56,15 @@ __cudaFindRSAllSetGPU = get_cudaFindRSAllSetGPU()
 
 # convenient python wrapper for __cudaFindRSAll
 # it does all job with types convertation
-# from python ones to C++ ones 
-def cudaFindRSAllSetGPU(npointsrange, pointset, queryset, vecradius, thelier, nchunkspergpu, pointsdim, datalengthpergpu, gpuid):
+# from python ones to C++ ones
+def cudaFindRSAllSetGPU(npointsrange, pointset, queryset, vecradius, theiler, nchunkspergpu, pointsdim, datalengthpergpu, gpuid):
     npointsrange_p = npointsrange.ctypes.data_as(POINTER(c_int32))
     pointset_p = pointset.ctypes.data_as(POINTER(c_float))
     queryset_p = queryset.ctypes.data_as(POINTER(c_float))
     vecradius_p = vecradius.ctypes.data_as(POINTER(c_float))
 
-    bool = __cudaFindRSAllSetGPU(npointsrange_p, pointset_p, queryset_p, vecradius_p, thelier, nchunkspergpu, pointsdim, datalengthpergpu, gpuid)
-    
+    bool = __cudaFindRSAllSetGPU(npointsrange_p, pointset_p, queryset_p, vecradius_p, theiler, nchunkspergpu, pointsdim, datalengthpergpu, gpuid)
+
     return bool
 
 '''
@@ -72,22 +72,22 @@ def cudaFindRSAllSetGPU(npointsrange, pointset, queryset, vecradius, thelier, nc
 '''
 
 # KNN function
-def testKNN_call_multiGPU(indexes, distances, pointset, queryset, kth, thelier, nchunkspergpu, pointsdim, signallengthpergpu, gpuid):
+def testKNN_call_multiGPU(indexes, distances, pointset, queryset, kth, theiler, nchunkspergpu, pointsdim, signallengthpergpu, gpuid):
 
     #GPU Execution
-    bool = cudaFindKnnSetGPU(indexes, distances, pointset, queryset, kth, thelier, nchunkspergpu, pointsdim, signallengthpergpu, gpuid)
-    
+    bool = cudaFindKnnSetGPU(indexes, distances, pointset, queryset, kth, theiler, nchunkspergpu, pointsdim, signallengthpergpu, gpuid)
+
     return bool
-    
+
 '''
     Range Search function
 '''
 
 # Range Search function
-def testRSAll_call_multiGPU(npointsrange, pointset, queryset, vecradius, thelier, nchunkspergpu, pointsdim, datalengthpergpu, gpuid):
+def testRSAll_call_multiGPU(npointsrange, pointset, queryset, vecradius, theiler, nchunkspergpu, pointsdim, datalengthpergpu, gpuid):
 
     #GPU Execution
-    bool = cudaFindRSAllSetGPU(npointsrange, pointset, queryset, vecradius, thelier, nchunkspergpu, pointsdim, datalengthpergpu, gpuid)
-    
+    bool = cudaFindRSAllSetGPU(npointsrange, pointset, queryset, vecradius, theiler, nchunkspergpu, pointsdim, datalengthpergpu, gpuid)
+
     return bool
 

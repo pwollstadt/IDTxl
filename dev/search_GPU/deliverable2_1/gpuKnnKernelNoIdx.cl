@@ -31,7 +31,7 @@ float maxMetricPoints(
 	float	r_u1;
 	float	r_v1;
 	float	r_d1,r_dim=0;
-	
+
 	r_dim=0;
 	for(size_t d=0; d<pointdim; d++)
         {
@@ -52,7 +52,7 @@ __kernel void kernelKNNshared(
     __global const float* g_uquery,
     __global const float* g_vpointset,
     __global float* g_distances,
-    const int pointdim, 
+    const int pointdim,
     const int triallength,
     const int signallength,
     const int kth,
@@ -80,7 +80,7 @@ __kernel void kernelKNNshared(
 		    int indexv = (t + itrial*triallength); //Read all chunk members
 		    int condition1=indexi-exclude;
 		    int condition2=indexi+exclude;
-		    //Exclude = thelier. If thelier = 0, analize all points except the actual one
+		    //Exclude = theiler. If theiler = 0, analize all points except the actual one
 		    if((t<condition1)||(t>condition2))
 		    {
 			    float temp_dist = maxMetricPoints(g_uquery+indexu, g_vpointset+indexv, pointdim, signallength);
@@ -90,7 +90,7 @@ __kernel void kernelKNNshared(
 			    }
 		    }
 	    }
-	
+
 	    barrier(CLK_LOCAL_MEM_FENCE);
 
 	    //Copy to global memory
@@ -123,7 +123,7 @@ __kernel void kernelBFRSAllshared(
 
 	const unsigned int tid = get_global_id(0)+get_global_id(1)*get_global_size(0); //Global identifier
 	const unsigned int itrial = tid / triallength; //Chunk index
-	
+
 	if(tid<signallength)
 	{
 		s_npointsrange= 0;

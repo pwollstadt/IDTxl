@@ -3,10 +3,10 @@ import pyopencl as cl
 import numpy
 from time import time
 
-def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, thelier, nchunks, pointdim, signallength, gpuid):
+def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, theiler, nchunks, pointdim, signallength, gpuid):
 
     triallength = int(signallength / nchunks)
-#    print 'Values:', pointdim, triallength, signallength, kth, thelier
+#    print 'Values:', pointdim, triallength, signallength, kth, theiler
 
     '''for platform in cl.get_platforms():
         for device in platform.get_devices():
@@ -76,8 +76,8 @@ def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, thelier, n
     localmem1 = cl.LocalMemory(numpy.dtype(numpy.float32).itemsize*kth*workitems_x)
     localmem2 = cl.LocalMemory(numpy.dtype(numpy.int32).itemsize*kth*workitems_x)
 
-    # kernelKNNshared(queue, (NDRange_x,), (workitems_x,), d_bf_query, d_bf_pointset, d_bf_indexes, d_bf_distances, pointdim, triallength, signallength,kth,thelier, localmem1, localmem2)
-    kernelKNNshared(queue, (NDRange_x,), (workitems_x,), d_bf_query, d_bf_pointset, d_bf_distances, pointdim, triallength, signallength,kth,thelier, localmem1)
+    # kernelKNNshared(queue, (NDRange_x,), (workitems_x,), d_bf_query, d_bf_pointset, d_bf_indexes, d_bf_distances, pointdim, triallength, signallength,kth,theiler, localmem1, localmem2)
+    kernelKNNshared(queue, (NDRange_x,), (workitems_x,), d_bf_query, d_bf_pointset, d_bf_distances, pointdim, triallength, signallength,kth,theiler, localmem1)
 
     queue.finish()
 
@@ -98,10 +98,10 @@ def clFindKnn(h_bf_indexes, h_bf_distances, h_pointset, h_query, kth, thelier, n
  * Range search being radius a vector of length number points in queryset/pointset
 '''
 
-def clFindRSAll(h_bf_npointsrange, h_pointset, h_query, h_vecradius, thelier, nchunks, pointdim, signallength, gpuid):
+def clFindRSAll(h_bf_npointsrange, h_pointset, h_query, h_vecradius, theiler, nchunks, pointdim, signallength, gpuid):
 
     triallength = int(signallength / nchunks)
-    #print 'Values:', pointdim, triallength, signallength, kth, thelier
+    #print 'Values:', pointdim, triallength, signallength, kth, theiler
 
     '''for platform in cl.get_platforms():
         for device in platform.get_devices():
@@ -164,7 +164,7 @@ def clFindRSAll(h_bf_npointsrange, h_pointset, h_query, h_vecradius, thelier, nc
     #Local memory for rangesearch. Actually not used, better results with private memory
     localmem = cl.LocalMemory(numpy.dtype(numpy.int32).itemsize*workitems_x)
 
-    kernelBFRSAllshared(queue, (NDRange_x,), (workitems_x,), d_bf_query, d_bf_pointset, d_bf_vecradius, d_bf_npointsrange, pointdim, triallength, signallength, thelier, localmem)
+    kernelBFRSAllshared(queue, (NDRange_x,), (workitems_x,), d_bf_query, d_bf_pointset, d_bf_vecradius, d_bf_npointsrange, pointdim, triallength, signallength, theiler, localmem)
 
     queue.finish()
 

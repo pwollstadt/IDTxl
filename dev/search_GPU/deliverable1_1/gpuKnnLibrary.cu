@@ -3,7 +3,7 @@
 #include "helperfunctions.cu"
 
 extern "C" {
-int cudaFindKnn(int* h_bf_indexes, float* h_bf_distances, float* h_pointset, float* h_query, int kth, int thelier, int nchunks, int pointdim, int signallength){
+int cudaFindKnn(int* h_bf_indexes, float* h_bf_distances, float* h_pointset, float* h_query, int kth, int theiler, int nchunks, int pointdim, int signallength){
 	float *d_bf_pointset, *d_bf_query;
 	int *d_bf_indexes;
 	float *d_bf_distances;
@@ -42,7 +42,7 @@ int cudaFindKnn(int* h_bf_indexes, float* h_bf_distances, float* h_pointset, flo
 	int triallength = signallength / nchunks;
 	kernelKNNshared<<< grid.x, threads.x, memkernel>>>(\
 			d_bf_query,d_bf_pointset,d_bf_indexes,d_bf_distances, \
-			pointdim,triallength, signallength,kth,thelier);
+			pointdim,triallength, signallength,kth,theiler);
 
 
 	//Download result
@@ -74,7 +74,7 @@ int cudaFindKnn(int* h_bf_indexes, float* h_bf_distances, float* h_pointset, flo
 }
 
 extern "C" {
-int cudaFindKnnSetGPU(int* h_bf_indexes, float* h_bf_distances, float* h_pointset, float* h_query, int kth, int thelier, int nchunks, int pointdim, int signallength, int deviceid){
+int cudaFindKnnSetGPU(int* h_bf_indexes, float* h_bf_distances, float* h_pointset, float* h_query, int kth, int theiler, int nchunks, int pointdim, int signallength, int deviceid){
 	float *d_bf_pointset, *d_bf_query;
 	int *d_bf_indexes;
 	float *d_bf_distances;
@@ -118,7 +118,7 @@ int cudaFindKnnSetGPU(int* h_bf_indexes, float* h_bf_distances, float* h_pointse
 
 	kernelKNNshared<<< grid.x, threads.x, memkernel>>>(\
 			d_bf_query,d_bf_pointset,d_bf_indexes,d_bf_distances, \
-			pointdim,triallength, signallength,kth,thelier);
+			pointdim,triallength, signallength,kth,theiler);
 
 	cudaThreadSynchronize();
 
@@ -155,7 +155,7 @@ int cudaFindKnnSetGPU(int* h_bf_indexes, float* h_bf_distances, float* h_pointse
  */
 
 extern "C" {
-int cudaFindRSAll(int* h_bf_npointsrange, float* h_pointset, float* h_query, float* h_vecradius, int thelier, int nchunks, int pointdim, int signallength){
+int cudaFindRSAll(int* h_bf_npointsrange, float* h_pointset, float* h_query, float* h_vecradius, int theiler, int nchunks, int pointdim, int signallength){
 	float *d_bf_pointset, *d_bf_query, *d_bf_vecradius;
 	int *d_bf_npointsrange;
 
@@ -194,7 +194,7 @@ int cudaFindRSAll(int* h_bf_npointsrange, float* h_pointset, float* h_query, flo
 
 	kernelBFRSAllshared<<< grid.x, threads.x, memkernel>>>(\
 					d_bf_query,d_bf_pointset, d_bf_npointsrange, \
-					pointdim,triallength, signallength,thelier, d_bf_vecradius);
+					pointdim,triallength, signallength,theiler, d_bf_vecradius);
 
 	checkCudaErrors( cudaMemcpy( h_bf_npointsrange, d_bf_npointsrange,mem_bfcl_outputsignalnpointsrange, cudaMemcpyDeviceToHost) );
 
@@ -222,7 +222,7 @@ int cudaFindRSAll(int* h_bf_npointsrange, float* h_pointset, float* h_query, flo
 }
 
 extern "C" {
-int cudaFindRSAllSetGPU(int* h_bf_npointsrange, float* h_pointset, float* h_query, float* h_vecradius, int thelier, int nchunks, int pointdim, int signallength, int deviceid){
+int cudaFindRSAllSetGPU(int* h_bf_npointsrange, float* h_pointset, float* h_query, float* h_vecradius, int theiler, int nchunks, int pointdim, int signallength, int deviceid){
 	float *d_bf_pointset, *d_bf_query, *d_bf_vecradius;
 	int *d_bf_npointsrange;
 
@@ -263,7 +263,7 @@ int cudaFindRSAllSetGPU(int* h_bf_npointsrange, float* h_pointset, float* h_quer
 
 	kernelBFRSAllshared<<< grid.x, threads.x, memkernel>>>(\
 					d_bf_query,d_bf_pointset, d_bf_npointsrange, \
-					pointdim,triallength, signallength,thelier, d_bf_vecradius);
+					pointdim,triallength, signallength,theiler, d_bf_vecradius);
 	cudaThreadSynchronize();
 
 	checkCudaErrors( cudaMemcpy( h_bf_npointsrange, d_bf_npointsrange,mem_bfcl_outputsignalnpointsrange, cudaMemcpyDeviceToHost) );
