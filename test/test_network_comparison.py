@@ -294,8 +294,9 @@ def test_calculate_cmi_all_links():
     target = target[:-1]
     data = Data(np.hstack((source, target)),
                 dim_order='sp', normalise=False)
-    res_0 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_results_0.p'))
+    res_0 = pickle.load(open(os.path.join(os.path.dirname(__file__),
+                             'data/mute_results_0.p'), 'rb'))
+
     comp_settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 50,
@@ -326,8 +327,9 @@ def test_calculate_mean():
     """Test if mean over CMI estimates is calculated correctly."""
     data = Data()
     data.generate_mute_data(100, 5)
-    res_0 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_results_0.p'))
+    res_0 = pickle.load(open(os.path.join(os.path.dirname(__file__),
+                             'data/mute_results_0.p'), 'rb'))
+
     comp_settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 50,
