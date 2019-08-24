@@ -163,13 +163,7 @@ class CudaKraskov(GPUKraskov):
             indexes, distances, pointset, queryset, knn_k, theiler_t, n_chunks,
             n_dims, n_points, gpuid)
 
-        # Only return distances to the kth neighbor. Also, subtract machine
-        # eps/1e-6 (the latter led to more exact results compared to the other
-        # estimators for test data). because the CUDA range searche implements
-        # <= distance when looking for points, which includes points that have
-        # an exact distance d to the query point. distances =
-        # distances[knn_k-1, :] - np.finfo(np.float32).eps
-        distances = distances[knn_k-1, :] - np.float32(1e-6)
+        distances = distances[knn_k-1, :]
         assert distances.shape[0] == n_points
         logger.debug('distances shape: {}, {}'.format(
             distances.shape, distances[:4]))
