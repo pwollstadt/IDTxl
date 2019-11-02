@@ -1,0 +1,57 @@
+
+python test_opencl_search.py --gpuid 1 -p 3153920 -d 2 -c 1  # Runs, no padding
+python test_opencl_search.py --gpuid 1 -p 1576960 -d 2 -c 2  # Runs, no padding
+python test_opencl_search.py --gpuid 1 -p  788480 -d 2 -c 4  # Runs, no padding
+python test_opencl_search.py --gpuid 1 -p 1576960 -d 2 -c 2  # Runs, no padding
+
+python test_opencl_search.py --gpuid 1 -p   43170 -d 2 -c 200  # Fails
+python test_opencl_search.py --gpuid 1 -p  788483 -d 2 -c 4  # Fails, padding
+python test_opencl_search.py --gpuid 1 -p  525570 -d 2 -c 3  # Fails on RTX8000
+python test_opencl_search.py --gpuid 1 -p  525570 -d 1 -c 3  # Fails on RTX8000
+python test_opencl_search.py --gpuid 1 -p  525570 -d 2 -c 6  # Fails on RTX8000, Runs on Titan
+=> same number of points! (roughly!)
+
+0) python test_opencl_search.py --gpuid 1 -p 1576960 -d 2 -c 2  # Runs, requires no padding
+1) python test_opencl_search.py --gpuid 1 -p 1576963 -d 2 -c 2  # Runs, when padding switched off
+2) python test_opencl_search.py --gpuid 1 -p 1576963 -d 2 -c 2 --padding  # Fails, same as 1) but with padding
+3) python test_opencl_search.py --gpuid 1 -p 1577472 -d 2 -c 2 --padding  # Runs, no padding, same point dim as 2) after! padding
+=> Something seems to go wrong with the padding. Apparently it's not the point
+set size itself, which when set manually (3) to the same size as we obtain after
+padding (2) runs. Also, when switching the padding off, everything goes
+smoothly (1).
+
+3) Output:
+pointset: 12.04, TOTAL: 24.07 MB, PADDING: 0
+pointset shape: (1, 3154944)
+Pointset: 3154944 elements, dim 1x3154944, 2 chunks (chunklength: 1577472).
+
+2) Output:
+pointset: 12.04, TOTAL: 24.07 MB, PADDING: 1018
+pointset shape: (1, 3154944)
+Pointset: 3154944 elements, dim 1x3154944, 2 chunks (chunklength: 1576963).
+==> Chunksize is not adapted to signallength after padding
+==> Everything runs after chunksize is calculated correctly (after padding!)
+==> Check if distances are returned correctly! How do we obtain these in the
+main code? Check if the same error occurs when I try to mimic this input for the
+IDTxl estimator!
+
+# Run the same test cases using the OpenCLMI estimator (all RTX8000)
+0) python test_opencl_estimators.py --gpuid 1 -p 1576960 -d 2 -c 2  # Runs, requires no padding
+1) python test_opencl_estimators.py --gpuid 1 -p 1576963 -d 2 -c 2  # Fails, padding
+2) python test_opencl_estimators.py --gpuid 1 -p 1576963 -d 2 -c 2
+3) python test_opencl_estimators.py --gpuid 1 -p 1577472 -d 2 -c 2
+
+# There seems to be a limit in point size up to which padding works (all RTX8000):
+0) python test_opencl_estimators.py --gpuid 1 -d 2 -c 2 --padding -p 917504  # Runs, requires padding
+1) python test_opencl_estimators.py --gpuid 1 -d 2 -c 2 --padding -p 917505  # Fails, requires padding
+    >>> Memory req. after padding: 42.02 MB (3672064 elements, shape: (2, 1836032), 2 chunks, chunksize: 917505) -- Padding: 1022
+2) python test_opencl_estimators.py --gpuid 1 -d 2 -c 2 -p 917505  # Runs, padding switched off, same as 2)
+    >>> Memory req. after padding: 42.00 MB (3670020 elements, shape: (2, 1835010), 2 chunks, chunksize: 917505) -- Padding: 0
+
+
+https://streamhpc.com/blog/2013-10-15/basic-concepts-resources-clenqueuereadbuffer/
+
+
+Next steps:
+    Test on other device (Titan) --> runs
+    Check if CUDA estimator fails for the same problem size
