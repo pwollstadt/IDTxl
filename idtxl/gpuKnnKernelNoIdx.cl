@@ -5,14 +5,14 @@
 float insertPointKlist(
     int kth,
     float distance,
-    size_t indexv,
+    long indexv,
     __local float* kdistances)
 {
-	size_t k=0;
+	long k=0;
 	while( (distance>*(kdistances+k)) && (k<kth-1))
         {k++;}
 	//Move value to the next
-	for(size_t k2=kth-1;k2>k;k2--)
+	for(long k2=kth-1;k2>k;k2--)
     {
 		*(kdistances+k2)=*(kdistances+k2-1);
 	}
@@ -25,15 +25,15 @@ float insertPointKlist(
 float maxMetricPoints(
     __global const float* g_uquery,
     __global const float* g_vpoint,
-    size_t pointdim,
-    size_t signallength)
+    long pointdim,
+    long signallength)
 {
 	float	r_u1;
 	float	r_v1;
 	float	r_d1,r_dim=0;
 
 	r_dim=0;
-	for(size_t d=0; d<pointdim; d++)
+	for(long d=0; d<pointdim; d++)
         {
 		r_u1 = *(g_uquery+d*signallength);
 		r_v1 = *(g_vpoint+d*signallength);
