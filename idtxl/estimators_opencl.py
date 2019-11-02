@@ -317,11 +317,12 @@ class OpenCLKraskovMI(OpenCLKraskov):
             pointset = np.hstack((var1, var2)).T.copy()
             signallength_padded = signallength
 
-        if self.settings['noise_level'] > 0:
-            pointset += np.random.normal(scale=self.settings['noise_level'],
-                                         size=pointset.shape)
         if not pointset.dtype == np.float32:
             pointset = pointset.astype(np.float32)
+        if self.settings['noise_level'] > 0:
+            pointset += np.random.normal(
+                scale=self.settings['noise_level'],
+                size=pointset.shape).astype(np.float32)
 
         if self.settings['debug']:
             # Print memory requirements after padding
@@ -650,11 +651,12 @@ class OpenCLKraskovCMI(OpenCLKraskov):
             pointset = np.hstack((var1, conditional, var2)).T.copy()
             signallength_padded = signallength
 
-        if self.settings['noise_level'] > 0:
-            pointset += np.random.normal(scale=self.settings['noise_level'],
-                                         size=pointset.shape)
         if not pointset.dtype == np.float32:
             pointset = pointset.astype(np.float32)
+        if self.settings['noise_level'] > 0:
+            pointset += np.random.normal(
+                scale=self.settings['noise_level'],
+                size=pointset.shape).astype(np.float32)
 
         if self.settings['debug']:
             # Print memory requirements after padding
@@ -665,7 +667,7 @@ class OpenCLKraskovCMI(OpenCLKraskov):
             mem_ncnt = 2 * self.sizeof_int * signallength_padded
             mem_total = mem_data_pad + mem_dist + mem_ncnt
             logger.debug(
-                'Memory req. after padding: {0:.2f} MB ({1} elements) -- Padding: {}.'.format(
+                'Memory req. after padding: {0:.2f} MB ({1} elements) -- Padding: {2}.'.format(
                       mem_total / C, pointset.size, pad_size))
 
 
