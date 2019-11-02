@@ -1,3 +1,5 @@
+import sys
+import logging
 from pkg_resources import resource_filename
 from scipy.special import digamma
 import numpy as np
@@ -9,6 +11,9 @@ except ImportError as err:
     ex.package_missing(err, 'PyOpenCl is not available on this system. Install'
                             ' it using pip or the package manager to use '
                             'OpenCL-powered CMI estimation.')
+
+logger = logging.getLogger(__name__)
+C = 1024**2
 
 
 class OpenCLKraskov(Estimator):
@@ -53,6 +58,8 @@ class OpenCLKraskov(Estimator):
               in KNN and range searches (default=0)
             - noise_level : float [optional] - random noise added to the data
               (default=1e-8)
+            - padding : bool [optional] - pad data to a length that is a
+              multiple of 1024, workaround for a
             - debug : bool [optional] - calculate intermediate results, i.e.
               neighbour counts from range searches and KNN distances, print
               debug output to console (default=False)
@@ -70,6 +77,7 @@ class OpenCLKraskov(Estimator):
         self.settings.setdefault('theiler_t', int(0))
         self.settings.setdefault('noise_level', np.float32(1e-8))
         self.settings.setdefault('local_values', False)
+        self.settings.setdefault('padding', False)
         self.settings.setdefault('debug', False)
         self.settings.setdefault('return_counts', False)
         self.settings.setdefault('verbose', True)
@@ -108,8 +116,7 @@ class OpenCLKraskov(Estimator):
                 'No device with gpuid {0} (available device IDs: {1}).'.format(
                     gpuid, np.arange(len(my_gpu_devices))))
         queue = cl.CommandQueue(context, my_gpu_devices[gpuid])
-        if self.settings['debug']:
-            print("Selected Device: ", my_gpu_devices[gpuid].name)
+        logger.debug("Selected Device: {}".format(my_gpu_devices[gpuid].name))
         return my_gpu_devices, context, queue
 
     def _get_kernels(self):
@@ -222,12 +229,10 @@ class OpenCLKraskovMI(OpenCLKraskov):
         max_chunks_per_run = np.floor(max_mem/mem_chunk).astype(int)
         chunks_per_run = min(max_chunks_per_run, n_chunks)
 
-        if self.settings['debug']:
-            print('Memory per chunk: {0:.5f} MB, GPU global memory: {1} MB, '
-                  'chunks per run: {2}.'.format(mem_chunk / 1024 / 1024,
-                                                max_mem / 1024 / 1024,
-                                                chunks_per_run))
-
+        logger.debug(
+            'Memory per chunk: {0:.5f} MB, GPU global memory: {1} MB, chunks '
+            'per run: {2}.'.format(
+                mem_chunk / C, max_mem / C, chunks_per_run))
         if mem_chunk > max_mem:
             raise RuntimeError('Size of single chunk exceeds GPU global '
                                'memory.')
@@ -284,9 +289,6 @@ class OpenCLKraskovMI(OpenCLKraskov):
         """
         # Prepare data and add noise: check if variable realisations are passed
         # as 1D or 2D arrays and have equal no. observations.
-        if self.settings['debug']:
-            print('var1 shape: {0}, {1}, n_chunks: {2}'.format(
-                             var1.shape[0], var1.shape[1], n_chunks))
         var1 = self._ensure_two_dim_input(var1)
         var2 = self._ensure_two_dim_input(var2)
         assert var1.shape[0] == var2.shape[0]
@@ -294,20 +296,27 @@ class OpenCLKraskovMI(OpenCLKraskov):
         self._check_number_of_points(var1.shape[0])
         signallength = var1.shape[0]
         chunklength = signallength // n_chunks
+        assert signallength % n_chunks == 0
         var1dim = var1.shape[1]
         var2dim = var2.shape[1]
         pointdim = var1dim + var2dim
 
-        # Pad time series to make GPU memory regions a multiple of 1024
-        pad_target = 1024
-        pad_size = (int(np.ceil(signallength/pad_target)) * pad_target -
-                    signallength)
-        pad_var1 = np.vstack(
-            [var1, 999999 + 0.1 * np.random.rand(pad_size, var1dim)])
-        pad_var2 = np.vstack(
-            [var2, 999999 + 0.1 * np.random.rand(pad_size, var2dim)])
-        pointset = np.hstack((pad_var1, pad_var2)).T.copy()
-        signallength_padded = signallength + pad_size
+        if self.settings['padding']:
+            # Pad time series to make GPU memory regions a multiple of 1024
+            pad_target = 1024
+            pad_size = (int(np.ceil(signallength/pad_target)) * pad_target -
+                        signallength)
+            pad_var1 = np.vstack(
+                [var1, 999999 + 0.1 * np.random.rand(pad_size, var1dim)])
+            pad_var2 = np.vstack(
+                [var2, 999999 + 0.1 * np.random.rand(pad_size, var2dim)])
+            pointset = np.hstack((pad_var1, pad_var2)).T.copy()
+            signallength_padded = signallength + pad_size
+        else:
+            pad_size = 0
+            pointset = np.hstack((var1, var2)).T.copy()
+            signallength_padded = signallength
+
         if self.settings['noise_level'] > 0:
             pointset += np.random.normal(scale=self.settings['noise_level'],
                                          size=pointset.shape)
@@ -322,8 +331,12 @@ class OpenCLKraskovMI(OpenCLKraskov):
                         self.settings['kraskov_k'])
             mem_ncnt = 2 * self.sizeof_int * signallength_padded
             mem_total = mem_data_pad + mem_dist + mem_ncnt
-            print('Memory req. after padding: {0:.5f} MB.'.format(
-                      mem_total / 1024 / 1024))
+            logger.debug(
+                'Memory req. after padding: {0:.2f} MB ({1} elements, shape: '
+                '{2}, {3} chunks, chunksize: {4}) -- Padding: {5}'.format(
+                    mem_total / C, pointset.size, pointset.shape,
+                    n_chunks, chunklength, pad_size))
+            assert (pointset.shape[1] - pad_size) % n_chunks == 0
 
         # Set OpenCL kernel launch parameters
         if chunklength < self.devices[
@@ -336,6 +349,8 @@ class OpenCLKraskovMI(OpenCLKraskov):
             workitems_x = 256
         NDRange_x = (workitems_x *
                      (int((signallength_padded - 1)/workitems_x) + 1))
+        logger.debug('NDRange_x: {}, workitems_x: {}'.format(
+            NDRange_x, workitems_x))
 
         # Allocate and copy memory to device
         kraskov_k = self.settings['kraskov_k']
@@ -370,7 +385,24 @@ class OpenCLKraskovMI(OpenCLKraskov):
                         np.int32(chunklength), np.int32(signallength_padded),
                         np.int32(kraskov_k), theiler_t, localmem)
         distances = np.zeros(signallength_padded * kraskov_k, dtype=np.float32)
-        cl.enqueue_copy(self.queue, distances, d_distances)
+        try:
+            cl.enqueue_copy(self.queue, distances, d_distances)
+        except cl._cl.RuntimeError as e:
+            print(e)
+            # Print memory requirements after padding
+            mem_data_pad = (self.sizeof_float *
+                            pointset.shape[0] * pointset.shape[1])
+            mem_dist = (self.sizeof_float * signallength_padded *
+                        self.settings['kraskov_k'])
+            mem_ncnt = 2 * self.sizeof_int * signallength_padded
+            mem_total = mem_data_pad + mem_dist + mem_ncnt
+            print(
+                'Memory req. after padding: {0:.2f} MB ({1} elements, shape: '
+                '{2}, {3} chunks, chunksize: {4}) -- Padding: {5}'.format(
+                    mem_total / C, pointset.size, pointset.shape,
+                    n_chunks, chunklength, pad_size))
+            assert (pointset.shape[1] - pad_size) % n_chunks == 0
+            sys.exit(1)
         self.queue.finish()
 
         # Range search in var1
@@ -416,6 +448,7 @@ class OpenCLKraskovMI(OpenCLKraskov):
                 mi_array[c] = mi
 
         if self.settings['debug']:
+            print('dist shape: {}'.format(distances.shape))
             return mi_array, distances, count_var1, count_var2
         else:
             return mi_array
@@ -512,11 +545,10 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         max_chunks_per_run = np.floor(max_mem/mem_chunk).astype(int)
         chunks_per_run = min(max_chunks_per_run, n_chunks)
 
-        if self.settings['debug']:
-            print('Memory per chunk: {0:.5f} MB, GPU global memory: {1} MB, '
-                  'chunks per run: {2}.'.format(mem_chunk / 1024 / 1024,
-                                                max_mem / 1024 / 1024,
-                                                chunks_per_run))
+        logger.debug(
+            'Memory per chunk: {0:.5f} MB, GPU global memory: {1} MB, chunks '
+            'per run: {2}.'.format(
+                mem_chunk / C, max_mem / C, chunks_per_run))
         if mem_chunk > max_mem:
             raise RuntimeError('Size of single chunk exceeds GPU global '
                                'memory.')
@@ -600,18 +632,24 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         conddim = conditional.shape[1]
         pointdim = var1dim + var2dim + conddim
 
-        # Pad time series to make GPU memory regions a multiple of 1024
-        pad_target = 1024
-        pad_size = (int(np.ceil(signallength/pad_target)) * pad_target -
-                    signallength)
-        pad_var1 = np.vstack(
-            [var1, 999999 + 0.1 * np.random.rand(pad_size, var1dim)])
-        pad_var2 = np.vstack(
-            [var2, 999999 + 0.1 * np.random.rand(pad_size, var2dim)])
-        pad_conditional = np.vstack(
-            [conditional, 999999 + 0.1 * np.random.rand(pad_size, conddim)])
-        pointset = np.hstack((pad_var1, pad_conditional, pad_var2)).T.copy()
-        signallength_padded = signallength + pad_size
+        if self.settings['padding']:
+            # Pad time series to make GPU memory regions a multiple of 1024
+            pad_target = 1024
+            pad_size = (int(np.ceil(signallength/pad_target)) * pad_target -
+                        signallength)
+            pad_var1 = np.vstack(
+                [var1, 999999 + 0.1 * np.random.rand(pad_size, var1dim)])
+            pad_var2 = np.vstack(
+                [var2, 999999 + 0.1 * np.random.rand(pad_size, var2dim)])
+            pad_conditional = np.vstack(
+                [conditional, 999999 + 0.1 * np.random.rand(pad_size, conddim)])
+            pointset = np.hstack((pad_var1, pad_conditional, pad_var2)).T.copy()
+            signallength_padded = signallength + pad_size
+        else:
+            pad_size = 0
+            pointset = np.hstack((var1, conditional, var2)).T.copy()
+            signallength_padded = signallength
+
         if self.settings['noise_level'] > 0:
             pointset += np.random.normal(scale=self.settings['noise_level'],
                                          size=pointset.shape)
@@ -626,8 +664,10 @@ class OpenCLKraskovCMI(OpenCLKraskov):
                         self.settings['kraskov_k'])
             mem_ncnt = 2 * self.sizeof_int * signallength_padded
             mem_total = mem_data_pad + mem_dist + mem_ncnt
-            print('Memory req. after padding: {0:.5f} MB.'.format(
-                      mem_total / 1024 / 1024))
+            logger.debug(
+                'Memory req. after padding: {0:.2f} MB ({1} elements) -- Padding: {}.'.format(
+                      mem_total / C, pointset.size, pad_size))
+
 
         # Set OpenCL kernel launch parameters
         if chunklength < self.devices[
