@@ -5,14 +5,14 @@
 float insertPointKlist(
     int kth,
     float distance,
-    size_t indexv,
+    long indexv,
     __local float* kdistances)
 {
-	size_t k=0;
+	long k=0;
 	while( (distance>*(kdistances+k)) && (k<kth-1))
         {k++;}
 	//Move value to the next
-	for(size_t k2=kth-1;k2>k;k2--)
+	for(long k2=kth-1;k2>k;k2--)
     {
 		*(kdistances+k2)=*(kdistances+k2-1);
 	}
@@ -25,15 +25,15 @@ float insertPointKlist(
 float maxMetricPoints(
     __global const float* g_uquery,
     __global const float* g_vpoint,
-    size_t pointdim,
-    size_t signallength)
+    long pointdim,
+    long signallength)
 {
 	float	r_u1;
 	float	r_v1;
 	float	r_d1,r_dim=0;
-	
+
 	r_dim=0;
-	for(size_t d=0; d<pointdim; d++)
+	for(long d=0; d<pointdim; d++)
         {
 		r_u1 = *(g_uquery+d*signallength);
 		r_v1 = *(g_vpoint+d*signallength);
@@ -52,7 +52,7 @@ __kernel void kernelKNNshared(
     __global const float* g_uquery,
     __global const float* g_vpointset,
     __global float* g_distances,
-    const int pointdim, 
+    const int pointdim,
     const int triallength,
     const int signallength,
     const int kth,
@@ -90,7 +90,7 @@ __kernel void kernelKNNshared(
 			    }
 		    }
 	    }
-	
+
 	    barrier(CLK_LOCAL_MEM_FENCE);
 
 	    //Copy to global memory
@@ -123,7 +123,7 @@ __kernel void kernelBFRSAllshared(
 
 	const unsigned int tid = get_global_id(0)+get_global_id(1)*get_global_size(0); //Global identifier
 	const unsigned int itrial = tid / triallength; //Chunk index
-	
+
 	if(tid<signallength)
 	{
 		s_npointsrange= 0;
