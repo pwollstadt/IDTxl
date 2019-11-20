@@ -17,3 +17,8 @@ rm my_checkpoint.dat
 rm my_checkpoint.json
 rm $cmp
 rm $file
+rm resume_checkpoint.ckp
+rm run_checkpoint.ckp
+rm resume_checkpoint.ckp.old
+rm run_checkpoint.ckp.old
+ 
