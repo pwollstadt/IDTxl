@@ -25,7 +25,7 @@ P. Wollstadt, J. T. Lizier, R. Vicente, C. Finn, M. Martinez-Zarzuela, P. Median
 ## Contributors
 
 - [Patricia Wollstadt](http://patriciawollstadt.de/), Brain Imaging Center, MEG Unit, Goethe-University, Frankfurt, Germany
-- Michael Wibral, Campus Institute for Dynamics of Biological Networks, Georg August University, Göttingen, Germany
+- [Michael Wibral](http://www.uni-goettingen.de/de/datengetriebene+analyse+biologischer+netzwerke+%28wibral%29/603144.html), Campus Institute for Dynamics of Biological Networks, Georg August University, Göttingen, Germany
 - [Joseph T. Lizier](http://lizier.me/joseph/), Centre for Complex Systems, The University of Sydney, Sydney, Australia
 - [Raul Vicente](http://neuro.cs.ut.ee/people/), Computational Neuroscience Lab, Institute of Computer Science, University of Tartu, Tartu, Estonia
 - Conor Finn, Centre for Complex Systems, The University of Sydney, Sydney, Australia
