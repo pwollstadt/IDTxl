@@ -1,6 +1,6 @@
 """Estimate partial information decomposition (PID).
 
-Estimate PID for two source and one target process using different estimators.
+Estimate PID for multiple sources (less than 5) and one target process using SxPID estimator.
 
 Note:
     Written for Python 3.4+
@@ -8,16 +8,16 @@ Note:
 import numpy as np
 from .single_process_analysis import SingleProcessAnalysis
 from .estimator import find_estimator
-from .results import ResultsPartialInformationDecomposition
+from .results import ResultsMultivariatePartialInformationDecomposition
 
 
-class PartialInformationDecomposition(SingleProcessAnalysis):
+class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
     """Perform partial information decomposition for individual processes.
 
-    Perform partial information decomposition (PID) for two source processes
-    and one target process in the network. Estimate unique, shared, and
-    synergistic information in the two sources about the target. Call
-    analyse_network() on the whole network or a set of nodes or call
+    Perform partial information decomposition (PID) for multiple source 
+    processes and one target process in the network. Estimate unique, shared, 
+    and synergistic information in the multiple sources about the target. 
+    Call analyse_network() on the whole network or a set of nodes or call
     analyse_single_target() to estimate PID for a single process. See
     docstrings of the two functions for more information.
 
@@ -26,15 +26,14 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
     - Williams, P. L., & Beer, R. D. (2010). Nonnegative Decomposition of
       Multivariate Information, 1–14. Retrieved from
       http://arxiv.org/abs/1004.2515
-    - Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., & Ay, N. (2014).
-      Quantifying Unique Information. Entropy, 16(4), 2161–2183.
-      http://doi.org/10.3390/e16042161
+    - Makkeh, A. & Gutknecht, A. & Wibral, M. (2020). A Differentiable measure for shared
+      information. Retrieved from ...
 
     Attributes:
         target : int
             index of target process
         sources : array type
-            pair of indices of source processes
+            multiple of indices of source processes
         settings : dict
             analysis settings
         results : dict
@@ -64,7 +63,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             >>> z = np.logical_xor(x, y).astype(int)
             >>> data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
             >>> settings = {
-            >>>     'lags_pid': [[1, 1], [3, 2], [0, 0]],
+            >>>     'lags_pid': [[1, 1], [3, 2]],
             >>>     'alpha': 0.1,
             >>>     'alph_s1': alph,
             >>>     'alph_s2': alph,
@@ -73,9 +72,9 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             >>>     'num_reps': 63,
             >>>     'max_iters': 1000,
             >>>     'pid_estimator': 'SydneyPID'}
-            >>> targets = [0, 1, 2]
-            >>> sources = [[1, 2], [0, 2], [0, 1]]
-            >>> pid_analysis = PartialInformationDecomposition()
+            >>> targets = [0, 1]
+            >>> sources = [[1, 2], [0, 2]]
+            >>> pid_analysis = MultivariatePartialInformationDecomposition()
             >>> results = pid_analysis.analyse_network(settings, data, targets,
             >>>                                        sources)
 
@@ -93,17 +92,18 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             targets : list of int
                 index of target processes
             sources : list of lists
-                indices of the two source processes for each target, e.g.,
-                [[0, 2], [1, 0]], must have the same length as targets
+                indices of the multiple source processes for each target, e.g.,
+                [[0, 1, 2], [1, 0, 3]], all must lists be of the same lenght and 
+                list of lists must have the same length as targets
 
         Returns:
-            ResultsPartialInformationDecomposition instance
+            ResultsMultivariatePartialInformationDecomposition instance
                 results of network inference, see documentation of
-                ResultsPartialInformationDecomposition()
+                ResultsMultivariatePartialInformationDecomposition()
         """
         # Set defaults for PID estimation.
         settings.setdefault('verbose', True)
-        settings.setdefault('lags_pid', np.array([[1, 1]] * len(targets)))
+        settings.setdefault('lags_pid', np.array([[1 for i in range(len(sources))]] * len(targets)))
 
         # Check inputs.
         if not len(targets) == len(sources) == len(settings['lags_pid']):
@@ -112,7 +112,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         list_of_lags = settings['lags_pid']
 
         # Perform PID estimation for each target individually
-        results = ResultsPartialInformationDecomposition(
+        results = ResultsMultivariatePartialInformationDecomposition(
             n_nodes=data.n_processes,
             n_realisations=data.n_realisations(),
             normalised=data.normalise)
@@ -149,16 +149,10 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             >>> z = np.logical_xor(x, y).astype(int)
             >>> data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
             >>> settings = {
-            >>>     'alpha': 0.1,
-            >>>     'alph_s1': alph,
-            >>>     'alph_s2': alph,
-            >>>     'alph_t': alph,
-            >>>     'max_unsuc_swaps_row_parm': 60,
-            >>>     'num_reps': 63,
-            >>>     'max_iters': 1000,
-            >>>     'pid_calc_name': 'SydneyPID',
+            >>>     'printing' : false,
+            >>>     'pid_calc_name': 'SxPID',
             >>>     'lags_pid': [2, 3]}
-            >>> pid_analysis = PartialInformationDecomposition()
+            >>> pid_analysis = MultivariatePartialInformationDecomposition()
             >>> results = pid_analysis.analyse_single_target(settings=settings,
             >>>                                              data=data,
             >>>                                              target=0,
@@ -170,7 +164,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
                   (for estimator settings see the documentation in the
                   estimators_pid modules)
                 - lags_pid : list of ints [optional] - lags in samples between
-                  sources and target (default=[1, 1])
+                  sources and target (default=[1, 1,...,1])
                 - verbose : bool [optional] - toggle console output
                   (default=True)
 
@@ -179,9 +173,9 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             target : int
                 index of target processes
             sources : list of ints
-                indices of the two source processes for the target
+                indices of the multiple source processes for the target
 
-        Returns: ResultsPartialInformationDecomposition instance results of
+        Returns: ResultsMultivariatePartialInformationDecomposition instance results of
             network inference, see documentation of
             ResultsPartialInformationDecomposition()
         """
@@ -192,7 +186,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         self._calculate_pid(data)
 
         # Add analyis info.
-        results = ResultsPartialInformationDecomposition(
+        results = ResultsMultivariatePartialInformationDecomposition(
             n_nodes=data.n_processes,
             n_realisations=data.n_realisations(self.current_value),
             normalised=data.normalise)
@@ -213,29 +207,25 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         self._pid_estimator = EstimatorClass(settings)
 
         self.settings = settings.copy()
-        self.settings.setdefault('lags_pid', [1, 1])
+        self.settings.setdefault('lags_pid', [1 for i in range(len(sources))])
         self.settings.setdefault('verbose', True)
 
         # Check if provided lags are correct and work with the number of
         # samples in the data.
-        if len(self.settings['lags_pid']) != 2:
-            raise RuntimeError('List of lags must have length 2.')
-        if self.settings['lags_pid'][0] >= data.n_samples:
-            raise RuntimeError(
-                'Lag 1 ({0}) is larger than the number of samples in the data '
-                'set ({1}).'.format(
-                    self.settings['lags_pid'][0], data.n_samples))
-        if self.settings['lags_pid'][1] >= data.n_samples:
-            raise RuntimeError(
-                'Lag 2 ({0}) is larger than the number of samples in the data '
-                'set ({1}).'.format(
-                    self.settings['lags_pid'][1], data.n_samples))
+        if len(self.settings['lags_pid']) not in [2, 3, 4]:
+            raise RuntimeError('List of lags must have length 2 or 3 or 4.')
+        for i in range(len(self.settings['lags_pid'])):
+            if self.settings['lags_pid'][0] >= data.n_samples:
+                raise RuntimeError(
+                    'Lag {0} ({1}) is larger than the number of samples in the data '
+                    'set ({2}).'.format(
+                        i, self.settings['lags_pid'][i], data.n_samples))
 
         # Check if target and sources are provided correctly.
         if type(target) is not int:
             raise RuntimeError('Target must be an integer.')
-        if len(sources) != 2:
-            raise RuntimeError('List of sources must have length 2.')
+        if len(sources) not in  [2, 3, 4]:
+            raise RuntimeError('List of sources must have length 2 or 3 or 4.')
         if target in sources:
             raise RuntimeError('The target ({0}) should not be in the list '
                                'of sources ({1}).'.format(target, sources))
@@ -244,9 +234,9 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         self.target = target
         # TODO works for single vars only, change to multivariate?
         self.sources = self._lag_to_idx([
-                                (sources[0], self.settings['lags_pid'][0]),
-                                (sources[1], self.settings['lags_pid'][1])])
-
+                                (sources[i], self.settings['lags_pid'][i])
+                                for i in range(len(sources))])
+        
     def _calculate_pid(self, data):
 
         # TODO Discuss how and if the following statistical testing should be
@@ -262,29 +252,26 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         target_realisations = data.get_realisations(
                                             self.current_value,
                                             [self.current_value])[0]
-        source_1_realisations = data.get_realisations(
-                                            self.current_value,
-                                            [self.sources[0]])[0]
-        source_2_realisations = data.get_realisations(
-                                            self.current_value,
-                                             [self.sources[1]])[0]
+
+        # CHECK! make sure self.source has the same idx as sources
+        data.get_realisations(self.current_value, [self.sources[0]])[0]
+        list_sources_var_realisations = [data.get_realisations(
+                                                     self.current_value,
+                                                     [self.sources[i]])[0]
+                                         for i in range(len(self.sources))] 
+
+
         orig_pid = self._pid_estimator.estimate(
-                                s1=source_1_realisations,
-                                s2=source_2_realisations,
+                                s=list_sources_var_realisations,
                                 t=target_realisations)
 
-        if self.settings['verbose']:
-            print('\nunq information s1: {0:.8f}, s2: {1:.8f}'.format(
-                                                           orig_pid['unq_s1'],
-                                                           orig_pid['unq_s2']))
-            print('shd information: {0:.8f}, syn information: {1:.8f}'.format(
-                                                        orig_pid['shd_s1_s2'],
-                                                        orig_pid['syn_s1_s2']))
+        
         self.results = orig_pid
-        self.results['source_1'] = self._idx_to_lag([self.sources[0]])
-        self.results['source_2'] = self._idx_to_lag([self.sources[1]])
+        for i in range(len(self.sources)):
+            self.results['source_'+str(i+1)] = self._idx_to_lag([self.sources[i]])
+        #^ for
         self.results['selected_vars_sources'] = [
-            self.results['source_1'][0], self.results['source_2'][0]]
+            self.results['source_'+str(i+1)][0] for i in range(len(self.sources))]
         self.results['current_value'] = self.current_value
         # self.results['unq_s1_sign'] = sign_1
         # self.results['unq_s2_sign'] = sign_2
