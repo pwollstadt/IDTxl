@@ -53,14 +53,20 @@ class SxPID(Estimator):
         """
         Args:
             s : list of numpy arrays
-                        1D array containing realizations of a discrete random variable
+                1D arrays containing realizations of a discrete random variable
             t : numpy array
                 1D array containing realizations of a discrete random variable
 
         Returns:
             dict of dict
-                {'ptw' -> pointwise decomposition,            avg ->  average decomposition} 
-                          {realization -> {alpha -> float}}   {alpha -> float}
+                {
+                 'ptw' -> { realization -> {alpha -> [float, float, float]} }
+
+                 'avg' -> {alpha -> [float, float, float]}
+                }
+            where the list of floats is ordered [informative, misinformative, informative - misinformative]
+            ptw stands for pointwise decomposition
+            avg stands for average decomposition
         """
         s, t, self.settings = _check_input(s, t, self.settings)
         pdf = _get_pdf_dict(s, t)
