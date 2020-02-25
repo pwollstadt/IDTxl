@@ -103,12 +103,21 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
         """
         # Set defaults for PID estimation.
         settings.setdefault('verbose', True)
-        settings.setdefault('lags_pid', np.array([[1 for i in range(len(sources))]] * len(targets)))
+        settings.setdefault('lags_pid', np.array([[1 for i in range(len(sources[0]))]] * len(targets)))
 
         # Check inputs.
         if not len(targets) == len(sources) == len(settings['lags_pid']):
             raise RuntimeError('Lists of targets, sources, and lags must have'
                                'the same lengths.')
+        for lis_1 in sources:
+            for lis_2 in sources:
+                if not len(lis_1) == len(lis_2):
+                    raise RuntimeError('Lists in the list sources must have'
+                               'the same lengths.')
+                #^ if
+            #^ for
+        #^ for
+            
         list_of_lags = settings['lags_pid']
 
         # Perform PID estimation for each target individually
@@ -214,6 +223,9 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
         # samples in the data.
         if len(self.settings['lags_pid']) not in [2, 3, 4]:
             raise RuntimeError('List of lags must have length 2 or 3 or 4.')
+        # number of lags is equal to number of sources
+        if not len(self.settings['lags_pid']) == len(sources):
+            raise RuntimeError('List of lags must have same length as the list sources.')
         for i in range(len(self.settings['lags_pid'])):
             if self.settings['lags_pid'][0] >= data.n_samples:
                 raise RuntimeError(
