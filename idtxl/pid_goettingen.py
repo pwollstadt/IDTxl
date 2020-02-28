@@ -190,7 +190,7 @@ def pid(n, pdf_dirty, chld, achain, printing=False):
     their corresponding redundancy lattice is provided ( check Lattice() )
 
     Args:
-            n : int - number of sources
+            n : int - number of pid sources
             pdf_dirty : dict - the joint distribution of the inputs and the 
                         output (realizations are the keys)
             chld : dict - list of children for each node in the redundancy 
@@ -203,39 +203,33 @@ def pid(n, pdf_dirty, chld, achain, printing=False):
             tuple
                 pointwise decomposition, averaged decomposition
     """
-    assert type(pdf_dirty) is dict, ("pid_goettingen.pid(pdf, chld,
-            achain): pdf must be a dictionary")
-    assert type(chld) is dict, ("pid_goettingen.pid(pdf, chld, achain):
-            chld must be a dictionary")
-    assert type(achain) is list, ("pid_goettingen.pid(pdf, chld, achain):
-            pdf must be a list")
+    assert type(pdf_dirty) is dict, (
+        "pid_goettingen.pid(pdf, chld, achain): pdf must be a dictionary")
+    assert type(chld) is dict, (
+        "pid_goettingen.pid(pdf, chld, achain): chld must be a dictionary")
+    assert type(achain) is list, (
+        "pid_goettingen.pid(pdf, chld, achain): pdf must be a list")
 
     if __debug__:
         sum_p = 0.
         for k,v in pdf_dirty.items():
             assert type(k) is tuple, (
-                "pid_goettingen.pid(pdf, chld, achain): pdf's keys must be
-                tuples")
+                "pid_goettingen.pid(pdf, chld, achain): pdf's keys must be tuples")
             assert len(k) < 6, (
-                "pid_goettingen.pid(pdf, chld, achain): pdf's keys must be
-                tuples of length at most 5")
+                "pid_goettingen.pid(pdf, chld, achain): pdf's keys must be tuples of length at most 5")
             assert type(v) is float or ( type(v)==int and v==0 ), (
-                "pid_goettingen.pid(pdf, chld, achain): pdf's values must
-                be floats")
+                "pid_goettingen.pid(pdf, chld, achain): pdf's values must be floats")
             assert v >-.1, (
-                "pid_goettingen.pid(pdf, chld, achain): pdf's values must be 
-                nonnegative")
+                "pid_goettingen.pid(pdf, chld, achain): pdf's values must be nonnegative")
             sum_p += v
         #^ for
 
         assert abs(sum_p - 1) < 1.e-7, (
-            "pid_goettingen.pid(pdf, chld, achain): pdf's keys must sum up
-            to 1 (tolerance of precision is 1.e-7)")
+            "pid_goettingen.pid(pdf, chld, achain): pdf's keys must sum up to 1 (tolerance of precision is 1.e-7)")
     #^ if debug
 
     assert type(printing) is bool, (
-        "pid_goettingen.pid(pdf, chld, achain, printing): printing must be
-        a bool")
+        "pid_goettingen.pid(pdf, chld, achain, printing): printing must be a bool")
 
     # Remove the impossible realization
     pdf = {k:v for k,v in pdf_dirty.items() if v > 1.e-300 }

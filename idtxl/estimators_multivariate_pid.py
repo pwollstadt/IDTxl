@@ -8,7 +8,7 @@ information. Retrieved from ...
 """
 import numpy as np
 from . import lattices as lt
-from . import shared_goettingen
+from . import pid_goettingen
 from .estimator import Estimator
 
 # TODO add support for multivariate estimation for Tartu and Sydney estimator
@@ -75,7 +75,7 @@ class SxPID(Estimator):
         # Pickled as { n -> [{alpha -> children}, (alpha_1,...) ] }
         lattices = lt.lattices
         num_source_vars = len(s)
-        retval_ptw, retval_avg = shared_goettingen.pid(num_source_vars, pdf_dirty=pdf,
+        retval_ptw, retval_avg = pid_goettingen.pid(num_source_vars, pdf_dirty=pdf,
                                        chld=lattices[num_source_vars][0],
                                        achain=lattices[num_source_vars][1],
                                        printing = self.settings['verbose'])
