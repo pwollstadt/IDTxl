@@ -1,6 +1,7 @@
 """Estimate partial information decomposition (PID).
 
-Estimate PID for multiple sources (less than 5) and one target process using SxPID estimator.
+Estimate PID for multiple sources (less than 5) and one target process using
+SxPID estimator.
 
 Note:
     Written for Python 3.4+
@@ -26,8 +27,9 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
     - Williams, P. L., & Beer, R. D. (2010). Nonnegative Decomposition of
       Multivariate Information, 1–14. Retrieved from
       http://arxiv.org/abs/1004.2515
-    - Makkeh, A. & Gutknecht, A. & Wibral, M. (2020). A Differentiable measure for shared
-      information. Retrieved from ...
+    - Makkeh, A. & Gutknecht, A. & Wibral, M. (2020). A Differentiable measure 
+      for shared information. 1- 27 Retrieved from
+      http://arxiv.org/abs/2002.03356 
 
     Attributes:
         target : int
@@ -64,14 +66,8 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
             >>> data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
             >>> settings = {
             >>>     'lags_pid': [[1, 1], [3, 2]],
-            >>>     'alpha': 0.1,
-            >>>     'alph_s1': alph,
-            >>>     'alph_s2': alph,
-            >>>     'alph_t': alph,
-            >>>     'max_unsuc_swaps_row_parm': 60,
-            >>>     'num_reps': 63,
-            >>>     'max_iters': 1000,
-            >>>     'pid_estimator': 'SydneyPID'}
+            >>>     'verbose': False,
+            >>>     'pid_estimator': 'SxPID'}
             >>> targets = [0, 1]
             >>> sources = [[1, 2], [0, 2]]
             >>> pid_analysis = MultivariatePartialInformationDecomposition()
@@ -158,8 +154,8 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
             >>> z = np.logical_xor(x, y).astype(int)
             >>> data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
             >>> settings = {
-            >>>     'printing' : false,
-            >>>     'pid_calc_name': 'SxPID',
+            >>>     'verbose' : false,
+            >>>     'pid_estimator': 'SxPID',
             >>>     'lags_pid': [2, 3]}
             >>> pid_analysis = MultivariatePartialInformationDecomposition()
             >>> results = pid_analysis.analyse_single_target(settings=settings,

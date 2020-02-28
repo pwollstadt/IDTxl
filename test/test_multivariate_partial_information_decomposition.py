@@ -50,26 +50,32 @@ def test_pid_user_input():
                 'verbose': False}
     pid = MultivariatePartialInformationDecomposition()
 
-    with pytest.raises(RuntimeError):  # Test incorrect number of sources
+    # Test incorrect number of sources
+    with pytest.raises(RuntimeError):
         pid.analyse_single_target(settings=settings, data=data, target=2,
-                                  sources=[1, 2, 3])
+                                  sources=[0, 1, 2])
+    # Test incorrect number of lags
     settings['lags_pid'] = [0, 0, 0]
-    with pytest.raises(RuntimeError):  # Test incorrect number of lags # [1, 3]
+    with pytest.raises(RuntimeError):
         pid.analyse_single_target(settings=settings, data=data, target=2,
                                   sources=[0, 1])
+    # Test lag > no. samples
     settings['lags_pid'] = [n * 3, 0]
-    with pytest.raises(RuntimeError):  # Test lag > no. samples
+    with pytest.raises(RuntimeError):
         pid.analyse_single_target(settings=settings, data=data, target=2,
                                   sources=[0, 1])
+    # Test lag == no. samples
     settings['lags_pid'] = [n, 0]
-    with pytest.raises(RuntimeError):  # Test lag == no. samples
+    with pytest.raises(RuntimeError):
         pid.analyse_single_target(settings=settings, data=data, target=2,
                                   sources=[0, 1])
+    # Test target in sources
     settings['lags_pid'] = [0, 0]
-    with pytest.raises(RuntimeError):  # Test target in sources
+    with pytest.raises(RuntimeError):
         pid.analyse_single_target(settings=settings, data=data, target=2,
                                   sources=[2, 3])
-    with pytest.raises(IndexError):  # Test target not in processes
+    # Test target not in processes
+    with pytest.raises(IndexError):
         pid.analyse_single_target(settings=settings, data=data, target=5,
                                   sources=[0, 1])
 
@@ -83,12 +89,12 @@ def test_pid_user_input():
     s5 = np.random.randint(0, alph, n)
     z  = s1 + s2 + s3 + s4 + s5
     data = Data(np.vstack((s1, s2, s3, s4, s5, z)), 'ps', normalise=False)
-    # Test two-tailed significance test
     settings = {'pid_estimator': 'SxPID', 'tail': 'two', 'lags_pid': [0, 0, 0, 0],
                 'verbose': False}
     pid = MultivariatePartialInformationDecomposition()
 
-    with pytest.raises(RuntimeError):  # Test number of sources over limit (N=4)
+    # Test number of sources over limit (N=4)
+    with pytest.raises(RuntimeError):
         pid.analyse_single_target(settings=settings, data=data, target=5,
                                   sources=[0, 1, 2, 3, 4])
 
@@ -102,7 +108,7 @@ def test_network_analysis():
     z = np.logical_xor(x, y).astype(int)
     data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
-    # Run SxPID  estimator
+    # Run Goettingen estimator
     pid = MultivariatePartialInformationDecomposition()
     settings = {'pid_estimator': 'SxPID', 'tail': 'two',
                 'lags_pid': [[0, 0], [0, 0]]}
@@ -110,7 +116,7 @@ def test_network_analysis():
                                     data=data, targets=[0, 2],
                                     sources=[[1, 2], [0, 1]])
     assert 0.39 < est_goettingen._single_target[2]['avg'][((1,2,),)][2] <= 0.42, (
-        'SxPID estimator incorrect synergy: {0}, should approx. 0.415...'.format(
+        'Goettingen estimator incorrect synergy: {0}, should approx. 0.415...'.format(
         est_goettingen._single_target[2]['avg'][((1,2,),)][2]))
 
     # Test Multivairate case
@@ -136,7 +142,7 @@ def test_network_analysis():
                                     data=tri_data, targets=[0, 3],
                                     sources=[[1, 2, 3], [0, 1, 2]])
     assert 0.23 < est_goettingen._single_target[3]['avg'][((1,2,3,),)][2] <= 0.26, (
-        'SxPID estimator incorrect synergy: {0}, should approx. 0.2451...'.format(
+        'Goettingen estimator incorrect synergy: {0}, should approx. 0.2451...'.format(
         est_goettingen._single_target[2]['avg'][((1,2,),)][2]))
 
     # Quad-variate
@@ -146,7 +152,7 @@ def test_network_analysis():
                                     data=quad_data, targets=[0, 4],
                                     sources=[[1, 2, 3, 4], [0, 1, 2, 3]])
     assert 0.15 < est_goettingen._single_target[4]['avg'][((1,2,3,4,),)][2] <= 0.18, (
-        'SxPID estimator incorrect synergy: {0}, should approx. 0.1682...'.format(
+        'Goettingen estimator incorrect synergy: {0}, should approx. 0.1682...'.format(
         est_goettingen._single_target[2]['avg'][((1,2,),)][2]))
 
 
@@ -159,7 +165,7 @@ def test_analyse_single_target():
     z = np.logical_xor(x, y).astype(int)
     data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
-    # Run Tartu estimator
+    # Run Goettingen estimator
     pid = MultivariatePartialInformationDecomposition()
     settings = {'pid_estimator': 'SxPID',
                 'tail': 'two',
@@ -168,13 +174,13 @@ def test_analyse_single_target():
     est_goettingen = pid.analyse_single_target(settings=settings, data=data,
                                                target=2, sources=[0, 1])
     assert 0.39 < est_goettingen._single_target[2]['avg'][((1,2,),)][2] <= 0.42, (
-        'SxPID estimator incorrect synergy: {0}, should approx. 0.415...'.format(
+        'Goettingen estimator incorrect synergy: {0}, should approx. 0.415...'.format(
         est_goettingen._single_target[2]['avg'][((1,2,),)][2]))
     assert 0.56 < est_goettingen._single_target[2]['avg'][((1,),)][2] <= 0.6, (
-        'SxPID estimator incorrect unique s1: {0}, should approx. 0.5896...'.format(
+        'Goettingen estimator incorrect unique s1: {0}, should approx. 0.5896...'.format(
         est_goettingen._single_target[2]['avg'][((1,),)][2]))
     assert 0.56 < est_goettingen._single_target[2]['avg'][((2,),)][2] <= 0.6, (
-        'SxPID estimator incorrect unique s2: {0}, should approx. 0.5896...'.format(
+        'Goettingen estimator incorrect unique s2: {0}, should approx. 0.5896...'.format(
         est_goettingen._single_target[2]['avg'][((2,),)][2]))
 
 

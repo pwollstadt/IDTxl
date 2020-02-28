@@ -1,4 +1,4 @@
-"""Provide unit tests for PID estimators."""
+"""Provide unit tests for Multivariate PID estimators."""
 import time as tm
 import numpy as np
 import pytest
@@ -8,17 +8,10 @@ from idtxl.estimators_multivariate_pid import SxPID
 SETTINGS = {}
 
 X = np.asarray([0, 0, 1, 1])
-# X = np.squeeze(nm.repmat(X, 1, 100000))
 Y = np.asarray([0, 1, 0, 1])
-# Y = np.squeeze(nm.repmat(Y, 1, 100000))
-
-# alternative way of generating the distributions stochastically
-# n = 10000000
-# X = np.random.randint(0, ALPH_X, n)
-# Y = np.random.randint(0, ALPH_Y, n)
 
 def test_goettingen_estimator():
-    # Test Shared Goettingen estimator on logical and
+    """Test Goettingen estimator on pointwise level"""
     pid_goettingen = SxPID(SETTINGS)
     Z = np.logical_and(X, Y).astype(int)
     est_goettingen = pid_goettingen.estimate([X, Y], Z)
@@ -40,7 +33,7 @@ def test_goettingen_estimator():
 
 
 def test_pid_and():
-    """Test PID estimator on logical AND."""
+    """Test Goettingen estimator on logical AND."""
     Z = np.logical_and(X, Y).astype(int)
     est_goettingen = _estimate(Z)
 
@@ -48,7 +41,7 @@ def test_pid_and():
         'Average Shared is not 0.1225...')
 
 def test_pid_xor():
-    """Test PID estimator on logical XOR."""
+    """Test Goettingen estimator on logical XOR."""
     Z = np.logical_xor(X, Y).astype(int)
     est_goettingen = _estimate(Z)
 
@@ -57,7 +50,7 @@ def test_pid_xor():
 
 
 def test_pid_source_copy():
-    """Test PID estimator on copied source."""
+    """Test Goettingen estimator on copied source."""
     Z = X
     est_goettingen = _estimate(Z)
 
@@ -76,7 +69,7 @@ def test_pid_source_copy():
 
 
 def test_xor_long():
-    """Test PID estimation with Sydney estimator on XOR with higher N."""
+    """Test PID estimation with Goettingen estimator on XOR with higher N."""
     # logical XOR - N
     n = 1000
     alph = 2
@@ -132,7 +125,7 @@ def _estimate(Z):
 
 
 def test_int_types():
-    """Test PID estimator on different integer types."""
+    """Test Goettingen estimator on different integer types."""
     Z = np.logical_xor(X, Y).astype(np.int32)
     print(type(Z))
     print(type(Z[0]))
@@ -158,7 +151,7 @@ def test_int_types():
 
 # Not sure if it is useful for SxPID
 def test_non_binary_alphabet():
-    """Test PID estimators on larger alphabets."""
+    """Test Goettingen estimator on larger alphabets."""
     n = 1000
     alph_s1 = 5
     alph_s2 = 3
@@ -195,7 +188,7 @@ def test_non_binary_alphabet():
 
 
 def test_three_hash():
-    """Test PID estimator on binary three hash."""
+    """Test Goettingen estimator on binary three hash."""
     s1 = np.asarray([0, 0, 0, 0, 1, 1, 1, 1])
     s2 = np.asarray([0, 0, 1, 1, 0, 0, 1, 1])
     s3 = np.asarray([0, 1, 0, 1, 0, 1, 0, 1])
