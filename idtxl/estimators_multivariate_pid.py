@@ -3,8 +3,9 @@
 This module provides an estimator for multivariate partial information 
 decomposition as proposed in
 
-Makkeh, A. & Gutknecht, A. & Wibral, M. (2020). A Differentiable measure for shared
-information. Retrieved from ...
+- Makkeh, A. & Gutknecht, A. & Wibral, M. (2020). A Differentiable measure 
+  for shared information. 1- 27 Retrieved from
+  http://arxiv.org/abs/2002.03356 
 """
 import numpy as np
 from . import lattices as lt
@@ -18,8 +19,8 @@ class SxPID(Estimator):
 
     Implementation of the point partial information decomposition (PID) estimator 
     for discrete data. The estimator finds shared information, unique information
-    and synergistic information between the two inputs s1 and s2 with respect
-    to the output t for each each realization and then average them.
+    and synergistic information between the multiple inputs s1, s2, ..., sn with '
+    respect to the output t for each each realization and then average them.
 
     The algorithm uses recurrsion to compute the partial information decomposition
 
@@ -64,7 +65,8 @@ class SxPID(Estimator):
 
                  'avg' -> {alpha -> [float, float, float]}
                 }
-            where the list of floats is ordered [informative, misinformative, informative - misinformative]
+            where the list of floats is ordered 
+            [informative, misinformative, informative - misinformative]
             ptw stands for pointwise decomposition
             avg stands for average decomposition
         """
@@ -72,10 +74,13 @@ class SxPID(Estimator):
         pdf = _get_pdf_dict(s, t)
 
         # Read lattices from a file
-        # Pickled as { n -> [{alpha -> children}, (alpha_1,...) ] }
+        # Stored as {
+        #             n -> [{alpha -> children}, (alpha_1,...) ]
+        #           }
+        # children is a list of tuples
         lattices = lt.lattices
         num_source_vars = len(s)
-        retval_ptw, retval_avg = pid_goettingen.pid(num_source_vars, pdf_dirty=pdf,
+        retval_ptw, retval_avg = pid_goettingen.pid(num_source_vars, pdf_orig=pdf,
                                        chld=lattices[num_source_vars][0],
                                        achain=lattices[num_source_vars][1],
                                        printing = self.settings['verbose'])
@@ -90,6 +95,7 @@ class SxPID(Estimator):
 
 
 def _get_pdf_dict(s, t):
+    """"Stores the probability mass function estimated via counting to a dictionary"""
     # Create dictionary with probability mass function
     counts = dict()
     n_samples = s[0].shape[0]
@@ -151,7 +157,8 @@ def _check_input(s, t, settings):
         raise TypeError('The settings argument should be a dictionary.')
     for i in range(len(s)):
         if not issubclass(s[i].dtype.type, np.integer):
-            raise TypeError('Input s{0} (source {0}) must be an integer numpy array.'.format(i+1))
+            raise TypeError('Input s{0} (source {0}) must be an integer numpy '
+                            'array.'.format(i+1))
     #^ for
     if not issubclass(t.dtype.type, np.integer):
         raise TypeError('Input t (target) must be an integer numpy array.')

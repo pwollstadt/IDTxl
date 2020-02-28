@@ -178,7 +178,7 @@ def pi_minus(n, pdf, rlz, alpha, chld, achain):
 #^ pi_minus()
 
 
-def pid(n, pdf_dirty, chld, achain, printing=False):
+def pid(n, pdf_orig, chld, achain, printing=False):
     """Estimate partial information decomposition for 'n' inputs and one output
     
     Implementation of the partial information decomposition (PID) estimator for
@@ -191,8 +191,10 @@ def pid(n, pdf_dirty, chld, achain, printing=False):
 
     Args:
             n : int - number of pid sources
-            pdf_dirty : dict - the joint distribution of the inputs and the 
-                        output (realizations are the keys)
+            pdf_orig : dict - the original joint distribution of the inputs and 
+                       the output (realizations are the keys). It doesn't have 
+                       to be a full support distribution, i.e., it can contain
+                       realizations with 'zero' mass probability 
             chld : dict - list of children for each node in the redundancy 
                    lattice (nodes are the keys)
             achain : tuple - tuple of all the nodes (antichains) in the 
@@ -203,7 +205,7 @@ def pid(n, pdf_dirty, chld, achain, printing=False):
             tuple
                 pointwise decomposition, averaged decomposition
     """
-    assert type(pdf_dirty) is dict, (
+    assert type(pdf_orig) is dict, (
         "pid_goettingen.pid(pdf, chld, achain): pdf must be a dictionary")
     assert type(chld) is dict, (
         "pid_goettingen.pid(pdf, chld, achain): chld must be a dictionary")
@@ -212,7 +214,7 @@ def pid(n, pdf_dirty, chld, achain, printing=False):
 
     if __debug__:
         sum_p = 0.
-        for k,v in pdf_dirty.items():
+        for k,v in pdf_orig.items():
             assert type(k) is tuple, (
                 "pid_goettingen.pid(pdf, chld, achain): pdf's keys must be tuples")
             assert len(k) < 6, (
@@ -232,7 +234,7 @@ def pid(n, pdf_dirty, chld, achain, printing=False):
         "pid_goettingen.pid(pdf, chld, achain, printing): printing must be a bool")
 
     # Remove the impossible realization
-    pdf = {k:v for k,v in pdf_dirty.items() if v > 1.e-300 }
+    pdf = {k:v for k,v in pdf_orig.items() if v > 1.e-300 }
 
     # Initialize the output where
     # ptw = { rlz -> { alpha -> pi_alpha } }

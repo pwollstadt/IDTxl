@@ -29,7 +29,7 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
       http://arxiv.org/abs/1004.2515
     - Makkeh, A. & Gutknecht, A. & Wibral, M. (2020). A Differentiable measure 
       for shared information. 1- 27 Retrieved from
-      http://arxiv.org/abs/2002.03356 
+      http://arxiv.org/abs/2002.03356
 
     Attributes:
         target : int
