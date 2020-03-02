@@ -1,7 +1,7 @@
-"""Partical information decomposition for discrete random variables.
+"""Multivariate Partical information decomposition for discrete random variables.
 
-This module provides an estimator for multivariate partial information 
-decomposition as proposed in
+This module provides an estimator for multivariate partial information decomposition 
+as proposed in
 
 - Makkeh, A. & Gutknecht, A. & Wibral, M. (2020). A Differentiable measure 
   for shared information. 1- 27 Retrieved from
@@ -15,12 +15,16 @@ from .estimator import Estimator
 # TODO add support for multivariate estimation for Tartu and Sydney estimator
 
 class SxPID(Estimator):
-    """Estimate partial information decomposition for multiple inputs and one output
+    """Estimate partial information decomposition for multiple inputs (up to 4 inputs)
+    and one output
 
-    Implementation of the point partial information decomposition (PID) estimator 
-    for discrete data. The estimator finds shared information, unique information
-    and synergistic information between the multiple inputs s1, s2, ..., sn with '
-    respect to the output t for each each realization and then average them.
+    Implementation of the multivariate partial information decomposition (PID) 
+    estimator for discrete data. The estimator finds shared information, unique 
+    information and synergistic information between the multiple inputs 
+    s1, s2, ..., sn with respect to the output t for each realization (t, s1, ..., sn)
+    and then average them according to their distribution weights p(t, s1, ..., sn).
+    Both the pointwise (on the realization level) PID and the averaged PID are 
+    returned (see the 'return' of 'estimate()').
 
     The algorithm uses recurrsion to compute the partial information decomposition
 

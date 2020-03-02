@@ -216,22 +216,24 @@ def pid(n, pdf_orig, chld, achain, printing=False):
         sum_p = 0.
         for k,v in pdf_orig.items():
             assert type(k) is tuple, (
-                "pid_goettingen.pid(pdf, chld, achain): pdf's keys must be tuples")
+                'pid_goettingen.pid(pdf, chld, achain): pdf keys must be tuples')
             assert len(k) < 6, (
-                "pid_goettingen.pid(pdf, chld, achain): pdf's keys must be tuples of length at most 5")
+                'pid_goettingen.pid(pdf, chld, achain): pdf keys must be tuples'
+                'of length at most 5')
             assert type(v) is float or ( type(v)==int and v==0 ), (
-                "pid_goettingen.pid(pdf, chld, achain): pdf's values must be floats")
+                'pid_goettingen.pid(pdf, chld, achain): pdf values must be floats')
             assert v >-.1, (
-                "pid_goettingen.pid(pdf, chld, achain): pdf's values must be nonnegative")
+                'pid_goettingen.pid(pdf, chld, achain): pdf values must be nonnegative')
             sum_p += v
         #^ for
 
         assert abs(sum_p - 1) < 1.e-7, (
-            "pid_goettingen.pid(pdf, chld, achain): pdf's keys must sum up to 1 (tolerance of precision is 1.e-7)")
+            'pid_goettingen.pid(pdf, chld, achain): pdf keys must sum up to 1'
+            '(tolerance of precision is 1.e-7)')
     #^ if debug
 
     assert type(printing) is bool, (
-        "pid_goettingen.pid(pdf, chld, achain, printing): printing must be a bool")
+        'pid_goettingen.pid(pdf, chld, achain, printing): printing must be a bool')
 
     # Remove the impossible realization
     pdf = {k:v for k,v in pdf_orig.items() if v > 1.e-300 }

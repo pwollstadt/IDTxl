@@ -1,7 +1,7 @@
 """Estimate partial information decomposition (PID).
 
-Estimate PID for multiple sources (less than 5) and one target process using
-SxPID estimator.
+Estimate PID for multiple sources (up to 4 sources) and one target process 
+using SxPID estimator.
 
 Note:
     Written for Python 3.4+
@@ -16,11 +16,11 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
     """Perform partial information decomposition for individual processes.
 
     Perform partial information decomposition (PID) for multiple source 
-    processes and one target process in the network. Estimate unique, shared, 
-    and synergistic information in the multiple sources about the target. 
-    Call analyse_network() on the whole network or a set of nodes or call
-    analyse_single_target() to estimate PID for a single process. See
-    docstrings of the two functions for more information.
+    processes (up to 4 sources) and a target process in the network. 
+    Estimate unique, shared, and synergistic information in the multiple 
+    sources about the target. Call analyse_network() on the whole network 
+    or a set of nodes or call analyse_single_target() to estimate PID for 
+    a single process. See docstrings of the two functions for more information.
 
     References:
 
@@ -48,8 +48,10 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
     def analyse_network(self, settings, data, targets, sources):
         """Estimate partial information decomposition for network nodes.
 
-        Estimate partial information decomposition (PID) for multiple nodes in
-        the network.
+        Estimate, for multiple nodes (target processes), the partial 
+        information decomposition (PID) for multiple source processes 
+        (up to 4 sources) and each of these target processes 
+        in the network. 
 
         Note:
             For a detailed description of the algorithm and settings see
@@ -60,16 +62,19 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
 
             >>> n = 20
             >>> alph = 2
-            >>> x = np.random.randint(0, alph, n)
-            >>> y = np.random.randint(0, alph, n)
-            >>> z = np.logical_xor(x, y).astype(int)
-            >>> data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
+            >>> s1 = np.random.randint(0, alph, n)
+            >>> s2 = np.random.randint(0, alph, n)
+            >>> s3 = np.random.randint(0, alph, n)
+            >>> target1 = np.logical_xor(s1, s2).astype(int)
+            >>> target  = np.logical_xor(target1, s3).astype(int)
+            >>> data = Data(np.vstack((s1, s2, s3, target)), 'ps', 
+            >>> normalise=False)
             >>> settings = {
-            >>>     'lags_pid': [[1, 1], [3, 2]],
+            >>>     'lags_pid': [[1, 1, 1], [3, 2, 7]],
             >>>     'verbose': False,
             >>>     'pid_estimator': 'SxPID'}
             >>> targets = [0, 1]
-            >>> sources = [[1, 2], [0, 2]]
+            >>> sources = [[1, 2, 3], [0, 2, 3]]
             >>> pid_analysis = MultivariatePartialInformationDecomposition()
             >>> results = pid_analysis.analyse_network(settings, data, targets,
             >>>                                        sources)
@@ -81,7 +86,8 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
                 contain
 
                 - lags_pid : list of lists of ints [optional] - lags in samples
-                  between sources and target (default=[[1, 1], [1, 1] ...])
+                  between sources and target 
+                  (default=[[1, 1, ..., 1], [1, 1, ..., 1], ...])
 
             data : Data instance
                 raw data for analysis
@@ -138,8 +144,8 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
     def analyse_single_target(self, settings, data, target, sources):
         """Estimate partial information decomposition for a network node.
 
-        Estimate partial information decomposition (PID) for a target node in
-        the network.
+        Estimate partial information decomposition (PID) for multiple source 
+        processes (up to 4 sources) and a target process in the network.
 
         Note:
             For a description of the algorithm and the method see references in
@@ -149,19 +155,22 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
 
             >>> n = 20
             >>> alph = 2
-            >>> x = np.random.randint(0, alph, n)
-            >>> y = np.random.randint(0, alph, n)
-            >>> z = np.logical_xor(x, y).astype(int)
-            >>> data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
+            >>> s1 = np.random.randint(0, alph, n)
+            >>> s2 = np.random.randint(0, alph, n)
+            >>> s3 = np.random.randint(0, alph, n)
+            >>> target1 = np.logical_xor(s1, s2).astype(int)
+            >>> target  = np.logical_xor(target1, s3).astype(int)
+            >>> data = Data(np.vstack((s1, s2, s3, target)), 'ps', 
+            >>> normalise=False)
             >>> settings = {
             >>>     'verbose' : false,
             >>>     'pid_estimator': 'SxPID',
-            >>>     'lags_pid': [2, 3]}
+            >>>     'lags_pid': [2, 3, 1]}
             >>> pid_analysis = MultivariatePartialInformationDecomposition()
             >>> results = pid_analysis.analyse_single_target(settings=settings,
             >>>                                              data=data,
             >>>                                              target=0,
-            >>>                                              sources=[1, 2])
+            >>>                                              sources=[1, 2, 3])
 
         Args: settings : dict parameters for estimator use and statistics:
 
@@ -169,7 +178,7 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
                   (for estimator settings see the documentation in the
                   estimators_pid modules)
                 - lags_pid : list of ints [optional] - lags in samples between
-                  sources and target (default=[1, 1,...,1])
+                  sources and target (default=[1, 1, ..., 1])
                 - verbose : bool [optional] - toggle console output
                   (default=True)
 
