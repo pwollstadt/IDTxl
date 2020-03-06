@@ -10,13 +10,11 @@ SETTINGS = {}
 X = np.asarray([0, 0, 1, 1])
 Y = np.asarray([0, 1, 0, 1])
 
-def test_goettingen_estimator():
+def test_pointwise_pid_and():
     """Test Goettingen estimator on pointwise level"""
     pid_goettingen = SxPID(SETTINGS)
     Z = np.logical_and(X, Y).astype(int)
-    est_goettingen = pid_goettingen.estimate([X, Y], Z)
-    assert np.isclose(0.12255624891826572, est_goettingen['avg'][((1,),(2,),)][2]), (
-    'Average shared is not 0.1225... for SxPID estimator.' )
+    est_goettingen = _estimate(Z)
     true_values = {
         (0,0,0): 0.4150374992788438,
         (0,1,0): -0.16992500144231237,
@@ -32,7 +30,7 @@ def test_goettingen_estimator():
     #^ for
 
 
-def test_pid_and():
+def test_average_pid_and():
     """Test Goettingen estimator on logical AND."""
     Z = np.logical_and(X, Y).astype(int)
     est_goettingen = _estimate(Z)
@@ -40,7 +38,7 @@ def test_pid_and():
     assert np.isclose(0.12255624891826572, est_goettingen['avg'][((1,),(2,),)][2]), (
         'Average Shared is not 0.1225...')
 
-def test_pid_xor():
+def test_average_pid_xor():
     """Test Goettingen estimator on logical XOR."""
     Z = np.logical_xor(X, Y).astype(int)
     est_goettingen = _estimate(Z)
@@ -49,7 +47,7 @@ def test_pid_xor():
         'Average Shared is not -0.5849...')
 
 
-def test_pid_source_copy():
+def test_average_pid_source_copy():
     """Test Goettingen estimator on copied source."""
     Z = X
     est_goettingen = _estimate(Z)
@@ -68,7 +66,31 @@ def test_pid_source_copy():
             est_goettingen['avg'][((1,2,),)][2]))
 
 
-def test_xor_long():
+def _estimate(T):
+    """Estimate PID for a given target."""
+
+    # Goettingen estimator
+    pid_goettingen = SxPID(SETTINGS)
+    tic = tm.time()
+    est_goettingen = pid_goettingen.estimate([X, Y], T)
+    t_goettingen = tm.time() - tic
+
+    print('\nCopied source')
+    print('Estimator            SxPID\n')
+    print('PID evaluation       {:.3f} s\n'.format(t_goettingen))
+    print('Uni s1               {0:.8f}'.format(
+                                         est_goettingen['avg'][((1,),)][2]))
+    print('Uni s2               {0:.8f}'.format(
+                                         est_goettingen['avg'][((2,),)][2]))
+    print('Shared s1_s2         {0:.8f}'.format(
+                                         est_goettingen['avg'][((1,),(2,),)][2]))
+    print('Synergy s1_s2        {0:.8f}'.format(
+                                         est_goettingen['avg'][((1,2,),)][2]))
+          
+    return est_goettingen
+
+
+def test_average_pid_xor_long():
     """Test PID estimation with Goettingen estimator on XOR with higher N."""
     # logical XOR - N
     n = 1000
@@ -98,30 +120,6 @@ def test_xor_long():
     # atol = 10/n since the divergence from the uniform dist of logic xor is in the order of 10/n
     assert np.isclose(-0.5849625007211562, est_goettingen['avg'][((1,),(2,),)][2], atol=10/n), (
         'Average Shared is not -0.5849...')
-
-
-def _estimate(Z):
-    """Estimate PID for a given target."""
-
-    # Goettingen estimator
-    pid_goettingen = SxPID(SETTINGS)
-    tic = tm.time()
-    est_goettingen = pid_goettingen.estimate([X, Y], Z)
-    t_goettingen = tm.time() - tic
-
-    print('\nCopied source')
-    print('Estimator            SxPID\n')
-    print('PID evaluation       {:.3f} s\n'.format(t_goettingen))
-    print('Uni s1               {0:.8f}'.format(
-                                         est_goettingen['avg'][((1,),)][2]))
-    print('Uni s2               {0:.8f}'.format(
-                                         est_goettingen['avg'][((2,),)][2]))
-    print('Shared s1_s2         {0:.8f}'.format(
-                                         est_goettingen['avg'][((1,),(2,),)][2]))
-    print('Synergy s1_s2        {0:.8f}'.format(
-                                         est_goettingen['avg'][((1,2,),)][2]))
-          
-    return est_goettingen
 
 
 def test_int_types():
@@ -187,7 +185,7 @@ def test_non_binary_alphabet():
     #                   atol=1e-03), 'Unique2 is not equal.'
 
 
-def test_three_hash():
+def test_average_pid_three_hash():
     """Test Goettingen estimator on binary three hash."""
     s1 = np.asarray([0, 0, 0, 0, 1, 1, 1, 1])
     s2 = np.asarray([0, 0, 1, 1, 0, 0, 1, 1])
@@ -251,11 +249,11 @@ def test_three_hash():
     
 
 if __name__ == '__main__':
-    test_goettingen_estimator()
+    test_pointwise_pid_and()
+    test_average_pid_xor_long()
+    test_average_pid_and()
+    test_average_pid_xor()
+    test_average_pid_source_copy()
+    test_average_pid_three_hash()
     test_non_binary_alphabet()
-    test_xor_long()
-    test_pid_and()
-    test_pid_xor()
-    test_pid_source_copy()
-    test_three_hash()
     test_int_types()
