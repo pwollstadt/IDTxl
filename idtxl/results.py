@@ -239,7 +239,6 @@ class Results():
                             '(.single_proces or ._single_target).')
                 self._add_single_result(p, results_to_add, r.settings)
 
-
 class ResultsSingleProcessAnalysis(Results):
     """Store results of single process analysis.
 
