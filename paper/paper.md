@@ -1,6 +1,5 @@
 ---
-title: 'IDTxl: The Information Dynamics Toolkit xl: a Python package for the
-efficient analysis of multivariate information dynamics in networks'
+title: 'IDTxl: The Information Dynamics Toolkit xl: a Python package for the efficient analysis of multivariate information dynamics in networks'
 tags:
   - information theory
   - network inference
@@ -130,7 +129,7 @@ The toolkit is highly flexible, providing various information-theoretic
 estimators for the user to select from; these handle both discrete and
 continuous time-series data, and allow choices, e.g. using linear Gaussian
 estimators (i.e. Granger causality, @Granger1969) for speed versus nonlinear
-estimators (e.g. Kraskov-Stoegbauer-Grassberger, @Kraskov2004) for accuracy
+estimators (e.g. @Kraskov2004) for accuracy
 (see the [IDTxl homepage](https://github.com/pwollstadt/IDTxl) for details).
 Further, estimator implementations for both CPU and GPU compute platforms are
 provided, which offer parallel computing engines for efficiency. IDTxl provides
