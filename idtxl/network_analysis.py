@@ -631,8 +631,7 @@ class NetworkAnalysis():
         for l in range(8, len(lines)):
             result = [x.strip() for x in lines[l].split(':')]
             # Format: target - sources analyzed - selected variables
-            print(result)
-            #ast.literal_eval(result[2]): IndexError: list index out of range
+            ast.literal_eval(result[2]): IndexError: list index out of range
             selected_variables[int(result[0])] = ast.literal_eval(result[2])
 
         # Load settings and data

@@ -327,39 +327,3 @@ class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
 
     def getit(self):
         print(self.target)
-
-
-
-"""
-31.7 5h
-"""
-"""
-Attributes:
-
-    source_set : list
-        indices of source processes tested for their influence on the
-        target
-    target : list
-        index of target process
-    settings : dict
-        analysis settings
-    current_value : tuple
-        index of the current value in TE estimation, (idx process,
-        idx sample)
-    selected_vars_full : list of tuples
-        samples in the full conditional set, (idx process, idx sample)
-    selected_vars_sources : list of tuples
-        source samples in the conditional set, (idx process, idx sample)
-    selected_vars_target : list of tuples
-        target samples in the conditional set, (idx process, idx sample)
-    pvalue_omnibus : float
-        p-value of the omnibus test
-    pvalues_sign_sources : numpy array
-        array of p-values for TE from individual sources to the target
-    statistic_omnibus : float
-        joint TE from all sources to the target
-    statistic_sign_sources : numpy array
-        raw TE values from individual sources to the target
-    sign_ominbus : bool
-        statistical significance of the over-all TE
-"""
