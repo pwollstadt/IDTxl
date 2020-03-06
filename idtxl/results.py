@@ -781,6 +781,76 @@ class ResultsPartialInformationDecomposition(ResultsNetworkAnalysis):
                      self).get_single_target(target, fdr=False)
 
 
+class ResultsMultivariatePartialInformationDecomposition(ResultsNetworkAnalysis):
+    """Store results of Multivariate Partial Information Decomposition (PID) 
+analysis.
+
+    Provide a container for results of Multivariate Partial Information 
+    Decomposition (PID) algorithms.
+
+    Note that for convenience all dictionaries in this class can additionally
+    be accessed using dot-notation:
+
+    >>> res_pid._single_target[2].source_1
+
+    or
+
+    >>> res_pid._single_target[2].['source_1'].
+
+    Attributes:
+        settings : dict
+            settings used for estimation of information theoretic measures and
+            statistical testing
+        data_properties : dict
+            data properties, contains
+
+                - n_nodes : int - total number of nodes in the network
+                - n_realisations : int - number of samples available for
+                  analysis given the settings (e.g., a high maximum lag used in
+                  network inference, results in fewer data points available for
+                  estimation)
+                - normalised : bool - indicates if data were z-standardised
+                  before the estimation
+
+        targets_analysed : list
+            list of analysed targets
+    """
+
+    def __init__(self, n_nodes, n_realisations, normalised):
+        super().__init__(n_nodes, n_realisations, normalised)
+
+    def get_single_target(self, target):
+        """Return results for a single target in the network.
+
+        Results for single targets include for each target
+
+        - source_i : tuple - source variable i
+        - selected_vars_sources : list of tuples - source variables used in PID
+          estimation
+        - avg : dict - avg pid {alpha -> float} where alpha is a redundancy 
+          lattice node
+        - ptw : dict of dicts - ptw pid {rlz -> {alpha -> float} } where rlz is 
+          a single realisation of the random variables and alpha is a redundancy 
+          lattice node  
+        - current_value : tuple - current value used for analysis, described by
+          target and sample index in the data
+        - [estimator-specific settings]
+
+        Args:
+            target : int
+                target id
+
+        Returns:
+            dict
+                Results for single target. Note that for convenience
+                dictionary entries can either be accessed via keywords
+                (result['selected_vars_sources']) or via dot-notation
+                (result.selected_vars_sources).
+        """
+        return super(ResultsMultivariatePartialInformationDecomposition,
+                     self).get_single_target(target, fdr=False)
+
+
 class ResultsNetworkComparison(ResultsNetworkAnalysis):
     """Store results of network comparison.
 
