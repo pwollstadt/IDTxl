@@ -21,4 +21,8 @@ rm resume_checkpoint.ckp
 rm run_checkpoint.ckp
 rm resume_checkpoint.ckp.old
 rm run_checkpoint.ckp.old
- 
+rm resume_checkpoint.dat
+rm resume_checkpoint.json
+rm run_checkpoint.dat
+rm run_checkpoint.json
+

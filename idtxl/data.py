@@ -1056,3 +1056,20 @@ class Data():
 
         # Discard transient effects (only take end of time series)
         self.set_data(x[:, -(n_samples + 1):-1, :], 'psr')
+
+        def __eq__(self, other):
+            return self.data == other.data and self.n_processes == other.processes and self.n_replications == other.n_replications and self.normalise == other.normalise
+
+    """
+    Attributes:
+        data : numpy array
+            realisations, can only be set via 'set_data' method
+        n_processes : int
+            number of processes
+        n_replications : int
+            number of replications
+        n_samples : int
+            number of samples in time
+        normalise : bool
+            if true, all data gets z-standardised per process
+"""
