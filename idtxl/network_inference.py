@@ -1026,7 +1026,7 @@ class NetworkInferenceMultivariate(NetworkInference):
             if self.sign_omnibus:
                 # If there is an ex.AlgorithmExhaustedError exception inside
                 #  max_stats_sequential, it will catch it and return
-                #  everything as not significant:NetworkInferenceMultivariate
+                #  everything as not significant:
                 [s, p, stat] = stats.max_statistic_sequential(self, data)
                 p, stat = self._remove_non_significant(s, p, stat)
                 self.pvalues_sign_sources = p
