@@ -622,3 +622,4 @@ def _check_input(s1, s2, t, settings):
         raise ValueError('Number of samples s1, s2 and t must be equal')
 
     return s1, s2, t, settings
+ 
