@@ -12,7 +12,7 @@ y = np.random.randint(0, alph, n)
 z = np.logical_xor(x, y).astype(int)
 data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
-# b) Initialise analysis object and define settings for both PID estimators
+# b) Initialise analysis object and define settings for SxPID estimators
 pid = MultivariatePartialInformationDecomposition()
 settings_SxPID = {'pid_estimator': 'SxPID', 'lags_pid': [0, 0]}
 
