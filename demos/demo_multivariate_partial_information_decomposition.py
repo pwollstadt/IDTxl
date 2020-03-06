@@ -16,7 +16,7 @@ data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 pid = MultivariatePartialInformationDecomposition()
 settings_SxPID = {'pid_estimator': 'SxPID', 'lags_pid': [0, 0]}
 
-# c) Run Tartu estimator
+# c) Run Goettingen estimator
 results_SxPID = pid.analyse_single_target(
     settings=settings_SxPID, data=data, target=2, sources=[0, 1])
 
