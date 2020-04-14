@@ -1,7 +1,6 @@
 # Import classes
 import numpy as np
-from idtxl.multivariate_partial_information_decomposition import (
-                                        MultivariatePartialInformationDecomposition)
+from idtxl.multivariate_pid import MultivariatePID
 from idtxl.data import Data
 
 # a) Generate test data
@@ -13,7 +12,7 @@ z = np.logical_xor(x, y).astype(int)
 data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
 # b) Initialise analysis object and define settings for SxPID estimators
-pid = MultivariatePartialInformationDecomposition()
+pid = MultivariatePID()
 settings_SxPID = {'pid_estimator': 'SxPID', 'lags_pid': [0, 0]}
 
 # c) Run Goettingen estimator
@@ -39,13 +38,13 @@ print('Synergy s1_s2        {0:.4f}\t\t{1:.4f}'.format(
 
 # Some special Examples
 
-# Pointwise Unique  
+# Pointwise Unique
 x = np.asarray([0, 1, 0, 2])
 y = np.asarray([1, 0, 2, 0])
 z = np.asarray([1, 1, 2, 2])
 data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
-pid = MultivariatePartialInformationDecomposition()
+pid = MultivariatePID()
 settings_SxPID = {'pid_estimator': 'SxPID', 'lags_pid': [0, 0]}
 
 results_SxPID = pid.analyse_single_target(
@@ -66,13 +65,13 @@ print('Synergy s1_s2        {0:.4f}\t\t{1:.1f}'.format(
     results_SxPID.get_single_target(2)['avg'][((1,2,),)][2],
     0.))
 
-# Redundancy Error  
+# Redundancy Error
 x = np.asarray([0, 0, 0, 1, 1, 1, 0, 1])
 y = np.asarray([0, 0, 0, 1, 1, 1, 1, 0])
 z = np.asarray([0, 0, 0, 1, 1, 1, 0, 1])
 data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
-pid = MultivariatePartialInformationDecomposition()
+pid = MultivariatePID()
 settings_SxPID = {'pid_estimator': 'SxPID', 'lags_pid': [0, 0]}
 
 results_SxPID = pid.analyse_single_target(
@@ -93,14 +92,14 @@ print('Synergy s1_s2        {0:.4f}\t\t{1:.4f}'.format(
     results_SxPID.get_single_target(2)['avg'][((1,2,),)][2],
     0.368))
 
-# Three bits hash  
+# Three bits hash
 s1 = np.asarray([0, 0, 0, 0, 1, 1, 1, 1])
 s2 = np.asarray([0, 0, 1, 1, 0, 0, 1, 1])
 s3 = np.asarray([0, 1, 0, 1, 0, 1, 0, 1])
 z  = np.asarray([0, 1, 1, 0, 1, 0, 0, 1])
 data = Data(np.vstack((s1, s2, s3, z)), 'ps', normalise=False)
 
-pid = MultivariatePartialInformationDecomposition()
+pid = MultivariatePID()
 settings_SxPID = {'pid_estimator': 'SxPID', 'lags_pid': [0, 0, 0]}
 
 results_SxPID = pid.analyse_single_target(
@@ -113,7 +112,7 @@ print('Uni s1                                                   {0:.4f}\t\t{1:.4
 print('Uni s2                                                   {0:.4f}\t\t{1:.4f}'.format(
     results_SxPID.get_single_target(3)['avg'][((2,),)][2], 0.3219))
 print('Uni s3                                                   {0:.4f}\t\t{1:.4f}'.format(
-    results_SxPID.get_single_target(3)['avg'][((3,),)][2], 0.3219))    
+    results_SxPID.get_single_target(3)['avg'][((3,),)][2], 0.3219))
 print('Synergy s1_s2_s3                                         {0:.4f}\t\t{1:.4f}'.format(
     results_SxPID.get_single_target(3)['avg'][((1,2,3),)][2], 0.2451))
 print('Synergy s1_s2                                            {0:.4f}\t\t{1:.4f}'.format(

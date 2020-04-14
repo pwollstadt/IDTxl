@@ -1,7 +1,6 @@
 # Import classes
 import numpy as np
-from idtxl.partial_information_decomposition import (
-                                        PartialInformationDecomposition)
+from idtxl.bivariate_pid import BivariatePID
 from idtxl.data import Data
 
 # a) Generate test data
@@ -13,7 +12,7 @@ z = np.logical_xor(x, y).astype(int)
 data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
 # b) Initialise analysis object and define settings for both PID estimators
-pid = PartialInformationDecomposition()
+pid = BivariatePID()
 settings_tartu = {'pid_estimator': 'TartuPID', 'lags_pid': [0, 0]}
 settings_sydney = {
     'alph_s1': alph,
@@ -30,7 +29,7 @@ results_tartu = pid.analyse_single_target(
     settings=settings_tartu, data=data, target=2, sources=[0, 1])
 
 # d) Run Sydney estimator
-pid = PartialInformationDecomposition()
+pid = BivariatePID()
 results_sydney = pid.analyse_single_target(
     settings=settings_sydney, data=data, target=2, sources=[0, 1])
 

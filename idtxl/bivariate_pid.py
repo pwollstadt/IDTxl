@@ -8,10 +8,10 @@ Note:
 import numpy as np
 from .single_process_analysis import SingleProcessAnalysis
 from .estimator import find_estimator
-from .results import ResultsPartialInformationDecomposition
+from .results import ResultsPID
 
 
-class PartialInformationDecomposition(SingleProcessAnalysis):
+class BivariatePID(SingleProcessAnalysis):
     """Perform partial information decomposition for individual processes.
 
     Perform partial information decomposition (PID) for two source processes
@@ -75,7 +75,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             >>>     'pid_estimator': 'SydneyPID'}
             >>> targets = [0, 1, 2]
             >>> sources = [[1, 2], [0, 2], [0, 1]]
-            >>> pid_analysis = PartialInformationDecomposition()
+            >>> pid_analysis = BivariatePID()
             >>> results = pid_analysis.analyse_network(settings, data, targets,
             >>>                                        sources)
 
@@ -97,9 +97,9 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
                 [[0, 2], [1, 0]], must have the same length as targets
 
         Returns:
-            ResultsPartialInformationDecomposition instance
+            ResultsPID instance
                 results of network inference, see documentation of
-                ResultsPartialInformationDecomposition()
+                ResultsPID()
         """
         # Set defaults for PID estimation.
         settings.setdefault('verbose', True)
@@ -112,7 +112,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         list_of_lags = settings['lags_pid']
 
         # Perform PID estimation for each target individually
-        results = ResultsPartialInformationDecomposition(
+        results = ResultsPID(
             n_nodes=data.n_processes,
             n_realisations=data.n_realisations(),
             normalised=data.normalise)
@@ -158,7 +158,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             >>>     'max_iters': 1000,
             >>>     'pid_calc_name': 'SydneyPID',
             >>>     'lags_pid': [2, 3]}
-            >>> pid_analysis = PartialInformationDecomposition()
+            >>> pid_analysis = BivariatePID()
             >>> results = pid_analysis.analyse_single_target(settings=settings,
             >>>                                              data=data,
             >>>                                              target=0,
@@ -181,9 +181,9 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
             sources : list of ints
                 indices of the two source processes for the target
 
-        Returns: ResultsPartialInformationDecomposition instance results of
+        Returns: ResultsPID instance results of
             network inference, see documentation of
-            ResultsPartialInformationDecomposition()
+            ResultsPID()
         """
         # Check input and initialise values for analysis.
         self._initialise(settings, data, target, sources)
@@ -192,7 +192,7 @@ class PartialInformationDecomposition(SingleProcessAnalysis):
         self._calculate_pid(data)
 
         # Add analyis info.
-        results = ResultsPartialInformationDecomposition(
+        results = ResultsPID(
             n_nodes=data.n_processes,
             n_realisations=data.n_realisations(self.current_value),
             normalised=data.normalise)

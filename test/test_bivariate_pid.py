@@ -1,8 +1,8 @@
 """Provide unit tests for high-level PID estimation."""
 import pytest
 import numpy as np
-from idtxl.partial_information_decomposition import (
-                                        PartialInformationDecomposition)
+from idtxl.bivariate_pid import (
+                                        BivariatePID)
 from idtxl.data import Data
 from test_estimators_pid import optimiser_missing, float128_not_available
 
@@ -11,7 +11,7 @@ from test_estimators_pid import optimiser_missing, float128_not_available
 def test_pid_user_input():
     """Test if user input is handled correctly."""
     # Test missing estimator name
-    pid = PartialInformationDecomposition()
+    pid = BivariatePID()
     with pytest.raises(RuntimeError):
         pid.analyse_single_target(settings={}, data=Data(), target=0,
                                   sources=[1, 2])
@@ -41,7 +41,7 @@ def test_pid_user_input():
 
     # Test two-tailed significance test
     settings = {'pid_estimator': 'TartuPID', 'tail': 'two', 'lags_pid': [0, 0]}
-    pid = PartialInformationDecomposition()
+    pid = BivariatePID()
 
     with pytest.raises(RuntimeError):  # Test incorrect number of sources
         pid.analyse_single_target(settings=settings, data=data, target=2,
@@ -79,7 +79,7 @@ def test_network_analysis():
     data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
     # Run Tartu estimator
-    pid = PartialInformationDecomposition()
+    pid = BivariatePID()
     settings = {'pid_estimator': 'TartuPID', 'tail': 'two',
                 'lags_pid': [[0, 0], [0, 0]]}
     est_tartu = pid.analyse_network(settings=settings,
@@ -119,7 +119,7 @@ def test_analyse_single_target():
     data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
     # Run Tartu estimator
-    pid = PartialInformationDecomposition()
+    pid = BivariatePID()
     settings = {'pid_estimator': 'TartuPID',
                 'tail': 'two',
                 'lags_pid': [0, 0]}

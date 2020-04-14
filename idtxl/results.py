@@ -713,7 +713,7 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
         self._print_edge_list(adjacency_matrix, weights=weights)
 
 
-class ResultsPartialInformationDecomposition(ResultsNetworkAnalysis):
+class ResultsPID(ResultsNetworkAnalysis):
     """Store results of Partial Information Decomposition (PID) analysis.
 
     Provide a container for results of Partial Information Decomposition (PID)
@@ -778,15 +778,15 @@ class ResultsPartialInformationDecomposition(ResultsNetworkAnalysis):
                 (result['selected_vars_sources']) or via dot-notation
                 (result.selected_vars_sources).
         """
-        return super(ResultsPartialInformationDecomposition,
+        return super(ResultsPID,
                      self).get_single_target(target, fdr=False)
 
 
-class ResultsMultivariatePartialInformationDecomposition(ResultsNetworkAnalysis):
-    """Store results of Multivariate Partial Information Decomposition (PID) 
+class ResultsMultivariatePID(ResultsNetworkAnalysis):
+    """Store results of Multivariate Partial Information Decomposition (PID)
 analysis.
 
-    Provide a container for results of Multivariate Partial Information 
+    Provide a container for results of Multivariate Partial Information
     Decomposition (PID) algorithms.
 
     Note that for convenience all dictionaries in this class can additionally
@@ -828,11 +828,11 @@ analysis.
         - source_i : tuple - source variable i
         - selected_vars_sources : list of tuples - source variables used in PID
           estimation
-        - avg : dict - avg pid {alpha -> float} where alpha is a redundancy 
+        - avg : dict - avg pid {alpha -> float} where alpha is a redundancy
           lattice node
-        - ptw : dict of dicts - ptw pid {rlz -> {alpha -> float} } where rlz is 
-          a single realisation of the random variables and alpha is a redundancy 
-          lattice node  
+        - ptw : dict of dicts - ptw pid {rlz -> {alpha -> float} } where rlz is
+          a single realisation of the random variables and alpha is a redundancy
+          lattice node
         - current_value : tuple - current value used for analysis, described by
           target and sample index in the data
         - [estimator-specific settings]
@@ -848,7 +848,7 @@ analysis.
                 (result['selected_vars_sources']) or via dot-notation
                 (result.selected_vars_sources).
         """
-        return super(ResultsMultivariatePartialInformationDecomposition,
+        return super(ResultsMultivariatePID,
                      self).get_single_target(target, fdr=False)
 
 

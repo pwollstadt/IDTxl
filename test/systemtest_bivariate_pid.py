@@ -1,8 +1,8 @@
 """Provide unit tests for high-level PID estimation."""
 import time as tm
 import numpy as np
-from idtxl.partial_information_decomposition import (
-                                        PartialInformationDecomposition)
+from idtxl.bivariate_pid import (
+                                        BivariatePID)
 from idtxl.data import Data
 import idtxl.idtxl_utils as utils
 
@@ -18,7 +18,7 @@ def test_pid_xor_data():
 
     # Run Tartu estimator
     settings = {'pid_estimator': 'TartuPID', 'lags_pid': [0, 0]}
-    pid = PartialInformationDecomposition()
+    pid = BivariatePID()
     tic = tm.time()
     est_tartu = pid.analyse_single_target(settings, data=data, target=2,
                                           sources=[0, 1])
@@ -36,7 +36,7 @@ def test_pid_xor_data():
         'max_iters': 1000,
         'pid_estimator': 'SydneyPID',
         'lags_pid': [0, 0]}
-    pid = PartialInformationDecomposition()
+    pid = BivariatePID()
     tic = tm.time()
     est_sydney = pid.analyse_single_target(settings, data=data, target=2,
                                            sources=[0, 1])

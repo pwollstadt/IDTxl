@@ -1,6 +1,6 @@
 """Estimate partial information decomposition (PID).
 
-Estimate PID for multiple sources (up to 4 sources) and one target process 
+Estimate PID for multiple sources (up to 4 sources) and one target process
 using SxPID estimator.
 
 Note:
@@ -9,17 +9,17 @@ Note:
 import numpy as np
 from .single_process_analysis import SingleProcessAnalysis
 from .estimator import find_estimator
-from .results import ResultsMultivariatePartialInformationDecomposition
+from .results import ResultsMultivariatePID
 
 
-class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
+class MultivariatePID(SingleProcessAnalysis):
     """Perform partial information decomposition for individual processes.
 
-    Perform partial information decomposition (PID) for multiple source 
-    processes (up to 4 sources) and a target process in the network. 
-    Estimate unique, shared, and synergistic information in the multiple 
-    sources about the target. Call analyse_network() on the whole network 
-    or a set of nodes or call analyse_single_target() to estimate PID for 
+    Perform partial information decomposition (PID) for multiple source
+    processes (up to 4 sources) and a target process in the network.
+    Estimate unique, shared, and synergistic information in the multiple
+    sources about the target. Call analyse_network() on the whole network
+    or a set of nodes or call analyse_single_target() to estimate PID for
     a single process. See docstrings of the two functions for more information.
 
     References:
@@ -27,7 +27,7 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
     - Williams, P. L., & Beer, R. D. (2010). Nonnegative Decomposition of
       Multivariate Information, 1–14. Retrieved from
       http://arxiv.org/abs/1004.2515
-    - Makkeh, A. & Gutknecht, A. & Wibral, M. (2020). A Differentiable measure 
+    - Makkeh, A. & Gutknecht, A. & Wibral, M. (2020). A Differentiable measure
       for shared information. 1- 27 Retrieved from
       http://arxiv.org/abs/2002.03356
 
@@ -48,10 +48,10 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
     def analyse_network(self, settings, data, targets, sources):
         """Estimate partial information decomposition for network nodes.
 
-        Estimate, for multiple nodes (target processes), the partial 
-        information decomposition (PID) for multiple source processes 
-        (up to 4 sources) and each of these target processes 
-        in the network. 
+        Estimate, for multiple nodes (target processes), the partial
+        information decomposition (PID) for multiple source processes
+        (up to 4 sources) and each of these target processes
+        in the network.
 
         Note:
             For a detailed description of the algorithm and settings see
@@ -67,7 +67,7 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
             >>> s3 = np.random.randint(0, alph, n)
             >>> target1 = np.logical_xor(s1, s2).astype(int)
             >>> target  = np.logical_xor(target1, s3).astype(int)
-            >>> data = Data(np.vstack((s1, s2, s3, target)), 'ps', 
+            >>> data = Data(np.vstack((s1, s2, s3, target)), 'ps',
             >>> normalise=False)
             >>> settings = {
             >>>     'lags_pid': [[1, 1, 1], [3, 2, 7]],
@@ -75,7 +75,7 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
             >>>     'pid_estimator': 'SxPID'}
             >>> targets = [0, 1]
             >>> sources = [[1, 2, 3], [0, 2, 3]]
-            >>> pid_analysis = MultivariatePartialInformationDecomposition()
+            >>> pid_analysis = MultivariatePID()
             >>> results = pid_analysis.analyse_network(settings, data, targets,
             >>>                                        sources)
 
@@ -86,7 +86,7 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
                 contain
 
                 - lags_pid : list of lists of ints [optional] - lags in samples
-                  between sources and target 
+                  between sources and target
                   (default=[[1, 1, ..., 1], [1, 1, ..., 1], ...])
 
             data : Data instance
@@ -95,13 +95,13 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
                 index of target processes
             sources : list of lists
                 indices of the multiple source processes for each target, e.g.,
-                [[0, 1, 2], [1, 0, 3]], all must lists be of the same lenght and 
+                [[0, 1, 2], [1, 0, 3]], all must lists be of the same lenght and
                 list of lists must have the same length as targets
 
         Returns:
-            ResultsMultivariatePartialInformationDecomposition instance
+            ResultsMultivariatePID instance
                 results of network inference, see documentation of
-                ResultsMultivariatePartialInformationDecomposition()
+                ResultsMultivariatePID()
         """
         # Set defaults for PID estimation.
         settings.setdefault('verbose', True)
@@ -119,11 +119,11 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
                 #^ if
             #^ for
         #^ for
-            
+
         list_of_lags = settings['lags_pid']
 
         # Perform PID estimation for each target individually
-        results = ResultsMultivariatePartialInformationDecomposition(
+        results = ResultsMultivariatePID(
             n_nodes=data.n_processes,
             n_realisations=data.n_realisations(),
             normalised=data.normalise)
@@ -144,7 +144,7 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
     def analyse_single_target(self, settings, data, target, sources):
         """Estimate partial information decomposition for a network node.
 
-        Estimate partial information decomposition (PID) for multiple source 
+        Estimate partial information decomposition (PID) for multiple source
         processes (up to 4 sources) and a target process in the network.
 
         Note:
@@ -160,13 +160,13 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
             >>> s3 = np.random.randint(0, alph, n)
             >>> target1 = np.logical_xor(s1, s2).astype(int)
             >>> target  = np.logical_xor(target1, s3).astype(int)
-            >>> data = Data(np.vstack((s1, s2, s3, target)), 'ps', 
+            >>> data = Data(np.vstack((s1, s2, s3, target)), 'ps',
             >>> normalise=False)
             >>> settings = {
             >>>     'verbose' : false,
             >>>     'pid_estimator': 'SxPID',
             >>>     'lags_pid': [2, 3, 1]}
-            >>> pid_analysis = MultivariatePartialInformationDecomposition()
+            >>> pid_analysis = MultivariatePID()
             >>> results = pid_analysis.analyse_single_target(settings=settings,
             >>>                                              data=data,
             >>>                                              target=0,
@@ -189,9 +189,9 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
             sources : list of ints
                 indices of the multiple source processes for the target
 
-        Returns: ResultsMultivariatePartialInformationDecomposition instance results of
+        Returns: ResultsMultivariatePID instance results of
             network inference, see documentation of
-            ResultsPartialInformationDecomposition()
+            ResultsPID()
         """
         # Check input and initialise values for analysis.
         self._initialise(settings, data, target, sources)
@@ -200,7 +200,7 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
         self._calculate_pid(data)
 
         # Add analyis info.
-        results = ResultsMultivariatePartialInformationDecomposition(
+        results = ResultsMultivariatePID(
             n_nodes=data.n_processes,
             n_realisations=data.n_realisations(self.current_value),
             normalised=data.normalise)
@@ -253,7 +253,7 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
         self.sources = self._lag_to_idx([
                                 (sources[i], self.settings['lags_pid'][i])
                                 for i in range(len(sources))])
-        
+
     def _calculate_pid(self, data):
 
         # TODO Discuss how and if the following statistical testing should be
@@ -275,14 +275,14 @@ class MultivariatePartialInformationDecomposition(SingleProcessAnalysis):
         list_sources_var_realisations = [data.get_realisations(
                                                      self.current_value,
                                                      [self.sources[i]])[0]
-                                         for i in range(len(self.sources))] 
+                                         for i in range(len(self.sources))]
 
 
         orig_pid = self._pid_estimator.estimate(
                                 s=list_sources_var_realisations,
                                 t=target_realisations)
 
-        
+
         self.results = orig_pid
         for i in range(len(self.sources)):
             self.results['source_'+str(i+1)] = self._idx_to_lag([self.sources[i]])

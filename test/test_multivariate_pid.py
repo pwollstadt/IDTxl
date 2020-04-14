@@ -1,16 +1,16 @@
 """Provide unit tests for high-level Multivariate PID estimation."""
 import pytest
 import numpy as np
-from idtxl.multivariate_partial_information_decomposition import (
-                                        MultivariatePartialInformationDecomposition)
+from idtxl.multivariate_pid import (
+                                        MultivariatePID)
 from idtxl.data import Data
 
 
 def test_pid_user_input():
     """Test if user input is handled correctly."""
     # Test missing estimator name
-    pid = MultivariatePartialInformationDecomposition()
-    settings = {'verbose': False}    
+    pid = MultivariatePID()
+    settings = {'verbose': False}
     with pytest.raises(RuntimeError):
         pid.analyse_single_target(settings=settings, data=Data(), target=0,
                                   sources=[1, 2])
@@ -48,7 +48,7 @@ def test_pid_user_input():
     # Test two-tailed significance test
     settings = {'pid_estimator': 'SxPID', 'tail': 'two', 'lags_pid': [0, 0],
                 'verbose': False}
-    pid = MultivariatePartialInformationDecomposition()
+    pid = MultivariatePID()
 
     # Test incorrect number of sources
     with pytest.raises(RuntimeError):
@@ -91,7 +91,7 @@ def test_pid_user_input():
     data = Data(np.vstack((s1, s2, s3, s4, s5, z)), 'ps', normalise=False)
     settings = {'pid_estimator': 'SxPID', 'tail': 'two', 'lags_pid': [0, 0, 0, 0],
                 'verbose': False}
-    pid = MultivariatePartialInformationDecomposition()
+    pid = MultivariatePID()
 
     # Test number of sources over limit (N=4)
     with pytest.raises(RuntimeError):
@@ -109,7 +109,7 @@ def test_network_analysis():
     data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
     # Run Goettingen estimator
-    pid = MultivariatePartialInformationDecomposition()
+    pid = MultivariatePID()
     settings = {'pid_estimator': 'SxPID', 'tail': 'two',
                 'lags_pid': [[0, 0], [0, 0]]}
     est_goettingen = pid.analyse_network(settings=settings,
@@ -135,7 +135,7 @@ def test_network_analysis():
     quad_data = Data(np.vstack((s1, s2, s3, s4, quad_target)), 'ps', normalise=False)
 
     # Trivariate
-    pid = MultivariatePartialInformationDecomposition()
+    pid = MultivariatePID()
     tri_settings = {'pid_estimator': 'SxPID', 'tail': 'two',
                     'lags_pid': [[0, 0, 0], [0, 0, 0]]}
     est_goettingen = pid.analyse_network(settings=tri_settings,
@@ -166,7 +166,7 @@ def test_analyse_single_target():
     data = Data(np.vstack((x, y, z)), 'ps', normalise=False)
 
     # Run Goettingen estimator
-    pid = MultivariatePartialInformationDecomposition()
+    pid = MultivariatePID()
     settings = {'pid_estimator': 'SxPID',
                 'tail': 'two',
                 'lags_pid': [0, 0],
