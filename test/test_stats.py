@@ -48,6 +48,9 @@ def test_max_statistic_sequential():
                                     1)
     [sign, p, te] = stats.max_statistic_sequential(analysis_setup=setup,
                                                    data=data)
+    [sign, p, te] = stats.max_statistic_sequential_bivariate(
+                                                   analysis_setup=setup,
+                                                   data=data)
 
 
 def test_network_fdr():
@@ -326,16 +329,16 @@ def test_analytical_surrogates():
 
 
 if __name__ == '__main__':
-    test_ais_fdr()
-    test_analytical_surrogates()
-    test_data_type()
-    test_network_fdr()
-    test_find_pvalue()
-    test_find_table_max()
-    test_find_table_min()
-    test_sort_table_max()
-    test_sort_table_min()
-    test_omnibus_test()
-    test_max_statistic()
-    test_min_statistic()
+    # test_ais_fdr()
+    # test_analytical_surrogates()
+    # test_data_type()
+    # test_network_fdr()
+    # test_find_pvalue()
+    # test_find_table_max()
+    # test_find_table_min()
+    # test_sort_table_max()
+    # test_sort_table_min()
+    # test_omnibus_test()
+    # test_max_statistic()
+    # test_min_statistic()
     test_max_statistic_sequential()
