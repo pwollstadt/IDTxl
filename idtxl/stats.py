@@ -1537,10 +1537,10 @@ def _generate_spectral_surrogates(data, scale, n_perm, perm_settings):
     # Allocate memory for surrogates
     surrogates = np.empty((data.n_samples, data.n_replications,
                            n_perm)).astype(data.data_type)
-    permute_in_time = perm_settings['permute_in_time']
+
     # Generate surrogates by permuting over replications if possible (no.
     # replications needs to be sufficient); else permute samples over time.
-    if permute_in_time:
+    if perm_settings['perm_in_time']:
         for perm in range(n_perm):
             surrogates[:, :, perm] = data.slice_permute_samples(
                                                     scale, perm_settings)[0]

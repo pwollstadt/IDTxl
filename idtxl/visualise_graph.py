@@ -301,3 +301,197 @@ def plot_network_comparison(results):
                      cbar_label='p-value')
     ax.set_title('p-value [%]', y=1.1)
     return graph_union, fig
+
+
+def plot_spectral_result(spectral_result, freq_rate):
+    """Plot results of spectral transfer entropy analysis at each scale.
+
+    Args:
+        spectral_results : ResultsSpectralTE instance
+            Results of spectral TE analysis
+        freq_rate: int
+            samplign rate of the system under analysis
+
+    Returns:
+        Figure
+            figure handle, Figure object from the matplotlib package
+    """
+    for target in spectral_result.targets_analysed:
+        freq1 = np.round(freq_rate/2, 2)
+        freq2 = np.round(freq1/2, 2)
+        if spectral_result.settings['spectral_analysis_type'] == 'source':
+
+            for process in range(spectral_result._single_target[target][0]['source_tested']):
+
+                # Make a subplot for each link.
+                n_scale = spectral_result.settings['n_scale']
+                fig, axs = plt.subplots(
+                    n_scale, 1, sharex=True, sharey=True, figsize=(10, 5))
+                nbin = int(round(np.size(
+                    spectral_result._single_target[target]['source'][0]['te_surrogate'][process])/5))
+                axs = axs.ravel()
+                te_orig = spectral_result._single_target[target][0]['te_full_orig'][process]
+                for i in range(0, n_scale):
+
+                    median_s = np.median(
+                        spectral_result._single_target[target]['source'][i]['te_surrogate'][process])
+
+                    axs[i].hist(spectral_result._single_target[target][i]['te_surrogate'][process],
+                                bins=nbin, color='white', edgecolor='black')
+
+                    axs[i].plot([te_orig, te_orig], [0, nbin],
+                                'black', linestyle='dashed')
+                    axs[i].plot([median_s, median_s], [0, nbin],
+                                'red', linestyle='dashed')
+                    axs[0].text(.5, .9,
+                                'Scale {0} (Freq {1}-{2}Hz)'.format(
+                                    i, freq1, freq2),
+                                horizontalalignment='center',
+                                transform=axs[0].transAxes)
+                    axs[0].set_title('Source Shuffled:'.format(target), y=1.3)
+
+                    freq1 = freq2
+                    freq2 = np.round(freq1/2, 2)
+
+                axs[i].set_xlabel("Transfer Entropy")
+                fig.subplots_adjust(hspace=0.7)
+                plt.show()
+
+        elif spectral_result.settings['spectral_analysis_type'] == 'target':
+
+            for process in range(0, spectral_result._single_target[target][0]['source_tested']):
+
+                n_scale = spectral_result.settings['n_scale']
+                fig, axs = plt.subplots(
+                    n_scale, 1, sharex=True, sharey=True, figsize=(10, 5))
+                nbin = int(round(np.size(
+                    spectral_result._single_target[target]['target'][0]['te_surrogate'][process])/5))
+                axs = axs.ravel()
+                te_orig = spectral_result._single_target[target][0]['te_full_orig'][process]
+                for i in range(n_scale):
+                    median_t = np.median(
+                        spectral_result._single_target[target]['target'][i]['te_surrogate'][process])
+                    axs[i].hist(spectral_result._single_target[target][i]['te_surrogate'][process],
+                                bins=nbin, color='white', edgecolor='black')
+
+                    axs[i].plot([te_orig, te_orig], [0, nbin],
+                                'black', linestyle='dashed')
+                    axs[i].plot([median_t, median_t], [0, nbin],
+                                'red', linestyle='dashed')
+                    axs[i].text(.5, .9, 'Scale {0} (Freq {1}-{2}Hz)'.format(
+                                    i, freq1, freq2),
+                                horizontalalignment='center',
+                                transform=axs[i].transAxes)
+                    axs[0].set_title('Target Shuffled:'.format(target), y=1.3)
+
+                    freq1 = freq2
+                    freq2 = np.round(freq1/2, 2)
+
+                axs[i].set_xlabel("Transfer Entropy")
+
+                fig.subplots_adjust(hspace=0.7)
+                plt.show()
+
+        else:
+            # Make one figure for each source tested (rigth column source
+            # destroyed-left column target destroyed.
+            for process in range(0, len(spectral_result._single_target[target]['source'][0]['source_tested'])):
+
+                process_tested = spectral_result._single_target[target]['source'][0]['source_tested']
+                n_scale = spectral_result.settings['n_scale']
+                fig, axarr = plt.subplots(
+                    n_scale, 2, sharex=True, sharey=True, figsize=(8, 5))
+                nbin = int(round(np.size(
+                    spectral_result._single_target[target]['source'][0]['te_surrogate'][process])/5))
+
+                te_orig = spectral_result._single_target[target]['source'][0]['te_full_orig'][0]
+
+                for i in range(0, n_scale):
+                    median_s = np.median(
+                        spectral_result._single_target[target]['source'][i]['te_surrogate'][process])
+                    median_t = np.median(
+                        spectral_result._single_target[target]['target'][i]['te_surrogate'][process])
+                    axarr[i, 0].hist(spectral_result._single_target[target]['source'][i]['te_surrogate'][process],
+                                     bins=nbin,
+                                     color='white', edgecolor='black')
+
+                    axarr[i, 0].plot([te_orig, te_orig], [
+                                     0, nbin], 'black', linestyle='dashed')
+                    axarr[i, 0].plot([median_s, median_s], [
+                                     0, nbin], 'red', linestyle='dashed')
+                    axarr[i, 0].text(.5, 1.1,
+                                     'Scale {0} (Freq {1}-{2}Hz)'.format(
+                                         i, freq1, freq2),
+                                     horizontalalignment='center',
+                                     transform=axarr[i, 0].transAxes)
+                    axarr[0, 0].set_title(
+                        'Source shuffled:'.format(process_tested), y=1.3)
+
+                    axarr[i, 0].get_yaxis().set_visible(False)
+                    axarr[i, 1].hist(spectral_result._single_target[target]['target'][i]['te_surrogate'][process],
+                                     bins=nbin, color='white',
+                                     edgecolor='black')
+                    axarr[i, 1].plot([te_orig, te_orig], [
+                                     0, nbin], 'black', linestyle='dashed')
+                    axarr[i, 1].plot([median_t, median_t], [
+                                     0, nbin], 'red', linestyle='dashed')
+                    axarr[i, 1].get_yaxis().set_visible(False)
+                    axarr[i, 1].text(.5, 1.1,
+                                     'Scale {0} (Freq {1}-{2}Hz)'.format(
+                                         i, freq1, freq2),
+                                     horizontalalignment='center',
+                                     transform=axarr[i, 1].transAxes)
+
+                    axarr[0, 1].set_title(
+                        'Target shuffled:'.format(target), y=1.3)
+                    freq1 = freq2
+                    freq2 = np.round(freq1/2, 2)
+
+                axarr[i, 0].set_xlabel("Transfer Entropy")
+                axarr[i, 1].set_xlabel("Transfer Entropy")
+                fig.subplots_adjust(hspace=0.7)
+
+                plt.show()
+    return fig
+
+
+def plot_SOSO_result(SOSO_result, target, source_scale, target_scale):
+    """Plot results of SOSO spectral transfer entropy analysis using.
+
+    Plot results of the 'swap-out swap-out' (SOSO) algorithm for testing for
+    direct information transfer from source to receiver frequencies.
+
+    References:
+
+    - Pinzuti, E., Wollstadt, P., Gutknecht, A., Tüscher, O., Wibral, M.
+      (2020). Measuring spectrally-resolved information transfer for sender-
+      and receiver- specific frequencies.
+      https://www.biorxiv.org/content/10.1101/2020.02.08.939744v1
+
+    Args:
+        spectral_results : ResultsSpectralTE instance
+            Results of spectral TE analysis
+        freq_rate: int
+            samplign rate of the system under analysis
+
+    Returns:
+        Figure
+            figure handle, Figure object from the matplotlib package
+    """
+    fig, axarr = plt.subplots(1, 1, sharex=True, sharey=True, figsize=(4, 4))
+    nbin = int(round(np.size(
+        SOSO_result._single_target[target]['source'][source_scale]['delta_surrogate'])/5))
+
+    axarr.hist(
+        SOSO_result._single_target[target]['source'][source_scale]['delta_surrogate'],
+        bins=nbin, color='royalblue', edgecolor='black')
+    delta = SOSO_result._single_target[target]['source'][source_scale]['delta']
+    median_s = np.median(
+        SOSO_result._single_target[target]['source'][source_scale]['delta_surrogate'])
+    axarr.plot([delta, delta], [0, nbin], 'black')
+    axarr.plot([median_s, median_s], [0, nbin], 'red', linestyle='dashed')
+    axarr.set_xlabel("Distance delta")
+    axarr.set_title('Source scale'.format(source_scale) +
+                    '-Target scale'.format(target_scale))
+    plt.show()
+    return fig
