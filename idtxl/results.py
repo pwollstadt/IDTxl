@@ -1037,3 +1037,79 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
         """
         v = self.get_single_target(target)['selected_vars_sources']
         return np.unique(np.array([s[0] for s in v]))
+
+
+class ResultsSpectralTE(ResultsNetworkAnalysis):
+    """Store results of spectral transfer entropy analysis.
+
+    Provide a container for results of spectral TE analysis.
+
+    Note that for convenience all dictionaries in this class can additionally
+    be accessed using dot-notation: res_network.settings.cmi_estimator
+    or res_network.settings['cmi_estimator'].
+
+    Attributes:
+        settings : dict
+            settings used for estimation of information theoretic measures and
+            statistical testing
+        data_properties: dict
+            data properties, contains
+
+            - n_nodes : int - total number of nodes in the network
+            - n_realisations : int - number of samples available for
+              analysis given the settings (e.g., a high maximum lag used in
+              network inference, results in fewer data points available for
+              estimation)
+            - normalised : bool - indicates if data were z-standardised
+              before estimation
+
+        targets_analysed : list
+            list of analysed targets
+    """
+
+    def __init__(self, n_nodes, n_realisations, normalised):
+        super().__init__(n_nodes, n_realisations, normalised)
+
+    def get_single_target(self, target):
+        """Return results for a single target in the network.
+
+        Return results for single targets, include for each target a dictionary
+        with results for each scale:
+
+        - te_surrogate : numpy array - surrogate TE values
+        - delta : float -distance between single link TE and median of
+          surrogate distribution
+        - temporal_surrogate: numpy array - temporal_surrogate TE values
+        - spec_pval : float - p-value for this scale
+        - spec_sign : bool - significance of this scale
+
+        Args:
+            target : int
+                target id
+
+        Returns:
+            dict
+                Results for single target. Note that for convenience
+                dictionary entries can either be accessed via keywords
+                (result['selected_vars_sources']) or via dot-notation
+                (result.selected_vars_sources).
+        """
+        if target not in self.targets_analysed:
+            raise RuntimeError('No results for target {0}.'.format(target))
+        try:
+            return self._single_target[target]
+        except AttributeError:
+            raise RuntimeError('No results have been added.')
+        except KeyError:
+            raise RuntimeError(
+                'No results for target {0}.'.format(target))
+
+    def get_target_sources(self, target):
+        """Return list of sources (parents) for given target.
+
+        Args:
+            target : int
+                target index
+        """
+        v = self.get_single_target(target)['selected_vars_sources']
+        return np.unique(np.array([s[0] for s in v]))
