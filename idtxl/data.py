@@ -50,7 +50,8 @@ class Data():
             if True, data gets normalised per process (default=True)
         seed: int [optional]
             can be set to a fixed integer to get repetitive results on the
-            same data with multiple runs of analyses.
+            same data with multiple runs of analyses. Otherweise a random
+            seed is set as default.
 
     Attributes:
         data : numpy array
@@ -63,17 +64,16 @@ class Data():
             number of samples in time
         normalise : bool
             if true, all data gets z-standardised per process
-        seed : int
-            if None, truely random shuffled data
+        initial_state : array
+            initial state of the seed for shuffled permutations
     """
 
     def __init__(self, data=None, dim_order='psr', normalise=True, seed=None):
+        np.random.seed(seed)
+        self.initial_state = np.random.get_state()
         self.normalise = normalise
         if data is not None:
             self.set_data(data, dim_order)
-        if data is not None:
-            self.seed = seed
-            np.random.seed(seed)
 
     def n_realisations(self, current_value=None):
         """Number of realisations over samples and replications.
@@ -202,6 +202,14 @@ class Data():
         self.n_processes = data.shape[0]
         self.n_samples = data.shape[1]
         self.n_replications = data.shape[2]
+
+    def get_seed(self):
+        """return the initial seed of the data"""
+        return self.initial_state
+
+    def get_state(self):
+        """return the current state of the random seed"""
+        return np.random.get_state()
 
     def get_realisations(self, current_value, idx_list, shuffle=False):
         """Return realisations for a list of indices.
