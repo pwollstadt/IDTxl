@@ -25,4 +25,3 @@ rm resume_checkpoint.dat
 rm resume_checkpoint.json
 rm run_checkpoint.dat
 rm run_checkpoint.json
-
