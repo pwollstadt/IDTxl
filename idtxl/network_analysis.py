@@ -603,7 +603,8 @@ class NetworkAnalysis():
                                               self.current_value[1])
         # Read file as list of lines and replace first and last line. Write
         # modified file back to disk.
-        lines = open(filename_ckp, 'r').readlines()
+        with open(filename_ckp, 'r') as f:
+            lines = f.readlines()
         lines[1] = '{:%Y-%m-%d %H:%M:%S}\n'.format(timestamp)
         if int(lines[-1][0]) == self.target:
             lines[-1] = '{0}: {1}: {2}\n'.format(
@@ -611,7 +612,8 @@ class NetworkAnalysis():
         else:
             lines.append('{0}: {1}: {2}\n'.format(
                 self.target, self.source_set, selected_variables))
-        open(filename_ckp, 'w').writelines(lines)
+        with open(filename_ckp, 'w') as f:
+            f.writelines(lines)
 
     def resume_checkpoint(self, file_path):
         """Resume analysis from a checkpoint saved to disk.
@@ -621,7 +623,8 @@ class NetworkAnalysis():
                 path to checkpoint file (excluding extension: *.ckp)
         """
         # Read checkpoint
-        lines = open('{}.ckp'.format(file_path), 'r').readlines()
+        with open('{}.ckp'.format(file_path), 'r') as f:
+            lines = f.readlines()
         timestamp = lines[1]
         data_path = lines[2].split(':')[1].strip()
         settings_path = lines[3].split(':')[1].strip()
