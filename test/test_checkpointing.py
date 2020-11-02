@@ -25,6 +25,39 @@ def _clear_ckp(filename):
     os.remove(f'{filename}.json')
 
 
+def test_checkpoint_defaults():
+    """Test if checkpointing defaults are set and used correctly."""
+    # Generate test data
+    data = Data()
+    data.generate_mute_data(n_samples=N_SAMPLES, n_replications=1)
+
+    # Initialise analysis object and define settings
+    network_analysis = MultivariateTE()
+    settings = {'cmi_estimator': 'JidtGaussianCMI',
+                'max_lag_sources': 3,
+                'min_lag_sources': 2,
+                'verbose': True,
+                'write_ckp': True}
+    sources = [0, 1]
+    targets = [3]
+    network_analysis = MultivariateTE()
+    network_analysis._set_checkpointing_defaults(settings, data, sources, targets)
+    ckp_file = os.path.join(os.path.dirname(__file__), 'idtxl_checkpoint')
+    assert os.path.isfile(f'{ckp_file}.ckp'), 'Did not write default checkpoint file'
+    assert os.path.isfile(f'{ckp_file}.dat'), 'Did not write default checkpoint data'
+    assert os.path.isfile(f'{ckp_file}.json'), 'Did not write default checkpoint settings'
+
+    # Check if
+    data_res, settings_res, targets_res, sources_res = network_analysis.resume_checkpoint(
+        ckp_file)
+    for k in settings:
+        assert settings[k] == settings_res[k], f'Unequal entries in settings: key {k}'
+    assert sources == sources_res, 'Sources not the same'
+    assert targets == targets_res, 'Targets not the same'
+
+    _clear_ckp(ckp_file)
+
+
 def test_checkpoint_resume():
     """Test resuming from manually generated checkpoint."""
     # Generate test data
@@ -1963,6 +1996,7 @@ def JidtDiscreteCMI_BMI_checktest():
 
 
 if __name__ == '__main__':
+    test_checkpoint_defaults()
     test_checkpoint_copy()
     test_checkpoint_resume()
 
