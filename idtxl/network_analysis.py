@@ -622,29 +622,37 @@ class NetworkAnalysis():
             file_path : str
                 path to checkpoint file (excluding extension: *.ckp)
         """
+
         # Read checkpoint
         with open('{}.ckp'.format(file_path), 'r') as f:
             lines = f.readlines()
         timestamp = lines[1]
-        data_path = lines[2].split(':')[1].strip()
-        settings_path = lines[3].split(':')[1].strip()
-        targets = ast.literal_eval(lines[4].split(':')[1].strip())
-        sources = ast.literal_eval(lines[5].split(':')[1].strip())
-        selected_variables = {}  # vars as lags wrt. the current value
-        for l in range(8, len(lines)):
-            result = [x.strip() for x in lines[l].split(':')]
-            # Format: target - sources analyzed - selected variables
-            # ast.literal_eval(result[2]): IndexError: list index out of range
-            selected_variables[int(result[0])] = ast.literal_eval(result[2])
-
+        data_path = lines[2][15:].strip()
+        settings_path = lines[3][15:].strip()
         # Load settings and data
         data = io.load_pickle(data_path)
         settings = io.load_json(settings_path)
-
         verbose = settings.get('verbose', True)
         if verbose:
             print('Resuming analysis from file {}.ckp, saved {}'.format(
                 file_path, timestamp))
+
+        # Read targets and sources.
+        targets = ast.literal_eval(lines[4].split(':')[1].strip())
+        sources = ast.literal_eval(lines[5].split(':')[1].strip())
+        # Read selected variables
+        # Format: target - sources analyzed - selected variables
+        selected_variables = {}  # vars as lags wrt. the current value
+        for l in range(8, len(lines)):
+            result = [x.strip() for x in lines[l].split(':')]
+            # ast.literal_eval(result[2]): IndexError: list index out of range
+            try:
+                selected_variables[int(result[0])] = ast.literal_eval(result[2])
+            except IndexError:
+                if verbose:
+                    print('No variables previously selected.')
+
+        if verbose:
             print('Selected variables per target:')
             pprint(selected_variables)
 
