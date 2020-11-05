@@ -19,6 +19,8 @@ opencl_missing = pytest.mark.skipif(
     package_missing,
     reason="Jpype is missing, JIDT estimators are not available")
 
+SEED = 0
+
 
 @jpype_missing
 def test_return_local_values():
@@ -32,7 +34,7 @@ def test_return_local_values():
         'n_perm_mi': 21,
         'max_lag': max_lag,
         'tau': 1}
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(100, 3)
     ais = ActiveInformationStorage()
     processes = [1, 2]
@@ -57,7 +59,7 @@ def test_ActiveInformationStorage_init():
     """Test instance creation for ActiveInformationStorage class."""
     # Test error on missing estimator
     settings = {'max_lag': 5}
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(10, 3)
     ais = ActiveInformationStorage()
     with pytest.raises(RuntimeError):
@@ -127,7 +129,7 @@ def test_analyse_network():
         'n_perm_mi': 21,
         'max_lag': 5,
         'tau': 1}
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(10, 3)
     ais = ActiveInformationStorage()
     # Test analysis of 'all' processes
@@ -145,8 +147,9 @@ def test_analyse_network():
 @jpype_missing
 def test_single_source_storage_gaussian():
     n = 1000
-    proc_1 = [rn.normalvariate(0, 1) for r in range(n)]  # correlated src
-    proc_2 = [rn.normalvariate(0, 1) for r in range(n)]  # correlated src
+    np.random.seed(SEED)
+    proc_1 = np.random.normal(0, 1, size=n)
+    proc_2 = np.random.normal(0, 1, size=n)
     # Cast everything to numpy so the idtxl estimator understands it.
     data = Data(np.array([proc_1, proc_2]), dim_order='ps')
     settings = {
@@ -172,7 +175,7 @@ def test_single_source_storage_gaussian():
 @opencl_missing
 def test_compare_jidt_open_cl_estimator():
     """Compare results from OpenCl and JIDT estimators for AIS calculation."""
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(1000, 2)
     settings = {
         'cmi_estimator': 'OpenCLKraskovCMI',
@@ -219,6 +222,7 @@ def test_discrete_input():
     order = 1
     n = 10000 - order
     self_coupling = 0.5
+    np.random.seed(SEED)
     process = np.zeros(n + order)
     process[0:order] = np.random.normal(size=(order))
     for n in range(order, n + order):
