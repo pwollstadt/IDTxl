@@ -265,8 +265,9 @@ def test_delay_reconstruction():
             'Actual results: {2}.'.format(target, expected_mi, est_mi))
 
 
-def _generate_gauss_data(covariance=0.4, n=10000, delay=1, normalise=False):
+def _generate_gauss_data(covariance=0.4, n=10000, delay=1, normalise=False, seed=None):
     # Generate two coupled Gaussian time series
+    np.random.seed(seed)
     source = np.random.normal(0, 1, size=n)
     target = (covariance * source + (1 - covariance) *
               np.random.normal(0, 1, size=n))

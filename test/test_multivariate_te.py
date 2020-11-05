@@ -6,6 +6,8 @@ from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
 from idtxl.estimators_jidt import JidtDiscreteCMI, JidtKraskovTE
 from test_estimators_jidt import jpype_missing
+from test_results import _get_discrete_gauss_data
+from test_checkpointing import _clear_ckp
 from idtxl.idtxl_utils import calculate_mi
 from test_estimators_jidt import _get_gauss_data
 
@@ -535,8 +537,8 @@ def test_separate_realisations():
 def test_indices_to_lags():
     pass
 
-def test_checkpoint():
 
+def test_checkpoint():
     """Test method for full network analysis."""
     n_processes = 5  # the MuTE network has 5 nodes
     data = Data()
@@ -595,10 +597,8 @@ def test_checkpoint():
                         'Network analysis did not run on the correct subset '
                         'of sources for target {0}'.format(t))
 
-    os.remove('{0}.ckp'.format(filename_ckp))
-    os.remove('{0}.ckp.old'.format(filename_ckp))
-    os.remove('{0}.dat'.format(filename_ckp))
-    os.remove('{0}.json'.format(filename_ckp))
+    _clear_ckp(filename_ckp)
+
 
 if __name__ == '__main__':
     test_return_local_values()

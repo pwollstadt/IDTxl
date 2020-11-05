@@ -181,15 +181,19 @@ def test_write_checkpoint():
     # Test writing of checkpoints for network analysis
     filename_ckp = 'test_checkpoint'
     nw = NetworkAnalysis()
-
-    with pytest.raises(RuntimeError):
+    nw.current_value = (0, 0)
+    nw.settings = {'filename_ckp': filename_ckp}
+    with pytest.raises(FileNotFoundError):
         nw._update_checkpoint(filename_ckp)
-    nw._write_checkpoint_data()
+    with pytest.raises(RuntimeError):
+        nw._write_checkpoint()
+
 
 def test_enforce_conditioning_vars():
     # Test if tuples, lists, dicts, and 'faes' vars are added correctly!
     # Check if tests already exist
     # Test if source and target vars are added to the correct lists
+    pass
 
 
 if __name__ == '__main__':
