@@ -9,8 +9,13 @@ from idtxl.multivariate_mi import MultivariateMI
 from idtxl.bivariate_mi import BivariateMI
 from idtxl.bivariate_te import BivariateTE
 
+from test_results import _generate_gauss_data
+
 N_PERM = 21  # this no. permutations is usually sufficient to find links in the MUTE data
 N_SAMPLES = 1000
+SEED = 0
+GAUSS_COV = 0.4
+DELAY = 1
 
 
 def _clear_ckp(filename):
@@ -28,7 +33,7 @@ def _clear_ckp(filename):
 def test_checkpoint_defaults():
     """Test if checkpointing defaults are set and used correctly."""
     # Generate test data
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(n_samples=N_SAMPLES, n_replications=1)
 
     # Initialise analysis object and define settings
@@ -61,7 +66,7 @@ def test_checkpoint_defaults():
 def test_checkpoint_resume():
     """Test resuming from manually generated checkpoint."""
     # Generate test data
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(n_samples=N_SAMPLES, n_replications=1)
 
     # Initialise analysis object and define settings
@@ -111,7 +116,7 @@ def test_checkpoint_resume():
 def test_checkpoint_copy():
     """Assert that a copy of the current checkpoint is written upon update."""
     # Generate test data
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(n_samples=N_SAMPLES, n_replications=1)
 
     # Initialise analysis object and define settings
@@ -142,7 +147,7 @@ def test_checkpoint_copy():
     _clear_ckp(filename_ckp)
 
 
-def JidtGaussianCMI_MMI_checktest():
+def test_JidtGaussianCMI_MMI_checkpoint():
     """ run test without checkpointing, with checkpointing without resume and checkpointing with resume to compare the results"""
     filename_ckp1 = os.path.join(
         os.path.dirname(__file__), 'data', 'run_checkpoint')
@@ -151,7 +156,7 @@ def JidtGaussianCMI_MMI_checktest():
 
     """Test running analysis without any checkpoint setting."""
     # Generate test data
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(n_samples=N_SAMPLES, n_replications=1)
 
     # Initialise analysis object and define settings
@@ -185,8 +190,8 @@ def JidtGaussianCMI_MMI_checktest():
 
     # Setting sources and targets for the analysis
     sources = [0, 1]
-    targets = [2, 3, 4]
-    targets2 = [3, 4]
+    targets = [2, 3]
+    targets2 = [3]
 
     # Starting Analysis of the Network
     # results of a network analysis without checkpointing
@@ -227,21 +232,15 @@ def JidtGaussianCMI_MMI_checktest():
     results4 = network_analysis4.analyse_network(
         settings=settings1, data=data, targets=targets2, sources=sources)
 
-    # results of a network analysis just like results 1
-    results5 = network_analysis1.analyse_network(
-        settings=settings1, data=data, targets=targets, sources=sources)
-
     adj_matrix1 = results1.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix2 = results2.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix3 = results3.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix4 = results4.get_adjacency_matrix(weights='binary', fdr=False)
-    adj_matrix5 = results5.get_adjacency_matrix(weights='binary', fdr=False)
 
     result1 = adj_matrix1.get_edge_list()
     result2 = adj_matrix2.get_edge_list()
     result3 = adj_matrix3.get_edge_list()
     result4 = adj_matrix4.get_edge_list()
-    result5 = adj_matrix5.get_edge_list()
 
     print("Printing results:")
     print("Result 1: without checkpoint")
@@ -252,21 +251,17 @@ def JidtGaussianCMI_MMI_checktest():
     print(result3)
     print("Result 4: without checkpoint and different targets and sources")
     print(result4)
-    print("Result 5: without checkpoint and same targets and sources")
-    print(result5)
 
     print("Comparing the results:")
     assert np.array_equal(result1, result2), 'Result 1 and 2 not equal!'
     assert np.array_equal(result1, result3), 'Result 1 and 3 not equal!'
     assert not np.array_equal(result1, result4), 'Result 1 and 4 equal, expected to be different!'
-    assert np.array_equal(result1, result5), 'Result 1 and 5 not equal!'
 
     cmp1 = list(set(result1).intersection(result2))
     cmp2 = list(set(result1).intersection(result3))
     cmp3 = list(set(result1).intersection(result4))
-    cmp4 = list(set(result1).intersection(result5))
     len1 = len(result1)
-    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp4) == len1 and len(cmp3) != len1, (
+    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp3) != len1, (
         "Discrete MultivariateMI Running with checkpoints does not give the expected results")
 
     print("Final")
@@ -276,14 +271,12 @@ def JidtGaussianCMI_MMI_checktest():
     print(cmp2)
     print("Elements of comparison between result 1 and 4")
     print(cmp3)
-    print("Elements of comparison between result 1 and 5")
-    print(cmp4)
 
     _clear_ckp(filename_ckp1)
     _clear_ckp(filename_ckp2)
 
 
-def JidtKraskovCMI_MMI_checktest():
+def test_JidtKraskovCMI_MMI_checkpoint():
     """ run test without checkpointing, with checkpointing without resume and checkpointing with resume to compare the results"""
     filename_ckp1 = os.path.join(
         os.path.dirname(__file__), 'data', 'run_checkpoint')
@@ -292,7 +285,7 @@ def JidtKraskovCMI_MMI_checktest():
 
     """Test running analysis without any checkpoint setting."""
     # Generate test data
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(n_samples=N_SAMPLES, n_replications=1)
 
     # Initialise analysis object and define settings
@@ -338,8 +331,8 @@ def JidtKraskovCMI_MMI_checktest():
 
     # Setting sources and targets for the analysis
     sources = [0, 1]
-    targets = [2, 3, 4]
-    targets2 = [3, 4]
+    targets = [2, 3]
+    targets2 = [3]
 
     # Starting Analysis of the Network
     # results of a network analysis without checkpointing
@@ -380,21 +373,15 @@ def JidtKraskovCMI_MMI_checktest():
     results4 = network_analysis4.analyse_network(
         settings=settings1, data=data, targets=targets2, sources=sources)
 
-    # results of a network analysis just like results 1
-    results5 = network_analysis1.analyse_network(
-        settings=settings1, data=data, targets=targets, sources=sources)
-
     adj_matrix1 = results1.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix2 = results2.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix3 = results3.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix4 = results4.get_adjacency_matrix(weights='binary', fdr=False)
-    adj_matrix5 = results5.get_adjacency_matrix(weights='binary', fdr=False)
 
     result1 = adj_matrix1.get_edge_list()
     result2 = adj_matrix2.get_edge_list()
     result3 = adj_matrix3.get_edge_list()
     result4 = adj_matrix4.get_edge_list()
-    result5 = adj_matrix5.get_edge_list()
 
     print("Printing results:")
     print("Result 1: without checkpoint")
@@ -405,21 +392,17 @@ def JidtKraskovCMI_MMI_checktest():
     print(result3)
     print("Result 4: without checkpoint and different targets and sources")
     print(result4)
-    print("Result 5: without checkpoint and same targets and sources")
-    print(result5)
 
     print("Comparing the results:")
     assert np.array_equal(result1, result2), 'Result 1 and 2 not equal!'
     assert np.array_equal(result1, result3), 'Result 1 and 3 not equal!'
     assert not np.array_equal(result1, result4), 'Result 1 and 4 equal, expected to be different!'
-    assert np.array_equal(result1, result5), 'Result 1 and 5 not equal!'
 
     cmp1 = list(set(result1).intersection(result2))
     cmp2 = list(set(result1).intersection(result3))
     cmp3 = list(set(result1).intersection(result4))
-    cmp4 = list(set(result1).intersection(result5))
     len1 = len(result1)
-    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp4) == len1 and len(cmp3) != len1, (
+    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp3) != len1, (
         "Discrete MultivariateMI Running with checkpoints does not give the expected results")
 
     print("Final")
@@ -429,14 +412,12 @@ def JidtKraskovCMI_MMI_checktest():
     print(cmp2)
     print("Elements of comparison between result 1 and 4")
     print(cmp3)
-    print("Elements of comparison between result 1 and 5")
-    print(cmp4)
 
     _clear_ckp(filename_ckp1)
     _clear_ckp(filename_ckp2)
 
 
-def JidtDiscreteCMI_MMI_checktest():
+def test_JidtDiscreteCMI_MMI_checkpoint():
     """ run test without checkpointing, with checkpointing without resume and checkpointing with resume to compare the results"""
     filename_ckp1 = os.path.join(
         os.path.dirname(__file__), 'data', 'run_checkpoint')
@@ -445,25 +426,11 @@ def JidtDiscreteCMI_MMI_checktest():
 
     """Test multivariate TE estimation from discrete data."""
     # Generate Gaussian test data
-    covariance = 0.4
-    n = N_SAMPLES
-    delay = 1
-    source = np.random.normal(0, 1, size=n)
-    target = (covariance * source + (1 - covariance) *
-              np.random.normal(0, 1, size=n))
-    corr_expected = covariance / \
-        (1 * np.sqrt(covariance**2 + (1-covariance)**2))
-    expected_mi = calculate_mi(corr_expected)
-    source = source[delay:]
-    target = target[:-delay]
-
-    # Discretise data
-    settings = {'discretise_method': 'equal',
-                'n_discrete_bins': 5}
-    est = JidtDiscreteCMI(settings)
-    source_dis, target_dis = est._discretise_vars(var1=source, var2=target)
-    data = Data(np.vstack((source_dis, target_dis)),
-                dim_order='ps', normalise=False)
+    data = _generate_gauss_data(covariance=GAUSS_COV,
+                                n=N_SAMPLES*10,
+                                delay=DELAY,
+                                normalise=False,
+                                seed=SEED)
 
     network_analysis1 = MultivariateMI()
     network_analysis2 = MultivariateMI()
@@ -477,35 +444,17 @@ def JidtDiscreteCMI_MMI_checktest():
         'n_perm_max_stat': 21,
         'n_perm_omnibus': 30,
         'n_perm_max_seq': 30,
-        'min_lag_sources': 2,
-        'max_lag_sources': 2,
+        'min_lag_sources': DELAY,
+        'max_lag_sources': DELAY,
         'max_lag_target': 1}
 
-    settings2 = {
-        'cmi_estimator': 'JidtDiscreteCMI',
-        'discretise_method': 'none',
-        'n_discrete_bins': 5,
-        'n_perm_max_stat': 21,
-        'n_perm_omnibus': 30,
-        'n_perm_max_seq': 30,
-        'min_lag_sources': 2,
-        'max_lag_sources': 2,
-        'max_lag_target': 1,
-        'write_ckp': True,
-        'filename_ckp': filename_ckp1}
+    settings2 = settings1.copy()
+    settings2['write_ckp'] = True
+    settings2['filename_ckp'] = filename_ckp1
 
-    settings3 = {
-        'cmi_estimator': 'JidtDiscreteCMI',
-        'discretise_method': 'none',
-        'n_discrete_bins': 5,
-        'n_perm_max_stat': 21,
-        'n_perm_omnibus': 30,
-        'n_perm_max_seq': 30,
-        'min_lag_sources': 2,
-        'max_lag_sources': 2,
-        'max_lag_target': 1,
-        'write_ckp': True,
-        'filename_ckp': filename_ckp2}
+    settings3 = settings1.copy()
+    settings3['write_ckp'] = True
+    settings3['filename_ckp'] = filename_ckp2
 
     # Starting Analysis of the Network
     # results of a network analysis without checkpointing
@@ -546,21 +495,15 @@ def JidtDiscreteCMI_MMI_checktest():
     results4 = network_analysis4.analyse_single_target(
         settings=settings1, data=data, target=0)
 
-    # results of a network analysis just like results 1
-    results5 = network_analysis1.analyse_single_target(settings1, data,
-                                                       target=1)
-
     adj_matrix1 = results1.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix2 = results2.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix3 = results3.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix4 = results4.get_adjacency_matrix(weights='binary', fdr=False)
-    adj_matrix5 = results5.get_adjacency_matrix(weights='binary', fdr=False)
 
     result1 = adj_matrix1.get_edge_list()
     result2 = adj_matrix2.get_edge_list()
     result3 = adj_matrix3.get_edge_list()
     result4 = adj_matrix4.get_edge_list()
-    result5 = adj_matrix5.get_edge_list()
 
     print("Printing results:")
     print("Result 1: without checkpoint")
@@ -571,21 +514,17 @@ def JidtDiscreteCMI_MMI_checktest():
     print(result3)
     print("Result 4: without checkpoint and different targets and sources")
     print(result4)
-    print("Result 5: without checkpoint and same targets and sources")
-    print(result5)
 
     print("Comparing the results:")
     assert np.array_equal(result1, result2), 'Result 1 and 2 not equal!'
     assert np.array_equal(result1, result3), 'Result 1 and 3 not equal!'
     assert not np.array_equal(result1, result4), 'Result 1 and 4 equal, expected to be different!'
-    assert np.array_equal(result1, result5), 'Result 1 and 5 not equal!'
 
     cmp1 = list(set(result1).intersection(result2))
     cmp2 = list(set(result1).intersection(result3))
     cmp3 = list(set(result1).intersection(result4))
-    cmp4 = list(set(result1).intersection(result5))
     len1 = len(result1)
-    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp4) == len1 and len(cmp3) != len1, (
+    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp3) != len1, (
         "Discrete MultivariateMI Running with checkpoints does not give the expected results")
 
     print("Final")
@@ -595,14 +534,12 @@ def JidtDiscreteCMI_MMI_checktest():
     print(cmp2)
     print("Elements of comparison between result 1 and 4")
     print(cmp3)
-    print("Elements of comparison between result 1 and 5")
-    print(cmp4)
 
     _clear_ckp(filename_ckp1)
     _clear_ckp(filename_ckp2)
 
 
-def JidtGaussianCMI_MTE_checktest():
+def test_JidtGaussianCMI_MTE_checkpoint():
     """ run test without checkpointing, with checkpointing without resume and checkpointing with resume to compare the results"""
     filename_ckp1 = os.path.join(
         os.path.dirname(__file__), 'data', 'run_checkpoint')
@@ -611,7 +548,7 @@ def JidtGaussianCMI_MTE_checktest():
 
     """Test running analysis without any checkpoint setting."""
     # Generate test data
-    data = Data()
+    data = Data(seed=SEED+1)
     data.generate_mute_data(n_samples=N_SAMPLES, n_replications=1)
 
     # Initialise analysis object and define settings
@@ -649,8 +586,8 @@ def JidtGaussianCMI_MTE_checktest():
 
     # Setting sources and targets for the analysis
     sources = [0, 1]
-    targets = [2, 3, 4]
-    targets2 = [3, 4]
+    targets = [2, 3]
+    targets2 = [3]
 
     # Starting Analysis of the Network
     # results of a network analysis without checkpointing
@@ -690,21 +627,15 @@ def JidtGaussianCMI_MTE_checktest():
     results4 = network_analysis4.analyse_network(
         settings=settings1, data=data, targets=targets2, sources=sources)
 
-    # results of a network analysis just like results 1
-    results5 = network_analysis1.analyse_network(
-        settings=settings1, data=data, targets=targets, sources=sources)
-
     adj_matrix1 = results1.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix2 = results2.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix3 = results3.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix4 = results4.get_adjacency_matrix(weights='binary', fdr=False)
-    adj_matrix5 = results5.get_adjacency_matrix(weights='binary', fdr=False)
 
     result1 = adj_matrix1.get_edge_list()
     result2 = adj_matrix2.get_edge_list()
     result3 = adj_matrix3.get_edge_list()
     result4 = adj_matrix4.get_edge_list()
-    result5 = adj_matrix5.get_edge_list()
 
     print("Printing results:")
     print("Result 1: without checkpoint")
@@ -715,21 +646,17 @@ def JidtGaussianCMI_MTE_checktest():
     print(result3)
     print("Result 4: without checkpoint and different targets and sources")
     print(result4)
-    print("Result 5: without checkpoint and same targets and sources")
-    print(result5)
 
     print("Comparing the results:")
     assert np.array_equal(result1, result2), 'Result 1 and 2 not equal!'
     assert np.array_equal(result1, result3), 'Result 1 and 3 not equal!'
     assert not np.array_equal(result1, result4), 'Result 1 and 4 equal, expected to be different!'
-    assert np.array_equal(result1, result5), 'Result 1 and 5 not equal!'
 
     cmp1 = list(set(result1).intersection(result2))
     cmp2 = list(set(result1).intersection(result3))
     cmp3 = list(set(result1).intersection(result4))
-    cmp4 = list(set(result1).intersection(result5))
     len1 = len(result1)
-    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp4) == len1 and len(cmp3) != len1, (
+    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp3) != len1, (
         "Discrete MultivariateMI Running with checkpoints does not give the expected results")
 
     print("Final")
@@ -739,14 +666,12 @@ def JidtGaussianCMI_MTE_checktest():
     print(cmp2)
     print("Elements of comparison between result 1 and 4")
     print(cmp3)
-    print("Elements of comparison between result 1 and 5")
-    print(cmp4)
 
     _clear_ckp(filename_ckp1)
     _clear_ckp(filename_ckp2)
 
 
-def JidtKraskovCMI_MTE_checktest():
+def test_JidtKraskovCMI_MTE_checkpoint():
     """ run test without checkpointing, with checkpointing without resume and checkpointing with resume to compare the results"""
     filename_ckp1 = os.path.join(
         os.path.dirname(__file__), 'data', 'run_checkpoint')
@@ -755,7 +680,7 @@ def JidtKraskovCMI_MTE_checktest():
 
     """Test running analysis without any checkpoint setting."""
     # Generate test data
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(n_samples=N_SAMPLES, n_replications=1)
 
     # Initialise analysis object and define settings
@@ -801,8 +726,8 @@ def JidtKraskovCMI_MTE_checktest():
 
     # Setting sources and targets for the analysis
     sources = [0, 1]
-    targets = [2, 3, 4]
-    targets2 = [3, 4]
+    targets = [2, 3]
+    targets2 = [3]
 
     # Starting Analysis of the Network
     # results of a network analysis without checkpointing
@@ -843,21 +768,15 @@ def JidtKraskovCMI_MTE_checktest():
     results4 = network_analysis4.analyse_network(
         settings=settings1, data=data, targets=targets2, sources=sources)
 
-    # results of a network analysis just like results 1
-    results5 = network_analysis1.analyse_network(
-        settings=settings1, data=data, targets=targets, sources=sources)
-
     adj_matrix1 = results1.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix2 = results2.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix3 = results3.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix4 = results4.get_adjacency_matrix(weights='binary', fdr=False)
-    adj_matrix5 = results5.get_adjacency_matrix(weights='binary', fdr=False)
 
     result1 = adj_matrix1.get_edge_list()
     result2 = adj_matrix2.get_edge_list()
     result3 = adj_matrix3.get_edge_list()
     result4 = adj_matrix4.get_edge_list()
-    result5 = adj_matrix5.get_edge_list()
 
     print("Printing results:")
     print("Result 1: without checkpoint")
@@ -868,21 +787,17 @@ def JidtKraskovCMI_MTE_checktest():
     print(result3)
     print("Result 4: without checkpoint and different targets and sources")
     print(result4)
-    print("Result 5: without checkpoint and same targets and sources")
-    print(result5)
 
     print("Comparing the results:")
     assert np.array_equal(result1, result2), 'Result 1 and 2 not equal!'
     assert np.array_equal(result1, result3), 'Result 1 and 3 not equal!'
     assert not np.array_equal(result1, result4), 'Result 1 and 4 equal, expected to be different!'
-    assert np.array_equal(result1, result5), 'Result 1 and 5 not equal!'
 
     cmp1 = list(set(result1).intersection(result2))
     cmp2 = list(set(result1).intersection(result3))
     cmp3 = list(set(result1).intersection(result4))
-    cmp4 = list(set(result1).intersection(result5))
     len1 = len(result1)
-    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp4) == len1 and len(cmp3) != len1, (
+    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp3) != len1, (
         "Discrete MultivariateMI Running with checkpoints does not give the expected results")
 
     print("Final")
@@ -892,14 +807,12 @@ def JidtKraskovCMI_MTE_checktest():
     print(cmp2)
     print("Elements of comparison between result 1 and 4")
     print(cmp3)
-    print("Elements of comparison between result 1 and 5")
-    print(cmp4)
 
     _clear_ckp(filename_ckp1)
     _clear_ckp(filename_ckp2)
 
 
-def JidtDiscreteCMI_MTE_checktest():
+def test_JidtDiscreteCMI_MTE_checkpoint():
     """ run test without checkpointing, with checkpointing without resume and checkpointing with resume to compare the results"""
     filename_ckp1 = os.path.join(
         os.path.dirname(__file__), 'data', 'run_checkpoint')
@@ -908,25 +821,12 @@ def JidtDiscreteCMI_MTE_checktest():
 
     """Test multivariate TE estimation from discrete data."""
     # Generate Gaussian test data
-    covariance = 0.4
-    n = N_SAMPLES
-    delay = 1
-    source = np.random.normal(0, 1, size=n)
-    target = (covariance * source + (1 - covariance) *
-              np.random.normal(0, 1, size=n))
-    corr_expected = covariance / \
-        (1 * np.sqrt(covariance**2 + (1-covariance)**2))
-    expected_mi = calculate_mi(corr_expected)
-    source = source[delay:]
-    target = target[:-delay]
+    data = _generate_gauss_data(covariance=GAUSS_COV,
+                                n=N_SAMPLES*10,
+                                delay=DELAY,
+                                normalise=False,
+                                seed=SEED)
 
-    # Discretise data
-    settings = {'discretise_method': 'equal',
-                'n_discrete_bins': 5}
-    est = JidtDiscreteCMI(settings)
-    source_dis, target_dis = est._discretise_vars(var1=source, var2=target)
-    data = Data(np.vstack((source_dis, target_dis)),
-                dim_order='ps', normalise=False)
     settings1 = {
         'cmi_estimator': 'JidtDiscreteCMI',
         'discretise_method': 'none',
@@ -934,35 +834,17 @@ def JidtDiscreteCMI_MTE_checktest():
         'n_perm_max_stat': 21,
         'n_perm_omnibus': 30,
         'n_perm_max_seq': 30,
-        'min_lag_sources': 2,
-        'max_lag_sources': 2,
+        'min_lag_sources': DELAY,
+        'max_lag_sources': DELAY,
         'max_lag_target': 1}
 
-    settings2 = {
-        'cmi_estimator': 'JidtDiscreteCMI',
-        'discretise_method': 'none',
-        'n_discrete_bins': 5,
-        'n_perm_max_stat': 21,
-        'n_perm_omnibus': 30,
-        'n_perm_max_seq': 30,
-        'min_lag_sources': 2,
-        'max_lag_sources': 2,
-        'max_lag_target': 1,
-        'write_ckp': True,
-        'filename_ckp': filename_ckp1}
+    settings2 = settings1.copy()
+    settings2['write_ckp'] = True
+    settings2['filename_ckp'] = filename_ckp1
 
-    settings3 = {
-        'cmi_estimator': 'JidtDiscreteCMI',
-        'discretise_method': 'none',
-        'n_discrete_bins': 5,
-        'n_perm_max_stat': 21,
-        'n_perm_omnibus': 30,
-        'n_perm_max_seq': 30,
-        'min_lag_sources': 2,
-        'max_lag_sources': 2,
-        'max_lag_target': 1,
-        'write_ckp': True,
-        'filename_ckp': filename_ckp2}
+    settings3 = settings1.copy()
+    settings3['write_ckp'] = True
+    settings3['filename_ckp'] = filename_ckp2
 
     network_analysis1 = MultivariateTE()
     network_analysis2 = MultivariateTE()
@@ -1008,21 +890,15 @@ def JidtDiscreteCMI_MTE_checktest():
     results4 = network_analysis4.analyse_single_target(
         settings=settings1, data=data, target=0)
 
-    # results of a network analysis just like results 1
-    results5 = network_analysis1.analyse_single_target(settings1, data,
-                                                       target=1)
-
     adj_matrix1 = results1.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix2 = results2.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix3 = results3.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix4 = results4.get_adjacency_matrix(weights='binary', fdr=False)
-    adj_matrix5 = results5.get_adjacency_matrix(weights='binary', fdr=False)
 
     result1 = adj_matrix1.get_edge_list()
     result2 = adj_matrix2.get_edge_list()
     result3 = adj_matrix3.get_edge_list()
     result4 = adj_matrix4.get_edge_list()
-    result5 = adj_matrix5.get_edge_list()
 
     print("Printing results:")
     print("Result 1: without checkpoint")
@@ -1033,21 +909,17 @@ def JidtDiscreteCMI_MTE_checktest():
     print(result3)
     print("Result 4: without checkpoint and different targets and sources")
     print(result4)
-    print("Result 5: without checkpoint and same targets and sources")
-    print(result5)
 
     print("Comparing the results:")
     assert np.array_equal(result1, result2), 'Result 1 and 2 not equal!'
     assert np.array_equal(result1, result3), 'Result 1 and 3 not equal!'
     assert not np.array_equal(result1, result4), 'Result 1 and 4 equal, expected to be different!'
-    assert np.array_equal(result1, result5), 'Result 1 and 5 not equal!'
 
     cmp1 = list(set(result1).intersection(result2))
     cmp2 = list(set(result1).intersection(result3))
     cmp3 = list(set(result1).intersection(result4))
-    cmp4 = list(set(result1).intersection(result5))
     len1 = len(result1)
-    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp4) == len1 and len(cmp3) != len1, (
+    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp3) != len1, (
         "Discrete MultivariateMI Running with checkpoints does not give the expected results")
 
     print("Final")
@@ -1057,14 +929,12 @@ def JidtDiscreteCMI_MTE_checktest():
     print(cmp2)
     print("Elements of comparison between result 1 and 4")
     print(cmp3)
-    print("Elements of comparison between result 1 and 5")
-    print(cmp4)
 
     _clear_ckp(filename_ckp1)
     _clear_ckp(filename_ckp2)
 
 
-def JidtGaussianCMI_BTE_checktest():
+def test_JidtGaussianCMI_BTE_checkpoint():
     """ run test without checkpointing, with checkpointing without resume and checkpointing with resume to compare the results"""
     filename_ckp1 = os.path.join(
         os.path.dirname(__file__), 'data', 'run_checkpoint')
@@ -1073,8 +943,8 @@ def JidtGaussianCMI_BTE_checktest():
 
     """Test running analysis without any checkpoint setting."""
     # Generate test data
-    data = Data()
-    data.generate_mute_data(n_samples=N_SAMPLES*10, n_replications=1)
+    data = Data(seed=SEED+1)
+    data.generate_mute_data(n_samples=N_SAMPLES, n_replications=1)
 
     # Initialise analysis object and define settings
     network_analysis1 = BivariateTE()
@@ -1119,8 +989,8 @@ def JidtGaussianCMI_BTE_checktest():
 
     # Setting sources and targets for the analysis
     sources = [0, 1]
-    targets = [2, 3, 4]
-    targets2 = [3, 4]
+    targets = [2, 3]
+    targets2 = [3]
 
     # Starting Analysis of the Network
     # results of a network analysis without checkpointing
@@ -1161,21 +1031,15 @@ def JidtGaussianCMI_BTE_checktest():
     results4 = network_analysis4.analyse_network(
         settings=settings1, data=data, targets=targets2, sources=sources)
 
-    # results of a network analysis just like results 1
-    results5 = network_analysis1.analyse_network(
-        settings=settings1, data=data, targets=targets, sources=sources)
-
     adj_matrix1 = results1.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix2 = results2.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix3 = results3.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix4 = results4.get_adjacency_matrix(weights='binary', fdr=False)
-    adj_matrix5 = results5.get_adjacency_matrix(weights='binary', fdr=False)
 
     result1 = adj_matrix1.get_edge_list()
     result2 = adj_matrix2.get_edge_list()
     result3 = adj_matrix3.get_edge_list()
     result4 = adj_matrix4.get_edge_list()
-    result5 = adj_matrix5.get_edge_list()
 
     print("Printing results:")
     print("Result 1: without checkpoint")
@@ -1186,21 +1050,17 @@ def JidtGaussianCMI_BTE_checktest():
     print(result3)
     print("Result 4: without checkpoint and different targets and sources")
     print(result4)
-    print("Result 5: without checkpoint and same targets and sources")
-    print(result5)
 
     print("Comparing the results:")
     assert np.array_equal(result1, result2), 'Result 1 and 2 not equal!'
     assert np.array_equal(result1, result3), 'Result 1 and 3 not equal!'
     assert not np.array_equal(result1, result4), 'Result 1 and 4 equal, expected to be different!'
-    assert np.array_equal(result1, result5), 'Result 1 and 5 not equal!'
 
     cmp1 = list(set(result1).intersection(result2))
     cmp2 = list(set(result1).intersection(result3))
     cmp3 = list(set(result1).intersection(result4))
-    cmp4 = list(set(result1).intersection(result5))
     len1 = len(result1)
-    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp4) == len1 and len(cmp3) != len1, (
+    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp3) != len1, (
         "Discrete MultivariateMI Running with checkpoints does not give the expected results")
 
     print("Final")
@@ -1210,14 +1070,12 @@ def JidtGaussianCMI_BTE_checktest():
     print(cmp2)
     print("Elements of comparison between result 1 and 4")
     print(cmp3)
-    print("Elements of comparison between result 1 and 5")
-    print(cmp4)
 
     _clear_ckp(filename_ckp1)
     _clear_ckp(filename_ckp2)
 
 
-def JidtKraskovCMI_BTE_checktest():
+def test_JidtKraskovCMI_BTE_checkpoint():
     """ run test without checkpointing, with checkpointing without resume and checkpointing with resume to compare the results"""
     filename_ckp1 = os.path.join(
         os.path.dirname(__file__), 'data', 'run_checkpoint')
@@ -1226,8 +1084,8 @@ def JidtKraskovCMI_BTE_checktest():
 
     """Test running analysis without any checkpoint setting."""
     # Generate test data
-    data = Data()
-    data.generate_mute_data(n_samples=N_SAMPLES, n_replications=1)
+    data = Data(seed=SEED)
+    data.generate_mute_data(n_samples=N_SAMPLES*10, n_replications=1)
 
     # Initialise analysis object and define settings
     network_analysis1 = BivariateTE()
@@ -1272,8 +1130,8 @@ def JidtKraskovCMI_BTE_checktest():
 
     # Setting sources and targets for the analysis
     sources = [0, 1]
-    targets = [2, 3, 4]
-    targets2 = [3, 4]
+    targets = [2, 3]
+    targets2 = [3]
 
     # Starting Analysis of the Network
     # results of a network analysis without checkpointing
@@ -1315,21 +1173,15 @@ def JidtKraskovCMI_BTE_checktest():
     results4 = network_analysis4.analyse_network(
         settings=settings1, data=data, targets=targets2, sources=sources)
 
-    # results of a network analysis just like results 1
-    results5 = network_analysis1.analyse_network(
-        settings=settings1, data=data, targets=targets, sources=sources)
-
     adj_matrix1 = results1.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix2 = results2.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix3 = results3.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix4 = results4.get_adjacency_matrix(weights='binary', fdr=False)
-    adj_matrix5 = results5.get_adjacency_matrix(weights='binary', fdr=False)
 
     result1 = adj_matrix1.get_edge_list()
     result2 = adj_matrix2.get_edge_list()
     result3 = adj_matrix3.get_edge_list()
     result4 = adj_matrix4.get_edge_list()
-    result5 = adj_matrix5.get_edge_list()
 
     print("Printing results:")
     print("Result 1: without checkpoint")
@@ -1340,21 +1192,17 @@ def JidtKraskovCMI_BTE_checktest():
     print(result3)
     print("Result 4: without checkpoint and different targets and sources")
     print(result4)
-    print("Result 5: without checkpoint and same targets and sources")
-    print(result5)
 
     print("Comparing the results:")
     assert np.array_equal(result1, result2), 'Result 1 and 2 not equal!'
     assert np.array_equal(result1, result3), 'Result 1 and 3 not equal!'
     assert not np.array_equal(result1, result4), 'Result 1 and 4 equal, expected to be different!'
-    assert np.array_equal(result1, result5), 'Result 1 and 5 not equal!'
 
     cmp1 = list(set(result1).intersection(result2))
     cmp2 = list(set(result1).intersection(result3))
     cmp3 = list(set(result1).intersection(result4))
-    cmp4 = list(set(result1).intersection(result5))
     len1 = len(result1)
-    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp4) == len1 and len(cmp3) != len1, (
+    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp3) != len1, (
         "Discrete MultivariateMI Running with checkpoints does not give the expected results")
 
     print("Final")
@@ -1364,14 +1212,12 @@ def JidtKraskovCMI_BTE_checktest():
     print(cmp2)
     print("Elements of comparison between result 1 and 4")
     print(cmp3)
-    print("Elements of comparison between result 1 and 5")
-    print(cmp4)
 
     _clear_ckp(filename_ckp1)
     _clear_ckp(filename_ckp2)
 
 
-def JidtDiscreteCMI_BTE_checktest():
+def test_JidtDiscreteCMI_BTE_checkpoint():
     """ run test without checkpointing, with checkpointing without resume and checkpointing with resume to compare the results"""
     filename_ckp1 = os.path.join(
         os.path.dirname(__file__), 'data', 'run_checkpoint')
@@ -1380,25 +1226,12 @@ def JidtDiscreteCMI_BTE_checktest():
 
     """Test multivariate TE estimation from discrete data."""
     # Generate Gaussian test data
-    covariance = 0.4
-    n = N_SAMPLES*10
-    delay = 1
-    source = np.random.normal(0, 1, size=n)
-    target = (covariance * source + (1 - covariance) *
-              np.random.normal(0, 1, size=n))
-    corr_expected = covariance / \
-        (1 * np.sqrt(covariance**2 + (1-covariance)**2))
-    expected_mi = calculate_mi(corr_expected)
-    source = source[delay:]
-    target = target[:-delay]
+    data = _generate_gauss_data(covariance=GAUSS_COV,
+                                n=N_SAMPLES*10,
+                                delay=DELAY,
+                                normalise=False,
+                                seed=SEED)
 
-    # Discretise data
-    settings = {'discretise_method': 'equal',
-                'n_discrete_bins': 5}
-    est = JidtDiscreteCMI(settings)
-    source_dis, target_dis = est._discretise_vars(var1=source, var2=target)
-    data = Data(np.vstack((source_dis, target_dis)),
-                dim_order='ps', normalise=False)
     settings1 = {
         'cmi_estimator': 'JidtDiscreteCMI',
         'discretise_method': 'none',
@@ -1406,35 +1239,17 @@ def JidtDiscreteCMI_BTE_checktest():
         'n_perm_max_stat': 21,
         'n_perm_omnibus': 30,
         'n_perm_max_seq': 30,
-        'min_lag_sources': 2,
-        'max_lag_sources': 2,
+        'min_lag_sources': DELAY,
+        'max_lag_sources': DELAY,
         'max_lag_target': 1}
 
-    settings2 = {
-        'cmi_estimator': 'JidtDiscreteCMI',
-        'discretise_method': 'none',
-        'n_discrete_bins': 5,
-        'n_perm_max_stat': 21,
-        'n_perm_omnibus': 30,
-        'n_perm_max_seq': 30,
-        'min_lag_sources': 2,
-        'max_lag_sources': 2,
-        'max_lag_target': 1,
-        'write_ckp': True,
-        'filename_ckp': filename_ckp1}
+    settings2 = settings1.copy()
+    settings2['write_ckp'] = True
+    settings2['filename_ckp'] = filename_ckp1
 
-    settings3 = {
-        'cmi_estimator': 'JidtDiscreteCMI',
-        'discretise_method': 'none',
-        'n_discrete_bins': 5,
-        'n_perm_max_stat': 21,
-        'n_perm_omnibus': 30,
-        'n_perm_max_seq': 30,
-        'min_lag_sources': 2,
-        'max_lag_sources': 2,
-        'max_lag_target': 1,
-        'write_ckp': True,
-        'filename_ckp': filename_ckp2}
+    settings3 = settings1.copy()
+    settings3['write_ckp'] = True
+    settings3['filename_ckp'] = filename_ckp2
 
     network_analysis1 = BivariateTE()
     network_analysis2 = BivariateTE()
@@ -1456,7 +1271,7 @@ def JidtDiscreteCMI_BTE_checktest():
         tarsource = f.readlines()
     tarsource = tarsource[8]
     tarsource = (tarsource[:-1])
-
+    print(tarsource)
     network_analysis3._set_checkpointing_defaults(
         settings3, data, sources=tarsource, target=1)
 
@@ -1480,21 +1295,15 @@ def JidtDiscreteCMI_BTE_checktest():
     results4 = network_analysis4.analyse_single_target(
         settings=settings1, data=data, target=0)
 
-    # results of a network analysis just like results 1
-    results5 = network_analysis1.analyse_single_target(settings1, data,
-                                                       target=1)
-
     adj_matrix1 = results1.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix2 = results2.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix3 = results3.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix4 = results4.get_adjacency_matrix(weights='binary', fdr=False)
-    adj_matrix5 = results5.get_adjacency_matrix(weights='binary', fdr=False)
 
     result1 = adj_matrix1.get_edge_list()
     result2 = adj_matrix2.get_edge_list()
     result3 = adj_matrix3.get_edge_list()
     result4 = adj_matrix4.get_edge_list()
-    result5 = adj_matrix5.get_edge_list()
 
     print("Printing results:")
     print("Result 1: without checkpoint")
@@ -1505,21 +1314,17 @@ def JidtDiscreteCMI_BTE_checktest():
     print(result3)
     print("Result 4: without checkpoint and different targets and sources")
     print(result4)
-    print("Result 5: without checkpoint and same targets and sources")
-    print(result5)
 
     print("Comparing the results:")
     assert np.array_equal(result1, result2), 'Result 1 and 2 not equal!'
     assert np.array_equal(result1, result3), 'Result 1 and 3 not equal!'
     assert not np.array_equal(result1, result4), 'Result 1 and 4 equal, expected to be different!'
-    assert np.array_equal(result1, result5), 'Result 1 and 5 not equal!'
 
     cmp1 = list(set(result1).intersection(result2))
     cmp2 = list(set(result1).intersection(result3))
     cmp3 = list(set(result1).intersection(result4))
-    cmp4 = list(set(result1).intersection(result5))
     len1 = len(result1)
-    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp4) == len1 and len(cmp3) != len1, (
+    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp3) != len1, (
         "Discrete MultivariateMI Running with checkpoints does not give the expected results")
 
     print("Final")
@@ -1529,14 +1334,12 @@ def JidtDiscreteCMI_BTE_checktest():
     print(cmp2)
     print("Elements of comparison between result 1 and 4")
     print(cmp3)
-    print("Elements of comparison between result 1 and 5")
-    print(cmp4)
 
     _clear_ckp(filename_ckp1)
     _clear_ckp(filename_ckp2)
 
 
-def JidtGaussianCMI_BMI_checktest():
+def test_JidtGaussianCMI_BMI_checkpoint():
     """ run test without checkpointing, with checkpointing without resume and checkpointing with resume to compare the results"""
     filename_ckp1 = os.path.join(
         os.path.dirname(__file__), 'data', 'run_checkpoint')
@@ -1545,7 +1348,7 @@ def JidtGaussianCMI_BMI_checktest():
 
     """Test running analysis without any checkpoint setting."""
     # Generate test data
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(n_samples=N_SAMPLES, n_replications=1)
 
     # Initialise analysis object and define settings
@@ -1579,8 +1382,8 @@ def JidtGaussianCMI_BMI_checktest():
 
     # Setting sources and targets for the analysis
     sources = [0, 1]
-    targets = [2, 3, 4]
-    targets2 = [3, 4]
+    targets = [2, 3]
+    targets2 = [3]
 
     # Starting Analysis of the Network
     # results of a network analysis without checkpointing
@@ -1621,21 +1424,15 @@ def JidtGaussianCMI_BMI_checktest():
     results4 = network_analysis4.analyse_network(
         settings=settings1, data=data, targets=targets2, sources=sources)
 
-    # results of a network analysis just like results 1
-    results5 = network_analysis1.analyse_network(
-        settings=settings1, data=data, targets=targets, sources=sources)
-
     adj_matrix1 = results1.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix2 = results2.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix3 = results3.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix4 = results4.get_adjacency_matrix(weights='binary', fdr=False)
-    adj_matrix5 = results5.get_adjacency_matrix(weights='binary', fdr=False)
 
     result1 = adj_matrix1.get_edge_list()
     result2 = adj_matrix2.get_edge_list()
     result3 = adj_matrix3.get_edge_list()
     result4 = adj_matrix4.get_edge_list()
-    result5 = adj_matrix5.get_edge_list()
 
     print("Printing results:")
     print("Result 1: without checkpoint")
@@ -1646,21 +1443,17 @@ def JidtGaussianCMI_BMI_checktest():
     print(result3)
     print("Result 4: without checkpoint and different targets and sources")
     print(result4)
-    print("Result 5: without checkpoint and same targets and sources")
-    print(result5)
 
     print("Comparing the results:")
     assert np.array_equal(result1, result2), 'Result 1 and 2 not equal!'
     assert np.array_equal(result1, result3), 'Result 1 and 3 not equal!'
     assert not np.array_equal(result1, result4), 'Result 1 and 4 equal, expected to be different!'
-    assert np.array_equal(result1, result5), 'Result 1 and 5 not equal!'
 
     cmp1 = list(set(result1).intersection(result2))
     cmp2 = list(set(result1).intersection(result3))
     cmp3 = list(set(result1).intersection(result4))
-    cmp4 = list(set(result1).intersection(result5))
     len1 = len(result1)
-    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp4) == len1 and len(cmp3) != len1, (
+    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp3) != len1, (
         "Discrete MultivariateMI Running with checkpoints does not give the expected results")
 
     print("Final")
@@ -1670,14 +1463,12 @@ def JidtGaussianCMI_BMI_checktest():
     print(cmp2)
     print("Elements of comparison between result 1 and 4")
     print(cmp3)
-    print("Elements of comparison between result 1 and 5")
-    print(cmp4)
 
     _clear_ckp(filename_ckp1)
     _clear_ckp(filename_ckp2)
 
 
-def JidtKraskovCMI_BMI_checktest():
+def test_JidtKraskovCMI_BMI_checkpoint():
     """ run test without checkpointing, with checkpointing without resume and checkpointing with resume to compare the results"""
     filename_ckp1 = os.path.join(
         os.path.dirname(__file__), 'data', 'run_checkpoint')
@@ -1686,7 +1477,7 @@ def JidtKraskovCMI_BMI_checktest():
 
     """Test running analysis without any checkpoint setting."""
     # Generate test data
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(n_samples=N_SAMPLES, n_replications=1)
 
     # Initialise analysis object and define settings
@@ -1774,21 +1565,15 @@ def JidtKraskovCMI_BMI_checktest():
     results4 = network_analysis4.analyse_network(
         settings=settings1, data=data, targets=targets2, sources=sources)
 
-    # results of a network analysis just like results 1
-    results5 = network_analysis1.analyse_network(
-        settings=settings1, data=data, targets=targets, sources=sources)
-
     adj_matrix1 = results1.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix2 = results2.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix3 = results3.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix4 = results4.get_adjacency_matrix(weights='binary', fdr=False)
-    adj_matrix5 = results5.get_adjacency_matrix(weights='binary', fdr=False)
 
     result1 = adj_matrix1.get_edge_list()
     result2 = adj_matrix2.get_edge_list()
     result3 = adj_matrix3.get_edge_list()
     result4 = adj_matrix4.get_edge_list()
-    result5 = adj_matrix5.get_edge_list()
 
     print("Printing results:")
     print("Result 1: without checkpoint")
@@ -1799,21 +1584,17 @@ def JidtKraskovCMI_BMI_checktest():
     print(result3)
     print("Result 4: without checkpoint and different targets and sources")
     print(result4)
-    print("Result 5: without checkpoint and same targets and sources")
-    print(result5)
 
     print("Comparing the results:")
     assert np.array_equal(result1, result2), 'Result 1 and 2 not equal!'
     assert np.array_equal(result1, result3), 'Result 1 and 3 not equal!'
     assert not np.array_equal(result1, result4), 'Result 1 and 4 equal, expected to be different!'
-    assert np.array_equal(result1, result5), 'Result 1 and 5 not equal!'
 
     cmp1 = list(set(result1).intersection(result2))
     cmp2 = list(set(result1).intersection(result3))
     cmp3 = list(set(result1).intersection(result4))
-    cmp4 = list(set(result1).intersection(result5))
     len1 = len(result1)
-    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp4) == len1 and len(cmp3) != len1, (
+    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp3) != len1, (
         "Discrete MultivariateMI Running with checkpoints does not give the expected results")
 
     print("Final")
@@ -1823,14 +1604,12 @@ def JidtKraskovCMI_BMI_checktest():
     print(cmp2)
     print("Elements of comparison between result 1 and 4")
     print(cmp3)
-    print("Elements of comparison between result 1 and 5")
-    print(cmp4)
 
     _clear_ckp(filename_ckp1)
     _clear_ckp(filename_ckp2)
 
 
-def JidtDiscreteCMI_BMI_checktest():
+def test_JidtDiscreteCMI_BMI_checkpoint():
     """ run test without checkpointing, with checkpointing without resume and checkpointing with resume to compare the results"""
     filename_ckp1 = os.path.join(
         os.path.dirname(__file__), 'data', 'run_checkpoint')
@@ -1838,25 +1617,12 @@ def JidtDiscreteCMI_BMI_checktest():
         os.path.dirname(__file__), 'data', 'resume_checkpoint')
 
     # Generate Gaussian test data
-    covariance = 0.4
-    n = N_SAMPLES*10
-    delay = 1
-    source = np.random.normal(0, 1, size=n)
-    target = (covariance * source + (1 - covariance) *
-              np.random.normal(0, 1, size=n))
-    corr_expected = covariance / \
-        (1 * np.sqrt(covariance**2 + (1-covariance)**2))
-    expected_mi = calculate_mi(corr_expected)
-    source = source[delay:]
-    target = target[:-delay]
+    data = _generate_gauss_data(covariance=GAUSS_COV,
+                                n=N_SAMPLES*10,
+                                delay=DELAY,
+                                normalise=False,
+                                seed=SEED)
 
-    # Discretise data
-    settings = {'discretise_method': 'equal',
-                'n_discrete_bins': 5}
-    est = JidtDiscreteCMI(settings)
-    source_dis, target_dis = est._discretise_vars(var1=source, var2=target)
-    data = Data(np.vstack((source_dis, target_dis)),
-                dim_order='ps', normalise=False)
     settings1 = {
         'cmi_estimator': 'JidtDiscreteCMI',
         'discretise_method': 'none',
@@ -1864,35 +1630,17 @@ def JidtDiscreteCMI_BMI_checktest():
         'n_perm_max_stat': 21,
         'n_perm_omnibus': 30,
         'n_perm_max_seq': 30,
-        'min_lag_sources': 2,
-        'max_lag_sources': 2,
+        'min_lag_sources': DELAY,
+        'max_lag_sources': DELAY,
         'max_lag_target': 1}
 
-    settings2 = {
-        'cmi_estimator': 'JidtDiscreteCMI',
-        'discretise_method': 'none',
-        'n_discrete_bins': 5,
-        'n_perm_max_stat': 21,
-        'n_perm_omnibus': 30,
-        'n_perm_max_seq': 30,
-        'min_lag_sources': 2,
-        'max_lag_sources': 2,
-        'max_lag_target': 1,
-        'write_ckp': True,
-        'filename_ckp': filename_ckp1}
+    settings2 = settings1.copy()
+    settings2['write_ckp'] = True
+    settings2['filename_ckp'] = filename_ckp1
 
-    settings3 = {
-        'cmi_estimator': 'JidtDiscreteCMI',
-        'discretise_method': 'none',
-        'n_discrete_bins': 5,
-        'n_perm_max_stat': 21,
-        'n_perm_omnibus': 30,
-        'n_perm_max_seq': 30,
-        'min_lag_sources': 2,
-        'max_lag_sources': 2,
-        'max_lag_target': 1,
-        'write_ckp': True,
-        'filename_ckp': filename_ckp2}
+    settings3 = settings1.copy()
+    settings3['write_ckp'] = True
+    settings3['filename_ckp'] = filename_ckp2
 
     # Initialise analysis object and define settings
     network_analysis1 = BivariateMI()
@@ -1939,21 +1687,15 @@ def JidtDiscreteCMI_BMI_checktest():
     results4 = network_analysis4.analyse_single_target(
         settings=settings1, data=data, target=0)
 
-    # results of a network analysis just like results 1
-    results5 = network_analysis1.analyse_single_target(settings1, data,
-                                                       target=1)
-
     adj_matrix1 = results1.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix2 = results2.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix3 = results3.get_adjacency_matrix(weights='binary', fdr=False)
     adj_matrix4 = results4.get_adjacency_matrix(weights='binary', fdr=False)
-    adj_matrix5 = results5.get_adjacency_matrix(weights='binary', fdr=False)
 
     result1 = adj_matrix1.get_edge_list()
     result2 = adj_matrix2.get_edge_list()
     result3 = adj_matrix3.get_edge_list()
     result4 = adj_matrix4.get_edge_list()
-    result5 = adj_matrix5.get_edge_list()
 
     print("Printing results:")
     print("Result 1: without checkpoint")
@@ -1964,21 +1706,17 @@ def JidtDiscreteCMI_BMI_checktest():
     print(result3)
     print("Result 4: without checkpoint and different targets and sources")
     print(result4)
-    print("Result 5: without checkpoint and same targets and sources")
-    print(result5)
 
     print("Comparing the results:")
     assert np.array_equal(result1, result2), 'Result 1 and 2 not equal!'
     assert np.array_equal(result1, result3), 'Result 1 and 3 not equal!'
     assert not np.array_equal(result1, result4), 'Result 1 and 4 equal, expected to be different!'
-    assert np.array_equal(result1, result5), 'Result 1 and 5 not equal!'
 
     cmp1 = list(set(result1).intersection(result2))
     cmp2 = list(set(result1).intersection(result3))
     cmp3 = list(set(result1).intersection(result4))
-    cmp4 = list(set(result1).intersection(result5))
     len1 = len(result1)
-    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp4) == len1 and len(cmp3) != len1, (
+    assert len(cmp1) == len1 and len(cmp2) == len1 and len(cmp3) != len1, (
         "Discrete MultivariateMI Running with checkpoints does not give the expected results")
 
     print("Final")
@@ -1988,8 +1726,6 @@ def JidtDiscreteCMI_BMI_checktest():
     print(cmp2)
     print("Elements of comparison between result 1 and 4")
     print(cmp3)
-    print("Elements of comparison between result 1 and 5")
-    print(cmp4)
 
     _clear_ckp(filename_ckp1)
     _clear_ckp(filename_ckp2)
@@ -2000,17 +1736,17 @@ if __name__ == '__main__':
     test_checkpoint_copy()
     test_checkpoint_resume()
 
-    JidtKraskovCMI_MMI_checktest()
-    JidtKraskovCMI_MTE_checktest()
-    JidtKraskovCMI_BMI_checktest()  # passed
-    JidtKraskovCMI_BTE_checktest()  # passed
+    test_JidtKraskovCMI_MMI_checkpoint()
+    test_JidtKraskovCMI_MTE_checkpoint()
+    test_JidtKraskovCMI_BMI_checkpoint()
+    test_JidtKraskovCMI_BTE_checkpoint()
 
-    JidtDiscreteCMI_MMI_checktest()
-    JidtDiscreteCMI_MTE_checktest()
-    JidtDiscreteCMI_BMI_checktest()  # passed
-    JidtDiscreteCMI_BTE_checktest()  # passed
+    test_JidtDiscreteCMI_MMI_checkpoint()
+    test_JidtDiscreteCMI_MTE_checkpoint()
+    test_JidtDiscreteCMI_BMI_checkpoint()
+    test_JidtDiscreteCMI_BTE_checkpoint()
 
-    JidtGaussianCMI_MMI_checktest()
-    JidtGaussianCMI_MTE_checktest()
-    JidtGaussianCMI_BMI_checktest()  # passed
-    JidtGaussianCMI_BTE_checktest()  # passed
+    test_JidtGaussianCMI_MMI_checkpoint()
+    test_JidtGaussianCMI_MTE_checkpoint()
+    test_JidtGaussianCMI_BMI_checkpoint()
+    test_JidtGaussianCMI_BTE_checkpoint()

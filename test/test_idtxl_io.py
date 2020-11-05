@@ -120,31 +120,31 @@ def test_export_brain_net():
                                    node_color=np.arange(n_nodes + 1))
 
 
-def test_import_fieldtrip():
-    """Test FieldTrip importer."""
-    file_path = resource_filename(__name__, 'data/ABA04_Up_10-140Hz_v7_3.mat')
-    (data, label, timestamps, fsample) = io.import_fieldtrip(
-                                            file_name=file_path,
-                                            ft_struct_name='data',
-                                            file_version='v7.3')
-    assert data.n_processes == 14, (
-        'Wrong number of processes, expected 14, found: {0}').format(
-            data.n_processes)
-    assert data.n_replications == 135, (
-        'Wrong number of replications, expected 135, found: {0}').format(
-            data.n_replications)
-    assert data.n_samples == 1200, (
-        'Wrong number of samples, expected 1200, found: {0}').format(
-            data.n_samples)
+# def test_import_fieldtrip():
+#     """Test FieldTrip importer."""
+#     file_path = resource_filename(__name__, 'data/ABA04_Up_10-140Hz_v7_3.mat')
+#     (data, label, timestamps, fsample) = io.import_fieldtrip(
+#                                             file_name=file_path,
+#                                             ft_struct_name='data',
+#                                             file_version='v7.3')
+#     assert data.n_processes == 14, (
+#         'Wrong number of processes, expected 14, found: {0}').format(
+#             data.n_processes)
+#     assert data.n_replications == 135, (
+#         'Wrong number of replications, expected 135, found: {0}').format(
+#             data.n_replications)
+#     assert data.n_samples == 1200, (
+#         'Wrong number of samples, expected 1200, found: {0}').format(
+#             data.n_samples)
 
-    assert label[0] == 'VirtualChannel_3491_pc1', (
-        'Wrong channel name for label 0.')
-    assert label[10] == 'VirtualChannel_1573_pc2', (
-        'Wrong channel name for label 10.')
-    assert label[30] == 'VirtualChannel_1804_pc1', (
-        'Wrong channel name for label 30.')
-    assert fsample == 600, ('Wrong sampling frequency: {0}'.format(fsample))
-    print(timestamps)  # TODO add assertion for this
+#     assert label[0] == 'VirtualChannel_3491_pc1', (
+#         'Wrong channel name for label 0.')
+#     assert label[10] == 'VirtualChannel_1573_pc2', (
+#         'Wrong channel name for label 10.')
+#     assert label[30] == 'VirtualChannel_1804_pc1', (
+#         'Wrong channel name for label 30.')
+#     assert fsample == 600, ('Wrong sampling frequency: {0}'.format(fsample))
+#     print(timestamps)  # TODO add assertion for this
 
 
 def test_import_matarray():
@@ -296,4 +296,4 @@ if __name__ == '__main__':
     test_export_brain_net()
     test_export_networkx()
     test_import_matarray()
-    test_import_fieldtrip()
+    # test_import_fieldtrip()

@@ -636,7 +636,6 @@ class NetworkAnalysis():
         if verbose:
             print('Resuming analysis from file {}.ckp, saved {}'.format(
                 file_path, timestamp))
-
         # Read targets and sources.
         targets = ast.literal_eval(lines[4].split(':')[1].strip())
         sources = ast.literal_eval(lines[5].split(':')[1].strip())
