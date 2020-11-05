@@ -13,16 +13,10 @@ optimiser_missing = pytest.mark.skipif(
     package_missing,
     reason='ECOS is missing.')
 
-no_float128 = False
-try:
-    np.float128()
-except AttributeError as err:
-    if "'module' object has no attribute 'float128'" == err.args[0]:
-        no_float128 = True
-    else:
-        raise
+# Float128 is not available on all systems (e.g., missing on Windows systems).
+# Skip tests in this case.
 float128_not_available = pytest.mark.skipif(
-    no_float128,
+    np.invert(hasattr(np, 'float128')),
     reason="type float128 not available on current architecture")
 
 
@@ -49,6 +43,7 @@ Y = np.asarray([0, 1, 0, 1])
 # Y = np.random.randint(0, ALPH_Y, n)
 
 
+@float128_not_available
 @optimiser_missing
 def test_tartu_estimator():
     # Test Tartu estimator on logical and
