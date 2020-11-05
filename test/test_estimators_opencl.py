@@ -22,6 +22,8 @@ jpype_missing = pytest.mark.skipif(
     package_missing,
     reason="Jpype is missing, JIDT estimators are not available")
 
+SEED = 0
+
 
 def test_debug_setting():
     """Test setting of debugging options."""
@@ -46,7 +48,7 @@ def test_debug_setting():
 
 def test_amd_data_padding():
     """Test padding necessary for AMD devices."""
-    expected_mi, source, source_uncorr, target = _get_gauss_data()
+    expected_mi, source, source_uncorr, target = _get_gauss_data(seed=SEED)
 
     settings = {'debug': True, 'return_counts': True}
     est_mi = OpenCLKraskovMI(settings=settings)
@@ -133,7 +135,7 @@ def test_user_input():
 @jpype_missing
 def test_mi_correlated_gaussians():
     """Test estimators on correlated Gaussian data."""
-    expected_mi, source, source_uncorr, target = _get_gauss_data()
+    expected_mi, source, source_uncorr, target = _get_gauss_data(seed=SEED)
 
     # Run OpenCL estimator.
     settings = {'debug': True, 'return_counts': True}
@@ -162,7 +164,7 @@ def test_mi_correlated_gaussians():
 @jpype_missing
 def test_cmi_no_cond_correlated_gaussians():
     """Test estimators on correlated Gaussian data without conditional."""
-    expected_mi, source, source_uncorr, target = _get_gauss_data()
+    expected_mi, source, source_uncorr, target = _get_gauss_data(seed=SEED)
 
     # Run OpenCL estimator.
     settings = {'debug': True, 'return_counts': True}
@@ -191,7 +193,7 @@ def test_cmi_no_cond_correlated_gaussians():
 @jpype_missing
 def test_cmi_correlated_gaussians():
     """Test estimators on correlated Gaussian data with conditional."""
-    expected_mi, source, source_uncorr, target = _get_gauss_data()
+    expected_mi, source, source_uncorr, target = _get_gauss_data(seed=SEED)
 
     # Run OpenCL estimator.
     settings = {'debug': True, 'return_counts': True}
@@ -222,7 +224,8 @@ def test_cmi_correlated_gaussians():
 @jpype_missing
 def test_mi_correlated_gaussians_two_chunks():
     """Test estimators on two chunks of correlated Gaussian data."""
-    expected_mi, source, source_uncorr, target = _get_gauss_data(n=20000)
+    expected_mi, source, source_uncorr, target = _get_gauss_data(
+        n=20000, seed=SEED)
     n_points = source.shape[0]
 
     # Run OpenCL estimator.
@@ -262,6 +265,7 @@ def test_mi_correlated_gaussians_two_chunks():
 def test_mi_uncorrelated_gaussians():
     """Test MI estimator on uncorrelated Gaussian data."""
     n_obs = 10000
+    np.random.seed(SEED)
     var1 = np.random.randn(n_obs, 1)
     var2 = np.random.randn(n_obs, 1)
 
@@ -293,6 +297,7 @@ def test_mi_uncorrelated_gaussians():
 def test_cmi_uncorrelated_gaussians():
     """Test CMI estimator on uncorrelated Gaussian data."""
     n_obs = 10000
+    np.random.seed(SEED)
     var1 = np.random.randn(n_obs, 1)
     var2 = np.random.randn(n_obs, 1)
     var3 = np.random.randn(n_obs, 1)
@@ -327,6 +332,7 @@ def test_mi_uncorrelated_gaussians_three_dims():
     """Test MI estimator on uncorrelated 3D Gaussian data."""
     n_obs = 10000
     dim = 3
+    np.random.seed(SEED)
     var1 = np.random.randn(n_obs, dim)
     var2 = np.random.randn(n_obs, dim)
 
@@ -359,6 +365,7 @@ def test_cmi_uncorrelated_gaussians_three_dims():
     """Test CMI estimator on uncorrelated 3D Gaussian data."""
     n_obs = 10000
     dim = 3
+    np.random.seed(SEED)
     var1 = np.random.randn(n_obs, dim)
     var2 = np.random.randn(n_obs, dim)
     var3 = np.random.randn(n_obs, dim)
@@ -410,6 +417,7 @@ def test_cmi_uncorrelated_gaussians_three_dims():
 def test_cmi_uncorrelated_gaussians_unequal_dims():
     """Test CMI estimator on uncorrelated Gaussian data with unequal dims."""
     n_obs = 10000
+    np.random.seed(SEED)
     var1 = np.random.randn(n_obs, 3)
     var2 = np.random.randn(n_obs, 5)
     var3 = np.random.randn(n_obs, 7)
@@ -461,7 +469,8 @@ def test_local_values():
     """Test estimation of local MI and CMI using OpenCL estimators."""
     # Get data
     n_chunks = 2
-    expec_mi, source, source_uncorr, target = _get_gauss_data(n=20000)
+    expec_mi, source, source_uncorr, target = _get_gauss_data(
+        n=20000, seed=SEED)
     chunklength = int(source.shape[0] / n_chunks)
 
     # Estimate local values
@@ -507,7 +516,7 @@ def test_local_values():
 
 def test_insufficient_no_points():
     """Test if estimation aborts for too few data points."""
-    expected_mi, source1, source2, target = _get_gauss_data(n=4)
+    expected_mi, source1, source2, target = _get_gauss_data(n=4, seed=SEED)
 
     settings = {
         'kraskov_k': 4,
@@ -535,7 +544,7 @@ def test_insufficient_no_points():
 @jpype_missing
 def test_multi_gpu():
     """Test use of multiple GPUs."""
-    expected_mi, source, source_uncorr, target = _get_gauss_data()
+    expected_mi, source, source_uncorr, target = _get_gauss_data(seed=SEED)
     settings = {'debug': True, 'return_counts': True}
 
     # Get no. available devices on current platform.

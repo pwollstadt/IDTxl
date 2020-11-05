@@ -14,11 +14,13 @@ from test_estimators_jidt import jpype_missing
 from idtxl.idtxl_utils import calculate_mi
 from test_estimators_jidt import _get_gauss_data
 
+SEED = 0
+
 
 @jpype_missing
 def test_network_comparison_use_cases():
     """Run all intended use cases, within/between, dependent/independent."""
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(100, 5)
 
     path = os.path.join(os.path.dirname(__file__), 'data/')
@@ -84,7 +86,7 @@ def test_network_comparison_use_cases():
 @jpype_missing
 def test_assertions():
     """Test if input checks raise errors."""
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(100, 5)
 
     # Load previously generated example data
@@ -113,7 +115,7 @@ def test_assertions():
         comp._initialise(comp_settings)
 
     # data sets have unequal no. replications
-    dat2 = Data()
+    dat2 = Data(seed=SEED+1)
     dat2.generate_mute_data(100, 3)
     comp_settings['stats_type'] = 'dependent'
     comp_settings['alpha_comp'] = 0.05
@@ -123,7 +125,7 @@ def test_assertions():
         comp.compare_within(comp_settings, res_0, res_1, data, dat2)
 
     # data sets have unequal no. realisations
-    dat2 = Data()
+    dat2 = Data(seed=SEED+1)
     dat2.generate_mute_data(80, 5)
     comp_settings['stats_type'] = 'dependent'
     comp_settings['alpha_comp'] = 0.05
@@ -169,9 +171,9 @@ def test_assertions():
 @jpype_missing
 def test_create_union_network():
     """Test creation of union of multiple networks."""
-    dat1 = Data()
+    dat1 = Data(seed=SEED)
     dat1.generate_mute_data(100, 5)
-    dat2 = Data()
+    dat2 = Data(seed=SEED+1)
     dat2.generate_mute_data(100, 5)
 
     # Load previously generated example data
@@ -245,10 +247,10 @@ def test_get_permuted_replications():
 
     # Check permutation for dependent samples test: Replace realisations by
     # zeros and ones, check if realisations get swapped correctly.
-    dat1 = Data()
+    dat1 = Data(seed=SEED)
     dat1.normalise = False
     dat1.set_data(np.zeros((5, 100, 5)), 'psr')
-    dat2 = Data()
+    dat2 = Data(seed=SEED+1)
     dat2.normalise = False
     dat2.set_data(np.ones((5, 100, 5)), 'psr')
     [cond_a_perm,
@@ -325,7 +327,7 @@ def test_calculate_cmi_all_links():
 @jpype_missing
 def test_calculate_mean():
     """Test if mean over CMI estimates is calculated correctly."""
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(100, 5)
     res_0 = pickle.load(open(os.path.join(os.path.dirname(__file__),
                              'data/mute_results_0.p'), 'rb'))
@@ -355,10 +357,11 @@ def test_calculate_mean():
             'Error in mean of CMI for target {0} - actual: ({1}), expected: '
             '({2})'.format(t, cmi_mean[t], cmi[t][0]))
 
+
 @jpype_missing
 def test_p_value_union():
     """Test if the p-value is calculated correctly."""
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(100, 5)
     path = os.path.join(os.path.dirname(__file__), 'data/')
     res_0 = pickle.load(open(path + 'mute_results_0.p', 'rb'))
@@ -411,7 +414,7 @@ def test_p_value_union():
 
 def test_compare_links_within():
     """Test comparison of two links within a single network."""
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(100, 5)
 
     path = os.path.join(os.path.dirname(__file__), 'data/')
@@ -471,7 +474,7 @@ def test_compare_links_within():
 
 def test_tails():
     """Test one- and two-tailed testing for all stats types."""
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(100, 5)
 
     path = os.path.join(os.path.dirname(__file__), 'data/')

@@ -5,7 +5,6 @@ This module provides unit tests for JIDT estimators.
 Unit tests are adapted from the JIDT demos:
     https://github.com/jlizier/jidt/raw/master/demos/python/
 """
-import math
 import pytest
 import random as rn
 import numpy as np
@@ -28,10 +27,12 @@ jpype_missing = pytest.mark.skipif(
         package_missing,
         reason="Jpype is missing, JIDT estimators are not available")
 
+SEED = 0
+
 
 def _assert_result(results, expected_res, estimator, measure, tol=0.05):
     # Compare estimates with analytic results and print output.
-    print('{0} - {1} result: {2:.4f} nats; expected to be close to {3:.4f} '
+    print('{0} - {1} result: {2:.4f} nats expected to be close to {3:.4f} '
           'nats.'.format(estimator, measure, results, expected_res))
     assert np.isclose(results, expected_res, atol=tol), (
         '{0} calculation failed (error larger than {1}).'.format(measure, tol))
@@ -46,12 +47,13 @@ def _compare_result(res1, res2, estimator1, estimator2, measure, tol=0.05):
                         '{1}).'.format(measure, tol))
 
 
-def _get_gauss_data(n=10000, covariance=0.4, expand=True):
+def _get_gauss_data(n=10000, covariance=0.4, expand=True, seed=None):
     """Generate correlated and uncorrelated Gaussian variables.
 
     Generate two sets of random normal data, where one set has a given
     covariance and the second is uncorrelated.
     """
+    np.random.seed(seed)
     corr_expected = covariance / (1 * np.sqrt(covariance**2 + (1-covariance)**2))
     expected_mi = calculate_mi(corr_expected)
     src_corr = [rn.normalvariate(0, 1) for r in range(n)]  # correlated src
@@ -73,7 +75,7 @@ def _get_gauss_data(n=10000, covariance=0.4, expand=True):
     return expected_mi, src_corr, src_uncorr, target
 
 
-def _get_ar_data(n=10000, expand=False):
+def _get_ar_data(n=10000, expand=False, seed=None):
     """Simulate a process with memory using an AR process of order 2.
 
     Return data with memory and random data without memory.
@@ -115,10 +117,10 @@ def test_mi_gauss_data():
 
     Note that the calculation is based on a random variable (because the
     generated data is a set of random variables) - the result will be of the
-    order of what we expect, but not exactly equal to it; in fact, there will
+    order of what we expect, but not exactly equal to it in fact, there will
     be a large variance around it.
     """
-    expected_mi, source1, source2, target = _get_gauss_data()
+    expected_mi, source1, source2, target = _get_gauss_data(seed=SEED)
 
     # Test Kraskov
     mi_estimator = JidtKraskovMI(settings={})
@@ -139,8 +141,8 @@ def test_mi_gauss_data():
     mi_estimator = JidtDiscreteMI(settings=settings)
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
-    _assert_result(mi_cor, expected_mi, 'JidtDiscreteMI', 'CMI (no cond.)', 0.08) # More variability here
-    _assert_result(mi_uncor, 0, 'JidtDiscreteMI', 'CMI (uncorr., no cond.)', 0.08) # More variability here
+    _assert_result(mi_cor, expected_mi, 'JidtDiscreteMI', 'CMI (no cond.)', 0.08)  # More variability here
+    _assert_result(mi_uncor, 0, 'JidtDiscreteMI', 'CMI (uncorr., no cond.)', 0.08)  # More variability here
 
 
 @jpype_missing
@@ -152,10 +154,10 @@ def test_cmi_gauss_data_no_cond():
 
     Note that the calculation is based on a random variable (because the
     generated data is a set of random variables) - the result will be of the
-    order of what we expect, but not exactly equal to it; in fact, there will
+    order of what we expect, but not exactly equal to it in fact, there will
     be a large variance around it.
     """
-    expected_mi, source1, source2, target = _get_gauss_data()
+    expected_mi, source1, source2, target = _get_gauss_data(seed=SEED)
 
     # Test Kraskov
     mi_estimator = JidtKraskovCMI(settings={})
@@ -189,10 +191,10 @@ def test_cmi_gauss_data():
 
     Note that the calculation is based on a random variable (because the
     generated data is a set of random variables) - the result will be of the
-    order of what we expect, but not exactly equal to it; in fact, there will
+    order of what we expect, but not exactly equal to it in fact, there will
     be a large variance around it.
     """
-    expected_mi, source1, source2, target = _get_gauss_data()
+    expected_mi, source1, source2, target = _get_gauss_data(seed=SEED)
 
     # Test Kraskov
     mi_estimator = JidtKraskovCMI(settings={})
@@ -226,10 +228,10 @@ def test_te_gauss_data():
 
     Note that the calculation is based on a random variable (because the
     generated data is a set of random variables) - the result will be of the
-    order of what we expect, but not exactly equal to it; in fact, there will
+    order of what we expect, but not exactly equal to it in fact, there will
     be a large variance around it.
     """
-    expected_mi, source1, source2, target = _get_gauss_data(expand=False)
+    expected_mi, source1, source2, target = _get_gauss_data(expand=False, seed=SEED)
     # add delay of one sample
     source1 = source1[1:]
     source2 = source2[1:]
@@ -268,10 +270,10 @@ def test_ais_gauss_data():
 
     Note that the calculation is based on a random variable (because the
     generated data is a set of random variables) - the result will be of the
-    order of what we expect, but not exactly equal to it; in fact, there will
+    order of what we expect, but not exactly equal to it in fact, there will
     be a large variance around it.
     """
-    source1, source2 = _get_ar_data()
+    source1, source2 = _get_ar_data(seed=SEED)
 
     settings = {'discretise_method': 'equal',
                 'n_discrete_bins': 4,
@@ -306,10 +308,11 @@ def test_ais_gauss_data():
 @jpype_missing
 def test_one_two_dim_input_kraskov():
     """Test one- and two-dimensional input for Kraskov estimators."""
-    expected_mi, src_one, s, target_one = _get_gauss_data(expand=False)
+    expected_mi, src_one, s, target_one = _get_gauss_data(
+        expand=False, seed=SEED)
     src_two = np.expand_dims(src_one, axis=1)
     target_two = np.expand_dims(target_one, axis=1)
-    ar_src_one, s = _get_ar_data(expand=False)
+    ar_src_one, s = _get_ar_data(expand=False, seed=SEED)
     ar_src_two = np.expand_dims(ar_src_one, axis=1)
 
     # MI
@@ -348,10 +351,11 @@ def test_one_two_dim_input_kraskov():
 @jpype_missing
 def test_one_two_dim_input_gaussian():
     """Test one- and two-dimensional input for Gaussian estimators."""
-    expected_mi, src_one, s, target_one = _get_gauss_data(expand=False)
+    expected_mi, src_one, s, target_one = _get_gauss_data(
+        expand=False, seed=SEED)
     src_two = np.expand_dims(src_one, axis=1)
     target_two = np.expand_dims(target_one, axis=1)
-    ar_src_one, s = _get_ar_data(expand=False)
+    ar_src_one, s = _get_ar_data(expand=False, seed=SEED)
     ar_src_two = np.expand_dims(ar_src_one, axis=1)
 
     # MI
@@ -390,10 +394,11 @@ def test_one_two_dim_input_gaussian():
 @jpype_missing
 def test_one_two_dim_input_discrete():
     """Test one- and two-dimensional input for discrete estimators."""
-    expected_mi, src_one, s, target_one = _get_gauss_data(expand=False)
+    expected_mi, src_one, s, target_one = _get_gauss_data(
+        expand=False, seed=SEED)
     src_two = np.expand_dims(src_one, axis=1)
     target_two = np.expand_dims(target_one, axis=1)
-    ar_src_one, s = _get_ar_data(expand=False)
+    ar_src_one, s = _get_ar_data(expand=False, seed=SEED)
     ar_src_two = np.expand_dims(ar_src_one, axis=1)
 
     settings = {'discretise_method': 'equal',
@@ -436,8 +441,8 @@ def test_one_two_dim_input_discrete():
 @jpype_missing
 def test_local_values():
     """Test estimation of local values and their return type."""
-    expected_mi, source, s, target = _get_gauss_data(expand=False)
-    ar_proc, s = _get_ar_data(expand=False)
+    expected_mi, source, s, target = _get_gauss_data(expand=False, seed=SEED)
+    ar_proc, s = _get_ar_data(expand=False, seed=SEED)
 
     settings = {'discretise_method': 'equal',
                 'n_discrete_bins': 4,
@@ -723,15 +728,15 @@ def test_insufficient_no_points():
 def test_discrete_mi_memerror():
     """Test exception handling for memory exhausted exceptions."""
     var1, var2 = _get_mem_binary_data()
-    
+
     # Check that we catch instantiation error for an enormous history:
     caughtException = False
-    settings = {'n_discrete_bins': 1000000000};
-    result = -1;
+    settings = {'n_discrete_bins': 1000000000}
+    result = -1
     try:
         mi_estimator = JidtDiscreteMI(settings=settings)
         result = mi_estimator.estimate(var1, var2)
-        print('Result of MI calc (which should not have completed) was ', result);
+        print('Result of MI calc (which should not have completed) was ', result)
     except ex.JidtOutOfMemoryError:
         caughtException = True
         print('ex.JidtOutOfMemoryError caught as required')
@@ -750,13 +755,13 @@ def test_discrete_mi_memerror():
 
 
 def test_jidt_kraskov_alg1And2():
-    """ Test that JIDT estimate changes properly when we change KSG algorithm """
-    n = 100;
+    """Test that JIDT estimate changes properly when we change KSG algorithm"""
+    n = 100
     source = [sum(pair) for pair in zip(
                         [y for y in range(n)],
                         [rn.normalvariate(0, 0.000001) for r in range(n)])]
     source = np.array(source)
-    target = np.array(source) # Target copies source on purpose
+    target = np.array(source)  # Target copies source on purpose
     # We've generated simple data 0:99, plus a little noise to ensure
     #  we only even get K nearest neighbours in each space.
     # So result should be:
@@ -765,29 +770,29 @@ def test_jidt_kraskov_alg1And2():
         'kraskov_k': 4,
         'noise_level': 0,
         'algorithm_num': 1}
-    for k in range(4,16):
-        settings['kraskov_k'] = k;
-        settings['algorithm_num'] = 1;
+    for k in range(4, 16):
+        settings['kraskov_k'] = k
+        settings['algorithm_num'] = 1
         est1 = JidtKraskovMI(settings)
         mi_alg1 = est1.estimate(source, target)
         # Neighbour counts n_x and n_y will be k-1 because they are
         #  *strictly* within the boundary
-        expected_alg1 = digamma(k) - 2*digamma((k-1)+1) + digamma(n);
-        _compare_result(mi_alg1, expected_alg1, 'JidtDiscreteMI_alg1', 'Analytic',
-                    'MI', tol=0.00001)
-        settings['algorithm_num'] = 2;
+        expected_alg1 = digamma(k) - 2*digamma((k-1)+1) + digamma(n)
+        _compare_result(mi_alg1, expected_alg1, 'JidtDiscreteMI_alg1',
+                        'Analytic', 'MI', tol=0.00001)
+        settings['algorithm_num'] = 2
         est2 = JidtKraskovMI(settings)
         mi_alg2 = est2.estimate(source, target)
-        expected_alg2 = digamma(k) - 1/k - 2*digamma(k) + digamma(n);
-        _compare_result(mi_alg2, expected_alg2, 'JidtDiscreteMI_alg2', 'Analytic',
-                    'MI', tol=0.00001)
+        expected_alg2 = digamma(k) - 1/k - 2*digamma(k) + digamma(n)
+        _compare_result(mi_alg2, expected_alg2, 'JidtDiscreteMI_alg2',
+                        'Analytic', 'MI', tol=0.00001)
         # And now check that it doesn't work for algorithm "3"
-        settings['algorithm_num'] = 3;
-        caughtAssertionError = False;
+        settings['algorithm_num'] = 3
+        caughtAssertionError = False
         try:
-            est3 = JidtKraskovMI(settings);
+            JidtKraskovMI(settings)
         except AssertionError:
-            caughtAssertionError = True;
+            caughtAssertionError = True
         assert caughtAssertionError, 'Assertion error not raised for KSG algorithm 3 request'
 
 

@@ -12,6 +12,7 @@ from idtxl.multivariate_te import MultivariateTE
 from idtxl.estimators_jidt import JidtKraskovMI
 from test_estimators_jidt import jpype_missing, _get_gauss_data
 
+
 def test_find_estimator():
     """Test dynamic loading of classes."""
 

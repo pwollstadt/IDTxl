@@ -11,12 +11,14 @@ from test_checkpointing import _clear_ckp
 from idtxl.idtxl_utils import calculate_mi
 from test_estimators_jidt import _get_gauss_data
 
+SEED = 0
+
 
 @jpype_missing
 def test_gauss_data():
     """Test multivariate TE estimation from correlated Gaussians."""
     # Generate data and add a delay one one sample.
-    expected_mi, source, source_uncorr, target = _get_gauss_data()
+    expected_mi, source, source_uncorr, target = _get_gauss_data(seed=SEED)
     source = source[1:]
     source_uncorr = source_uncorr[1:]
     target = target[:-1]
@@ -62,7 +64,7 @@ def test_gauss_data():
 def test_return_local_values():
     """Test estimation of local values."""
     max_lag = 5
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(500, 5)
     settings = {
         'cmi_estimator': 'JidtKraskovCMI',
@@ -137,11 +139,12 @@ def test_multivariate_te_init():
         'max_lag_target': 5}
     nw = MultivariateTE()
     with pytest.raises(RuntimeError):
-        nw.analyse_single_target(settings=settings, data=Data(), target=1)
+        nw.analyse_single_target(
+            settings=settings, data=Data(seed=SEED), target=1)
 
     # Test setting of min and max lags
     settings['cmi_estimator'] = 'JidtKraskovCMI'
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(n_samples=10, n_replications=5)
 
     # Valid: max lag sources bigger than max lag target
@@ -250,14 +253,12 @@ def test_multivariate_te_one_realisation_per_replication():
         'max_lag_sources': 5,
         'min_lag_sources': 4}
     target = 0
-    data = Data(normalise=False)
+    data = Data(normalise=False, seed=SEED)
     n_repl = 10
     n_procs = 2
     n_points = n_procs * (settings['max_lag_sources'] + 1) * n_repl
     data.set_data(np.arange(n_points).reshape(
-                                        n_procs,
-                                        settings['max_lag_sources'] + 1,
-                                        n_repl), 'psr')
+        n_procs, settings['max_lag_sources'] + 1, n_repl), 'psr')
     nw_0 = MultivariateTE()
     nw_0._initialise(settings, data, 'all', target)
     assert (not nw_0.selected_vars_full)
@@ -279,7 +280,7 @@ def test_faes_method():
                 'min_lag_sources': 3,
                 'max_lag_target': 7}
     nw_1 = MultivariateTE()
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data()
     sources = [1, 2, 3]
     target = 0
@@ -297,7 +298,7 @@ def test_add_conditional_manually():
                 'min_lag_sources': 3,
                 'max_lag_target': 7}
     nw = MultivariateTE()
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data()
 
     # Add a conditional with a lag bigger than the max_lag requested above
@@ -324,7 +325,7 @@ def test_check_source_set():
     This method sets the list of source processes from which candidates are
     taken for multivariate TE estimation.
     """
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(100, 5)
     nw_0 = MultivariateTE()
     nw_0.settings = {'verbose': True}
@@ -397,7 +398,7 @@ def test_define_candidates():
 def test_analyse_network():
     """Test method for full network analysis."""
     n_processes = 5  # the MuTE network has 5 nodes
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(10, 5)
     settings = {
         'cmi_estimator': 'JidtKraskovCMI',
@@ -456,7 +457,7 @@ def test_permute_time():
     """Create surrogates by permuting data in time instead of over replic."""
     # Test if perm type is set to default
     default = 'random'
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(10, 5)
     settings = {
         'cmi_estimator': 'JidtKraskovCMI',
@@ -478,23 +479,14 @@ def test_discrete_input():
     """Test multivariate TE estimation from discrete data."""
     # Generate Gaussian test data
     covariance = 0.4
-    n = 10000
-    delay = 1
-    source = np.random.normal(0, 1, size=n)
-    target = (covariance * source + (1 - covariance) *
-              np.random.normal(0, 1, size=n))
-    corr_expected = covariance / (1 * np.sqrt(covariance**2 + (1-covariance)**2))
+    data = _get_discrete_gauss_data(covariance=covariance,
+                                    n=10000,
+                                    delay=1,
+                                    normalise=False,
+                                    seed=SEED)
+    corr_expected = covariance / (
+        1 * np.sqrt(covariance**2 + (1-covariance)**2))
     expected_mi = calculate_mi(corr_expected)
-    source = source[delay:]
-    target = target[:-delay]
-
-    # Discretise data
-    settings = {'discretise_method': 'equal',
-                'n_discrete_bins': 5}
-    est = JidtDiscreteCMI(settings)
-    source_dis, target_dis = est._discretise_vars(var1=source, var2=target)
-    data = Data(np.vstack((source_dis, target_dis)),
-                dim_order='ps', normalise=False)
     settings = {
         'cmi_estimator': 'JidtDiscreteCMI',
         'discretise_method': 'none',
@@ -541,7 +533,7 @@ def test_indices_to_lags():
 def test_checkpoint():
     """Test method for full network analysis."""
     n_processes = 5  # the MuTE network has 5 nodes
-    data = Data()
+    data = Data(seed=SEED)
     data.generate_mute_data(10, 5)
     filename_ckp = './my_checkpoint'
     settings = {

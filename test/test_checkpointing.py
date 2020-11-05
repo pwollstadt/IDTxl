@@ -9,7 +9,7 @@ from idtxl.multivariate_mi import MultivariateMI
 from idtxl.bivariate_mi import BivariateMI
 from idtxl.bivariate_te import BivariateTE
 
-from test_results import _generate_gauss_data
+from test_results import _get_discrete_gauss_data
 
 N_PERM = 21  # this no. permutations is usually sufficient to find links in the MUTE data
 N_SAMPLES = 1000
@@ -426,7 +426,7 @@ def test_JidtDiscreteCMI_MMI_checkpoint():
 
     """Test multivariate TE estimation from discrete data."""
     # Generate Gaussian test data
-    data = _generate_gauss_data(covariance=GAUSS_COV,
+    data = _get_discrete_gauss_data(covariance=GAUSS_COV,
                                 n=N_SAMPLES*10,
                                 delay=DELAY,
                                 normalise=False,
@@ -821,7 +821,7 @@ def test_JidtDiscreteCMI_MTE_checkpoint():
 
     """Test multivariate TE estimation from discrete data."""
     # Generate Gaussian test data
-    data = _generate_gauss_data(covariance=GAUSS_COV,
+    data = _get_discrete_gauss_data(covariance=GAUSS_COV,
                                 n=N_SAMPLES*10,
                                 delay=DELAY,
                                 normalise=False,
@@ -1226,7 +1226,7 @@ def test_JidtDiscreteCMI_BTE_checkpoint():
 
     """Test multivariate TE estimation from discrete data."""
     # Generate Gaussian test data
-    data = _generate_gauss_data(covariance=GAUSS_COV,
+    data = _get_discrete_gauss_data(covariance=GAUSS_COV,
                                 n=N_SAMPLES*10,
                                 delay=DELAY,
                                 normalise=False,
@@ -1617,7 +1617,7 @@ def test_JidtDiscreteCMI_BMI_checkpoint():
         os.path.dirname(__file__), 'data', 'resume_checkpoint')
 
     # Generate Gaussian test data
-    data = _generate_gauss_data(covariance=GAUSS_COV,
+    data = _get_discrete_gauss_data(covariance=GAUSS_COV,
                                 n=N_SAMPLES*10,
                                 delay=DELAY,
                                 normalise=False,
