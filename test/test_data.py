@@ -396,6 +396,44 @@ def test_data_type():
         'Permuted samples type is not an int.')
 
 
+def test_setting_random_seed():
+    """Test fixing of random seed for data generation"""
+    seed = 0
+    n_samples = 100
+    data1 = Data(seed=seed)
+    data1.generate_mute_data(n_samples=n_samples, n_replications=1)
+    data2 = Data(seed=seed)
+    data2.generate_mute_data(n_samples=n_samples, n_replications=1)
+    data3 = Data(seed=seed+1)
+    data3.generate_mute_data(n_samples=n_samples, n_replications=1)
+    assert np.array_equal(data1._data, data2._data), (
+        'Data with fixed random seed not equal')
+    assert not np.array_equal(data1._data, data3._data), (
+        'Data with fixed different random seed equal')
+
+    data1 = Data(seed=seed)
+    data1.generate_logistic_maps_data(n_samples=n_samples, n_replications=1)
+    data2 = Data(seed=seed)
+    data2.generate_logistic_maps_data(n_samples=n_samples, n_replications=1)
+    data3 = Data(seed=seed+1)
+    data3.generate_logistic_maps_data(n_samples=n_samples, n_replications=1)
+    assert np.array_equal(data1._data, data2._data), (
+        'Data with fixed random seed not equal')
+    assert not np.array_equal(data1._data, data3._data), (
+        'Data with fixed different random seed equal')
+
+    data1 = Data(seed=seed)
+    data1.generate_var_data(n_samples=n_samples, n_replications=1)
+    data2 = Data(seed=seed)
+    data2.generate_var_data(n_samples=n_samples, n_replications=1)
+    data3 = Data(seed=seed+1)
+    data3.generate_var_data(n_samples=n_samples, n_replications=1)
+    assert np.array_equal(data1._data, data2._data), (
+        'Data with fixed random seed not equal')
+    assert not np.array_equal(data1._data, data3._data), (
+        'Data with fixed different random seed equal')
+
+
 if __name__ == '__main__':
     test_permute_samples()
     test_data_type()
@@ -408,3 +446,4 @@ if __name__ == '__main__':
     test_set_data()
     test_permute_replications()
     test_data_properties()
+    test_setting_random_seed()
