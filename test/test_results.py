@@ -412,14 +412,14 @@ def test_adjacency_matrix():
     # Test comparison of entry types
     a = AdjacencyMatrix(n_nodes, weight_type=bool)
     a.add_edge(0, 1, True)
+    a = AdjacencyMatrix(n_nodes, weight_type=int)
     for t in [int, np.int, np.int32, np.int64]:
-        a = AdjacencyMatrix(n_nodes, weight_type=t)
         a.add_edge(0, 1, int(1))
         a.add_edge(0, 1, np.int(1))
         a.add_edge(0, 1, np.int32(1))
         a.add_edge(0, 1, np.int64(1))
+    a = AdjacencyMatrix(n_nodes, weight_type=float)
     for t in [float, np.float, np.float32, np.float64]:
-        a = AdjacencyMatrix(n_nodes, weight_type=t)
         a.add_edge(0, 1, float(1))
         a.add_edge(0, 1, np.float(1))
         a.add_edge(0, 1, np.float32(1))
