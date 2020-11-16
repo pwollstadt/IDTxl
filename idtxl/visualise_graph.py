@@ -109,7 +109,7 @@ def plot_selected_vars(results, target, sign_sources=True,
     # Adjust color and position of nodes (variables).
     pos = nx.spring_layout(graph)
     color = ['lavender' for c in range(graph.number_of_nodes())]
-    for (ind, n) in enumerate(graph.node):
+    for (ind, n) in enumerate(graph.nodes):
 
         # Adjust posistions of nodes.
         if n == current_value:
@@ -131,8 +131,7 @@ def plot_selected_vars(results, target, sign_sources=True,
 
     fig = plt.figure()
     nx.draw(graph, pos=pos, with_labels=True, font_weight='bold',
-            node_size=900, alpha=0.7, node_shape='s', node_color=color,
-            hold=True)
+            node_size=900, alpha=0.7, node_shape='s', node_color=color)
     # Optionally display edge labels showing the TE value
     if display_edge_labels:
         edge_labels = nx.get_edge_attributes(graph, 'te')
@@ -151,7 +150,7 @@ def _plot_graph(graph, axis, weights=None, display_edge_labels=True):
     """Plot graph using networkx."""
     pos = nx.circular_layout(graph)
     nx.draw_circular(graph, with_labels=True, node_size=600, alpha=1.0,
-                     ax=axis, node_color='Gainsboro', hold=True, font_size=14,
+                     ax=axis, node_color='Gainsboro', font_size=14,
                      font_weight='bold')
     if display_edge_labels:
         edge_labels = nx.get_edge_attributes(graph, weights)
