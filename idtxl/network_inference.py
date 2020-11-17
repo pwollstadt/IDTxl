@@ -1035,10 +1035,6 @@ class NetworkInferenceMultivariate(NetworkInference):
                 self.statistic_sign_sources = stat
                 # Calculate TE for all links in the network. Calculate local TE
                 # if requested by the user.
-                if self.measure == 'te':
-                    conditioning = 'target'
-                elif self.measure == 'mi':
-                    conditioning = 'none'
                 try:
                     self.statistic_single_link = self._calculate_single_link(
                         data=data,
@@ -1046,7 +1042,7 @@ class NetworkInferenceMultivariate(NetworkInference):
                         source_vars=self.selected_vars_sources,
                         target_vars=self.selected_vars_target,
                         sources='all',
-                        conditioning=conditioning)
+                        conditioning='full')
                 except ex.AlgorithmExhaustedError as aee:
                     # The algorithm cannot continue here, so
                     #  we'll terminate the computation of single link stats.
