@@ -370,9 +370,11 @@ class OpenCLKraskovMI(OpenCLKraskov):
                         self.sizeof_float * signallength_padded * var1dim,
                         self.sizeof_float * signallength_padded * var2dim,
                         cl.mem_flags.READ_ONLY)
-        # here it's going to be tricky, we don not compute #signallength-padded
-        # distances (because we can't)
-        # still the fact that d_vecradius is a subbuffer necessitates these buffer sizes at present :-/
+        # here it's going to be tricky, we do not compute
+        # number_of(signallength_padded) distance values
+        # distances (because we can't/shouldn't)
+        # still the fact that d_vecradius is a subbuffer necessitates these weird
+        # and underused buffer sizes at present :-/
         d_distances = cl.Buffer(
                         self.context, cl.mem_flags.READ_WRITE,
                         self.sizeof_float * kraskov_k * signallength_padded)
@@ -736,7 +738,7 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         localmem = cl.LocalMemory(self.sizeof_int * workitems_x)
         self.RS_kernel(self.queue, (NDRange_x,), (workitems_x,), d_src, d_src,
                        d_vecradius, d_npointsrange_x, var1dim + conddim,
-                       chunklength, signallength_padded, theiler_t, localmem)
+                       chunklength, signallength_orig, theiler_t, localmem)
         count_src = np.zeros(signallength_orig, dtype=np.int32)
         cl.enqueue_copy(self.queue, count_src, d_npointsrange_x)
 

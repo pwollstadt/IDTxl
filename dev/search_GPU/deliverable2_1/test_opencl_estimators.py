@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
     #DATA INITIALIZATION
     gpuid = int(args.gpuid)
-    kth = int(2)  # int(5)
+    kth = int(3)
     theiler = int(0)
     print("gpuid: {}".format(gpuid))
 
@@ -120,8 +120,13 @@ if __name__ == '__main__':
     else:
         # print("Array of distances")
         signallength_padded = int(len(distances) / kth)
-        distances = distances.reshape(kth, signallength_padded)
+        print('The linear output array of distance (first 30 values):')
+        print(distances[0:30])
+        distances_written = distances[0: kth*signallengthpergpu]  # the actually computed distances
+        distances = distances_written.reshape(kth, signallengthpergpu)
         print("Array of distances shape: {}".format(distances.shape))
+
+   
         i = 0
         for c in range(1, nchunkspergpu + 1):
             for k in range(kth):
