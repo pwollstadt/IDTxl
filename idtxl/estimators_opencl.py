@@ -302,6 +302,8 @@ class OpenCLKraskovMI(OpenCLKraskov):
         pointdim = var1dim + var2dim
 
         if self.settings['padding']:
+            # remember the actual data length before padding the data with junk points
+            signallength_orig = signallength 
             # Pad time series to make GPU memory regions a multiple of 1024
             pad_target = 1024
             pad_size = (int(np.ceil(signallength/pad_target)) * pad_target -
@@ -349,7 +351,7 @@ class OpenCLKraskovMI(OpenCLKraskov):
         else:
             workitems_x = 256
         NDRange_x = (workitems_x *
-                     (int((signallength_padded - 1)/workitems_x) + 1))
+                     (int((signallength_orig - 1)/workitems_x) + 1))
         logger.debug('NDRange_x: {}, workitems_x: {}'.format(
             NDRange_x, workitems_x))
 
@@ -367,23 +369,27 @@ class OpenCLKraskovMI(OpenCLKraskov):
                         self.sizeof_float * signallength_padded * var1dim,
                         self.sizeof_float * signallength_padded * var2dim,
                         cl.mem_flags.READ_ONLY)
+        # here it's going to be tricky, we don not compute #signallength-padded
+        # distances (because we can't)
+        # still the fact that d_vecradius is a subbuffer necessitates these buffer sizes at present :-/
         d_distances = cl.Buffer(
                         self.context, cl.mem_flags.READ_WRITE,
                         self.sizeof_float * kraskov_k * signallength_padded)
         d_vecradius = d_distances.get_sub_region(
                     signallength_padded * (kraskov_k - 1) * self.sizeof_float,
                     signallength_padded * self.sizeof_float)
+        # no subbuffers involved here, so we should be fine
         d_npointsrange_x = cl.Buffer(self.context, cl.mem_flags.READ_WRITE,
-                                     self.sizeof_int * signallength_padded)
+                                     self.sizeof_int * signallength_orig)
         d_npointsrange_y = cl.Buffer(self.context, cl.mem_flags.READ_WRITE,
-                                     self.sizeof_int * signallength_padded)
+                                     self.sizeof_int * signallength_orig)
 
         # Neighbour search
         theiler_t = np.int32(self.settings['theiler_t'])
         localmem = cl.LocalMemory(self.sizeof_float * kraskov_k * workitems_x)
         self.kNN_kernel(self.queue, (NDRange_x,), (workitems_x,), d_pointset,
                         d_pointset, d_distances, np.int32(pointdim),
-                        np.int32(chunklength), np.int32(signallength_padded),
+                        np.int32(chunklength), np.int32(signallength_orig),
                         np.int32(kraskov_k), theiler_t, localmem)
         distances = np.zeros(signallength_padded * kraskov_k, dtype=np.float32)
         try:
@@ -411,16 +417,16 @@ class OpenCLKraskovMI(OpenCLKraskov):
         self.RS_kernel(
             self.queue, (NDRange_x,), (workitems_x,), d_var1,
             d_var1, d_vecradius, d_npointsrange_x,
-            var1dim, chunklength, signallength_padded, theiler_t, localmem)
-        count_var1 = np.zeros(signallength_padded, dtype=np.int32)
+            var1dim, chunklength, signallength_orig, theiler_t, localmem)
+        count_var1 = np.zeros(signallength_orig, dtype=np.int32)
         cl.enqueue_copy(self.queue, count_var1, d_npointsrange_x)
 
         # Range search in var2
         self.RS_kernel(
             self.queue, (NDRange_x,), (workitems_x,), d_var2,
             d_var2, d_vecradius, d_npointsrange_y,
-            var2dim, chunklength, signallength_padded, theiler_t, localmem)
-        count_var2 = np.zeros(signallength_padded, dtype=np.int32)
+            var2dim, chunklength, signallength_orig, theiler_t, localmem)
+        count_var2 = np.zeros(signallength_orig, dtype=np.int32)
         cl.enqueue_copy(self.queue, count_var2, d_npointsrange_y)
 
         d_pointset.release()
