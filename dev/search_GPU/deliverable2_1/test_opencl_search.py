@@ -74,7 +74,7 @@ def clFindKnn(pointset, kth, theiler, nchunkspergpu, pointsdim,
     else:
         workitems_x = 256
     NDRange_x = (workitems_x *
-                 (int((signallengthpergpu - 1)/workitems_x) + 1))
+                 (int((signallength_orig - 1)/workitems_x) + 1))
     sizeof_float = int(np.dtype(np.float32).itemsize)
     # Allocate and copy memory to device
     d_pointset = cl.Buffer(
@@ -250,6 +250,9 @@ if __name__ == '__main__':
     signallengthpergpu = nchunkspergpu * int(args.npoints)
 
     if args.padding:
+        # remember the original signallength that the data had and that fit
+        # with the chunklength
+        signallength_orig = signallengthpergpu
         # Pad time series to make GPU memory regions a multiple of 1024
         pad_target = 1024  # this is used in the toolbox
         print(f'Applying padding to multiple of {pad_target}')
@@ -289,7 +292,7 @@ if __name__ == '__main__':
         try:
             distances = clFindKnn(
                 pointset, kth, theiler, nchunkspergpu, pointsdim,
-                signallengthpergpu, gpuid, chunksize, args.cpu)
+                signallength_orig, gpuid, chunksize, args.cpu)
         except cl._cl.RuntimeError as e:
             print(e)
             success = False
