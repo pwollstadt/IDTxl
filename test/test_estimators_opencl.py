@@ -27,7 +27,7 @@ SEED = 0
 
 def test_debug_setting():
     """Test setting of debugging options."""
-    settings = {'debug': False, 'return_counts': True}
+    settings = {'debug': False, 'return_counts': True,'padding': True}
     # Estimators should raise an error if returning of neighborhood counts is
     # requested without the debugging option being set.
     with pytest.raises(RuntimeError): OpenCLKraskovMI(settings=settings)
@@ -50,7 +50,7 @@ def test_amd_data_padding():
     """Test padding necessary for AMD devices."""
     expected_mi, source, source_uncorr, target = _get_gauss_data(seed=SEED)
 
-    settings = {'debug': True, 'return_counts': True}
+    settings = {'debug': True, 'return_counts': True,'padding': True}
     est_mi = OpenCLKraskovMI(settings=settings)
     est_cmi = OpenCLKraskovCMI(settings=settings)
 
@@ -88,7 +88,7 @@ def test_amd_data_padding():
             'estimator failed (error larger 0.05).')
 
     # Test debugging switched off
-    settings = {'debug': False, 'return_counts': False}
+    settings = {'debug': False, 'return_counts': False, 'padding': True}
     est_mi = OpenCLKraskovMI(settings=settings)
     est_cmi = OpenCLKraskovCMI(settings=settings)
     mi = est_mi.estimate(source, target)
@@ -138,7 +138,7 @@ def test_mi_correlated_gaussians():
     expected_mi, source, source_uncorr, target = _get_gauss_data(seed=SEED)
 
     # Run OpenCL estimator.
-    settings = {'debug': True, 'return_counts': True}
+    settings = {'debug': True, 'return_counts': True, 'padding': True}
     ocl_est = OpenCLKraskovMI(settings=settings)
     mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(source, target)
 
@@ -167,7 +167,7 @@ def test_cmi_no_cond_correlated_gaussians():
     expected_mi, source, source_uncorr, target = _get_gauss_data(seed=SEED)
 
     # Run OpenCL estimator.
-    settings = {'debug': True, 'return_counts': True}
+    settings = {'debug': True, 'return_counts': True, 'padding': True}
     ocl_est = OpenCLKraskovCMI(settings=settings)
     mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(source, target)
 
@@ -196,7 +196,7 @@ def test_cmi_correlated_gaussians():
     expected_mi, source, source_uncorr, target = _get_gauss_data(seed=SEED)
 
     # Run OpenCL estimator.
-    settings = {'debug': True, 'return_counts': True}
+    settings = {'debug': True, 'return_counts': True, 'padding': True}
     ocl_est = OpenCLKraskovCMI(settings=settings)
     (mi_ocl, dist, n_range_var1,
      n_range_var2, n_range_cond) = ocl_est.estimate(source, target,
@@ -230,7 +230,7 @@ def test_mi_correlated_gaussians_two_chunks():
 
     # Run OpenCL estimator.
     n_chunks = 2
-    settings = {'debug': True, 'return_counts': True}
+    settings = {'debug': True, 'return_counts': True, 'padding': True}
     ocl_est = OpenCLKraskovMI(settings=settings)
     mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(
                                                             source, target,
@@ -270,7 +270,7 @@ def test_mi_uncorrelated_gaussians():
     var2 = np.random.randn(n_obs, 1)
 
     # Run OpenCL estimator.
-    settings = {'debug': True, 'return_counts': True}
+    settings = {'debug': True, 'return_counts': True, 'padding': True}
     ocl_est = OpenCLKraskovMI(settings=settings)
     mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(var1, var2)
     mi_ocl = mi_ocl[0]
@@ -303,7 +303,7 @@ def test_cmi_uncorrelated_gaussians():
     var3 = np.random.randn(n_obs, 1)
 
     # Run OpenCL estimator.
-    settings = {'debug': True, 'return_counts': True}
+    settings = {'debug': True, 'return_counts': True, 'padding': True}
     ocl_est = OpenCLKraskovCMI(settings=settings)
     (mi_ocl, dist, n_range_var1,
      n_range_var2, n_range_var3) = ocl_est.estimate(var1, var2, var3)
@@ -337,7 +337,7 @@ def test_mi_uncorrelated_gaussians_three_dims():
     var2 = np.random.randn(n_obs, dim)
 
     # Run OpenCL estimator.
-    settings = {'debug': True, 'return_counts': True}
+    settings = {'debug': True, 'return_counts': True, 'padding': True}
     ocl_est = OpenCLKraskovMI(settings=settings)
     mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(var1, var2)
     mi_ocl = mi_ocl[0]
@@ -371,7 +371,7 @@ def test_cmi_uncorrelated_gaussians_three_dims():
     var3 = np.random.randn(n_obs, dim)
 
     # Run OpenCL estimator.
-    settings = {'debug': True, 'return_counts': True}
+    settings = {'debug': True, 'return_counts': True, 'padding': True}
     ocl_est = OpenCLKraskovCMI(settings=settings)
     mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(var1, var2)
     mi_ocl = mi_ocl[0]
@@ -423,7 +423,7 @@ def test_cmi_uncorrelated_gaussians_unequal_dims():
     var3 = np.random.randn(n_obs, 7)
 
     # Run OpenCL estimator.
-    settings = {'debug': True, 'return_counts': True}
+    settings = {'debug': True, 'return_counts': True, 'padding': True}
     ocl_est = OpenCLKraskovCMI(settings=settings)
     mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(var1, var2)
     mi_ocl = mi_ocl[0]
@@ -474,7 +474,7 @@ def test_local_values():
     chunklength = int(source.shape[0] / n_chunks)
 
     # Estimate local values
-    settings = {'local_values': True}
+    settings = {'local_values': True, 'padding': True}
     est_cmi = OpenCLKraskovCMI(settings=settings)
     cmi = est_cmi.estimate(source, target, source_uncorr, n_chunks=n_chunks)
 
@@ -487,7 +487,7 @@ def test_local_values():
     cmi_ch2 = np.mean(cmi[chunklength:])
 
     # Estimate non-local values for comparison
-    settings = {'local_values': False}
+    settings = {'local_values': False, 'padding': True}
     est_cmi = OpenCLKraskovCMI(settings=settings)
     mi = est_cmi.estimate(source, target, source_uncorr, n_chunks=n_chunks)
 
@@ -545,7 +545,7 @@ def test_insufficient_no_points():
 def test_multi_gpu():
     """Test use of multiple GPUs."""
     expected_mi, source, source_uncorr, target = _get_gauss_data(seed=SEED)
-    settings = {'debug': True, 'return_counts': True}
+    settings = {'debug': True, 'return_counts': True, 'padding': True}
 
     # Get no. available devices on current platform.
     device_list, _, _ = OpenCLKraskovCMI()._get_device(gpuid=0)

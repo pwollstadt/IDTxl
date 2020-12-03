@@ -12,6 +12,7 @@ d = np.load(os.path.join(os.path.dirname(__file__),
 data = Data()
 data.set_data(d[:, :, 0:100], 'psr')
 settings = {
+        'padding': True,
         'cmi_estimator':  'OpenCLKraskovCMI',
         'max_lag_sources': 50,
         'min_lag_sources': 40,

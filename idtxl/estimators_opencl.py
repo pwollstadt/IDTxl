@@ -318,6 +318,7 @@ class OpenCLKraskovMI(OpenCLKraskov):
             pad_size = 0
             pointset = np.hstack((var1, var2)).T.copy()
             signallength_padded = signallength
+            signallength_orig = signallength
 
         if not pointset.dtype == np.float32:
             pointset = pointset.astype(np.float32)
@@ -640,6 +641,8 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         pointdim = var1dim + var2dim + conddim
 
         if self.settings['padding']:
+            # remember the original data range that should be computed on
+            signallength_orig = signallength
             # Pad time series to make GPU memory regions a multiple of 1024
             pad_target = 1024
             pad_size = (int(np.ceil(signallength/pad_target)) * pad_target -
@@ -656,6 +659,7 @@ class OpenCLKraskovCMI(OpenCLKraskov):
             pad_size = 0
             pointset = np.hstack((var1, conditional, var2)).T.copy()
             signallength_padded = signallength
+            signallength_orig = signallength
 
         if not pointset.dtype == np.float32:
             pointset = pointset.astype(np.float32)
@@ -687,7 +691,7 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         else:
             workitems_x = 256
         NDRange_x = (workitems_x *
-                     (int((signallength_padded - 1)/workitems_x) + 1))
+                     (int((signallength_orig - 1)/workitems_x) + 1))
 
         # Allocate and copy memory to device
         kraskov_k = self.settings['kraskov_k']
@@ -711,18 +715,18 @@ class OpenCLKraskovCMI(OpenCLKraskov):
                     signallength_padded * self.sizeof_float)
         d_npointsrange_x = cl.Buffer(self.context,
                                      cl.mem_flags.READ_WRITE,
-                                     self.sizeof_int * signallength_padded)
+                                     self.sizeof_int * signallength_orig)
         d_npointsrange_y = cl.Buffer(self.context, cl.mem_flags.READ_WRITE,
-                                     self.sizeof_int * signallength_padded)
+                                     self.sizeof_int * signallength_orig)
         d_npointsrange_z = cl.Buffer(self.context, cl.mem_flags.READ_WRITE,
-                                     self.sizeof_int * signallength_padded)
+                                     self.sizeof_int * signallength_orig)
 
         # Neighbour search in full space
         theiler_t = np.int32(self.settings['theiler_t'])
         localmem = cl.LocalMemory(self.sizeof_float * kraskov_k * workitems_x)
         self.kNN_kernel(self.queue, (NDRange_x,), (workitems_x,), d_pointset,
                         d_pointset, d_distances, np.int32(pointdim),
-                        np.int32(chunklength), np.int32(signallength_padded),
+                        np.int32(chunklength), np.int32(signallength_orig),
                         np.int32(kraskov_k), theiler_t, localmem)
         distances = np.zeros(signallength_padded * kraskov_k, dtype=np.float32)
         cl.enqueue_copy(self.queue, distances, d_distances)
@@ -733,21 +737,21 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         self.RS_kernel(self.queue, (NDRange_x,), (workitems_x,), d_src, d_src,
                        d_vecradius, d_npointsrange_x, var1dim + conddim,
                        chunklength, signallength_padded, theiler_t, localmem)
-        count_src = np.zeros(signallength_padded, dtype=np.int32)
+        count_src = np.zeros(signallength_orig, dtype=np.int32)
         cl.enqueue_copy(self.queue, count_src, d_npointsrange_x)
 
         # Range search in target and conditional
         self.RS_kernel(self.queue, (NDRange_x,), (workitems_x,), d_cnd, d_cnd,
                        d_vecradius, d_npointsrange_y, var2dim + conddim,
-                       chunklength, signallength_padded, theiler_t, localmem)
-        count_tgt = np.zeros(signallength_padded, dtype=np.int32)
+                       chunklength, signallength_orig, theiler_t, localmem)
+        count_tgt = np.zeros(signallength_orig, dtype=np.int32)
         cl.enqueue_copy(self.queue, count_tgt, d_npointsrange_y)
 
         # Range search in conditional
         self.RS_kernel(self.queue, (NDRange_x,), (workitems_x,), d_cnd, d_cnd,
                        d_vecradius, d_npointsrange_z, conddim, chunklength,
-                       signallength_padded, theiler_t, localmem)
-        count_cnd = np.zeros(signallength_padded, dtype=np.int32)
+                       signallength_orig, theiler_t, localmem)
+        count_cnd = np.zeros(signallength_orig, dtype=np.int32)
         cl.enqueue_copy(self.queue, count_cnd, d_npointsrange_z)
 
         d_pointset.release()
