@@ -306,7 +306,11 @@ class OpenCLKraskovMI(OpenCLKraskov):
 
         if self.settings['padding']:
             # Pad time series to make GPU memory regions a multiple of 1024
-            pad_target = 1024
+            # This value of 1024 should be replaced by 
+            #  self.devices[self.settings['gpuid']].CL_DEVICE_MEM_BASE_ADDR_ALIGN 
+            # or something similar, as professional cards are known to have
+            # base adress alignment of 4096 sometimes
+            pad_target = 4096
             pad_size = (int(np.ceil(signallength/pad_target)) * pad_target -
                         signallength)
             pad_var1 = np.vstack(
@@ -643,8 +647,10 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         signallength_orig = signallength
 
         if self.settings['padding']:
-            # Pad time series to make GPU memory regions a multiple of 1024
-            pad_target = 1024
+            # Pad time series to make GPU memory regions a multiple of 4096
+            # 4096 is the largestknown value for opencl subbuffer alignment targets
+            # but see comment in MI estimator above
+            pad_target = 4096
             pad_size = (int(np.ceil(signallength/pad_target)) * pad_target -
                         signallength)
             pad_var1 = np.vstack(
