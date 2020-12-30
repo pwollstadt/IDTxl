@@ -49,6 +49,9 @@ float maxMetricPoints(
  * Note: for strides in memory (e.g. going from var to var, or dim to dim 
  * use signallength_padded, for checking whether all requested work has been 
  * done use signallength_orig
+* tid indexes all points once for which we seek the neighbours
+* ichunk and chunklength determine in which piece of the data 
+* neighbours are being searched for a given reference point (tid)
  */
 
 __kernel void kernelKNNshared(
@@ -56,7 +59,7 @@ __kernel void kernelKNNshared(
     __global const float* g_vpointset,
     __global float* g_distances,
     const int pointdim,
-    const int triallength,
+    const int chunklength,
     const int signallength_padded, // signallength after padding
     const int signallength_orig, // original signal length before padding
     const int kth,
@@ -64,7 +67,7 @@ __kernel void kernelKNNshared(
     __local float* kdistances)
 {
 	const unsigned int tid = get_global_id(0)+get_global_id(1)*get_global_size(0); //Global identifier - this takes the 2D memory (vars(dims))*(chunks(samples)) and maps it to a 1-D location
-	const unsigned int ichunk = tid / triallength; //Chunk index, this should not be bigger than 
+	const unsigned int ichunk = tid / chunklength; //Chunk index, this should not be bigger than 
 
 	if (tid<signallength_orig) // Do not start another chunk when the things that should be originally computed have been done (was: tid<signallength_padded)
 	{
@@ -76,12 +79,12 @@ __kernel void kernelKNNshared(
 	    barrier(CLK_LOCAL_MEM_FENCE);
 
 	    float r_kdist=INFINITY;
-	    unsigned int indexi = tid-triallength*ichunk; //Position inside the chunk
+	    unsigned int indexi = tid-chunklength*ichunk; //Position inside the chunk
 
-	    for(int t=0; t<triallength; t++)
+	    for(int t=0; t<chunklength; t++)
 	    {
 		    int indexu = tid; //Current position
-		    int indexv = (t + ichunk*triallength); //Read all chunk members
+		    int indexv = (t + ichunk*chunklength); //Read all chunk members
 		    int condition1=indexi-exclude;
 		    int condition2=indexi+exclude;
 		    //Exclude = thelier. If thelier = 0, analize all points except the actual one
@@ -115,7 +118,7 @@ __kernel void kernelBFRSAllshared(
     __global const float* vecradius,
     __global int* g_npoints,
     const int pointdim,
-    const int triallength,
+    const int chunklength,
     const int signallength_padded,
     const int signallength_orig, // original signal length before padding
     const int exclude,
@@ -127,18 +130,18 @@ __kernel void kernelBFRSAllshared(
 	int s_npointsrange;
 
 	const unsigned int tid = get_global_id(0)+get_global_id(1)*get_global_size(0); //Global identifier
-	const unsigned int ichunk = tid / triallength; //Chunk index
+	const unsigned int ichunk = tid / chunklength; //Chunk index
 
 	if(tid<signallength_orig) // see kernelKNNshared
 	{
 		s_npointsrange= 0;
 
 	    radius = *(vecradius+tid);
-		unsigned int indexi = tid-triallength*ichunk;
-		for(int t=0; t<triallength; t++)
+		unsigned int indexi = tid-chunklength*ichunk;
+		for(int t=0; t<chunklength; t++)
 		{
 			int indexu = tid;
-			int indexv = (t + ichunk*triallength);
+			int indexv = (t + ichunk*chunklength);
 			int condition1=indexi-exclude;
 			int condition2=indexi+exclude;
 			if((t<condition1)||(t>condition2))
