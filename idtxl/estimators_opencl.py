@@ -126,12 +126,12 @@ class OpenCLKraskov(Estimator):
         kNN_kernel = program.kernelKNNshared
         kNN_kernel.set_scalar_arg_dtypes([None, None, None, np.int32,
                                           np.int32, np.int32, np.int32,
-                                          np.int32, np.int32, None]) # MW: added one int32 argument
+                                          np.int32, np.int32, None])  # MW: added one int32 argument
 
         RS_kernel = program.kernelBFRSAllshared
         RS_kernel.set_scalar_arg_dtypes([None, None, None, None,
                                          np.int32, np.int32, np.int32,
-                                         np.int32, np.int32, None]) # MW: added one int32 argument
+                                         np.int32, np.int32, None])  # MW: added one int32 argument
         return (kNN_kernel, RS_kernel)
 
     def _get_max_mem(self):
@@ -300,14 +300,14 @@ class OpenCLKraskovMI(OpenCLKraskov):
         var1dim = var1.shape[1]
         var2dim = var2.shape[1]
         pointdim = var1dim + var2dim
-        
+
         # prepare for the padding
-        signallength_orig = signallength # used for clarity at present
+        signallength_orig = signallength  # used for clarity at present
 
         if self.settings['padding']:
             # Pad time series to make GPU memory regions a multiple of 1024
-            # This value of 1024 should be replaced by 
-            #  self.devices[self.settings['gpuid']].CL_DEVICE_MEM_BASE_ADDR_ALIGN 
+            # This value of 1024 should be replaced by
+            #  self.devices[self.settings['gpuid']].CL_DEVICE_MEM_BASE_ADDR_ALIGN
             # or something similar, as professional cards are known to have
             # base adress alignment of 4096 sometimes
             pad_target = 4096
@@ -420,7 +420,7 @@ class OpenCLKraskovMI(OpenCLKraskov):
             self.queue, (NDRange_x,), (workitems_x,), d_var1,
             d_var1, d_vecradius, d_npointsrange_x,
             var1dim, chunklength, signallength_padded, signallength_orig,
-            theiler_t, localmem) # MW: added signallength_orig
+            theiler_t, localmem)  # MW: added signallength_orig
         count_var1 = np.zeros(signallength_padded, dtype=np.int32)
         cl.enqueue_copy(self.queue, count_var1, d_npointsrange_x)
 
@@ -429,7 +429,7 @@ class OpenCLKraskovMI(OpenCLKraskov):
             self.queue, (NDRange_x,), (workitems_x,), d_var2,
             d_var2, d_vecradius, d_npointsrange_y,
             var2dim, chunklength, signallength_padded, signallength_orig,
-            theiler_t, localmem) # MW: added signallength_orig
+            theiler_t, localmem)  # MW: added signallength_orig
         count_var2 = np.zeros(signallength_padded, dtype=np.int32)
         cl.enqueue_copy(self.queue, count_var2, d_npointsrange_y)
 
@@ -457,10 +457,13 @@ class OpenCLKraskovMI(OpenCLKraskov):
                       digamma(count_var1[c*chunklength:(c+1)*chunklength]+1) +
                       digamma(count_var2[c*chunklength:(c+1)*chunklength]+1)))
                 mi_array[c] = mi
+        assert signallength_orig == (c+1)*chunklength, 'Original signal length does not match no. processed points.'
 
         if self.settings['debug']:
-            print('dist shape: {}'.format(distances.shape))
-            return mi_array, distances, count_var1, count_var2
+            return (mi_array,
+                    distances[:signallength_orig],
+                    count_var1[:signallength_orig],
+                    count_var2[:signallength_orig])
         else:
             return mi_array
 
@@ -685,7 +688,6 @@ class OpenCLKraskovCMI(OpenCLKraskov):
                 'Memory req. after padding: {0:.2f} MB ({1} elements) -- Padding: {2}.'.format(
                       mem_total / C, pointset.size, pad_size))
 
-
         # Set OpenCL kernel launch parameters
         if chunklength < self.devices[
                                 self.settings['gpuid']].max_work_group_size:
@@ -734,7 +736,7 @@ class OpenCLKraskovCMI(OpenCLKraskov):
                         np.int32(chunklength), np.int32(signallength_padded),
                         np.int32(signallength_orig),
                         np.int32(kraskov_k),
-                        theiler_t, localmem) # MW: added signallength_orig
+                        theiler_t, localmem)  # MW: added signallength_orig
         distances = np.zeros(signallength_padded * kraskov_k, dtype=np.float32)
         cl.enqueue_copy(self.queue, distances, d_distances)
         self.queue.finish()
@@ -744,7 +746,7 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         self.RS_kernel(self.queue, (NDRange_x,), (workitems_x,), d_src, d_src,
                        d_vecradius, d_npointsrange_x, var1dim + conddim,
                        chunklength, signallength_padded, signallength_orig,
-                       theiler_t, localmem) # MW: added signallength_orig
+                       theiler_t, localmem)  # MW: added signallength_orig
         count_src = np.zeros(signallength_padded, dtype=np.int32)
         cl.enqueue_copy(self.queue, count_src, d_npointsrange_x)
 
@@ -752,7 +754,7 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         self.RS_kernel(self.queue, (NDRange_x,), (workitems_x,), d_cnd, d_cnd,
                        d_vecradius, d_npointsrange_y, var2dim + conddim,
                        chunklength, signallength_padded,  signallength_orig,
-                       theiler_t, localmem) # MW: added signallength_orig
+                       theiler_t, localmem)  # MW: added signallength_orig
         count_tgt = np.zeros(signallength_padded, dtype=np.int32)
         cl.enqueue_copy(self.queue, count_tgt, d_npointsrange_y)
 
@@ -760,7 +762,7 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         self.RS_kernel(self.queue, (NDRange_x,), (workitems_x,), d_cnd, d_cnd,
                        d_vecradius, d_npointsrange_z, conddim, chunklength,
                        signallength_padded, signallength_orig,
-                       theiler_t, localmem) # MW: added signallength_orig
+                       theiler_t, localmem)  # MW: added signallength_orig
         count_cnd = np.zeros(signallength_padded, dtype=np.int32)
         cl.enqueue_copy(self.queue, count_cnd, d_npointsrange_z)
 
@@ -791,8 +793,13 @@ class OpenCLKraskovCMI(OpenCLKraskov):
                         digamma(count_src[c*chunklength:(c+1)*chunklength]+1) -
                         digamma(count_tgt[c*chunklength:(c+1)*chunklength]+1)))
                 cmi_array[c] = cmi
+        assert signallength_orig == (c+1)*chunklength, 'Original signal length does not match no. processed points.'
 
         if self.settings['debug']:
-            return cmi_array, distances, count_src, count_tgt, count_cnd
+            return (cmi_array,
+                    distances[:signallength_orig],
+                    count_src[:signallength_orig],
+                    count_tgt[:signallength_orig],
+                    count_cnd[:signallength_orig])
         else:
             return cmi_array
