@@ -132,13 +132,13 @@ class SydneyPID(Estimator):
         """
         s1, s2, t, self.settings = _check_input(s1, s2, t, self.settings)
 
-        # Check if float128 is supported by the architecture
+        # Check if longdouble is supported by the architecture
         try:
-            np.float128()
+            np.longdouble()
         except AttributeError as err:
-            if "'module' object has no attribute 'float128'" == err.args[0]:
+            if "'module' object has no attribute 'longdouble'" == err.args[0]:
                 raise RuntimeError(
-                        'This system doesn''t seem to support float128 '
+                        'This system doesn''t seem to support longdouble '
                         '(requirement for using the Sydney PID-estimator.')
             else:
                 raise
@@ -185,19 +185,19 @@ class SydneyPID(Estimator):
                         joint_t_s1_s2_count[np.nonzero(joint_t_s1_s2_count)])
 
         # Fixed probabilities
-        t_prob = np.divide(t_count, num_samples).astype('float128')
-        s1_prob = np.divide(s1_count, num_samples).astype('float128')
-        s2_prob = np.divide(s2_count, num_samples).astype('float128')
+        t_prob = np.divide(t_count, num_samples).astype('longdouble')
+        s1_prob = np.divide(s1_count, num_samples).astype('longdouble')
+        s2_prob = np.divide(s2_count, num_samples).astype('longdouble')
         joint_t_s1_prob = np.divide(joint_t_s1_count,
-                                    num_samples).astype('float128')
+                                    num_samples).astype('longdouble')
         joint_t_s2_prob = np.divide(joint_t_s2_count,
-                                    num_samples).astype('float128')
+                                    num_samples).astype('longdouble')
 
         # Variable probabilities
         joint_s1_s2_prob = np.divide(joint_s1_s2_count,
-                                     num_samples).astype('float128')
+                                     num_samples).astype('longdouble')
         joint_t_s1_s2_prob = np.divide(joint_t_s1_s2_count,
-                                       num_samples).astype('float128')
+                                       num_samples).astype('longdouble')
         max_prob = np.max(joint_t_s1_s2_prob[np.nonzero(joint_t_s1_s2_prob)])
 
     #    # make copies of the variable probabilities for independent second
@@ -252,8 +252,8 @@ class SydneyPID(Estimator):
         # Replication loop
         for rep in reps:
             prob_inc = np.multiply(
-                np.float128(max_prob),
-                np.divide(np.float128(1), np.float128(rep)))
+                np.longdouble(max_prob),
+                np.divide(np.longdouble(1), np.longdouble(rep)))
             # Want to store number of succesive unsuccessful swaps
             unsuccessful_swaps_row = 0
             # SWAP LOOP
@@ -369,7 +369,7 @@ class SydneyPID(Estimator):
 
     def _cmi_prob(self, s2cond_prob, joint_t_s2cond_prob,
                   joint_s1_s2cond_prob, joint_t_s1_s2cond_prob):
-        total = np.zeros(1).astype('float128')
+        total = np.zeros(1).astype('longdouble')
 
         [alph_t, alph_s1, alph_s2cond] = np.shape(joint_t_s1_s2cond_prob)
 
@@ -402,7 +402,7 @@ class SydneyPID(Estimator):
 
     def _mi_prob(self, s1_prob, s2_prob, joint_s1_s2_prob):
         """MI estimator in the prob domain."""
-        total = np.zeros(1).astype('float128')
+        total = np.zeros(1).astype('longdouble')
         [alph_s1, alph_s2] = np.shape(joint_s1_s2_prob)
 
         for sym_s1 in range(0, alph_s1):
@@ -441,10 +441,10 @@ class SydneyPID(Estimator):
             s12_count[s12[obs]] += 1
             joint_t_s12_count[t[obs], s12[obs]] += 1
 
-        t_prob = np.divide(t_count, num_samples).astype('float128')
-        s12_prob = np.divide(s12_count, num_samples).astype('float128')
+        t_prob = np.divide(t_count, num_samples).astype('longdouble')
+        s12_prob = np.divide(s12_count, num_samples).astype('longdouble')
         joint_t_s12_prob = np.divide(joint_t_s12_count,
-                                     num_samples).astype('float128')
+                                     num_samples).astype('longdouble')
 
         return self._mi_prob(t_prob, s12_prob, joint_t_s12_prob)
 
@@ -622,4 +622,4 @@ def _check_input(s1, s2, t, settings):
         raise ValueError('Number of samples s1, s2 and t must be equal')
 
     return s1, s2, t, settings
- 
+
