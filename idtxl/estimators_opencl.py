@@ -437,6 +437,9 @@ class OpenCLKraskovMI(OpenCLKraskov):
         d_distances.release()
         d_npointsrange_x.release()
         d_npointsrange_y.release()
+        d_var1.release()
+        d_var2.release()
+        d_vecradius.release()
 
         # Calculate and sum digammas
         if self.settings['local_values']:
@@ -771,6 +774,9 @@ class OpenCLKraskovCMI(OpenCLKraskov):
         d_npointsrange_x.release()
         d_npointsrange_y.release()
         d_npointsrange_z.release()
+        d_src.release()
+        d_cnd.release()
+        d_vecradius.release()
 
         # Calculate and sum digammas
         if self.settings['local_values']:
