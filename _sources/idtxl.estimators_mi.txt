@@ -1,7 +1,0 @@
-idtxl.estimators_mi module
-==========================
-
-.. automodule:: idtxl.estimators_mi
-    :members:
-    :undoc-members:
-    :show-inheritance:

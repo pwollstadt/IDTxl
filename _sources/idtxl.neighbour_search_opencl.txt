@@ -1,7 +1,0 @@
-idtxl.neighbour_search_opencl module
-====================================
-
-.. automodule:: idtxl.neighbour_search_opencl
-    :members:
-    :undoc-members:
-    :show-inheritance:

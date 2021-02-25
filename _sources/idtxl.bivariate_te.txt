@@ -1,7 +1,0 @@
-idtxl.bivariate_te module
-=========================
-
-.. automodule:: idtxl.bivariate_te
-    :members:
-    :undoc-members:
-    :show-inheritance:

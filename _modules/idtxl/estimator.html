@@ -41,12 +41,13 @@
     <script type="text/javascript" src="../../_static/js/jquery.min.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/bootstrap3.min.js"></script>
 <script type="text/javascript" src="../../_static/js/jquery.cookie.min.js"></script>
 <script type="text/javascript" src="../../_static/js/basicstrap.js"></script>
 <script type="text/javascript">
 </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
     <link rel="top" title="IDTxl 0.1 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
@@ -108,15 +109,15 @@
                 <div class="body">
                   
   <h1>Source code for idtxl.estimator</h1><div class="highlight"><pre>
-<span class="sd">&quot;&quot;&quot;Provide estimator base class for information theoretic measures.&quot;&quot;&quot;</span>
-<span class="kn">import</span> <span class="nn">sys</span>
+<span></span><span class="sd">&quot;&quot;&quot;Provide estimator base class for information theoretic measures.&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">imp</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">importlib</span>
 <span class="kn">import</span> <span class="nn">inspect</span>
-<span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pprint</span>
-<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">idtxl_exceptions</span> <span class="k">as</span> <span class="n">ex</span>
 
 <span class="n">MODULE_EXTENSIONS</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;.py&#39;</span><span class="p">)</span>  <span class="c1"># (&#39;.py&#39;, &#39;.pyc&#39;, &#39;.pyo&#39;)</span>
 <span class="n">ESTIMATOR_PREFIX</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;estimators_&#39;</span><span class="p">)</span>
@@ -124,8 +125,8 @@
 
 <span class="k">def</span> <span class="nf">_package_contents</span><span class="p">():</span>
     <span class="c1"># Return list of IDTxl modules containing estimators.</span>
-    <span class="nb">file</span><span class="p">,</span> <span class="n">pathname</span><span class="p">,</span> <span class="n">description</span> <span class="o">=</span> <span class="n">imp</span><span class="o">.</span><span class="n">find_module</span><span class="p">(</span><span class="n">__package__</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">file</span><span class="p">:</span>
+    <span class="n">file</span><span class="p">,</span> <span class="n">pathname</span><span class="p">,</span> <span class="n">description</span> <span class="o">=</span> <span class="n">imp</span><span class="o">.</span><span class="n">find_module</span><span class="p">(</span><span class="n">__package__</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">file</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s1">&#39;Not a package: </span><span class="si">%r</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">__package__</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">module</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">pathname</span><span class="p">)</span>
@@ -152,7 +153,7 @@
 <span class="sd">    search for class with that name in IDTxl and return it.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        est : int | Class</span>
+<span class="sd">        est : str | Class</span>
 <span class="sd">            name of an estimator class implemented in IDTxl or custom estimator</span>
 <span class="sd">            class</span>
 
@@ -169,7 +170,7 @@
         <span class="k">return</span> <span class="n">est</span>
     <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">est</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
         <span class="n">module_list</span> <span class="o">=</span> <span class="n">_package_contents</span><span class="p">()</span>
-        <span class="n">estimator</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">estimator</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">module_list</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">m</span><span class="p">,</span> <span class="n">__package__</span><span class="p">)</span>
@@ -177,7 +178,7 @@
             <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
                 <span class="k">pass</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">estimator</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Estimator {0} not found.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">est</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Estimator </span><span class="si">{0}</span><span class="s1"> not found.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">est</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Please provide an estimator class or the name of an &#39;</span>
                         <span class="s1">&#39;estimator as string.&#39;</span><span class="p">)</span></div>
@@ -194,7 +195,7 @@
 <span class="sd">    Estimator classes implement a method &#39;estimate()&#39; for the estimation from</span>
 <span class="sd">    single or multiple data sets in parallel. Whether &#39;estimate()&#39; provides</span>
 <span class="sd">    parallel computing capabilities is indicated by the &#39;is_parallel()&#39;</span>
-<span class="sd">    method. The &#39;estimate_mult()&#39; method of this abstract class provides a</span>
+<span class="sd">    method. The &#39;estimate_parallel()&#39; method of this abstract class provides a</span>
 <span class="sd">    common interface to parallel and serial methods (see docstring for</span>
 <span class="sd">    details).</span>
 
@@ -203,25 +204,33 @@
 <span class="sd">    details).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">pass</span>
 
-    <span class="nd">@abstractmethod</span>
-<div class="viewcode-block" id="Estimator.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimator.Estimator.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="nb">vars</span><span class="p">):</span>
+<div class="viewcode-block" id="Estimator.estimate"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimator.Estimator.estimate">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="nb">vars</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate measure for a single data set.</span>
 
 <span class="sd">        The number of variables in data depends on the measure to be estimated,</span>
 <span class="sd">        e.g., 2 for mutual information and 3 for a conditional mutual</span>
 <span class="sd">        information.</span>
 
-<span class="sd">        Each entry in data should be a numpy array with realisations, where the</span>
-<span class="sd">        first axis is assumed to represent realisations over samples and</span>
+<span class="sd">        Each variable in vars should be a numpy array of realisations, where</span>
+<span class="sd">        the first axis is assumed to represent realisations over samples and</span>
 <span class="sd">        replications, while the second axis represents the variable dimension</span>
-<span class="sd">        ([(samples * replications) x variable dimension]).</span>
+<span class="sd">        ([(n_samples * n_replications) x variable dimension]).</span>
+
+<span class="sd">        For parallel estimators, the first axis of each variable is assumed to</span>
+<span class="sd">        represent realisations for multiple chunks of realisations that are</span>
+<span class="sd">        then handled in parallel. Each array has size</span>
+<span class="sd">        [(n_samples * n_replications * n_chunks) x variable dimension]. The</span>
+<span class="sd">        number of chunks has to be passed as an additional parameter (see for</span>
+<span class="sd">        example the OpenCLKraskov() estimator).</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            self : instance of Estimator class</span>
-<span class="sd">            data: dict of numpy arrays</span>
+<span class="sd">            self : Estimator class instance</span>
+<span class="sd">                estimator</span>
+<span class="sd">            vars: numpy arrays</span>
 <span class="sd">                realisations of random variables</span>
 
 <span class="sd">        Returns:</span>
@@ -230,8 +239,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-    <span class="nd">@abstractmethod</span>
-<div class="viewcode-block" id="Estimator.is_parallel"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimator.Estimator.is_parallel">[docs]</a>    <span class="k">def</span> <span class="nf">is_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Estimator.is_parallel"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimator.Estimator.is_parallel">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">is_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Indicate if estimator supports parallel estimation over chunks.</span>
 
 <span class="sd">        Return true if the supports parallel estimation over chunks, where a</span>
@@ -242,27 +251,26 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-    <span class="nd">@abstractmethod</span>
-<div class="viewcode-block" id="Estimator.is_analytic_null_estimator"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimator.Estimator.is_analytic_null_estimator">[docs]</a>    <span class="k">def</span> <span class="nf">is_analytic_null_estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Estimator.is_analytic_null_estimator"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimator.Estimator.is_analytic_null_estimator">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">is_analytic_null_estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Indicate if estimator supports analytic surrogates.</span>
 
-<span class="sd">        Return true if the estimator implements</span>
-<span class="sd">        estimate_surrogates_analytic(self, n_perm, **data) where data is</span>
-<span class="sd">        formatted as per the estimate method for this estimator.</span>
+<span class="sd">        Return true if the estimator implements estimate_surrogates_analytic()</span>
+<span class="sd">        where data is formatted as per the estimate method for this estimator.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            bool</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-    <span class="k">def</span> <span class="nf">_check_settings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_check_settings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Set default for settings dictionary.</span>
 
 <span class="sd">        Check if settings dictionary is None. If None, initialise an empty</span>
 <span class="sd">        dictionary. If not None check if type is dictionary. Function should be</span>
 <span class="sd">        called before setting default values.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">settings</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">settings</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">{}</span>
         <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">dict</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;settings should be a dictionary.&#39;</span><span class="p">)</span>
@@ -272,16 +280,16 @@
     <span class="k">def</span> <span class="nf">_check_number_of_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_points</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sanity check for number of points going into the estimator.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">n_points</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">]):</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Insufficient number of points ({0}) for the &#39;</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Insufficient number of points (</span><span class="si">{0}</span><span class="s1">) for the &#39;</span>
                                <span class="s1">&#39;requested number of nearest neighbours &#39;</span>
-                               <span class="s1">&#39;(kraskov_k: {1}).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                               <span class="s1">&#39;(kraskov_k: </span><span class="si">{1}</span><span class="s1">).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                                         <span class="n">n_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">]))</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">n_points</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">])</span> <span class="o">+</span>
                               <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;theiler_t&#39;</span><span class="p">])):</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Insufficient number of points ({0}) for the &#39;</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Insufficient number of points (</span><span class="si">{0}</span><span class="s1">) for the &#39;</span>
                                <span class="s1">&#39;requested number of nearest neighbours &#39;</span>
-                               <span class="s1">&#39;(kraskov_k: {1}) and Theiler-correction &#39;</span>
-                               <span class="s1">&#39;(theiler_t: {2}).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                               <span class="s1">&#39;(kraskov_k: </span><span class="si">{1}</span><span class="s1">) and Theiler-correction &#39;</span>
+                               <span class="s1">&#39;(theiler_t: </span><span class="si">{2}</span><span class="s1">).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                                                 <span class="n">n_points</span><span class="p">,</span>
                                                 <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">],</span>
                                                 <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;theiler_t&#39;</span><span class="p">]))</span>
@@ -323,7 +331,7 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Input arrays must be 1D or 2D&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">var</span>
 
-<div class="viewcode-block" id="Estimator.estimate_mult"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimator.Estimator.estimate_mult">[docs]</a>    <span class="k">def</span> <span class="nf">estimate_mult</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">re_use</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+<div class="viewcode-block" id="Estimator.estimate_parallel"><a class="viewcode-back" href="../../idtxl.html#idtxl.estimator.Estimator.estimate_parallel">[docs]</a>    <span class="k">def</span> <span class="nf">estimate_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">re_use</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate measure for multiple data sets (chunks).</span>
 
 <span class="sd">        Test if the estimator used provides parallel capabilities; if so,</span>
@@ -351,27 +359,32 @@
 <span class="sd">        data for re-use.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            self : instance of Estimator class</span>
+<span class="sd">            self : Estimator class instance</span>
+<span class="sd">                estimator</span>
 <span class="sd">            n_chunks : int [optional]</span>
 <span class="sd">                number of data chunks (default=1)</span>
 <span class="sd">            re_use : list of keys [optional}</span>
 <span class="sd">                realisatins to be re-used (default=None)</span>
-<span class="sd">            data: dict of numpy arrays</span>
+<span class="sd">            data: numpy arrays</span>
 <span class="sd">                realisations of random variables</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            numpy array</span>
 <span class="sd">                estimated values for each chunk</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ex.AlgorithmExhaustedError</span>
+<span class="sd">                Raised from self.estimate() when calculation cannot be made</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="n">n_chunks</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;n_chunks must be positive.&#39;</span>
-        <span class="k">if</span> <span class="n">re_use</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">re_use</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">re_use</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="c1"># If the estimator supports parallel estimation, pass the variables</span>
         <span class="c1"># and number of chunks on to the estimator.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_parallel</span><span class="p">():</span>
             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">re_use</span><span class="p">:</span>  <span class="c1"># multiply data for re-use</span>
-                <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="p">(</span><span class="n">n_chunks</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">n_chunks</span><span class="o">=</span><span class="n">n_chunks</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">)</span>
 
@@ -386,34 +399,50 @@
                 <span class="c1"># return the estimate directly.</span>
                 <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)]</span>
 
-            <span class="n">n_samples_total</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">slice_vars</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="c1"># Find the number of samples, check that all data to be sliced into</span>
+            <span class="c1"># chunks has the same number of samples.</span>
+            <span class="n">n_samples_total</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">slice_vars</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">n_samples_total</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">n_samples_total</span><span class="p">)</span> <span class="o">==</span> <span class="n">n_samples_total</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span> <span class="p">(</span>
+                <span class="s1">&#39;No. realisations should be the same for all variables: &#39;</span>
+                <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_samples_total</span><span class="p">))</span>
+            <span class="n">n_samples_total</span> <span class="o">=</span> <span class="n">n_samples_total</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">n_samples_total</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="p">(</span>
+                <span class="s1">&#39;All variables provided for estimation are empty.&#39;</span><span class="p">)</span>
             <span class="k">assert</span> <span class="n">n_samples_total</span> <span class="o">%</span> <span class="n">n_chunks</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span>
-                    <span class="s1">&#39;No. chunks ({0}) does not match data length ({1}). &#39;</span>
-                    <span class="s1">&#39;Remainder: {2}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                                    <span class="n">n_chunks</span><span class="p">,</span>
-                                    <span class="n">data</span><span class="p">[</span><span class="n">slice_vars</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-                                    <span class="n">data</span><span class="p">[</span><span class="n">slice_vars</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">%</span> <span class="n">n_chunks</span><span class="p">))</span>
+                <span class="s1">&#39;No. chunks (</span><span class="si">{0}</span><span class="s1">) does not match data length (</span><span class="si">{1}</span><span class="s1">). Remainder:&#39;</span>
+                <span class="s1">&#39; </span><span class="si">{2}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_chunks</span><span class="p">,</span>
+                               <span class="n">data</span><span class="p">[</span><span class="n">slice_vars</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                               <span class="n">data</span><span class="p">[</span><span class="n">slice_vars</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">%</span> <span class="n">n_chunks</span><span class="p">))</span>
+
+            <span class="c1"># Cut data into chunks and call estimator serially on each chunk.</span>
             <span class="n">chunk_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_samples_total</span> <span class="o">/</span> <span class="n">n_chunks</span><span class="p">)</span>
             <span class="n">idx_1</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">idx_2</span> <span class="o">=</span> <span class="n">chunk_size</span>
-            <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">n_chunks</span><span class="p">))</span>
-            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="c1"># Cut data into chunks and call estimator serially.</span>
-            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_chunks</span><span class="p">):</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">n_chunks</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_chunks</span><span class="p">):</span>
                 <span class="n">chunk_data</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="c1"># Slice data into single chunks</span>
                 <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">slice_vars</span><span class="p">:</span>  <span class="c1"># NOTE: I am consciously not creating a deep copy here to save memory</span>
-                    <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="n">chunk_data</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">idx_1</span><span class="p">:</span><span class="n">idx_2</span><span class="p">,</span> <span class="p">:]</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">chunk_data</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+                <span class="c1"># Collect data that is reused over chunks.</span>
                 <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">re_use</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">assert</span> <span class="n">data</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">chunk_size</span><span class="p">,</span> <span class="p">(</span>
+                            <span class="s1">&#39;No. samples in variable </span><span class="si">{0}</span><span class="s1"> (</span><span class="si">{1}</span><span class="s1">) is not equal &#39;</span>
+                            <span class="s1">&#39;to chunk size (</span><span class="si">{2}</span><span class="s1">).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                <span class="n">v</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">chunk_size</span><span class="p">))</span>
                     <span class="n">chunk_data</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
-                <span class="n">res</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="o">**</span><span class="n">chunk_data</span><span class="p">)</span>
+                <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="o">**</span><span class="n">chunk_data</span><span class="p">)</span>
                 <span class="n">idx_1</span> <span class="o">=</span> <span class="n">idx_2</span>
                 <span class="n">idx_2</span> <span class="o">+=</span> <span class="n">chunk_size</span>
-                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
 
-            <span class="k">return</span> <span class="n">res</span></div></div>
+            <span class="k">return</span> <span class="n">results</span></div></div>
 </pre></div>
 
                 </div>
@@ -467,7 +496,7 @@
       <!-- footer -->
       <footer role="contentinfo">
           &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
-        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.3.6.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 3.5.1.
       </footer>
       <!-- /footer -->
 

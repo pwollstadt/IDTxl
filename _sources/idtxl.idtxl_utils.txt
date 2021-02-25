@@ -1,7 +1,0 @@
-idtxl.idtxl_utils module
-========================
-
-.. automodule:: idtxl.idtxl_utils
-    :members:
-    :undoc-members:
-    :show-inheritance:

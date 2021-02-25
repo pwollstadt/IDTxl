@@ -1,7 +1,0 @@
-idtxl.estimators_te module
-==========================
-
-.. automodule:: idtxl.estimators_te
-    :members:
-    :undoc-members:
-    :show-inheritance:

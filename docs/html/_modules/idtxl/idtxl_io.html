@@ -1,18 +1,17 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>idtxl.idtxl_io &#8212; IDTxl 1.0 documentation</title>
-    <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -33,7 +32,8 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">idtxl.idtxl_io</a></li> 
       </ul>
     </div>  
 
@@ -48,10 +48,11 @@
 <span class="sd">Provide functions to load and save IDTxl data, provide import functions (e.g.,</span>
 <span class="sd">mat-files, FieldTrip) and export functions (e.g., networkx, BrainNet Viewer).</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="c1"># import json</span>
+<span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">pickle</span>
 <span class="kn">import</span> <span class="nn">h5py</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">copy</span> <span class="k">as</span> <span class="nn">cp</span>
 <span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">it</span>
@@ -67,72 +68,58 @@
          <span class="s1">&#39;https://pypi.python.org/pypi/networkx/2.0 to export and plot IDTxl &#39;</span>
          <span class="s1">&#39;results in this format.&#39;</span><span class="p">))</span>
 
-<span class="n">VERBOSE</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">DEBUG</span> <span class="o">=</span> <span class="kc">False</span>
 
 
-<span class="c1"># def save(data, file_path):</span>
-<span class="c1">#     &quot;&quot;&quot;Save IDTxl data to disk.</span>
+<div class="viewcode-block" id="save_json"><a class="viewcode-back" href="../../idtxl.html#idtxl.idtxl_io.save_json">[docs]</a><span class="k">def</span> <span class="nf">save_json</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">file_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Save dictionary to disk as JSON file.</span>
 
-<span class="c1">#     Save different data types to disk. Supported types are:</span>
+<span class="sd">    Writes dictionary to disk at the specified file path.</span>
 
-<span class="c1">#     - dictionaries with results, e.g., from MultivariateTE</span>
-<span class="c1">#     - numpy array</span>
-<span class="c1">#     - instance of IDTXL Data object</span>
+<span class="sd">    Args:</span>
+<span class="sd">        d : dict</span>
+<span class="sd">            dictionary to be written to disk</span>
+<span class="sd">        file_path : str</span>
+<span class="sd">            path to file (including extension)</span>
 
-<span class="c1">#     Note that while numpy arrays and Data instances are saved in binary for</span>
-<span class="c1">#     performance, dictionaries are saved in the json format, which is human-</span>
-<span class="c1">#     readable and also easily read into other programs (e.g., MATLAB:</span>
-<span class="c1">#     http://undocumentedmatlab.com/blog/json-matlab-integration).</span>
+<span class="sd">    Note: JSON does not recognize numpy data types, those are converted to</span>
+<span class="sd">    basic Python data types first.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data_json</span> <span class="o">=</span> <span class="n">_remove_numpy</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="n">data_json</span><span class="p">,</span> <span class="n">fp</span><span class="o">=</span><span class="n">outfile</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
-<span class="c1">#     File extensions are</span>
 
-<span class="c1">#     - .txt for dictionaries (JSON file)</span>
-<span class="c1">#     - .npy for numpy array</span>
-<span class="c1">#     - .npz for Data instances</span>
+<div class="viewcode-block" id="load_json"><a class="viewcode-back" href="../../idtxl.html#idtxl.idtxl_io.load_json">[docs]</a><span class="k">def</span> <span class="nf">load_json</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Load dictionary saved as JSON file from disk.</span>
 
-<span class="c1">#     If the extension is not provided in the file_path, the function will add</span>
-<span class="c1">#     it depending on the type of the data to be written.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        file_path : str</span>
+<span class="sd">            path to file (including extension)</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        dict</span>
 
-<span class="c1">#     Args:</span>
-<span class="c1">#         data : dict | numpy array | Data object</span>
-<span class="c1">#             data to be saved to disk</span>
-<span class="c1">#         file_path : string</span>
-<span class="c1">#             string with file name (including the path)</span>
-<span class="c1">#     &quot;&quot;&quot;</span>
-<span class="c1">#     # Check if a file extension is provided in the file_path. Note that the</span>
-<span class="c1">#     # numpy save functions don&#39;t need an extension, they are added if</span>
-<span class="c1">#     # missing.</span>
-<span class="c1">#     if file_path.find(&#39;.&#39;, -4) == -1:</span>
-<span class="c1">#         add_extension = True</span>
-<span class="c1">#     else:</span>
-<span class="c1">#         add_extension = False</span>
-
-<span class="c1">#     if type(data) is dict:</span>
-<span class="c1">#         if add_extension:</span>
-<span class="c1">#             file_path = &#39;&#39;.join([file_path, &#39;.txt&#39;])</span>
-<span class="c1">#         # JSON does not recognize numpy arrays and data types, they have to</span>
-<span class="c1">#         # be converted before dumping them.</span>
-<span class="c1">#         data_json = _remove_numpy(data)</span>
-<span class="c1">#         if VERBOSE:</span>
-<span class="c1">#             print(&#39;writing file {0}&#39;.format(file_path))</span>
-<span class="c1">#         with open(file_path, &#39;w&#39;) as outfile:</span>
-<span class="c1">#             json.dump(obj=data_json, fp=outfile, sort_keys=True)</span>
-<span class="c1">#     elif type(data) is np.ndarray:</span>
-<span class="c1">#         # TODO this can&#39;t handle scalars, handle this as an exception</span>
-<span class="c1">#         np.save(file_path, data)</span>
-<span class="c1">#     elif type(data) is __name__.data.Data:</span>
-<span class="c1">#         np.savez(file_path, data=data.data, normalised=data.normalise)</span>
+<span class="sd">    Note: JSON does not recognize numpy data structures and types. Numpy arrays</span>
+<span class="sd">    and data types (float, int) are thus converted to Python types and lists.</span>
+<span class="sd">    The loaded dictionary may thus contain different data types than the saved</span>
+<span class="sd">    one.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">infile</span><span class="p">:</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+        <span class="n">pprint</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">d</span></div>
 
 
 <span class="k">def</span> <span class="nf">_remove_numpy</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Remove all numpy data structures and types from dictionary.</span>
+    <span class="sd">&quot;&quot;&quot;Replace numpy data types with basic Python types in a dictionary.</span>
 
 <span class="sd">    JSON can not handle numpy types and data structures, they have to be</span>
-<span class="sd">    convertedto native python types first.</span>
+<span class="sd">    converted to native python types first.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">data_json</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">data_json</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">, type: </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data_json</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="nb">type</span><span class="p">(</span><span class="n">data_json</span><span class="p">[</span><span class="n">k</span><span class="p">])))</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data_json</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="ow">is</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
             <span class="n">data_json</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_json</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
@@ -191,6 +178,7 @@
 <span class="c1">#         return d</span>
 
 
+
 <div class="viewcode-block" id="save_pickle"><a class="viewcode-back" href="../../idtxl.html#idtxl.idtxl_io.save_pickle">[docs]</a><span class="k">def</span> <span class="nf">save_pickle</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Save objects using Python&#39;s pickle module.</span>
 
@@ -198,13 +186,13 @@
 <span class="sd">        pickle.HIGHEST_PROTOCOL is a binary format, which may be inconvenient,</span>
 <span class="sd">        but is good for performance. Protocol 0 is a text format.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">pickle</span><span class="o">.</span><span class="n">HIGHEST_PROTOCOL</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="load_pickle"><a class="viewcode-back" href="../../idtxl.html#idtxl.idtxl_io.load_pickle">[docs]</a><span class="k">def</span> <span class="nf">load_pickle</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Load objects that have been saved using Python&#39;s pickle module.&quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span></div>
 
 
@@ -300,7 +288,7 @@
     <span class="n">ft_struct</span> <span class="o">=</span> <span class="n">ft_file</span><span class="p">[</span><span class="n">ft_struct_name</span><span class="p">]</span>
     <span class="n">ft_label</span> <span class="o">=</span> <span class="n">ft_struct</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>
 
-    <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Converting FT labels to python list of strings&#39;</span><span class="p">)</span>
 
     <span class="n">label</span> <span class="o">=</span> <span class="p">[]</span>
@@ -324,7 +312,7 @@
     <span class="n">ft_file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
     <span class="n">ft_struct</span> <span class="o">=</span> <span class="n">ft_file</span><span class="p">[</span><span class="n">ft_struct_name</span><span class="p">]</span>
     <span class="n">ft_time</span> <span class="o">=</span> <span class="n">ft_struct</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Converting FT time cell array to numpy array&#39;</span><span class="p">)</span>
 
     <span class="n">np_timeaxis_tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ft_file</span><span class="p">[</span><span class="n">ft_time</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
@@ -342,7 +330,7 @@
     <span class="n">ft_struct</span> <span class="o">=</span> <span class="n">ft_file</span><span class="p">[</span><span class="n">ft_struct_name</span><span class="p">]</span>
     <span class="n">FTfsample</span> <span class="o">=</span> <span class="n">ft_struct</span><span class="p">[</span><span class="s1">&#39;fsample&#39;</span><span class="p">]</span>
     <span class="n">fsample</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">FTfsample</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Converting FT fsample array (1x1) to numpy array (1x1)&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">fsample</span>
 
@@ -436,6 +424,7 @@
     <span class="c1"># use &#39;weights&#39; parameter (string) as networkx edge property name and use</span>
     <span class="c1"># adjacency matrix entries as edge property values</span>
     <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">()))</span>
     <span class="n">G</span><span class="o">.</span><span class="n">add_weighted_edges_from</span><span class="p">(</span><span class="n">adjacency_matrix</span><span class="o">.</span><span class="n">get_edge_list</span><span class="p">(),</span> <span class="n">weights</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">G</span></div>
 
@@ -600,23 +589,22 @@
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">text_file</span><span class="p">)</span></div>
 </pre></div>
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -631,12 +619,13 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">idtxl.idtxl_io</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.1.
     </div>
   </body>
 </html>

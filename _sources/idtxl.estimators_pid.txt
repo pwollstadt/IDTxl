@@ -1,7 +1,0 @@
-idtxl.estimators_pid module
-===========================
-
-.. automodule:: idtxl.estimators_pid
-    :members:
-    :undoc-members:
-    :show-inheritance:

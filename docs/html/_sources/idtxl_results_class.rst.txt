@@ -18,6 +18,9 @@ Results node dynamics
 .. autoclass:: idtxl.results.ResultsSingleProcessAnalysis()
     :members:
     :noindex:
-.. autoclass:: idtxl.results.ResultsPartialInformationDecomposition
+.. autoclass:: idtxl.results.ResultsPID
+    :members:
+    :noindex:
+.. autoclass:: idtxl.results.ResultsMultivariatePID
     :members:
     :noindex:

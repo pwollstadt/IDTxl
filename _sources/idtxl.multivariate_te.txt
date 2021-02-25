@@ -1,7 +1,0 @@
-idtxl.multivariate_te module
-============================
-
-.. automodule:: idtxl.multivariate_te
-    :members:
-    :undoc-members:
-    :show-inheritance:

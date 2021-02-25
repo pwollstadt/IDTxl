@@ -1,18 +1,13 @@
 idtxl package
 =============
 
-idtxl.active_information_storage module
----------------------------------------
+Submodules
+----------
 
-.. automodule:: idtxl.active_information_storage
-    :members:
-    :undoc-members:
-    :show-inheritance:
+idtxl.data module
+-----------------
 
-idtxl.bivariate_mi module
--------------------------
-
-.. automodule:: idtxl.bivariate_mi
+.. automodule:: idtxl.data
     :members:
     :undoc-members:
     :show-inheritance:
@@ -25,18 +20,51 @@ idtxl.bivariate_te module
     :undoc-members:
     :show-inheritance:
 
-idtxl.data module
------------------
+idtxl.bivariate_mi module
+-------------------------
 
-.. automodule:: idtxl.data
+.. automodule:: idtxl.bivariate_mi
     :members:
     :undoc-members:
     :show-inheritance:
 
-idtxl.estimator module
-----------------------
+idtxl.bivariate_pid module
+--------------------------
 
-.. automodule:: idtxl.estimator
+.. automodule:: idtxl.bivariate_pid
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+idtxl.multivariate_te module
+----------------------------
+
+.. automodule:: idtxl.multivariate_te
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+idtxl.multivariate_mi module
+----------------------------
+
+.. automodule:: idtxl.multivariate_mi
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+idtxl.multivariate_pid module
+-----------------------------
+
+.. automodule:: idtxl.multivariate_pid
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+idtxl.active_information_storage module
+---------------------------------------
+
+.. automodule:: idtxl.active_information_storage
     :members:
     :undoc-members:
     :show-inheritance:
@@ -57,10 +85,27 @@ idtxl.estimators_opencl module
     :undoc-members:
     :show-inheritance:
 
+idtxl.estimators_multivariate_pid module
+----------------------------------------
+
+.. automodule:: idtxl.estimators_multivariate_pid
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 idtxl.estimators_pid module
 ---------------------------
 
 .. automodule:: idtxl.estimators_pid
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+idtxl.idtxl_import module
+-------------------------
+
+.. automodule:: idtxl.idtxl_import
     :members:
     :undoc-members:
     :show-inheritance:
@@ -89,34 +134,10 @@ idtxl.idtxl_utils module
     :undoc-members:
     :show-inheritance:
 
-idtxl.multivariate_mi module
-----------------------------
-
-.. automodule:: idtxl.multivariate_mi
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-idtxl.multivariate_te module
-----------------------------
-
-.. automodule:: idtxl.multivariate_te
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 idtxl.network_analysis module
 -----------------------------
 
 .. automodule:: idtxl.network_analysis
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-idtxl.network_comparison module
--------------------------------
-
-.. automodule:: idtxl.network_comparison
     :members:
     :undoc-members:
     :show-inheritance:
@@ -129,10 +150,18 @@ idtxl.network_inference module
     :undoc-members:
     :show-inheritance:
 
-idtxl.partial_information_decomposition module
-----------------------------------------------
+idtxl.single_process_analysis module
+------------------------------------
 
-.. automodule:: idtxl.partial_information_decomposition
+.. automodule:: idtxl.single_process_analysis
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+idtxl.network_comparison module
+-------------------------------
+
+.. automodule:: idtxl.network_comparison
     :members:
     :undoc-members:
     :show-inheritance:
@@ -145,26 +174,10 @@ idtxl.results module
     :undoc-members:
     :show-inheritance:
 
-idtxl.single_process_analysis module
-------------------------------------
-
-.. automodule:: idtxl.single_process_analysis
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 idtxl.stats module
 ------------------
 
 .. automodule:: idtxl.stats
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-idtxl.synergy_tartu module
---------------------------
-
-.. automodule:: idtxl.synergy_tartu
     :members:
     :undoc-members:
     :show-inheritance:

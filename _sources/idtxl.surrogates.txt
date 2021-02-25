@@ -1,7 +1,0 @@
-idtxl.surrogates module
-=======================
-
-.. automodule:: idtxl.surrogates
-    :members:
-    :undoc-members:
-    :show-inheritance:

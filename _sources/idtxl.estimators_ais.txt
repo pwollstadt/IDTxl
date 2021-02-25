@@ -1,7 +1,0 @@
-idtxl.estimators_ais module
-===========================
-
-.. automodule:: idtxl.estimators_ais
-    :members:
-    :undoc-members:
-    :show-inheritance:

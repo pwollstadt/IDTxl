@@ -41,12 +41,13 @@
     <script type="text/javascript" src="../../_static/js/jquery.min.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/bootstrap3.min.js"></script>
 <script type="text/javascript" src="../../_static/js/jquery.cookie.min.js"></script>
 <script type="text/javascript" src="../../_static/js/basicstrap.js"></script>
 <script type="text/javascript">
 </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
     <link rel="top" title="IDTxl 0.1 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
@@ -108,17 +109,45 @@
                 <div class="body">
                   
   <h1>Source code for idtxl.idtxl_exceptions</h1><div class="highlight"><pre>
-<span class="sd">&quot;&quot;&quot;Provide error handling and warnings.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Provide error handling and warnings.&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">traceback</span>
 
 
 <div class="viewcode-block" id="package_missing"><a class="viewcode-back" href="../../idtxl.html#idtxl.idtxl_exceptions.package_missing">[docs]</a><span class="k">def</span> <span class="nf">package_missing</span><span class="p">(</span><span class="n">err</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Report a missing optional package upon import.&quot;&quot;&quot;</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
     <span class="n">traceback</span><span class="o">.</span><span class="n">print_tb</span><span class="p">(</span><span class="n">err</span><span class="o">.</span><span class="n">__traceback__</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">()</span></div>
+    <span class="nb">print</span><span class="p">()</span></div>
     <span class="c1"># warnings.simplefilter(&#39;always&#39;, ImportWarning)</span>
     <span class="c1"># warnings.warn(message, ImportWarning, stacklevel=2)</span>
+
+
+<div class="viewcode-block" id="AlgorithmExhaustedError"><a class="viewcode-back" href="../../idtxl.html#idtxl.idtxl_exceptions.AlgorithmExhaustedError">[docs]</a><span class="k">class</span> <span class="nc">AlgorithmExhaustedError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exception raised to signal that the estimators can no longer be used</span>
+<span class="sd">    for this particular target (e.g. because of memory errors in high</span>
+<span class="sd">    dimensions) but that the estimation could continue for others.</span>
+<span class="sd">    </span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        message -- explanation of the error</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span></div>
+
+
+<div class="viewcode-block" id="JidtOutOfMemoryError"><a class="viewcode-back" href="../../idtxl.html#idtxl.idtxl_exceptions.JidtOutOfMemoryError">[docs]</a><span class="k">class</span> <span class="nc">JidtOutOfMemoryError</span><span class="p">(</span><span class="n">AlgorithmExhaustedError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exception raised to signal a Java OutOfMemoryException.</span>
+<span class="sd">       It is a child class of AlgorithmExhaustedError.</span>
+<span class="sd">    </span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        message -- explanation of the error</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">message</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BROJA_2PID_Exception"><a class="viewcode-back" href="../../idtxl.html#idtxl.idtxl_exceptions.BROJA_2PID_Exception">[docs]</a><span class="k">class</span> <span class="nc">BROJA_2PID_Exception</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span></div>
 </pre></div>
 
                 </div>
@@ -172,7 +201,7 @@
       <!-- footer -->
       <footer role="contentinfo">
           &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
-        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.3.6.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 3.5.1.
       </footer>
       <!-- /footer -->
 

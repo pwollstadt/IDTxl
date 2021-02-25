@@ -1,7 +1,0 @@
-idtxl.set_estimator module
-==========================
-
-.. automodule:: idtxl.set_estimator
-    :members:
-    :undoc-members:
-    :show-inheritance:

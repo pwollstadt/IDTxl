@@ -41,12 +41,13 @@
     <script type="text/javascript" src="../../_static/js/jquery.min.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/bootstrap3.min.js"></script>
 <script type="text/javascript" src="../../_static/js/jquery.cookie.min.js"></script>
 <script type="text/javascript" src="../../_static/js/basicstrap.js"></script>
 <script type="text/javascript">
 </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
     <link rel="top" title="IDTxl 0.1 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
@@ -108,209 +109,214 @@
                 <div class="body">
                   
   <h1>Source code for idtxl.visualise_graph</h1><div class="highlight"><pre>
-<span class="sd">&quot;&quot;&quot;Export and plot results as networkx objects.&quot;&quot;&quot;</span>
-<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
-<span class="kn">from</span> <span class="nn">.multivariate_te</span> <span class="kn">import</span> <span class="n">MultivariateTE</span>
-
-<span class="n">VERBOSE</span> <span class="o">=</span> <span class="bp">False</span>
-
-
-<div class="viewcode-block" id="generate_network_graph"><a class="viewcode-back" href="../../idtxl.html#idtxl.visualise_graph.generate_network_graph">[docs]</a><span class="k">def</span> <span class="nf">generate_network_graph</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">find_u</span><span class="o">=</span><span class="s1">&#39;max_te&#39;</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Generate graph object for an inferred network.</span>
-
-<span class="sd">    Generate a weighted, directed graph object from the network of inferred</span>
-<span class="sd">    (multivariate) interactions (e.g., multivariate TE), using the networkx</span>
-<span class="sd">    class for directed graphs (DiGraph). The graph is weighted by the</span>
-<span class="sd">    reconstructed source-target delays.</span>
-
-<span class="sd">    Source-target delays are determined by the lag of the variable in a</span>
-<span class="sd">    sources&#39; past that has the highest information transfer into the target</span>
-<span class="sd">    process. There are two ways of idendifying the variable with maximum</span>
-<span class="sd">    information transfer:</span>
-
-<span class="sd">        a) use the variable with the highest absolute TE value (highest</span>
-<span class="sd">           information transfer)</span>
-<span class="sd">        b) use the variable with the smallest p-value (highest statistical</span>
-<span class="sd">           significance)</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        res : dict</span>
-<span class="sd">            output of multivariate_te.analyse_network()</span>
-<span class="sd">        n_nodes : int</span>
-<span class="sd">            number of nodes in the network</span>
-<span class="sd">        fdr : bool</span>
-<span class="sd">            print FDR-corrected results (default=True)</span>
-<span class="sd">        find_u : str</span>
-<span class="sd">            use TE value (&#39;max_te&#39;) or p-value (&#39;max_p&#39;) to determine the</span>
-<span class="sd">            variable with maximum information transfer into the target in order</span>
-<span class="sd">            to determine the source-target delay (default=&#39;max_te&#39;)</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        instance of a directed graph class from the networkx</span>
-<span class="sd">        package (DiGraph)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">adj_matrix</span> <span class="o">=</span> <span class="n">_get_adj_matrix</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">fdr</span><span class="p">,</span> <span class="n">find_u</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy_matrix</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">())</span></div>
+<span></span><span class="sd">&quot;&quot;&quot;Plot results of network inference.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">idtxl_io</span> <span class="k">as</span> <span class="n">io</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">idtxl_exceptions</span> <span class="k">as</span> <span class="n">ex</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+    <span class="n">ex</span><span class="o">.</span><span class="n">package_missing</span><span class="p">(</span>
+        <span class="n">err</span><span class="p">,</span>
+        <span class="p">(</span><span class="s1">&#39;networkx is not available on this system. Install it from &#39;</span>
+         <span class="s1">&#39;https://pypi.python.org/pypi/networkx/2.0 to export and plot IDTxl &#39;</span>
+         <span class="s1">&#39;results in this format.&#39;</span><span class="p">))</span>
 
 
-<div class="viewcode-block" id="generate_source_graph"><a class="viewcode-back" href="../../idtxl.html#idtxl.visualise_graph.generate_source_graph">[docs]</a><span class="k">def</span> <span class="nf">generate_source_graph</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">sign_sources</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Generate graph object for a target process and single variables.</span>
-
-<span class="sd">    Generate a graph object from the network of (multivariate)</span>
-<span class="sd">    interactions (e.g., multivariate TE) between single samples and</span>
-<span class="sd">    a target sample (current value), using the networkx class for</span>
-<span class="sd">    directed graphs (DiGraph).</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        res : dict</span>
-<span class="sd">            output of multivariate_te.analyse_single_target()</span>
-<span class="sd">        sign_sources : bool</span>
-<span class="sd">            add only sources significant information contribution</span>
-<span class="sd">            (default=True)</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        instance of a directed graph class from the networkx</span>
-<span class="sd">        package (DiGraph)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">target</span> <span class="o">=</span> <span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;current_value&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Input res should be result of analyse_single_target() &#39;</span>
-                 <span class="s1">&#39;method.&#39;</span><span class="p">)</span>
-    <span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
-    <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
-    <span class="c1"># Add either all tested candidates or only significant ones</span>
-    <span class="c1"># to the graph.</span>
-    <span class="k">if</span> <span class="n">sign_sources</span><span class="p">:</span>
-        <span class="n">graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;selected_vars_full&#39;</span><span class="p">][:])</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">procs</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;sources_tested&#39;</span><span class="p">]</span>
-        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;current_value&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;min_lag_sources&#39;</span><span class="p">],</span>
-                            <span class="n">res</span><span class="p">[</span><span class="s1">&#39;current_value&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;max_lag_sources&#39;</span><span class="p">],</span>
-                            <span class="o">-</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;tau_sources&#39;</span><span class="p">])</span>
-        <span class="n">define_candidates</span> <span class="o">=</span> <span class="n">MultivariateTE</span><span class="o">.</span><span class="n">_define_candidates</span>
-        <span class="n">nodes</span> <span class="o">=</span> <span class="n">define_candidates</span><span class="p">([],</span> <span class="n">procs</span><span class="p">,</span> <span class="n">samples</span><span class="p">)</span>
-        <span class="n">graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
-
-    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;selected_vars_full&#39;</span><span class="p">])):</span>
-        <span class="c1"># Here, one could add additional info in the future, networkx graphs</span>
-        <span class="c1"># support attributes for graphs, nodes, and edges.</span>
-        <span class="n">graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;selected_vars_full&#39;</span><span class="p">][</span><span class="n">v</span><span class="p">],</span> <span class="n">target</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">edge</span><span class="p">)</span>
-        <span class="n">graph</span><span class="o">.</span><span class="n">number_of_edges</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">graph</span></div>
-
-
-<div class="viewcode-block" id="plot_network"><a class="viewcode-back" href="../../idtxl.html#idtxl.visualise_graph.plot_network">[docs]</a><span class="k">def</span> <span class="nf">plot_network</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">find_u</span><span class="o">=</span><span class="s1">&#39;max_te&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="plot_network"><a class="viewcode-back" href="../../idtxl.html#idtxl.visualise_graph.plot_network">[docs]</a><span class="k">def</span> <span class="nf">plot_network</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Plot network of multivariate TE between processes.</span>
 
-<span class="sd">    Plot graph of the network of (multivariate) interactions between</span>
-<span class="sd">    processes (e.g., multivariate TE). The function uses  the</span>
-<span class="sd">    networkx class for directed graphs (DiGraph) internally.</span>
-<span class="sd">    Plots a network and adjacency matrix.</span>
+<span class="sd">    Plot graph of the network of (multivariate) interactions between processes</span>
+<span class="sd">    (e.g., multivariate TE). The function uses  the networkx class for directed</span>
+<span class="sd">    graphs (DiGraph) internally. Plots a network and adjacency matrix.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        res : dict</span>
-<span class="sd">            output of multivariate_te.analyse_network()</span>
-<span class="sd">        n_nodes : int</span>
-<span class="sd">            number of nodes in the network</span>
-<span class="sd">        fdr : bool</span>
+<span class="sd">        results : ResultsNetworkInference() instance</span>
+<span class="sd">            output of an network inference algorithm</span>
+<span class="sd">        weights : str</span>
+<span class="sd">            for single network inference, it can either be</span>
+
+<span class="sd">                - &#39;max_te_lag&#39;: the weights represent the source -&gt; target</span>
+<span class="sd">                   lag corresponding to the maximum tranfer entropy value</span>
+<span class="sd">                   (see documentation for method get_target_delays for details)</span>
+<span class="sd">                - &#39;max_p_lag&#39;: the weights represent the source -&gt; target</span>
+<span class="sd">                   lag corresponding to the maximum p-value</span>
+<span class="sd">                   (see documentation for method get_target_delays for details)</span>
+<span class="sd">                - &#39;vars_count&#39;: the weights represent the number of</span>
+<span class="sd">                   statistically-significant source -&gt; target lags</span>
+<span class="sd">                - &#39;binary&#39;: return unweighted adjacency matrix with binary</span>
+<span class="sd">                   entries</span>
+
+<span class="sd">                   - 1 = significant information transfer;</span>
+<span class="sd">                   - 0 = no significant information transfer.</span>
+
+<span class="sd">            for network comparison, it can either be</span>
+
+<span class="sd">                - &#39;union&#39;: all links in the union network, i.e., all</span>
+<span class="sd">                  links that were tested for a difference</span>
+<span class="sd">                - &#39;comparison&#39;: True for links with a significant difference in</span>
+<span class="sd">                   inferred effective connectivity (default)</span>
+<span class="sd">                - &#39;pvalue&#39;: absolute differences in inferred effective</span>
+<span class="sd">                   connectivity for significant links</span>
+<span class="sd">                - &#39;diff_abs&#39;: absolute difference</span>
+
+<span class="sd">        fdr : bool [optional]</span>
 <span class="sd">            print FDR-corrected results (default=True)</span>
-<span class="sd">        find_u : str</span>
-<span class="sd">            use TE value (&#39;max_te&#39;) or p-value (&#39;max_p&#39;) to determine the</span>
-<span class="sd">            variable with maximum information transfer into the target in order</span>
-<span class="sd">            to determine the source-target delay (default=&#39;max_te&#39;)</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        instance of a directed graph class from the networkx</span>
-<span class="sd">        package (DiGraph)</span>
+<span class="sd">        DiGraph</span>
+<span class="sd">            instance of a directed graph class from the networkx package</span>
+<span class="sd">        Figure</span>
+<span class="sd">            figure handle, Figure object from the matplotlib package</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">graph</span> <span class="o">=</span> <span class="n">generate_network_graph</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">fdr</span><span class="p">,</span> <span class="n">find_u</span><span class="p">)</span>
-    <span class="n">adj_matrix</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_numpy_matrix</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">)</span>
+    <span class="n">adj_matrix</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_adjacency_matrix</span><span class="p">(</span><span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="n">fdr</span><span class="p">)</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">export_networkx_graph</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
 
-    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
-    <span class="c1"># Plot graph.</span>
-    <span class="n">ax1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">)</span>
-    <span class="n">nx</span><span class="o">.</span><span class="n">draw_circular</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">node_size</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax1</span><span class="p">,</span>
-                     <span class="n">node_color</span><span class="o">=</span><span class="s1">&#39;Gainsboro&#39;</span><span class="p">,</span> <span class="n">hold</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span>
-                     <span class="n">font_weight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
-    <span class="n">pos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">circular_layout</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
-    <span class="n">edge_labels</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">get_edge_attributes</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="s1">&#39;weight&#39;</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">edge_labels</span><span class="p">)</span>
-    <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_edge_labels</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">edge_labels</span><span class="o">=</span><span class="n">edge_labels</span><span class="p">,</span>
-                                 <span class="n">font_size</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>  <span class="c1"># font_weight=&#39;bold&#39;</span>
-
-    <span class="c1"># Plot adjacency matrix.</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">122</span><span class="p">)</span>
-    <span class="n">_plot_adj_matrix</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">graph</span></div>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+    <span class="n">ax1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">)</span>  <span class="c1"># plot graph</span>
+    <span class="n">_plot_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">ax1</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">122</span><span class="p">)</span>  <span class="c1"># plot adjacency matrix</span>
+    <span class="n">_plot_adj_matrix</span><span class="p">(</span>
+        <span class="n">results</span><span class="o">.</span><span class="n">get_adjacency_matrix</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">fdr</span><span class="p">),</span>
+        <span class="n">cbar_label</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="n">fig</span></div>
 
 
-<div class="viewcode-block" id="plot_selected_vars"><a class="viewcode-back" href="../../idtxl.html#idtxl.visualise_graph.plot_selected_vars">[docs]</a><span class="k">def</span> <span class="nf">plot_selected_vars</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">sign_sources</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+<div class="viewcode-block" id="plot_selected_vars"><a class="viewcode-back" href="../../idtxl.html#idtxl.visualise_graph.plot_selected_vars">[docs]</a><span class="k">def</span> <span class="nf">plot_selected_vars</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">sign_sources</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                       <span class="n">display_edge_labels</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Plot network of a target process and single variables.</span>
 
-<span class="sd">    Plot graph of the network of (multivariate) interactions between</span>
-<span class="sd">    source variables and the current value. The function uses the</span>
-<span class="sd">    networkx class for directed graphs (DiGraph) internally.</span>
-<span class="sd">    Plots a network and reduced adjacency matrix.</span>
+<span class="sd">    Plot graph of the network of (multivariate) interactions between source</span>
+<span class="sd">    variables and the target. The function uses the networkx class for directed</span>
+<span class="sd">    graphs (DiGraph) internally. Plots a network and reduced adjacency matrix.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        res : dict</span>
-<span class="sd">            output of multivariate_te.analyse_single_target()</span>
-<span class="sd">        sign_sources : bool</span>
-<span class="sd">            add only sources significant information contribution</span>
+<span class="sd">        results : ResultsNetworkInference() instance</span>
+<span class="sd">            output of an network inference algorithm</span>
+<span class="sd">        target : int</span>
+<span class="sd">            index of target process</span>
+<span class="sd">        sign_sources : bool [optional]</span>
+<span class="sd">            plot sources with significant information contribution only</span>
 <span class="sd">            (default=True)</span>
+<span class="sd">        display_edge_labels : bool [optional]</span>
+<span class="sd">            display TE value on edge lables (default=False)</span>
+<span class="sd">        fdr : bool [optional]</span>
+<span class="sd">            print FDR-corrected results (default=True)</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        instance of a directed graph class from the networkx</span>
-<span class="sd">        package (DiGraph)</span>
+<span class="sd">        DiGraph</span>
+<span class="sd">            instance of a directed graph class from the networkx package</span>
+<span class="sd">        Figure</span>
+<span class="sd">            figure handle, Figure object from the matplotlib package</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">graph</span> <span class="o">=</span> <span class="n">generate_source_graph</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">sign_sources</span><span class="p">)</span>
-    <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">(),</span>
-                 <span class="n">dtype</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;procs&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;lags&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)])</span>
-    <span class="n">target</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="s1">&#39;lags&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
-    <span class="n">max_lag</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;max_lag_sources&#39;</span><span class="p">],</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;max_lag_target&#39;</span><span class="p">])</span>
-    <span class="n">ind</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;lavender&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">())]</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">export_networkx_source_graph</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">sign_sources</span><span class="p">,</span> <span class="n">fdr</span><span class="p">)</span>
+    <span class="c1"># Replace time index of current value to be consistent with lag-notation</span>
+    <span class="c1"># in plot.</span>
+    <span class="n">current_value</span> <span class="o">=</span> <span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">_single_target</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">current_value</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">max_lag</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">max_lag_sources</span><span class="p">,</span>
+                  <span class="n">results</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">max_lag_target</span><span class="p">)</span>
+
+    <span class="c1"># Adjust color and position of nodes (variables).</span>
     <span class="n">pos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">spring_layout</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">target</span><span class="p">:</span>  <span class="c1"># current value</span>
+    <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;lavender&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">())]</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">ind</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">):</span>
+
+        <span class="c1"># Adjust posistions of nodes.</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">current_value</span><span class="p">:</span>
             <span class="n">pos</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">max_lag</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-        <span class="k">elif</span> <span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">target</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>  <span class="c1"># target history</span>
+        <span class="k">elif</span> <span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">current_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>  <span class="c1"># target history</span>
             <span class="n">pos</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">max_lag</span> <span class="o">-</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">])</span>
-        <span class="k">elif</span> <span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">target</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>  <span class="c1"># sources with proc. number &lt; target</span>
+        <span class="k">elif</span> <span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">current_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>  <span class="c1"># sources with proc. number &lt; target</span>
             <span class="n">pos</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">max_lag</span> <span class="o">-</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># sources with proc. number &gt; target</span>
             <span class="n">pos</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">max_lag</span> <span class="o">-</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
 
-        <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;selected_vars_sources&#39;</span><span class="p">]:</span>
+        <span class="c1"># Adjust color of nodes.</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">_single_target</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">:</span>
             <span class="n">color</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;cadetblue&#39;</span>
-        <span class="k">elif</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;selected_vars_target&#39;</span><span class="p">]:</span>
+        <span class="k">elif</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">_single_target</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">selected_vars_target</span><span class="p">:</span>
             <span class="n">color</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;tomato&#39;</span>
-        <span class="k">elif</span> <span class="n">n</span> <span class="o">==</span> <span class="n">target</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">n</span> <span class="o">==</span> <span class="n">current_value</span><span class="p">:</span>
             <span class="n">color</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;red&#39;</span>
-        <span class="n">ind</span> <span class="o">+=</span> <span class="mi">1</span>
 
-    <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-    <span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">font_weight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">,</span>
-            <span class="n">node_size</span><span class="o">=</span><span class="mi">900</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">node_shape</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">node_color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
-            <span class="n">hold</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">font_weight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">,</span>
+            <span class="n">node_size</span><span class="o">=</span><span class="mi">900</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">node_shape</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">node_color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+    <span class="c1"># Optionally display edge labels showing the TE value</span>
+    <span class="k">if</span> <span class="n">display_edge_labels</span><span class="p">:</span>
+        <span class="n">edge_labels</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">get_edge_attributes</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="s1">&#39;te&#39;</span><span class="p">)</span>
+        <span class="c1"># Change format to only display 2 decimals</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">edge_labels</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">edge_labels</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0:.2g}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_edge_labels</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">edge_labels</span><span class="o">=</span><span class="n">edge_labels</span><span class="p">,</span>
+                                     <span class="n">font_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>  <span class="c1"># font_weight=&#39;bold&#39;</span>
+
     <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">max_lag</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
              <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;0.5&#39;</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">graph</span></div>
+    <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="n">fig</span></div>
 
 
-<span class="k">def</span> <span class="nf">_plot_adj_matrix</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">,</span> <span class="n">mat_color</span><span class="o">=</span><span class="s1">&#39;gray_r&#39;</span><span class="p">,</span> <span class="n">diverging</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+<span class="k">def</span> <span class="nf">_plot_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">display_edge_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Plot graph using networkx.&quot;&quot;&quot;</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">circular_layout</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+    <span class="n">nx</span><span class="o">.</span><span class="n">draw_circular</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">node_size</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                     <span class="n">ax</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">node_color</span><span class="o">=</span><span class="s1">&#39;Gainsboro&#39;</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span>
+                     <span class="n">font_weight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">display_edge_labels</span><span class="p">:</span>
+        <span class="n">edge_labels</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">get_edge_attributes</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_edge_labels</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">edge_labels</span><span class="o">=</span><span class="n">edge_labels</span><span class="p">,</span>
+                                     <span class="n">font_size</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>  <span class="c1"># font_weight=&#39;bold&#39;</span>
+
+
+<span class="k">def</span> <span class="nf">_plot_adj_matrix</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">,</span> <span class="n">mat_color</span><span class="o">=</span><span class="s1">&#39;gray_r&#39;</span><span class="p">,</span> <span class="n">diverging</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                     <span class="n">cbar_label</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">cbar_stepsize</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Plot adjacency matrix.&quot;&quot;&quot;</span>
+    <span class="c1"># Plot matrix, set minimum and maximum values to the same value for</span>
+    <span class="c1"># diverging plots to center colormap at 0, i.e., 0 is plotted in white</span>
+    <span class="c1"># https://stackoverflow.com/questions/25500541/</span>
+    <span class="c1"># matplotlib-bwr-colormap-always-centered-on-zero</span>
+    <span class="k">if</span> <span class="n">diverging</span><span class="p">:</span>
+        <span class="n">max_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">_weight_matrix</span><span class="p">))</span>
+        <span class="n">min_val</span> <span class="o">=</span> <span class="o">-</span><span class="n">max_val</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">max_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">_weight_matrix</span><span class="p">)</span>
+        <span class="n">min_val</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">_weight_matrix</span><span class="p">)</span>
+
+    <span class="n">adj_matrix_masked</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">_edge_matrix</span><span class="p">),</span> <span class="n">adj_matrix</span><span class="o">.</span><span class="n">_weight_matrix</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">adj_matrix_masked</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">mat_color</span><span class="p">,</span>
+               <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="n">min_val</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">max_val</span><span class="p">)</span>
+
+    <span class="c1"># Set the colorbar and make colorbar match the image in size using the</span>
+    <span class="c1"># fraction and pad parameters (see https://stackoverflow.com/a/26720422).</span>
+    <span class="n">cbar_ticks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_val</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">cbar_stepsize</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cbar_label</span> <span class="o">==</span> <span class="s1">&#39;max_te_lag&#39;</span><span class="p">:</span>
+        <span class="n">cbar_label</span> <span class="o">=</span> <span class="s1">&#39;delay [samples]&#39;</span>
+    <span class="k">elif</span> <span class="n">cbar_label</span> <span class="o">==</span> <span class="s1">&#39;max_p_lag&#39;</span><span class="p">:</span>
+        <span class="n">cbar_label</span> <span class="o">=</span> <span class="s1">&#39;max p-value lag [samples]&#39;</span>
+    <span class="k">elif</span> <span class="n">cbar_label</span> <span class="o">==</span> <span class="s1">&#39;vars_count&#39;</span><span class="p">:</span>
+        <span class="n">cbar_label</span> <span class="o">=</span> <span class="s1">&#39;# of selected vars&#39;</span>
+    <span class="k">elif</span> <span class="n">cbar_label</span> <span class="o">==</span> <span class="s1">&#39;binary&#39;</span><span class="p">:</span>
+        <span class="n">cbar_label</span> <span class="o">=</span> <span class="s1">&#39;Binary adjacency matrix&#39;</span>
+    <span class="k">elif</span> <span class="n">cbar_label</span> <span class="o">==</span> <span class="s1">&#39;p-value&#39;</span><span class="p">:</span>
+        <span class="c1"># cbar_ticks = np.arange(0, 1.001, 0.1)</span>
+        <span class="n">cbar_ticks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_val</span> <span class="o">*</span> <span class="mf">1.01</span><span class="p">,</span> <span class="n">max_val</span> <span class="o">/</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cbar_ticks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span> <span class="o">+</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">max_val</span><span class="p">,</span>
+                               <span class="n">cbar_stepsize</span><span class="p">)</span>
+    <span class="n">cbar</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">fraction</span><span class="o">=</span><span class="mf">0.046</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.04</span><span class="p">,</span> <span class="n">ticks</span><span class="o">=</span><span class="n">cbar_ticks</span><span class="p">)</span>
+    <span class="n">cbar</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="n">cbar_label</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
+
+    <span class="c1"># Set x- and y-ticks.</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">()))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">n_nodes</span><span class="p">()))</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">tick_top</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">cbar</span>
+
+
+<span class="k">def</span> <span class="nf">_plot_adj_matrix</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">,</span> <span class="n">mat_color</span><span class="o">=</span><span class="s1">&#39;gray_r&#39;</span><span class="p">,</span> <span class="n">diverging</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                      <span class="n">cbar_label</span><span class="o">=</span><span class="s1">&#39;delay&#39;</span><span class="p">,</span> <span class="n">cbar_stepsize</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Plot adjacency matrix.&quot;&quot;&quot;</span>
     <span class="c1"># Plot matrix, set minimum and maximum values to the same value for</span>
@@ -352,11 +358,16 @@
 <span class="sd">    on the MuTE toolbox (Montalto, PLOS ONE, 2014, eq. 14). The</span>
 <span class="sd">    network consists of five autoregressive (AR) processes with model</span>
 <span class="sd">    orders 2 and les and the following (non-linear) couplings:</span>
-<span class="sd">        0 -&gt; 1, u = 2</span>
-<span class="sd">        0 -&gt; 2, u = 3</span>
-<span class="sd">        0 -&gt; 3, u = 2 (non-linear)</span>
-<span class="sd">        3 -&gt; 4, u = 1</span>
-<span class="sd">        4 -&gt; 3, u = 1</span>
+
+<span class="sd">        &gt;&gt;&gt; 0 -&gt; 1, u = 2</span>
+<span class="sd">        &gt;&gt;&gt; 0 -&gt; 2, u = 3</span>
+<span class="sd">        &gt;&gt;&gt; 0 -&gt; 3, u = 2 (non-linear)</span>
+<span class="sd">        &gt;&gt;&gt; 3 -&gt; 4, u = 1</span>
+<span class="sd">        &gt;&gt;&gt; 4 -&gt; 3, u = 1</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Figure handle</span>
+<span class="sd">            Figure object from the matplotlib package</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
     <span class="n">graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
@@ -370,220 +381,72 @@
         <span class="mi">3</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span>
         <span class="mi">4</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span>
     <span class="p">}</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-    <span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">node_size</span><span class="o">=</span><span class="mi">900</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">node_size</span><span class="o">=</span><span class="mi">900</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
             <span class="n">node_color</span><span class="o">=</span><span class="s1">&#39;cadetblue&#39;</span><span class="p">,</span> <span class="n">font_weight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">,</span>
-            <span class="n">edge_color</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">],</span> <span class="n">hold</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">edge_color</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">],</span> <span class="n">hold</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_edge_labels</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">)</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="s1">&#39;non-linear interaction in red&#39;</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
     <span class="c1"># see here for an example on how to plot edge labels:</span>
     <span class="c1"># http://stackoverflow.com/questions/10104700/how-to-set-networkx-edge-labels-offset-to-avoid-label-overlap</span>
+    <span class="k">return</span> <span class="n">fig</span></div>
 
 
-<div class="viewcode-block" id="print_res_to_console"><a class="viewcode-back" href="../../idtxl.html#idtxl.visualise_graph.print_res_to_console">[docs]</a><span class="k">def</span> <span class="nf">print_res_to_console</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">find_u</span><span class="o">=</span><span class="s1">&#39;max_te&#39;</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Print results of network inference to console.</span>
+<div class="viewcode-block" id="plot_network_comparison"><a class="viewcode-back" href="../../idtxl.html#idtxl.visualise_graph.plot_network_comparison">[docs]</a><span class="k">def</span> <span class="nf">plot_network_comparison</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Plot results of network comparison.</span>
 
-<span class="sd">    Print results of network inference to console. Output looks like this:</span>
-
-<span class="sd">        0 -&gt; 1, u = 2</span>
-<span class="sd">        0 -&gt; 2, u = 3</span>
-<span class="sd">        0 -&gt; 3, u = 2</span>
-<span class="sd">        3 -&gt; 4, u = 1</span>
-<span class="sd">        4 -&gt; 3, u = 1</span>
-
-<span class="sd">    indicating significant information transfer source -&gt; target with a source-</span>
-<span class="sd">    target delay u. The network can either be plotted from FDR-</span>
-
-<span class="sd">    Source-target delays are determined by the lag of the variable in a</span>
-<span class="sd">    sources&#39; past that has the highest information transfer into the target</span>
-<span class="sd">    process. There are two ways of idendifying the variable with maximum</span>
-<span class="sd">    information transfer:</span>
-
-<span class="sd">        a) use the variable with the highest absolute TE value (highest</span>
-<span class="sd">           information transfer)</span>
-<span class="sd">        b) use the variable with the smallest p-value (highest statistical</span>
-<span class="sd">           significance)</span>
+<span class="sd">    Plot results of network comparison. Produces a figure with five subplots,</span>
+<span class="sd">    where the first plot shows the network graph of the union network, the</span>
+<span class="sd">    second plot shows the adjacency matrix of the union network, the third</span>
+<span class="sd">    plot shows the qualitative results of the comparison of each link, the</span>
+<span class="sd">    fourth plot shows the absolute differences in CMI per link, and the fifth</span>
+<span class="sd">    plot shows p-values for each link.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        data : Data() instance</span>
-<span class="sd">            raw data</span>
-<span class="sd">        res : dict</span>
-<span class="sd">            output of network inference algorithm, e.g., MultivariateTE</span>
-<span class="sd">        fdr : bool</span>
-<span class="sd">            print FDR-corrected results (default=True)</span>
-<span class="sd">        find_u : str</span>
-<span class="sd">            use TE value (&#39;max_te&#39;) or p-value (&#39;max_p&#39;) to determine the</span>
-<span class="sd">            variable with maximum information transfer into the target in order</span>
-<span class="sd">            to determine the source-target delay (default=&#39;max_te&#39;)</span>
+<span class="sd">        results : ResultsNetworkComparison() instance</span>
+<span class="sd">            network comparison results</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        numpy array</span>
-<span class="sd">            adjacency matrix describing multivariate TE between all network</span>
-<span class="sd">            nodes, entries in the matrix denote source-target-delays</span>
+<span class="sd">        DiGraph</span>
+<span class="sd">            instance of a directed graph class from the networkx package</span>
+<span class="sd">        Figure</span>
+<span class="sd">            figure handle, Figure object from the matplotlib package</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Generate adjacency matrix from results.</span>
-    <span class="n">n_nodes</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">n_processes</span>
-    <span class="n">adj_matrix</span> <span class="o">=</span> <span class="n">_get_adj_matrix</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">fdr</span><span class="p">,</span> <span class="n">find_u</span><span class="p">)</span>
+    <span class="c1"># Get union graph.</span>
+    <span class="n">adj_matrix</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_adjacency_matrix</span><span class="p">(</span><span class="n">weights</span><span class="o">=</span><span class="s1">&#39;union&#39;</span><span class="p">)</span>
+    <span class="n">graph_union</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">export_networkx_graph</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="s1">&#39;union&#39;</span><span class="p">)</span>
 
-    <span class="c1"># Print link to console.</span>
-    <span class="n">link_found</span> <span class="o">=</span> <span class="bp">False</span>
-    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">adj_matrix</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">]:</span>
-                <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">{0} -&gt; {1}, u: {2}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">adj_matrix</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">]))</span>
-                <span class="n">link_found</span> <span class="o">=</span> <span class="bp">True</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">link_found</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;No significant links in network.&#39;</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">adj_matrix</span></div>
-
-
-<span class="k">def</span> <span class="nf">_get_adj_matrix</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">find_u</span><span class="o">=</span><span class="s1">&#39;max_te&#39;</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return adjacency matrix as numpy array.</span>
-
-<span class="sd">    Return results of network inference as directed adjacency matrix. Output is</span>
-<span class="sd">    a 2D numpy-array where non-zero entries indicate a significant link and the</span>
-<span class="sd">    integer denotes the source-target delay between nodes.</span>
-
-<span class="sd">    Source-target delays are determined by the lag of the variable in a</span>
-<span class="sd">    sources&#39; past that has the highest information transfer into the target</span>
-<span class="sd">    process. There are two ways of idendifying the variable with maximum</span>
-<span class="sd">    information transfer:</span>
-
-<span class="sd">        a) use the variable with the highest absolute TE value (highest</span>
-<span class="sd">           information transfer)</span>
-<span class="sd">        b) use the variable with the smallest p-value (highest statistical</span>
-<span class="sd">           significance)</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        res : dict</span>
-<span class="sd">            output of network inference algorithm, e.g., MultivariateTE</span>
-<span class="sd">        n_nodes : int</span>
-<span class="sd">            number of nodes in the network</span>
-<span class="sd">        fdr : bool</span>
-<span class="sd">            print FDR-corrected results (default=True)</span>
-<span class="sd">        find_u : str</span>
-<span class="sd">            use TE value (&#39;max_te&#39;) or p-value (&#39;max_p&#39;) to determine the</span>
-<span class="sd">            variable with maximum information transfer into the target in order</span>
-<span class="sd">            to determine the source-target delay (default=&#39;max_te&#39;)</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        numpy array</span>
-<span class="sd">            adjacency matrix describing multivariate TE between all network</span>
-<span class="sd">            nodes, entries in the matrix denote source-target-delays</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Check if FDR-corrected or uncorrected results are requested.</span>
-    <span class="k">if</span> <span class="n">fdr</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">r</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;fdr_corrected&#39;</span><span class="p">]</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;No FDR-corrected results found.&#39;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">r</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">del</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;fdr_corrected&#39;</span><span class="p">]</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="k">pass</span>
-
-    <span class="n">targets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-    <span class="n">adj_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-
-    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
-        <span class="n">all_vars_sources</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span>
-                                     <span class="n">r</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;selected_vars_sources&#39;</span><span class="p">]])</span>
-        <span class="n">all_vars_lags</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">r</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;selected_vars_sources&#39;</span><span class="p">]])</span>
-        <span class="n">sources</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">all_vars_sources</span><span class="p">)</span>
-        <span class="n">pval</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;selected_sources_pval&#39;</span><span class="p">]</span>
-        <span class="n">te</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;selected_sources_te&#39;</span><span class="p">]</span>
-        <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">sources</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-
-        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
-            <span class="c1"># Find u as the variable with either the smalles p-value or highest</span>
-            <span class="c1"># TE-value.</span>
-            <span class="k">if</span> <span class="n">find_u</span> <span class="o">==</span> <span class="s1">&#39;max_p&#39;</span><span class="p">:</span>
-                <span class="n">u_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">pval</span><span class="p">[</span><span class="n">all_vars_sources</span> <span class="o">==</span> <span class="n">s</span><span class="p">])</span>
-            <span class="k">elif</span> <span class="n">find_u</span> <span class="o">==</span> <span class="s1">&#39;max_te&#39;</span><span class="p">:</span>
-                <span class="n">u_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">te</span><span class="p">[</span><span class="n">all_vars_sources</span> <span class="o">==</span> <span class="n">s</span><span class="p">])</span>
-            <span class="n">u</span> <span class="o">=</span> <span class="n">all_vars_lags</span><span class="p">[</span><span class="n">all_vars_sources</span> <span class="o">==</span> <span class="n">s</span><span class="p">][</span><span class="n">u_ind</span><span class="p">]</span>
-
-            <span class="n">adj_matrix</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span>
-
-    <span class="k">return</span> <span class="n">adj_matrix</span>
-
-
-<div class="viewcode-block" id="plot_network_comparison"><a class="viewcode-back" href="../../idtxl.html#idtxl.visualise_graph.plot_network_comparison">[docs]</a><span class="k">def</span> <span class="nf">plot_network_comparison</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">mask_sign</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Plot results of network comparison.&quot;&quot;&quot;</span>
-    <span class="n">union</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;union_network&#39;</span><span class="p">]</span>
-
-    <span class="n">targets</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;union_network&#39;</span><span class="p">][</span><span class="s1">&#39;targets&#39;</span><span class="p">]</span>
-    <span class="n">n_nodes</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
-    <span class="n">union_network</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-    <span class="n">adj_matrix_te_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">))</span>
-    <span class="n">adj_matrix_pval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">))</span>
-    <span class="n">adj_matrix_comp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">))</span>
-
-    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
-        <span class="n">all_vars_sources</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span>
-                                     <span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;selected_vars_sources&#39;</span><span class="p">]])</span>
-        <span class="n">all_vars_lags</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span>
-                                  <span class="n">union</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;selected_vars_sources&#39;</span><span class="p">]])</span>
-
-        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">all_vars_sources</span><span class="p">):</span>
-            <span class="n">union_network</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-
-        <span class="n">pval</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;pval&#39;</span><span class="p">][</span><span class="n">t</span><span class="p">]</span>
-        <span class="n">sign</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;sign&#39;</span><span class="p">][</span><span class="n">t</span><span class="p">]</span>
-        <span class="n">te_diff</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;cmi_diff_abs&#39;</span><span class="p">][</span><span class="n">t</span><span class="p">]</span>
-        <span class="n">comp</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;a&gt;b&#39;</span><span class="p">][</span><span class="n">t</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-        <span class="n">comp</span><span class="p">[</span><span class="n">comp</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-        <span class="k">if</span> <span class="n">mask_sign</span><span class="p">:</span>
-            <span class="n">all_vars_sources</span> <span class="o">=</span> <span class="n">all_vars_sources</span><span class="p">[</span><span class="n">sign</span><span class="p">]</span>
-            <span class="n">all_vars_lags</span> <span class="o">=</span> <span class="n">all_vars_lags</span><span class="p">[</span><span class="n">sign</span><span class="p">]</span>
-            <span class="n">pval</span> <span class="o">=</span> <span class="n">pval</span><span class="p">[</span><span class="n">sign</span><span class="p">]</span>
-            <span class="n">te_diff</span> <span class="o">=</span> <span class="n">te_diff</span><span class="p">[</span><span class="n">sign</span><span class="p">]</span>
-            <span class="n">comp</span> <span class="o">=</span> <span class="n">comp</span><span class="p">[</span><span class="n">sign</span><span class="p">]</span>
-
-        <span class="n">sources</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">all_vars_sources</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
-            <span class="c1"># For now, if there are multiple variables in the past of a source,</span>
-            <span class="c1"># report the one with the maximum TE difference</span>
-            <span class="n">te_diff_abs</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">te_diff</span><span class="p">)</span>
-            <span class="n">max_te</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">te_diff_abs</span><span class="p">[</span><span class="n">all_vars_sources</span> <span class="o">==</span> <span class="n">s</span><span class="p">])</span>
-            <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">te_diff_abs</span> <span class="o">==</span> <span class="n">max_te</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">adj_matrix_te_diff</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">te_diff</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-            <span class="n">adj_matrix_pval</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">pval</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-            <span class="n">adj_matrix_comp</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">comp</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-
-    <span class="n">adj_matrix_te_diff_sign</span> <span class="o">=</span> <span class="n">adj_matrix_te_diff</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">adj_matrix_te_diff</span><span class="p">)</span>
-    <span class="n">adj_matrix_te_diff_sign</span> <span class="o">*=</span> <span class="n">adj_matrix_comp</span>
-
-    <span class="n">f</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
-    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">221</span><span class="p">)</span>
-    <span class="n">_plot_adj_matrix</span><span class="p">(</span><span class="n">adj_matrix_te_diff_sign</span><span class="p">,</span> <span class="n">mat_color</span><span class="o">=</span><span class="s1">&#39;seismic&#39;</span><span class="p">,</span>
-                     <span class="n">diverging</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">cbar_label</span><span class="o">=</span><span class="s1">&#39;norm. CMI diff [a.u.]&#39;</span><span class="p">,</span>
-                     <span class="n">cbar_stepsize</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;CMI raw diff cond. A - B&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.1</span><span class="p">)</span>
-    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">222</span><span class="p">)</span>
-    <span class="n">_plot_adj_matrix</span><span class="p">(</span><span class="n">adj_matrix_pval</span><span class="p">,</span> <span class="n">cbar_label</span><span class="o">=</span><span class="s1">&#39;p-value [%]&#39;</span><span class="p">,</span>
-                     <span class="n">cbar_stepsize</span><span class="o">=</span><span class="mf">0.005</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;p-values cond. A vs. B&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.1</span><span class="p">)</span>
-    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">223</span><span class="p">)</span>
-    <span class="n">_plot_adj_matrix</span><span class="p">(</span><span class="n">union_network</span><span class="p">,</span> <span class="n">mat_color</span><span class="o">=</span><span class="s1">&#39;PuBu&#39;</span><span class="p">,</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+    <span class="n">ax1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">231</span><span class="p">)</span>  <span class="c1"># plot union graph</span>
+    <span class="n">_plot_graph</span><span class="p">(</span><span class="n">graph_union</span><span class="p">,</span> <span class="n">ax1</span><span class="p">)</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">232</span><span class="p">)</span>  <span class="c1"># plot union graph adjacency matrix</span>
+    <span class="n">_plot_adj_matrix</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">get_adjacency_matrix</span><span class="p">(</span><span class="s1">&#39;union&#39;</span><span class="p">),</span> <span class="n">mat_color</span><span class="o">=</span><span class="s1">&#39;PuBu&#39;</span><span class="p">,</span>
                      <span class="n">cbar_label</span><span class="o">=</span><span class="s1">&#39;link in union&#39;</span><span class="p">,</span> <span class="n">cbar_stepsize</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;union network A and B&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.1</span><span class="p">)</span>
-    <span class="c1"># ax = plt.subplot(224)</span>
-    <span class="c1"># cbar = _plot_adj_matrix(adj_matrix_comp, diverging=True,</span>
-    <span class="c1">#                         mat_color=&#39;bwr&#39;, cbar_stepsize=1)</span>
-    <span class="c1"># cbar.set_ticks([1, -1])</span>
-    <span class="c1"># cbar.ax.set_yticklabels([&#39;A &gt; B&#39;, &#39;B&gt;=A&#39;])</span>
-    <span class="c1"># ax.set_title(&#39;Comparison mean TE&#39;, y=1.1)</span>
 
-    <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">234</span><span class="p">)</span>  <span class="c1"># plot comparison adjacency matrix</span>
+    <span class="k">if</span> <span class="n">results</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">tail_comp</span> <span class="o">==</span> <span class="s1">&#39;two&#39;</span><span class="p">:</span>
+        <span class="n">cbar_label</span> <span class="o">=</span> <span class="s1">&#39;A != B&#39;</span>
+    <span class="k">elif</span> <span class="n">results</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">tail_comp</span> <span class="o">==</span> <span class="s1">&#39;one&#39;</span><span class="p">:</span>
+        <span class="n">cbar_label</span> <span class="o">=</span> <span class="s1">&#39;A &gt; B&#39;</span>
+    <span class="n">adj_matrix_comparison</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_adjacency_matrix</span><span class="p">(</span><span class="s1">&#39;comparison&#39;</span><span class="p">)</span>
+    <span class="n">_plot_adj_matrix</span><span class="p">(</span><span class="n">adj_matrix_comparison</span><span class="p">,</span>
+                     <span class="n">mat_color</span><span class="o">=</span><span class="s1">&#39;OrRd&#39;</span><span class="p">,</span> <span class="n">cbar_label</span><span class="o">=</span><span class="n">cbar_label</span><span class="p">,</span> <span class="n">cbar_stepsize</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Comparison </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cbar_label</span><span class="p">),</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.1</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">adj_matrix_te_diff_sign</span><span class="p">,</span> <span class="n">adj_matrix_pval</span><span class="p">,</span> <span class="n">f</span></div>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">235</span><span class="p">)</span>  <span class="c1"># plot abs. differences adjacency matrix</span>
+    <span class="n">adj_matrix_diff</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_adjacency_matrix</span><span class="p">(</span><span class="s1">&#39;diff_abs&#39;</span><span class="p">)</span>
+    <span class="n">_plot_adj_matrix</span><span class="p">(</span><span class="n">adj_matrix_diff</span><span class="p">,</span>
+                     <span class="n">mat_color</span><span class="o">=</span><span class="s1">&#39;BuGn&#39;</span><span class="p">,</span> <span class="n">cbar_label</span><span class="o">=</span><span class="s1">&#39;norm. CMI diff [a.u.]&#39;</span><span class="p">,</span>
+                     <span class="n">cbar_stepsize</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;CMI diff abs (A - B)&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.1</span><span class="p">)</span>
+
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">236</span><span class="p">)</span>  <span class="c1"># plot p-value adjacency matrix</span>
+    <span class="n">adj_matrix_pval</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_adjacency_matrix</span><span class="p">(</span><span class="s1">&#39;pvalue&#39;</span><span class="p">)</span>
+    <span class="n">_plot_adj_matrix</span><span class="p">(</span><span class="n">adj_matrix_pval</span><span class="p">,</span> <span class="n">mat_color</span><span class="o">=</span><span class="s1">&#39;Greys&#39;</span><span class="p">,</span>
+                     <span class="n">cbar_label</span><span class="o">=</span><span class="s1">&#39;p-value&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;p-value [%]&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">graph_union</span><span class="p">,</span> <span class="n">fig</span></div>
 </pre></div>
 
                 </div>
@@ -637,7 +500,7 @@
       <!-- footer -->
       <footer role="contentinfo">
           &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
-        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.3.6.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 3.5.1.
       </footer>
       <!-- /footer -->
 

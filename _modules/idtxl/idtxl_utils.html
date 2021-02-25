@@ -41,12 +41,13 @@
     <script type="text/javascript" src="../../_static/js/jquery.min.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../_static/js/bootstrap3.min.js"></script>
 <script type="text/javascript" src="../../_static/js/jquery.cookie.min.js"></script>
 <script type="text/javascript" src="../../_static/js/basicstrap.js"></script>
 <script type="text/javascript">
 </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
     <link rel="top" title="IDTxl 0.1 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
@@ -108,10 +109,10 @@
                 <div class="body">
                   
   <h1>Source code for idtxl.idtxl_utils</h1><div class="highlight"><pre>
-<span class="sd">&quot;&quot;&quot;Provide IDTxl utility functions.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Provide IDTxl utility functions.&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">pprint</span>
-<span class="kn">import</span> <span class="nn">copy</span> <span class="kn">as</span> <span class="nn">cp</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">copy</span> <span class="k">as</span> <span class="nn">cp</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 
 <div class="viewcode-block" id="swap_chars"><a class="viewcode-back" href="../../idtxl_helper.html#idtxl.idtxl_utils.swap_chars">[docs]</a><span class="k">def</span> <span class="nf">swap_chars</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">i_1</span><span class="p">,</span> <span class="n">i_2</span><span class="p">):</span>
@@ -150,8 +151,12 @@
 <span class="sd">        numpy array</span>
 <span class="sd">            standardised data</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">a</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">a</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">dimension</span><span class="p">))</span> <span class="o">/</span> <span class="n">a</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">dimension</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="n">df</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">a</span></div>
+    <span class="c1"># Don&#39;t divide by standard devitation if process is constant.</span>
+    <span class="n">a_sd</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">dimension</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="n">df</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">a_sd</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">-</span> <span class="n">a</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">dimension</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">a</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">dimension</span><span class="p">))</span> <span class="o">/</span> <span class="n">a_sd</span></div>
 
 
 <div class="viewcode-block" id="sort_descending"><a class="viewcode-back" href="../../idtxl_helper.html#idtxl.idtxl_utils.sort_descending">[docs]</a><span class="k">def</span> <span class="nf">sort_descending</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
@@ -208,28 +213,16 @@
 
 <div class="viewcode-block" id="autocorrelation"><a class="viewcode-back" href="../../idtxl_helper.html#idtxl.idtxl_utils.autocorrelation">[docs]</a><span class="k">def</span> <span class="nf">autocorrelation</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculate autocorrelation of a vector.&quot;&quot;&quot;</span>
-    <span class="c1"># TODO check this, function taken from here:</span>
-    <span class="c1"># http://stackoverflow.com/questions/14297012/</span>
-    <span class="c1">#       estimate-autocorrelation-using-python</span>
-    <span class="c1"># after Wikipedie:</span>
-    <span class="c1"># https://en.wikipedia.org/wiki/Autocorrelation#Estimation</span>
-
-    <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    n = len(x)</span>
-<span class="sd">    variance = x.var()</span>
-<span class="sd">    x = x - x.mean()</span>
-<span class="sd">    r = np.correlate(x, x, mode = &#39;full&#39;)[-n:]</span>
-<span class="sd">    assert n.allclose(r,</span>
-<span class="sd">                      N.array([(x[:n-k]*x[-(n-k):]).sum() for k in range(n)]))</span>
-<span class="sd">    result = r / (variance * (n.arange(n, 0, -1)))</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">return</span> <span class="mi">3</span></div>
+    <span class="k">pass</span></div>
 
 
 <div class="viewcode-block" id="discretise"><a class="viewcode-back" href="../../idtxl_helper.html#idtxl.idtxl_utils.discretise">[docs]</a><span class="k">def</span> <span class="nf">discretise</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">numBins</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Discretise continuous data into discrete values (with 0 as lowest)</span>
-<span class="sd">    by evenly partitioning the range of the data, one dimension at a time.</span>
-<span class="sd">    Adapted from infodynamics.utils.MatrixUtils.discretise() from JIDT by J.Lizier</span>
+    <span class="sd">&quot;&quot;&quot;Discretise continuous data.</span>
+
+<span class="sd">    Discretise continuous data into discrete values (with 0 as lowest) by</span>
+<span class="sd">    evenly partitioning the range of the data, one dimension at a time.</span>
+<span class="sd">    Adapted from infodynamics.utils.MatrixUtils.discretise() from JIDT by</span>
+<span class="sd">    J. Lizier.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        a : numpy array</span>
@@ -242,7 +235,6 @@
 <span class="sd">        numpy array</span>
 <span class="sd">            discretised data</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">num_samples</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
         <span class="c1"># It&#39;s a unidimensional array</span>
@@ -253,7 +245,8 @@
         <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">):</span>
             <span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">a</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="n">theMin</span><span class="p">)</span> <span class="o">/</span> <span class="n">binInterval</span><span class="p">)</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">==</span> <span class="n">numBins</span><span class="p">):</span>
-                <span class="c1"># This occurs for the maximum value; put it in the largest bin (base - 1)</span>
+                <span class="c1"># This occurs for the maximum value; put it in the largest</span>
+                <span class="c1"># bin (base - 1).</span>
                 <span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="n">discretised_values</span>
 
@@ -262,21 +255,25 @@
     <span class="n">discretised_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">num_samples</span><span class="p">,</span> <span class="n">num_dimensions</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
         <span class="c1"># Bin dimension v:</span>
-        <span class="n">theMin</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:,</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
-        <span class="n">theMax</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:,</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">theMin</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:,</span> <span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">theMax</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:,</span> <span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
         <span class="n">binInterval</span> <span class="o">=</span> <span class="p">(</span><span class="n">theMax</span> <span class="o">-</span> <span class="n">theMin</span><span class="p">)</span> <span class="o">/</span> <span class="n">numBins</span>
         <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">):</span>
-            <span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">a</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">v</span><span class="p">]</span> <span class="o">-</span> <span class="n">theMin</span><span class="p">)</span> <span class="o">/</span> <span class="n">binInterval</span><span class="p">)</span>
-            <span class="k">if</span> <span class="p">(</span><span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">v</span><span class="p">]</span> <span class="o">==</span> <span class="n">numBins</span><span class="p">):</span>
-                <span class="c1"># This occurs for the maximum value; put it in the largest bin (base - 1)</span>
-                <span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">v</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">a</span><span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">]</span> <span class="o">-</span> <span class="n">theMin</span><span class="p">)</span> <span class="o">/</span> <span class="n">binInterval</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">]</span> <span class="o">==</span> <span class="n">numBins</span><span class="p">):</span>
+                <span class="c1"># This occurs for the maximum value; put it in the largest bin</span>
+                <span class="c1"># (base - 1)</span>
+                <span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
     <span class="k">return</span> <span class="n">discretised_values</span></div>
 
 
 <div class="viewcode-block" id="discretise_max_ent"><a class="viewcode-back" href="../../idtxl_helper.html#idtxl.idtxl_utils.discretise_max_ent">[docs]</a><span class="k">def</span> <span class="nf">discretise_max_ent</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">numBins</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Discretise continuous data into discrete values (with 0 as lowest)</span>
-<span class="sd">    by making a maximum entropy partitioning, one dimension at a time.</span>
-<span class="sd">    Adapted from infodynamics.utils.MatrixUtils.discretiseMaxEntropy() from JIDT by J.Lizier</span>
+    <span class="sd">&quot;&quot;&quot;Discretise continuous data using maximum entropy partitioning.</span>
+
+<span class="sd">    Discretise continuous data into discrete values (with 0 as lowest) by</span>
+<span class="sd">    making a maximum entropy partitioning, one dimension at a time. Adapted</span>
+<span class="sd">    from infodynamics.utils.MatrixUtils.discretiseMaxEntropy() from JIDT by</span>
+<span class="sd">    J. Lizier.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        a : numpy array</span>
@@ -289,7 +286,6 @@
 <span class="sd">        numpy array</span>
 <span class="sd">            discretised data</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">num_samples</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
         <span class="c1"># It&#39;s a unidimensional array</span>
@@ -297,7 +293,7 @@
         <span class="n">cuttoff_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">numBins</span><span class="p">)</span>
         <span class="n">sorted_copy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
         <span class="k">for</span> <span class="nb">bin</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numBins</span><span class="p">):</span>
-            <span class="n">compartmentSize</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="nb">bin</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">num_samples</span><span class="p">)</span><span class="o">/</span><span class="n">numBins</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+            <span class="n">compartmentSize</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="nb">bin</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">num_samples</span><span class="p">)</span> <span class="o">/</span> <span class="n">numBins</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
             <span class="n">cuttoff_values</span><span class="p">[</span><span class="nb">bin</span><span class="p">]</span> <span class="o">=</span> <span class="n">sorted_copy</span><span class="p">[</span><span class="n">compartmentSize</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numBins</span><span class="p">):</span>
@@ -312,14 +308,14 @@
     <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_dimensions</span><span class="p">):</span>
         <span class="c1"># Bin dimension v:</span>
         <span class="n">cuttoff_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">numBins</span><span class="p">)</span>
-        <span class="n">sorted_copy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">a</span><span class="p">[:,</span><span class="n">v</span><span class="p">])</span>
+        <span class="n">sorted_copy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">a</span><span class="p">[:,</span> <span class="n">v</span><span class="p">])</span>
         <span class="k">for</span> <span class="nb">bin</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numBins</span><span class="p">):</span>
-            <span class="n">compartmentSize</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="nb">bin</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">num_samples</span><span class="p">)</span><span class="o">/</span><span class="n">numBins</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+            <span class="n">compartmentSize</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="nb">bin</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">num_samples</span><span class="p">)</span> <span class="o">/</span> <span class="n">numBins</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
             <span class="n">cuttoff_values</span><span class="p">[</span><span class="nb">bin</span><span class="p">]</span> <span class="o">=</span> <span class="n">sorted_copy</span><span class="p">[</span><span class="n">compartmentSize</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numBins</span><span class="p">):</span>
-                <span class="k">if</span> <span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">v</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">cuttoff_values</span><span class="p">[</span><span class="n">m</span><span class="p">]):</span>
-                    <span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">cuttoff_values</span><span class="p">[</span><span class="n">m</span><span class="p">]):</span>
+                    <span class="n">discretised_values</span><span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span>
                     <span class="k">break</span>
     <span class="k">return</span> <span class="n">discretised_values</span></div>
 
@@ -393,46 +389,48 @@
             <span class="n">multiplier</span> <span class="o">=</span> <span class="n">multiplier</span> <span class="o">*</span> <span class="n">numBins</span>
             <span class="k">if</span> <span class="n">multiplier</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="c1"># Multiplier has overflown</span>
-                <span class="k">raise</span> <span class="ne">ArithmeticError</span><span class="p">(</span><span class="s1">&#39;Combination of numBins and number of dimensions of a leads to overflow in making unidimensional array&#39;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ArithmeticError</span><span class="p">(</span>
+                    <span class="s1">&#39;Combination of numBins and number of dimensions of a &#39;</span>
+                    <span class="s1">&#39;leads to overflow in making unidimensional array&#39;</span><span class="p">)</span>
         <span class="n">combined_values</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">combined_value</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">combined_values</span></div>
 
 
-<div class="viewcode-block" id="combine_results"><a class="viewcode-back" href="../../idtxl_helper.html#idtxl.idtxl_utils.combine_results">[docs]</a><span class="k">def</span> <span class="nf">combine_results</span><span class="p">(</span><span class="o">*</span><span class="n">results</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Combine partial results into single results dictionary.</span>
+<div class="viewcode-block" id="equal_dicts"><a class="viewcode-back" href="../../idtxl_helper.html#idtxl.idtxl_utils.equal_dicts">[docs]</a><span class="k">def</span> <span class="nf">equal_dicts</span><span class="p">(</span><span class="n">dict_1</span><span class="p">,</span> <span class="n">dict_2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test two dictionaries for equality.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">dict_1</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">!=</span> <span class="n">dict_2</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">dict_1</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dict_1</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">dict_1</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">!=</span> <span class="n">dict_2</span><span class="p">[</span><span class="n">k</span><span class="p">])</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dict_1</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">!=</span> <span class="n">dict_2</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
 
-<span class="sd">    Combine a list of partial network inference results into a single results</span>
-<span class="sd">    dictionary (e.g., results from analysis parallelized over target nodes).</span>
-<span class="sd">    Raise an error if duplicate keys, i.e., duplicate targets, occur in</span>
-<span class="sd">    partial results. Remove FDR-corrections from partial results before</span>
-<span class="sd">    combining them. Corrections performed on the basis of parts of the network</span>
-<span class="sd">    a not valid for the combined network.</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        results : list of dicts</span>
-<span class="sd">            network inference results from .analyse_network methods, where each</span>
-<span class="sd">            dict entry represents results for one target node</span>
+<div class="viewcode-block" id="conflicting_entries"><a class="viewcode-back" href="../../idtxl_helper.html#idtxl.idtxl_utils.conflicting_entries">[docs]</a><span class="k">def</span> <span class="nf">conflicting_entries</span><span class="p">(</span><span class="n">dict_1</span><span class="p">,</span> <span class="n">dict_2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test two dictionaries for unequal entries.</span>
 
-<span class="sd">    Returns:</span>
-<span class="sd">        dict</span>
-<span class="sd">            combined results dict</span>
+<span class="sd">    Note that only keys that are present in both dicts are compared. If one</span>
+<span class="sd">    dictionary contains an entry not present in the other dictionary, the</span>
+<span class="sd">    test passes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
-        <span class="c1"># Remove potential partial FDR-corrected results. These are no longer</span>
-        <span class="c1"># valid for the combined network.</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">del</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;fdr_corrected&#39;</span><span class="p">]</span>
-            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Removing FDR-corrected results.&#39;</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="k">pass</span>
-        <span class="c1"># Check for duplicate keys in the partial results.</span>
-        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">res</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Duplicate keys.&#39;</span><span class="p">)</span>
-        <span class="n">res</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">cp</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">res</span><span class="p">)</span></div>
+    <span class="n">d1_keys</span> <span class="o">=</span> <span class="n">dict_1</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="n">d2_keys</span> <span class="o">=</span> <span class="n">dict_2</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="n">intersect_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">d1_keys</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">d2_keys</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">intersect_keys</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dict_1</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">!=</span> <span class="n">dict_2</span><span class="p">[</span><span class="n">k</span><span class="p">])</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Unequal entries for key &#39;&#39;</span><span class="si">{0}</span><span class="s1">&#39;&#39;: dict_1: &#39;&#39;</span><span class="si">{1}</span><span class="s1">&#39;&#39;, dict_2:&#39;</span>
+                  <span class="s1">&#39; &#39;&#39;</span><span class="si">{2}</span><span class="s1">&#39;&#39;.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">dict_1</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">dict_2</span><span class="p">[</span><span class="n">k</span><span class="p">]))</span>
+            <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
 
+
+<div class="viewcode-block" id="calculate_mi"><a class="viewcode-back" href="../../idtxl_helper.html#idtxl.idtxl_utils.calculate_mi">[docs]</a><span class="k">def</span> <span class="nf">calculate_mi</span><span class="p">(</span><span class="n">corr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate mutual information from correlation coefficient.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">corr</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span></div>
 </pre></div>
 
                 </div>
@@ -486,7 +484,7 @@
       <!-- footer -->
       <footer role="contentinfo">
           &copy; Copyright 2016, Patricia Wollstadt, Michael Wibral, Joe T. Lizier, Finn Connor, Raul Vicente.
-        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.3.6.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 3.5.1.
       </footer>
       <!-- /footer -->
 

@@ -1,7 +1,0 @@
-idtxl.estimators_fast_pid_ext_rep module
-========================================
-
-.. automodule:: idtxl.estimators_fast_pid_ext_rep
-    :members:
-    :undoc-members:
-    :show-inheritance:

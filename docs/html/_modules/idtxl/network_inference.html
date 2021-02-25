@@ -1,18 +1,17 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>idtxl.network_inference &#8212; IDTxl 1.0 documentation</title>
-    <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -33,7 +32,8 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">idtxl.network_inference</a></li> 
       </ul>
     </div>  
 
@@ -145,8 +145,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;candidate set: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span><span class="n">candidate_set</span><span class="p">)))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;candidate set: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span><span class="n">candidate_set</span><span class="p">)))</span>
         <span class="k">while</span> <span class="n">candidate_set</span><span class="p">:</span>
             <span class="c1"># Get realisations for all candidates.</span>
             <span class="n">cand_real</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">,</span>
@@ -167,9 +167,9 @@
                 <span class="c1"># The algorithm cannot continue here, so</span>
                 <span class="c1">#  we&#39;ll terminate the search for more candidates,</span>
                 <span class="c1">#  though those identified already remain valid</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;AlgorithmExhaustedError encountered in &#39;</span>
-                    <span class="s1">&#39;estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Halting current estimation set.&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s1">&#39;AlgorithmExhaustedError encountered in estimations: </span><span class="si">{}</span><span class="s1">. &#39;</span>
+                    <span class="s1">&#39;Halting current estimation set.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">))</span>
                 <span class="c1"># For now we don&#39;t need a stack trace:</span>
                 <span class="c1"># traceback.print_tb(aee.__traceback__)</span>
                 <span class="k">break</span>
@@ -181,14 +181,14 @@
                 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;testing candidate: </span><span class="si">{0}</span><span class="s1"> &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">([</span><span class="n">max_candidate</span><span class="p">])[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">significant</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">max_statistic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">candidate_set</span><span class="p">,</span>
-                                              <span class="n">te_max_candidate</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">significant</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">max_statistic</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">candidate_set</span><span class="p">,</span> <span class="n">te_max_candidate</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">except</span> <span class="n">ex</span><span class="o">.</span><span class="n">AlgorithmExhaustedError</span> <span class="k">as</span> <span class="n">aee</span><span class="p">:</span>
-                <span class="c1"># The algorithm cannot continue here, so</span>
-                <span class="c1">#  we&#39;ll terminate the check of significance for this candidate,</span>
-                <span class="c1">#  though those identified already remain valid</span>
+                <span class="c1"># The algorithm cannot continue here, so we&#39;ll terminate the</span>
+                <span class="c1"># check of significance for this candidate, though those</span>
+                <span class="c1"># identified already remain valid</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;AlgorithmExhaustedError encountered in &#39;</span>
-                    <span class="s1">&#39;estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                      <span class="s1">&#39;estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Halting candidate max stats test&#39;</span><span class="p">)</span>
                 <span class="c1"># For now we don&#39;t need a stack trace:</span>
                 <span class="c1"># traceback.print_tb(aee.__traceback__)</span>
@@ -206,6 +206,8 @@
                         <span class="p">[</span><span class="n">max_candidate</span><span class="p">],</span>
                         <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">,</span>
                                               <span class="p">[</span><span class="n">max_candidate</span><span class="p">])[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;write_ckp&#39;</span><span class="p">]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_write_checkpoint</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; -- not significant&#39;</span><span class="p">)</span>
@@ -213,7 +215,25 @@
         <span class="k">return</span> <span class="n">success</span>
 
     <span class="k">def</span> <span class="nf">_force_conditionals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cond</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Enforce a given conditioning set.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Enforce a given conditioning set.</span>
+
+<span class="sd">        Manually add variables to the conditioning set before analysis. Added</span>
+<span class="sd">        variables are not tested in the inclusion step of the algorithm, but</span>
+<span class="sd">        are tested in the pruning step and may be removed there. Source and</span>
+<span class="sd">        target past and current variables can be included.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            cond : str | dict | list | tuple</span>
+<span class="sd">                variables added to the conditioning set, &#39;faes&#39; adds all source</span>
+<span class="sd">                variables with zero-lag to condition out shared information due</span>
+<span class="sd">                to instantaneous mixing, a dict can contain a list of variables</span>
+<span class="sd">                for each target ({target ind: [(source ind, lag), ...]}), a list</span>
+<span class="sd">                of the same variables added for each target ([(source ind, lag),</span>
+<span class="sd">                ...]), a tuple with a single variable that is added for each</span>
+<span class="sd">                target</span>
+<span class="sd">            data : Data instance</span>
+<span class="sd">                input data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">cond</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
             <span class="c1"># Get realisations and indices of source variables with lag 0. Note</span>
             <span class="c1"># that _define_candidates returns tuples with absolute indices and</span>
@@ -229,6 +249,11 @@
             <span class="c1"># lags to absolute sample indices and add variables.</span>
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">cond</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">tuple</span><span class="p">:</span>  <span class="c1"># easily add single variable</span>
                 <span class="n">cond</span> <span class="o">=</span> <span class="p">[</span><span class="n">cond</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">cond</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>  <span class="c1"># add conditioning variables per target</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">cond</span> <span class="o">=</span> <span class="n">cond</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">]</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="k">return</span>  <span class="c1"># no additional variables for the current target</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Adding the following variables to the conditioning set: &#39;</span>
                   <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cond</span><span class="p">))</span>
             <span class="n">cond_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lag_to_idx</span><span class="p">(</span><span class="n">cond</span><span class="p">)</span>
@@ -322,6 +347,11 @@
         <span class="c1"># Check the permutation type and no. permutations requested by the</span>
         <span class="c1"># user. This tests if there is sufficient data to do all tests.</span>
         <span class="c1"># surrogates.check_permutations(self, data)</span>
+
+        <span class="c1"># Check and set defaults for checkpointing. If requested, initialise</span>
+        <span class="c1"># checkpointing.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_checkpointing_defaults</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
 
         <span class="c1"># Reset all attributes to inital values if the instance of</span>
         <span class="c1"># MultivariateTE has been used before.</span>
@@ -441,6 +471,11 @@
         <span class="c1"># user. This tests if there is sufficient data to do all tests.</span>
         <span class="c1"># surrogates.check_permutations(self, data)</span>
 
+        <span class="c1"># Check and set defaults for checkpointing. If requested, initialise</span>
+        <span class="c1"># checkpointing.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_checkpointing_defaults</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+
         <span class="c1"># Reset all attributes to inital values if the instance of</span>
         <span class="c1"># MultivariateTE has been used before.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="p">:</span>
@@ -538,11 +573,12 @@
         <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_set</span><span class="p">:</span>
             <span class="n">candidate_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_define_candidates</span><span class="p">([</span><span class="n">source</span><span class="p">],</span> <span class="n">samples</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;candidate set current source: </span><span class="si">{0}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span><span class="n">candidate_set</span><span class="p">)),</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;candidate set current source: </span><span class="si">{0}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span><span class="n">candidate_set</span><span class="p">)),</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
 
             <span class="c1"># Initialise conditional realisations. This gets updated if sources</span>
-            <span class="c1"># are selected in the iterative conditioning.</span>
+            <span class="c1"># are selected in the iterative conditioning. For MI calculation</span>
+            <span class="c1"># this is None.</span>
             <span class="n">conditional_realisations</span> <span class="o">=</span> <span class="n">conditional_realisations_target</span>
 
             <span class="k">while</span> <span class="n">candidate_set</span><span class="p">:</span>
@@ -566,7 +602,7 @@
                     <span class="c1">#  we&#39;ll terminate the search for more candidates,</span>
                     <span class="c1">#  though those identified already remain valid</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;AlgorithmExhaustedError encountered in &#39;</span>
-                        <span class="s1">&#39;estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                          <span class="s1">&#39;estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Halting current estimation set.&#39;</span><span class="p">)</span>
                     <span class="c1"># For now we don&#39;t need a stack trace:</span>
                     <span class="c1"># traceback.print_tb(aee.__traceback__)</span>
@@ -584,10 +620,10 @@
                         <span class="n">te_max_candidate</span><span class="p">,</span> <span class="n">conditional_realisations</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="k">except</span> <span class="n">ex</span><span class="o">.</span><span class="n">AlgorithmExhaustedError</span> <span class="k">as</span> <span class="n">aee</span><span class="p">:</span>
                     <span class="c1"># The algorithm cannot continue here, so</span>
-                    <span class="c1">#  we&#39;ll terminate the significance check for this candidate,</span>
-                    <span class="c1">#  though those identified already remain valid</span>
+                    <span class="c1"># we&#39;ll terminate the significance check for this</span>
+                    <span class="c1"># candidate, though those identified already remain valid.</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;AlgorithmExhaustedError encountered in &#39;</span>
-                        <span class="s1">&#39;estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                          <span class="s1">&#39;estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Halting candidate max stats test&#39;</span><span class="p">)</span>
                     <span class="c1"># For now we don&#39;t need a stack trace:</span>
                     <span class="c1"># traceback.print_tb(aee.__traceback__)</span>
@@ -611,6 +647,9 @@
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">conditional_realisations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span>
                             <span class="n">conditional_realisations</span><span class="p">,</span> <span class="n">candidate_realisations</span><span class="p">))</span>
+
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;write_ckp&#39;</span><span class="p">]:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_write_checkpoint</span><span class="p">()</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
                         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; -- not significant&#39;</span><span class="p">)</span>
@@ -643,6 +682,7 @@
             <span class="n">conditional_realisations_target</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_target_realisations</span><span class="p">)</span>
             <span class="n">cond_target_dim</span> <span class="o">=</span> <span class="n">conditional_realisations_target</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
         <span class="c1"># Prune all selected sources separately. This way, the conditioning</span>
         <span class="c1"># uses past variables from the current source only (opposed to past</span>
         <span class="c1"># variables from all sources as in multivariate network inference).</span>
@@ -650,7 +690,8 @@
             <span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">])</span>
         <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">significant_sources</span><span class="p">:</span>
             <span class="c1"># Find selected past variables for current source</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;selected vars sources </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;selected vars sources </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">))</span>
             <span class="n">source_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span> <span class="k">if</span>
                            <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">source</span><span class="p">]</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;selected candidates current source: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -660,7 +701,7 @@
             <span class="c1"># maximum statistic for this variable.</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">source_vars</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; -- significant&#39;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; -- significant&#39;</span><span class="p">)</span>
                 <span class="k">continue</span>
 
             <span class="c1"># Find the candidate with the minimum TE/MI into the target.</span>
@@ -712,10 +753,10 @@
                     <span class="c1"># The algorithm cannot continue here, so</span>
                     <span class="c1">#  we&#39;ll terminate the pruning check,</span>
                     <span class="c1">#  assuming that we need not prune any more</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;AlgorithmExhaustedError encountered in &#39;</span>
-                        <span class="s1">&#39;estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Halting current pruning and allowing others to&#39;</span>
-                        <span class="s1">&#39; remain.&#39;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span>
+                        <span class="s1">&#39;AlgorithmExhaustedError encountered in estimations: &#39;</span>
+                        <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">. Halting current estimation set.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">))</span>
                     <span class="c1"># For now we don&#39;t need a stack trace:</span>
                     <span class="c1"># traceback.print_tb(aee.__traceback__)</span>
                     <span class="k">break</span>
@@ -752,9 +793,9 @@
                     <span class="c1">#  we&#39;ll terminate the pruning check,</span>
                     <span class="c1">#  assuming that we need not prune any more</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;AlgorithmExhaustedError encountered in &#39;</span>
-                        <span class="s1">&#39;estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                          <span class="s1">&#39;estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Halting current pruning and allowing others to&#39;</span>
-                        <span class="s1">&#39; remain.&#39;</span><span class="p">)</span>
+                          <span class="s1">&#39; remain.&#39;</span><span class="p">)</span>
                     <span class="c1"># For now we don&#39;t need a stack trace:</span>
                     <span class="c1"># traceback.print_tb(aee.__traceback__)</span>
                     <span class="k">break</span>
@@ -768,6 +809,8 @@
                     <span class="n">source_vars</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">temp_te</span><span class="p">))</span>
                     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">source_vars</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No remaining candidates after pruning.&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;write_ckp&#39;</span><span class="p">]:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_write_checkpoint</span><span class="p">()</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
                         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; -- significant&#39;</span><span class="p">)</span>
@@ -794,7 +837,7 @@
                 <span class="c1"># The algorithm cannot continue here, so</span>
                 <span class="c1">#  we&#39;ll set the results to zero</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;AlgorithmExhaustedError encountered in &#39;</span>
-                    <span class="s1">&#39;estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                      <span class="s1">&#39;estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Halting omnibus test and setting to not significant.&#39;</span><span class="p">)</span>
                 <span class="c1"># For now we don&#39;t need a stack trace:</span>
                 <span class="c1"># traceback.print_tb(aee.__traceback__)</span>
@@ -834,7 +877,7 @@
                     <span class="c1">#  it seems ok to let everything through still but</span>
                     <span class="c1">#  just write a 0 for final values</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;AlgorithmExhaustedError encountered in &#39;</span>
-                        <span class="s1">&#39;final_conditional estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                          <span class="s1">&#39;final_conditional estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Halting final_conditional estimations&#39;</span><span class="p">)</span>
                     <span class="c1"># For now we don&#39;t need a stack trace:</span>
                     <span class="c1"># traceback.print_tb(aee.__traceback__)</span>
@@ -939,9 +982,9 @@
                 <span class="c1">#  we&#39;ll terminate the pruning check,</span>
                 <span class="c1">#  assuming that we need not prune any more</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;AlgorithmExhaustedError encountered in &#39;</span>
-                    <span class="s1">&#39;estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                      <span class="s1">&#39;estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Halting current pruning and allowing others to&#39;</span>
-                    <span class="s1">&#39; remain.&#39;</span><span class="p">)</span>
+                      <span class="s1">&#39; remain.&#39;</span><span class="p">)</span>
                 <span class="c1"># For now we don&#39;t need a stack trace:</span>
                 <span class="c1"># traceback.print_tb(aee.__traceback__)</span>
                 <span class="k">break</span>
@@ -970,9 +1013,9 @@
                 <span class="c1">#  we&#39;ll terminate the pruning check,</span>
                 <span class="c1">#  assuming that we need not prune any more</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;AlgorithmExhaustedError encountered in &#39;</span>
-                    <span class="s1">&#39;estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                      <span class="s1">&#39;estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Halting current pruning and allowing others to&#39;</span>
-                    <span class="s1">&#39; remain.&#39;</span><span class="p">)</span>
+                      <span class="s1">&#39; remain.&#39;</span><span class="p">)</span>
                 <span class="c1"># For now we don&#39;t need a stack trace:</span>
                 <span class="c1"># traceback.print_tb(aee.__traceback__)</span>
                 <span class="k">break</span>
@@ -986,6 +1029,8 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_remove_selected_var</span><span class="p">(</span><span class="n">min_candidate</span><span class="p">)</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No remaining candidates after pruning.&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;write_ckp&#39;</span><span class="p">]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_write_checkpoint</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; -- significant&#39;</span><span class="p">)</span>
@@ -1012,9 +1057,9 @@
             <span class="k">except</span> <span class="n">ex</span><span class="o">.</span><span class="n">AlgorithmExhaustedError</span> <span class="k">as</span> <span class="n">aee</span><span class="p">:</span>
                 <span class="c1"># The algorithm cannot continue here, so</span>
                 <span class="c1">#  we&#39;ll set the results to zero</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;AlgorithmExhaustedError encountered in &#39;</span>
-                    <span class="s1">&#39;estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Halting omnibus test and setting to not significant.&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s1">&#39;AlgorithmExhaustedError encountered in estimations: </span><span class="si">{}</span><span class="s1">. &#39;</span>
+                    <span class="s1">&#39;Halting current estimation set.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">))</span>
                 <span class="c1"># For now we don&#39;t need a stack trace:</span>
                 <span class="c1"># traceback.print_tb(aee.__traceback__)</span>
                 <span class="n">stat</span> <span class="o">=</span> <span class="mi">0</span>
@@ -1035,10 +1080,6 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">statistic_sign_sources</span> <span class="o">=</span> <span class="n">stat</span>
                 <span class="c1"># Calculate TE for all links in the network. Calculate local TE</span>
                 <span class="c1"># if requested by the user.</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span> <span class="o">==</span> <span class="s1">&#39;te&#39;</span><span class="p">:</span>
-                    <span class="n">conditioning</span> <span class="o">=</span> <span class="s1">&#39;target&#39;</span>
-                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span> <span class="o">==</span> <span class="s1">&#39;mi&#39;</span><span class="p">:</span>
-                    <span class="n">conditioning</span> <span class="o">=</span> <span class="s1">&#39;none&#39;</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">statistic_single_link</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_single_link</span><span class="p">(</span>
                         <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
@@ -1046,7 +1087,7 @@
                         <span class="n">source_vars</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">,</span>
                         <span class="n">target_vars</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span><span class="p">,</span>
                         <span class="n">sources</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span>
-                        <span class="n">conditioning</span><span class="o">=</span><span class="n">conditioning</span><span class="p">)</span>
+                        <span class="n">conditioning</span><span class="o">=</span><span class="s1">&#39;full&#39;</span><span class="p">)</span>
                 <span class="k">except</span> <span class="n">ex</span><span class="o">.</span><span class="n">AlgorithmExhaustedError</span> <span class="k">as</span> <span class="n">aee</span><span class="p">:</span>
                     <span class="c1"># The algorithm cannot continue here, so</span>
                     <span class="c1">#  we&#39;ll terminate the computation of single link stats.</span>
@@ -1054,7 +1095,7 @@
                     <span class="c1">#  it seems ok to let everything through still but</span>
                     <span class="c1">#  just write a 0 for final values</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;AlgorithmExhaustedError encountered in &#39;</span>
-                        <span class="s1">&#39;final_conditional estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                          <span class="s1">&#39;final_conditional estimations: &#39;</span> <span class="o">+</span> <span class="n">aee</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Halting final_conditional estimations&#39;</span><span class="p">)</span>
                     <span class="c1"># For now we don&#39;t need a stack trace:</span>
                     <span class="c1"># traceback.print_tb(aee.__traceback__)</span>
@@ -1068,23 +1109,22 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">statistic_single_link</span> <span class="o">=</span> <span class="kc">None</span></div>
 </pre></div>
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -1099,12 +1139,13 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">idtxl.network_inference</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.1.
     </div>
   </body>
 </html>

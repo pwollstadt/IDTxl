@@ -1,7 +1,0 @@
-idtxl.data module
-=================
-
-.. automodule:: idtxl.data
-    :members:
-    :undoc-members:
-    :show-inheritance:
