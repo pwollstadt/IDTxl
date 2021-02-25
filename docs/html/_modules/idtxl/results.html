@@ -1,18 +1,17 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>idtxl.results &#8212; IDTxl 1.0 documentation</title>
-    <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -33,7 +32,8 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">idtxl.results</a></li> 
       </ul>
     </div>  
 
@@ -54,7 +54,7 @@
 <span class="n">MIN_INT</span> <span class="o">=</span> <span class="o">-</span><span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># minimum integer for initializing adj. matrix</span>
 
 
-<div class="viewcode-block" id="DotDict"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.DotDict">[docs]</a><span class="k">class</span> <span class="nc">DotDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">DotDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Dictionary with dot-notation access to values.</span>
 
 <span class="sd">    Provides the same functionality as a regular dict, but also allows</span>
@@ -95,42 +95,42 @@
 
     <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
         <span class="c1"># For un-pickling the object</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
         <span class="c1"># self.__dict__ = self</span>
 
 
-<div class="viewcode-block" id="AdjacencyMatrix"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.AdjacencyMatrix">[docs]</a><span class="k">class</span> <span class="nc">AdjacencyMatrix</span><span class="p">():</span>
+<span class="k">class</span> <span class="nc">AdjacencyMatrix</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;Adjacency matrix representing inferred networks.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">weight_type</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_edge_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_weight_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">weight_type</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">weight_type</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_weight_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span>
-        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">weight_type</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_weight_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">weight_type</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_weight_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span>
         <span class="k">elif</span> <span class="n">weight_type</span> <span class="ow">is</span> <span class="nb">bool</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_weight_type</span> <span class="o">=</span> <span class="n">weight_type</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unknown weight data type </span><span class="si">{0}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                 <span class="n">weight_type</span><span class="p">))</span>
 
-<div class="viewcode-block" id="AdjacencyMatrix.n_nodes"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.AdjacencyMatrix.n_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">n_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">n_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return number of nodes.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-<div class="viewcode-block" id="AdjacencyMatrix.n_edges"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.AdjacencyMatrix.n_edges">[docs]</a>    <span class="k">def</span> <span class="nf">n_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_matrix</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span></div>
+    <span class="k">def</span> <span class="nf">n_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_matrix</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 
-<div class="viewcode-block" id="AdjacencyMatrix.add_edge"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.AdjacencyMatrix.add_edge">[docs]</a>    <span class="k">def</span> <span class="nf">add_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">weight</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">add_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">weight</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add weighted edge (i, j) to adjacency matrix.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">weight</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight_type</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
                 <span class="s1">&#39;Can not add weight of type </span><span class="si">{0}</span><span class="s1"> to adjacency matrix of type &#39;</span>
                 <span class="s1">&#39;</span><span class="si">{1}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">weight</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight_type</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_edge_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_weight_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">weight</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_weight_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">weight</span>
 
-<div class="viewcode-block" id="AdjacencyMatrix.add_edge_list"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.AdjacencyMatrix.add_edge_list">[docs]</a>    <span class="k">def</span> <span class="nf">add_edge_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i_list</span><span class="p">,</span> <span class="n">j_list</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">add_edge_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i_list</span><span class="p">,</span> <span class="n">j_list</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add multiple weighted edges (i, j) to adjacency matrix.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">i_list</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">j_list</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
@@ -139,14 +139,14 @@
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="s1">&#39;Edge weights must have same length as edge indices.&#39;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">weight</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">i_list</span><span class="p">,</span> <span class="n">j_list</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
 
-<div class="viewcode-block" id="AdjacencyMatrix.print_matrix"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.AdjacencyMatrix.print_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">print_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">print_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Print weight and edge matrix.&quot;&quot;&quot;</span>
         <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_edge_matrix</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_weight_matrix</span><span class="p">)</span></div>
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_weight_matrix</span><span class="p">)</span>
 
-<div class="viewcode-block" id="AdjacencyMatrix.get_edge_list"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.AdjacencyMatrix.get_edge_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_edge_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_edge_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return list of weighted edges.</span>
 
 <span class="sd">        Returns</span>
@@ -160,10 +160,10 @@
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]:</span>
                     <span class="n">edge_list</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
                     <span class="n">ind</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="k">return</span> <span class="n">edge_list</span></div></div>
+        <span class="k">return</span> <span class="n">edge_list</span>
 
 
-<div class="viewcode-block" id="Results"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.Results">[docs]</a><span class="k">class</span> <span class="nc">Results</span><span class="p">():</span>
+<span class="k">class</span> <span class="nc">Results</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;Parent class for results of network analysis algorithms.</span>
 
 <span class="sd">    Provide a container for results of network analysis algorithms, e.g.,</span>
@@ -229,7 +229,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="Results.combine_results"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.Results.combine_results">[docs]</a>    <span class="k">def</span> <span class="nf">combine_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">results</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">combine_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">results</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Combine multiple (partial) results objects.</span>
 
 <span class="sd">        Combine a list of partial network analysis results into a single</span>
@@ -282,8 +282,7 @@
                         <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
                             <span class="s1">&#39;Did not find any method attributes to combine &#39;</span>
                             <span class="s1">&#39;(.single_proces or ._single_target).&#39;</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_add_single_result</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">results_to_add</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span></div></div>
-
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_single_result</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">results_to_add</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ResultsSingleProcessAnalysis"><a class="viewcode-back" href="../../idtxl_results_class.html#idtxl.results.ResultsSingleProcessAnalysis">[docs]</a><span class="k">class</span> <span class="nc">ResultsSingleProcessAnalysis</span><span class="p">(</span><span class="n">Results</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Store results of single process analysis.</span>
@@ -436,7 +435,7 @@
         <span class="k">return</span> <span class="n">significant_processes</span></div></div>
 
 
-<div class="viewcode-block" id="ResultsNetworkAnalysis"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.ResultsNetworkAnalysis">[docs]</a><span class="k">class</span> <span class="nc">ResultsNetworkAnalysis</span><span class="p">(</span><span class="n">Results</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">ResultsNetworkAnalysis</span><span class="p">(</span><span class="n">Results</span><span class="p">):</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_realisations</span><span class="p">,</span> <span class="n">normalised</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_realisations</span><span class="p">,</span> <span class="n">normalised</span><span class="p">)</span>
@@ -460,7 +459,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_single_target</span><span class="p">[</span><span class="n">target</span><span class="p">]</span> <span class="o">=</span> <span class="n">DotDict</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">targets_analysed</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_single_target</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
-<div class="viewcode-block" id="ResultsNetworkAnalysis.get_single_target"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.ResultsNetworkAnalysis.get_single_target">[docs]</a>    <span class="k">def</span> <span class="nf">get_single_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_single_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return results for a single target in the network.</span>
 
 <span class="sd">        Return results for individual processes, contains for each process</span>
@@ -523,9 +522,9 @@
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;No results have been added.&#39;</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="s1">&#39;No results for target </span><span class="si">{0}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target</span><span class="p">))</span></div>
+                    <span class="s1">&#39;No results for target </span><span class="si">{0}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target</span><span class="p">))</span>
 
-<div class="viewcode-block" id="ResultsNetworkAnalysis.get_target_sources"><a class="viewcode-back" href="../../idtxl.html#idtxl.results.ResultsNetworkAnalysis.get_target_sources">[docs]</a>    <span class="k">def</span> <span class="nf">get_target_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_target_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return list of sources (parents) for given target.</span>
 
 <span class="sd">        Args:</span>
@@ -536,7 +535,7 @@
 <span class="sd">                (default=True)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_single_target</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">fdr</span><span class="p">)[</span><span class="s1">&#39;selected_vars_sources&#39;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">v</span><span class="p">]))</span></div></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">v</span><span class="p">]))</span>
 
 
 <div class="viewcode-block" id="ResultsNetworkInference"><a class="viewcode-back" href="../../idtxl_results_class.html#idtxl.results.ResultsNetworkInference">[docs]</a><span class="k">class</span> <span class="nc">ResultsNetworkInference</span><span class="p">(</span><span class="n">ResultsNetworkAnalysis</span><span class="p">):</span>
@@ -758,7 +757,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_print_edge_list</span><span class="p">(</span><span class="n">adjacency_matrix</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="ResultsPartialInformationDecomposition"><a class="viewcode-back" href="../../idtxl_results_class.html#idtxl.results.ResultsPartialInformationDecomposition">[docs]</a><span class="k">class</span> <span class="nc">ResultsPartialInformationDecomposition</span><span class="p">(</span><span class="n">ResultsNetworkAnalysis</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">ResultsPID</span><span class="p">(</span><span class="n">ResultsNetworkAnalysis</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Store results of Partial Information Decomposition (PID) analysis.</span>
 
 <span class="sd">    Provide a container for results of Partial Information Decomposition (PID)</span>
@@ -795,7 +794,7 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_realisations</span><span class="p">,</span> <span class="n">normalised</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_realisations</span><span class="p">,</span> <span class="n">normalised</span><span class="p">)</span>
 
-<div class="viewcode-block" id="ResultsPartialInformationDecomposition.get_single_target"><a class="viewcode-back" href="../../idtxl_results_class.html#idtxl.results.ResultsPartialInformationDecomposition.get_single_target">[docs]</a>    <span class="k">def</span> <span class="nf">get_single_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_single_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return results for a single target in the network.</span>
 
 <span class="sd">        Results for single targets include for each target</span>
@@ -823,8 +822,78 @@
 <span class="sd">                (result[&#39;selected_vars_sources&#39;]) or via dot-notation</span>
 <span class="sd">                (result.selected_vars_sources).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">ResultsPartialInformationDecomposition</span><span class="p">,</span>
-                     <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get_single_target</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">ResultsPID</span><span class="p">,</span>
+                     <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get_single_target</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">ResultsMultivariatePID</span><span class="p">(</span><span class="n">ResultsNetworkAnalysis</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Store results of Multivariate Partial Information Decomposition (PID)</span>
+<span class="sd">analysis.</span>
+
+<span class="sd">    Provide a container for results of Multivariate Partial Information</span>
+<span class="sd">    Decomposition (PID) algorithms.</span>
+
+<span class="sd">    Note that for convenience all dictionaries in this class can additionally</span>
+<span class="sd">    be accessed using dot-notation:</span>
+
+<span class="sd">    &gt;&gt;&gt; res_pid._single_target[2].source_1</span>
+
+<span class="sd">    or</span>
+
+<span class="sd">    &gt;&gt;&gt; res_pid._single_target[2].[&#39;source_1&#39;].</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        settings : dict</span>
+<span class="sd">            settings used for estimation of information theoretic measures and</span>
+<span class="sd">            statistical testing</span>
+<span class="sd">        data_properties : dict</span>
+<span class="sd">            data properties, contains</span>
+
+<span class="sd">                - n_nodes : int - total number of nodes in the network</span>
+<span class="sd">                - n_realisations : int - number of samples available for</span>
+<span class="sd">                  analysis given the settings (e.g., a high maximum lag used in</span>
+<span class="sd">                  network inference, results in fewer data points available for</span>
+<span class="sd">                  estimation)</span>
+<span class="sd">                - normalised : bool - indicates if data were z-standardised</span>
+<span class="sd">                  before the estimation</span>
+
+<span class="sd">        targets_analysed : list</span>
+<span class="sd">            list of analysed targets</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_realisations</span><span class="p">,</span> <span class="n">normalised</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_realisations</span><span class="p">,</span> <span class="n">normalised</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_single_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return results for a single target in the network.</span>
+
+<span class="sd">        Results for single targets include for each target</span>
+
+<span class="sd">        - source_i : tuple - source variable i</span>
+<span class="sd">        - selected_vars_sources : list of tuples - source variables used in PID</span>
+<span class="sd">          estimation</span>
+<span class="sd">        - avg : dict - avg pid {alpha -&gt; float} where alpha is a redundancy</span>
+<span class="sd">          lattice node</span>
+<span class="sd">        - ptw : dict of dicts - ptw pid {rlz -&gt; {alpha -&gt; float} } where rlz is</span>
+<span class="sd">          a single realisation of the random variables and alpha is a redundancy</span>
+<span class="sd">          lattice node</span>
+<span class="sd">        - current_value : tuple - current value used for analysis, described by</span>
+<span class="sd">          target and sample index in the data</span>
+<span class="sd">        - [estimator-specific settings]</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            target : int</span>
+<span class="sd">                target id</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict</span>
+<span class="sd">                Results for single target. Note that for convenience</span>
+<span class="sd">                dictionary entries can either be accessed via keywords</span>
+<span class="sd">                (result[&#39;selected_vars_sources&#39;]) or via dot-notation</span>
+<span class="sd">                (result.selected_vars_sources).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">ResultsMultivariatePID</span><span class="p">,</span>
+                     <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get_single_target</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">fdr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="ResultsNetworkComparison"><a class="viewcode-back" href="../../idtxl_results_class.html#idtxl.results.ResultsNetworkComparison">[docs]</a><span class="k">class</span> <span class="nc">ResultsNetworkComparison</span><span class="p">(</span><span class="n">ResultsNetworkAnalysis</span><span class="p">):</span>
@@ -1014,23 +1083,22 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">v</span><span class="p">]))</span></div></div>
 </pre></div>
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -1045,12 +1113,13 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">idtxl.results</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.1.
     </div>
   </body>
 </html>

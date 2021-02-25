@@ -7,8 +7,14 @@ Active Information Storage (AIS)
     :members:
     :noindex:
 
-Partial Information Decomposition (PID)
----------------------------------------
-.. autoclass:: idtxl.partial_information_decomposition.PartialInformationDecomposition
+Multivariate Partial Information Decomposition (PID)
+----------------------------------------------------
+.. autoclass:: idtxl.multivariate_pid.MultivariatePID
+    :members:
+    :noindex:
+
+Bivariate Partial Information Decomposition (PID)
+-------------------------------------------------
+.. autoclass:: idtxl.bivariate_pid.BivariatePID
     :members:
     :noindex:
