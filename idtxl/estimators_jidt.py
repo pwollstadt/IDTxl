@@ -305,6 +305,8 @@ class JidtGaussian(JidtEstimator):
     Set common estimation parameters for JIDT Kraskov-estimators. For usage of
     these estimators see documentation for the child classes.
 
+    Results are returned in nats.
+
     Args:
         CalcClass : JAVA class
             JAVA class returned by jpype.JPackage
@@ -376,6 +378,8 @@ class JidtKraskovCMI(JidtKraskov):
     Call JIDT via jpype and use the Kraskov 1 estimator. If no conditional is
     given (is None), the function returns the mutual information between var1
     and var2. See parent class for references.
+
+     Results are returned in nats.
 
     Args:
         settings : dict [optional]
@@ -479,6 +483,8 @@ class JidtDiscreteCMI(JidtDiscrete):
     Calculate the conditional mutual information between two variables given
     the third. Call JIDT via jpype and use the discrete estimator. See parent
     class for references.
+
+    Results are returned in bits.
 
     Args:
         settings : dict [optional]
@@ -661,6 +667,8 @@ class JidtDiscreteMI(JidtDiscrete):
     Calculate the mutual information (MI) between two variables. Call JIDT via
     jpype and use the discrete estimator. See parent class for references.
 
+    Results are returned in bits.
+
     Args:
         settings : dict [optional]
             sets estimation parameters:
@@ -813,6 +821,8 @@ class JidtKraskovMI(JidtKraskov):
     Calculate the mutual information between two variables. Call JIDT via jpype
     and use the Kraskov 1 estimator. See parent class for references.
 
+    Results are returned in nats.
+
     Args:
         settings : dict [optional]
             sets estimation parameters:
@@ -914,7 +924,7 @@ class JidtKraskovAIS(JidtKraskov):
     tau describes the embedding delay, i.e., the spacing between every two
     samples from the processes' past.
 
-    See parent class for references.
+    See parent class for references. Results are returned in nats.
 
     Args:
         settings : dict
@@ -997,6 +1007,8 @@ class JidtDiscreteAIS(JidtDiscrete):
 
     Calculate the active information storage (AIS) for one process. Call JIDT
     via jpype and use the discrete estimator. See parent class for references.
+
+    Results are returned in bits.
 
     Args:
         settings : dict
@@ -1155,7 +1167,7 @@ class JidtGaussianAIS(JidtGaussian):
     tau describes the embedding delay, i.e., the spacing between every two
     samples from the processes' past.
 
-    See parent class for references.
+    See parent class for references.Results are returned in nats.
 
     Args:
         settings : dict
@@ -1224,6 +1236,8 @@ class JidtGaussianMI(JidtGaussian):
 
     Calculate the mutual information between two variables. Call JIDT via jpype
     and use the Gaussian estimator. See parent class for references.
+
+    Results are returned in nats.
 
     Args:
         settings : dict [optional]
@@ -1301,7 +1315,8 @@ class JidtGaussianCMI(JidtGaussian):
     If no conditional is given (is None), the function returns the mutual
     information between var1 and var2.
 
-    See parent class for references.
+    See parent class for references. Results are returned in nats.
+
 
     Args:
         settings : dict [optional]
@@ -1418,7 +1433,7 @@ class JidtKraskovTE(JidtKraskov):
     tau descrices the embedding delay, i.e., the spacing between every two
     samples from the processes' past.
 
-    See parent class for references.
+    See parent class for references. Results are returned in nats.
 
     Args:
         settings : dict
@@ -1503,6 +1518,8 @@ class JidtDiscreteTE(JidtDiscrete):
     defined as the conditional mutual information between the source's past
     state and the target's current value, conditional on the target's past.
     See parent class for references.
+
+    Results are returned in bits.
 
     Args:
         settings : dict
@@ -1680,7 +1697,7 @@ class JidtGaussianTE(JidtGaussian):
     tau descrices the embedding delay, i.e., the spacing between every two
     samples from the processes' past.
 
-    See parent class for references.
+    See parent class for references. Results are returned in nats.
 
     Args:
         settings : dict
