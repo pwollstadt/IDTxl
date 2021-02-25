@@ -378,6 +378,7 @@ def export_networkx_graph(adjacency_matrix, weights):
     # use 'weights' parameter (string) as networkx edge property name and use
     # adjacency matrix entries as edge property values
     G = nx.DiGraph()
+    G.add_nodes_from(np.arange(adjacency_matrix.n_nodes()))
     G.add_weighted_edges_from(adjacency_matrix.get_edge_list(), weights)
     return G
 

@@ -11,6 +11,8 @@ from idtxl.data import Data
 from idtxl.network_comparison import NetworkComparison
 from idtxl.multivariate_te import MultivariateTE
 
+SEED = 0
+
 # Generate data and load network inference results.
 n_nodes = 5
 data_0 = Data()
@@ -42,6 +44,33 @@ res_within = comp.compare_within(
 
 def test_export_networkx():
     """Test export to networkx DiGrap() object."""
+    # Test export of graph with unconnected nodes.
+    max_lag = 3
+    data = Data(seed=SEED)
+    data.generate_mute_data(500, 5)
+    settings = {
+        'cmi_estimator': 'JidtKraskovCMI',
+        'noise_level': 0,
+        'n_perm_max_stat': 21,
+        'n_perm_min_stat': 21,
+        'n_perm_max_seq': 21,
+        'n_perm_omnibus': 21,
+        'max_lag_sources': max_lag,
+        'min_lag_sources': 1,
+        'max_lag_target': max_lag}
+    target = 3
+    sources = [0, 4]
+    te = MultivariateTE()
+    results = te.analyse_single_target(
+        settings, data, target=target, sources=sources)
+    weights = 'binary'
+    adj_matrix = results.get_adjacency_matrix(weights=weights, fdr=False)
+    digraph = io.export_networkx_graph(
+        adjacency_matrix=adj_matrix, weights=weights)
+    np.testing.assert_array_equal(
+        np.sort(digraph.nodes), np.arange(data.n_processes),
+        err_msg='Wrong nodes in exported DiGraph.')
+
     # raise AssertionError('Test not yet implemented.')
     # Test export of networx graph for network inference results.
     weights = 'binary'
