@@ -1,0 +1,472 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Algorithms for the analysis of node dynamics &#8212; IDTxl 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Network comparison" href="idtxl_network_comparison.html" />
+    <link rel="prev" title="Algorithms for network inference" href="idtxl_network_inference.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="idtxl_network_comparison.html" title="Network comparison"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="idtxl_network_inference.html" title="Algorithms for network inference"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="algorithms-for-the-analysis-of-node-dynamics">
+<h1>Algorithms for the analysis of node dynamics<a class="headerlink" href="#algorithms-for-the-analysis-of-node-dynamics" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="active-information-storage-ais">
+<h2>Active Information Storage (AIS)<a class="headerlink" href="#active-information-storage-ais" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.active_information_storage.</code><code class="descname">ActiveInformationStorage</code><a class="reference internal" href="_modules/idtxl/active_information_storage.html#ActiveInformationStorage"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate active information storage in individual processes.</p>
+<p>Estimate active information storage (AIS) in individual processes of the
+network. To perform AIS estimation call analyse_network() on the whole
+network or a set of nodes or call analyse_single_process() to estimate
+AIS for a single process. See docstrings of the two functions for more
+information.</p>
+<p>References:</p>
+<ul class="simple">
+<li>Lizier, J. T., Prokopenko, M., &amp; Zomaya, A. Y. (2012). Local measures of
+information storage in complex distributed computation. Inform Sci, 208,
+39–54. <a class="reference external" href="http://doi.org/10.1016/j.ins.2012.04.016">http://doi.org/10.1016/j.ins.2012.04.016</a></li>
+<li>Wibral, M., Lizier, J. T., Vögler, S., Priesemann, V., &amp; Galuske, R.
+(2014). Local active information storage as a tool to understand
+distributed neural information processing. Front Neuroinf, 8, 1.
+<a class="reference external" href="http://doi.org/10.3389/fninf.2014.00001">http://doi.org/10.3389/fninf.2014.00001</a></li>
+<li>Faes, L., Nollo, G., &amp; Porta, A. (2011). Information-based detection
+of nonlinear Granger causality in multivariate processes via a
+nonuniform embedding technique. Phys Rev E, 83, 1–15.
+<a class="reference external" href="http://doi.org/10.1103/PhysRevE.83.051112">http://doi.org/10.1103/PhysRevE.83.051112</a></li>
+</ul>
+<dl class="docutils">
+<dt>Attributes:</dt>
+<dd><dl class="first last docutils">
+<dt>process_set <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd>list with indices of analyzed processes</dd>
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>analysis settings</dd>
+<dt>current_value <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>index of the current value in AIS estimation, (idx process,
+idx sample)</dd>
+<dt>selected_vars_full <span class="classifier-delimiter">:</span> <span class="classifier">list of tuples</span></dt>
+<dd>samples in the past state, (idx process, idx sample)</dd>
+<dt>ais <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>raw AIS value</dd>
+<dt>sign <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>true if AIS is significant</dd>
+<dt>pvalue: float</dt>
+<dd>p-value of AIS</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">analyse_network</code><span class="sig-paren">(</span><em>settings</em>, <em>data</em>, <em>processes='all'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/active_information_storage.html#ActiveInformationStorage.analyse_network"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate active information storage for multiple network processes.</p>
+<p>Estimate active information storage for all or a subset of processes in
+the network.</p>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>For a detailed description of the algorithm and settings see
+documentation of the analyse_single_process() method and
+references in the class docstring.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">Data</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="o">.</span><span class="n">generate_mute_data</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;cmi_estimator&#39;</span><span class="p">:</span> <span class="s1">&#39;JidtKraskovCMI&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_max_stat&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_min_stat&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;max_lag&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;tau&#39;</span><span class="p">:</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">processes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">network_analysis</span> <span class="o">=</span> <span class="n">ActiveInformationStorage</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">network_analysis</span><span class="o">.</span><span class="n">analyse_network</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                                           <span class="n">processes</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd><p class="first">parameters for estimation and statistical testing, see
+documentation of analyse_single_target() for details, settings
+can further contain</p>
+<ul class="last simple">
+<li>verbose : bool [optional] - toggle console output
+(default=True)</li>
+<li>fdr_correction : bool [optional] - correct results on the
+network level, see documentation of stats.ais_fdr() for
+details (default=True)</li>
+</ul>
+</dd>
+<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">Data instance</span></dt>
+<dd>raw data for analysis</dd>
+<dt>processes <span class="classifier-delimiter">:</span> <span class="classifier">list of int | ‘all’</span></dt>
+<dd>index of processes (default=’all’);
+if ‘all’, AIS is estimated for all processes;
+if list of int, AIS is estimated for processes specified in the
+list.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>ResultsSingleProcessAnalysis instance</dt>
+<dd>results of network AIS estimation, see documentation of
+ResultsSingleProcessAnalysis()</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">analyse_single_process</code><span class="sig-paren">(</span><em>settings</em>, <em>data</em>, <em>process</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/active_information_storage.html#ActiveInformationStorage.analyse_single_process"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate active information storage for a single process.</p>
+<p>Estimate active information storage for one process in the network.
+Uses non-uniform embedding found through information maximisation. This
+is done in three steps (see Lizier and Faes for details):</p>
+<ol class="arabic simple">
+<li>Find all relevant samples in the processes’ own past, by
+iteratively adding candidate samples that have significant
+conditional mutual information (CMI) with the current value
+(conditional on all samples that were added previously)</li>
+<li>Prune the final conditional set by testing the CMI between each
+sample in the final set and the current value, conditional on all
+other samples in the final set</li>
+<li>Calculate AIS using the final set of candidates as the past state
+(calculate MI between samples in the past and the current value);
+test for statistical significance using a permutation test</li>
+</ol>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>For a further description of the algorithm see references in the
+class docstring.</dd>
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd><p class="first">parameters for estimator use and statistics:</p>
+<ul class="last simple">
+<li>cmi_estimator : str - estimator to be used for CMI and MI
+calculation (for estimator settings see the documentation in
+the estimators_* modules)</li>
+<li>max_lag : int - maximum temporal search depth for candidates
+in the processes’ past in samples</li>
+<li>tau : int [optional] - spacing between candidates in the
+sources’ past in samples (default=1)</li>
+<li>n_perm_* : int [optional] - number of permutations, where *
+can be ‘max_stat’, ‘min_stat’, ‘mi’ (default=500)</li>
+<li>alpha_* : float [optional] - critical alpha level for
+statistical significance, where * can be ‘max_stat’,
+‘min_stat’, ‘mi’ (default=0.05)</li>
+<li>add_conditionals : list of tuples | str [optional] - force
+the estimator to add these conditionals when estimating TE;
+can either be a list of variables, where each variable is
+described as (idx process, lag wrt to current value) or can
+be a string: ‘faes’ for Faes-Method (see references)</li>
+<li>permute_in_time : bool [optional] - force surrogate creation
+by shuffling realisations in time instead of shuffling
+replications; see documentation of Data.permute_samples() for
+further settings (default=False)</li>
+<li>verbose : bool [optional] - toggle console output
+(default=True)</li>
+</ul>
+</dd>
+<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">Data instance</span></dt>
+<dd>raw data for analysis</dd>
+<dt>process <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>index of process</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>ResultsSingleProcessAnalysis instance</dt>
+<dd>results of AIS estimation, see documentation of
+ResultsSingleProcessAnalysis()</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="partial-information-decomposition-pid">
+<h2>Partial Information Decomposition (PID)<a class="headerlink" href="#partial-information-decomposition-pid" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.partial_information_decomposition.</code><code class="descname">PartialInformationDecomposition</code><a class="reference internal" href="_modules/idtxl/partial_information_decomposition.html#PartialInformationDecomposition"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Perform partial information decomposition for individual processes.</p>
+<p>Perform partial information decomposition (PID) for two source processes
+and one target process in the network. Estimate unique, shared, and
+synergistic information in the two sources about the target. Call
+analyse_network() on the whole network or a set of nodes or call
+analyse_single_target() to estimate PID for a single process. See
+docstrings of the two functions for more information.</p>
+<p>References:</p>
+<ul class="simple">
+<li>Williams, P. L., &amp; Beer, R. D. (2010). Nonnegative Decomposition of
+Multivariate Information, 1–14. Retrieved from
+<a class="reference external" href="http://arxiv.org/abs/1004.2515">http://arxiv.org/abs/1004.2515</a></li>
+<li>Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., &amp; Ay, N. (2014).
+Quantifying Unique Information. Entropy, 16(4), 2161–2183.
+<a class="reference external" href="http://doi.org/10.3390/e16042161">http://doi.org/10.3390/e16042161</a></li>
+</ul>
+<dl class="docutils">
+<dt>Attributes:</dt>
+<dd><dl class="first last docutils">
+<dt>target <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>index of target process</dd>
+<dt>sources <span class="classifier-delimiter">:</span> <span class="classifier">array type</span></dt>
+<dd>pair of indices of source processes</dd>
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>analysis settings</dd>
+<dt>results <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>estimated PID</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">analyse_network</code><span class="sig-paren">(</span><em>settings</em>, <em>data</em>, <em>targets</em>, <em>sources</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/partial_information_decomposition.html#PartialInformationDecomposition.analyse_network"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate partial information decomposition for network nodes.</p>
+<p>Estimate partial information decomposition (PID) for multiple nodes in
+the network.</p>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>For a detailed description of the algorithm and settings see
+documentation of the analyse_single_target() method and
+references in the class docstring.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">alph</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_xor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">Data</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)),</span> <span class="s1">&#39;ps&#39;</span><span class="p">,</span> <span class="n">normalise</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;lags_pid&#39;</span><span class="p">:</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;alpha&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;alph_s1&#39;</span><span class="p">:</span> <span class="n">alph</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;alph_s2&#39;</span><span class="p">:</span> <span class="n">alph</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;alph_t&#39;</span><span class="p">:</span> <span class="n">alph</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;max_unsuc_swaps_row_parm&#39;</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;num_reps&#39;</span><span class="p">:</span> <span class="mi">63</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;max_iters&#39;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;pid_estimator&#39;</span><span class="p">:</span> <span class="s1">&#39;SydneyPID&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">targets</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sources</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pid_analysis</span> <span class="o">=</span> <span class="n">PartialInformationDecomposition</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">pid_analysis</span><span class="o">.</span><span class="n">analyse_network</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                                       <span class="n">sources</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd><p class="first">parameters for estimation and statistical testing, see
+documentation of analyse_single_target() for details, can
+contain</p>
+<ul class="last simple">
+<li>lags_pid : list of lists of ints [optional] - lags in samples
+between sources and target (default=[[1, 1], [1, 1] …])</li>
+</ul>
+</dd>
+<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">Data instance</span></dt>
+<dd>raw data for analysis</dd>
+<dt>targets <span class="classifier-delimiter">:</span> <span class="classifier">list of int</span></dt>
+<dd>index of target processes</dd>
+<dt>sources <span class="classifier-delimiter">:</span> <span class="classifier">list of lists</span></dt>
+<dd>indices of the two source processes for each target, e.g.,
+[[0, 2], [1, 0]], must have the same length as targets</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>ResultsPartialInformationDecomposition instance</dt>
+<dd>results of network inference, see documentation of
+ResultsPartialInformationDecomposition()</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">analyse_single_target</code><span class="sig-paren">(</span><em>settings</em>, <em>data</em>, <em>target</em>, <em>sources</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/partial_information_decomposition.html#PartialInformationDecomposition.analyse_single_target"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate partial information decomposition for a network node.</p>
+<p>Estimate partial information decomposition (PID) for a target node in
+the network.</p>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>For a description of the algorithm and the method see references in
+the class and estimator docstrings.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">alph</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alph</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_xor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">Data</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)),</span> <span class="s1">&#39;ps&#39;</span><span class="p">,</span> <span class="n">normalise</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;alpha&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;alph_s1&#39;</span><span class="p">:</span> <span class="n">alph</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;alph_s2&#39;</span><span class="p">:</span> <span class="n">alph</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;alph_t&#39;</span><span class="p">:</span> <span class="n">alph</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;max_unsuc_swaps_row_parm&#39;</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;num_reps&#39;</span><span class="p">:</span> <span class="mi">63</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;max_iters&#39;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;pid_calc_name&#39;</span><span class="p">:</span> <span class="s1">&#39;SydneyPID&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;lags_pid&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pid_analysis</span> <span class="o">=</span> <span class="n">PartialInformationDecomposition</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">pid_analysis</span><span class="o">.</span><span class="n">analyse_single_target</span><span class="p">(</span><span class="n">settings</span><span class="o">=</span><span class="n">settings</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                                             <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                                             <span class="n">target</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                                             <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Args: settings : dict parameters for estimator use and statistics:</p>
+<blockquote>
+<div><blockquote>
+<div><ul class="simple">
+<li>pid_estimator : str - estimator to be used for PID estimation
+(for estimator settings see the documentation in the
+estimators_pid modules)</li>
+<li>lags_pid : list of ints [optional] - lags in samples between
+sources and target (default=[1, 1])</li>
+<li>verbose : bool [optional] - toggle console output
+(default=True)</li>
+</ul>
+</div></blockquote>
+<dl class="docutils">
+<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">Data instance</span></dt>
+<dd>raw data for analysis</dd>
+<dt>target <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>index of target processes</dd>
+<dt>sources <span class="classifier-delimiter">:</span> <span class="classifier">list of ints</span></dt>
+<dd>indices of the two source processes for the target</dd>
+</dl>
+</div></blockquote>
+<dl class="docutils">
+<dt>Returns: ResultsPartialInformationDecomposition instance results of</dt>
+<dd>network inference, see documentation of
+ResultsPartialInformationDecomposition()</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Algorithms for the analysis of node dynamics</a><ul>
+<li><a class="reference internal" href="#active-information-storage-ais">Active Information Storage (AIS)</a></li>
+<li><a class="reference internal" href="#partial-information-decomposition-pid">Partial Information Decomposition (PID)</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="idtxl_network_inference.html"
+                        title="previous chapter">Algorithms for network inference</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="idtxl_network_comparison.html"
+                        title="next chapter">Network comparison</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/idtxl_process_analysis.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="idtxl_network_comparison.html" title="Network comparison"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="idtxl_network_inference.html" title="Algorithms for network inference"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,1888 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Information theoretic estimators &#8212; IDTxl 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Helper functions" href="idtxl_helper.html" />
+    <link rel="prev" title="The Results Class" href="idtxl_results_class.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="idtxl_helper.html" title="Helper functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="idtxl_results_class.html" title="The Results Class"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="information-theoretic-estimators">
+<h1>Information theoretic estimators<a class="headerlink" href="#information-theoretic-estimators" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="jidt-estimators-cpu">
+<h2>JIDT Estimators (CPU)<a class="headerlink" href="#jidt-estimators-cpu" title="Permalink to this headline">¶</a></h2>
+<p>Provide JIDT estimators.</p>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtDiscrete</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscrete"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Abstract class for implementation of discrete JIDT-estimators.</p>
+<p>Abstract class for implementation of plug-in JIDT-estimators for discrete
+data. Child classes implement estimators for mutual information (MI),
+conditional mutual information (CMI), actice information storage (AIS), and
+transfer entropy (TE). See parent class for references.</p>
+<p>Set common estimation parameters for discrete JIDT-estimators. For usage of
+these estimators see documentation for the child classes.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">set estimator parameters:</p>
+<ul class="last simple">
+<li>debug : bool [optional] - return debug information when calling
+JIDT (default=False)</li>
+<li>local_values : bool [optional] - return local TE instead of
+average TE (default=False)</li>
+<li>discretise_method : str [optional] - if and how to discretise
+incoming continuous data, can be ‘max_ent’ for maximum entropy
+binning, ‘equal’ for equal size bins, and ‘none’ if no binning is
+required (default=’none’)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Note:</dt>
+<dd>Discrete JIDT estimators require the data’s alphabet size for
+instantiation. Hence, opposed to the Kraskov and Gaussian estimators,
+the JAVA class is added to the object instance, while for Kraskov/
+Gaussian estimators an instance of that class is added (because for the
+latter, objects can be instantiated independent of data properties).</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">estimate_surrogates_analytic</code><span class="sig-paren">(</span><em>n_perm=200</em>, <em>**data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscrete.estimate_surrogates_analytic"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Return estimate of the analytical surrogate distribution.</p>
+<p>This method must be implemented because this class’
+is_analytic_null_estimator() method returns true.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>n_perms <span class="classifier-delimiter">:</span> <span class="classifier">int [optional]</span></dt>
+<dd>number of permutations (default=200)</dd>
+<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">numpy arrays</span></dt>
+<dd>realisations of random variables required for the calculation
+(varies between estimators, e.g. 2 variables for MI, 3 for
+CMI). Formatted as per the estimate method for this estimator.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float | numpy array</dt>
+<dd>n_perm surrogates of the average MI/CMI/TE over all samples
+under the null hypothesis of no relationship between var1 and
+var2 (in the context of conditional)</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">get_analytic_distribution</code><span class="sig-paren">(</span><em>**data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscrete.get_analytic_distribution"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Return a JIDT AnalyticNullDistribution object.</p>
+<p>Required so that our estimate_surrogates_analytic method can use the
+common_estimate_surrogates_analytic() method, where data is formatted
+as per the estimate method for this estimator.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">numpy arrays</span></dt>
+<dd>realisations of random variables required for the calculation
+(varies between estimators, e.g. 2 variables for MI, 3 for
+CMI). Formatted as per the estimate method for this estimator.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>Java object</dt>
+<dd>JIDT calculator that was used here</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">is_analytic_null_estimator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscrete.is_analytic_null_estimator"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Indicate if estimator supports analytic surrogates.</p>
+<p>Return true if the estimator implements estimate_surrogates_analytic()
+where data is formatted as per the estimate method for this estimator.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>bool</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtDiscreteAIS</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteAIS"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Calculate AIS with JIDT’s discrete-variable implementation.</p>
+<p>Calculate the active information storage (AIS) for one process. Call JIDT
+via jpype and use the discrete estimator. See parent class for references.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd><p class="first">set estimator parameters:</p>
+<ul class="last simple">
+<li>history : int - number of samples in the target’s past used as
+embedding (&gt;= 0)</li>
+<li>debug : bool [optional] - return debug information when calling
+JIDT (default=False)</li>
+<li>local_values : bool [optional] - return local TE instead of
+average TE (default=False)</li>
+<li>discretise_method : str [optional] - if and how to discretise
+incoming continuous data, can be ‘max_ent’ for maximum entropy
+binning, ‘equal’ for equal size bins, and ‘none’ if no binning is
+required (default=’none’)</li>
+<li>n_discrete_bins : int [optional] - number of discrete bins/
+levels or the base of each dimension of the discrete variables
+(default=2). If set, this parameter overwrites/sets alph. (&gt;= 2)</li>
+<li>alph : int [optional] - number of discrete bins/levels for var1
+(default=2 , or the value set for n_discrete_bins). (&gt;= 2)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">estimate</code><span class="sig-paren">(</span><em>process</em>, <em>return_calc=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteAIS.estimate"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate active information storage.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>process <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations as either a 2D numpy array where array dimensions
+represent [realisations x variable dimension] or a 1D array
+representing [realisations], array type can be float (requires
+discretisation) or int</dd>
+<dt>return_calc <span class="classifier-delimiter">:</span> <span class="classifier">boolean</span></dt>
+<dd>return the calculator used here as well as the numeric
+calculated value(s)</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float | numpy array</dt>
+<dd>average AIS over all samples or local AIS for individual
+samples if ‘local_values’=True</dd>
+<dt>Java object</dt>
+<dd>JIDT calculator that was used here. Only returned if
+return_calc was set.</dd>
+</dl>
+</dd>
+<dt>Raises:</dt>
+<dd><dl class="first last docutils">
+<dt>ex.JidtOutOfMemoryError</dt>
+<dd>Raised when JIDT object cannot be instantiated due to mem error</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">get_analytic_distribution</code><span class="sig-paren">(</span><em>process</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteAIS.get_analytic_distribution"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Return a JIDT AnalyticNullDistribution object.</p>
+<p>Required so that our estimate_surrogates_analytic method can use the
+common_estimate_surrogates_analytic() method, where data is formatted
+as per the estimate method for this estimator.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>process <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations as either a 2D numpy array where array dimensions
+represent [realisations x variable dimension] or a 1D array
+representing [realisations], array type can be float (requires
+discretisation) or int</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>Java object</dt>
+<dd>JIDT calculator that was used here</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtDiscreteCMI</code><span class="sig-paren">(</span><em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteCMI"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Calculate CMI with JIDT’s implementation for discrete variables.</p>
+<p>Calculate the conditional mutual information between two variables given
+the third. Call JIDT via jpype and use the discrete estimator. See parent
+class for references.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">sets estimation parameters:</p>
+<ul class="last simple">
+<li>debug : bool [optional] - return debug information when calling
+JIDT (default=False)</li>
+<li>local_values : bool [optional] - return local TE instead of
+average TE (default=False)</li>
+<li>discretise_method : str [optional] - if and how to discretise
+incoming continuous data, can be ‘max_ent’ for maximum entropy
+binning, ‘equal’ for equal size bins, and ‘none’ if no binning is
+required (default=’none’)</li>
+<li>n_discrete_bins : int [optional] - number of discrete bins/
+levels or the base of each dimension of the discrete variables
+(default=2). If set, this parameter overwrites/sets alph1, alph2
+and alphc</li>
+<li>alph1 : int [optional] - number of discrete bins/levels for var1
+(default=2, or the value set for n_discrete_bins)</li>
+<li>alph2 : int [optional] - number of discrete bins/levels for var2
+(default=2, or the value set for n_discrete_bins)</li>
+<li>alphc : int [optional] - number of discrete bins/levels for
+conditional (default=2, or the value set for n_discrete_bins)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">estimate</code><span class="sig-paren">(</span><em>var1</em>, <em>var2</em>, <em>conditional=None</em>, <em>return_calc=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteCMI.estimate"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate conditional mutual information.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>var1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of first variable, either a 2D numpy array where
+array dimensions represent [realisations x variable dimension]
+or a 1D array representing [realisations], array type can be
+float (requires discretisation) or int</dd>
+<dt>var2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of the second variable (similar to var1)</dd>
+<dt>conditional <span class="classifier-delimiter">:</span> <span class="classifier">numpy array [optional]</span></dt>
+<dd>realisations of the conditioning variable (similar to var), if
+no conditional is provided, return MI between var1 and var2</dd>
+<dt>return_calc <span class="classifier-delimiter">:</span> <span class="classifier">boolean</span></dt>
+<dd>return the calculator used here as well as the numeric
+calculated value(s)</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float | numpy array</dt>
+<dd>average CMI over all samples or local CMI for individual
+samples if ‘local_values’=True</dd>
+<dt>Java object</dt>
+<dd>JIDT calculator that was used here. Only returned if
+return_calc was set.</dd>
+</dl>
+</dd>
+<dt>Raises:</dt>
+<dd><dl class="first last docutils">
+<dt>ex.JidtOutOfMemoryError</dt>
+<dd>Raised when JIDT object cannot be instantiated due to mem error</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">get_analytic_distribution</code><span class="sig-paren">(</span><em>var1</em>, <em>var2</em>, <em>conditional=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteCMI.get_analytic_distribution"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Return a JIDT AnalyticNullDistribution object.</p>
+<p>Required so that our estimate_surrogates_analytic method can use the
+common_estimate_surrogates_analytic() method, where data is formatted
+as per the estimate method for this estimator.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>var1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of first variable, either a 2D numpy array where
+array dimensions represent [realisations x variable dimension]
+or a 1D array representing [realisations], array type can be
+float (requires discretisation) or int</dd>
+<dt>var2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of the second variable (similar to var1)</dd>
+<dt>conditional <span class="classifier-delimiter">:</span> <span class="classifier">numpy array [optional]</span></dt>
+<dd>realisations of the conditioning variable (similar to var), if
+no conditional is provided, return MI between var1 and var2</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>Java object</dt>
+<dd>JIDT calculator that was used here</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtDiscreteMI</code><span class="sig-paren">(</span><em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteMI"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Calculate MI with JIDT’s discrete-variable implementation.</p>
+<p>Calculate the mutual information (MI) between two variables. Call JIDT via
+jpype and use the discrete estimator. See parent class for references.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">sets estimation parameters:</p>
+<ul class="last simple">
+<li>debug : bool [optional] - return debug information when calling
+JIDT (default=False)</li>
+<li>local_values : bool [optional] - return local TE instead of
+average TE (default=False)</li>
+<li>discretise_method : str [optional] - if and how to discretise
+incoming continuous data, can be ‘max_ent’ for maximum entropy
+binning, ‘equal’ for equal size bins, and ‘none’ if no binning is
+required (default=’none’)</li>
+<li>n_discrete_bins : int [optional] - number of discrete bins/
+levels or the base of each dimension of the discrete variables
+(default=2). If set, this parameter overwrites/sets alph1 and
+alph2</li>
+<li>alph1 : int [optional] - number of discrete bins/levels for var1
+(default=2, or the value set for n_discrete_bins)</li>
+<li>alph2 : int [optional] - number of discrete bins/levels for var2
+(default=2, or the value set for n_discrete_bins)</li>
+<li>lag_mi : int [optional] - time difference in samples to calculate
+the lagged MI between processes (default=0)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">estimate</code><span class="sig-paren">(</span><em>var1</em>, <em>var2</em>, <em>return_calc=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteMI.estimate"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate mutual information.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>var1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of first variable, either a 2D numpy array where
+array dimensions represent [realisations x variable dimension]
+or a 1D array representing [realisations], array type can be
+float (requires discretisation) or int</dd>
+<dt>var2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of the second variable (similar to var1)</dd>
+<dt>return_calc <span class="classifier-delimiter">:</span> <span class="classifier">boolean</span></dt>
+<dd>return the calculator used here as well as the numeric
+calculated value(s)</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float | numpy array</dt>
+<dd>average MI over all samples or local MI for individual
+samples if ‘local_values’=True</dd>
+<dt>Java object</dt>
+<dd>JIDT calculator that was used here. Only returned if
+return_calc was set.</dd>
+</dl>
+</dd>
+<dt>Raises:</dt>
+<dd><dl class="first last docutils">
+<dt>ex.JidtOutOfMemoryError</dt>
+<dd>Raised when JIDT object cannot be instantiated due to mem error</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">get_analytic_distribution</code><span class="sig-paren">(</span><em>var1</em>, <em>var2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteMI.get_analytic_distribution"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Return a JIDT AnalyticNullDistribution object.</p>
+<p>Required so that our estimate_surrogates_analytic method can use the
+common_estimate_surrogates_analytic() method, where data is formatted
+as per the estimate method for this estimator.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>var1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of first variable, either a 2D numpy array where
+array dimensions represent [realisations x variable dimension]
+or a 1D array representing [realisations], array type can be
+float (requires discretisation) or int</dd>
+<dt>var2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of the second variable (similar to var1)</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>Java object</dt>
+<dd>JIDT calculator that was used here</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtDiscreteTE</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteTE"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Calculate TE with JIDT’s implementation for discrete variables.</p>
+<p>Calculate the transfer entropy between two time series processes.
+Call JIDT via jpype and use the discrete estimator. Transfer entropy is
+defined as the conditional mutual information between the source’s past
+state and the target’s current value, conditional on the target’s past.
+See parent class for references.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd><p class="first">sets estimation parameters:</p>
+<ul class="last simple">
+<li>history_target : int - number of samples in the target’s past
+used as embedding. (&gt;= 0)</li>
+<li>history_source  : int [optional] - number of samples in the
+source’s past used as embedding (default=same as the target
+history). (&gt;= 1)</li>
+<li>tau_source : int [optional] - source’s embedding delay
+(default=1). (&gt;= 1)</li>
+<li>tau_target : int [optional] - target’s embedding delay
+(default=1). (&gt;= 1)</li>
+<li>source_target_delay : int [optional] - information transfer delay
+between source and target (default=1) (&gt;= 0)</li>
+<li>discretise_method : str [optional] - if and how to discretise
+incoming continuous data, can be ‘max_ent’ for maximum entropy
+binning, ‘equal’ for equal size bins, and ‘none’ if no binning is
+required (default=’none’)</li>
+<li>n_discrete_bins : int [optional] - number of discrete bins/
+levels or the base of each dimension of the discrete variables
+(default=2). If set, this parameter overwrites/sets alph1 and
+alph2. (&gt;= 2)</li>
+<li>alph1 : int [optional] - number of discrete bins/levels for
+source (default=2, or the value set for n_discrete_bins). (&gt;= 2)</li>
+<li>alph2 : int [optional] - number of discrete bins/levels for
+target (default=2, or the value set for n_discrete_bins). (&gt;= 2)</li>
+<li>debug : bool [optional] - return debug information when calling
+JIDT (default=False)</li>
+<li>local_values : bool [optional] - return local TE instead of
+average TE (default=False)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">estimate</code><span class="sig-paren">(</span><em>source</em>, <em>target</em>, <em>return_calc=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteTE.estimate"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate transfer entropy from a source to a target variable.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>source <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of source variable, either a 2D numpy array where
+array dimensions represent [realisations x variable dimension]
+or a 1D array representing [realisations], array type can be
+float (requires discretisation) or int</dd>
+<dt>target <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of target variable (similar to var1)</dd>
+<dt>return_calc <span class="classifier-delimiter">:</span> <span class="classifier">boolean</span></dt>
+<dd>return the calculator used here as well as the numeric
+calculated value(s)</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float | numpy array</dt>
+<dd>average TE over all samples or local TE for individual
+samples if ‘local_values’=True</dd>
+<dt>Java object</dt>
+<dd>JIDT calculator that was used here. Only returned if
+return_calc was set.</dd>
+</dl>
+</dd>
+<dt>Raises:</dt>
+<dd><dl class="first last docutils">
+<dt>ex.JidtOutOfMemoryError</dt>
+<dd>Raised when JIDT object cannot be instantiated due to mem error</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">get_analytic_distribution</code><span class="sig-paren">(</span><em>source</em>, <em>target</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteTE.get_analytic_distribution"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Return a JIDT AnalyticNullDistribution object.</p>
+<p>Required so that our estimate_surrogates_analytic method can use the
+common_estimate_surrogates_analytic() method, where data is formatted
+as per the estimate method for this estimator.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>source <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of source variable, either a 2D numpy array where
+array dimensions represent [realisations x variable dimension]
+or a 1D array representing [realisations], array type can be
+float (requires discretisation) or int</dd>
+<dt>target <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of target variable (similar to var1)</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>Java object</dt>
+<dd>JIDT calculator that was used here</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtEstimator</code><span class="sig-paren">(</span><em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtEstimator"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Abstract class for implementation of JIDT estimators.</p>
+<p>Abstract class for implementation of JIDT estimators, child classes
+implement estimators for mutual information (MI), conditional mutual
+information (CMI), active information storage (AIS), transfer entropy (TE)
+using the Kraskov-Grassberger-Stoegbauer estimator for continuous data,
+plug-in estimators for discrete data, and Gaussian estimators for
+continuous Gaussian data.</p>
+<p>References:</p>
+<ul class="simple">
+<li>Lizier, Joseph T. (2014). JIDT: an information-theoretic toolkit for
+studying the dynamics of complex systems. Front Robot AI, 1(11).</li>
+<li>Kraskov, A., Stoegbauer, H., &amp; Grassberger, P. (2004). Estimating mutual
+information. Phys Rev E, 69(6), 066138.</li>
+<li>Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012).
+Local measures of information storage in complex distributed computation.
+Inform Sci, 208, 39-54.</li>
+<li>Schreiber, T. (2000). Measuring information transfer. Phys Rev Lett,
+85(2), 461.</li>
+</ul>
+<p>Set common estimation parameters for JIDT estimators. For usage of these
+estimators see documentation for the child classes.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">set estimator parameters:</p>
+<ul class="last simple">
+<li>debug : bool [optional] - return debug information when calling
+JIDT (default=False)</li>
+<li>local_values : bool [optional] - return local TE instead of
+average TE (default=False)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">is_parallel</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtEstimator.is_parallel"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Indicate if estimator supports parallel estimation over chunks.</p>
+<p>Return true if the supports parallel estimation over chunks, where a
+chunk is one independent data set.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>bool</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtGaussian</code><span class="sig-paren">(</span><em>CalcClass</em>, <em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussian"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Abstract class for implementation of JIDT Gaussian-estimators.</p>
+<p>Abstract class for implementation of JIDT Gaussian-estimators, child
+classes implement estimators for mutual information (MI), conditional
+mutual information (CMI), actice information storage (AIS), transfer
+entropy (TE) using JIDT’s Gaussian estimator for continuous data. See
+parent class for references.</p>
+<p>Set common estimation parameters for JIDT Kraskov-estimators. For usage of
+these estimators see documentation for the child classes.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>CalcClass <span class="classifier-delimiter">:</span> <span class="classifier">JAVA class</span></dt>
+<dd>JAVA class returned by jpype.JPackage</dd>
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">set estimator parameters:</p>
+<ul class="last simple">
+<li>debug : bool [optional] - return debug information when calling
+JIDT (default=False)</li>
+<li>local_values : bool [optional] - return local TE instead of
+average TE (default=False)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">estimate_surrogates_analytic</code><span class="sig-paren">(</span><em>n_perm=200</em>, <em>**data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussian.estimate_surrogates_analytic"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate the surrogate distribution analytically.</p>
+<p>This method must be implemented because this class’
+is_analytic_null_estimator() method returns true</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>n_perms <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>number of permutations (default=200)</dd>
+<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">numpy arrays</span></dt>
+<dd>realisations of random variables required for the calculation
+(varies between estimators, e.g. 2 variables for MI, 3 for
+CMI). Formatted as per estimate_parallel for this estimator.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float | numpy array</dt>
+<dd>n_perm surrogates of the average MI/CMI/TE over all samples
+under the null hypothesis of no relationship between var1 and
+var2 (in the context of conditional)</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">get_analytic_distribution</code><span class="sig-paren">(</span><em>**data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussian.get_analytic_distribution"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Return a JIDT AnalyticNullDistribution object.</p>
+<p>Required so that our estimate_surrogates_analytic method can use the
+common_estimate_surrogates_analytic() method, where data is formatted
+as per the estimate method for this estimator.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">numpy arrays</span></dt>
+<dd>realisations of random variables required for the calculation
+(varies between estimators, e.g. 2 variables for MI, 3 for
+CMI). Formatted as per the estimate method for this estimator.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>Java object</dt>
+<dd>JIDT calculator that was used here</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">is_analytic_null_estimator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussian.is_analytic_null_estimator"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Indicate if estimator supports analytic surrogates.</p>
+<p>Return true if the estimator implements estimate_surrogates_analytic()
+where data is formatted as per the estimate method for this estimator.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>bool</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtGaussianAIS</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianAIS"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Calculate active information storage with JIDT’s Gaussian implementation.</p>
+<p>Calculate active information storage (AIS) for some process using JIDT’s
+implementation of the Gaussian estimator. AIS is defined as the
+mutual information between the processes’ past state and current value.</p>
+<p>The past state needs to be defined in the settings dictionary, where a past
+state is defined as a uniform embedding with parameters history and tau.
+The history describes the number of samples taken from a processes’ past,
+tau describes the embedding delay, i.e., the spacing between every two
+samples from the processes’ past.</p>
+<p>See parent class for references.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd><p class="first">sets estimation parameters:</p>
+<ul class="last simple">
+<li>history : int - number of samples in the processes’ past used as
+embedding</li>
+<li>tau : int [optional] - the processes’ embedding delay (default=1)</li>
+<li>debug : bool [optional] - return debug information when calling
+JIDT (default=False)</li>
+<li>local_values : bool [optional] - return local TE instead of
+average TE (default=False)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Note:</dt>
+<dd>Some technical details: JIDT normalises over realisations, IDTxl
+normalises over raw data once, outside the AIS estimator to save
+computation time. The Theiler window ignores trial boundaries. The
+AIS estimator does add noise to the data as a default. To make analysis
+runs replicable set noise_level to 0.</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">estimate</code><span class="sig-paren">(</span><em>process</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianAIS.estimate"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate active information storage.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>process <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of first variable, either a 2D numpy array where
+array dimensions represent [realisations x variable dimension]
+or a 1D array representing [realisations]</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float | numpy array</dt>
+<dd>average AIS over all samples or local AIS for individual
+samples if ‘local_values’=True</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtGaussianCMI</code><span class="sig-paren">(</span><em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianCMI"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Calculate conditional mutual infor with JIDT’s Gaussian implementation.</p>
+<p>Computes the differential conditional mutual information of two
+multivariate sets of observations, conditioned on another, assuming that
+the probability distribution function for these observations is a
+multivariate Gaussian distribution.
+Call JIDT via jpype and use
+ConditionalMutualInfoCalculatorMultiVariateGaussian estimator.
+If no conditional is given (is None), the function returns the mutual
+information between var1 and var2.</p>
+<p>See parent class for references.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">sets estimation parameters:</p>
+<ul class="last simple">
+<li>debug : bool [optional] - return debug information when calling
+JIDT (default=False)</li>
+<li>local_values : bool [optional] - return local TE instead of
+average TE (default=False)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Note:</dt>
+<dd>Some technical details: JIDT normalises over realisations, IDTxl
+normalises over raw data once, outside the CMI estimator to save
+computation time. The Theiler window ignores trial boundaries. The
+CMI estimator does add noise to the data as a default. To make analysis
+runs replicable set noise_level to 0.</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">estimate</code><span class="sig-paren">(</span><em>var1</em>, <em>var2</em>, <em>conditional=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianCMI.estimate"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate conditional mutual information.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>var1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of first variable, either a 2D numpy array where
+array dimensions represent [realisations x variable dimension]
+or a 1D array representing [realisations]</dd>
+<dt>var2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of the second variable (similar to var1)</dd>
+<dt>conditional <span class="classifier-delimiter">:</span> <span class="classifier">numpy array [optional]</span></dt>
+<dd>realisations of the conditioning variable (similar to var), if
+no conditional is provided, return MI between var1 and var2</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float | numpy array</dt>
+<dd>average CMI over all samples or local CMI for individual
+samples if ‘local_values’=True</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">get_analytic_distribution</code><span class="sig-paren">(</span><em>var1</em>, <em>var2</em>, <em>conditional=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianCMI.get_analytic_distribution"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Return a JIDT AnalyticNullDistribution object.</p>
+<p>Required so that our estimate_surrogates_analytic method can use the
+common_estimate_surrogates_analytic() method, where data is formatted
+as per the estimate method for this estimator.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>var1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of first variable, either a 2D numpy array where
+array dimensions represent [realisations x variable dimension]
+or a 1D array representing [realisations]</dd>
+<dt>var2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of the second variable (similar to var1)</dd>
+<dt>conditional <span class="classifier-delimiter">:</span> <span class="classifier">numpy array [optional]</span></dt>
+<dd>realisations of the conditioning variable (similar to var), if
+no conditional is provided, return MI between var1 and var2</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>Java object</dt>
+<dd>JIDT calculator that was used here</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtGaussianMI</code><span class="sig-paren">(</span><em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianMI"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Calculate mutual information with JIDT’s Gaussian implementation.</p>
+<p>Calculate the mutual information between two variables. Call JIDT via jpype
+and use the Gaussian estimator. See parent class for references.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">sets estimation parameters:</p>
+<ul class="last simple">
+<li>debug : bool [optional] - return debug information when calling
+JIDT (default=False)</li>
+<li>local_values : bool [optional] - return local TE instead of
+average TE (default=False)</li>
+<li>lag_mi : int [optional] - time difference in samples to calculate
+the lagged MI between processes (default=0)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Note:</dt>
+<dd>Some technical details: JIDT normalises over realisations, IDTxl
+normalises over raw data once, outside the MI estimator to save
+computation time. The Theiler window ignores trial boundaries. The
+MI estimator does add noise to the data as a default. To make analysis
+runs replicable set noise_level to 0.</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">estimate</code><span class="sig-paren">(</span><em>var1</em>, <em>var2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianMI.estimate"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate mutual information.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>var1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of first variable, either a 2D numpy array where
+array dimensions represent [realisations x variable dimension]
+or a 1D array representing [realisations]</dd>
+<dt>var2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of the second variable (similar to var1)</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float | numpy array</dt>
+<dd>average MI over all samples or local MI for individual
+samples if ‘local_values’=True</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtGaussianTE</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianTE"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Calculate transfer entropy with JIDT’s Gaussian implementation.</p>
+<p>Calculate transfer entropy between a source and a target variable using
+JIDT’s implementation of the Gaussian estimator. Transfer entropy is
+defined as the conditional mutual information between the source’s past
+state and the target’s current value, conditional on the target’s past.</p>
+<p>Past states need to be defined in the settings dictionary, where a past
+state is defined as a uniform embedding with parameters history and tau.
+The history describes the number of samples taken from a variable’s past,
+tau descrices the embedding delay, i.e., the spacing between every two
+samples from the processes’ past.</p>
+<p>See parent class for references.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd><p class="first">sets estimation parameters:</p>
+<ul class="last simple">
+<li>history_target : int - number of samples in the target’s past
+used as embedding</li>
+<li>history_source  : int [optional] - number of samples in the
+source’s past used as embedding (default=same as the target
+history)</li>
+<li>tau_source : int [optional] - source’s embedding delay
+(default=1)</li>
+<li>tau_target : int [optional] - target’s embedding delay
+(default=1)</li>
+<li>source_target_delay : int [optional] - information transfer delay
+between source and target (default=1)</li>
+<li>debug : bool [optional] - return debug information when calling
+JIDT (default=False)</li>
+<li>local_values : bool [optional] - return local TE instead of
+average TE (default=False)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Note:</dt>
+<dd>Some technical details: JIDT normalises over realisations, IDTxl
+normalises over raw data once, outside the CMI estimator to save
+computation time. The Theiler window ignores trial boundaries. The
+CMI estimator does add noise to the data as a default. To make analysis
+runs replicable set noise_level to 0.</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">estimate</code><span class="sig-paren">(</span><em>source</em>, <em>target</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianTE.estimate"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate transfer entropy from a source to a target variable.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>source <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of source variable, either a 2D numpy array where
+array dimensions represent [realisations x variable dimension]
+or a 1D array representing [realisations]</dd>
+<dt>var2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of target variable (similar to var1)</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float | numpy array</dt>
+<dd>average TE over all samples or local TE for individual
+samples if ‘local_values’=True</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtKraskov</code><span class="sig-paren">(</span><em>CalcClass</em>, <em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskov"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Abstract class for implementation of JIDT Kraskov-estimators.</p>
+<p>Abstract class for implementation of JIDT Kraskov-estimators, child classes
+implement estimators for mutual information (MI), conditional mutual
+information (CMI), actice information storage (AIS), transfer entropy (TE)
+using the Kraskov-Grassberger-Stoegbauer estimator for continuous data.
+See parent class for references.</p>
+<p>Set common estimation parameters for JIDT Kraskov-estimators. For usage of
+these estimators see documentation for the child classes.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>CalcClass <span class="classifier-delimiter">:</span> <span class="classifier">JAVA class</span></dt>
+<dd>JAVA class returned by jpype.JPackage</dd>
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">set estimator parameters:</p>
+<ul class="last simple">
+<li>debug : bool [optional] - return debug information when calling
+JIDT (default=False)</li>
+<li>local_values : bool [optional] - return local TE instead of
+average TE (default=False)</li>
+<li>kraskov_k : int [optional] - no. nearest neighbours for KNN
+search (default=4)</li>
+<li>normalise : bool [optional] - z-standardise data (default=False)</li>
+<li>theiler_t : int [optional] - no. next temporal neighbours ignored
+in KNN and range searches (default=0)</li>
+<li>noise_level : float [optional] - random noise added to the data
+(default=1e-8)</li>
+<li>num_threads : int | str [optional] - number of threads used for
+estimation (default=’USE_ALL’, note that this uses <em>all</em>
+available threads on the current machine)</li>
+<li>algorithm_num : int [optional] - which Kraskov algorithm (1 or 2)
+to use (default=1). Only applied at this method for TE and AIS
+(is already applied for MI/CMI). Note that default algorithm of 1
+here is different to the default ALG_NUM argument for the JIDT
+AIS KSG estimator.</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">is_analytic_null_estimator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskov.is_analytic_null_estimator"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Indicate if estimator supports analytic surrogates.</p>
+<p>Return true if the estimator implements estimate_surrogates_analytic()
+where data is formatted as per the estimate method for this estimator.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>bool</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtKraskovAIS</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovAIS"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Calculate active information storage with JIDT’s Kraskov implementation.</p>
+<p>Calculate active information storage (AIS) for some process using JIDT’s
+implementation of the Kraskov type 1 estimator. AIS is defined as the
+mutual information between the processes’ past state and current value.</p>
+<p>The past state needs to be defined in the settings dictionary, where a past
+state is defined as a uniform embedding with parameters history and tau.
+The history describes the number of samples taken from a processes’ past,
+tau describes the embedding delay, i.e., the spacing between every two
+samples from the processes’ past.</p>
+<p>See parent class for references.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd><p class="first">sets estimation parameters:</p>
+<ul class="last simple">
+<li>history : int - number of samples in the processes’ past used as
+embedding</li>
+<li>tau : int [optional] - the processes’ embedding delay (default=1)</li>
+<li>debug : bool [optional] - return debug information when calling
+JIDT (default=False)</li>
+<li>local_values : bool [optional] - return local TE instead of
+average TE (default=False)</li>
+<li>kraskov_k : int [optional] - no. nearest neighbours for KNN
+search (default=4)</li>
+<li>normalise : bool [optional] - z-standardise data (default=False)</li>
+<li>theiler_t : int [optional] - no. next temporal neighbours ignored
+in KNN and range searches (default=0)</li>
+<li>noise_level : float [optional] - random noise added to the data
+(default=1e-8)</li>
+<li>num_threads : int | str [optional] - number of threads used for
+estimation (default=’USE_ALL’, note that this uses <em>all</em>
+available threads on the current machine)</li>
+<li>algorithm_num : int [optional] - which Kraskov algorithm (1 or 2)
+to use (default=1)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Note:</dt>
+<dd>Some technical details: JIDT normalises over realisations, IDTxl
+normalises over raw data once, outside the AIS estimator to save
+computation time. The Theiler window ignores trial boundaries. The
+AIS estimator does add noise to the data as a default. To make analysis
+runs replicable set noise_level to 0.</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">estimate</code><span class="sig-paren">(</span><em>process</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovAIS.estimate"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate active information storage.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>process <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of first variable, either a 2D numpy array where
+array dimensions represent [realisations x variable dimension]
+or a 1D array representing [realisations]</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float | numpy array</dt>
+<dd>average AIS over all samples or local AIS for individual
+samples if ‘local_values’=True</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtKraskovCMI</code><span class="sig-paren">(</span><em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovCMI"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Calculate conditional mutual inform with JIDT’s Kraskov implementation.</p>
+<p>Calculate the conditional mutual information (CMI) between three variables.
+Call JIDT via jpype and use the Kraskov 1 estimator. If no conditional is
+given (is None), the function returns the mutual information between var1
+and var2. See parent class for references.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">set estimator parameters:</p>
+<ul class="last simple">
+<li>debug : bool [optional] - return debug information when calling
+JIDT (default=False)</li>
+<li>local_values : bool [optional] - return local TE instead of
+average TE (default=False)</li>
+<li>kraskov_k : int [optional] - no. nearest neighbours for KNN
+search (default=4)</li>
+<li>normalise : bool [optional] - z-standardise data (default=False)</li>
+<li>theiler_t : int [optional] - no. next temporal neighbours ignored
+in KNN and range searches (default=0)</li>
+<li>noise_level : float [optional] - random noise added to the data
+(default=1e-8)</li>
+<li>num_threads : int | str [optional] - number of threads used for
+estimation (default=’USE_ALL’, note that this uses <em>all</em>
+available threads on the current machine)</li>
+<li>algorithm_num : int [optional] - which Kraskov algorithm (1 or 2)
+to use (default=1)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Note:</dt>
+<dd>Some technical details: JIDT normalises over realisations, IDTxl
+normalises over raw data once, outside the CMI estimator to save
+computation time. The Theiler window ignores trial boundaries. The
+CMI estimator does add noise to the data as a default. To make analysis
+runs replicable set noise_level to 0.</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">estimate</code><span class="sig-paren">(</span><em>var1</em>, <em>var2</em>, <em>conditional=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovCMI.estimate"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate conditional mutual information.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>var1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of first variable, either a 2D numpy array where
+array dimensions represent [realisations x variable dimension]
+or a 1D array representing [realisations]</dd>
+<dt>var2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of the second variable (similar to var1)</dd>
+<dt>conditional <span class="classifier-delimiter">:</span> <span class="classifier">numpy array [optional]</span></dt>
+<dd>realisations of the conditioning variable (similar to var), if
+no conditional is provided, return MI between var1 and var2</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float | numpy array</dt>
+<dd>average CMI over all samples or local CMI for individual
+samples if ‘local_values’=True</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtKraskovMI</code><span class="sig-paren">(</span><em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovMI"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Calculate mutual information with JIDT’s Kraskov implementation.</p>
+<p>Calculate the mutual information between two variables. Call JIDT via jpype
+and use the Kraskov 1 estimator. See parent class for references.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">sets estimation parameters:</p>
+<ul class="last simple">
+<li>debug : bool [optional] - return debug information when calling
+JIDT (default=False)</li>
+<li>local_values : bool [optional] - return local TE instead of
+average TE (default=False)</li>
+<li>kraskov_k : int [optional] - no. nearest neighbours for KNN
+search (default=4)</li>
+<li>normalise : bool [optional] - z-standardise data (default=False)</li>
+<li>theiler_t : int [optional] - no. next temporal neighbours ignored
+in KNN and range searches (default=0)</li>
+<li>noise_level : float [optional] - random noise added to the data
+(default=1e-8)</li>
+<li>num_threads : int | str [optional] - number of threads used for
+estimation (default=’USE_ALL’, note that this uses <em>all</em>
+available threads on the current machine)</li>
+<li>algorithm_num : int [optional] - which Kraskov algorithm (1 or 2)
+to use (default=1)</li>
+<li>lag_mi : int [optional] - time difference in samples to calculate
+the lagged MI between processes (default=0)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Note:</dt>
+<dd>Some technical details: JIDT normalises over realisations, IDTxl
+normalises over raw data once, outside the MI estimator to save
+computation time. The Theiler window ignores trial boundaries. The
+MI estimator does add noise to the data as a default. To make analysis
+runs replicable set noise_level to 0.</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">estimate</code><span class="sig-paren">(</span><em>var1</em>, <em>var2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovMI.estimate"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate mutual information.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>var1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of first variable, either a 2D numpy array where
+array dimensions represent [realisations x variable dimension]
+or a 1D array representing [realisations]</dd>
+<dt>var2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of the second variable (similar to var1)</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float | numpy array</dt>
+<dd>average MI over all samples or local MI for individual
+samples if ‘local_values’=True</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">JidtKraskovTE</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovTE"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Calculate transfer entropy with JIDT’s Kraskov implementation.</p>
+<p>Calculate transfer entropy between a source and a target variable using
+JIDT’s implementation of the Kraskov type 1 estimator. Transfer entropy is
+defined as the conditional mutual information between the source’s past
+state and the target’s current value, conditional on the target’s past.</p>
+<p>Past states need to be defined in the settings dictionary, where a past
+state is defined as a uniform embedding with parameters history and tau.
+The history describes the number of samples taken from a variable’s past,
+tau descrices the embedding delay, i.e., the spacing between every two
+samples from the processes’ past.</p>
+<p>See parent class for references.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd><p class="first">sets estimation parameters:</p>
+<ul class="last simple">
+<li>history_target : int - number of samples in the target’s past
+used as embedding</li>
+<li>history_source  : int [optional] - number of samples in the
+source’s past used as embedding (default=same as the target
+history)</li>
+<li>tau_source : int [optional] - source’s embedding delay
+(default=1)</li>
+<li>tau_target : int [optional] - target’s embedding delay
+(default=1)</li>
+<li>source_target_delay : int [optional] - information transfer delay
+between source and target (default=1)</li>
+<li>debug : bool [optional] - return debug information when calling
+JIDT (default=False)</li>
+<li>local_values : bool [optional] - return local TE instead of
+average TE (default=False)</li>
+<li>algorithm_num : int [optional] - which Kraskov algorithm (1 or 2)
+to use (default=1)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Note:</dt>
+<dd>Some technical details: JIDT normalises over realisations, IDTxl
+normalises over raw data once, outside the CMI estimator to save
+computation time. The Theiler window ignores trial boundaries. The
+CMI estimator does add noise to the data as a default. To make analysis
+runs replicable set noise_level to 0.</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">estimate</code><span class="sig-paren">(</span><em>source</em>, <em>target</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovTE.estimate"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate transfer entropy from a source to a target variable.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>source <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of source variable, either a 2D numpy array where
+array dimensions represent [realisations x variable dimension]
+or a 1D array representing [realisations]</dd>
+<dt>var2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of target variable (similar to var1)</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float | numpy array</dt>
+<dd>average TE over all samples or local TE for individual
+samples if ‘local_values’=True</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt>
+<code class="descclassname">idtxl.estimators_jidt.</code><code class="descname">common_estimate_surrogates_analytic</code><span class="sig-paren">(</span><em>estimator</em>, <em>n_perm=200</em>, <em>**data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#common_estimate_surrogates_analytic"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate the surrogate distribution analytically for JidtEstimator.</p>
+<p>Estimate the surrogate distribution analytically for a JidtEstimator
+which is_analytic_null_estimator(), by sampling estimates at random
+p-values in the analytic distribution.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>estimator <span class="classifier-delimiter">:</span> <span class="classifier">a JidtEstimator object, which returns True to a call to</span></dt>
+<dd>its is_analytic_null_estimator() method</dd>
+<dt>n_perms <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>number of permutations (default=200)</dd>
+<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">numpy arrays</span></dt>
+<dd>realisations of random variables required for the calculation
+(varies between estimators, e.g. 2 variables for MI, 3 for CMI)</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float | numpy array</dt>
+<dd>n_perm surrogates of the average MI/CMI/TE over all samples
+under the null hypothesis of no relationship between var1 and
+var2 (in the context of conditional)</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="opencl-estimators-gpu">
+<h2>OpenCL Estimators (GPU)<a class="headerlink" href="#opencl-estimators-gpu" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_opencl.</code><code class="descname">OpenCLKraskov</code><span class="sig-paren">(</span><em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskov"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Abstract class for implementation of OpenCL estimators.</p>
+<p>Abstract class for implementation of OpenCL estimators, child classes
+implement estimators for mutual information (MI) and conditional mutual
+information (CMI) using the Kraskov-Grassberger-Stoegbauer estimator for
+continuous data.</p>
+<p>References:</p>
+<ul class="simple">
+<li>Kraskov, A., Stoegbauer, H., &amp; Grassberger, P. (2004). Estimating mutual
+information. Phys Rev E, 69(6), 066138.</li>
+<li>Lizier, Joseph T., Mikhail Prokopenko, and Albert Y. Zomaya. (2012).
+Local measures of information storage in complex distributed computation.
+Inform Sci, 208, 39-54.</li>
+<li>Schreiber, T. (2000). Measuring information transfer. Phys Rev Lett,
+85(2), 461.</li>
+</ul>
+<p>Estimators can be used to perform multiple, independent searches in
+parallel. Each of these parallel searches is called a ‘chunk’. To search
+multiple chunks, provide point sets as 2D arrays, where the first
+dimension represents samples or points, and the second dimension
+represents the points’ dimensions. Concatenate chunk data in the first
+dimension and pass the number of chunks to the estimators. Chunks must be
+of equal size.</p>
+<p>Set common estimation parameters for OpenCL estimators. For usage of these
+estimators see documentation for the child classes.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">set estimator parameters:</p>
+<ul class="last simple">
+<li>gpuid : int [optional] - device ID used for estimation (if more
+than one device is available on the current platform) (default=0)</li>
+<li>kraskov_k : int [optional] - no. nearest neighbours for KNN
+search (default=4)</li>
+<li>normalise : bool [optional] - z-standardise data (default=False)</li>
+<li>theiler_t : int [optional] - no. next temporal neighbours ignored
+in KNN and range searches (default=0)</li>
+<li>noise_level : float [optional] - random noise added to the data
+(default=1e-8)</li>
+<li>debug : bool [optional] - calculate intermediate results, i.e.
+neighbour counts from range searches and KNN distances, print
+debug output to console (default=False)</li>
+<li>return_counts : bool [optional] - return intermediate results,
+i.e. neighbour counts from range searches and KNN distances
+(default=False)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">is_analytic_null_estimator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskov.is_analytic_null_estimator"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Indicate if estimator supports analytic surrogates.</p>
+<p>Return true if the estimator implements estimate_surrogates_analytic()
+where data is formatted as per the estimate method for this estimator.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>bool</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">is_parallel</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskov.is_parallel"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Indicate if estimator supports parallel estimation over chunks.</p>
+<p>Return true if the supports parallel estimation over chunks, where a
+chunk is one independent data set.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>bool</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_opencl.</code><code class="descname">OpenCLKraskovCMI</code><span class="sig-paren">(</span><em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskovCMI"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Calculate conditional mutual inform with OpenCL Kraskov implementation.</p>
+<p>Calculate the conditional mutual information (CMI) between three variables
+using OpenCL GPU-code. If no conditional is given (is None), the function
+returns the mutual information between var1 and var2. See parent class for
+references.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">set estimator parameters:</p>
+<ul class="last simple">
+<li>gpuid : int [optional] - device ID used for estimation (if more
+than one device is available on the current platform) (default=0)</li>
+<li>kraskov_k : int [optional] - no. nearest neighbours for KNN
+search (default=4)</li>
+<li>normalise : bool [optional] - z-standardise data (default=False)</li>
+<li>theiler_t : int [optional] - no. next temporal neighbours ignored
+in KNN and range searches (default=0)</li>
+<li>noise_level : float [optional] - random noise added to the data
+(default=1e-8)</li>
+<li>debug : bool [optional] - return intermediate results, i.e.
+neighbour counts from range searches and KNN distances
+(default=False)</li>
+<li>return_counts : bool [optional] - return intermediate results,
+i.e. neighbour counts from range searches and KNN distances
+(default=False)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">estimate</code><span class="sig-paren">(</span><em>var1</em>, <em>var2</em>, <em>conditional=None</em>, <em>n_chunks=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskovCMI.estimate"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate conditional mutual information.</p>
+<p>If conditional is None, the mutual information between var1 and var2 is
+calculated.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>var1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of first variable, either a 2D numpy array where
+array dimensions represent [(realisations * n_chunks) x
+variable dimension] or a 1D array representing [realisations],
+array type should be int32</dd>
+<dt>var2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of the second variable (similar to var1)</dd>
+<dt>conditional <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of conditioning variable (similar to var1)</dd>
+<dt>n_chunks <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>number of data chunks, no. data points has to be the same for
+each chunk</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float | numpy array</dt>
+<dd>average CMI over all samples or local CMI for individual
+samples if ‘local_values’=True</dd>
+<dt>numpy arrays</dt>
+<dd>distances and neighborhood counts for var1 and var2 if
+debug=True and return_counts=True</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_opencl.</code><code class="descname">OpenCLKraskovMI</code><span class="sig-paren">(</span><em>settings=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskovMI"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Calculate mutual information with OpenCL Kraskov implementation.</p>
+<p>Calculate the mutual information (MI) between two variables using OpenCL
+GPU-code. See parent class for references.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict [optional]</span></dt>
+<dd><p class="first">set estimator parameters:</p>
+<ul class="last simple">
+<li>gpuid : int [optional] - device ID used for estimation (if more
+than one device is available on the current platform) (default=0)</li>
+<li>kraskov_k : int [optional] - no. nearest neighbours for KNN
+search (default=4)</li>
+<li>normalise : bool [optional] - z-standardise data (default=False)</li>
+<li>theiler_t : int [optional] - no. next temporal neighbours ignored
+in KNN and range searches (default=0)</li>
+<li>noise_level : float [optional] - random noise added to the data
+(default=1e-8)</li>
+<li>debug : bool [optional] - return intermediate results, i.e.
+neighbour counts from range searches and KNN distances
+(default=False)</li>
+<li>return_counts : bool [optional] - return intermediate results,
+i.e. neighbour counts from range searches and KNN distances
+(default=False)</li>
+<li>lag_mi : int [optional] - time difference in samples to calculate
+the lagged MI between processes (default=0)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">estimate</code><span class="sig-paren">(</span><em>var1</em>, <em>var2</em>, <em>n_chunks=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskovMI.estimate"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate mutual information.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>var1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of first variable, either a 2D numpy array where
+array dimensions represent [(realisations * n_chunks) x
+variable dimension] or a 1D array representing [realisations],
+array type should be int32</dd>
+<dt>var2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>realisations of the second variable (similar to var1)</dd>
+<dt>n_chunks <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>number of data chunks, no. data points has to be the same for
+each chunk</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float | numpy array</dt>
+<dd>average MI over all samples or local MI for individual
+samples if ‘local_values’=True</dd>
+<dt>numpy arrays</dt>
+<dd>distances and neighborhood counts for var1 and var2 if
+debug=True and return_counts=True</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="pid-estimators">
+<h2>PID Estimators<a class="headerlink" href="#pid-estimators" title="Permalink to this headline">¶</a></h2>
+<p>Partical information decomposition for discrete random variables.</p>
+<p>This module provides an estimator for partial information decomposition
+as proposed in</p>
+<p>Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., &amp; Ay, N. (2014). Quantifying
+Unique Information. Entropy, 16(4), 2161–2183. <a class="reference external" href="http://doi.org/10.3390/e16042161">http://doi.org/10.3390/e16042161</a></p>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_pid.</code><code class="descname">SydneyPID</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#SydneyPID"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate partial information decomposition of discrete variables.</p>
+<p>Fast implementation of the BROJA partial information decomposition (PID)
+estimator for discrete data (Bertschinger, 2014). The estimator does not
+require JAVA or GPU modules to run.</p>
+<p>The estimator finds shared information, unique information and
+synergistic information between the two inputs s1 and s2 with respect to
+the output t.</p>
+<p>Improved version with larger initial swaps and checking for convergence of
+both the unique information from sources 1 and 2. The function counts the
+empirical observations, calculates probabilities and the initial CMI, then
+does the vitrualised swaps until it has converged, and finally calculates
+the PID. The virtualised swaps stage contains two loops. An inner loop
+which actually does the virtualised swapping, keeping the changes if the
+CMI decreases; and an outer loop which decreases the size of the
+probability mass increment the virtualised swapping utilises.</p>
+<p>References</p>
+<ul class="simple">
+<li>Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., &amp; Ay, N. (2014).
+Quantifying unique information. Entropy, 16(4), 2161–2183.
+<a class="reference external" href="http://doi.org/10.3390/e16042161">http://doi.org/10.3390/e16042161</a></li>
+</ul>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd><p class="first">estimation parameters</p>
+<ul class="last simple">
+<li>alph_s1 : int - alphabet size of s1</li>
+<li>alph_s2 : int - alphabet size of s2</li>
+<li>alph_t : int - alphabet size of t</li>
+<li>max_unsuc_swaps_row_parm : int - soft limit for virtualised swaps
+based on the number of unsuccessful swaps attempted in a row.
+If there are too many unsuccessful swaps in a row, then it
+will break the inner swap loop; the outer loop decrements the
+size of the probability mass increment and then attemps
+virtualised swaps again with the smaller probability increment.
+The exact number of unsuccessful swaps allowed before breaking
+is the total number of possible swaps (given our alphabet
+sizes) times the control parameter max_unsuc_swaps_row_parm,
+e.g., if the parameter is set to 3, this gives a high degree of
+confidence that nearly (if not) all of the possible swaps have
+been attempted before this soft limit breaks the swap loop.</li>
+<li>num_reps : int -  number of times the outer loop will halve the
+size of the probability increment used for the virtualised
+swaps. This is in direct correspondence with the number of times
+the empirical data was replicated in your original
+implementation.</li>
+<li>max_iters : int - provides a hard upper bound on the number of
+times it will attempt to perform virtualised swaps in the inner
+loop. However, this hard limit is (practically) never used as it
+should always hit the soft limit defined above (parameter may be
+removed in the future).</li>
+<li>verbose : bool [optional] - print output to console
+(default=False)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">estimate</code><span class="sig-paren">(</span><em>s1</em>, <em>s2</em>, <em>t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#SydneyPID.estimate"><span class="viewcode-link">[source]</span></a></dt>
+<dd><dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>s1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>1D array containing realizations of a discrete random variable</dd>
+<dt>s2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>1D array containing realizations of a discrete random variable</dd>
+<dt>t <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>1D array containing realizations of a discrete random variable</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>dict</dt>
+<dd>estimated decomposition, contains the joint distribution,
+unique, shared, and synergistic information</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">is_analytic_null_estimator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#SydneyPID.is_analytic_null_estimator"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Indicate if estimator supports analytic surrogates.</p>
+<p>Return true if the estimator implements estimate_surrogates_analytic()
+where data is formatted as per the estimate method for this estimator.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>bool</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">is_parallel</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#SydneyPID.is_parallel"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Indicate if estimator supports parallel estimation over chunks.</p>
+<p>Return true if the supports parallel estimation over chunks, where a
+chunk is one independent data set.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>bool</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.estimators_pid.</code><code class="descname">TartuPID</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#TartuPID"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate partial information decomposition for two inputs and one output</p>
+<p>Implementation of the partial information decomposition (PID) estimator for
+discrete data. The estimator finds shared information, unique information
+and synergistic information between the two inputs s1 and s2 with respect
+to the output t.</p>
+<p>The algorithm uses exponential cone programming and requires the Python
+package for ECOS: Embedded Cone Solver (<a class="reference external" href="https://pypi.python.org/pypi/ecos">https://pypi.python.org/pypi/ecos</a>).</p>
+<p>References:</p>
+<ul class="simple">
+<li>Makkeh, A., Theis, D.O., &amp; Vicente, R. (2017). Bivariate Partial
+Information Decomposition: The Optimization Perspective. Entropy, 19(10),
+530.</li>
+<li>Makkeh, A., Theis, D.O., &amp; Vicente, R. (2018). BROJA-2PID: A cone
+programming based Partial Information Decomposition estimator. Entropy,
+20(271), <a class="reference external" href="https://github.com/Abzinger/BROJA_2PID">https://github.com/Abzinger/BROJA_2PID</a>.</li>
+</ul>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd><p class="first">estimation parameters (with default parameters)</p>
+<ul class="last simple">
+<li>verbose : bool [optional] - print output to console
+(default=False)</li>
+<li>cone_solver : str [optional] - which cone solver to use
+(default=’ECOS’)</li>
+<li>solver_args : dict [optional] - solver arguments (default={})</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">estimate</code><span class="sig-paren">(</span><em>s1</em>, <em>s2</em>, <em>t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#TartuPID.estimate"><span class="viewcode-link">[source]</span></a></dt>
+<dd><dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>s1 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>1D array containing realizations of a discrete random variable</dd>
+<dt>s2 <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>1D array containing realizations of a discrete random variable</dd>
+<dt>t <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>1D array containing realizations of a discrete random variable</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>dict</dt>
+<dd>estimated decomposition, solver used, numerical error</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">is_analytic_null_estimator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#TartuPID.is_analytic_null_estimator"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Indicate if estimator supports analytic surrogates.</p>
+<p>Return true if the estimator implements estimate_surrogates_analytic()
+where data is formatted as per the estimate method for this estimator.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>bool</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">is_parallel</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#TartuPID.is_parallel"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Indicate if estimator supports parallel estimation over chunks.</p>
+<p>Return true if the supports parallel estimation over chunks, where a
+chunk is one independent data set.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>bool</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Information theoretic estimators</a><ul>
+<li><a class="reference internal" href="#jidt-estimators-cpu">JIDT Estimators (CPU)</a></li>
+<li><a class="reference internal" href="#opencl-estimators-gpu">OpenCL Estimators (GPU)</a></li>
+<li><a class="reference internal" href="#pid-estimators">PID Estimators</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="idtxl_results_class.html"
+                        title="previous chapter">The Results Class</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="idtxl_helper.html"
+                        title="next chapter">Helper functions</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/idtxl_estimators.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="idtxl_helper.html" title="Helper functions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="idtxl_results_class.html" title="The Results Class"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+    </div>
+  </body>
+</html>

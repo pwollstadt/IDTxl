@@ -1,0 +1,1065 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Algorithms for network inference &#8212; IDTxl 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Algorithms for the analysis of node dynamics" href="idtxl_process_analysis.html" />
+    <link rel="prev" title="The Data Class" href="idtxl_data_class.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="idtxl_process_analysis.html" title="Algorithms for the analysis of node dynamics"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="idtxl_data_class.html" title="The Data Class"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="algorithms-for-network-inference">
+<h1>Algorithms for network inference<a class="headerlink" href="#algorithms-for-network-inference" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="multivariate-transfer-entropy-mte">
+<h2>Multivariate Transfer Entropy (mTE)<a class="headerlink" href="#multivariate-transfer-entropy-mte" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.multivariate_te.</code><code class="descname">MultivariateTE</code><a class="reference internal" href="_modules/idtxl/multivariate_te.html#MultivariateTE"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Perform network inference using multivariate transfer entropy.</p>
+<p>Perform network inference using multivariate transfer entropy (TE). To
+perform network inference call analyse_network() on the whole network or a
+set of nodes or call analyse_single_target() to estimate TE for a single
+target. See docstrings of the two functions for more information.</p>
+<p>References:</p>
+<ul class="simple">
+<li>Schreiber, T. (2000). Measuring Information Transfer. Phys Rev Lett,
+85(2), 461–464. <a class="reference external" href="http://doi.org/10.1103/PhysRevLett.85.461">http://doi.org/10.1103/PhysRevLett.85.461</a></li>
+<li>Vicente, R., Wibral, M., Lindner, M., &amp; Pipa, G. (2011). Transfer
+entropy-a model-free measure of effective connectivity for the
+neurosciences. J Comp Neurosci, 30(1), 45–67.
+<a class="reference external" href="http://doi.org/10.1007/s10827-010-0262-3">http://doi.org/10.1007/s10827-010-0262-3</a></li>
+<li>Lizier, J. T., &amp; Rubinov, M. (2012). Multivariate construction of
+effective computational networks from observational data. Max Planck
+Institute: Preprint. Retrieved from
+<a class="reference external" href="http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf">http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf</a></li>
+<li>Faes, L., Nollo, G., &amp; Porta, A. (2011). Information-based detection
+of nonlinear Granger causality in multivariate processes via a
+nonuniform embedding technique. Phys Rev E, 83, 1–15.
+<a class="reference external" href="http://doi.org/10.1103/PhysRevE.83.051112">http://doi.org/10.1103/PhysRevE.83.051112</a></li>
+</ul>
+<p>Attributes:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>source_set <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd>indices of source processes tested for their influence on the
+target</dd>
+<dt>target <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd>index of target process</dd>
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>analysis settings</dd>
+<dt>current_value <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>index of the current value in TE estimation, (idx process,
+idx sample)</dd>
+<dt>selected_vars_full <span class="classifier-delimiter">:</span> <span class="classifier">list of tuples</span></dt>
+<dd>samples in the full conditional set, (idx process, idx sample)</dd>
+<dt>selected_vars_sources <span class="classifier-delimiter">:</span> <span class="classifier">list of tuples</span></dt>
+<dd>source samples in the conditional set, (idx process, idx sample)</dd>
+<dt>selected_vars_target <span class="classifier-delimiter">:</span> <span class="classifier">list of tuples</span></dt>
+<dd>target samples in the conditional set, (idx process, idx sample)</dd>
+<dt>pvalue_omnibus <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>p-value of the omnibus test</dd>
+<dt>pvalues_sign_sources <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>array of p-values for TE from individual sources to the target</dd>
+<dt>statistic_omnibus <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>joint TE from all sources to the target</dd>
+<dt>statistic_sign_sources <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>raw TE values from individual sources to the target</dd>
+<dt>sign_ominbus <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>statistical significance of the over-all TE</dd>
+</dl>
+</div></blockquote>
+<dl class="method">
+<dt>
+<code class="descname">analyse_network</code><span class="sig-paren">(</span><em>settings</em>, <em>data</em>, <em>targets='all'</em>, <em>sources='all'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/multivariate_te.html#MultivariateTE.analyse_network"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Find multivariate transfer entropy between all nodes in the network.</p>
+<p>Estimate multivariate transfer entropy (TE) between all nodes in the
+network or between selected sources and targets.</p>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>For a detailed description of the algorithm and settings see
+documentation of the analyse_single_target() method and references
+in the class docstring.</dd>
+<dt>Example:</dt>
+<dd><div class="first last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">Data</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="o">.</span><span class="n">generate_mute_data</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;cmi_estimator&#39;</span><span class="p">:</span>  <span class="s1">&#39;JidtKraskovCMI&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_max_stat&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_min_stat&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_omnibus&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_max_seq&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;max_lag_sources&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;min_lag_sources&#39;</span><span class="p">:</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">network_analysis</span> <span class="o">=</span> <span class="n">MultivariateTE</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">network_analysis</span><span class="o">.</span><span class="n">analyse_network</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd><p class="first">parameters for estimation and statistical testing, see
+documentation of analyse_single_target() for details, settings
+can further contain</p>
+<ul class="last simple">
+<li>verbose : bool [optional] - toggle console output
+(default=True)</li>
+<li>fdr_correction : bool [optional] - correct results on the
+network level, see documentation of stats.network_fdr() for
+details (default=True)</li>
+</ul>
+</dd>
+<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">Data instance</span></dt>
+<dd>raw data for analysis</dd>
+<dt>targets <span class="classifier-delimiter">:</span> <span class="classifier">list of int | ‘all’ [optional]</span></dt>
+<dd>index of target processes (default=’all’)</dd>
+<dt>sources <span class="classifier-delimiter">:</span> <span class="classifier">list of int | list of list | ‘all’ [optional]</span></dt>
+<dd>indices of source processes for each target (default=’all’);
+if ‘all’, all network nodes excluding the target node are
+considered as potential sources and tested;
+if list of int, the source specified by each int is tested as
+a potential source for the target with the same index or a
+single target;
+if list of list, sources specified in each inner list are
+tested for the target with the same index</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>ResultsNetworkInference instance</dt>
+<dd>results of network inference, see documentation of
+ResultsNetworkInference()</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">analyse_single_target</code><span class="sig-paren">(</span><em>settings</em>, <em>data</em>, <em>target</em>, <em>sources='all'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/multivariate_te.html#MultivariateTE.analyse_single_target"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Find multivariate transfer entropy between sources and a target.</p>
+<p>Find multivariate transfer entropy (TE) between all source processes
+and the target process. Uses multivariate, non-uniform embedding found
+through information maximisation. Multivariate TE is calculated in four
+steps:</p>
+<ol class="arabic simple">
+<li>find all relevant variables in the target processes’ own past, by
+iteratively adding candidate variables that have significant
+conditional mutual information (CMI) with the current value
+(conditional on all variables that were added previously)</li>
+<li>find all relevant variables in the source processes’ pasts (again
+by finding all candidates with significant CMI)</li>
+<li>prune the final conditional set by testing the CMI between each
+variable in the final set and the current value, conditional on all
+other variables in the final set</li>
+<li>statistics on the final set of sources (test for over-all transfer
+between the final conditional set and the current value, and for
+significant transfer of all individual variables in the set)</li>
+</ol>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>For a further description of the algorithm see references in the
+class docstring.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">Data</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="o">.</span><span class="n">generate_mute_data</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;cmi_estimator&#39;</span><span class="p">:</span>  <span class="s1">&#39;JidtKraskovCMI&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_max_stat&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_min_stat&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_omnibus&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_max_seq&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;max_lag_sources&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;min_lag_sources&#39;</span><span class="p">:</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">network_analysis</span> <span class="o">=</span> <span class="n">MultivariateTE</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">network_analysis</span><span class="o">.</span><span class="n">analyse_single_target</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                                                 <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                                                 <span class="n">sources</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd><p class="first">parameters for estimation and statistical testing:</p>
+<ul class="last simple">
+<li>cmi_estimator : str - estimator to be used for CMI
+calculation (for estimator settings see the documentation in
+the estimators_* modules)</li>
+<li>max_lag_sources : int - maximum temporal search depth for
+candidates in the sources’ past in samples</li>
+<li>min_lag_sources : int - minimum temporal search depth for
+candidates in the sources’ past in samples</li>
+<li>max_lag_target : int [optional] - maximum temporal search
+depth for candidates in the target’s past in samples
+(default=same as max_lag_sources)</li>
+<li>tau_sources : int [optional] - spacing between candidates in
+the sources’ past in samples (default=1)</li>
+<li>tau_target : int [optional] - spacing between candidates in
+the target’s past in samples (default=1)</li>
+<li>n_perm_* : int [optional] - number of permutations, where *
+can be ‘max_stat’, ‘min_stat’, ‘omnibus’, and ‘max_seq’
+(default=500)</li>
+<li>alpha_* : float [optional] - critical alpha level for
+statistical significance, where * can be ‘max_stats’,
+‘min_stats’, ‘omnibus’, and ‘max_seq’ (default=0.05)</li>
+<li>add_conditionals : list of tuples | str [optional] - force
+the estimator to add these conditionals when estimating TE;
+can either be a list of variables, where each variable is
+described as (idx process, lag wrt to current value) or can
+be a string: ‘faes’ for Faes-Method (see references)</li>
+<li>permute_in_time : bool [optional] - force surrogate
+creation by shuffling realisations in time instead of
+shuffling replications; see documentation of
+Data.permute_samples() for further settings (default=False)</li>
+<li>verbose : bool [optional] - toggle console output
+(default=True)</li>
+</ul>
+</dd>
+<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">Data instance</span></dt>
+<dd>raw data for analysis</dd>
+<dt>target <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>index of target process</dd>
+<dt>sources <span class="classifier-delimiter">:</span> <span class="classifier">list of int | int | ‘all’ [optional]</span></dt>
+<dd>single index or list of indices of source processes
+(default=’all’), if ‘all’, all network nodes excluding the
+target node are considered as potential sources</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>ResultsNetworkInference instance</dt>
+<dd>results of network inference, see documentation of
+ResultsNetworkInference()</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="bivariate-transfer-entropy-bte">
+<h2>Bivariate Transfer Entropy (bTE)<a class="headerlink" href="#bivariate-transfer-entropy-bte" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.bivariate_te.</code><code class="descname">BivariateTE</code><a class="reference internal" href="_modules/idtxl/bivariate_te.html#BivariateTE"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Perform network inference using bivariate transfer entropy.</p>
+<p>Perform network inference using bivariate transfer entropy (TE). To
+perform network inference call analyse_network() on the whole network or a
+set of nodes or call analyse_single_target() to estimate TE for a single
+target. See docstrings of the two functions for more information.</p>
+<p>References:</p>
+<ul class="simple">
+<li>Schreiber, T. (2000). Measuring Information Transfer. Phys Rev Lett,
+85(2), 461–464. <a class="reference external" href="http://doi.org/10.1103/PhysRevLett.85.461">http://doi.org/10.1103/PhysRevLett.85.461</a></li>
+<li>Vicente, R., Wibral, M., Lindner, M., &amp; Pipa, G. (2011). Transfer
+entropy-a model-free measure of effective connectivity for the
+neurosciences. J Comp Neurosci, 30(1), 45–67.
+<a class="reference external" href="http://doi.org/10.1007/s10827-010-0262-3">http://doi.org/10.1007/s10827-010-0262-3</a></li>
+<li>Lizier, J. T., &amp; Rubinov, M. (2012). Multivariate construction of
+effective computational networks from observational data. Max Planck
+Institute: Preprint. Retrieved from
+<a class="reference external" href="http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf">http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf</a></li>
+<li>Faes, L., Nollo, G., &amp; Porta, A. (2011). Information-based detection
+of nonlinear Granger causality in multivariate processes via a
+nonuniform embedding technique. Phys Rev E, 83, 1–15.
+<a class="reference external" href="http://doi.org/10.1103/PhysRevE.83.051112">http://doi.org/10.1103/PhysRevE.83.051112</a></li>
+</ul>
+<dl class="docutils">
+<dt>Attributes:</dt>
+<dd><dl class="first last docutils">
+<dt>source_set <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd>indices of source processes tested for their influence on the
+target</dd>
+<dt>target <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd>index of target process</dd>
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>analysis settings</dd>
+<dt>current_value <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>index of the current value in TE estimation, (idx process,
+idx sample)</dd>
+<dt>selected_vars_full <span class="classifier-delimiter">:</span> <span class="classifier">list of tuples</span></dt>
+<dd>samples in the full conditional set, (idx process, idx sample)</dd>
+<dt>selected_vars_sources <span class="classifier-delimiter">:</span> <span class="classifier">list of tuples</span></dt>
+<dd>source samples in the conditional set, (idx process, idx sample)</dd>
+<dt>selected_vars_target <span class="classifier-delimiter">:</span> <span class="classifier">list of tuples</span></dt>
+<dd>target samples in the conditional set, (idx process, idx sample)</dd>
+<dt>pvalue_omnibus <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>p-value of the omnibus test</dd>
+<dt>pvalues_sign_sources <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>array of p-values for TE from individual sources to the target</dd>
+<dt>statistic_omnibus <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>joint TE from all sources to the target</dd>
+<dt>statistic_sign_sources <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>raw TE values from individual sources to the target</dd>
+<dt>sign_ominbus <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>statistical significance of the over-all TE</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">analyse_network</code><span class="sig-paren">(</span><em>settings</em>, <em>data</em>, <em>targets='all'</em>, <em>sources='all'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/bivariate_te.html#BivariateTE.analyse_network"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Find bivariate transfer entropy between all nodes in the network.</p>
+<p>Estimate bivariate transfer entropy (TE) between all nodes in the
+network or between selected sources and targets.</p>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>For a detailed description of the algorithm and settings see
+documentation of the analyse_single_target() method and references
+in the class docstring.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">Data</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="o">.</span><span class="n">generate_mute_data</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;cmi_estimator&#39;</span><span class="p">:</span>  <span class="s1">&#39;JidtKraskovCMI&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_max_stat&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_min_stat&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_omnibus&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_max_seq&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;max_lag&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;min_lag&#39;</span><span class="p">:</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">network_analysis</span> <span class="o">=</span> <span class="n">BivariateTE</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">network_analysis</span><span class="o">.</span><span class="n">analyse_network</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd><p class="first">parameters for estimation and statistical testing, see
+documentation of analyse_single_target() for details, settings
+can further contain</p>
+<ul class="last simple">
+<li>verbose : bool [optional] - toggle console output
+(default=True)</li>
+</ul>
+</dd>
+<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">Data instance</span></dt>
+<dd>raw data for analysis</dd>
+<dt>targets <span class="classifier-delimiter">:</span> <span class="classifier">list of int | ‘all’ [optional]</span></dt>
+<dd>index of target processes (default=’all’)</dd>
+<dt>sources <span class="classifier-delimiter">:</span> <span class="classifier">list of int | list of list | ‘all’  [optional]</span></dt>
+<dd>indices of source processes for each target (default=’all’);
+if ‘all’, all network nodes excluding the target node are
+considered as potential sources and tested;
+if list of int, the source specified by each int is tested as
+a potential source for the target with the same index or a
+single target;
+if list of list, sources specified in each inner list are
+tested for the target with the same index</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>ResultsNetworkInference instance</dt>
+<dd>results of network inference, see documentation of
+ResultsNetworkInference()</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">analyse_single_target</code><span class="sig-paren">(</span><em>settings</em>, <em>data</em>, <em>target</em>, <em>sources='all'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/bivariate_te.html#BivariateTE.analyse_single_target"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Find bivariate transfer entropy between sources and a target.</p>
+<p>Find bivariate transfer entropy (TE) between all potential source
+processes and the target process. Uses bivariate, non-uniform embedding
+found through information maximisation.</p>
+<p>Bivariate TE is calculated in four steps:</p>
+<ol class="arabic simple">
+<li>find all relevant variables in the target processes’ own past, by
+iteratively adding candidate variables that have significant
+conditional mutual information (CMI) with the current value
+(conditional on all variables that were added previously)</li>
+<li>find all relevant variables in the single source processes’ pasts
+(again by finding all candidates with significant CMI); treat each
+potential source process separately, i.e., the CMI is calculated
+with respect to already selected variables from the target’s past
+and from the current processes’ past only</li>
+<li>prune the final conditional set for each link (i.e., each
+process-target pairing): test the CMI between each variable in
+the final set and the current value, conditional on all other
+variables in the final set of the current link</li>
+<li>statistics on the final set of sources (test for over-all transfer
+between the final conditional set and the current value, and for
+significant transfer of all individual variables in the set)</li>
+</ol>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>For a further description of the algorithm see references in the
+class docstring.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">Data</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="o">.</span><span class="n">generate_mute_data</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;cmi_estimator&#39;</span><span class="p">:</span>  <span class="s1">&#39;JidtKraskovCMI&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_max_stat&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_min_stat&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_omnibus&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_max_seq&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;max_lag&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;min_lag&#39;</span><span class="p">:</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">network_analysis</span> <span class="o">=</span> <span class="n">BivariateTE</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">network_analysis</span><span class="o">.</span><span class="n">analyse_single_target</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                                                 <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                                                 <span class="n">sources</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd><p class="first">parameters for estimation and statistical testing:</p>
+<ul class="last simple">
+<li>cmi_estimator : str - estimator to be used for CMI
+calculation (for estimator settings see the documentation in
+the estimators_* modules)</li>
+<li>max_lag_sources : int - maximum temporal search depth for
+candidates in the sources’ past in samples</li>
+<li>min_lag_sources : int - minimum temporal search depth for
+candidates in the sources’ past in samples</li>
+<li>max_lag_target : int [optional] - maximum temporal search
+depth for candidates in the target’s past in samples
+(default=same as max_lag_sources)</li>
+<li>tau_sources : int [optional] - spacing between candidates in
+the sources’ past in samples (default=1)</li>
+<li>tau_target : int [optional] - spacing between candidates in
+the target’s past in samples (default=1)</li>
+<li>n_perm_* : int - number of permutations, where * can be
+‘max_stat’, ‘min_stat’, ‘omnibus’, and ‘max_seq’
+(default=500)</li>
+<li>alpha_* : float - critical alpha level for statistical
+significance, where * can be ‘max_stats’,  ‘min_stats’, and
+‘omnibus’ (default=0.05)</li>
+<li>add_conditionals : list of tuples | str [optional] - force
+the estimator to add these conditionals when estimating TE;
+can either be a list of variables, where each variable is
+described as (idx process, lag wrt to current value) or can
+be a string: ‘faes’ for Faes-Method (see references)</li>
+<li>permute_in_time : bool [optional] - force surrogate creation
+by shuffling realisations in time instead of shuffling
+replications; see documentation of Data.permute_samples() for
+further settings (default=False)</li>
+<li>verbose : bool [optional] - toggle console output
+(default=True)</li>
+</ul>
+</dd>
+<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">Data instance</span></dt>
+<dd>raw data for analysis</dd>
+<dt>target <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>index of target process</dd>
+<dt>sources <span class="classifier-delimiter">:</span> <span class="classifier">list of int | int | ‘all’ [optional]</span></dt>
+<dd>single index or list of indices of source processes
+(default=’all’), if ‘all’, all network nodes excluding the
+target node are considered as potential sources</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>ResultsNetworkInference instance</dt>
+<dd>results of network inference, see documentation of
+ResultsNetworkInference()</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="multivariate-mutual-information-mmi">
+<h2>Multivariate Mutual Information (mMI)<a class="headerlink" href="#multivariate-mutual-information-mmi" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.multivariate_mi.</code><code class="descname">MultivariateMI</code><a class="reference internal" href="_modules/idtxl/multivariate_mi.html#MultivariateMI"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Perform network inference using multivariate mutual information.</p>
+<p>Perform network inference using multivariate mutual information (MI). To
+perform network inference call analyse_network() on the whole network or a
+set of nodes or call analyse_single_target() to estimate MI for a single
+target. See docstrings of the two functions for more information.</p>
+<p>References:</p>
+<ul class="simple">
+<li>Lizier, J. T., &amp; Rubinov, M. (2012). Multivariate construction of
+effective computational networks from observational data. Max Planck
+Institute: Preprint. Retrieved from
+<a class="reference external" href="http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf">http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf</a></li>
+<li>Faes, L., Nollo, G., &amp; Porta, A. (2011). Information-based detection
+of nonlinear Granger causality in multivariate processes via a
+nonuniform embedding technique. Phys Rev E, 83, 1–15.
+<a class="reference external" href="http://doi.org/10.1103/PhysRevE.83.051112">http://doi.org/10.1103/PhysRevE.83.051112</a></li>
+</ul>
+<dl class="docutils">
+<dt>Attributes:</dt>
+<dd><dl class="first last docutils">
+<dt>source_set <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd>indices of source processes tested for their influence on the
+target</dd>
+<dt>target <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd>index of target process</dd>
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>analysis settings</dd>
+<dt>current_value <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>index of the current value in MI estimation, (idx process,
+idx sample)</dd>
+<dt>selected_vars_full <span class="classifier-delimiter">:</span> <span class="classifier">list of tuples</span></dt>
+<dd>samples in the full conditional set, (idx process, idx sample)</dd>
+<dt>selected_vars_sources <span class="classifier-delimiter">:</span> <span class="classifier">list of tuples</span></dt>
+<dd>source samples in the conditional set, (idx process, idx sample)</dd>
+<dt>pvalue_omnibus <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>p-value of the omnibus test</dd>
+<dt>pvalues_sign_sources <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>array of p-values for MI from individual sources to the target</dd>
+<dt>mi_omnibus <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>joint MI from all sources to the target</dd>
+<dt>mi_sign_sources <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>raw MI values from individual sources to the target</dd>
+<dt>sign_ominbus <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>statistical significance of the over-all MI</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">analyse_network</code><span class="sig-paren">(</span><em>settings</em>, <em>data</em>, <em>targets='all'</em>, <em>sources='all'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/multivariate_mi.html#MultivariateMI.analyse_network"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Find multivariate mutual information between nodes in the network.</p>
+<p>Estimate multivariate mutual information (MI) between all nodes in the
+network or between selected sources and targets.</p>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>For a detailed description of the algorithm and settings see
+documentation of the analyse_single_target() method and references
+in the class docstring.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">Data</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="o">.</span><span class="n">generate_mute_data</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># The algorithm uses a conditional mutual information to</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># construct a non-uniform embedding, hence a CMI- not MI-</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># estimator has to be specified:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;cmi_estimator&#39;</span><span class="p">:</span>  <span class="s1">&#39;JidtKraskovCMI&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_max_stat&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_min_stat&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_omnibus&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_max_seq&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;max_lag_sources&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;min_lag_sources&#39;</span><span class="p">:</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">network_analysis</span> <span class="o">=</span> <span class="n">MultivariateMI</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">network_analysis</span><span class="o">.</span><span class="n">analyse_network</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd><p class="first">parameters for estimation and statistical testing, see
+documentation of analyse_single_target() for details, settings
+can further contain</p>
+<ul class="last simple">
+<li>verbose : bool [optional] - toggle console output
+(default=True)</li>
+<li>fdr_correction : bool [optional] - correct results on the
+network level, see documentation of stats.network_fdr() for
+details (default=True)</li>
+</ul>
+</dd>
+<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">Data instance</span></dt>
+<dd>raw data for analysis</dd>
+<dt>targets <span class="classifier-delimiter">:</span> <span class="classifier">list of int | ‘all’ [optional]</span></dt>
+<dd>index of target processes (default=’all’)</dd>
+<dt>sources <span class="classifier-delimiter">:</span> <span class="classifier">list of int | list of list | ‘all’ [optional]</span></dt>
+<dd>indices of source processes for each target (default=’all’);
+if ‘all’, all network nodes excluding the target node are
+considered as potential sources and tested;
+if list of int, the source specified by each int is tested as
+a potential source for the target with the same index or a
+single target;
+if list of list, sources specified in each inner list are
+tested for the target with the same index</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>dict</dt>
+<dd>results for each target, see documentation of
+analyse_single_target(); results FDR-corrected, see
+documentation of stats.network_fdr()</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">analyse_single_target</code><span class="sig-paren">(</span><em>settings</em>, <em>data</em>, <em>target</em>, <em>sources='all'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/multivariate_mi.html#MultivariateMI.analyse_single_target"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Find multivariate mutual information between sources and a target.</p>
+<p>Find multivariate mutual information (MI) between all source processes
+and the target process. Uses multivariate, non-uniform embedding found
+through information maximisation .</p>
+<p>Multivariate MI is calculated in four steps (see Lizier and Faes for
+details):</p>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>For a further description of the algorithm see references in the
+class docstring.</dd>
+</dl>
+<ol class="arabic simple">
+<li>Find all relevant samples in the source processes’ past, by
+iteratively adding candidate samples that have significant
+conditional mutual information (CMI) with the current value
+(conditional on all samples that were added previously)</li>
+<li>Prune the final conditional set by testing the CMI between each
+sample in the final set and the current value, conditional on all
+other samples in the final set</li>
+<li>Statistics on the final set of sources (test for over-all transfer
+between the final conditional set and the current value, and for
+significant transfer of all individual samples in the set)</li>
+</ol>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">Data</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="o">.</span><span class="n">generate_mute_data</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># The algorithm uses a conditional mutual information to</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># construct a non-uniform embedding, hence a CMI- not MI-</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># estimator has to be specified:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;cmi_estimator&#39;</span><span class="p">:</span>  <span class="s1">&#39;JidtKraskovCMI&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_max_stat&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_min_stat&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_omnibus&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_max_seq&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;max_lag_sources&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;min_lag_sources&#39;</span><span class="p">:</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">network_analysis</span> <span class="o">=</span> <span class="n">MultivariateMI</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">network_analysis</span><span class="o">.</span><span class="n">analyse_single_target</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                                                 <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                                                 <span class="n">sources</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd><p class="first">parameters for estimation and statistical testing:</p>
+<ul class="last simple">
+<li>cmi_estimator : str - estimator to be used for CMI
+calculation (for estimator settings see the documentation in
+the estimators_* modules)</li>
+<li>max_lag_sources : int - maximum temporal search depth for
+candidates in the sources’ past in samples</li>
+<li>min_lag_sources : int - minimum temporal search depth for
+candidates in the sources’ past in samples</li>
+<li>tau_sources : int [optional] - spacing between candidates in
+the sources’ past in samples (default=1)</li>
+<li>n_perm_* : int [optional] - number of permutations, where *
+can be ‘max_stat’, ‘min_stat’, ‘omnibus’, and ‘max_seq’
+(default=500)</li>
+<li>alpha_* : float [optional] - critical alpha level for
+statistical significance, where * can be ‘max_stats’,
+‘min_stats’, ‘omnibus’, and ‘max_seq’ (default=0.05)</li>
+<li>add_conditionals : list of tuples | str [optional] - force
+the estimator to add these conditionals when estimating MI;
+can either be a list of variables, where each variable is
+described as (idx process, lag wrt to current value) or can
+be a string: ‘faes’ for Faes-Method (see references)</li>
+<li>permute_in_time : bool [optional] - force surrogate
+creation by shuffling realisations in time instead of
+shuffling replications; see documentation of
+Data.permute_samples() for further settings (default=False)</li>
+<li>verbose : bool [optional] - toggle console output
+(default=True)</li>
+</ul>
+</dd>
+<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">Data instance</span></dt>
+<dd>raw data for analysis</dd>
+<dt>target <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>index of target process</dd>
+<dt>sources <span class="classifier-delimiter">:</span> <span class="classifier">list of int | int | ‘all’ [optional]</span></dt>
+<dd>single index or list of indices of source processes
+(default=’all’), if ‘all’, all network nodes excluding the
+target node are considered as potential sources</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>dict</dt>
+<dd>results consisting of sets of selected variables as (full set,
+variables from the sources’ past), pvalues and MI for each
+selected variable, the current value for this analysis, results
+for omnibus test (joint MI between all selected source
+variables and the target, omnibus MI, p-value, and
+significance); NOTE that all variables are listed as tuples
+(process, lag wrt. current value)</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="bivariate-mutual-information-bmi">
+<h2>Bivariate Mutual Information (bMI)<a class="headerlink" href="#bivariate-mutual-information-bmi" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">idtxl.bivariate_mi.</code><code class="descname">BivariateMI</code><a class="reference internal" href="_modules/idtxl/bivariate_mi.html#BivariateMI"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Perform network inference using bivariate mutual information.</p>
+<p>Perform network inference using bivariate mutual information (MI). To
+perform network inference call analyse_network() on the whole network or a
+set of nodes or call analyse_single_target() to estimate MI for a single
+target. See docstrings of the two functions for more information.</p>
+<p>References:</p>
+<ul class="simple">
+<li>Lizier, J. T., &amp; Rubinov, M. (2012). Multivariate construction of
+effective computational networks from observational data. Max Planck
+Institute: Preprint. Retrieved from
+<a class="reference external" href="http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf">http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf</a></li>
+<li>Faes, L., Nollo, G., &amp; Porta, A. (2011). Information-based detection
+of nonlinear Granger causality in multivariate processes via a
+nonuniform embedding technique. Phys Rev E, 83, 1–15.
+<a class="reference external" href="http://doi.org/10.1103/PhysRevE.83.051112">http://doi.org/10.1103/PhysRevE.83.051112</a></li>
+</ul>
+<dl class="docutils">
+<dt>Attributes:</dt>
+<dd><dl class="first last docutils">
+<dt>source_set <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd>indices of source processes tested for their influence on the
+target</dd>
+<dt>target <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd>index of target process</dd>
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>analysis settings</dd>
+<dt>current_value <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>index of the current value in MI estimation, (idx process,
+idx sample)</dd>
+<dt>selected_vars_full <span class="classifier-delimiter">:</span> <span class="classifier">list of tuples</span></dt>
+<dd>samples in the full conditional set, (idx process, idx sample)</dd>
+<dt>selected_vars_sources <span class="classifier-delimiter">:</span> <span class="classifier">list of tuples</span></dt>
+<dd>source samples in the conditional set, (idx process, idx sample)</dd>
+<dt>selected_vars_target <span class="classifier-delimiter">:</span> <span class="classifier">list of tuples</span></dt>
+<dd>target samples in the conditional set, (idx process, idx sample)</dd>
+<dt>pvalue_omnibus <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>p-value of the omnibus test</dd>
+<dt>pvalues_sign_sources <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>array of p-values for MI from individual sources to the target</dd>
+<dt>mi_omnibus <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>joint MI from all sources to the target</dd>
+<dt>mi_sign_sources <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
+<dd>raw MI values from individual sources to the target</dd>
+<dt>sign_ominbus <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>statistical significance of the over-all MI</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">analyse_network</code><span class="sig-paren">(</span><em>settings</em>, <em>data</em>, <em>targets='all'</em>, <em>sources='all'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/bivariate_mi.html#BivariateMI.analyse_network"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Find bivariate mutual information between all nodes in the network.</p>
+<p>Estimate bivariate mutual information (MI) between all nodes in the
+network or between selected sources and targets.</p>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>For a detailed description of the algorithm and settings see
+documentation of the analyse_single_target() method and references
+in the class docstring.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">Data</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="o">.</span><span class="n">generate_mute_data</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># The algorithm uses a conditional mutual information to</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># construct a non-uniform embedding, hence a CMI- not MI-</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># estimator has to be specified:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;cmi_estimator&#39;</span><span class="p">:</span>  <span class="s1">&#39;JidtKraskovCMI&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_max_stat&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_min_stat&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_omnibus&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_max_seq&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;max_lag&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;min_lag&#39;</span><span class="p">:</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">network_analysis</span> <span class="o">=</span> <span class="n">BivariateMI</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">network_analysis</span><span class="o">.</span><span class="n">analyse_network</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd><p class="first">parameters for estimation and statistical testing, see
+documentation of analyse_single_target() for details, settings
+can further contain</p>
+<ul class="last simple">
+<li>verbose : bool [optional] - toggle console output
+(default=True)</li>
+</ul>
+</dd>
+<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">Data instance</span></dt>
+<dd>raw data for analysis</dd>
+<dt>targets <span class="classifier-delimiter">:</span> <span class="classifier">list of int | ‘all’ [optional]</span></dt>
+<dd>index of target processes (default=’all’)</dd>
+<dt>sources <span class="classifier-delimiter">:</span> <span class="classifier">list of int | list of list | ‘all’  [optional]</span></dt>
+<dd>indices of source processes for each target (default=’all’);
+if ‘all’, all network nodes excluding the target node are
+considered as potential sources and tested;
+if list of int, the source specified by each int is tested as
+a potential source for the target with the same index or a
+single target;
+if list of list, sources specified in each inner list are
+tested for the target with the same index</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>dict</dt>
+<dd>results for each target, see documentation of
+analyse_single_target()</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">analyse_single_target</code><span class="sig-paren">(</span><em>settings</em>, <em>data</em>, <em>target</em>, <em>sources='all'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/bivariate_mi.html#BivariateMI.analyse_single_target"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Find bivariate mutual information between sources and a target.</p>
+<p>Find bivariate mutual information (MI) between all potential source
+processes and the target process. Uses bivariate, non-uniform embedding
+found through information maximisation</p>
+<p>MI is calculated in three steps:</p>
+<ol class="arabic simple">
+<li>find all relevant variables in a single source processes’ past, by
+iteratively adding candidate variables that have significant
+conditional mutual information (CMI) with the current value
+(conditional on all variables that were added previously)</li>
+<li>prune the final conditional set for each link (i.e., each
+process-target pairing): test the CMI between each variable in
+the final set and the current value, conditional on all other
+variables in the final set of the current link; treat each
+potential source process separately, i.e., the CMI is calculated
+with respect to already selected variables the current processes’
+past only</li>
+<li>statistics on the final set of sources (test for over-all transfer
+between the final conditional set and the current value, and for
+significant transfer of all individual variables in the set)</li>
+</ol>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>For a further description of the algorithm see references in the
+class docstring.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">Data</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="o">.</span><span class="n">generate_mute_data</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># The algorithm uses a conditional mutual information to</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># construct a non-uniform embedding, hence a CMI- not MI-</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># estimator has to be specified:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;cmi_estimator&#39;</span><span class="p">:</span>  <span class="s1">&#39;JidtKraskovCMI&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_max_stat&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_min_stat&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_omnibus&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;n_perm_max_seq&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;max_lag&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;min_lag&#39;</span><span class="p">:</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">network_analysis</span> <span class="o">=</span> <span class="n">BivariateMI</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">network_analysis</span><span class="o">.</span><span class="n">analyse_single_target</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                                                 <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                                                 <span class="n">sources</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd><p class="first">parameters for estimation and statistical testing:</p>
+<ul class="last simple">
+<li>cmi_estimator : str - estimator to be used for CMI
+calculation (for estimator settings see the documentation in
+the estimators_* modules)</li>
+<li>max_lag_sources : int - maximum temporal search depth for
+candidates in the sources’ past in samples</li>
+<li>min_lag_sources : int - minimum temporal search depth for
+candidates in the sources’ past in samples</li>
+<li>tau_sources : int [optional] - spacing between candidates in
+the sources’ past in samples (default=1)</li>
+<li>n_perm_* : int - number of permutations, where * can be
+‘max_stat’, ‘min_stat’, ‘omnibus’, and ‘max_seq’
+(default=500)</li>
+<li>alpha_* : float - critical alpha level for statistical
+significance, where * can be ‘max_stats’,  ‘min_stats’, and
+‘omnibus’ (default=0.05)</li>
+<li>add_conditionals : list of tuples | str [optional] - force
+the estimator to add these conditionals when estimating MI;
+can either be a list of variables, where each variable is
+described as (idx process, lag wrt to current value) or can
+be a string: ‘faes’ for Faes-Method (see references)</li>
+<li>permute_in_time : bool [optional] - force surrogate creation
+by shuffling realisations in time instead of shuffling
+replications; see documentation of Data.permute_samples() for
+further settings (default=False)</li>
+<li>verbose : bool [optional] - toggle console output
+(default=True)</li>
+</ul>
+</dd>
+<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">Data instance</span></dt>
+<dd>raw data for analysis</dd>
+<dt>target <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>index of target process</dd>
+<dt>sources <span class="classifier-delimiter">:</span> <span class="classifier">list of int | int | ‘all’ [optional]</span></dt>
+<dd>single index or list of indices of source processes
+(default=’all’), if ‘all’, all network nodes excluding the
+target node are considered as potential sources</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>dict</dt>
+<dd>results consisting of sets of selected variables as (full set,
+variables from the sources’ past), pvalues and MI for each
+selected variable, the current value for this analysis, results
+for omnibus test (joint MI between all selected source
+variables and the target, omnibus MI, p-value, and
+significance); NOTE that all variables are listed as tuples
+(process, lag wrt. current value)</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Algorithms for network inference</a><ul>
+<li><a class="reference internal" href="#multivariate-transfer-entropy-mte">Multivariate Transfer Entropy (mTE)</a></li>
+<li><a class="reference internal" href="#bivariate-transfer-entropy-bte">Bivariate Transfer Entropy (bTE)</a></li>
+<li><a class="reference internal" href="#multivariate-mutual-information-mmi">Multivariate Mutual Information (mMI)</a></li>
+<li><a class="reference internal" href="#bivariate-mutual-information-bmi">Bivariate Mutual Information (bMI)</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="idtxl_data_class.html"
+                        title="previous chapter">The Data Class</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="idtxl_process_analysis.html"
+                        title="next chapter">Algorithms for the analysis of node dynamics</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/idtxl_network_inference.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="idtxl_process_analysis.html" title="Algorithms for the analysis of node dynamics"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="idtxl_data_class.html" title="The Data Class"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+    </div>
+  </body>
+</html>

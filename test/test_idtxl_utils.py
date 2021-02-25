@@ -1,10 +1,4 @@
-"""Unit tests for IDTxl utilities module.
-
-Created on Thu Apr  7 12:16:23 2016
-
-@author: patricia
-"""
-import pytest
+"""Unit tests for IDTxl utilities module."""
 import numpy as np
 from idtxl import idtxl_utils as utils
 
@@ -36,25 +30,30 @@ def test_discretise():
     assert type(discretised) == np.ndarray
     assert len(discretised.shape) == 1
     assert discretised.shape[0] == 3
-    assert (type(discretised[0]) == np.int32) or (type(discretised[0]) == np.int64)
-    assert check_all_bools_true(discretised == np.array([1,1,0]))
+    assert (
+        type(discretised[0]) == np.int32) or (type(discretised[0]) == np.int64)
+    assert check_all_bools_true(discretised == np.array([1, 1, 0]))
     # Now test where one value drops below the threshold
-    discretised = utils.discretise(np.array([1.1,0.54,0]), 2)
-    assert check_all_bools_true(discretised == np.array([1,0,0]))
-    # and test another example that will contrast with the max_ent discretisation:
-    discretised = utils.discretise(np.array([1,0.9,0.8,0]), 2)
+    discretised = utils.discretise(np.array([1.1, 0.54, 0]), 2)
+    assert check_all_bools_true(discretised == np.array([1, 0, 0]))
+    # and test another example that will contrast with the max_ent
+    # discretisation:
+    discretised = utils.discretise(np.array([1, 0.9, 0.8, 0]), 2)
     assert type(discretised) == np.ndarray
     assert len(discretised.shape) == 1
     assert discretised.shape[0] == 4
-    assert check_all_bools_true(discretised == np.array([1,1,1,0]))
+    assert check_all_bools_true(discretised == np.array([1, 1, 1, 0]))
     # Test 2D discretisation
-    discretised = utils.discretise(np.array([[1.1,1.1],[1.1,1.1],[0.55,1.5],[0,1.9],[0,2]]), 2)
+    discretised = utils.discretise(
+        np.array([[1.1, 1.1], [1.1, 1.1], [0.55, 1.5], [0, 1.9], [0, 2]]), 2)
     assert type(discretised) == np.ndarray
     assert len(discretised.shape) == 2
     assert discretised.shape[0] == 5
     assert discretised.shape[1] == 2
-    assert (type(discretised[0,0]) == np.int32) or (type(discretised[0,0]) == np.int64)
-    assert check_all_bools_true_2d(discretised == np.array([[1,0],[1,0],[1,0],[ 0,1],[0,1]]))
+    assert ((type(discretised[0, 0]) == np.int32) or
+            (type(discretised[0, 0]) == np.int64))
+    assert check_all_bools_true_2d(
+        discretised == np.array([[1, 0], [1, 0], [1, 0], [0, 1], [0, 1]]))
 
 
 def test_discretise_max_ent():

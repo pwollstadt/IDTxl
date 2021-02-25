@@ -1,20 +1,16 @@
 """Analysis of AIS in a network of processes.
 
 Analysis of active information storage (AIS) in individual processes of a
-network. The algorithm uses non-uniform embedding as described in Faes ???.
+network. The algorithm uses non-uniform embedding as described in Faes (2011).
 
 Note:
     Written for Python 3.4+
-
-@author: patricia
 """
 import numpy as np
 from . import stats
 from .single_process_analysis import SingleProcessAnalysis
-from .estimator import find_estimator
-
-# TODO use target instead of process to define the process that is analyzed.
-# This would reuse an attribute set in the parent class.
+from .results import ResultsSingleProcessAnalysis
+from . import idtxl_exceptions as ex
 
 
 class ActiveInformationStorage(SingleProcessAnalysis):
@@ -35,6 +31,10 @@ class ActiveInformationStorage(SingleProcessAnalysis):
       (2014). Local active information storage as a tool to understand
       distributed neural information processing. Front Neuroinf, 8, 1.
       http://doi.org/10.3389/fninf.2014.00001
+    - Faes, L., Nollo, G., & Porta, A. (2011). Information-based detection
+      of nonlinear Granger causality in multivariate processes via a
+      nonuniform embedding technique. Phys Rev E, 83, 1–15.
+      http://doi.org/10.1103/PhysRevE.83.051112
 
     Attributes:
         process_set : list
@@ -64,13 +64,14 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         the network.
 
         Note:
-            For a detailed description see the documentation of the
-            analyse_single_process() method of this class and the references.
+            For a detailed description of the algorithm and settings see
+            documentation of the analyse_single_process() method and
+            references in the class docstring.
 
         Example:
 
-            >>> dat = Data()
-            >>> dat.generate_mute_data(100, 5)
+            >>> data = Data()
+            >>> data.generate_mute_data(100, 5)
             >>> settings = {
             >>>     'cmi_estimator': 'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
@@ -80,26 +81,38 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             >>>     }
             >>> processes = [1, 2, 3]
             >>> network_analysis = ActiveInformationStorage()
-            >>> res = network_analysis.analyse_network(settings, dat,
-            >>>                                        processes)
+            >>> results = network_analysis.analyse_network(settings, data,
+            >>>                                            processes)
 
         Args:
             settings : dict
                 parameters for estimation and statistical testing, see
-                documentation of analyse_single_process() for details
+                documentation of analyse_single_target() for details, settings
+                can further contain
+
+                - verbose : bool [optional] - toggle console output
+                  (default=True)
+                - fdr_correction : bool [optional] - correct results on the
+                  network level, see documentation of stats.ais_fdr() for
+                  details (default=True)
+
             data : Data instance
                 raw data for analysis
-            process : list of int | 'all'
+            processes : list of int | 'all'
                 index of processes (default='all');
                 if 'all', AIS is estimated for all processes;
                 if list of int, AIS is estimated for processes specified in the
                 list.
 
         Returns:
-            dict
-                results for each process, see documentation of
-                analyse_single_process()
+            ResultsSingleProcessAnalysis instance
+                results of network AIS estimation, see documentation of
+                ResultsSingleProcessAnalysis()
         """
+        # Set defaults for AIS estimation.
+        settings.setdefault('verbose', True)
+        settings.setdefault('fdr_correction', True)
+
         # Check provided processes for analysis.
         if processes == 'all':
             processes = [t for t in range(data.n_processes)]
@@ -109,16 +122,33 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             raise ValueError('Processes were not specified correctly: '
                              '{0}.'.format(processes))
 
+        # Check and set defaults for checkpointing.
+        self.settings = self._set_checkpointing_defaults(
+            settings, data, [], processes)
+
         # Perform AIS estimation for each target individually.
-        settings.setdefault('verbose', True)
-        results = {}
+        results = ResultsSingleProcessAnalysis(
+            n_nodes=data.n_processes,
+            n_realisations=data.n_realisations(),
+            normalised=data.normalise)
         for t in range(len(processes)):
             if settings['verbose']:
                 print('\n####### analysing process {0} of {1}'.format(
                                                 processes[t], processes))
-            r = self.analyse_single_process(settings, data, processes[t])
-            r['process'] = processes[t]
-            results[processes[t]] = r
+            res_single = self.analyse_single_process(
+                settings, data, processes[t])
+            results.combine_results(res_single)
+
+        # Get no. realisations actually used for estimation from single target
+        # analysis.
+        results.data_properties.n_realisations = (
+            res_single.data_properties.n_realisations)
+
+        # Perform FDR-correction on the network level. Add FDR-corrected
+        # results as an extra field. Network_fdr/combine_results internally
+        # creates a deep copy of the results.
+        if settings['fdr_correction']:
+            results = stats.ais_fdr(settings, results)
         return results
 
     def analyse_single_process(self, settings, data, process):
@@ -128,16 +158,20 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         Uses non-uniform embedding found through information maximisation. This
         is done in three steps (see Lizier and Faes for details):
 
-        (1) find all relevant samples in the processes' own past, by
+        (1) Find all relevant samples in the processes' own past, by
             iteratively adding candidate samples that have significant
             conditional mutual information (CMI) with the current value
             (conditional on all samples that were added previously)
-        (3) prune the final conditional set by testing the CMI between each
+        (2) Prune the final conditional set by testing the CMI between each
             sample in the final set and the current value, conditional on all
             other samples in the final set
-        (4) calculate AIS using the final set of candidates as the past state
+        (3) Calculate AIS using the final set of candidates as the past state
             (calculate MI between samples in the past and the current value);
             test for statistical significance using a permutation test
+
+        Note:
+            For a further description of the algorithm see references in the
+            class docstring.
 
         Args:
             settings : dict
@@ -166,6 +200,12 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                   further settings (default=False)
                 - verbose : bool [optional] - toggle console output
                   (default=True)
+                - write_ckp : bool [optional] - enable checkpointing, writes
+                  analysis state to disk every time a variable is selected;
+                  resume crashed analysis using
+                  network_analysis.resume_checkpoint() (default=False)
+                - filename_ckp : str [optional] - checkpoint file name (without
+                  extension) (default='./idtxl_checkpoint')
 
             data : Data instance
                 raw data for analysis
@@ -173,12 +213,9 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 index of process
 
         Returns:
-            dict
-                results consisting of sets of selected variables as, the
-                current value for this analysis, results for omnibus test
-                (joint influence of all selected variables, omnibus TE,
-                p-value, and significance); NOTE that all variables are listed
-                as tuples (process, lag wrt. current value)
+            ResultsSingleProcessAnalysis instance
+                results of AIS estimation, see documentation of
+                ResultsSingleProcessAnalysis()
         """
         # Check input and clean up object if it was used before.
         self._initialise(settings, data, process)
@@ -195,43 +232,46 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         if self.settings['verbose']:
             print('final conditional samples: {0}'.format(
                     self._idx_to_lag(self.selected_vars_full)))
-        results = {
-            'current_value': self.current_value,
-            'selected_vars': self._idx_to_lag(self.selected_vars_full),
-            'ais': self.ais,
-            'ais_pval': self.pvalue,
-            'ais_sign': self.sign,
-            'settings': self.settings}
+        results = ResultsSingleProcessAnalysis(
+            n_nodes=data.n_processes,
+            n_realisations=data.n_realisations(self.current_value),
+            normalised=data.normalise)
+        results._add_single_result(
+            process=self.process,
+            settings=self.settings,
+            results={
+                'current_value': self.current_value,
+                'selected_vars': self._idx_to_lag(self.selected_vars_full),
+                'ais': self.ais,
+                'ais_pval': self.pvalue,
+                'ais_sign': self.sign
+            })
         self._reset()  # remove realisations and min_stats surrogate table
         return results
 
     def _initialise(self, settings, data, process):
         """Check input, set initial or default values for analysis settings."""
         # Check analysis settings and set defaults.
-        settings.setdefault('verbose', True)
-        settings.setdefault('add_conditionals', None)
-        settings.setdefault('tau', 1)
+        self.settings = settings.copy()
+        self.settings.setdefault('verbose', True)
+        self.settings.setdefault('add_conditionals', None)
+        self.settings.setdefault('tau', 1)
+        self.settings.setdefault('local_values', False)
 
-        if type(settings['max_lag']) is not int or settings['max_lag'] < 0:
+        if type(self.settings['max_lag']) is not int or (
+                self.settings['max_lag'] < 0):
             raise RuntimeError('max_lag has to be an integer >= 0.')
-        if type(settings['tau']) is not int or settings['tau'] <= 0:
+        if type(self.settings['tau']) is not int or self.settings['tau'] <= 0:
             raise RuntimeError('tau has to be an integer > 0.')
-        if settings['tau'] >= settings['max_lag']:
+        if self.settings['tau'] >= self.settings['max_lag']:
             raise RuntimeError('tau ({0}) has to be smaller than max_lag ({1})'
-                               '.'.format(settings['tau'],
-                                          settings['max_lag']))
-        self.settings = settings
+                               '.'.format(self.settings['tau'],
+                                          self.settings['max_lag']))
 
         # Set CMI estimator.
-        try:
-            EstimatorClass = find_estimator(settings['cmi_estimator'])
-        except KeyError:
-            raise RuntimeError('Please provide an estimator class or name!')
-        self._cmi_estimator = EstimatorClass(settings)
+        self._set_cmi_estimator()
 
         # Initialise class attributes.
-
-        self.settings = settings
         self._min_stats_surr_table = None
 
         # Check process to be analysed.
@@ -262,6 +302,10 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         # Check the permutation type and no. permutations requested by the
         # user. This tests if there is sufficient data to do all tests.
         # surrogates.check_permutations(self, data)
+
+        # Check and set defaults for checkpointing.
+        self.settings = self._set_checkpointing_defaults(
+            self.settings, data, [], process)
 
         # Reset all attributes to inital values if the instance has been used
         # before.
@@ -312,6 +356,9 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 True if a significant variable was found in the process's past.
         """
         success = False
+        if self.settings['verbose']:
+            print('testing candidate set: {0}'.format(
+                                self._idx_to_lag(candidate_set)))
         while candidate_set:
             # Get realisations for all candidates.
             cand_real = data.get_realisations(self.current_value,
@@ -319,29 +366,52 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             cand_real = cand_real.T.reshape(cand_real.size, 1)
 
             # Calculate the (C)MI for each candidate and the target.
-            temp_te = self._cmi_estimator.estimate_mult(
+            try:
+                temp_te = self._cmi_estimator.estimate_parallel(
                                 n_chunks=len(candidate_set),
                                 re_use=['var2', 'conditional'],
                                 var1=cand_real,
                                 var2=self._current_value_realisations,
                                 conditional=self._selected_vars_realisations)
+            except ex.AlgorithmExhaustedError as aee:
+                # The algorithm cannot continue here, so
+                #  we'll terminate the search for more candidates,
+                #  though those identified already remain valid
+                print('AlgorithmExhaustedError encountered in '
+                      'estimations: ' + aee.message)
+                print('Halting current estimation set.')
+                # For now we don't need a stack trace:
+                # traceback.print_tb(aee.__traceback__)
+                break
 
             # Test max CMI for significance with maximum statistics.
             te_max_candidate = max(temp_te)
             max_candidate = candidate_set[np.argmax(temp_te)]
             if self.settings['verbose']:
-                print('testing candidate {0} from candidate set {1}'.format(
-                                    self._idx_to_lag([max_candidate])[0],
-                                    self._idx_to_lag(candidate_set)), end='')
-            significant = stats.max_statistic(self, data, candidate_set,
-                                              te_max_candidate)[0]
+                print('testing candidate {0} '.format(
+                                self._idx_to_lag([max_candidate])[0]), end='')
+            significant = False
+            try:
+                significant = stats.max_statistic(
+                    self, data, candidate_set, te_max_candidate,
+                    conditional=self._selected_vars_realisations)[0]
+            except ex.AlgorithmExhaustedError as aee:
+                # The algorithm cannot continue here, so
+                #  we'll terminate the check on the max stats and not let the
+                #  source pass
+                print('AlgorithmExhaustedError encountered in '
+                      'estimations: ' + aee.message)
+                print('Halting max stats and further selection for target.')
+                # For now we don't need a stack trace:
+                # traceback.print_tb(aee.__traceback__)
+                break
 
             # If the max is significant keep it and test the next candidate. If
             # it is not significant break. There will be no further significant
             # sources b/c they all have lesser TE.
             if significant:
-                if self.settings['verbose']:
-                    print(' -- significant')
+                # if self.settings['verbose']:
+                #     print(' -- significant')
                 success = True
                 # Remove candidate from candidate set and add it to the
                 # selected variables (used as the conditioning set).
@@ -350,11 +420,12 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                         [max_candidate],
                         data.get_realisations(self.current_value,
                                               [max_candidate])[0])
+                if self.settings['write_ckp']:
+                    self._write_checkpoint()
             else:
                 if self.settings['verbose']:
                     print(' -- not significant')
                 break
-
         return success
 
     def _prune_candidates(self, data):
@@ -370,15 +441,23 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 raw data
         """
         # FOR LATER we don't need to test the last included in the first round
+        if self.settings['verbose']:
+            if self.selected_vars_sources:
+                print('testing candidate set: {0}'.format(
+                        self._idx_to_lag(self.selected_vars_sources)), end='')
+            else:
+                print('no sources selected, nothing to prune ...')
         while self.selected_vars_sources:
             # Find the candidate with the minimum TE into the target.
             cond_dim = len(self.selected_vars_sources) - 1
             candidate_realisations = np.empty(
-                                (data.n_realisations(self.current_value) *
-                                 len(self.selected_vars_sources), 1))
+                (data.n_realisations(self.current_value) *
+                    len(self.selected_vars_sources),
+                    1)).astype(data.data_type)
             conditional_realisations = np.empty(
-                                (data.n_realisations(self.current_value) *
-                                 len(self.selected_vars_sources), cond_dim))
+                (data.n_realisations(self.current_value) *
+                 len(self.selected_vars_sources),
+                 cond_dim)).astype(data.data_type)
             i_1 = 0
             i_2 = data.n_realisations(self.current_value)
             for candidate in self.selected_vars_sources:
@@ -397,44 +476,88 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 i_1 = i_2
                 i_2 += data.n_realisations(self.current_value)
 
-            temp_te = self._cmi_estimator.estimate_mult(
+            try:
+                temp_te = self._cmi_estimator.estimate_parallel(
                                     n_chunks=len(self.selected_vars_sources),
                                     re_use=re_use,
                                     var1=candidate_realisations,
                                     var2=self._current_value_realisations,
                                     conditional=conditional_realisations)
+            except ex.AlgorithmExhaustedError as aee:
+                # The algorithm cannot continue here, so we'll terminate the
+                # pruning check, assuming that we need not prune any more
+                print('AlgorithmExhaustedError encountered in '
+                      'estimations: ' + aee.message)
+                print('Halting current pruning and allowing others to'
+                      ' remain.')
+                # For now we don't need a stack trace:
+                # traceback.print_tb(aee.__traceback__)
+                break
 
             # Test min TE for significance with minimum statistics.
             te_min_candidate = min(temp_te)
             min_candidate = self.selected_vars_sources[np.argmin(temp_te)]
             if self.settings['verbose']:
-                print('testing candidate {0} from candidate set {1}'.format(
-                                self._idx_to_lag([min_candidate])[0],
-                                self._idx_to_lag(self.selected_vars_sources)),
-                      end='')
-            [significant, p, surr_table] = stats.min_statistic(
-                                              self, data,
-                                              self.selected_vars_sources,
-                                              te_min_candidate)
+                print('testing candidate: {0}'.format(
+                    self._idx_to_lag([min_candidate])[0]))
+            remaining_candidates = set(self.selected_vars_sources).difference(
+                    set([min_candidate]))
+            conditional_realisations = data.get_realisations(
+                self.current_value, remaining_candidates)[0]
+            try:
+                [significant, p, surr_table] = stats.min_statistic(
+                                    analysis_setup=self,
+                                    data=data,
+                                    candidate_set=self.selected_vars_sources,
+                                    te_min_candidate=te_min_candidate,
+                                    conditional=conditional_realisations)
+            except ex.AlgorithmExhaustedError as aee:
+                # The algorithm cannot continue here, so
+                #  we'll terminate the min statistics
+                #  assuming that we need not prune any more
+                print('AlgorithmExhaustedError encountered in '
+                      'estimations: ' + aee.message)
+                print('Halting current pruning and allowing others to'
+                      ' remain.')
+                # For now we don't need a stack trace:
+                # traceback.print_tb(aee.__traceback__)
+                break
 
             # Remove the minimum it is not significant and test the next min.
             # candidate. If the minimum is significant, break, all other
             # sources will be significant as well (b/c they have higher TE).
             if not significant:
-                if self.settings['verbose']:
-                    print(' -- not significant')
+                # if self.settings['verbose']:
+                #     print(' -- not significant')
                 self._remove_selected_var(min_candidate)
+                if self.settings['write_ckp']:
+                    self._write_checkpoint()
             else:
                 if self.settings['verbose']:
                     print(' -- significant')
                 self._min_stats_surr_table = surr_table
                 break
 
-    def _test_final_conditional(self, data):  # TODO test this!
+    def _test_final_conditional(self, data):
         """Perform statistical test on AIS using the final conditional set."""
         if self._selected_vars_full:
-            print(self._idx_to_lag(self.selected_vars_full))
-            [ais, s, p] = stats.mi_against_surrogates(self, data)
+            if self.settings['verbose']:
+                print('selected sources: {0}'.format(
+                    self._idx_to_lag(self.selected_vars_full)))
+            try:
+                [ais, s, p] = stats.mi_against_surrogates(self, data)
+            except ex.AlgorithmExhaustedError as aee:
+                # The algorithm cannot continue here, so
+                #  we'll set the results to zero
+                print('AlgorithmExhaustedError encountered in '
+                      'estimations: ' + aee.message)
+                print('Halting AIS final conditional test and setting to not '
+                      'significant.')
+                # For now we don't need a stack trace:
+                # traceback.print_tb(aee.__traceback__)
+                ais = 0
+                s = False
+                p = 1
 
             # If a parallel estimator was used, an array of AIS estimates is
             # returned. Make the output uniform for both estimator types.
@@ -442,10 +565,38 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 assert ais.shape[0] == 1, 'AIS result is not a scalar.'
                 ais = ais[0]
 
-            self.ais = ais
+            if self.settings['local_values']:
+                replication_ind = data.get_realisations(
+                    self.current_value, self._selected_vars_sources)[1]
+                try:
+                    local_ais = self._cmi_estimator_local.estimate(
+                                var1=self._current_value_realisations,
+                                var2=self._selected_vars_realisations,
+                                conditional=None)
+                except ex.AlgorithmExhaustedError as aee:
+                    # The algorithm cannot continue here, so
+                    #  we'll set the results to zero
+                    print('AlgorithmExhaustedError encountered in '
+                          'final local AIS estimations: ' + aee.message)
+                    print('Setting all local results to zero (but leaving'
+                          ' surrogate statistical test results)')
+                    # For now we don't need a stack trace:
+                    # traceback.print_tb(aee.__traceback__)
+                    # Return local AIS values of all zeros:
+                    #  (length gleaned from line below)
+                    local_ais = np.zeros(
+                        (max(replication_ind) + 1)*sum(replication_ind == 0))
+
+                # Reshape local AIS to a [replications x samples] matrix.
+                self.ais = local_ais.reshape(
+                    max(replication_ind) + 1, sum(replication_ind == 0))
+            else:
+                self.ais = ais
             self.sign = s
             self.pvalue = p
         else:
+            if self.settings['verbose']:
+                print('no sources selected')
             self.ais = np.nan
             self.sign = False
             self.pvalue = 1.0
@@ -454,12 +605,11 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         """Enforce a given conditioning set."""
         if type(cond) is tuple:  # easily add single variable
             cond = [cond]
-
         print('Adding the following variables to the conditioning set: {0}.'.
-              format(self._idx_to_lag(cond)))
-        self._append_selected_vars(cond,
-                                   data.get_realisations(self.current_value,
-                                                         cond)[0])
+              format(cond))
+        cond_idx = self._lag_to_idx(cond)
+        self._append_selected_vars(
+            cond_idx, data.get_realisations(self.current_value, cond_idx)[0])
 
     def _reset(self):
         """Reset instance after analysis."""

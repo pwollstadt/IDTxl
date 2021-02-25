@@ -2,73 +2,33 @@
 
 This module provides unit/system tests for network comparison between and
 within subjects.
-
-@author: patricia
 """
 import os
 import pickle
 import random as rn
 import pytest
 import numpy as np
-# from idtxl.multivariate_te import MultivariateTE
 from idtxl.network_comparison import NetworkComparison
 from idtxl.data import Data
 from test_estimators_jidt import jpype_missing
+from idtxl.idtxl_utils import calculate_mi
+from test_estimators_jidt import _get_gauss_data
 
-# # Generate example data: the following was ran once to generate example data,
-# # which is now in the data sub-folder of the test-folder.
-# dat = Data()
-# dat.generate_mute_data(100, 5)
-# # analysis settings
-# settings = {
-#     'cmi_estimator': 'JidtKraskovCMI',
-#     'n_perm_max_stat': 50,
-#     'n_perm_min_stat': 50,
-#     'n_perm_omnibus': 200,
-#     'n_perm_max_seq': 50,
-#     'max_lag_target': 5,
-#     'max_lag_sources': 5,
-#     'min_lag_sources': 1,
-#     }
-# # network inference for individual data sets
-# path = os.path.join(os.path.dirname(__file__) + '/data/'
-# nw_0 = MultivariateTE()
-# res_0 = nw_0.analyse_network(settings, dat, targets=[0, 1], sources='all')
-# pickle.dump(res_0, open(path + 'mute_res_0.pkl', 'wb'))
-# res_1 = nw_0.analyse_network(settings, dat,  targets=[1, 2], sources='all')
-# pickle.dump(res_1, open(path + 'mute_res_1.pkl', 'wb'))
-# res_2 = nw_0.analyse_network(settings, dat,  targets=[0, 2], sources='all')
-# pickle.dump(res_2, open(path + 'mute_res_2.pkl', 'wb'))
-# res_3 = nw_0.analyse_network(settings, dat,  targets=[0, 1, 2], sources='all')
-# pickle.dump(res_3, open(path + 'mute_res_3.pkl', 'wb'))
-# res_4 = nw_0.analyse_network(settings, dat,  targets=[1, 2], sources='all')
-# pickle.dump(res_4, open(path + 'mute_res_4.pkl', 'wb'))
+SEED = 0
 
 
 @jpype_missing
 def test_network_comparison_use_cases():
     """Run all intended use cases, within/between, dependent/independent."""
-    dat = Data()
-    dat.generate_mute_data(100, 5)
+    data = Data(seed=SEED)
+    data.generate_mute_data(100, 5)
 
-    # Load previously generated example data (pickled)
-    res_0 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_0.pkl'))
-    res_1 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_1.pkl'))
-    res_2 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_2.pkl'))
-    res_3 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_3.pkl'))
-    res_4 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_4.pkl'))
-
-#    path = os.path.dirname(__file__) + 'data/'
-#    res_0 = idtxl_io.load_pickle(path + 'mute_res_0')
-#    res_1 = idtxl_io.load_pickle(path + 'mute_res_1')
-#    res_2 = idtxl_io.load_pickle(path + 'mute_res_2')
-#    res_3 = idtxl_io.load_pickle(path + 'mute_res_3')
-#    res_4 = idtxl_io.load_pickle(path + 'mute_res_4')
+    path = os.path.join(os.path.dirname(__file__), 'data/')
+    res_0 = pickle.load(open(path + 'mute_results_0.p', 'rb'))
+    res_1 = pickle.load(open(path + 'mute_results_1.p', 'rb'))
+    res_2 = pickle.load(open(path + 'mute_results_2.p', 'rb'))
+    res_3 = pickle.load(open(path + 'mute_results_3.p', 'rb'))
+    res_4 = pickle.load(open(path + 'mute_results_4.p', 'rb'))
 
     # comparison settings
     comp_settings = {
@@ -86,32 +46,32 @@ def test_network_comparison_use_cases():
 
     print('\n\nTEST 0 - independent within')
     comp_settings['stats_type'] = 'independent'
-    comp.compare_within(comp_settings, res_0, res_1, dat, dat)
+    comp.compare_within(comp_settings, res_0, res_1, data, data)
 
     print('\n\nTEST 1 - dependent within')
     comp_settings['stats_type'] = 'dependent'
-    comp.compare_within(comp_settings, res_0, res_1, dat, dat)
+    comp.compare_within(comp_settings, res_0, res_1, data, data)
 
     print('\n\nTEST 2 - independent between')
     comp_settings['stats_type'] = 'independent'
     comp.compare_between(comp_settings,
                          network_set_a=np.array((res_0, res_1)),
                          network_set_b=np.array((res_2, res_3)),
-                         data_set_a=np.array((dat, dat)),
-                         data_set_b=np.array((dat, dat)))
+                         data_set_a=np.array((data, data)),
+                         data_set_b=np.array((data, data)))
 
     print('\n\nTEST 3 - dependent between')
     comp_settings['stats_type'] = 'dependent'
     comp.compare_between(comp_settings,
                          network_set_a=np.array((res_0, res_1)),
                          network_set_b=np.array((res_2, res_3)),
-                         data_set_a=np.array((dat, dat)),
-                         data_set_b=np.array((dat, dat)))
+                         data_set_a=np.array((data, data)),
+                         data_set_b=np.array((data, data)))
 
     print('\n\nTEST 4 - independent within unbalanced')
     comp_settings['stats_type'] = 'independent'
     comp = NetworkComparison()
-    comp.compare_within(comp_settings, res_0, res_1, dat, dat)
+    comp.compare_within(comp_settings, res_0, res_1, data, data)
 
     print('\n\nTEST 5 - independent between unbalanced')
     comp_settings['stats_type'] = 'independent'
@@ -119,25 +79,22 @@ def test_network_comparison_use_cases():
     comp.compare_between(comp_settings,
                          network_set_a=np.array((res_0, res_1)),
                          network_set_b=np.array((res_2, res_3, res_4)),
-                         data_set_a=np.array((dat, dat)),
-                         data_set_b=np.array((dat, dat, dat)))
+                         data_set_a=np.array((data, data)),
+                         data_set_b=np.array((data, data, data)))
 
 
 @jpype_missing
 def test_assertions():
     """Test if input checks raise errors."""
-    dat = Data()
-    dat.generate_mute_data(100, 5)
+    data = Data(seed=SEED)
+    data.generate_mute_data(100, 5)
 
     # Load previously generated example data
-    res_0 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_0.pkl'))
-    res_1 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_1.pkl'))
-    res_2 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_2.pkl'))
-    res_3 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_3.pkl'))
+    path = os.path.join(os.path.dirname(__file__), 'data/')
+    res_0 = pickle.load(open(path + 'mute_results_0.p', 'rb'))
+    res_1 = pickle.load(open(path + 'mute_results_1.p', 'rb'))
+    res_2 = pickle.load(open(path + 'mute_results_2.p', 'rb'))
+    res_3 = pickle.load(open(path + 'mute_results_3.p', 'rb'))
 
     # comparison settings
     comp_settings = {
@@ -158,24 +115,24 @@ def test_assertions():
         comp._initialise(comp_settings)
 
     # data sets have unequal no. replications
-    dat2 = Data()
+    dat2 = Data(seed=SEED+1)
     dat2.generate_mute_data(100, 3)
     comp_settings['stats_type'] = 'dependent'
     comp_settings['alpha_comp'] = 0.05
     comp_settings['n_perm_comp'] = 1000
     comp = NetworkComparison()
     with pytest.raises(AssertionError):
-        comp.compare_within(comp_settings, res_0, res_1, dat, dat2)
+        comp.compare_within(comp_settings, res_0, res_1, data, dat2)
 
     # data sets have unequal no. realisations
-    dat2 = Data()
+    dat2 = Data(seed=SEED+1)
     dat2.generate_mute_data(80, 5)
     comp_settings['stats_type'] = 'dependent'
     comp_settings['alpha_comp'] = 0.05
     comp_settings['n_perm_comp'] = 21
     comp = NetworkComparison()
     with pytest.raises(RuntimeError):
-        comp.compare_within(comp_settings, res_0, res_1, dat, dat2)
+        comp.compare_within(comp_settings, res_0, res_1, data, dat2)
 
     # no. replications/subjects too small for dependent-samples test
     comp_settings['stats_type'] = 'dependent'
@@ -185,8 +142,8 @@ def test_assertions():
         comp.compare_between(comp_settings,
                              network_set_a=np.array((res_0, res_1)),
                              network_set_b=np.array((res_2, res_3)),
-                             data_set_a=np.array((dat, dat)),
-                             data_set_b=np.array((dat, dat)))
+                             data_set_a=np.array((data, data)),
+                             data_set_b=np.array((data, data)))
     with pytest.raises(RuntimeError):   # within
         comp.compare_within(comp_settings, res_0, res_1, dat2, dat2)
 
@@ -197,34 +154,32 @@ def test_assertions():
         comp.compare_between(comp_settings,
                              network_set_a=np.array((res_0, res_1)),
                              network_set_b=np.array((res_2, res_3)),
-                             data_set_a=np.array((dat, dat)),
-                             data_set_b=np.array((dat, dat)))
+                             data_set_a=np.array((data, data)),
+                             data_set_b=np.array((data, data)))
     with pytest.raises(RuntimeError):   # within
         comp.compare_within(comp_settings, res_0, res_1, dat2, dat2)
 
     # add target to network that is not in the data object
-    res_99 = res_0
-    res_99[99] = res_99[1]
+    dat2 = Data(np.random.rand(2, 1000, 50), dim_order='psr')
     comp_settings['alpha_comp'] = 0.05
     comp_settings['n_perm_comp'] = 21
     comp = NetworkComparison()
     with pytest.raises(IndexError):
-        comp.compare_within(comp_settings, res_0, res_99, dat2, dat2)
+        comp.compare_within(comp_settings, res_0, res_2, dat2, dat2)
 
 
 @jpype_missing
 def test_create_union_network():
     """Test creation of union of multiple networks."""
-    dat1 = Data()
+    dat1 = Data(seed=SEED)
     dat1.generate_mute_data(100, 5)
-    dat2 = Data()
+    dat2 = Data(seed=SEED+1)
     dat2.generate_mute_data(100, 5)
 
     # Load previously generated example data
-    res_0 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_0.pkl'))
-    res_1 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_1.pkl'))
+    path = os.path.join(os.path.dirname(__file__), 'data/')
+    res_0 = pickle.load(open(path + 'mute_results_0.p', 'rb'))
+    res_1 = pickle.load(open(path + 'mute_results_1.p', 'rb'))
 
     # comparison settings
     comp_settings = {
@@ -243,26 +198,27 @@ def test_create_union_network():
 
     src_1 = [(0, 2), (0, 1)]
     src_2 = [(0, 4), (0, 5)]
-    res_0[1]['selected_vars_sources'] = src_1
-    res_1[1]['selected_vars_sources'] = src_2
+    res_0._single_target[1].selected_vars_sources = src_1
+    res_1._single_target[1].selected_vars_sources = src_2
 
     comp._create_union(res_0, res_1)
-    ref_targets = [0, 1, 2]
-    assert (comp.union['targets'] == ref_targets).all(), (
-                                        'Union does not include all targets.')
-    assert np.array([True for i in ref_targets if
-                     i in comp.union.keys()]).all(), (
-                                'Not all targets contained in union network.')
-    assert comp.union['max_lag'] == res_0[0]['current_value'][1], (
-                                    'The max. lag was not defined correctly.')
+    ref_targets = np.array([0, 1, 2])
+    assert (comp.union.targets_analysed == ref_targets).all(), (
+        'Union does not include all targets.')
+    assert np.array([
+        True for i in ref_targets if i in comp.union.keys()]).all(), (
+            'Not all targets contained in union network.')
+    assert comp.union['max_lag'] == res_0._single_target[1].current_value[1], (
+        'The max. lag was not defined correctly.')
 
-    src_union = comp._idx_to_lag(comp.union[1]['selected_vars_sources'],
-                                 comp.union['max_lag'])
-    assert src_union == (src_1 + src_2), ('Sources for target 1 were not '
-                                          'combined correctly.')
+    src_union = comp._idx_to_lag(
+        comp.union._single_target[1]['selected_vars_sources'],
+        comp.union['max_lag'])
+    assert src_union == (src_1 + src_2), (
+        'Sources for target 1 were not combined correctly.')
 
     # unequal current values in single networks
-    res_0[1]['current_value'] = (1, 7)  # the original is (1, 5)
+    res_0._single_target[1].current_value = (1, 7)  # the original is (1, 5)
     with pytest.raises(ValueError):
         comp._create_union(res_0, res_1)
 
@@ -271,11 +227,9 @@ def test_create_union_network():
 def test_get_permuted_replications():
     """Test if permutation of replications works."""
     # Load previously generated example data
-    res_0 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_0.pkl'))
-    res_1 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_1.pkl'))
-
+    path = os.path.join(os.path.dirname(__file__), 'data/')
+    res_0 = pickle.load(open(path + 'mute_results_0.p', 'rb'))
+    res_1 = pickle.load(open(path + 'mute_results_1.p', 'rb'))
     comp_settings = {
             'cmi_estimator': 'JidtKraskovCMI',
             'n_perm_max_stat': 50,
@@ -293,10 +247,10 @@ def test_get_permuted_replications():
 
     # Check permutation for dependent samples test: Replace realisations by
     # zeros and ones, check if realisations get swapped correctly.
-    dat1 = Data()
+    dat1 = Data(seed=SEED)
     dat1.normalise = False
     dat1.set_data(np.zeros((5, 100, 5)), 'psr')
-    dat2 = Data()
+    dat2 = Data(seed=SEED+1)
     dat2.normalise = False
     dat2.set_data(np.ones((5, 100, 5)), 'psr')
     [cond_a_perm,
@@ -336,17 +290,15 @@ def test_get_permuted_replications():
 @jpype_missing
 def test_calculate_cmi_all_links():
     """Test if the CMI is estimated correctly."""
-    dat = Data()
-    n = 1000
-    cov = 0.4
-    source = [rn.normalvariate(0, 1) for r in range(n)]  # correlated src
-    target = [0] + [sum(pair) for pair in zip(
-        [cov * y for y in source[0:n - 1]],
-        [(1 - cov) * y for y in
-            [rn.normalvariate(0, 1) for r in range(n - 1)]])]
-    dat.set_data(np.vstack((source, target)), 'ps')
-    res_0 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_0.pkl'))
+    expected_mi, source, source_uncorr, target = _get_gauss_data()
+    source = source[1:]
+    source_uncorr = source_uncorr[1:]
+    target = target[:-1]
+    data = Data(np.hstack((source, target)),
+                dim_order='sp', normalise=False)
+    res_0 = pickle.load(open(os.path.join(os.path.dirname(__file__),
+                             'data/mute_results_0.p'), 'rb'))
+
     comp_settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 50,
@@ -361,23 +313,25 @@ def test_calculate_cmi_all_links():
     comp = NetworkComparison()
     comp._initialise(comp_settings)
     comp._create_union(res_0)
-    comp.union[1]['selected_vars_sources'] = [(0, 4)]
-    cmi = comp._calculate_cmi_all_links(dat)
-    cmi_expected = np.log(1 / (1 - cov ** 2))
+    # Set selected variable to the source, one sample in the past of the
+    # current_value (1, 5).
+    comp.union._single_target[1]['selected_vars_sources'] = [(0, 4)]
+    cmi = comp._calculate_cmi_all_links(data)
     print('correlated Gaussians: TE result {0:.4f} bits; expected to be '
-          '{1:0.4f} bit for the copy'.format(cmi[1][0], cmi_expected))
-    np.testing.assert_almost_equal(
-                   cmi[1][0], cmi_expected, decimal=1,
-                   err_msg='when calculating cmi for correlated Gaussians.')
+          '{1:0.4f} bit for the copy'.format(cmi[1][0], expected_mi))
+    assert np.isclose(cmi[1][0], expected_mi, atol=0.05), (
+        'Estimated TE {0:0.6f} differs from expected TE {1:0.6f}.'.format(
+            cmi[1][0], expected_mi))
 
 
 @jpype_missing
 def test_calculate_mean():
     """Test if mean over CMI estimates is calculated correctly."""
-    dat = Data()
-    dat.generate_mute_data(100, 5)
-    res_0 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_0.pkl'))
+    data = Data(seed=SEED)
+    data.generate_mute_data(100, 5)
+    res_0 = pickle.load(open(os.path.join(os.path.dirname(__file__),
+                             'data/mute_results_0.p'), 'rb'))
+
     comp_settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 50,
@@ -392,22 +346,26 @@ def test_calculate_mean():
     comp = NetworkComparison()
     comp._initialise(comp_settings)
     comp._create_union(res_0)
-    cmi = comp._calculate_cmi_all_links(dat)
+    cmi = comp._calculate_cmi_all_links(data)
     cmi_mean = comp._calculate_mean([cmi, cmi])
-    for t in comp.union['targets']:
+    for t in comp.union.targets_analysed:
         assert (cmi_mean[t] == cmi[t]).all(), ('Error in mean of CMI for '
                                                'target {0}'.format(t))
+        if len(cmi[t]) == 0:  # skip if no links in results
+            continue
+        assert (cmi_mean[t] == cmi[t][0]).all(), (
+            'Error in mean of CMI for target {0} - actual: ({1}), expected: '
+            '({2})'.format(t, cmi_mean[t], cmi[t][0]))
 
 
 @jpype_missing
 def test_p_value_union():
     """Test if the p-value is calculated correctly."""
-    dat = Data()
-    dat.generate_mute_data(100, 5)
-    res_0 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_0.pkl'))
-    res_1 = np.load(os.path.join(os.path.dirname(__file__),
-                    'data/mute_res_1.pkl'))
+    data = Data(seed=SEED)
+    data.generate_mute_data(100, 5)
+    path = os.path.join(os.path.dirname(__file__), 'data/')
+    res_0 = pickle.load(open(path + 'mute_results_0.p', 'rb'))
+    res_1 = pickle.load(open(path + 'mute_results_1.p', 'rb'))
     comp_settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 50,
@@ -420,7 +378,7 @@ def test_p_value_union():
         'stats_type': 'independent'
         }
     comp = NetworkComparison()
-    res_comp = comp.compare_within(comp_settings, res_0, res_1, dat, dat)
+    comp.compare_within(comp_settings, res_0, res_1, data, data)
 
     # Replace the surrogate CMI by all zeros for source 0 and all ones for
     # source 1. Set the CMI difference to 0.5 for both sources. Check if this
@@ -428,29 +386,139 @@ def test_p_value_union():
     # correct p-values.
     comp._initialise(comp_settings)
     comp._create_union(res_0, res_1)
-    comp._calculate_cmi_diff_within(dat, dat)
-    comp._create_surrogate_distribution_within(dat, dat)
+    comp._calculate_cmi_diff_within(data, data)
+    comp._create_surrogate_distribution_within(data, data)
     target = 1
-    for p in range(comp_settings['n_perm_comp']):
-        comp.cmi_surr[p][target] = np.array([0, 1])
-    comp.cmi_diff[target] = np.array([0.5, 0.5])
-    [p, s] = comp._p_value_union()
-    assert (s[target] == np.array([True, False])).all(), (
-                                    'The significance was not determined '
-                                    'correctly: {0}'.format(s[target]))
-    p_1 = 1 / comp_settings['n_perm_comp']
-    p_2 = 1.0
-    print(p[target])
-    assert (p[target] == np.array([p_1, p_2])).all(), (
-                                'The p-value was not calculated correctly: {0}'
-                                .format(p[target]))
+    source = 0
+
+    comp.cmi_surr[target] = np.zeros((1, comp_settings['n_perm_comp']))
+    comp.cmi_diff[target] = np.array([0.5])
+    comp._p_value_union()
+    p = comp.pvalue
+    s = comp.significance
+    assert s[target][source], (
+        'The significance was not determined correctly: {0}'.format(s[target]))
+    assert p[target][source] == 1 / comp_settings['n_perm_comp'], (
+        'The p-value was not calculated correctly: {0}'.format(p[target]))
+
+    comp.cmi_surr[target] = np.ones((1, comp_settings['n_perm_comp']))
+    comp.cmi_diff[target] = np.array([0.5])
+    comp._p_value_union()
+    p = comp.pvalue
+    s = comp.significance
+    assert not s[target][source], (
+        'The significance was not determined correctly: {0}'.format(s[target]))
+    assert p[target][source] == 1.0, (
+        'The p-value was not calculated correctly: {0}'.format(p[target]))
+
+
+def test_compare_links_within():
+    """Test comparison of two links within a single network."""
+    data = Data(seed=SEED)
+    data.generate_mute_data(100, 5)
+
+    path = os.path.join(os.path.dirname(__file__), 'data/')
+    res = pickle.load(open(path + 'mute_results_1.p', 'rb'))
+
+    # comparison settings
+    comp_settings = {
+            'cmi_estimator': 'JidtKraskovCMI',
+            'n_perm_max_stat': 50,
+            'n_perm_min_stat': 50,
+            'n_perm_omnibus': 200,
+            'n_perm_max_seq': 50,
+            'alpha_comp': 0.26,
+            'n_perm_comp': 4,
+            'tail': 'two'
+            }
+
+    link_a = [0, 1]
+    link_b = [0, 2]
+
+    comp = NetworkComparison()
+    comp_settings['stats_type'] = 'independent'
+    res_indep = comp.compare_links_within(settings=comp_settings,
+                                          link_a=link_a,
+                                          link_b=link_b,
+                                          network=res,
+                                          data=data)
+    comp_settings['stats_type'] = 'dependent'
+    res_dep = comp.compare_links_within(settings=comp_settings,
+                                        link_a=[0, 1],
+                                        link_b=[0, 2],
+                                        network=res,
+                                        data=data)
+    for r in [res_indep, res_dep]:
+        adj_mat_diff = r.get_adjacency_matrix('diff_abs')
+        adj_mat_comp = r.get_adjacency_matrix('comparison')
+        adj_mat_pval = r.get_adjacency_matrix('pvalue')
+        assert (adj_mat_diff._weight_matrix[link_a[0], link_a[1]] ==
+                adj_mat_diff._weight_matrix[link_b[0], link_b[1]]), (
+                    'Absolute differences for link comparison not equal.')
+        assert (adj_mat_comp._weight_matrix[link_a[0], link_a[1]] ==
+                adj_mat_comp._weight_matrix[link_b[0], link_b[1]]), (
+                    'Comparison results for link comparison not equal.')
+        assert (adj_mat_pval._weight_matrix[link_a[0], link_a[1]] ==
+                adj_mat_pval._weight_matrix[link_b[0], link_b[1]]), (
+                    'P-value for link comparison not equal.')
+        assert (r.targets_analysed == [link_a[1], link_b[1]]).all(), (
+                'Analysed targets are not correct.')
+
+    with pytest.raises(RuntimeError):
+        comp.compare_links_within(settings=comp_settings,
+                                  link_a=link_a,
+                                  link_b=[3, 4],
+                                  network=res,
+                                  data=data)
+
+
+def test_tails():
+    """Test one- and two-tailed testing for all stats types."""
+    data = Data(seed=SEED)
+    data.generate_mute_data(100, 5)
+
+    path = os.path.join(os.path.dirname(__file__), 'data/')
+    res_0 = pickle.load(open(path + 'mute_results_0.p', 'rb'))
+    res_1 = pickle.load(open(path + 'mute_results_1.p', 'rb'))
+    res_2 = pickle.load(open(path + 'mute_results_2.p', 'rb'))
+    res_3 = pickle.load(open(path + 'mute_results_3.p', 'rb'))
+
+    # comparison settings
+    comp_settings = {
+            'cmi_estimator': 'JidtKraskovCMI',
+            'n_perm_max_stat': 50,
+            'n_perm_min_stat': 50,
+            'n_perm_omnibus': 200,
+            'n_perm_max_seq': 50,
+            'alpha_comp': 0.26,
+            'n_perm_comp': 4}
+
+    comp = NetworkComparison()
+    for tail in ['two', 'one']:
+        for stats_type in ['independent', 'dependent']:
+            comp_settings['stats_type'] = stats_type
+            comp_settings['tail_comp'] = tail
+            c_within = comp.compare_within(
+                comp_settings, res_0, res_1, data, data)
+            c_between = comp.compare_between(
+                comp_settings,
+                network_set_a=np.array((res_0, res_1)),
+                network_set_b=np.array((res_2, res_3)),
+                data_set_a=np.array((data, data)),
+                data_set_b=np.array((data, data)))
+            adj_mat_within = c_within.get_adjacency_matrix('pvalue')
+            adj_mat_within.print_matrix()
+            adj_mat_between = c_between.get_adjacency_matrix('pvalue')
+            adj_mat_between.print_matrix()
 
 
 if __name__ == '__main__':
+    test_calculate_cmi_all_links()
+    test_tails()
+    test_compare_links_within()
     test_network_comparison_use_cases()
     test_p_value_union()
-    test_calculate_mean()
-    test_calculate_cmi_all_links()
-    test_get_permuted_replications()
-    test_assertions()
     test_create_union_network()
+    test_assertions()
+    test_calculate_mean()
+    test_get_permuted_replications()

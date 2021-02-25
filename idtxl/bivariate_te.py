@@ -1,21 +1,18 @@
-"""Estimate bivariate transfer entropy.
+"""Perform network inference using multivarate transfer entropy.
 
-Calculate bivariate transfer entropy (TE) using the maximum statistic.
-
-Created on Wed Apr 06 17:58:31 2016
+Estimate multivariate transfer entropy (TE) for network inference using a
+greedy approach with maximum statistics to generate a non-uniform embedding
+(Faes, 2011; Lizier, 2012).
 
 Note:
     Written for Python 3.4+
-
-@author: patricia
 """
-import numpy as np
-import itertools as it
-from . import stats
-from .network_inference import NetworkInference
+from .network_inference import NetworkInferenceTE, NetworkInferenceBivariate
+from .stats import network_fdr
+from .results import ResultsNetworkInference
 
 
-class BivariateTE(NetworkInference):
+class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
     """Perform network inference using bivariate transfer entropy.
 
     Perform network inference using bivariate transfer entropy (TE). To
@@ -61,9 +58,9 @@ class BivariateTE(NetworkInference):
             p-value of the omnibus test
         pvalues_sign_sources : numpy array
             array of p-values for TE from individual sources to the target
-        te_omnibus : float
+        statistic_omnibus : float
             joint TE from all sources to the target
-        te_sign_sources : numpy array
+        statistic_sign_sources : numpy array
             raw TE values from individual sources to the target
         sign_ominbus : bool
             statistical significance of the over-all TE
@@ -79,13 +76,14 @@ class BivariateTE(NetworkInference):
         network or between selected sources and targets.
 
         Note:
-            For a detailed description see the documentation of the
-            analyse_single_target() method of this class and the references.
+            For a detailed description of the algorithm and settings see
+            documentation of the analyse_single_target() method and references
+            in the class docstring.
 
         Example:
 
-            >>> dat = Data()
-            >>> dat.generate_mute_data(100, 5)
+            >>> data = Data()
+            >>> data.generate_mute_data(100, 5)
             >>> settings = {
             >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
@@ -95,8 +93,8 @@ class BivariateTE(NetworkInference):
             >>>     'max_lag': 5,
             >>>     'min_lag': 4
             >>>     }
-            >>> network_analysis = Bivariate_te()
-            >>> res = network_analysis.analyse_network(settings, dat)
+            >>> network_analysis = BivariateTE()
+            >>> results = network_analysis.analyse_network(settings, data)
 
         Args:
             settings : dict
@@ -122,10 +120,15 @@ class BivariateTE(NetworkInference):
                 tested for the target with the same index
 
         Returns:
-            dict
-                results for each target, see documentation of
-                analyse_single_target()
+            ResultsNetworkInference instance
+                results of network inference, see documentation of
+                ResultsNetworkInference()
         """
+        # Set defaults for network inference.
+        settings.setdefault('verbose', True)
+        settings.setdefault('fdr_correction', True)
+
+        # Check which targets and sources are requested for analysis.
         if targets == 'all':
             targets = [t for t in range(data.n_processes)]
         if sources == 'all':
@@ -137,21 +140,36 @@ class BivariateTE(NetworkInference):
         else:
             ValueError('Sources was not specified correctly: {0}.'.format(
                                                                     sources))
-        assert(len(sources) == len(targets)), ('List of targets and list of '
-                                               'sources have to have the same '
-                                               'same length')
+        assert(len(sources) == len(targets)), (
+            'List of targets and list of sources have to have the length')
+
+        # Check and set defaults for checkpointing. If requested, initialise
+        # checkpointing.
+        self.settings = self._set_checkpointing_defaults(
+            settings, data, sources, targets)
 
         # Perform TE estimation for each target individually
-        settings.setdefault('verbose', True)
-        results = {}
+        results = ResultsNetworkInference(n_nodes=data.n_processes,
+                                          n_realisations=data.n_realisations(),
+                                          normalised=data.normalise)
         for t in range(len(targets)):
             if settings['verbose']:
-                print('####### analysing target {0} of {1}'.format(t, targets))
-            r = self.analyse_single_target(settings, data,
-                                           targets[t], sources[t])
-            r['target'] = targets[t]
-            r['sources'] = sources[t]
-            results[targets[t]] = r
+                print('\n####### analysing target with index {0} from list {1}'
+                      .format(t, targets))
+            res_single = self.analyse_single_target(
+                settings, data, targets[t], sources[t])
+            results.combine_results(res_single)
+
+        # Get no. realisations actually used for estimation from single target
+        # analysis.
+        results.data_properties.n_realisations = (
+            res_single.data_properties.n_realisations)
+
+        # Perform FDR-correction on the network level. Add FDR-corrected
+        # results as an extra field. Network_fdr/combine_results internally
+        # creates a deep copy of the results.
+        if settings['fdr_correction']:
+            results = network_fdr(settings, results)
         return results
 
     def analyse_single_target(self, settings, data, target, sources='all'):
@@ -159,29 +177,35 @@ class BivariateTE(NetworkInference):
 
         Find bivariate transfer entropy (TE) between all potential source
         processes and the target process. Uses bivariate, non-uniform embedding
-        found through information maximisation (see Faes et al., 2011, Phys Rev
-        E 83, 051112 and Lizier & Rubinov, 2012, Max Planck Institute:
-        Preprint. Retrieved from
-        http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf). Bivariate
-        TE is calculated in four steps (see Lizier and Faes for details):
+        found through information maximisation.
 
-        (1) find all relevant samples in the target processes' own past, by
-            iteratively adding candidate samples that have significant
+        Bivariate TE is calculated in four steps:
+
+        (1) find all relevant variables in the target processes' own past, by
+            iteratively adding candidate variables that have significant
             conditional mutual information (CMI) with the current value
-            (conditional on all samples that were added previously)
-        (2) find all relevant samples in the source processes' pasts (again
-            by finding all candidates with significant CMI)
-        (3) prune the final conditional set by testing the CMI between each
-            sample in the final set and the current value, conditional on all
-            other samples in the final set
+            (conditional on all variables that were added previously)
+        (2) find all relevant variables in the single source processes' pasts
+            (again by finding all candidates with significant CMI); treat each
+            potential source process separately, i.e., the CMI is calculated
+            with respect to already selected variables from the target's past
+            and from the current processes' past only
+        (3) prune the final conditional set for each link (i.e., each
+            process-target pairing): test the CMI between each variable in
+            the final set and the current value, conditional on all other
+            variables in the final set of the current link
         (4) statistics on the final set of sources (test for over-all transfer
             between the final conditional set and the current value, and for
-            significant transfer of all individual samples in the set)
+            significant transfer of all individual variables in the set)
+
+        Note:
+            For a further description of the algorithm see references in the
+            class docstring.
 
         Example:
 
-            >>> dat = Data()
-            >>> dat.generate_mute_data(100, 5)
+            >>> data = Data()
+            >>> data.generate_mute_data(100, 5)
             >>> settings = {
             >>>     'cmi_estimator':  'JidtKraskovCMI',
             >>>     'n_perm_max_stat': 200,
@@ -193,10 +217,10 @@ class BivariateTE(NetworkInference):
             >>>     }
             >>> target = 0
             >>> sources = [1, 2, 3]
-            >>> network_analysis = Bivariate_te()
-            >>> res = network_analysis.analyse_single_target(settings,
-            >>>                                              dat, target,
-            >>>                                              sources)
+            >>> network_analysis = BivariateTE()
+            >>> results = network_analysis.analyse_single_target(settings,
+            >>>                                                  data, target,
+            >>>                                                  sources)
 
         Args:
             settings : dict
@@ -233,6 +257,12 @@ class BivariateTE(NetworkInference):
                   further settings (default=False)
                 - verbose : bool [optional] - toggle console output
                   (default=True)
+                - write_ckp : bool [optional] - enable checkpointing, writes
+                  analysis state to disk every time a variable is selected;
+                  resume crashed analysis using
+                  network_analysis.resume_checkpoint() (default=False)
+                - filename_ckp : str [optional] - checkpoint file name (without
+                  extension) (default='./idtxl_checkpoint')
 
             data : Data instance
                 raw data for analysis
@@ -244,14 +274,9 @@ class BivariateTE(NetworkInference):
                 target node are considered as potential sources
 
         Returns:
-            dict
-                results consisting of sets of selected variables as (full set,
-                variables from the sources' past, variables from the target's
-                past), pvalues and TE for each selected variable, the current
-                value for this analysis, results for omnibus test (joint
-                influence of all selected source variables on the target,
-                omnibus TE, p-value, and significance); NOTE that all variables
-                are listed as tuples (process, lag wrt. current value)
+            ResultsNetworkInference instance
+                results of network inference, see documentation of
+                ResultsNetworkInference()
         """
         # Check input and clean up object if it was used before.
         self._initialise(settings, data, sources, target)
@@ -261,99 +286,37 @@ class BivariateTE(NetworkInference):
         self._include_target_candidates(data)
         print('\n---------------------------- (2) include source candidates')
         self._include_source_candidates(data)
-        print('\n---------------------------- (3) omnibus test')
+        print('\n---------------------------- (3) prune candidates')
+        self._prune_candidates(data)
+        print('\n---------------------------- (4) final statistics')
         self._test_final_conditional(data)
 
         # Clean up and return results.
         if self.settings['verbose']:
             print('final source samples: {0}'.format(
                     self._idx_to_lag(self.selected_vars_sources)))
-            print('final target samples: {0}'.format(
+            print('final target samples: {0}\n\n'.format(
                     self._idx_to_lag(self.selected_vars_target)))
-        results = {
-            'target': self.target,
-            'sources_tested': self.source_set,
-            'settings': self.settings,
-            'current_value': self.current_value,
-            'selected_vars_full': self._idx_to_lag(self.selected_vars_full),
-            'selected_vars_sources': self._idx_to_lag(
-                                                self.selected_vars_sources),
-            'selected_vars_target': self._idx_to_lag(
-                                                self.selected_vars_target),
-            'selected_sources_pval': self.pvalues_sign_sources,
-            'selected_sources_te': self.te_sign_sources,
-            'omnibus_te': self.te_omnibus,
-            'omnibus_pval': self.pvalue_omnibus,
-            'omnibus_sign': self.sign_omnibus}
+        results = ResultsNetworkInference(
+            n_nodes=data.n_processes,
+            n_realisations=data.n_realisations(self.current_value),
+            normalised=data.normalise)
+        results._add_single_result(
+            target=self.target,
+            settings=self.settings,
+            results={
+                'sources_tested': self.source_set,
+                'current_value': self.current_value,
+                'selected_vars_sources': self._idx_to_lag(
+                    self.selected_vars_sources),
+                'selected_vars_target': self._idx_to_lag(
+                    self.selected_vars_target),
+                'selected_sources_pval': self.pvalues_sign_sources,
+                'selected_sources_te': self.statistic_sign_sources,
+                'omnibus_te': self.statistic_omnibus,
+                'omnibus_pval': self.pvalue_omnibus,
+                'omnibus_sign': self.sign_omnibus,
+                'te': self.statistic_single_link
+            })
         self._reset()  # remove attributes
         return results
-
-    def _include_source_candidates(self, data):
-        """Inlcude informative candidates into the conditioning set.
-
-        Loop over each candidate in the candidate set and test if it has
-        significant mutual information with the current value, conditional
-        on all samples that were informative in previous rounds and are already
-        in the conditioning set. If this conditional mutual information is
-        significant using maximum statistics, add the current candidate to the
-        conditional set.
-
-        Args:
-            data : Data instance
-                raw data
-        """
-        # Define candidate set and get realisations.
-        procs = self.source_set
-        samples = np.arange(
-                self.current_value[1] - self.settings['min_lag_sources'],
-                self.current_value[1] - self.settings['max_lag_sources'],
-                -self.settings['tau_sources'])
-        candidate_set = self._define_candidates(procs, samples)
-        self._append_selected_vars(
-                candidate_set,
-                data.get_realisations(self.current_value, candidate_set)[0])
-
-        # Perform one round of sequential max statistics.
-        [s, p, te] = stats.max_statistic_sequential(self, data)
-
-        # Remove non-significant sources from the candidate set. Loop
-        # backwards over the candidates to remove them iteratively.
-        for i in range(s.shape[0] - 1, -1, -1):
-            if not s[i]:
-                self._remove_selected_var(self.selected_vars_sources[i])
-                p = np.delete(p, i)
-                te = np.delete(te, i)
-        self.pvalues_sign_sources = p
-        self.te_sign_sources = te
-
-    def _define_candidates(self, processes, samples):
-        """Build a list of candidate indices.
-
-        Args:
-            processes : list of int
-                process indices
-            samples: list of int
-                sample indices
-
-        Returns:
-            a list of tuples, where each tuple holds the index of one
-            candidate and has the form (process index, sample index)
-        """
-        candidate_set = []
-        for idx in it.product(processes, samples):
-            candidate_set.append(idx)
-        return candidate_set
-
-    def _test_final_conditional(self, data):  # TODO test this!
-        """Perform statistical test on the final conditional set."""
-        if not self.selected_vars_sources:
-            print('---------------------------- no sources found')
-            self.te_omnibus = None
-            self.sign_omnibus = False
-            self.pvalue_omnibus = None
-        else:
-            print(self._idx_to_lag(self.selected_vars_full))
-            [s, p, te] = stats.omnibus_test(self, data)
-            self.te_omnibus = te
-            self.sign_omnibus = s
-            self.pvalue_omnibus = p

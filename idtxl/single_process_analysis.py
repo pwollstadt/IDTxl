@@ -1,10 +1,5 @@
-"""Parent class for analysis of single processes in the network.
-
-@author: patricia
-"""
-import numpy as np
+"""Parent class for analysis of single processes in the network."""
 from .network_analysis import NetworkAnalysis
-
 
 class SingleProcessAnalysis(NetworkAnalysis):
     def __init__(self):

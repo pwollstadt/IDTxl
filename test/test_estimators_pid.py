@@ -1,9 +1,4 @@
-"""Provide unit tests for PID estimators.
-
-Created on Mon Apr 11 21:51:56 2016
-
-@author: wibral
-"""
+"""Provide unit tests for PID estimators."""
 import time as tm
 import numpy as np
 import pytest
@@ -11,25 +6,18 @@ from idtxl.estimators_pid import SydneyPID, TartuPID
 
 package_missing = False
 try:
-    import gurobipy
-    import cvxopt
+    import ecos
 except ImportError:
     package_missing = True
-optimization_not_available = pytest.mark.skipif(
+optimiser_missing = pytest.mark.skipif(
     package_missing,
-    reason="at least optimization package is missing (gurobi and cvxopt)")
+    reason='ECOS is missing.')
 
-no_float128 = False
-try:
-    np.float128()
-except AttributeError as err:
-    if "'module' object has no attribute 'float128'" == err.args[0]:
-        no_float128 = True
-    else:
-        raise
-float128_not_available = pytest.mark.skipif(
-    no_float128,
-    reason="type float128 not available on current architecture")
+# longdouble is not available on all systems (e.g., missing on Windows systems).
+# Skip tests in this case.
+longdouble_not_available = pytest.mark.skipif(
+    np.invert(hasattr(np, 'longdouble')),
+    reason="type longdouble not available on current architecture")
 
 
 ALPH_X = 2
@@ -55,8 +43,29 @@ Y = np.asarray([0, 1, 0, 1])
 # Y = np.random.randint(0, ALPH_Y, n)
 
 
-@float128_not_available
-@optimization_not_available
+@longdouble_not_available
+@optimiser_missing
+def test_tartu_estimator():
+    # Test Tartu estimator on logical and
+    pid_tartu = TartuPID(SETTINGS)
+    Z = np.logical_and(X, Y).astype(int)
+    est_tartu = pid_tartu.estimate(X, Y, Z)
+    assert np.isclose(0.5, est_tartu['syn_s1_s2']), (
+        'Synergy is not 0.5. for Tartu estimator.')
+
+
+@longdouble_not_available
+def test_sydney_estimator():
+    # Test Sydney estimator on logical and
+    pid_sydney = SydneyPID(SETTINGS)
+    Z = np.logical_and(X, Y).astype(int)
+    est_sydney = pid_sydney.estimate(X, Y, Z)
+    assert np.isclose(0.5, est_sydney['syn_s1_s2']), (
+        'Synergy is not 0.5. for Sydney estimator.')
+
+
+@longdouble_not_available
+@optimiser_missing
 def test_pid_and():
     """Test PID estimator on logical AND."""
     Z = np.logical_and(X, Y).astype(int)
@@ -68,8 +77,8 @@ def test_pid_and():
                                                      'Tartu estimator.')
 
 
-@float128_not_available
-@optimization_not_available
+@longdouble_not_available
+@optimiser_missing
 def test_pid_xor():
     """Test PID estimator on logical XOR."""
     Z = np.logical_xor(X, Y).astype(int)
@@ -79,29 +88,35 @@ def test_pid_xor():
     assert np.isclose(1, est_tartu['syn_s1_s2']), 'Synergy is not 1.'
 
 
-@float128_not_available
-@optimization_not_available
+@longdouble_not_available
+@optimiser_missing
 def test_pip_source_copy():
     """Test PID estimator on copied source."""
     Z = X
     est_sydney, est_tartu = _estimate(Z)
 
-    assert np.isclose(1, est_sydney['unq_s1']), ('Unique information 1 is not '
-                                                 '1 for Sydney estimator.')
-    assert np.isclose(0, est_sydney['unq_s2']), ('Unique information 2 is not '
-                                                 '0 for Sydney estimator.')
-    assert np.isclose(0, est_sydney['shd_s1_s2']), ('Shared information is not'
-                                                    '0 for Sydney estimator.')
-    assert np.isclose(0, est_sydney['syn_s1_s2']), ('Synergy is not 0 for '
-                                                    'Sydney estimator.')
-    assert np.isclose(0, est_tartu['shd_s1_s2']), ('Shared information is not'
-                                                   '0 for Tartu estimator.')
-    assert np.isclose(0, est_tartu['syn_s1_s2']), ('Synergy is not 0 for '
-                                                   'Tartu estimator.')
+    assert np.isclose(1, est_sydney['unq_s1'], atol=1.e-7), (
+        'Unique information 1 is not 1 for Sydney estimator ({0}).'.format(
+            est_sydney['unq_s1']))
+    assert np.isclose(0, est_sydney['unq_s2'], atol=1.e-7), (
+        'Unique information 2 is not 0 for Sydney estimator ({0}).'.format(
+            est_sydney['unq_s2']))
+    assert np.isclose(0, est_sydney['shd_s1_s2'], atol=1.e-7), (
+        'Shared information is not 0 for Sydney estimator ({0}).'.format(
+            est_sydney['shd_s1_s2']))
+    assert np.isclose(0, est_sydney['syn_s1_s2'], atol=1.e-7), (
+        'Synergy is not 0 for Sydney estimator ({0}).'.format(
+            est_sydney['syn_s1_s2']))
+    assert np.isclose(0, est_tartu['shd_s1_s2'], atol=1.e-7), (
+        'Shared information is not 0 for Tartu estimator ({0}).'.format(
+            est_tartu['shd_s1_s2']))
+    assert np.isclose(0, est_tartu['syn_s1_s2'], atol=1.e-7), (
+        'Synergy is not 0 for Tartu estimator ({0}).'.format(
+            est_tartu['syn_s1_s2']))
 
 
-@float128_not_available
-@optimization_not_available
+@longdouble_not_available
+@optimiser_missing
 def test_xor_long():
     """Test PID estimation with Sydney estimator on XOR with higher N."""
     # logical AND
@@ -189,8 +204,8 @@ def _estimate(Z):
     return est_sydney, est_tartu
 
 
-@float128_not_available
-@optimization_not_available
+@longdouble_not_available
+@optimiser_missing
 def test_int_types():
     """Test PID estimator on different integer types."""
     Z = np.logical_xor(X, Y).astype(np.int32)
@@ -215,8 +230,8 @@ def test_int_types():
         est_sydney, est_tartu = _estimate(Z)
 
 
-@float128_not_available
-@optimization_not_available
+@longdouble_not_available
+@optimiser_missing
 def test_non_binary_alphabet():
     """Test PID estimators on larger alphabets."""
     n = 1000

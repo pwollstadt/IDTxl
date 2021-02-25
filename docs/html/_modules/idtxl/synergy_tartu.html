@@ -1,0 +1,632 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>idtxl.synergy_tartu &#8212; IDTxl 1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="../../_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for idtxl.synergy_tartu</h1><div class="highlight"><pre>
+<span></span><span class="c1"># BROJA_2PID.py -- Python module</span>
+<span class="c1">#</span>
+<span class="c1"># BROJA_2PID: Bertschinger-Rauh-Olbrich-Jost-Ay (BROJA) bivariate Partial</span>
+<span class="c1"># Information Decomposition   https://github.com/Abzinger/BROJA_2PID</span>
+<span class="c1"># (c) Abdullah Makkeh, Dirk Oliver Theis</span>
+<span class="c1"># Permission to use and modify with proper attribution</span>
+<span class="c1"># (Apache License version 2.0)</span>
+<span class="c1">#</span>
+<span class="c1"># Information about the algorithm, documentation, and examples are here:</span>
+<span class="c1"># @Article{makkeh-theis-vicente:pidOpt:2017,</span>
+<span class="c1">#          author =       {Makkeh, Abdullah and Theis, Dirk Oliver and</span>
+<span class="c1">#                          Vicente, Raul},</span>
+<span class="c1">#          title =        {BROJA-2PID: A cone programming based Partial</span>
+<span class="c1">#                          Information Decomposition estimator},</span>
+<span class="c1">#          journal =      {jo},</span>
+<span class="c1">#          year =         2017,</span>
+<span class="c1">#          key =       {key},</span>
+<span class="c1">#          volume =    {vol},</span>
+<span class="c1">#          number =    {nr},</span>
+<span class="c1">#          pages =     {1--2}</span>
+<span class="c1"># }</span>
+<span class="c1"># Please cite this paper when you use this software (cf. README.md)</span>
+<span class="c1">###############################################################################</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">sparse</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">LA</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">idtxl_exceptions</span> <span class="k">as</span> <span class="n">ex</span>
+<span class="kn">from</span> <span class="nn">.idtxl_exceptions</span> <span class="k">import</span> <span class="n">BROJA_2PID_Exception</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">ecos</span>
+<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+    <span class="n">ex</span><span class="o">.</span><span class="n">package_missing</span><span class="p">(</span><span class="n">err</span><span class="p">,</span> <span class="s1">&#39;ECOS is not available on this system. Install it &#39;</span>
+                            <span class="s1">&#39;from https://pypi.python.org/pypi/ecos to use &#39;</span>
+                            <span class="s1">&#39;The Tartu cone programming PID estimator.&#39;</span><span class="p">)</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">log2</span>
+<span class="n">ln</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span>
+
+<span class="c1"># ECOS&#39;s exp cone: (r,p,q)   w/   q&gt;0  &amp;  exp(r/q) ≤ p/q</span>
+<span class="c1"># Translation:     (0,1,2)   w/   2&gt;0  &amp;  0/2      ≤ ln(1/2)</span>
+<div class="viewcode-block" id="r_vidx"><a class="viewcode-back" href="../../idtxl.html#idtxl.synergy_tartu.r_vidx">[docs]</a><span class="k">def</span> <span class="nf">r_vidx</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mi">3</span><span class="o">*</span><span class="n">i</span></div>
+<div class="viewcode-block" id="p_vidx"><a class="viewcode-back" href="../../idtxl.html#idtxl.synergy_tartu.p_vidx">[docs]</a><span class="k">def</span> <span class="nf">p_vidx</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span></div>
+<div class="viewcode-block" id="q_vidx"><a class="viewcode-back" href="../../idtxl.html#idtxl.synergy_tartu.q_vidx">[docs]</a><span class="k">def</span> <span class="nf">q_vidx</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span></div>
+
+
+<div class="viewcode-block" id="Solve_w_ECOS"><a class="viewcode-back" href="../../idtxl.html#idtxl.synergy_tartu.Solve_w_ECOS">[docs]</a><span class="k">class</span> <span class="nc">Solve_w_ECOS</span><span class="p">:</span>
+    <span class="c1"># (c) Abdullah Makkeh, Dirk Oliver Theis</span>
+    <span class="c1"># Permission to use and modify under Apache License version 2.0</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marg_xy</span><span class="p">,</span> <span class="n">marg_xz</span><span class="p">):</span>
+        <span class="c1"># (c) Abdullah Makkeh, Dirk Oliver Theis</span>
+        <span class="c1"># Permission to use and modify under Apache License version 2.0</span>
+
+        <span class="c1"># ECOS parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ecos_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Data for ECOS</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dims</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># ECOS result</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sol_rpq</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sol_slack</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sol_lambda</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># dual variables for equality constraints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sol_mu</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># dual variables for generalized ieqs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sol_info</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Probability density funciton data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_xy</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">marg_xy</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_xz</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">marg_xz</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_xy</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span> <span class="o">+</span>
+                     <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_xz</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_xy</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">z</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_xz</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">idx_of_trip</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trip_of_idx</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Do stuff:</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_xy</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Z</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_xz</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">idx_of_trip</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trip_of_idx</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">trip_of_idx</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Solve_w_ECOS.create_model"><a class="viewcode-back" href="../../idtxl.html#idtxl.synergy_tartu.Solve_w_ECOS.create_model">[docs]</a>    <span class="k">def</span> <span class="nf">create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># (c) Abdullah Makkeh, Dirk Oliver Theis</span>
+        <span class="c1"># Permission to use and modify under Apache License version 2.0</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trip_of_idx</span><span class="p">)</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_xy</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_xz</span><span class="p">)</span>
+        <span class="n">n_vars</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">n</span>
+        <span class="n">n_cons</span> <span class="o">=</span> <span class="n">n</span><span class="o">+</span><span class="n">m</span>
+
+        <span class="c1"># Create the equations: Ax = b</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_cons</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">)</span>
+        <span class="n">Eqn</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">Var</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">Coeff</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># The q-p coupling equations: q_{*yz} - p_{xyz} = 0</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">xyz</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trip_of_idx</span><span class="p">):</span>
+            <span class="n">eqn</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="n">p_var</span> <span class="o">=</span> <span class="n">p_vidx</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">Eqn</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eqn</span><span class="p">)</span>
+            <span class="n">Var</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p_var</span><span class="p">)</span>
+            <span class="n">Coeff</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="mf">1.</span><span class="p">)</span>
+
+            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="o">=</span> <span class="n">xyz</span>
+            <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx_of_trip</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">q_var</span> <span class="o">=</span> <span class="n">q_vidx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idx_of_trip</span><span class="p">[(</span><span class="n">u</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)])</span>
+                    <span class="n">Eqn</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eqn</span><span class="p">)</span>
+                    <span class="n">Var</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">q_var</span><span class="p">)</span>
+                    <span class="n">Coeff</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">+</span><span class="mf">1.</span><span class="p">)</span>
+
+        <span class="c1"># running number</span>
+        <span class="n">eqn</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trip_of_idx</span><span class="p">)</span>
+
+        <span class="c1"># The xy marginals q_{xy*} = b^y_{xy}</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_xy</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">eqn</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Z</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx_of_trip</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                            <span class="n">q_var</span> <span class="o">=</span> <span class="n">q_vidx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idx_of_trip</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)])</span>
+                            <span class="n">Eqn</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eqn</span><span class="p">)</span>
+                            <span class="n">Var</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">q_var</span><span class="p">)</span>
+                            <span class="n">Coeff</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">1.</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">[</span><span class="n">eqn</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_xy</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)]</span>
+        <span class="c1"># The xz marginals q_{x*z} = b^z_{xz}</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Z</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_xz</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">eqn</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx_of_trip</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                            <span class="n">q_var</span> <span class="o">=</span> <span class="n">q_vidx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idx_of_trip</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)])</span>
+                            <span class="n">Eqn</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eqn</span><span class="p">)</span>
+                            <span class="n">Var</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">q_var</span><span class="p">)</span>
+                            <span class="n">Coeff</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">1.</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">[</span><span class="n">eqn</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_xz</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">)]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">A</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">Coeff</span><span class="p">,</span> <span class="p">(</span><span class="n">Eqn</span><span class="p">,</span> <span class="n">Var</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n_cons</span><span class="p">,</span> <span class="n">n_vars</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">)</span>
+
+        <span class="c1"># Generalized ieqs: gen.nneg of the variable triples (r_i,q_i,p_i),</span>
+        <span class="c1"># i=0,dots,n-1:</span>
+        <span class="n">Ieq</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">Var</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">Coeff</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">xyz</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trip_of_idx</span><span class="p">):</span>
+            <span class="n">r_var</span> <span class="o">=</span> <span class="n">r_vidx</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">q_var</span> <span class="o">=</span> <span class="n">q_vidx</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">p_var</span> <span class="o">=</span> <span class="n">p_vidx</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+            <span class="n">Ieq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Ieq</span><span class="p">))</span>
+            <span class="n">Var</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r_var</span><span class="p">)</span>
+            <span class="n">Coeff</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="mf">1.</span><span class="p">)</span>
+
+            <span class="n">Ieq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Ieq</span><span class="p">))</span>
+            <span class="n">Var</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p_var</span><span class="p">)</span>
+            <span class="n">Coeff</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="mf">1.</span><span class="p">)</span>
+
+            <span class="n">Ieq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Ieq</span><span class="p">))</span>
+            <span class="n">Var</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">q_var</span><span class="p">)</span>
+            <span class="n">Coeff</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="mf">1.</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">Coeff</span><span class="p">,</span> <span class="p">(</span><span class="n">Ieq</span><span class="p">,</span> <span class="n">Var</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n_vars</span><span class="p">,</span> <span class="n">n_vars</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_vars</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dims</span><span class="p">[</span><span class="s1">&#39;e&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span>
+
+        <span class="c1"># Objective function:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_vars</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">xyz</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trip_of_idx</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">[</span><span class="n">r_vidx</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.</span></div>
+
+<div class="viewcode-block" id="Solve_w_ECOS.solve"><a class="viewcode-back" href="../../idtxl.html#idtxl.synergy_tartu.Solve_w_ECOS.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># (c) Abdullah Makkeh, Dirk Oliver Theis</span>
+        <span class="c1"># Permission to use and modify under Apache License version 2.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">marg_yz</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># for cond[]mutinf computation below</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ecos_kwargs</span><span class="p">[</span><span class="s2">&quot;verbose&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span>
+
+        <span class="n">solution</span> <span class="o">=</span> <span class="n">ecos</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">ecos_kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;x&#39;</span> <span class="ow">in</span> <span class="n">solution</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sol_rpq</span> <span class="o">=</span> <span class="n">solution</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sol_slack</span> <span class="o">=</span> <span class="n">solution</span><span class="p">[</span><span class="s1">&#39;s&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sol_lambda</span> <span class="o">=</span> <span class="n">solution</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sol_mu</span> <span class="o">=</span> <span class="n">solution</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sol_info</span> <span class="o">=</span> <span class="n">solution</span><span class="p">[</span><span class="s1">&#39;info&#39;</span><span class="p">]</span>
+            <span class="k">return</span> <span class="s2">&quot;success&quot;</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># &quot;x&quot; not in dict solution</span>
+            <span class="k">return</span> <span class="s2">&quot;x not in dict solution -- No Solution Found!!!&quot;</span></div>
+
+<div class="viewcode-block" id="Solve_w_ECOS.provide_marginals"><a class="viewcode-back" href="../../idtxl.html#idtxl.synergy_tartu.Solve_w_ECOS.provide_marginals">[docs]</a>    <span class="k">def</span> <span class="nf">provide_marginals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">marg_yz</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">marg_yz</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">marg_y</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="mf">0.</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">marg_z</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="mf">0.</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Z</span><span class="p">:</span>
+                    <span class="n">zysum</span> <span class="o">=</span> <span class="mf">0.</span>
+                    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx_of_trip</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                            <span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sol_rpq</span><span class="p">[</span>
+                                <span class="n">q_vidx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idx_of_trip</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)])]</span>
+                            <span class="k">if</span> <span class="n">q</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                                <span class="n">zysum</span> <span class="o">+=</span> <span class="n">q</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">marg_y</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">+=</span> <span class="n">q</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">marg_z</span><span class="p">[</span><span class="n">z</span><span class="p">]</span> <span class="o">+=</span> <span class="n">q</span>
+                    <span class="k">if</span> <span class="n">zysum</span> <span class="o">&gt;</span> <span class="mf">0.</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">marg_yz</span><span class="p">[(</span><span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)]</span> <span class="o">=</span> <span class="n">zysum</span></div>
+
+<div class="viewcode-block" id="Solve_w_ECOS.condYmutinf"><a class="viewcode-back" href="../../idtxl.html#idtxl.synergy_tartu.Solve_w_ECOS.condYmutinf">[docs]</a>    <span class="k">def</span> <span class="nf">condYmutinf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">provide_marginals</span><span class="p">()</span>
+
+        <span class="n">mysum</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Z</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_xz</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">continue</span>
+                <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx_of_trip</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="n">i</span> <span class="o">=</span> <span class="n">q_vidx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idx_of_trip</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)])</span>
+                        <span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sol_rpq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">q</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">mysum</span> <span class="o">+=</span> <span class="n">q</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">q</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">marg_y</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">b_xy</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">marg_yz</span><span class="p">[(</span><span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)]))</span>
+        <span class="k">return</span> <span class="n">mysum</span></div>
+
+<div class="viewcode-block" id="Solve_w_ECOS.condZmutinf"><a class="viewcode-back" href="../../idtxl.html#idtxl.synergy_tartu.Solve_w_ECOS.condZmutinf">[docs]</a>    <span class="k">def</span> <span class="nf">condZmutinf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">provide_marginals</span><span class="p">()</span>
+
+        <span class="n">mysum</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_xy</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">continue</span>
+                <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Z</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx_of_trip</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="n">i</span> <span class="o">=</span> <span class="n">q_vidx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idx_of_trip</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)])</span>
+                        <span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sol_rpq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">q</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">mysum</span> <span class="o">+=</span> <span class="n">q</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span>
+                                <span class="n">q</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">marg_z</span><span class="p">[</span><span class="n">z</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">b_xz</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">)]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">marg_yz</span><span class="p">[(</span><span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)]))</span>
+        <span class="k">return</span> <span class="n">mysum</span></div>
+
+<div class="viewcode-block" id="Solve_w_ECOS.entropy_X"><a class="viewcode-back" href="../../idtxl.html#idtxl.synergy_tartu.Solve_w_ECOS.entropy_X">[docs]</a>    <span class="k">def</span> <span class="nf">entropy_X</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pdf</span><span class="p">):</span>
+        <span class="n">mysum</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span>
+            <span class="n">psum</span> <span class="o">=</span> <span class="mf">0.</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_xy</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Z</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="n">pdf</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="n">psum</span> <span class="o">+=</span> <span class="n">pdf</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)]</span>
+            <span class="n">mysum</span> <span class="o">-=</span> <span class="n">psum</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">psum</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mysum</span></div>
+
+<div class="viewcode-block" id="Solve_w_ECOS.condentropy"><a class="viewcode-back" href="../../idtxl.html#idtxl.synergy_tartu.Solve_w_ECOS.condentropy">[docs]</a>    <span class="k">def</span> <span class="nf">condentropy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># compute cond entropy of the distribution in self.sol_rpq</span>
+        <span class="n">mysum</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Z</span><span class="p">:</span>
+                <span class="n">marg_x</span> <span class="o">=</span> <span class="mf">0.</span>
+                <span class="n">q_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">q_vidx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idx_of_trip</span><span class="p">[</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">)])</span> <span class="k">for</span>
+                          <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx_of_trip</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">q_list</span><span class="p">:</span>
+                    <span class="n">marg_x</span> <span class="o">+=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sol_rpq</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">q_list</span><span class="p">:</span>
+                    <span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sol_rpq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">q</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">mysum</span> <span class="o">-=</span> <span class="n">q</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">q</span> <span class="o">/</span> <span class="n">marg_x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mysum</span></div>
+
+<div class="viewcode-block" id="Solve_w_ECOS.condentropy__orig"><a class="viewcode-back" href="../../idtxl.html#idtxl.synergy_tartu.Solve_w_ECOS.condentropy__orig">[docs]</a>    <span class="k">def</span> <span class="nf">condentropy__orig</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pdf</span><span class="p">):</span>
+        <span class="n">mysum</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Z</span><span class="p">:</span>
+                <span class="n">x_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="n">pdf</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+                <span class="n">marg</span> <span class="o">=</span> <span class="mf">0.</span>
+                <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">x_list</span><span class="p">:</span>
+                    <span class="n">marg</span> <span class="o">+=</span> <span class="n">pdf</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)]</span>
+                <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">x_list</span><span class="p">:</span>
+                    <span class="n">p</span> <span class="o">=</span> <span class="n">pdf</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)]</span>
+                    <span class="n">mysum</span> <span class="o">-=</span> <span class="n">p</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="n">marg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mysum</span></div>
+
+<div class="viewcode-block" id="Solve_w_ECOS.dual_value"><a class="viewcode-back" href="../../idtxl.html#idtxl.synergy_tartu.Solve_w_ECOS.dual_value">[docs]</a>    <span class="k">def</span> <span class="nf">dual_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sol_lambda</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Solve_w_ECOS.check_feasibility"><a class="viewcode-back" href="../../idtxl.html#idtxl.synergy_tartu.Solve_w_ECOS.check_feasibility">[docs]</a>    <span class="k">def</span> <span class="nf">check_feasibility</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="c1"># returns pair (p,d) of primal/dual infeasibility (maxima)</span>
+        <span class="c1"># Primal infeasiblility</span>
+        <span class="c1"># ---------------------</span>
+        <span class="n">max_q_negativity</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trip_of_idx</span><span class="p">)):</span>
+            <span class="n">max_q_negativity</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_q_negativity</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">sol_rpq</span><span class="p">[</span><span class="n">q_vidx</span><span class="p">(</span><span class="n">i</span><span class="p">)])</span>
+        <span class="c1">#^ for</span>
+        <span class="n">max_violation_of_eqn</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="c1"># xy* - marginals:</span>
+        <span class="k">for</span> <span class="n">xy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_xy</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">mysum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_xy</span><span class="p">[</span><span class="n">xy</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Z</span><span class="p">:</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">xy</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx_of_trip</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx_of_trip</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)]</span>
+                    <span class="n">q</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sol_rpq</span><span class="p">[</span><span class="n">q_vidx</span><span class="p">(</span><span class="n">i</span><span class="p">)])</span>
+                    <span class="n">mysum</span> <span class="o">-=</span> <span class="n">q</span>
+            <span class="n">max_violation_of_eqn</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_violation_of_eqn</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">mysum</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">xz</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_xz</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">mysum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_xz</span><span class="p">[</span><span class="n">xz</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">:</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">xz</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx_of_trip</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx_of_trip</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)]</span>
+                    <span class="n">q</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sol_rpq</span><span class="p">[</span><span class="n">q_vidx</span><span class="p">(</span><span class="n">i</span><span class="p">)])</span>
+                    <span class="n">mysum</span> <span class="o">-=</span> <span class="n">q</span>
+            <span class="n">max_violation_of_eqn</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_violation_of_eqn</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">mysum</span><span class="p">))</span>
+
+        <span class="n">primal_infeasability</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_violation_of_eqn</span><span class="p">,</span> <span class="n">max_q_negativity</span><span class="p">)</span>
+
+        <span class="c1"># Dual infeasiblility</span>
+        <span class="c1"># -------------------</span>
+        <span class="n">idx_of_xy</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_xy</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">idx_of_xy</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)]</span> <span class="o">=</span> <span class="n">i</span>
+                    <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="c1">#^ for</span>
+
+        <span class="n">idx_of_xz</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Z</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_xz</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">idx_of_xz</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span><span class="n">z</span><span class="p">)]</span> <span class="o">=</span> <span class="n">i</span>
+                    <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="c1">#^ for</span>
+
+        <span class="n">dual_infeasability</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">xyz</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trip_of_idx</span><span class="p">):</span>
+            <span class="n">mu_yz</span> <span class="o">=</span> <span class="mf">0.</span>
+            <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">xyz</span>
+            <span class="c1"># Compute mu_*yz</span>
+            <span class="c1"># mu_xyz: dual variable of the coupling constraints</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">uvw</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trip_of_idx</span><span class="p">):</span>
+                <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">w</span> <span class="o">=</span> <span class="n">uvw</span>
+                <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="n">y</span> <span class="ow">and</span> <span class="n">w</span> <span class="o">==</span> <span class="n">z</span><span class="p">:</span>
+                    <span class="n">mu_yz</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sol_lambda</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+
+            <span class="c1"># Get indices of dual variables of the marginal constriants</span>
+            <span class="n">xy_idx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trip_of_idx</span><span class="p">)</span> <span class="o">+</span> <span class="n">idx_of_xy</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)]</span>
+            <span class="n">xz_idx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trip_of_idx</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_xy</span><span class="p">)</span> <span class="o">+</span> <span class="n">idx_of_xz</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span><span class="n">z</span><span class="p">)]</span>
+
+            <span class="c1"># Find the most violated dual ieq</span>
+            <span class="n">dual_infeasability</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                <span class="n">dual_infeasability</span><span class="p">,</span>
+                <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">sol_lambda</span><span class="p">[</span><span class="n">xy_idx</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">sol_lambda</span><span class="p">[</span><span class="n">xz_idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">mu_yz</span> <span class="o">-</span><span class="n">ln</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">sol_lambda</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1">#^ for</span>
+
+        <span class="k">return</span> <span class="n">primal_infeasability</span><span class="p">,</span> <span class="n">dual_infeasability</span></div></div>
+    <span class="c1">#^ check_feasibility()</span>
+
+<span class="c1">#^ class Solve_w_ECOS</span>
+
+
+<div class="viewcode-block" id="marginal_xy"><a class="viewcode-back" href="../../idtxl.html#idtxl.synergy_tartu.marginal_xy">[docs]</a><span class="k">def</span> <span class="nf">marginal_xy</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="n">marg</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">xyz</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="n">marg</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">marg</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)]</span> <span class="o">+=</span> <span class="n">r</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">marg</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)]</span> <span class="o">=</span> <span class="n">r</span>
+    <span class="k">return</span> <span class="n">marg</span></div>
+
+
+<div class="viewcode-block" id="marginal_xz"><a class="viewcode-back" href="../../idtxl.html#idtxl.synergy_tartu.marginal_xz">[docs]</a><span class="k">def</span> <span class="nf">marginal_xz</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="n">marg</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">xyz</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="n">marg</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">marg</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">)]</span> <span class="o">+=</span> <span class="n">r</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">marg</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">)]</span> <span class="o">=</span> <span class="n">r</span>
+    <span class="k">return</span> <span class="n">marg</span></div>
+
+
+<div class="viewcode-block" id="I_X_Y"><a class="viewcode-back" href="../../idtxl.html#idtxl.synergy_tartu.I_X_Y">[docs]</a><span class="k">def</span> <span class="nf">I_X_Y</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="c1"># Mutual information I( X ; Y )</span>
+    <span class="n">mysum</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="n">marg_x</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="mf">0.</span><span class="p">)</span>
+    <span class="n">marg_y</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="mf">0.</span><span class="p">)</span>
+    <span class="n">b_xy</span> <span class="o">=</span> <span class="n">marginal_xy</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">xyz</span>
+        <span class="k">if</span> <span class="n">r</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">marg_x</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">+=</span> <span class="n">r</span>
+            <span class="n">marg_y</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">+=</span> <span class="n">r</span>
+
+    <span class="k">for</span> <span class="n">xy</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">b_xy</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">xy</span>
+        <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">mysum</span> <span class="o">+=</span> <span class="n">t</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">t</span> <span class="o">/</span> <span class="p">(</span><span class="n">marg_x</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">*</span> <span class="n">marg_y</span><span class="p">[</span><span class="n">y</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">mysum</span></div>
+<span class="c1">#^ I_X_Y()</span>
+
+<div class="viewcode-block" id="I_X_Z"><a class="viewcode-back" href="../../idtxl.html#idtxl.synergy_tartu.I_X_Z">[docs]</a><span class="k">def</span> <span class="nf">I_X_Z</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="c1"># Mutual information I( X ; Z )</span>
+    <span class="n">mysum</span>   <span class="o">=</span> <span class="mf">0.</span>
+    <span class="n">marg_x</span>  <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="mf">0.</span><span class="p">)</span>
+    <span class="n">marg_z</span>  <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="mf">0.</span><span class="p">)</span>
+    <span class="n">b_xz</span>    <span class="o">=</span> <span class="n">marginal_xz</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">xyz</span><span class="p">,</span><span class="n">r</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">xyz</span>
+        <span class="k">if</span> <span class="n">r</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">:</span>
+            <span class="n">marg_x</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">+=</span> <span class="n">r</span>
+            <span class="n">marg_z</span><span class="p">[</span><span class="n">z</span><span class="p">]</span> <span class="o">+=</span> <span class="n">r</span>
+
+    <span class="k">for</span> <span class="n">xz</span><span class="p">,</span><span class="n">t</span> <span class="ow">in</span> <span class="n">b_xz</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">x</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">xz</span>
+        <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="n">mysum</span> <span class="o">+=</span> <span class="n">t</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span> <span class="n">t</span> <span class="o">/</span> <span class="p">(</span> <span class="n">marg_x</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">*</span><span class="n">marg_z</span><span class="p">[</span><span class="n">z</span><span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="n">mysum</span></div>
+<span class="c1">#^ I_X_Z()</span>
+
+<div class="viewcode-block" id="I_X_YZ"><a class="viewcode-back" href="../../idtxl.html#idtxl.synergy_tartu.I_X_YZ">[docs]</a><span class="k">def</span> <span class="nf">I_X_YZ</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="c1"># Mutual information I( X ; Y , Z )</span>
+    <span class="n">mysum</span>    <span class="o">=</span> <span class="mf">0.</span>
+    <span class="n">marg_x</span>   <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="mf">0.</span><span class="p">)</span>
+    <span class="n">marg_yz</span>  <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="mf">0.</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">xyz</span><span class="p">,</span><span class="n">r</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">xyz</span>
+        <span class="k">if</span> <span class="n">r</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">:</span>
+            <span class="n">marg_x</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>      <span class="o">+=</span> <span class="n">r</span>
+            <span class="n">marg_yz</span><span class="p">[(</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">)]</span> <span class="o">+=</span> <span class="n">r</span>
+
+    <span class="k">for</span> <span class="n">xyz</span><span class="p">,</span><span class="n">t</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">xyz</span>
+        <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="n">mysum</span> <span class="o">+=</span> <span class="n">t</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span> <span class="n">t</span> <span class="o">/</span> <span class="p">(</span> <span class="n">marg_x</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">*</span><span class="n">marg_yz</span><span class="p">[(</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">)]</span> <span class="p">)</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="n">mysum</span></div>
+<span class="c1">#^ I_X_YZ()</span>
+
+<div class="viewcode-block" id="pid"><a class="viewcode-back" href="../../idtxl.html#idtxl.synergy_tartu.pid">[docs]</a><span class="k">def</span> <span class="nf">pid</span><span class="p">(</span><span class="n">pdf_dirty</span><span class="p">,</span> <span class="n">cone_solver</span><span class="o">=</span><span class="s2">&quot;ECOS&quot;</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">solver_args</span><span class="p">):</span>
+    <span class="c1"># (c) Abdullah Makkeh, Dirk Oliver Theis</span>
+    <span class="c1"># Permission to use and modify under Apache License version 2.0</span>
+    <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">pdf_dirty</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">,</span> <span class="s2">&quot;broja_2pid.pid(pdf): pdf must be a dictionary&quot;</span>
+    <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">cone_solver</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;broja_2pid.pid(pdf): `cone_solver&#39; parameter must be string (e.g., &#39;ECOS&#39;)&quot;</span>
+    <span class="k">if</span> <span class="n">__debug__</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">pdf_dirty</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">tuple</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">,</span>           <span class="s2">&quot;broja_2pid.pid(pdf): pdf&#39;s keys must be tuples or lists&quot;</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">==</span><span class="mi">3</span><span class="p">,</span>                                     <span class="s2">&quot;broja_2pid.pid(pdf): pdf&#39;s keys must be tuples/lists of length 3&quot;</span>
+            <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">float</span> <span class="ow">or</span> <span class="p">(</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">==</span><span class="nb">int</span> <span class="ow">and</span> <span class="n">v</span><span class="o">==</span><span class="mi">0</span> <span class="p">),</span> <span class="s2">&quot;broja_2pid.pid(pdf): pdf&#39;s values must be floats&quot;</span>
+            <span class="k">assert</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="o">-.</span><span class="mi">1</span><span class="p">,</span>                                       <span class="s2">&quot;broja_2pid.pid(pdf): pdf&#39;s values must not be negative&quot;</span>
+        <span class="c1">#^ for</span>
+    <span class="c1">#^ if</span>
+    <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;broja_2pid.pid(pdf,output): output must be an integer&quot;</span>
+
+    <span class="c1"># Check if the solver is implemented:</span>
+    <span class="k">assert</span> <span class="n">cone_solver</span><span class="o">==</span><span class="s2">&quot;ECOS&quot;</span><span class="p">,</span> <span class="s2">&quot;broja_2pid.pid(pdf): We currently don&#39;t have an interface for the Cone Solver &quot;</span><span class="o">+</span><span class="n">cone_solver</span><span class="o">+</span><span class="s2">&quot; (only ECOS).&quot;</span>
+
+    <span class="n">pdf</span> <span class="o">=</span> <span class="p">{</span> <span class="n">k</span><span class="p">:</span><span class="n">v</span>  <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">pdf_dirty</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mf">1.e-300</span> <span class="p">}</span>
+
+    <span class="n">by_xy</span> <span class="o">=</span> <span class="n">marginal_xy</span><span class="p">(</span><span class="n">pdf</span><span class="p">)</span>
+    <span class="n">bz_xz</span> <span class="o">=</span> <span class="n">marginal_xz</span><span class="p">(</span><span class="n">pdf</span><span class="p">)</span>
+
+    <span class="c1"># if cone_solver==&quot;ECOS&quot;: .....</span>
+    <span class="k">if</span> <span class="n">output</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;BROJA_2PID: Preparing Cone Program data&quot;</span><span class="p">,</span><span class="n">end</span><span class="o">=</span><span class="s2">&quot;...&quot;</span><span class="p">)</span>
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">Solve_w_ECOS</span><span class="p">(</span><span class="n">by_xy</span><span class="p">,</span> <span class="n">bz_xz</span><span class="p">)</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">create_model</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">output</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span> <span class="n">solver</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">ecos_keep_solver_obj</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="s1">&#39;keep_solver_object&#39;</span> <span class="ow">in</span> <span class="n">solver_args</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">solver_args</span><span class="p">[</span><span class="s1">&#39;keep_solver_object&#39;</span><span class="p">]</span><span class="o">==</span><span class="kc">True</span><span class="p">:</span> <span class="n">ecos_keep_solver_obj</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">del</span> <span class="n">solver_args</span><span class="p">[</span><span class="s1">&#39;keep_solver_object&#39;</span><span class="p">]</span>
+
+    <span class="n">solver</span><span class="o">.</span><span class="n">ecos_kwargs</span> <span class="o">=</span> <span class="n">solver_args</span>
+
+    <span class="k">if</span> <span class="n">output</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;done.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">output</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;BROJA_2PID: Starting solver&quot;</span><span class="p">,</span><span class="n">end</span><span class="o">=</span><span class="s2">&quot;...&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">output</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;BROJA_2PID: Starting solver.&quot;</span><span class="p">)</span>
+    <span class="n">retval</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">retval</span> <span class="o">!=</span> <span class="s2">&quot;success&quot;</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Cone Programming solver failed to find (near) optimal &quot;</span>
+              <span class="s2">&quot;solution.</span><span class="se">\n</span><span class="s2">Please report the input probability density &quot;</span>
+              <span class="s2">&quot;function to abdullah.makkeh@gmail.com</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ecos_keep_solver_obj</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">solver</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BROJA_2PID_Exception</span><span class="p">(</span>
+                <span class="s2">&quot;BROJA_2PID_Exception: Cone Programming solver failed to find &quot;</span>
+                <span class="s2">&quot;(near) optimal solution. Please report the input probability &quot;</span>
+                <span class="s2">&quot;density function to abdullah.makkeh@gmail.com&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">output</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">BROJA_2PID: done.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">output</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>  <span class="nb">print</span><span class="p">(</span><span class="n">solver</span><span class="o">.</span><span class="n">sol_info</span><span class="p">)</span>
+
+    <span class="n">entropy_X</span>     <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">entropy_X</span><span class="p">(</span><span class="n">pdf</span><span class="p">)</span>
+    <span class="n">condent</span>       <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">condentropy</span><span class="p">()</span>
+    <span class="n">condent__orig</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">condentropy__orig</span><span class="p">(</span><span class="n">pdf</span><span class="p">)</span>
+    <span class="n">condYmutinf</span>   <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">condYmutinf</span><span class="p">()</span>
+    <span class="n">condZmutinf</span>   <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">condZmutinf</span><span class="p">()</span>
+    <span class="n">dual_val</span>      <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">dual_value</span><span class="p">()</span>
+    <span class="n">bits</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># elsif cone_solver==&quot;SCS&quot;:</span>
+    <span class="c1"># .....</span>
+    <span class="c1"># #^endif</span>
+
+    <span class="n">return_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">return_data</span><span class="p">[</span><span class="s2">&quot;SI&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">entropy_X</span> <span class="o">-</span> <span class="n">condent</span> <span class="o">-</span>
+                         <span class="n">condZmutinf</span> <span class="o">-</span> <span class="n">condYmutinf</span><span class="p">)</span> <span class="o">*</span> <span class="n">bits</span>
+    <span class="n">return_data</span><span class="p">[</span><span class="s2">&quot;UIY&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">condZmutinf</span><span class="p">)</span> <span class="o">*</span> <span class="n">bits</span>
+    <span class="n">return_data</span><span class="p">[</span><span class="s2">&quot;UIZ&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">condYmutinf</span><span class="p">)</span> <span class="o">*</span> <span class="n">bits</span>
+    <span class="n">return_data</span><span class="p">[</span><span class="s2">&quot;CI&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">condent</span> <span class="o">-</span> <span class="n">condent__orig</span><span class="p">)</span> <span class="o">*</span> <span class="n">bits</span>
+
+    <span class="n">primal_infeas</span><span class="p">,</span><span class="n">dual_infeas</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">check_feasibility</span><span class="p">()</span>
+    <span class="n">return_data</span><span class="p">[</span><span class="s2">&quot;Num_err&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">primal_infeas</span><span class="p">,</span> <span class="n">dual_infeas</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="o">-</span><span class="n">condent</span><span class="o">*</span><span class="n">ln</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">dual_val</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+    <span class="n">return_data</span><span class="p">[</span><span class="s2">&quot;Solver&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;ECOS http://www.embotech.com/ECOS&quot;</span>
+
+    <span class="k">if</span> <span class="n">ecos_keep_solver_obj</span><span class="p">:</span>
+        <span class="n">return_data</span><span class="p">[</span><span class="s2">&quot;Solver Object&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">solver</span>
+
+    <span class="k">return</span> <span class="n">return_data</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+    </div>
+  </body>
+</html>

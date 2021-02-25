@@ -40,8 +40,12 @@ def standardise(a, dimension=0, df=1):
         numpy array
             standardised data
     """
-    a = (a - a.mean(axis=dimension)) / a.std(axis=dimension, ddof=df)
-    return a
+    # Don't divide by standard devitation if process is constant.
+    a_sd = a.std(axis=dimension, ddof=df)
+    if np.isclose(a_sd, 0):
+        return a - a.mean(axis=dimension)
+    else:
+        return (a - a.mean(axis=dimension)) / a_sd
 
 
 def sort_descending(a):
@@ -98,28 +102,16 @@ def remove_column(a, j):
 
 def autocorrelation(x):
     """Calculate autocorrelation of a vector."""
-    # TODO check this, function taken from here:
-    # http://stackoverflow.com/questions/14297012/
-    #       estimate-autocorrelation-using-python
-    # after Wikipedie:
-    # https://en.wikipedia.org/wiki/Autocorrelation#Estimation
-
-    '''
-    n = len(x)
-    variance = x.var()
-    x = x - x.mean()
-    r = np.correlate(x, x, mode = 'full')[-n:]
-    assert n.allclose(r,
-                      N.array([(x[:n-k]*x[-(n-k):]).sum() for k in range(n)]))
-    result = r / (variance * (n.arange(n, 0, -1)))
-    '''
-    return 3
+    pass
 
 
 def discretise(a, numBins):
-    """Discretise continuous data into discrete values (with 0 as lowest)
-    by evenly partitioning the range of the data, one dimension at a time.
-    Adapted from infodynamics.utils.MatrixUtils.discretise() from JIDT by J.Lizier
+    """Discretise continuous data.
+
+    Discretise continuous data into discrete values (with 0 as lowest) by
+    evenly partitioning the range of the data, one dimension at a time.
+    Adapted from infodynamics.utils.MatrixUtils.discretise() from JIDT by
+    J. Lizier.
 
     Args:
         a : numpy array
@@ -132,7 +124,6 @@ def discretise(a, numBins):
         numpy array
             discretised data
     """
-
     num_samples = a.shape[0]
     if (len(a.shape) == 1):
         # It's a unidimensional array
@@ -143,7 +134,8 @@ def discretise(a, numBins):
         for t in range(num_samples):
             discretised_values[t] = int((a[t] - theMin) / binInterval)
             if (discretised_values[t] == numBins):
-                # This occurs for the maximum value; put it in the largest bin (base - 1)
+                # This occurs for the maximum value; put it in the largest
+                # bin (base - 1).
                 discretised_values[t] = discretised_values[t] - 1
         return discretised_values
 
@@ -152,21 +144,25 @@ def discretise(a, numBins):
     discretised_values = np.zeros([num_samples, num_dimensions], dtype=np.int_)
     for v in range(a.shape[1]):
         # Bin dimension v:
-        theMin = a[:,v].min()
-        theMax = a[:,v].max()
+        theMin = a[:, v].min()
+        theMax = a[:, v].max()
         binInterval = (theMax - theMin) / numBins
         for t in range(num_samples):
-            discretised_values[t,v] = int((a[t,v] - theMin) / binInterval)
-            if (discretised_values[t,v] == numBins):
-                # This occurs for the maximum value; put it in the largest bin (base - 1)
-                discretised_values[t,v] = discretised_values[t,v] - 1
+            discretised_values[t, v] = int((a[t, v] - theMin) / binInterval)
+            if (discretised_values[t, v] == numBins):
+                # This occurs for the maximum value; put it in the largest bin
+                # (base - 1)
+                discretised_values[t, v] = discretised_values[t, v] - 1
     return discretised_values
 
 
 def discretise_max_ent(a, numBins):
-    """Discretise continuous data into discrete values (with 0 as lowest)
-    by making a maximum entropy partitioning, one dimension at a time.
-    Adapted from infodynamics.utils.MatrixUtils.discretiseMaxEntropy() from JIDT by J.Lizier
+    """Discretise continuous data using maximum entropy partitioning.
+
+    Discretise continuous data into discrete values (with 0 as lowest) by
+    making a maximum entropy partitioning, one dimension at a time. Adapted
+    from infodynamics.utils.MatrixUtils.discretiseMaxEntropy() from JIDT by
+    J. Lizier.
 
     Args:
         a : numpy array
@@ -179,7 +175,6 @@ def discretise_max_ent(a, numBins):
         numpy array
             discretised data
     """
-
     num_samples = a.shape[0]
     if (len(a.shape) == 1):
         # It's a unidimensional array
@@ -187,7 +182,7 @@ def discretise_max_ent(a, numBins):
         cuttoff_values = np.zeros(numBins)
         sorted_copy = np.sort(a)
         for bin in range(numBins):
-            compartmentSize = int((bin+1)*(num_samples)/numBins)-1;
+            compartmentSize = int((bin + 1) * (num_samples) / numBins) - 1
             cuttoff_values[bin] = sorted_copy[compartmentSize]
         for t in range(num_samples):
             for m in range(numBins):
@@ -202,14 +197,14 @@ def discretise_max_ent(a, numBins):
     for v in range(num_dimensions):
         # Bin dimension v:
         cuttoff_values = np.zeros(numBins)
-        sorted_copy = np.sort(a[:,v])
+        sorted_copy = np.sort(a[:, v])
         for bin in range(numBins):
-            compartmentSize = int((bin+1)*(num_samples)/numBins)-1;
+            compartmentSize = int((bin + 1) * (num_samples) / numBins) - 1
             cuttoff_values[bin] = sorted_copy[compartmentSize]
         for t in range(num_samples):
             for m in range(numBins):
-                if (a[t,v] <= cuttoff_values[m]):
-                    discretised_values[t,v] = m
+                if (a[t, v] <= cuttoff_values[m]):
+                    discretised_values[t, v] = m
                     break
     return discretised_values
 
@@ -283,43 +278,45 @@ def combine_discrete_dimensions(a, numBins):
             multiplier = multiplier * numBins
             if multiplier <= 0:
                 # Multiplier has overflown
-                raise ArithmeticError('Combination of numBins and number of dimensions of a leads to overflow in making unidimensional array')
+                raise ArithmeticError(
+                    'Combination of numBins and number of dimensions of a '
+                    'leads to overflow in making unidimensional array')
         combined_values[t] = int(combined_value)
     return combined_values
 
 
-def combine_results(*results):
-    """Combine partial results into single results dictionary.
+def equal_dicts(dict_1, dict_2):
+    """Test two dictionaries for equality."""
+    if dict_1.keys() != dict_2.keys():
+        return False
+    for k in dict_1.keys():
+        if isinstance(dict_1[k], (list, np.ndarray)):
+            if (dict_1[k] != dict_2[k]).any():
+                return False
+        else:
+            if dict_1[k] != dict_2[k]:
+                return False
+    return True
 
-    Combine a list of partial network inference results into a single results
-    dictionary (e.g., results from analysis parallelized over target nodes).
-    Raise an error if duplicate keys, i.e., duplicate targets, occur in
-    partial results. Remove FDR-corrections from partial results before
-    combining them. Corrections performed on the basis of parts of the network
-    a not valid for the combined network.
 
-    Args:
-        results : list of dicts
-            network inference results from .analyse_network methods, where each
-            dict entry represents results for one target node
+def conflicting_entries(dict_1, dict_2):
+    """Test two dictionaries for unequal entries.
 
-    Returns:
-        dict
-            combined results dict
+    Note that only keys that are present in both dicts are compared. If one
+    dictionary contains an entry not present in the other dictionary, the
+    test passes.
     """
-    res = {}
-    for r in results:
-        # Remove potential partial FDR-corrected results. These are no longer
-        # valid for the combined network.
-        try:
-            del r['fdr_corrected']
-            print('Removing FDR-corrected results.')
-        except KeyError:
-            pass
-        # Check for duplicate keys in the partial results.
-        for k in r:
-            if k in res:
-                raise RuntimeError('Duplicate keys.')
-        res.update(r)
-    return cp.deepcopy(res)
+    d1_keys = dict_1.keys()
+    d2_keys = dict_2.keys()
+    intersect_keys = set(d1_keys).intersection(set(d2_keys))
+    for k in intersect_keys:
+        if np.array(dict_1[k] != dict_2[k]).any():
+            print('Unequal entries for key ''{0}'': dict_1: ''{1}'', dict_2:'
+                  ' ''{2}''.'.format(k, dict_1[k], dict_2[k]))
+            return True
+    return False
 
+
+def calculate_mi(corr):
+    """Calculate mutual information from correlation coefficient."""
+    return -0.5 * np.log(1 - corr**2)

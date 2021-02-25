@@ -5,396 +5,20 @@ as proposed in
 
 Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., & Ay, N. (2014). Quantifying
 Unique Information. Entropy, 16(4), 2161–2183. http://doi.org/10.3390/e16042161
-
 """
 import numpy as np
 from . import synergy_tartu
-from . import idtxl_exceptions as ex
 from .estimator import Estimator
-try:
-    import jpype as jp
-except ImportError as err:
-    ex.package_missing(err, 'Jpype is not available on this system. Install it'
-                            ' from https://pypi.python.org/pypi/JPype1 to use '
-                            'JAVA/JIDT-powered CMI estimation.')
 
 # TODO add support for multivariate estimation for Tartu and Sydney estimator
-
-
-def pid_frankfurt(self, s1, s2, t, settings):
-    """Estimate partial information decomposition of discrete variables.
-
-    The pid estimator returns estimates of shared information, unique
-    information and synergistic information that two random variables X and
-    Y have about a third variable Z. The estimator finds these estimates by
-    permuting the initial joint probability distribution of X, Y, and Z to
-    find a permuted distribution Q that minimizes the unique information in
-    X about Z (as proposed by Bertschinger and colleagues). The unique in-
-    formation is defined as the conditional mutual information I(X;Z|Y).
-
-    The estimator iteratively permutes the joint probability distribution of
-    X, Y, and Z under the constraint that the marginal distributions (X, Z)
-    and (Y, Z) stay constant. This is done by swapping two realizations of X
-    which have the same corresponding value in Z, e.g.:
-
-        X [1, 0, 1, 1, 0, 1, 0, 0, 1, 1]
-        Y [0, 0, 1, 1, 1, 0, 0, 0, 1, 1]
-        ---------------------------------
-        Z [1, 1, 0, 0, 0, 1, 1, 0, 1, 0]
-
-        Possible swaps: X[0] and X[1]; X[0] and X[4]; X[2] and X[8]; ...
-
-    After each swap, I(X;Z|Y) is re-calculated under the new distribution;
-    if the CMI is lower than the current permutation is kept and the next
-    swap is tested. The iteration stops after the provided number of
-    iterations.
-
-    Example:
-        import numpy as np
-        import pid
-
-        n = 5000
-        alph = 2
-        x = np.random.randint(0, alph, n)
-        y = np.random.randint(0, alph, n)
-        z = np.logical_xor(x, y).astype(int)
-        cfg = {
-            'alphabetsize': 2,
-            'jarpath': '/home/user/infodynamics-dist-1.3/infodynamics.jar',
-            'iterations': 10000
-        }
-        [est, opt] = pid(x, y, z, cfg)
-
-    Args:
-        s1 : numpy array
-            1D array containing realizations of a discrete random variable
-            (this is the source variable the algorithm calculates the actual
-            UI for)
-        s2 : numpy array
-            1D array containing realizations of a discrete random variable (the
-            other source variable)
-        t : numpy array
-            1D array containing realizations of a discrete random variable
-        settings : dict
-            estimation parameters
-
-            - 'alphabetsize' - no. values in each variable s1, s2, t
-            - 'jarpath' - string with path to JIDT jar file
-            - 'iterations' - no. iterations of the estimator
-
-    Returns:
-        dict
-            estimated decomposition, contains: MI/CMI values computed
-            from non-permuted distributions; PID estimates (shared,
-            synergistic, unique information); I(target;s1,s2) under permuted
-            distribution Q
-        dict
-            additional information about iterative optimization,
-            contains: final permutation Q; settings dictionary; array with
-            I(target:s1|s2) for each iteration; array with delta
-            I(target:s1|s2) for each iteration; I(target:s1,s2) for each
-            iteration
-
-    Note:
-        variables names joined by "_" enter a mutual information computation
-        together i.e. mi_va1_var2 --> I(var1 : var2). Variables names joined
-        directly form a new joint variable
-        mi_var1var2_var3 --> I(var3:(var1,var2))
-    """
-    _check_input(s1, s2, t, settings)
-    # make deep copies of input arrays to avoid side effects
-    s1_cp = s1.copy()
-    s2_cp = s2.copy()
-    t_cp = t.copy()
-
-    # get estimation parameters
-    settings.setdefault('verbose', False)
-    try:
-        jarpath = settings['jarpath']
-    except TypeError:
-        print('The settings argument should be a dictionary.')
-        raise
-    except KeyError:
-        print('"jarpath" is missing from the settings dictionary.')
-        raise
-    try:
-        alph_s1 = settings['alph_s1']
-    except KeyError:
-        print('"alphabetsize" is missing from the settings dictionary.')
-        raise
-    try:
-        alph_s2 = settings['alph_s2']
-    except KeyError:
-        print('"alphabetsize" is missing from the settings dictionary.')
-        raise
-    try:
-        alph_t = settings['alph_t']
-    except KeyError:
-        print('"alphabetsize" is missing from the settings dictionary.')
-        raise
-    try:
-        iterations = settings['iterations']
-    except KeyError:
-        print('"iterations" is missing from the settings dictionary.')
-        raise
-
-    if not jp.isJVMStarted():
-        jp.startJVM(jp.getDefaultJVMPath(),
-                    '-ea', '-Djava.class.path=' + jarpath, "-Xmx3000M")
-    # what if it's there already - do we have to attach to it?
-
-    # transform variables as far as possible outside the loops below
-    # (note: only these variables should change when executing the loop)
-    target_jA = jp.JArray(jp.JInt, t.ndim)(t.tolist())
-    s2_jA = jp.JArray(jp.JInt, s2.ndim)(s2.tolist())
-    s1_list = s1_cp.tolist()
-    s1_dim = s1_cp.ndim
-
-    Cmi_calc_class = (jp.JPackage('infodynamics.measures.discrete')
-                      .ConditionalMutualInformationCalculatorDiscrete)
-    Mi_calc_class = (jp.JPackage('infodynamics.measures.discrete')
-                     .MutualInformationCalculatorDiscrete)
-#
-#   cmi_calc = Cmi_calc_class(alphabet,alphabet,alphabet)
-    cmi_calc_target_s1_cond_s2 = Cmi_calc_class(alph_t, alph_s1, alph_s2)
-
-    # MAX THE CORRECT WAY TO GO?
-    alph_max_s1_t = max(alph_s1, alph_t)
-    alph_max_s2_t = max(alph_s2, alph_t)
-    alph_max = max(alph_s1 * alph_s2, alph_t)
-
-#   mi_calc  = Mi_calc_class(alphabet)
-    mi_calc_s1 = Mi_calc_class(alph_max_s1_t)
-    mi_calc_s2 = Mi_calc_class(alph_max_s2_t)
-
-#   jointmi_calc = Mi_calc_class(alphabet ** 2)
-    jointmi_calc = Mi_calc_class(alph_max)
-
-    print("initialized all estimators")
-    cmi_target_s1_cond_s2 = _calculate_cmi(cmi_calc_target_s1_cond_s2,
-                                           t_cp, s1_cp, s2_cp)
-    jointmi_s1s2_target = _calculate_jointmi(jointmi_calc, s1_cp, s2_cp, t_cp)
-#   print("Original joint mutual information: {0}".format(jointmi_s1s2_target))
-    mi_target_s1 = _calculate_mi(mi_calc_s1, s1_cp, t_cp)
-#   print("Original mutual information I(target:s1): {0}".format(mi_target_s1))
-    mi_target_s2 = _calculate_mi(mi_calc_s2, s2_cp, t_cp)
-#   print("Original mutual information I(target:s2): {0}".format(mi_target_s2))
-    print("Original redundancy - synergy: {0}".format(
-                            mi_target_s1 + mi_target_s2 - jointmi_s1s2_target))
-
-    n = t_cp.shape[0]
-    reps = iterations + 1
-    ind = np.arange(n)
-    # collect estimates in each iteration
-    cmi_q_target_s1_cond_s2_all = -np.inf * np.ones(reps).astype('float128')
-    cmi_q_target_s1_cond_s2_delta = -np.inf * np.ones(reps).astype('float128')
-    cmi_q_target_s1_cond_s2_all[0] = cmi_target_s1_cond_s2
-    unsuccessful = 0
-
-    for i in range(1, reps):
-        s1_new_list = s1_list
-        ind_new = ind
-
-        # swapping: pick sample at random, find all other samples that
-        # are potential matches (have the same value in target), pick one of
-        # the matches for the actual swap
-        swap_1 = np.random.randint(n)
-        swap_candidates = np.where(t_cp == t_cp[swap_1])[0]
-        swap_2 = np.random.choice(swap_candidates)
-
-        # swap value in s1 and index to keep track
-        s1_new_list[swap_1], s1_new_list[swap_2] = (s1_new_list[swap_2],
-                                                    s1_new_list[swap_1])
-        ind_new[swap_1], ind_new[swap_2] = (ind_new[swap_2],
-                                            ind_new[swap_1])
-
-        # calculate CMI under new swapped distribution
-        cmi_new = _calculate_cmi_from_jA_list(cmi_calc_target_s1_cond_s2,
-                                              target_jA,
-                                              s1_new_list,
-                                              s1_dim,
-                                              s2_jA)
-
-        if (np.less_equal(cmi_new, cmi_q_target_s1_cond_s2_all[i - 1])):
-            s1_list = s1_new_list
-            ind = ind_new
-            cmi_q_target_s1_cond_s2_all[i] = cmi_new
-            cmi_q_target_s1_cond_s2_delta[i] = cmi_q_target_s1_cond_s2_all[i - 1] - cmi_new
-        else:
-            cmi_q_target_s1_cond_s2_all[i] = cmi_q_target_s1_cond_s2_all[i - 1]
-            unsuccessful += 1
-
-    print('Unsuccessful swaps: {0}'.format(unsuccessful))
-    # convert the final s1 back to an array
-    s1_final = np.asarray(s1_new_list, dtype=np.int)
-    # estimate unq/syn/shd information
-    jointmi_q_s1s2_target = _calculate_jointmi(jointmi_calc, s1_final,
-                                               s2_cp, t_cp)
-    unq_s1 = _get_last_value(cmi_q_target_s1_cond_s2_all)  # Bertschinger, 2014, p. 2163
-
-    # NEED TO REINITIALISE the estimator
-    cmi_calc_target_s2_cond_s1 = Cmi_calc_class(alph_t, alph_s2, alph_s1)
-    unq_s2 = _calculate_cmi(cmi_calc_target_s2_cond_s1, t_cp, s2_cp, s1_final)  # Bertschinger, 2014, p. 2166
-    syn_s1s2 = jointmi_s1s2_target - jointmi_q_s1s2_target  # Bertschinger, 2014, p. 2163
-    shd_s1s2 = mi_target_s1 + mi_target_s2 - jointmi_q_s1s2_target  # Bertschinger, 2014, p. 2167
-
-    estimate = {
-        'unq_s1': unq_s1,
-        'unq_s2': unq_s2,
-        'shd_s1s2': shd_s1s2,
-        'syn_s1s2': syn_s1s2,
-        'jointmi_q_s1s2_target': jointmi_q_s1s2_target,
-        'orig_cmi_target_s1_cond_s2': cmi_target_s1_cond_s2,
-        'orig_jointmi_s1s2_target': jointmi_s1s2_target,
-        'orig_mi_target_s1': mi_target_s1,
-        'orig_mi_target_s2': mi_target_s2
-    }
-    # useful outputs for plotting/debugging
-    optimization = {
-        'q': ind_new,
-        'unsuc_swaps': unsuccessful,
-        'cmi_q_target_s1_cond_s2_all': cmi_q_target_s1_cond_s2_all,
-        'cmi_q_target_s1_cond_s2_delta': cmi_q_target_s1_cond_s2_delta,
-        'settings': settings
-    }
-    return estimate, optimization
-
-
-def _nan(shape):
-    """Return 1D numpy array of nans.
-
-    Args:
-        shape (int): length of array
-
-    Returns:
-        numpy array: array filled with nans
-    """
-    a = np.empty(shape)
-    a.fill(np.nan)
-    return a
-
-
-def _calculate_cmi(cmi_calc, var_1, var_2, cond):
-    """Calculate conditional MI from three variables usind JIDT.
-
-    Args:
-        cmi_calc (JIDT estimator object): JIDT estimator for conditio-
-            nal mutual information
-        var_1, var_2 (1D numpy array): realizations of two discrete
-            random variables
-        cond (1D numpy array): realizations of a discrete random
-            variable for conditioning
-
-    Returns:
-        double: conditional mutual information between var_1 and var_2
-            conditional on cond
-    """
-    var_1_java = jp.JArray(jp.JInt, var_1.ndim)(var_1.tolist())
-    var_2_java = jp.JArray(jp.JInt, var_2.ndim)(var_2.tolist())
-    cond_java = jp.JArray(jp.JInt, cond.ndim)(cond.tolist())
-    cmi_calc.initialise()
-    cmi_calc.addObservations(var_1_java, var_2_java, cond_java)
-    cmi = cmi_calc.computeAverageLocalOfObservations()
-    return cmi
-
-
-def _calculate_cmi_from_jA_list(cmi_calc, var_1_java, var_2_list, var_2_ndim,
-                                cond_java):
-    """Calculate conditional MI from three variables usind JIDT.
-
-    Args:
-        cmi_calc (JIDT estimator object): JIDT estimator for conditio-
-            nal mutual information
-        var_1, var_2 (1D numpy array): realizations of two discrete
-            random variables
-        cond (1D numpy array): realizations of a discrete random
-            variable for conditioning
-
-    Returns:
-        double: conditional mutual information between var_1 and var_2
-            conditional on cond
-    """
-#    var_1_java = jp.JArray(jp.JInt, var_1.ndim)(var_1.tolist())
-    var_2_java = jp.JArray(jp.JInt, var_2_ndim)(var_2_list)
-#    cond_java = jp.JArray(jp.JInt, cond.ndim)(cond.tolist())
-    cmi_calc.initialise()
-    cmi_calc.addObservations(var_1_java, var_2_java, cond_java)
-    cmi = cmi_calc.computeAverageLocalOfObservations()
-    return cmi
-
-
-def _calculate_mi(mi_calc, var_1, var_2):
-    """Calculate MI from two variables usind JIDT.
-
-    Args:
-        mi_calc (JIDT estimator object): JIDT estimator for mutual
-            information
-        var_1, var_2, (1D numpy array): realizations of some discrete
-            random variables
-
-    Returns:
-        double: mutual information between input variables
-    """
-    mi_calc.initialise()
-    mi_calc.addObservations(jp.JArray(jp.JInt, var_1.ndim)(var_1.tolist()),
-                            jp.JArray(jp.JInt, var_2.ndim)(var_2.tolist()))
-    mi = mi_calc.computeAverageLocalOfObservations()
-    return mi
-
-
-def _calculate_jointmi(jointmi_calc, s1, s2, target):
-    """Calculate MI from three variables usind JIDT.
-
-    Args:
-        jointmi_calc (JIDT estimator object): JIDT estimator for
-            mutual information
-        var_1, var_2, var_3 (1D numpy array): realizations of some
-            discrete random variables
-
-    Returns:
-        double: mutual information between all three input variables
-    """
-    mUtils = jp.JPackage('infodynamics.utils').MatrixUtils
-    # speed critical line ?
-    s12 = mUtils.computeCombinedValues(
-                jp.JArray(jp.JInt, 2)(np.column_stack((s1, s2)).tolist()), 2)
-#    [s12, alph_joined] = _join_variables(s1, s2, 2, 2)
-    jointmi_calc.initialise()
-#    jointmi_calc.addObservations(
-#                           jp.JArray(jp.JInt, s12.T.ndim)(s12.T.tolist()),
-#                           jp.JArray(jp.JInt, target.ndim)(target.tolist()))
-    jointmi_calc.addObservations(
-                            s12,
-                            jp.JArray(jp.JInt, target.ndim)(target.tolist()))
-
-    jointmi = jointmi_calc.computeAverageLocalOfObservations()
-    return jointmi
-
-
-def _get_last_value(x):
-    """Return the highest-index value that is not a NaN from an array.
-
-    Args:
-        x (1D numpy array): array where some entries are nan
-
-    Returns:
-        int/double: entry in x with highest index, which is not nan (if
-            no such value exists, nan is returned)
-    """
-    ind = np.where(x > -np.inf)[0]
-    try:
-        return x[ind[-1]]
-    except IndexError:
-        print('Couldn not find a value that is not -inf.')
-        return np.NaN
 
 
 class SydneyPID(Estimator):
     """Estimate partial information decomposition of discrete variables.
 
-    Fast implementation of the partial information decomposition (PID)
-    estimator for discrete data. The estimator does not require JAVA or GPU
-    modules to run.
+    Fast implementation of the BROJA partial information decomposition (PID)
+    estimator for discrete data (Bertschinger, 2014). The estimator does not
+    require JAVA or GPU modules to run.
 
     The estimator finds shared information, unique information and
     synergistic information between the two inputs s1 and s2 with respect to
@@ -408,6 +32,12 @@ class SydneyPID(Estimator):
     which actually does the virtualised swapping, keeping the changes if the
     CMI decreases; and an outer loop which decreases the size of the
     probability mass increment the virtualised swapping utilises.
+
+    References
+
+    - Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., & Ay, N. (2014).
+      Quantifying unique information. Entropy, 16(4), 2161–2183.
+      http://doi.org/10.3390/e16042161
 
     Args:
         settings : dict
@@ -438,6 +68,8 @@ class SydneyPID(Estimator):
               loop. However, this hard limit is (practically) never used as it
               should always hit the soft limit defined above (parameter may be
               removed in the future).
+            - verbose : bool [optional] - print output to console
+              (default=False)
     """
     def __init__(self, settings):
         try:
@@ -474,7 +106,8 @@ class SydneyPID(Estimator):
         except KeyError:
             print('"max_iters" is missing from the settings dictionary.')
             raise
-        self.settings = settings
+        self.settings = settings.copy()
+        self.settings.setdefault('verbose', False)
 
     def is_parallel():
         return False
@@ -499,13 +132,13 @@ class SydneyPID(Estimator):
         """
         s1, s2, t, self.settings = _check_input(s1, s2, t, self.settings)
 
-        # Check if float128 is supported by the architecture
+        # Check if longdouble is supported by the architecture
         try:
-            np.float128()
+            np.longdouble()
         except AttributeError as err:
-            if "'module' object has no attribute 'float128'" == err.args[0]:
+            if "'module' object has no attribute 'longdouble'" == err.args[0]:
                 raise RuntimeError(
-                        'This system doesn''t seem to support float128 '
+                        'This system doesn''t seem to support longdouble '
                         '(requirement for using the Sydney PID-estimator.')
             else:
                 raise
@@ -552,19 +185,19 @@ class SydneyPID(Estimator):
                         joint_t_s1_s2_count[np.nonzero(joint_t_s1_s2_count)])
 
         # Fixed probabilities
-        t_prob = np.divide(t_count, num_samples).astype('float128')
-        s1_prob = np.divide(s1_count, num_samples).astype('float128')
-        s2_prob = np.divide(s2_count, num_samples).astype('float128')
+        t_prob = np.divide(t_count, num_samples).astype('longdouble')
+        s1_prob = np.divide(s1_count, num_samples).astype('longdouble')
+        s2_prob = np.divide(s2_count, num_samples).astype('longdouble')
         joint_t_s1_prob = np.divide(joint_t_s1_count,
-                                    num_samples).astype('float128')
+                                    num_samples).astype('longdouble')
         joint_t_s2_prob = np.divide(joint_t_s2_count,
-                                    num_samples).astype('float128')
+                                    num_samples).astype('longdouble')
 
         # Variable probabilities
         joint_s1_s2_prob = np.divide(joint_s1_s2_count,
-                                     num_samples).astype('float128')
+                                     num_samples).astype('longdouble')
         joint_t_s1_s2_prob = np.divide(joint_t_s1_s2_count,
-                                       num_samples).astype('float128')
+                                       num_samples).astype('longdouble')
         max_prob = np.max(joint_t_s1_s2_prob[np.nonzero(joint_t_s1_s2_prob)])
 
     #    # make copies of the variable probabilities for independent second
@@ -619,8 +252,8 @@ class SydneyPID(Estimator):
         # Replication loop
         for rep in reps:
             prob_inc = np.multiply(
-                np.float128(max_prob),
-                np.divide(np.float128(1), np.float128(rep)))
+                np.longdouble(max_prob),
+                np.divide(np.longdouble(1), np.longdouble(rep)))
             # Want to store number of succesive unsuccessful swaps
             unsuccessful_swaps_row = 0
             # SWAP LOOP
@@ -736,7 +369,7 @@ class SydneyPID(Estimator):
 
     def _cmi_prob(self, s2cond_prob, joint_t_s2cond_prob,
                   joint_s1_s2cond_prob, joint_t_s1_s2cond_prob):
-        total = np.zeros(1).astype('float128')
+        total = np.zeros(1).astype('longdouble')
 
         [alph_t, alph_s1, alph_s2cond] = np.shape(joint_t_s1_s2cond_prob)
 
@@ -769,7 +402,7 @@ class SydneyPID(Estimator):
 
     def _mi_prob(self, s1_prob, s2_prob, joint_s1_s2_prob):
         """MI estimator in the prob domain."""
-        total = np.zeros(1).astype('float128')
+        total = np.zeros(1).astype('longdouble')
         [alph_s1, alph_s2] = np.shape(joint_s1_s2_prob)
 
         for sym_s1 in range(0, alph_s1):
@@ -808,10 +441,10 @@ class SydneyPID(Estimator):
             s12_count[s12[obs]] += 1
             joint_t_s12_count[t[obs], s12[obs]] += 1
 
-        t_prob = np.divide(t_count, num_samples).astype('float128')
-        s12_prob = np.divide(s12_count, num_samples).astype('float128')
+        t_prob = np.divide(t_count, num_samples).astype('longdouble')
+        s12_prob = np.divide(s12_count, num_samples).astype('longdouble')
         joint_t_s12_prob = np.divide(joint_t_s12_count,
-                                     num_samples).astype('float128')
+                                     num_samples).astype('longdouble')
 
         return self._mi_prob(t_prob, s12_prob, joint_t_s12_prob)
 
@@ -829,115 +462,43 @@ def _join_variables(a, b, alph_a, alph_b):
     return ab, alph_new
 
 
-# TODO fix this - no idea why it does not yield the correct results
-# def _try_swap(cur_cond_mut_info, joint_t_s1_s2_prob, joint_s1_s2_prob,
-#              joint_t_s2_prob, s2_prob,
-#              t_cand, s1_prim, s2_prim, s1_cand, s2_cand,
-#              prob_inc, unsuccessful_swaps_row):
-# #            unsuccessful_swaps_row_local = unsuccessful_swaps_row
-# #            print("unsuccessful_swaps_row_local: {0}".format(unsuccessful_swaps_row_local))
-#            if (joint_t_s1_s2_prob[t_cand, s1_cand, s2_cand] >= prob_inc
-#            and joint_t_s1_s2_prob[t_cand, s1_prim, s2_prim] >= prob_inc
-#            and joint_s1_s2_prob[s1_cand, s2_cand] >= prob_inc
-#            and joint_s1_s2_prob[s1_prim, s2_prim] >= prob_inc):
-#
-#                joint_t_s1_s2_prob[t_cand, s1_cand, s2_cand] -= prob_inc
-#                joint_t_s1_s2_prob[t_cand, s1_prim, s2_prim] -= prob_inc
-#                joint_t_s1_s2_prob[t_cand, s1_cand, s2_prim] += prob_inc
-#                joint_t_s1_s2_prob[t_cand, s1_prim, s2_cand] += prob_inc
-#
-#                joint_s1_s2_prob[s1_cand, s2_cand] -= prob_inc
-#                joint_s1_s2_prob[s1_prim, s2_prim] -= prob_inc
-#                joint_s1_s2_prob[s1_cand, s2_prim] += prob_inc
-#                joint_s1_s2_prob[s1_prim, s2_cand] += prob_inc
-#
-#                # Calculate the cmi after this virtual swap
-#                cond_mut_info = self._cmi_prob(
-#                    s2_prob, joint_t_s2_prob, joint_s1_s2_prob, joint_t_s1_s2_prob)
-#
-#                # If improved keep it, reset the unsuccessful swap counter
-#                if ( cond_mut_info < cur_cond_mut_info ):
-#                    cur_cond_mut_info = cond_mut_info
-#                    unsuccessful_swaps_row = 0
-#                    # TODO: if this swap direction was successful - repeat it !
-#                # Else undo the changes, record unsuccessful swap
-#                else:
-#                    joint_t_s1_s2_prob[t_cand, s1_cand, s2_cand] += prob_inc
-#                    joint_t_s1_s2_prob[t_cand, s1_prim, s2_prim] += prob_inc
-#                    joint_t_s1_s2_prob[t_cand, s1_cand, s2_prim] -= prob_inc
-#                    joint_t_s1_s2_prob[t_cand, s1_prim, s2_cand] -= prob_inc
-#
-#                    joint_s1_s2_prob[s1_cand, s2_cand] += prob_inc
-#                    joint_s1_s2_prob[s1_prim, s2_prim] += prob_inc
-#                    joint_s1_s2_prob[s1_cand, s2_prim] -= prob_inc
-#                    joint_s1_s2_prob[s1_prim, s2_cand] -= prob_inc
-#
-#                    unsuccessful_swaps_row += 1
-#            else:
-#                unsuccessful_swaps_row += 1
-#            return unsuccessful_swaps_row # need to return this to make it visible outside
-#        # END of a possible try_swap function
-
-
 class TartuPID(Estimator):
     """Estimate partial information decomposition for two inputs and one output
 
-    Fast implementation of the partial information decomposition (PID)
-    estimator for discrete data. The estimator does require a gurobi
-    installation.
+    Implementation of the partial information decomposition (PID) estimator for
+    discrete data. The estimator finds shared information, unique information
+    and synergistic information between the two inputs s1 and s2 with respect
+    to the output t.
 
-    The estimator finds shared information, unique information and
-    synergistic information between the two inputs s1 and s2 with respect to
-    the output t.
+    The algorithm uses exponential cone programming and requires the Python
+    package for ECOS: Embedded Cone Solver (https://pypi.python.org/pypi/ecos).
 
-    Improved version with larger initial swaps and checking for convergence of
-    both the unique information from sources 1 and 2.
+    References:
+
+    - Makkeh, A., Theis, D.O., & Vicente, R. (2017). Bivariate Partial
+      Information Decomposition: The Optimization Perspective. Entropy, 19(10),
+      530.
+    - Makkeh, A., Theis, D.O., & Vicente, R. (2018). BROJA-2PID: A cone
+      programming based Partial Information Decomposition estimator. Entropy,
+      20(271), https://github.com/Abzinger/BROJA_2PID.
 
     Args:
         settings : dict
             estimation parameters (with default parameters)
 
-            - get_sorted_pdf : bool [optional] - False
-            - true_pdf : [optional] - None
-            - true_result : [optional] - None
-            - true_CI : float [optional] - None
-            - true_SI : float [optional] - None
-            - feas_eps : float [optional] - 1.e-10
-            - kkt_eps : float [optional] - 1.e-5
-            - feas_eps_2 : float [optional] - 1.e-6
-            - kkt_eps_2 : float [optional] - 0.01
-            - kkt_search_eps : float [optional] - 0.5
-            - max_zero_probability : float [optional] - 1.e-5
-            - verbose : bool [optional] - False
+            - verbose : bool [optional] - print output to console
+              (default=False)
+            - cone_solver : str [optional] - which cone solver to use
+              (default='ECOS')
+            - solver_args : dict [optional] - solver arguments (default={})
     """
 
     def __init__(self, settings):
         # get estimation parameters
-        # get_sorted_pdf = settings.get('sorted_pdf', False)
-        # true_pdf = settings.get('true_pdf', None)
-        # true_result = settings.get('true_result', None)
-        # true_CI = settings.get('true_CI', None)
-        # true_SI = settings.get('true_SI', None)
-        # feas_eps = settings.get('feas_eps', 1.e-10)
-        # kkt_eps = settings.get('kkt_eps', 1.e-5)
-        # feas_eps_2 = settings.get('feas_eps_2', 1.e-6)
-        # kkt_eps_2 = settings.get('kkt_eps_2', .01)
-        # kkt_search_eps = settings.get('kkt_search_eps', .5)
-        # max_zero_probability = settings.get('max_zero_probability', 1.e-5)
-        # verbose = settings.get('verbose', False)
-        settings.setdefault('sorted_pdf', False)
-        settings.setdefault('true_pdf', None)
-        settings.setdefault('true_result', None)
-        settings.setdefault('true_CI', None)
-        settings.setdefault('true_SI', None)
-        settings.setdefault('feas_eps', 1.e-10)
-        settings.setdefault('kkt_eps', 1.e-5)
-        settings.setdefault('feas_eps_2', 1.e-6)
-        settings.setdefault('kkt_eps_2', .01)
-        settings.setdefault('kkt_search_eps', .5)
-        settings.setdefault('max_zero_probability', 1.e-5)
-        settings.setdefault('verbose', False)
-        self.settings = settings
+        self.settings = settings.copy()
+        self.settings.setdefault('verbose', False)
+        self.settings.setdefault('cone_solver', 'ECOS')
+        self.settings.setdefault('solver_args', {'keep_solver_object': False})
 
     def is_parallel():
         return False
@@ -957,72 +518,58 @@ class TartuPID(Estimator):
 
         Returns:
             dict
-                estimated decomposition, contains the optimised PDF, shared,
-                and synergistic information
+                estimated decomposition, solver used, numerical error
         """
         s1, s2, t, self.settings = _check_input(s1, s2, t, self.settings)
-        counts = dict()
-        n_samples = s1.shape[0]
+        pdf = _get_pdf_dict(s1, s2, t)
 
-        # count occurences
-        for i in range(n_samples):
-            if (t[i], s1[i], s2[i]) in counts.keys():
-                counts[(t[i], s1[i], s2[i])] += 1
-            else:
-                counts[(t[i], s1[i], s2[i])] = 1
+        retval = synergy_tartu.pid(pdf_dirty=pdf,
+                                   cone_solver=self.settings['cone_solver'],
+                                   output=int(self.settings['verbose']),
+                                   **self.settings['solver_args'])
 
-        # make pdf from counts
-        pdf = dict()
-        for xyz, c in counts.items():
-            pdf[xyz] = c / float(n_samples)
-
-        retval = synergy_tartu.solve_PDF(pdf,
-                                         self.settings['true_pdf'],
-                                         self.settings['true_result'],
-                                         self.settings['true_CI'],
-                                         self.settings['true_SI'],
-                                         self.settings['feas_eps'],
-                                         self.settings['kkt_eps'],
-                                         self.settings['feas_eps_2'],
-                                         self.settings['kkt_eps_2'],
-                                         self.settings['kkt_search_eps'],
-                                         self.settings['max_zero_probability'],
-                                         self.settings['verbose'])
-        optpdf, feas, kkt, CI, SI, UI_s1, UI_s2 = retval
-        res = {
-            'kkt': kkt,
-            'feas': feas,
-            'optpdf': optpdf,
-            'shd_s1_s2': SI,
-            'syn_s1_s2': CI,
-            'unq_s1': UI_s1,
-            'unq_s2': UI_s2,
+        results = {
+            'num_err': retval['Num_err'],
+            'solver': retval['Solver'],
+            'shd_s1_s2': retval['SI'],
+            'syn_s1_s2': retval['CI'],
+            'unq_s1': retval['UIY'],
+            'unq_s2': retval['UIZ'],
         }
-        if self.settings['sorted_pdf']:
-            res['sorted_pdf'] = synergy_tartu.sorted_pdf(pdf)
-        return res
+        return results
+
+
+def _get_pdf_dict(s1, s2, t):
+    # Create dictionary with probability mass function
+    counts = dict()
+    n_samples = s1.shape[0]
+
+    # Count occurences.
+    for i in range(n_samples):
+        if (t[i], s1[i], s2[i]) in counts.keys():
+            counts[(t[i], s1[i], s2[i])] += 1
+        else:
+            counts[(t[i], s1[i], s2[i])] = 1
+
+    # Create PMF from counts.
+    pmf = dict()
+    for xyz, c in counts.items():
+        pmf[xyz] = c / float(n_samples)
+    return pmf
 
 
 def _check_input(s1, s2, t, settings):
     """Check input to PID estimators."""
-#    if s1.ndim != 1 or s2.ndim != 1 or t.ndim != 1:
-#        raise ValueError('Inputs s1, s2, target have to be vectors'
-#                         '(1D-arrays).')
-#    if (len(t) != len(s1) or len(t) != len(s2)):
-#        raise ValueError('Number of samples s1, s2 and t must be equal')
-
-    # In general, IDTxl expects 2D inputs because JIDT/JPYPE only accepts those
-    # and we have a multivariate approach, i.e., a vector is a special case of
-    # 2D-data. Squeeze 2D arrays if the dimension of the second axis is 1.
-    # Otherwise combine multivariate sources into a single variable for
-    # estimation.
-
+    # Check if inputs are numpy arrays.
     if (type(s1) != np.ndarray or type(s2) != np.ndarray or
             type(t) != np.ndarray):
         raise TypeError('All inputs, s1, s2, t, must be numpy arrays.')
 
-    # Convert IDTxl 2D vectors to 1D arrays. Remove unneeded axis or combine
-    # multivariate inputs into a single variable.
+    # In general, IDTxl expects 2D inputs because JIDT/JPYPE only accepts those
+    # and we have a multivariate approach, i.e., a vector is a special case of
+    # 2D-data. The PID estimators on the other hand, expect 1D data. Squeeze 2D
+    # arrays if the dimension of the second axis is 1. Otherwise combine
+    # multivariate sources into a single variable for estimation.
     if s1.ndim != 1:
         if s1.shape[1] == 1:
             s1 = np.squeeze(s1)
@@ -1070,4 +617,9 @@ def _check_input(s1, s2, t, settings):
     if not issubclass(t.dtype.type, np.integer):
         raise TypeError('Input t (target) must be an integer numpy array.')
 
+    # Check if variables have equal length.
+    if (len(t) != len(s1) or len(t) != len(s2)):
+        raise ValueError('Number of samples s1, s2 and t must be equal')
+
     return s1, s2, t, settings
+

@@ -1,13 +1,100 @@
-"""Provide statistics functions.
-
-Created on Mon Mar  7 18:13:27 2016
-
-@author: patricia
-"""
+"""Provide statistics functions."""
+import copy as cp
 import numpy as np
 from . import idtxl_utils as utils
+from . import idtxl_exceptions as ex
 
-VERBOSE = True
+
+def ais_fdr(settings=None, *results):
+    """Perform FDR-correction on results of network AIS estimation.
+
+    Perform correction of the false discovery rate (FDR) after estimation of
+    active information storage (AIS) for all processes in the network. FDR
+    correction is applied by correcting the AIS estimate's omnibus p-values for
+    individual processes/nodes in the network.
+
+    Input can be a list of partial results to combine results from parallel
+    analysis.
+
+    References:
+
+    - Genovese, C.R., Lazar, N.A., & Nichols, T. (2002). Thresholding of
+      statistical maps in functional neuroimaging using the false discovery
+      rate. Neuroimage, 15(4), 870-878.
+
+    Args:
+        settings : dict [optional]
+            parameters for statistical testing with entries:
+
+            - alpha_fdr : float [optional] - critical alpha level
+              (default=0.05)
+            - fdr_constant : int [optional] - choose one of two constants used
+              for calculating the FDR-thresholds according to Genovese (2002):
+              1 will divide alpha by 1, 2 will divide alpha by the sum_i(1/i);
+              see the paper for details on the assumptions (default=2)
+
+        results : instances of ResultsSingleProcessAnalysis
+            results of network AIS estimation, see documentation of
+            ResultsSingleProcessAnalysis()
+
+    Returns:
+        ResultsSingleProcessAnalysis instance
+            input results objects pruned of non-significant estimates
+    """
+    if settings is None:
+        settings = {}
+    # Set defaults and get parameters from settings dictionary
+    alpha = settings.get('alpha_fdr', 0.05)
+    constant = settings.get('fdr_constant', 2)
+
+    # Combine results into single results dict.
+    if len(results) > 1:
+        results_comb = cp.deepcopy(results[0])
+        results_comb.combine_results(*results[1:])
+    else:
+        results_comb = cp.deepcopy(results[0])
+
+    # Collect p-values of whole processes (determined by the omnibus test).
+    pval = np.arange(0)
+    process_idx = np.arange(0).astype(int)
+    n_perm = np.arange(0).astype(int)
+    for process in results_comb.processes_analysed:
+        if results_comb._single_process[process].ais_sign:
+            pval = np.append(
+                pval, results_comb._single_process[process].ais_pval)
+            process_idx = np.append(process_idx, process)
+            n_perm = np.append(
+                    n_perm, results_comb.settings.n_perm_mi)
+
+    if pval.size == 0:
+        print('FDR correction: no links in final results ...\n')
+        results_comb._add_fdr(fdr=None, alpha=alpha, constant=constant)
+        return results_comb
+
+    sign, thresh = _perform_fdr_corretion(pval, constant, alpha)
+
+    # If the number of permutations for calculating p-values for individual
+    # variables is too low, return without performing any correction.
+    if (1 / min(n_perm)) > thresh[0]:
+        print('WARNING: Number of permutations (''n_perm_max_seq'') for at '
+              'least one target is too low to allow for FDR correction '
+              '(FDR-threshold: {0:.4f}, min. theoretically possible p-value: '
+              '{1}).'.format(thresh[0], 1 / min(n_perm)))
+        results_comb._add_fdr(fdr=None, alpha=alpha, constant=constant)
+        return results_comb
+
+    # Go over list of all candidates and remove non-significant results from
+    # the results object. Create a copy of the results object to leave the
+    # original intact.
+    fdr = cp.deepcopy(results_comb._single_process)
+    for s in range(sign.shape[0]):
+        if not sign[s]:
+            t = process_idx[s]
+            fdr[t].selected_vars = []
+            fdr[t].ais_pval = 1
+            fdr[t].ais_sign = False
+    results_comb._add_fdr(fdr, alpha, constant)
+    return results_comb
 
 
 def network_fdr(settings=None, *results):
@@ -42,26 +129,27 @@ def network_fdr(settings=None, *results):
               1 will divide alpha by 1, 2 will divide alpha by the sum_i(1/i);
               see the paper for details on the assumptions (default=2)
 
-        results : list of dicts
-            network inference results from .analyse_network methods, where each
-            dict entry represents results for one target node
+        results : instances of ResultsNetworkInference
+            results of network inference, see documentation of
+            ResultsNetworkInference()
 
     Returns:
-        dict
-            input results structure pruned of non-significant links.
+        ResultsNetworkInference instance
+            input object pruned of non-significant links
     """
     if settings is None:
         settings = {}
     # Set defaults and get parameters from settings dictionary
-    settings.setdefault('alpha_fdr', 0.05)
-    alpha = settings['alpha_fdr']
-    settings.setdefault('correct_by_target', True)
-    correct_by_target = settings['correct_by_target']
-    settings.setdefault('fdr_constant', 2)
-    constant = settings['fdr_constant']
+    alpha = settings.get('alpha_fdr', 0.05)
+    correct_by_target = settings.get('correct_by_target', True)
+    constant = settings.get('fdr_constant', 2)
 
-    # Combine results into single results dict (this creates a copy).
-    res = utils.combine_results(*results)
+    # Combine results into single results dict.
+    if len(results) > 1:
+        results_comb = cp.deepcopy(results[0])
+        results_comb.combine_results(*results[1:])
+    else:
+        results_comb = cp.deepcopy(results[0])
 
     # Collect significant source variables for all targets. Either correct
     # p-value of whole target (all candidates), or correct p-value of
@@ -72,27 +160,110 @@ def network_fdr(settings=None, *results):
     n_perm = np.arange(0).astype(int)
     cands = []
     if correct_by_target:  # whole target
-        for target in res.keys():
-            if res[target]['omnibus_sign']:
-                pval = np.append(pval, res[target]['omnibus_pval'])
+        for target in results_comb.targets_analysed:
+            if results_comb._single_target[target].omnibus_sign:
+                pval = np.append(
+                    pval, results_comb._single_target[target].omnibus_pval)
                 target_idx = np.append(target_idx, target)
-                n_perm = np.append(n_perm,
-                                   res[target]['settings']['n_perm_omnibus'])
+                n_perm = np.append(
+                        n_perm, results_comb.settings.n_perm_omnibus)
     else:  # individual variables
-        for target in res.keys():
-            if res[target]['omnibus_sign']:
-                n_sign = res[target]['selected_sources_pval'].size
-                pval = np.append(pval, res[target]['selected_sources_pval'])
+        for target in results_comb.targets_analysed:
+            if results_comb._single_target[target].omnibus_sign:
+                n_sign = (results_comb._single_target[target].
+                          selected_sources_pval.size)
+                pval = np.append(
+                    pval, (results_comb._single_target[target].
+                           selected_sources_pval))
                 target_idx = np.append(target_idx,
                                        np.ones(n_sign) * target).astype(int)
-                cands = cands + res[target]['selected_vars_sources']
-                n_perm = np.append(n_perm,
-                                   res[target]['settings']['n_perm_max_seq'])
+                cands = (cands +
+                         (results_comb._single_target[target].
+                          selected_vars_sources))
+                n_perm = np.append(
+                    n_perm, results_comb.settings.n_perm_max_seq)
 
     if pval.size == 0:
-        print('No links in final results. Return ...')
-        return
+        print('No links in final results ...')
+        results_comb._add_fdr(
+            fdr=None, alpha=alpha, correct_by_target=correct_by_target,
+            constant=constant)
+        return results_comb
 
+    sign, thresh = _perform_fdr_corretion(pval, constant, alpha)
+
+    # If the number of permutations for calculating p-values for individual
+    # variables is too low, return without performing any correction.
+    if (1 / min(n_perm)) > thresh[0]:
+        print('WARNING: Number of permutations (''n_perm_max_seq'') for at '
+              'least one target is too low to allow for FDR correction '
+              '(FDR-threshold: {0:.4f}, min. theoretically possible p-value: '
+              '{1}).'.format(thresh[0], 1 / min(n_perm)))
+        results_comb._add_fdr(
+            fdr=None, alpha=alpha, correct_by_target=correct_by_target,
+            constant=constant)
+        return results_comb
+
+    # Go over list of all candidates and remove non-significant results from
+    # the results object. Create a copy of the results object to leave the
+    # original intact.
+    fdr = cp.deepcopy(results_comb._single_target)
+    for s in range(sign.shape[0]):
+        if not sign[s]:
+            if correct_by_target:
+                t = target_idx[s]
+                fdr[t].selected_vars_full = cp.deepcopy(
+                    results_comb._single_target[t].selected_vars_target)
+                fdr[t].selected_sources_te = None
+                fdr[t].selected_sources_pval = None
+                fdr[t].selected_vars_sources = []
+                fdr[t].omnibus_pval = 1
+                fdr[t].omnibus_sign = False
+            else:
+                t = target_idx[s]
+                cand = cands[s]
+                cand_ind = (fdr[t].selected_vars_sources.index(cand))
+                fdr[t].selected_vars_sources.pop(cand_ind)
+                fdr[t].selected_sources_pval = np.delete(
+                    fdr[t].selected_sources_pval, cand_ind)
+                fdr[t].selected_sources_te = np.delete(
+                    fdr[t].selected_sources_te, cand_ind)
+                fdr[t].selected_vars_full.pop(
+                    fdr[t].selected_vars_full.index(cand))
+    results_comb._add_fdr(fdr, alpha, correct_by_target, constant)
+    return results_comb
+
+
+def _perform_fdr_corretion(pval, constant, alpha):
+    """Calculate sequential threshold for FDR-correction.
+
+    Calculate sequential thresholds for FDR-correction of p-values. The
+    constant defines how the threshold is calculated. See Genovese (2002) for
+    details.
+
+    References:
+
+    - Genovese, C.R., Lazar, N.A., & Nichols, T. (2002). Thresholding of
+      statistical maps in functional neuroimaging using the false discovery
+      rate. Neuroimage, 15(4), 870-878.
+
+    Args:
+        pval : numpy array
+            p-values to be corrected
+        alpha : float
+            critical alpha level
+        fdr_constant : int
+            one of two constants used for calculating the FDR-thresholds
+            according to Genovese (2002): 1 will divide alpha by 1, 2 will
+            divide alpha by the sum_i(1/i); see the paper for details on the
+            assumptions (default=2)
+
+    Returns:
+        array of bools
+            significance of p-values
+        array of floats
+            FDR-thresholds for each p-value
+    """
     # Sort all p-values in ascending order.
     sort_idx = np.argsort(pval)
     pval.sort()
@@ -112,45 +283,13 @@ def network_fdr(settings=None, *results):
         const = 1
     thresh = (np.arange(1, n + 1) / n) * alpha / const
 
-    # If the number of permutations for calculating p-values for individual
-    # variables is too low, return without performing any correction.
-    if (1 / min(n_perm)) > thresh[0]:
-        print('WARNING: Number of permutations (''n_perm_max_seq'') for at '
-              'least one target is too low to allow for FDR correction '
-              '(FDR-threshold: {0:.4f}, min. theoretically possible p-value: '
-              '{1}).'.format(thresh[0], 1 / min(n_perm)))
-        return None
-
     # Compare data to threshold.
     sign = pval <= thresh
     if np.invert(sign).any():
         first_false = np.where(np.invert(sign))[0][0]
         sign[first_false:] = False  # avoids false positives due to equal pvals
-
-    # Go over list of all candidates and remove them from the results dict.
-    sign = sign[sort_idx]
-    for s in range(sign.shape[0]):
-        if not sign[s]:
-            if correct_by_target:
-                t = target_idx[s]
-                res[t]['selected_vars_full'] = res[t]['selected_vars_target']
-                res[t]['selected_sources_te'] = None
-                res[t]['selected_sources_pval'] = None
-                res[t]['selected_vars_sources'] = []
-                res[t]['omnibus_pval'] = 1
-                res[t]['omnibus_sign'] = False
-            else:
-                t = target_idx[s]
-                cand = cands[s]
-                cand_ind = res[t]['selected_vars_sources'].index(cand)
-                res[t]['selected_vars_sources'].pop(cand_ind)
-                res[t]['selected_sources_pval'] = np.delete(
-                                    res[t]['selected_sources_pval'], cand_ind)
-                res[t]['selected_sources_te'] = np.delete(
-                                    res[t]['selected_sources_te'], cand_ind)
-                res[t]['selected_vars_full'].pop(
-                                    res[t]['selected_vars_full'].index(cand))
-    return res
+    sign = sign[sort_idx]  # restore original ordering of significance values
+    return sign, thresh
 
 
 def omnibus_test(analysis_setup, data):
@@ -183,6 +322,13 @@ def omnibus_test(analysis_setup, data):
             statistical significance
         float
             the test's p-value
+        float
+            the estimated test statisic, i.e., the information transfer from
+            all sources into the target
+
+    Raises:
+        ex.AlgorithmExhaustedError
+            Raised from estimate() calls when calculation cannot be made
     """
     # Set defaults and get parameters from settings dictionary
     analysis_setup.settings.setdefault('n_perm_omnibus', 500)
@@ -191,49 +337,33 @@ def omnibus_test(analysis_setup, data):
     alpha = analysis_setup.settings['alpha_omnibus']
     permute_in_time = _check_permute_in_time(analysis_setup, data,
                                              n_permutations)
-
-    print('no. target sources: {0}, no. sources: {1}'.format(
-                                    len(analysis_setup.selected_vars_target),
-                                    len(analysis_setup.selected_vars_sources)))
     assert analysis_setup.selected_vars_sources, 'No sources to test.'
 
     # Create temporary variables b/c realisations for sources and targets are
     # created on the fly, which is costly, so we want to re-use them after
     # creation. (This does not apply to the current value realisations).
+    # If there was no target variable selected (e.g., if MI is used for network
+    # inference), set conditional to None such that the MI instead of the CMI
+    # estimator is used when calculating the statistic.
     cond_source_realisations = (analysis_setup
                                 ._selected_vars_sources_realisations)
-    cond_target_realisations = (analysis_setup
-                                ._selected_vars_target_realisations)
-    te_orig = analysis_setup._cmi_estimator.estimate(
+    if analysis_setup._selected_vars_target:
+        cond_target_realisations = (analysis_setup
+                                    ._selected_vars_target_realisations)
+    else:
+        cond_target_realisations = None
+    statistic = analysis_setup._cmi_estimator.estimate(
                             var1=cond_source_realisations,
                             var2=analysis_setup._current_value_realisations,
                             conditional=cond_target_realisations)
 
     # Create the surrogate distribution by permuting the conditional sources.
-    if VERBOSE:
+    if analysis_setup.settings['verbose']:
         print('omnibus test, n_perm: {0}'.format(n_permutations))
-    '''
-    # Calculate TE in parallel for all permutations
-    surr_cond_real = np.empty(
-        (n_permutations * data.n_realisations(analysis_setup.current_value),
-         len(analysis_setup.selected_vars_sources)))
-    i_1 = 0
-    i_2 = data.n_realisations(analysis_setup.current_value)
-    for perm in range(n_permutations):
-        if permute_over_replications:
-            surr_cond_real[i_1:i_2, ] = data.permute_data(
-                                    analysis_setup.current_value,
-                                    analysis_setup.selected_vars_sources)[0]
-        else:
-            surr_cond_real[i_1:i_2, ] = _permute_realisations(
-                                            cond_source_realisations,
-                                            analysis_setup._replication_index)
-        i_1 = i_2
-        i_2 += data.n_realisations(analysis_setup.current_value)
-        '''
     if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
             permute_in_time):
         # Generate the surrogates analytically
+        analysis_setup.settings['analytical_surrogates'] = True
         surr_distribution = (analysis_setup._cmi_estimator.
                              estimate_surrogates_analytic(
                                n_perm=n_permutations,
@@ -241,29 +371,31 @@ def omnibus_test(analysis_setup, data):
                                var2=analysis_setup._current_value_realisations,
                                conditional=cond_target_realisations))
     else:
+        analysis_setup.settings['analytical_surrogates'] = False
         surr_cond_real = _get_surrogates(data,
                                          analysis_setup.current_value,
                                          analysis_setup.selected_vars_sources,
                                          n_permutations,
                                          analysis_setup.settings)
 
-        surr_distribution = analysis_setup._cmi_estimator.estimate_mult(
+        surr_distribution = analysis_setup._cmi_estimator.estimate_parallel(
                             n_chunks=n_permutations,
                             re_use=['var2', 'conditional'],
                             var1=surr_cond_real,
                             var2=analysis_setup._current_value_realisations,
                             conditional=cond_target_realisations)
-    [significance, pvalue] = _find_pvalue(te_orig, surr_distribution,
+    [significance, pvalue] = _find_pvalue(statistic, surr_distribution,
                                           alpha, 'one_bigger')
-    if VERBOSE:
+    if analysis_setup.settings['verbose']:
         if significance:
             print(' -- significant\n')
         else:
             print(' -- not significant\n')
-    return significance, pvalue, te_orig
+    return significance, pvalue, statistic
 
 
-def max_statistic(analysis_setup, data, candidate_set, te_max_candidate):
+def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
+                  conditional=None):
     """Perform maximum statistics for one candidate source.
 
     Test if a transfer entropy value is significantly bigger than the maximum
@@ -288,6 +420,10 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate):
             list of indices of remaning candidates
         te_max_candidate : float
             transfer entropy value to be tested
+        conditional : numpy array [optional]
+            realisations of conditional, 2D numpy array where array dimensions
+            represent [realisations x variable dimension] (default=None, no
+            conditioning performed)
 
     Returns:
         bool
@@ -296,6 +432,11 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate):
             the test's p-value
         numpy array
             surrogate table
+
+    Raises:
+        ex.AlgorithmExhaustedError
+            Raised from _create_surrogate_table() when calculation cannot be
+            made
     """
     # Set defaults and get parameters from settings dictionary
     analysis_setup.settings.setdefault('n_perm_max_stat', 200)
@@ -304,9 +445,13 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate):
     alpha = analysis_setup.settings['alpha_max_stat']
     _check_permute_in_time(analysis_setup, data, n_perm)
     assert(candidate_set), 'The candidate set is empty.'
+    if analysis_setup.settings['verbose']:
+        print('maximum statistic, n_perm: {0}'.format(
+                            analysis_setup.settings['n_perm_max_stat']))
 
+    # todo pass correct conditioning set
     surr_table = _create_surrogate_table(analysis_setup, data, candidate_set,
-                                         n_perm)
+                                         n_perm, conditional)
     max_distribution = _find_table_max(surr_table)
     [significance, pvalue] = _find_pvalue(statistic=te_max_candidate,
                                           distribution=max_distribution,
@@ -318,19 +463,31 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate):
 def max_statistic_sequential(analysis_setup, data):
     """Perform sequential maximum statistics for a set of candidate sources.
 
-    Test if sorted transfer entropy (TE) values are significantly bigger than
-    their respective counterpart obtained from surrogates of all remanining
-    candidates: test if the biggest TE is bigger than the distribution
-    of biggest TE surrogate values; test if the 2nd biggest TE is bigger than
-    the distribution of 2nd biggest surrogate TE values; ...
-    Stop comparison if a TE value is non significant, all smaller values are
-    considered non-significant as well.
+    Test multivariate/bivariate MI/TE values against surrogates. Test highest
+    TE/MI value against distribution of highest surrogate values, second
+    highest against distribution of second highest, and so forth. Surrogates
+    are created from each candidate in the candidate set, including the
+    candidate that is currently tested. Surrogates are then sorted over
+    candidates. This is repeated n_perm_max_seq times. Stop comparison if a
+    TE/MI value is not significant compared to the distribution of surrogate
+    values of the same rank. All smaller values are considered non-significant
+    as well.
+
+    The conditional for estimation of MI/TE is taken from the current set of
+    conditional variables in the analysis setup. For multivariate MI or TE
+    surrogate creation, the full set of conditional variables is used. For
+    bivariate MI or TE surrogate creation, the conditioning set has to be
+    restricted to a subset of the current set of conditional variables: for
+    bivariate MI no conditioning set is required, for bivariate TE only the
+    past variables from the target are required (not the variables selected
+    from other relevant sources).
 
     This function will re-use the surrogate table created in the last min-stats
     round if that table is in the analysis_setup. This saves the complete
     calculation of surrogates for this statistic.
 
     Args:
+
         analysis_setup : MultivariateTE instance
             information on the current analysis, can have an optional attribute
             'settings', a dictionary with parameters for statistical testing:
@@ -354,89 +511,370 @@ def max_statistic_sequential(analysis_setup, data):
         numpy array, float
             TE values for individual sources
     """
-    try:
-        n_permutations = analysis_setup.settings['n_perm_max_seq']
-    except KeyError:
-        try:  # use the same n_perm as for min_stats if surr table is reused
-            n_permutations = analysis_setup._min_stats_surr_table.shape[1]
-            analysis_setup.settings['n_perm_max_seq'] = n_permutations
-        except AttributeError:  # is surr table is None, use default
-            analysis_setup.settings['n_perm_max_seq'] = 500
-            n_permutations = analysis_setup.settings['n_perm_max_seq']
+    # Set defaults and get test parameters.
+    analysis_setup.settings.setdefault('n_perm_max_seq', 500)
+    n_permutations = analysis_setup.settings['n_perm_max_seq']
     analysis_setup.settings.setdefault('alpha_max_seq', 0.05)
     alpha = analysis_setup.settings['alpha_max_seq']
     _check_permute_in_time(analysis_setup, data, n_permutations)
+    permute_in_time = analysis_setup.settings['permute_in_time']
+
+    if analysis_setup.settings['verbose']:
+        print('sequential maximum statistic, n_perm: {0}, testing {1} selected'
+              ' sources'.format(n_permutations,
+                                len(analysis_setup.selected_vars_sources)))
 
     assert analysis_setup.selected_vars_sources, 'No sources to test.'
 
-    # Calculate TE for each candidate in the conditional source set and sort
-    # TE values.
-    candidate_realisations = np.empty(
-                        (data.n_realisations(analysis_setup.current_value) *
-                         len(analysis_setup.selected_vars_sources), 1))
+    idx_conditional = analysis_setup.selected_vars_full
     conditional_realisations = np.empty(
-                        (data.n_realisations(analysis_setup.current_value) *
-                            len(analysis_setup.selected_vars_sources),
-                         len(analysis_setup.selected_vars_full) - 1))
+        (data.n_realisations(analysis_setup.current_value) *
+            len(analysis_setup.selected_vars_sources),
+            len(idx_conditional) - 1)).astype(data.data_type)
+    candidate_realisations = np.empty(
+        (data.n_realisations(analysis_setup.current_value) *
+         len(analysis_setup.selected_vars_sources), 1)).astype(data.data_type)
+
+    # Calculate TE for each candidate in the conditional source set, i.e.,
+    # calculate the conditional MI between each candidate and the current
+    # value, conditional on all selected variables in the conditioning set,
+    # excluding the current source. Calculate surrogates for each candidate by
+    # shuffling the candidate realisations n_perm times. Afterwards, sort the
+    # estimated TE values.
     i_1 = 0
     i_2 = data.n_realisations(analysis_setup.current_value)
-    for conditional in analysis_setup.selected_vars_sources:
-        [temp_cond, temp_cand] = analysis_setup._separate_realisations(
-                                            analysis_setup.selected_vars_full,
-                                            conditional)
-        if temp_cond is None:
+    surr_table = np.zeros((len(analysis_setup.selected_vars_sources),
+                           n_permutations))
+    # Collect data for each candidate and the corresponding conditioning set.
+    # Use realisations for parallel estimation of the test statistic later.
+    for idx_c, candidate in enumerate(analysis_setup.selected_vars_sources):
+        [conditional_realisations_current,
+         candidate_realisations_current] = analysis_setup._separate_realisations(
+                                            idx_conditional, candidate)
+
+        # The following may happen if either the requested conditing is 'none'
+        # or if the conditiong set that is tested consists only of a single
+        # candidate.
+        if conditional_realisations_current is None:
             conditional_realisations = None
+            re_use = ['var2', 'conditional']
         else:
-            conditional_realisations[i_1:i_2, ] = temp_cond
-        candidate_realisations[i_1:i_2, ] = temp_cand
+            conditional_realisations[i_1:i_2, ] = conditional_realisations_current
+            re_use = ['var2']
+        candidate_realisations[i_1:i_2, ] = candidate_realisations_current
         i_1 = i_2
         i_2 += data.n_realisations(analysis_setup.current_value)
 
-    individual_te = analysis_setup._cmi_estimator.estimate_mult(
+        # Generate surrogates for the current candidate.
+        if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
+                permute_in_time):
+            # Generate the surrogates analytically
+            surr_table[idx_c, :] = (
+                analysis_setup._cmi_estimator.estimate_surrogates_analytic(
+                    n_perm=n_permutations,
+                    var1=data.get_realisations(analysis_setup.current_value,
+                                               [candidate])[0],
+                    var2=analysis_setup._current_value_realisations,
+                    conditional=conditional_realisations_current))
+        else:
+            analysis_setup.settings['analytical_surrogates'] = False
+            surr_candidate_realisations = _get_surrogates(
+                                                data,
+                                                analysis_setup.current_value,
+                                                [candidate],
+                                                n_permutations,
+                                                analysis_setup.settings)
+            try:
+                surr_table[idx_c, :] = (
+                    analysis_setup._cmi_estimator.estimate_parallel(
+                        n_chunks=n_permutations,
+                        re_use=['var2', 'conditional'],
+                        var1=surr_candidate_realisations,
+                        var2=analysis_setup._current_value_realisations,
+                        conditional=conditional_realisations_current))
+            except ex.AlgorithmExhaustedError as aee:
+                # The aglorithm cannot continue here, so
+                #  we'll terminate the max sequential stats test,
+                #  and declare all not significant
+                print('AlgorithmExhaustedError encountered in estimations: {}.'.format(
+                    aee.message))
+                print('Stopping sequential max stats at candidate with rank 0')
+                return \
+                    (np.zeros(len(analysis_setup.selected_vars_sources)).astype(bool),
+                     np.ones(len(analysis_setup.selected_vars_sources)),
+                     np.zeros(len(analysis_setup.selected_vars_sources)))
+
+    # Calculate original statistic (multivariate/bivariate TE/MI)
+    try:
+        individual_stat = analysis_setup._cmi_estimator.estimate_parallel(
                             n_chunks=len(analysis_setup.selected_vars_sources),
-                            re_use=['var2'],
+                            re_use=re_use,
                             var1=candidate_realisations,
                             var2=analysis_setup._current_value_realisations,
                             conditional=conditional_realisations)
+    except ex.AlgorithmExhaustedError as aee:
+        # The aglorithm cannot continue here, so
+        #  we'll terminate the max sequential stats test,
+        #  and declare all not significant
+        print('AlgorithmExhaustedError encountered in estimations: {}.'.format(
+            aee.message))
+        print('Stopping sequential max stats at candidate with rank 0')
+        # For now we don't need a stack trace:
+        # traceback.print_tb(aee.__traceback__)
+        # Return (signficance, pvalue, TEs):
+        return \
+            (np.zeros(len(analysis_setup.selected_vars_sources)).astype(bool),
+             np.ones(len(analysis_setup.selected_vars_sources)),
+             np.zeros(len(analysis_setup.selected_vars_sources)))
 
-    selected_vars_order = utils.argsort_descending(individual_te)
-    individual_te_sorted = utils.sort_descending(individual_te)
-
-    # Re-use or create surrogate table and sort it, this saves some time
-    if (analysis_setup._min_stats_surr_table is not None and
-            n_permutations <= analysis_setup._min_stats_surr_table.shape[1]):
-        surr_table = analysis_setup._min_stats_surr_table[:, :n_permutations]
-        assert len(analysis_setup.selected_vars_sources) == surr_table.shape[0]
-    else:
-        surr_table = _create_surrogate_table(
-                                        analysis_setup,
-                                        data,
-                                        analysis_setup.selected_vars_sources,
-                                        n_permutations)
+    selected_vars_order = utils.argsort_descending(individual_stat)
+    individual_stat_sorted = utils.sort_descending(individual_stat)
     max_distribution = _sort_table_max(surr_table)
 
-    # Compare each TE value with the distribution of the same rank, starting
-    # with the highest TE.
-    significance = np.zeros(individual_te.shape[0]).astype(bool)
-    pvalue = np.ones(individual_te.shape[0])
-    for c in range(individual_te.shape[0]):
-        [s, p] = _find_pvalue(individual_te_sorted[c],
+    # Compare each original value with the distribution of the same rank,
+    # starting with the highest value.
+    significance = np.zeros(individual_stat.shape[0]).astype(bool)
+    pvalue = np.ones(individual_stat.shape[0])
+    for c in range(individual_stat.shape[0]):
+        [s, p] = _find_pvalue(individual_stat_sorted[c],
                               max_distribution[c, ], alpha, tail='one_bigger')
         significance[c] = s
         pvalue[c] = p
         if not s:  # break as soon as a candidate is no longer significant
-            if VERBOSE:
-                print('Stopping sequential max stats at candidate with rank '
+            if analysis_setup.settings['verbose']:
+                print('\nStopping sequential max stats at candidate with rank '
                       '{0}.'.format(c))
             break
 
     # Get back original order and return results.
     significance = significance[selected_vars_order]
     pvalue = pvalue[selected_vars_order]
-    return significance, pvalue, individual_te
+    return significance, pvalue, individual_stat
 
 
-def min_statistic(analysis_setup, data, candidate_set, te_min_candidate):
+def max_statistic_sequential_bivariate(analysis_setup, data):
+    """Perform sequential maximum statistics for a set of candidate sources.
+
+    Test multivariate/bivariate MI/TE values against surrogates. Test highest
+    TE/MI value against distribution of highest surrogate values, second
+    highest against distribution of second highest, and so forth. Surrogates
+    are created from each candidate in the candidate set, including the
+    candidate that is currently tested. Surrogates are then sorted over
+    candidates. This is repeated n_perm_max_seq times. Stop comparison if a
+    TE/MI value is not significant compared to the distribution of surrogate
+    values of the same rank. All smaller values are considered non-significant
+    as well.
+
+    The conditional for estimation of MI/TE is taken from the current set of
+    conditional variables in the analysis setup. For multivariate MI or TE
+    surrogate creation, the full set of conditional variables is used. For
+    bivariate MI or TE surrogate creation, the conditioning set has to be
+    restricted to a subset of the current set of conditional variables: for
+    bivariate MI no conditioning set is required, for bivariate TE only the
+    past variables from the target are required (not the variables selected
+    from other relevant sources).
+
+    This function will re-use the surrogate table created in the last min-stats
+    round if that table is in the analysis_setup. This saves the complete
+    calculation of surrogates for this statistic.
+
+    Args:
+
+        analysis_setup : MultivariateTE instance
+            information on the current analysis, can have an optional attribute
+            'settings', a dictionary with parameters for statistical testing:
+
+            - n_perm_max_seq : int [optional] - number of permutations
+              (default='n_perm_min_stat'|500)
+            - alpha_max_seq : float [optional] - critical alpha level
+              (default=0.05)
+            - permute_in_time : bool [optional] - generate surrogates by
+              shuffling samples in time instead of shuffling whole replications
+              (default=False)
+
+        data : Data instance
+            raw data
+
+    Returns:
+        numpy array, bool
+            statistical significance of each source
+        numpy array, float
+            the test's p-values for each source
+        numpy array, float
+            TE values for individual sources
+    """
+    # Set defaults and get test parameters.
+    analysis_setup.settings.setdefault('n_perm_max_seq', 500)
+    n_permutations = analysis_setup.settings['n_perm_max_seq']
+    analysis_setup.settings.setdefault('alpha_max_seq', 0.05)
+    alpha = analysis_setup.settings['alpha_max_seq']
+    _check_permute_in_time(analysis_setup, data, n_permutations)
+    permute_in_time = analysis_setup.settings['permute_in_time']
+
+    if analysis_setup.settings['verbose']:
+        print('sequential maximum statistic, n_perm: {0}, testing {1} selected'
+              ' sources'.format(n_permutations,
+                                len(analysis_setup.selected_vars_sources)))
+
+    assert analysis_setup.selected_vars_sources, 'No sources to test.'
+
+    # Check if target variables were selected to distinguish between TE and MI
+    # analysis.
+    if len(analysis_setup._selected_vars_target) == 0:
+        conditional_realisations_target = None
+    else:
+        conditional_realisations_target = analysis_setup._selected_vars_target_realisations
+
+    # Test all selected sources separately. This way, the conditioning
+    # uses past variables from the current source only (opposed to past
+    # variables from all sources as in multivariate network inference).
+    significant_sources = np.unique(
+            [s[0] for s in analysis_setup.selected_vars_sources])
+    significance = np.zeros(
+        len(analysis_setup.selected_vars_sources)).astype(bool)
+    pvalue = np.ones(len(analysis_setup.selected_vars_sources))
+    stat = np.zeros(len(analysis_setup.selected_vars_sources))
+    for source in significant_sources:
+        # Find selected past variables for current source
+        source_vars = [s for s in analysis_setup.selected_vars_sources if
+                       s[0] == source]
+
+        # Determine length of conditioning set and allocate memory.
+        idx_conditional = source_vars.copy()
+        if conditional_realisations_target is not None:
+            idx_conditional += analysis_setup.selected_vars_target
+        conditional_realisations = np.empty(
+            (data.n_realisations(analysis_setup.current_value) *
+                len(source_vars),
+                len(idx_conditional) - 1)).astype(data.data_type)
+        candidate_realisations = np.empty(
+            (data.n_realisations(analysis_setup.current_value) *
+                len(source_vars), 1)).astype(data.data_type)
+
+        # Calculate TE/MI for each candidate in the conditional source set,
+        # i.e., calculate the conditional MI between each candidate and the
+        # current value, conditional on all selected variables in the
+        # conditioning set. Then sort the estimated TE/MI values.
+        i_1 = 0
+        i_2 = data.n_realisations(analysis_setup.current_value)
+        surr_table = np.zeros((len(source_vars), n_permutations))
+        # Collect data for each candidate and the corresponding conditioning set.
+        for idx_c, candidate in enumerate(source_vars):
+            temp_cond = data.get_realisations(
+                analysis_setup.current_value,
+                set(source_vars).difference(set([candidate])))[0]
+            temp_cand = data.get_realisations(
+                analysis_setup.current_value, [candidate])[0]
+            # The following may happen if either the requested conditing is
+            # 'none' or if the conditiong set that is tested consists only of
+            # a single candidate.
+            if temp_cond is None:
+                conditional_realisations = conditional_realisations_target
+                re_use = ['var2', 'conditional']
+            else:
+                re_use = ['var2']
+                if conditional_realisations_target is None:
+                    conditional_realisations[i_1:i_2, ] = temp_cond
+                else:
+                    conditional_realisations[i_1:i_2, ] = np.hstack((
+                        temp_cond, conditional_realisations_target))
+            candidate_realisations[i_1:i_2, ] = temp_cand
+            i_1 = i_2
+            i_2 += data.n_realisations(analysis_setup.current_value)
+
+        # Generate surrogates for the current candidate.
+        if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
+                permute_in_time):
+            # Generate the surrogates analytically
+            surr_table[idx_c, :] = (
+                analysis_setup._cmi_estimator.estimate_surrogates_analytic(
+                    n_perm=n_permutations,
+                    var1=data.get_realisations(analysis_setup.current_value,
+                                               [candidate])[0],
+                    var2=analysis_setup._current_value_realisations,
+                    conditional=temp_cond))
+        else:
+            analysis_setup.settings['analytical_surrogates'] = False
+            surr_candidate_realisations = _get_surrogates(
+                                                data,
+                                                analysis_setup.current_value,
+                                                [candidate],
+                                                n_permutations,
+                                                analysis_setup.settings)
+            try:
+                surr_table[idx_c, :] = (
+                    analysis_setup._cmi_estimator.estimate_parallel(
+                        n_chunks=n_permutations,
+                        re_use=['var2', 'conditional'],
+                        var1=surr_candidate_realisations,
+                        var2=analysis_setup._current_value_realisations,
+                        conditional=temp_cond))
+            except ex.AlgorithmExhaustedError as aee:
+                # The aglorithm cannot continue here, so
+                #  we'll terminate the max sequential stats test,
+                #  and declare all not significant
+                print('AlgorithmExhaustedError encountered in estimations: {}.'.format(
+                    aee.message))
+                print('Stopping sequential max stats at candidate with rank 0')
+                return \
+                    (np.zeros(len(analysis_setup.selected_vars_sources)).astype(bool),
+                     np.ones(len(analysis_setup.selected_vars_sources)),
+                     np.zeros(len(analysis_setup.selected_vars_sources)))
+
+        # Calculate original statistic (multivariate/bivariate TE/MI)
+        try:
+            individual_stat = analysis_setup._cmi_estimator.estimate_parallel(
+                            n_chunks=len(source_vars),
+                            re_use=re_use,
+                            var1=candidate_realisations,
+                            var2=analysis_setup._current_value_realisations,
+                            conditional=conditional_realisations)
+        except ex.AlgorithmExhaustedError as aee:
+            # The aglorithm cannot continue here, so
+            #  we'll terminate the max sequential stats test,
+            #  and declare all not significant
+            print('AlgorithmExhaustedError encountered in '
+                  'estimations: {}.'.format(aee.message))
+            print('Stopping sequential max stats at candidate with rank 0')
+            # For now we don't need a stack trace:
+            # traceback.print_tb(aee.__traceback__)
+            # Return (signficance, pvalue, TEs):
+            return (
+                np.zeros(len(analysis_setup.selected_vars_sources)).astype(bool),
+                np.ones(len(analysis_setup.selected_vars_sources)),
+                np.zeros(len(analysis_setup.selected_vars_sources)))
+
+        selected_vars_order = utils.argsort_descending(individual_stat)
+        individual_stat_sorted = utils.sort_descending(individual_stat)
+        max_distribution = _sort_table_max(surr_table)
+
+        # Compare each original value with the distribution of the same rank,
+        # starting with the highest value.
+        for c in range(individual_stat.shape[0]):
+            [s, p] = _find_pvalue(individual_stat_sorted[c],
+                                  max_distribution[c, ],
+                                  alpha, tail='one_bigger')
+            # Write results into an array with the same order as the set of
+            # selected sources from all process. Find the currently tested
+            # variable and its index in the list of all selected variables.
+            current_var = source_vars[selected_vars_order[c]]
+            for ind, v in enumerate(analysis_setup.selected_vars_sources):
+                if v == current_var:
+                    break
+            significance[ind] = s
+            pvalue[ind] = p
+            stat[ind] = individual_stat_sorted[c]
+            if not s:  # break as soon as a candidate is no longer significant
+                if analysis_setup.settings['verbose']:
+                    print('\nStopping sequential max stats at candidate with '
+                          'rank {0}.'.format(c))
+                break
+
+    return significance, pvalue, stat
+
+
+def min_statistic(analysis_setup, data, candidate_set, te_min_candidate,
+                  conditional=None):
     """Perform minimum statistics for one candidate source.
 
     Test if a transfer entropy value is significantly bigger than the minimum
@@ -461,6 +899,10 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate):
             list of indices of remaning candidates
         te_min_candidate : float
             transfer entropy value to be tested
+        conditional : numpy array [optional]
+            realisations of conditional, 2D numpy array where array dimensions
+            represent [realisations x variable dimension] (default=None, no
+            conditioning performed)
 
     Returns:
         bool
@@ -469,6 +911,11 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate):
             the test's p-value
         numpy array
             surrogate table
+
+    Raises:
+        ex.AlgorithmExhaustedError
+            Raised from _create_surrogate_table() when calculation cannot be
+            made
     """
     # Set defaults and get parameters from settings dictionary
     analysis_setup.settings.setdefault('n_perm_min_stat', 500)
@@ -476,11 +923,14 @@ def min_statistic(analysis_setup, data, candidate_set, te_min_candidate):
     analysis_setup.settings.setdefault('alpha_min_stat', 0.05)
     alpha = analysis_setup.settings['alpha_min_stat']
     _check_permute_in_time(analysis_setup, data, n_perm)
+    if analysis_setup.settings['verbose']:
+        print('minimum statistic, n_perm: {0}'.format(
+            analysis_setup.settings['n_perm_min_stat']))
 
     assert(candidate_set), 'The candidate set is empty.'
 
     surr_table = _create_surrogate_table(analysis_setup, data, candidate_set,
-                                         n_perm)
+                                         n_perm, conditional)
     min_distribution = _find_table_min(surr_table)
     [significance, pvalue] = _find_pvalue(statistic=te_min_candidate,
                                           distribution=min_distribution,
@@ -520,13 +970,19 @@ def mi_against_surrogates(analysis_setup, data):
             statistical significance
         float
             p_value for estimated MI value
+
+    Raises:
+        ex.AlgorithmExhaustedError
+            Raised from estimate() methods when calculation cannot be made
     """
     analysis_setup.settings.setdefault('n_perm_mi', 500)
     n_perm = analysis_setup.settings['n_perm_mi']
     analysis_setup.settings.setdefault('alpha_mi', 0.05)
     alpha = analysis_setup.settings['alpha_mi']
     permute_in_time = _check_permute_in_time(analysis_setup, data, n_perm)
-
+    if analysis_setup.settings['verbose']:
+        print('mi permutation test against surrogates, n_perm: {0}'.format(
+            analysis_setup.settings['n_perm_mi']))
     '''
     surr_realisations = np.empty(
                         (data.n_realisations(analysis_setup.current_value) *
@@ -558,6 +1014,7 @@ def mi_against_surrogates(analysis_setup, data):
     if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
             permute_in_time):
         # Generate the surrogates analytically
+        analysis_setup.settings['analytical_surrogates'] = True
         surr_dist = (analysis_setup._cmi_estimator.
                      estimate_surrogates_analytic(
                             n_perm=n_perm,
@@ -565,13 +1022,14 @@ def mi_against_surrogates(analysis_setup, data):
                             var2=analysis_setup._selected_vars_realisations,
                             conditional=None))
     else:
+        analysis_setup.settings['analytical_surrogates'] = False
         surr_realisations = _get_surrogates(data,
                                             analysis_setup.current_value,
                                             [analysis_setup.current_value],
                                             n_perm,
                                             analysis_setup.settings)
 
-        surr_dist = analysis_setup._cmi_estimator.estimate_mult(
+        surr_dist = analysis_setup._cmi_estimator.estimate_parallel(
                             n_chunks=n_perm,
                             re_use=['var2', 'conditional'],
                             var1=surr_realisations,
@@ -653,17 +1111,17 @@ def unq_against_surrogates(analysis_setup, data):
                                         n_perm,
                                         analysis_setup.settings)
     # Calculate surrogate distribution for unique information of source 1.
-    # Note: calling  .estimate_mult does not work here because the PID
+    # Note: calling  .estimate_parallel does not work here because the PID
     # estimator returns a dictionary not a single value. We have to get the
     # unique from the dictionary manually.
     surr_dist_s1 = np.empty(n_perm)
     chunk_size = int(surr_realisations.shape[0] / n_perm)
     i_1 = 0
     i_2 = chunk_size
-    if VERBOSE:
-            print('\nTesting unq information in s1')
+    if analysis_setup.settings['verbose']:
+        print('\nTesting unq information in s1')
     for p in range(n_perm):
-        if VERBOSE:
+        if analysis_setup.settings['verbose']:
             print('\tperm {0} of {1}'.format(p, n_perm))
         pid_est = analysis_setup._pid_estimator.estimate(
                                 settings=analysis_setup.settings,
@@ -686,10 +1144,10 @@ def unq_against_surrogates(analysis_setup, data):
     chunk_size = int(surr_realisations.shape[0] / n_perm)
     i_1 = 0
     i_2 = chunk_size
-    if VERBOSE:
-            print('\nTesting unq information in s2')
+    if analysis_setup.settings['verbose']:
+        print('\nTesting unq information in s2')
     for p in range(n_perm):
-        if VERBOSE:
+        if analysis_setup.settings['verbose']:
             print('\tperm {0} of {1}'.format(p, n_perm))
         pid_est = analysis_setup._pid_estimator.estimate(
                                 settings=analysis_setup.settings,
@@ -774,7 +1232,7 @@ def syn_shd_against_surrogates(analysis_setup, data):
                                         n_perm,
                                         analysis_setup.settings)
     # Calculate surrogate distribution for shd/syn information of both sources.
-    # Note: calling  .estimate_mult does not work here because the PID
+    # Note: calling  .estimate_parallel does not work here because the PID
     # estimator returns a dictionary not a single value. We have to get the
     # shared info and synergy from the dictionary manually.
     surr_dist_shd = np.empty(n_perm)
@@ -782,10 +1240,10 @@ def syn_shd_against_surrogates(analysis_setup, data):
     chunk_size = int(surr_realisations.shape[0] / n_perm)
     i_1 = 0
     i_2 = chunk_size
-    if VERBOSE:
-            print('\nTesting shd and syn information in both sources')
+    if analysis_setup.settings['verbose']:
+        print('\nTesting shd and syn information in both sources')
     for p in range(n_perm):
-        if VERBOSE:
+        if analysis_setup.settings['verbose']:
             print('\tperm {0} of {1}'.format(p, n_perm))
         pid_est = analysis_setup._pid_estimator.estimate(
                                 settings=analysis_setup.settings,
@@ -823,15 +1281,22 @@ def check_n_perm(n_perm, alpha):
                            .format(n_perm, alpha))
 
 
-def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
+def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm,
+                            conditional=None):
     """Create a table of surrogate MI/CMI/TE values.
 
-    Calculate MI/CMI/TE between surrogates for each source in the test
-    set and the target in the analysis setup using the current conditional in
-    the analysis setup.
+    Calculate MI/CMI/TE between surrogates for each source variable in the test
+    set and the target in the analysis setup. The conditional is taken from the
+    current set of conditional variables in the analysis setup. For
+    multivariate MI or TE surrogate creation, the full set of conditional
+    variables is used. For bivariate MI or TE surrogate creation, the
+    conditioning set has to be restricted to a subset of the current set of
+    conditional variables: for bivariate MI no conditioning set is required,
+    for bivariate TE only the past variables from the target are required (not
+    the variables selected from other relevant sources).
 
     Args:
-        analysis_setup : MultivariateTE instance
+        analysis_setup : instance of NetworkAnalysis or child class
             information on the current analysis, must contain an attribute
             settings with entry 'permute_in_time'
         data : Data instance
@@ -840,71 +1305,53 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm):
             list of indices indicating samples to be used as sources
         n_perm : int
             number of permutations for testing
-
+        conditional : numpy array [optional]
+            realisations of conditional, 2D numpy array where array dimensions
+            represent [realisations x variable dimension] (default=None, no
+            conditioning performed)
     Returns:
         numpy array
             surrogate MI/CMI/TE values, dimensions: (length test set, number of
             surrogates)
+
+    Raises:
+        ex.AlgorithmExhaustedError
+            Raised from estimate_parallel() when calculation cannot be made
     """
     # Check which permutation type is requested by the calling function.
     permute_in_time = analysis_setup.settings['permute_in_time']
 
     # Create surrogate table.
-    if VERBOSE:
-        print('\ncreating surrogate table with {0} permutations:'.format(
-                                                                    n_perm))
-        print('\tcand.', end='')
     surr_table = np.zeros((len(idx_test_set), n_perm))
     current_value_realisations = analysis_setup._current_value_realisations
     idx_c = 0
     for candidate in idx_test_set:
-        if VERBOSE:
-            print('\t{0}'.format(analysis_setup._idx_to_lag([candidate])[0]),
-                  end='')
-        '''
-        surr_candidate_realisations = np.empty(
-                (data.n_realisations(analysis_setup.current_value) * n_perm,
-                1))
-        i_1 = 0
-        i_2 = data.n_realisations(analysis_setup.current_value)
-        for perm in range(n_perm):
-            # Check the permutation type for the current candidate.
-            if permute_over_replications:
-                sur_temp = data.permute_data(analysis_setup.current_value,
-                                             [candidate])[0]
-            else:
-                [real, repl_idx] = data.get_realisations(
-                                                analysis_setup.current_value,
-                                                [candidate])
-                sur_temp = _permute_realisations(real, repl_idx, perm_range)
-
-            surr_candidate_realisations[i_1:i_2, ] = sur_temp
-            i_1 = i_2
-            i_2 += data.n_realisations(analysis_setup.current_value)
-        '''
         if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
                 permute_in_time):
             # Generate the surrogates analytically
-            surr_table[idx_c, :] = (analysis_setup._cmi_estimator.
-                                    estimate_surrogates_analytic(
-                                        n_perm=n_perm,
-                                        var1=data.get_realisations(
-                                                analysis_setup.current_value, [candidate])[0],
-                                        var2=current_value_realisations,
-                                        conditional=analysis_setup._selected_vars_realisations))
+            analysis_setup.settings['analytical_surrogates'] = True
+            surr_table[idx_c, :] = (
+                analysis_setup._cmi_estimator.estimate_surrogates_analytic(
+                    n_perm=n_perm,
+                    var1=data.get_realisations(analysis_setup.current_value,
+                                               [candidate])[0],
+                    var2=current_value_realisations,
+                    conditional=conditional))
         else:
+            analysis_setup.settings['analytical_surrogates'] = False
             surr_candidate_realisations = _get_surrogates(
                                                  data,
                                                  analysis_setup.current_value,
                                                  [candidate],
                                                  n_perm,
                                                  analysis_setup.settings)
-            surr_table[idx_c, :] = analysis_setup._cmi_estimator.estimate_mult(
+            surr_table[idx_c, :] = (
+                analysis_setup._cmi_estimator.estimate_parallel(
                     n_chunks=n_perm,
                     re_use=['var2', 'conditional'],
-                    var1=surr_candidate_realisations,  # too long
+                    var1=surr_candidate_realisations,
                     var2=current_value_realisations,
-                    conditional=analysis_setup._selected_vars_realisations)
+                    conditional=conditional))
         idx_c += 1
 
     return surr_table
@@ -947,8 +1394,9 @@ def _find_pvalue(statistic, distribution, alpha, tail):
         alpha : float
             critical alpha level for statistical significance
         tail : str
-            'one_bigger' for one-tailed testing H1 > H0, 'one_smaller' for one-
-            tailed testing H1 < H0, or 'two' for two-tailed testing
+            'one' or 'one_bigger' for one-tailed testing H1 > H0,
+            'one_smaller' for one- tailed testing H1 < H0, or 'two' for two-
+            tailed testing
 
     Returns:
         bool
@@ -960,7 +1408,7 @@ def _find_pvalue(statistic, distribution, alpha, tail):
     assert distribution.ndim == 1, 'Test distribution must be 1D.'
     check_n_perm(distribution.shape[0], alpha)
 
-    if tail == 'one_bigger':
+    if tail == 'one_bigger' or tail == 'one':
         pvalue = sum(distribution >= statistic) / distribution.shape[0]
     elif tail == 'one_smaller':
         pvalue = sum(distribution <= statistic) / distribution.shape[0]
@@ -970,8 +1418,9 @@ def _find_pvalue(statistic, distribution, alpha, tail):
         pvalue = min(p_bigger, p_smaller)
         alpha = alpha / 2
     else:
-        raise ValueError(('Unkown value for ''tail'', can be ''one_bigger'', '
-                          ' ''one_smaller'', or ''two''): {0}.'.format(tail)))
+        raise ValueError(
+            ('Unkown value for ''tail'', should be ''one'', ''one_bigger'','
+             ' ''one_smaller'', or ''two''): {0}.'.format(tail)))
 
     # If the statistic is larger than all values in the test distribution, set
     # the p-value to the smallest possible value 1/n_perm.
@@ -1123,9 +1572,9 @@ def _check_permute_in_time(analysis_setup, data, n_perm):
 
     if (not analysis_setup.settings['permute_in_time'] and
             not _sufficient_replications(data, n_perm)):
-        print('\n\nWARNING: Number of replications is not sufficient to generate '
-              'the desired number of surrogates. Permuting samples in time '
-              'instead.')
+        print('\nWARNING: Number of replications is not sufficient to '
+              'generate the desired number of surrogates. Permuting samples '
+              'in time instead.')
         analysis_setup.settings['permute_in_time'] = True
 
     if analysis_setup.settings['permute_in_time']:

@@ -1,0 +1,1130 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>idtxl.data &#8212; IDTxl 1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="../../_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for idtxl.data</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Provide data structures for IDTxl analysis.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">idtxl_utils</span> <span class="k">as</span> <span class="n">utils</span>
+
+<span class="n">VERBOSE</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="Data"><a class="viewcode-back" href="../../idtxl_data_class.html#idtxl.data.Data">[docs]</a><span class="k">class</span> <span class="nc">Data</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Store data for information dynamics estimation.</span>
+
+<span class="sd">    Data takes a 1- to 3-dimensional array representing realisations of random</span>
+<span class="sd">    variables in dimensions: processes, samples (over time), and replications.</span>
+<span class="sd">    If necessary, data reshapes provided realisations to fit the format</span>
+<span class="sd">    expected by IDTxl, which is a 3-dimensional array with axes representing</span>
+<span class="sd">    (process index, sample index, replication index). Indicate the actual order</span>
+<span class="sd">    of dimensions in the provided array in a three-character string, e.g. &#39;spr&#39;</span>
+<span class="sd">    for an array with realisations over (1) samples in time, (2) processes, (3)</span>
+<span class="sd">    replications.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">        &gt;&gt;&gt; data_mute = Data()              # initialise empty data object</span>
+<span class="sd">        &gt;&gt;&gt; data_mute.generate_mute_data()  # simulate data from MuTE paper</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # Create data objects with data of various sizes</span>
+<span class="sd">        &gt;&gt;&gt; d = np.arange(10000).reshape((2, 1000, 5))  # 2 procs.,</span>
+<span class="sd">        &gt;&gt;&gt; data_1 = Data(d, dim_order=&#39;psr&#39;)           # 1000 samples, 5 repl.</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; d = np.arange(3000).reshape((3, 1000))  # 3 procs.,</span>
+<span class="sd">        &gt;&gt;&gt; data_2 = Data(d, dim_order=&#39;ps&#39;)        # 1000 samples</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # Overwrite data in existing object with random data</span>
+<span class="sd">        &gt;&gt;&gt; d = np.arange(5000)</span>
+<span class="sd">        &gt;&gt;&gt; data_2.set_data(data_new, &#39;s&#39;)</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        Realisations are stored as attribute &#39;data&#39;. This can only be set via</span>
+<span class="sd">        the &#39;set_data()&#39; method.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data : numpy array [optional]</span>
+<span class="sd">            1/2/3-dimensional array with raw data</span>
+<span class="sd">        dim_order : string [optional]</span>
+<span class="sd">            order of dimensions, accepts any combination of the characters</span>
+<span class="sd">            &#39;p&#39;, &#39;s&#39;, and &#39;r&#39; for processes, samples, and replications; must</span>
+<span class="sd">            have the same length as the data dimensionality, e.g., &#39;ps&#39; for a</span>
+<span class="sd">            two-dimensional array of data from several processes over time</span>
+<span class="sd">            (default=&#39;psr&#39;)</span>
+<span class="sd">        normalise : bool [optional]</span>
+<span class="sd">            if True, data gets normalised per process (default=True)</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        data : numpy array</span>
+<span class="sd">            realisations, can only be set via &#39;set_data&#39; method</span>
+<span class="sd">        n_processes : int</span>
+<span class="sd">            number of processes</span>
+<span class="sd">        n_replications : int</span>
+<span class="sd">            number of replications</span>
+<span class="sd">        n_samples : int</span>
+<span class="sd">            number of samples in time</span>
+<span class="sd">        normalise : bool</span>
+<span class="sd">            if true, all data gets z-standardised per process</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dim_order</span><span class="o">=</span><span class="s1">&#39;psr&#39;</span><span class="p">,</span> <span class="n">normalise</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalise</span> <span class="o">=</span> <span class="n">normalise</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dim_order</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Data.n_realisations"><a class="viewcode-back" href="../../idtxl_data_class.html#idtxl.data.Data.n_realisations">[docs]</a>    <span class="k">def</span> <span class="nf">n_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of realisations over samples and replications.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            current_value : tuple [optional]</span>
+<span class="sd">                reference point for calculation of number of realisations</span>
+<span class="sd">                (e.g. when using an embedding of length k, we count</span>
+<span class="sd">                realisations from the k+1th sample because we loose the first k</span>
+<span class="sd">                samples to the embedding); if no current_value is provided, the</span>
+<span class="sd">                number of all samples is used</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_realisations_samples</span><span class="p">(</span><span class="n">current_value</span><span class="p">)</span> <span class="o">*</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n_realisations_repl</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="Data.n_realisations_samples"><a class="viewcode-back" href="../../idtxl_data_class.html#idtxl.data.Data.n_realisations_samples">[docs]</a>    <span class="k">def</span> <span class="nf">n_realisations_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of realisations over samples.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            current_value : tuple [optional]</span>
+<span class="sd">                reference point for calculation of number of realisations</span>
+<span class="sd">                (e.g. when using an embedding of length k, the current value is</span>
+<span class="sd">                at sample k + 1; we thus count realisations from the k + 1st</span>
+<span class="sd">                sample because we loose the first k samples to the embedding)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">current_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_samples</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">current_value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_samples</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;The sample index of the current value &#39;</span>
+                                   <span class="s1">&#39;(</span><span class="si">{0}</span><span class="s1">) is larger than the number of samples&#39;</span>
+                                   <span class="s1">&#39; in the data set (</span><span class="si">{1}</span><span class="s1">).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                              <span class="n">current_value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_samples</span><span class="p">))</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_samples</span> <span class="o">-</span> <span class="n">current_value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Data.n_realisations_repl"><a class="viewcode-back" href="../../idtxl_data_class.html#idtxl.data.Data.n_realisations_repl">[docs]</a>    <span class="k">def</span> <span class="nf">n_realisations_repl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of realisations over replications.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_replications</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return data array.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
+
+    <span class="nd">@data</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;You can not assign a value to this attribute&#39;</span>
+                                 <span class="s1">&#39; directly, use the set_data method instead.&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">d</span>
+
+    <span class="nd">@data</span><span class="o">.</span><span class="n">deleter</span>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;overwriting existing data&#39;</span><span class="p">)</span>
+        <span class="k">del</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Data.set_data"><a class="viewcode-back" href="../../idtxl_data_class.html#idtxl.data.Data.set_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">dim_order</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Overwrite data in an existing Data object.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data : numpy array</span>
+<span class="sd">                1- to 3-dimensional array of realisations</span>
+<span class="sd">            dim_order : string</span>
+<span class="sd">                order of dimensions, accepts any combination of the characters</span>
+<span class="sd">                &#39;p&#39;, &#39;s&#39;, and &#39;r&#39; for processes, samples, and replications;</span>
+<span class="sd">                must have the same length as number of dimensions in data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dim_order</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;dim_order can not have more than three &#39;</span>
+                               <span class="s1">&#39;entries&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dim_order</span><span class="p">)</span> <span class="o">!=</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Data array dimension (</span><span class="si">{0}</span><span class="s1">) and length of &#39;</span>
+                               <span class="s1">&#39;dim_order (</span><span class="si">{1}</span><span class="s1">) are not equal.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                           <span class="n">data</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">dim_order</span><span class="p">)))</span>
+
+        <span class="c1"># Bring data into the order processes x samples x replications and set</span>
+        <span class="c1"># set data.</span>
+        <span class="n">data_ordered</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reorder_data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dim_order</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_data_size</span><span class="p">(</span><span class="n">data_ordered</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Adding data with properties: </span><span class="si">{0}</span><span class="s1"> processes, </span><span class="si">{1}</span><span class="s1"> samples, </span><span class="si">{2}</span><span class="s1"> &#39;</span>
+              <span class="s1">&#39;replications&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_processes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_samples</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">n_replications</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="nb">delattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalise</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalise_data</span><span class="p">(</span><span class="n">data_ordered</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data_ordered</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span></div>
+
+    <span class="k">def</span> <span class="nf">_normalise_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Z-standardise data separately for each process.&quot;&quot;&quot;</span>
+        <span class="n">d_standardised</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">process</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_processes</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">standardise</span><span class="p">(</span>
+                            <span class="n">d</span><span class="p">[</span><span class="n">process</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_realisations</span><span class="p">()),</span>
+                            <span class="n">dimension</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">d_standardised</span><span class="p">[</span><span class="n">process</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_samples</span><span class="p">,</span>
+                                                      <span class="bp">self</span><span class="o">.</span><span class="n">n_replications</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">d_standardised</span>
+
+    <span class="k">def</span> <span class="nf">_reorder_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">dim_order</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reorder data dimensions to processes x samples x replications.&quot;&quot;&quot;</span>
+        <span class="c1"># add singletons for missing dimensions</span>
+        <span class="n">missing_dims</span> <span class="o">=</span> <span class="s1">&#39;psr&#39;</span>
+        <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">dim_order</span><span class="p">:</span>
+            <span class="n">missing_dims</span> <span class="o">=</span> <span class="n">missing_dims</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">missing_dims</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+            <span class="n">dim_order</span> <span class="o">+=</span> <span class="n">dim</span>
+
+        <span class="c1"># reorder array dims if necessary</span>
+        <span class="k">if</span> <span class="n">dim_order</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;p&#39;</span><span class="p">:</span>
+            <span class="n">ind_p</span> <span class="o">=</span> <span class="n">dim_order</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;p&#39;</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ind_p</span><span class="p">)</span>
+            <span class="n">dim_order</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">swap_chars</span><span class="p">(</span><span class="n">dim_order</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ind_p</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dim_order</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;s&#39;</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dim_order</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="k">def</span> <span class="nf">_set_data_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the data size.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_processes</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_samples</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_replications</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Data.get_realisations"><a class="viewcode-back" href="../../idtxl_data_class.html#idtxl.data.Data.get_realisations">[docs]</a>    <span class="k">def</span> <span class="nf">get_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_value</span><span class="p">,</span> <span class="n">idx_list</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return realisations for a list of indices.</span>
+
+<span class="sd">        Return realisations for indices in list. Optionally, realisations can</span>
+<span class="sd">        be shuffled to create surrogate data for statistical testing. For</span>
+<span class="sd">        shuffling, data blocks are permuted over replications while their</span>
+<span class="sd">        temporal order stays intact within replications:</span>
+
+<span class="sd">        Original data:</span>
+<span class="sd">            +--------------+---------+---------+---------+---------+---------+-----+</span>
+<span class="sd">            | repl. ind.   | 1 1 1 1 | 2 2 2 2 | 3 3 3 3 | 4 4 4 4 | 5 5 5 5 | ... |</span>
+<span class="sd">            +--------------+---------+---------+---------+---------+---------+-----+</span>
+<span class="sd">            | sample index | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | ... |</span>
+<span class="sd">            +--------------+---------+---------+---------+---------+---------+-----+</span>
+
+<span class="sd">        Shuffled data:</span>
+<span class="sd">            +--------------+---------+---------+---------+---------+---------+-----+</span>
+<span class="sd">            | repl. ind.   | 3 3 3 3 | 1 1 1 1 | 4 4 4 4 | 2 2 2 2 | 5 5 5 5 | ... |</span>
+<span class="sd">            +--------------+---------+---------+---------+---------+---------+-----+</span>
+<span class="sd">            | sample index | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | ... |</span>
+<span class="sd">            +--------------+---------+---------+---------+---------+---------+-----+</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            idx_list: list of tuples</span>
+<span class="sd">                variable indices</span>
+<span class="sd">            current_value : tuple</span>
+<span class="sd">                index of the current value in current analysis, has to have the</span>
+<span class="sd">                form (idx process, idx sample); if current_value == idx, all</span>
+<span class="sd">                samples for a process are returned</span>
+<span class="sd">            shuffle: bool</span>
+<span class="sd">                if true permute blocks of replications over trials</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy array</span>
+<span class="sd">                realisations with dimensions (no. samples * no.replications) x</span>
+<span class="sd">                number of indices</span>
+<span class="sd">            numpy array</span>
+<span class="sd">                replication index for each realisation with dimensions (no.</span>
+<span class="sd">                samples * no.replications) x number of indices</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;No data has been added to this Data() &#39;</span>
+                                 <span class="s1">&#39;instance.&#39;</span><span class="p">)</span>
+        <span class="c1"># Return None if index list is empty.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">idx_list</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="c1"># Check if requested indices are smaller than the current_value.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">idx_list</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="n">current_value</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Index list: </span><span class="si">{0}</span><span class="se">\n</span><span class="s1">current value: </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx_list</span><span class="p">,</span>
+                                                               <span class="n">current_value</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;All indices for which data is retrieved must &#39;</span>
+                               <span class="s1">&#39; be smaller than the current value.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Allocate memory.</span>
+        <span class="n">n_real_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_realisations_samples</span><span class="p">(</span><span class="n">current_value</span><span class="p">)</span>
+        <span class="n">n_real_repl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_realisations_repl</span><span class="p">()</span>
+        <span class="n">realisations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">n_real_time</span> <span class="o">*</span> <span class="n">n_real_repl</span><span class="p">,</span>
+                                 <span class="nb">len</span><span class="p">(</span><span class="n">idx_list</span><span class="p">)))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_type</span><span class="p">)</span>
+
+        <span class="c1"># Shuffle the replication order if requested. This creates surrogate</span>
+        <span class="c1"># data by permuting replications while keeping the order of samples</span>
+        <span class="c1"># intact.</span>
+        <span class="k">if</span> <span class="n">shuffle</span><span class="p">:</span>
+            <span class="n">replications_order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_replications</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">replications_order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_replications</span><span class="p">)</span>
+
+        <span class="c1"># Retrieve data.</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idx_list</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="c1"># get the last sample as negative value, i.e., no. samples from the</span>
+            <span class="c1"># end of the array</span>
+            <span class="n">last_sample</span> <span class="o">=</span> <span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">current_value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># indexing is much faster</span>
+            <span class="k">if</span> <span class="n">last_sample</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>                     <span class="c1"># than looping over time!</span>
+                <span class="n">last_sample</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">replication</span> <span class="ow">in</span> <span class="n">replications_order</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">realisations</span><span class="p">[</span><span class="n">r</span><span class="p">:</span><span class="n">r</span> <span class="o">+</span> <span class="n">n_real_time</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span>
+                                                        <span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                        <span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="n">last_sample</span><span class="p">,</span>
+                                                        <span class="n">replication</span><span class="p">]</span>
+                <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;You tried to access variable </span><span class="si">{0}</span><span class="s1"> in a &#39;</span>
+                                     <span class="s1">&#39;data set with </span><span class="si">{1}</span><span class="s1"> processes and </span><span class="si">{2}</span><span class="s1"> &#39;</span>
+                                     <span class="s1">&#39;samples.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_processes</span><span class="p">,</span>
+                                                       <span class="bp">self</span><span class="o">.</span><span class="n">n_samples</span><span class="p">))</span>
+                <span class="n">r</span> <span class="o">+=</span> <span class="n">n_real_time</span>
+
+            <span class="k">assert</span><span class="p">(</span><span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">realisations</span><span class="p">[:,</span> <span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">any</span><span class="p">()),</span> <span class="p">(</span><span class="s1">&#39;There are nans &#39;</span>
+                                                             <span class="s1">&#39;in the retrieved&#39;</span>
+                                                             <span class="s1">&#39; realisations.&#39;</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># For each realisation keep the index of the replication it came from.</span>
+        <span class="n">replications_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">replications_order</span><span class="p">,</span> <span class="n">n_real_time</span><span class="p">)</span>
+        <span class="k">assert</span><span class="p">(</span><span class="n">replications_index</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">realisations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">(</span>
+               <span class="s1">&#39;There seems to be a problem with the replications index.&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">realisations</span><span class="p">,</span> <span class="n">replications_index</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_data_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process</span><span class="p">,</span> <span class="n">offset_samples</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return data slice for a single process.</span>
+
+<span class="sd">        Return data slice for process. Optionally, an offset can be provided</span>
+<span class="sd">        such that data are returnded from sample &#39;offset_samples&#39; onwards.</span>
+<span class="sd">        Also, data</span>
+<span class="sd">        can be shuffled over replications to create surrogate data for</span>
+<span class="sd">        statistical testing. For shuffling, data blocks are permuted over</span>
+<span class="sd">        replications while their temporal order stays intact within</span>
+<span class="sd">        replications:</span>
+
+<span class="sd">        Original data:</span>
+<span class="sd">            +---------------+---------+---------+---------+---------+---------+-----+</span>
+<span class="sd">            | repl. index:  | 1 1 1 1 | 2 2 2 2 | 3 3 3 3 | 4 4 4 4 | 5 5 5 5 | ... |</span>
+<span class="sd">            +---------------+---------+---------+---------+---------+---------+-----+</span>
+<span class="sd">            | sample index: | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | ... |</span>
+<span class="sd">            +---------------+---------+---------+---------+---------+---------+-----+</span>
+
+<span class="sd">        Shuffled data:</span>
+<span class="sd">            +---------------+---------+---------+---------+---------+---------+-----+</span>
+<span class="sd">            | repl. index:  | 3 3 3 3 | 1 1 1 1 | 4 4 4 4 | 2 2 2 2 | 5 5 5 5 | ... |</span>
+<span class="sd">            +---------------+---------+---------+---------+---------+---------+-----+</span>
+<span class="sd">            | sample index: | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | ... |</span>
+<span class="sd">            +---------------+---------+---------+---------+---------+---------+-----+</span>
+
+<span class="sd">        If the current_value is provided, data are returned from an offset</span>
+<span class="sd">        specified by the index wrt the current_value.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            process: int</span>
+<span class="sd">                process index</span>
+<span class="sd">            offset_samples : int</span>
+<span class="sd">                offset in samples</span>
+<span class="sd">            shuffle: bool</span>
+<span class="sd">                if true permute blocks of data over trials</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy array</span>
+<span class="sd">                data slice with dimensions no. samples - offset x no.</span>
+<span class="sd">                replications</span>
+<span class="sd">            numpy array</span>
+<span class="sd">                list of replications indices</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check if requested indices are smaller than the current_value.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">offset_samples</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_samples</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Offset </span><span class="si">{0}</span><span class="s1"> must be smaller than number of samples in the &#39;</span>
+                  <span class="s1">&#39; data (</span><span class="si">{1}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">offset_samples</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_samples</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Offset must be smaller than no. samples.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Shuffle the replication order if requested. This creates surrogate</span>
+        <span class="c1"># data by permuting replications while keeping the order of samples</span>
+        <span class="c1"># intact.</span>
+        <span class="k">if</span> <span class="n">shuffle</span><span class="p">:</span>
+            <span class="n">replication_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_replications</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">replication_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_replications</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data_slice</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">process</span><span class="p">,</span> <span class="n">offset_samples</span><span class="p">:,</span> <span class="n">replication_index</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;You tried to access process </span><span class="si">{0}</span><span class="s1"> with an offset &#39;</span>
+                             <span class="s1">&#39;of </span><span class="si">{1}</span><span class="s1"> in a data set of </span><span class="si">{2}</span><span class="s1"> processes and </span><span class="si">{3}</span><span class="s1"> &#39;</span>
+                             <span class="s1">&#39;samples.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">process</span><span class="p">,</span> <span class="n">offset_samples</span><span class="p">,</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">n_processes</span><span class="p">,</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">n_samples</span><span class="p">))</span>
+        <span class="k">assert</span><span class="p">(</span><span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">data_slice</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()),</span> <span class="p">(</span><span class="s1">&#39;There are nans in the &#39;</span>
+                                                 <span class="s1">&#39;retrieved data slice.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data_slice</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">replication_index</span>
+
+<div class="viewcode-block" id="Data.slice_permute_replications"><a class="viewcode-back" href="../../idtxl_data_class.html#idtxl.data.Data.slice_permute_replications">[docs]</a>    <span class="k">def</span> <span class="nf">slice_permute_replications</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return data slice with permuted replications (time stays intact).</span>
+
+<span class="sd">        Create surrogate data by permuting realisations over replications while</span>
+<span class="sd">        keeping the temporal structure (order of samples) intact. Return</span>
+<span class="sd">        realisations for all indices in the list, where an index is expected to</span>
+<span class="sd">        have the form (process index, sample index). Realisations are permuted</span>
+<span class="sd">        block-wise by permuting the order of replications</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_data_slice</span><span class="p">(</span><span class="n">process</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Data.slice_permute_samples"><a class="viewcode-back" href="../../idtxl_data_class.html#idtxl.data.Data.slice_permute_samples">[docs]</a>    <span class="k">def</span> <span class="nf">slice_permute_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process</span><span class="p">,</span> <span class="n">perm_settings</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return slice of data with permuted samples (repl. stays intact).</span>
+
+<span class="sd">        Create surrogate data by permuting data in a slice over samples (time)</span>
+<span class="sd">        while keeping the order of replications intact. Return slice for the</span>
+<span class="sd">        entry specified by &#39;process&#39;. Realisations are permuted according to</span>
+<span class="sd">        the settings specified in perm_settings:</span>
+
+<span class="sd">        Original data:</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+<span class="sd">            | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+<span class="sd">            | sample index | 1 2 3 4 5 6 7 8 | 1 2 3 4 5 6 7 8 | 1 2 3 4 5 6 7 8 | ... |</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+
+<span class="sd">        Circular shift by 2, 6, and 4 samples:</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+<span class="sd">            | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+<span class="sd">            | sample index | 7 8 1 2 3 4 5 6 | 3 4 5 6 7 8 1 2 | 5 6 7 8 1 2 3 4 | ... |</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+
+<span class="sd">        Permute blocks of 3 samples:</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+<span class="sd">            | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+<span class="sd">            | sample index | 4 5 6 7 8 1 2 3 | 1 2 3 7 8 4 5 6 | 7 8 4 5 6 1 2 3 | ... |</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+
+<span class="sd">        Permute data locally within a range of 4 samples:</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+<span class="sd">            | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+<span class="sd">            | sample index | 1 2 4 3 8 5 6 7 | 4 1 2 3 5 7 8 6 | 3 1 2 4 8 5 6 7 | ... |</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+
+<span class="sd">        Random permutation:</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+<span class="sd">            | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+<span class="sd">            | sample index | 4 2 5 7 1 3 2 6 | 7 5 3 4 2 1 8 5 | 1 2 4 3 6 8 7 5 | ... |</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+
+<span class="sd">        Permuting samples is the fall-back option for surrogate creation if the</span>
+<span class="sd">        number of replications is too small to allow for a sufficient number of</span>
+<span class="sd">        permutations for the generation of surrogate data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            process : int</span>
+<span class="sd">                process for which to return data slice</span>
+<span class="sd">            perm_settings : dict</span>
+<span class="sd">                settings specifying the allowed permutations:</span>
+
+<span class="sd">                - perm_type : str</span>
+<span class="sd">                  permutation type, can be</span>
+
+<span class="sd">                    - &#39;circular&#39;: shifts time series by a random</span>
+<span class="sd">                      number of samples</span>
+<span class="sd">                    - &#39;block&#39;: swaps blocks of samples,</span>
+<span class="sd">                    - &#39;local&#39;: swaps samples within a given range, or</span>
+<span class="sd">                    - &#39;random&#39;: swaps samples at random,</span>
+
+<span class="sd">                - additional settings depending on the perm_type (n is the</span>
+<span class="sd">                  number of samples):</span>
+
+<span class="sd">                    - if perm_type == &#39;circular&#39;:</span>
+
+<span class="sd">                      &#39;max_shift&#39; : int</span>
+<span class="sd">                        the maximum number of samples for shifting</span>
+<span class="sd">                        (default=n/2)</span>
+<span class="sd">                    - if perm_type == &#39;block&#39;:</span>
+
+<span class="sd">                      &#39;block_size&#39; : int</span>
+<span class="sd">                        no. samples per block (default=n/10)</span>
+<span class="sd">                      &#39;perm_range&#39; : int</span>
+<span class="sd">                          range in which blocks can be swapped (default=max)</span>
+
+<span class="sd">                    - if perm_type == &#39;local&#39;:</span>
+
+<span class="sd">                      &#39;perm_range&#39; : int</span>
+<span class="sd">                          range in samples over which realisations can be</span>
+<span class="sd">                          permuted (default=n/10)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy array</span>
+<span class="sd">                data slice with data permuted over samples with dimensions</span>
+<span class="sd">                samples x number of replications</span>
+<span class="sd">            numpy array</span>
+<span class="sd">                index of permutet samples</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            This permutation scheme is the fall-back option if the number of</span>
+<span class="sd">            replications is too small to allow a sufficient number of</span>
+<span class="sd">            permutations for the generation of surrogate data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data_slice</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_data_slice</span><span class="p">(</span><span class="n">process</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">data_slice_perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">data_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_type</span><span class="p">)</span>
+        <span class="n">perm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_permutation_samples</span><span class="p">(</span><span class="n">data_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                             <span class="n">perm_settings</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_replications</span><span class="p">):</span>
+            <span class="n">data_slice_perm</span><span class="p">[:,</span> <span class="n">r</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_slice</span><span class="p">[</span><span class="n">perm</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">data_slice_perm</span><span class="p">,</span> <span class="n">perm</span></div>
+
+<div class="viewcode-block" id="Data.permute_replications"><a class="viewcode-back" href="../../idtxl_data_class.html#idtxl.data.Data.permute_replications">[docs]</a>    <span class="k">def</span> <span class="nf">permute_replications</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_value</span><span class="p">,</span> <span class="n">idx_list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return realisations with permuted replications (time stays intact).</span>
+
+<span class="sd">        Create surrogate data by permuting realisations over replications while</span>
+<span class="sd">        keeping the temporal structure (order of samples) intact. Return</span>
+<span class="sd">        realisations for all indices in the list, where an index is expected to</span>
+<span class="sd">        have the form (process index, sample index). Realisations are permuted</span>
+<span class="sd">        block-wise by permuting the order of replications:</span>
+
+<span class="sd">        Original data:</span>
+<span class="sd">            +--------------+---------+---------+---------+---------+---------+-----+</span>
+<span class="sd">            | repl. ind.   | 1 1 1 1 | 2 2 2 2 | 3 3 3 3 | 4 4 4 4 | 5 5 5 5 | ... |</span>
+<span class="sd">            +--------------+---------+---------+---------+---------+---------+-----+</span>
+<span class="sd">            | sample index | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | ... |</span>
+<span class="sd">            +--------------+---------+---------+---------+---------+---------+-----+</span>
+
+<span class="sd">        Permuted data:</span>
+<span class="sd">            +--------------+---------+---------+---------+---------+---------+-----+</span>
+<span class="sd">            | repl. ind.   | 3 3 3 3 | 1 1 1 1 | 4 4 4 4 | 2 2 2 2 | 5 5 5 5 | ... |</span>
+<span class="sd">            +--------------+---------+---------+---------+---------+---------+-----+</span>
+<span class="sd">            | sample index | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | ... |</span>
+<span class="sd">            +--------------+---------+---------+---------+---------+---------+-----+</span>
+
+
+<span class="sd">        Args:</span>
+<span class="sd">            current_value : tuple</span>
+<span class="sd">                index of the current_value in the data</span>
+<span class="sd">            idx_list : list of tuples</span>
+<span class="sd">                indices of variables</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy array</span>
+<span class="sd">                permuted realisations with dimensions replications x number of</span>
+<span class="sd">                indices</span>
+<span class="sd">            numpy array</span>
+<span class="sd">                replication index for each realisation</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            TypeError if idx_realisations is not a list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">idx_list</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;idx needs to be a list of tuples.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span><span class="n">current_value</span><span class="p">,</span> <span class="n">idx_list</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Data.permute_samples"><a class="viewcode-back" href="../../idtxl_data_class.html#idtxl.data.Data.permute_samples">[docs]</a>    <span class="k">def</span> <span class="nf">permute_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_value</span><span class="p">,</span> <span class="n">idx_list</span><span class="p">,</span> <span class="n">perm_settings</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return realisations with permuted samples (repl. stays intact).</span>
+
+<span class="sd">        Create surrogate data by permuting realisations over samples (time)</span>
+<span class="sd">        while keeping the order of replications intact. Surrogates can be</span>
+<span class="sd">        created for multiple variables in parallel, where variables are</span>
+<span class="sd">        provided as a list of indices. An index is expected to have the form</span>
+<span class="sd">        (process index, sample index).</span>
+
+<span class="sd">        Permuting samples in time is the fall-back option for surrogate data</span>
+<span class="sd">        creation. The default method for surrogate data creation is the</span>
+<span class="sd">        permutation of replications, while keeping the order of samples in time</span>
+<span class="sd">        intact. If the number of replications is too small to allow for a</span>
+<span class="sd">        sufficient number of permutations for the generation of surrogate data,</span>
+<span class="sd">        permutation of samples in time is chosen instead.</span>
+
+<span class="sd">        Different permutation strategies can be chosen to permute realisations</span>
+<span class="sd">        in time. Note that if data consists of multiple replications, within</span>
+<span class="sd">        each replication, samples are shuffled following the same permutation</span>
+<span class="sd">        pattern:</span>
+
+<span class="sd">        Original data:</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+<span class="sd">            | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+<span class="sd">            | sample index | 1 2 3 4 5 6 7 8 | 1 2 3 4 5 6 7 8 | 1 2 3 4 5 6 7 8 | ... |</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+
+<span class="sd">        Circular shift by a random number of samples, e.g. 4 samples:</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+<span class="sd">            | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+<span class="sd">            | sample index | 5 6 7 8 1 2 3 4 | 5 6 7 8 1 2 3 4 | 5 6 7 8 1 2 3 4 | ... |</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+
+<span class="sd">        Permute blocks of 3 samples:</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+<span class="sd">            | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+<span class="sd">            | sample index | 4 5 6 7 8 1 2 3 | 4 5 6 7 8 1 2 3 | 4 5 6 7 8 1 2 3 | ... |</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+
+<span class="sd">        Permute data locally within a range of 4 samples:</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+<span class="sd">            | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+<span class="sd">            | sample index | 1 2 4 3 8 5 6 7 | 1 2 4 3 8 5 6 7 | 1 2 4 3 8 5 6 7 | ... |</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+
+<span class="sd">        Random permutation:</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+<span class="sd">            | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+<span class="sd">            | sample index | 4 2 5 7 1 3 2 6 | 4 2 5 7 1 3 2 6 | 4 2 5 7 1 3 2 6 | ... |</span>
+<span class="sd">            +--------------+-----------------+-----------------+-----------------+-----+</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            current_value : tuple</span>
+<span class="sd">                index of the current_value in the data</span>
+<span class="sd">            idx_list : list of tuples</span>
+<span class="sd">                indices of variables</span>
+<span class="sd">            perm_settings : dict</span>
+<span class="sd">                settings specifying the allowed permutations:</span>
+
+<span class="sd">                - perm_type : str</span>
+<span class="sd">                  permutation type, can be</span>
+
+<span class="sd">                    - &#39;random&#39;: swaps samples at random,</span>
+<span class="sd">                    - &#39;circular&#39;: shifts time series by a random number of</span>
+<span class="sd">                      samples</span>
+<span class="sd">                    - &#39;block&#39;: swaps blocks of samples,</span>
+<span class="sd">                    - &#39;local&#39;: swaps samples within a given range, or</span>
+
+<span class="sd">                - additional settings depending on the perm_type (n is the</span>
+<span class="sd">                  number of samples):</span>
+
+<span class="sd">                    - if perm_type == &#39;circular&#39;:</span>
+
+<span class="sd">                      &#39;max_shift&#39; : int</span>
+<span class="sd">                        the maximum number of samples for shifting</span>
+<span class="sd">                        (e.g., number of samples / 2)</span>
+
+<span class="sd">                    - if perm_type == &#39;block&#39;:</span>
+
+<span class="sd">                      &#39;block_size&#39; : int</span>
+<span class="sd">                        no. samples per block (e.g., number of samples / 10)</span>
+<span class="sd">                      &#39;perm_range&#39; : int</span>
+<span class="sd">                        range in which blocks can be swapped (e.g., number</span>
+<span class="sd">                        of samples / block_size)</span>
+
+<span class="sd">                    - if perm_type == &#39;local&#39;:</span>
+
+<span class="sd">                      &#39;perm_range&#39; : int</span>
+<span class="sd">                        range in samples over which realisations can be</span>
+<span class="sd">                        permuted (e.g., number of samples / 10)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy array</span>
+<span class="sd">                permuted realisations with dimensions replications x number of</span>
+<span class="sd">                indices</span>
+<span class="sd">            numpy array</span>
+<span class="sd">                sample index for each realisation</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            TypeError if idx_realisations is not a list</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            This permutation scheme is the fall-back option if surrogate data</span>
+<span class="sd">            can not be created by shuffling replications because the number of</span>
+<span class="sd">            replications is too small to generate the requested number of</span>
+<span class="sd">            permutations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">[</span><span class="n">realisations</span><span class="p">,</span> <span class="n">replication_idx</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span><span class="n">current_value</span><span class="p">,</span>
+                                                                <span class="n">idx_list</span><span class="p">)</span>
+        <span class="n">n_samples</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">replication_idx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">perm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_permutation_samples</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">perm_settings</span><span class="p">)</span>
+        <span class="c1"># Apply the permutation to data from each replication.</span>
+        <span class="n">realisations_perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">realisations</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_type</span><span class="p">)</span>
+        <span class="n">perm_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">realisations_perm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">replication_idx</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">replication_idx</span> <span class="o">==</span> <span class="n">r</span>
+            <span class="n">data_temp</span> <span class="o">=</span> <span class="n">realisations</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">realisations_perm</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">data_temp</span><span class="p">[</span><span class="n">perm</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">perm_idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">perm</span>
+        <span class="k">return</span> <span class="n">realisations_perm</span><span class="p">,</span> <span class="n">perm_idx</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_permutation_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">perm_settings</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate permutation of n samples.</span>
+
+<span class="sd">        Generate a permutation of n samples under various, possible</span>
+<span class="sd">        restrictions. Permuting samples is the fall-back option for surrogate</span>
+<span class="sd">        creation if the number of replications is too small to allow for a</span>
+<span class="sd">        sufficient number of permutations for the generation of surrogate data.</span>
+<span class="sd">        For a detailed descriptions of permutation strategies see the</span>
+<span class="sd">        documentation of permute_samples().</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n_samples : int</span>
+<span class="sd">                length of the permutation</span>
+<span class="sd">            perm_settings : dict</span>
+<span class="sd">                settings specifying the allowed permutations, see documentation</span>
+<span class="sd">                of permute_samples()</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy array</span>
+<span class="sd">                realisations permuted over time</span>
+<span class="sd">            numpy Array</span>
+<span class="sd">                permuted indices of samples</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">perm_type</span> <span class="o">=</span> <span class="n">perm_settings</span><span class="p">[</span><span class="s1">&#39;perm_type&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Get the permutaion &#39;mask&#39; for one replication (the same mask is then</span>
+        <span class="c1"># applied to each replication).</span>
+        <span class="k">if</span> <span class="n">perm_type</span> <span class="o">==</span> <span class="s1">&#39;random&#39;</span><span class="p">:</span>
+            <span class="n">perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">n_samples</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">perm_type</span> <span class="o">==</span> <span class="s1">&#39;circular&#39;</span><span class="p">:</span>
+            <span class="n">max_shift</span> <span class="o">=</span> <span class="n">perm_settings</span><span class="p">[</span><span class="s1">&#39;max_shift&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">max_shift</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">int</span> <span class="ow">or</span> <span class="n">max_shift</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39; &#39;&#39;max_shift&#39;&#39; has to be an int &gt; 0.&#39;</span><span class="p">)</span>
+            <span class="n">perm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circular_shift</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">max_shift</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="n">perm_type</span> <span class="o">==</span> <span class="s1">&#39;block&#39;</span><span class="p">:</span>
+            <span class="n">block_size</span> <span class="o">=</span> <span class="n">perm_settings</span><span class="p">[</span><span class="s1">&#39;block_size&#39;</span><span class="p">]</span>
+            <span class="n">perm_range</span> <span class="o">=</span> <span class="n">perm_settings</span><span class="p">[</span><span class="s1">&#39;perm_range&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">block_size</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">int</span> <span class="ow">or</span> <span class="n">block_size</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39; &#39;&#39;block_size&#39;&#39; has to be an int &gt; 0.&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">perm_range</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">int</span> <span class="ow">or</span> <span class="n">perm_range</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39; &#39;&#39;perm_range&#39;&#39; has to be an int &gt; 0.&#39;</span><span class="p">)</span>
+            <span class="n">perm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_swap_blocks</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">block_size</span><span class="p">,</span> <span class="n">perm_range</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">perm_type</span> <span class="o">==</span> <span class="s1">&#39;local&#39;</span><span class="p">:</span>
+            <span class="n">perm_range</span> <span class="o">=</span> <span class="n">perm_settings</span><span class="p">[</span><span class="s1">&#39;perm_range&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">perm_range</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">int</span> <span class="ow">or</span> <span class="n">perm_range</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39; &#39;&#39;perm_range&#39;&#39; has to be an int &gt; 0.&#39;</span><span class="p">)</span>
+            <span class="n">perm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_swap_local</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">perm_range</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown permutation type (</span><span class="si">{0}</span><span class="s1">).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                                                    <span class="n">perm_type</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">perm</span>
+
+    <span class="k">def</span> <span class="nf">_swap_local</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">perm_range</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Permute n samples within blocks of length &#39;perm_range&#39;.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n : int</span>
+<span class="sd">                number of samples</span>
+<span class="sd">            perm_range : int</span>
+<span class="sd">                range over which realisations are permuted</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy array</span>
+<span class="sd">                permuted indices with length n</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">perm_range</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;Permutation range has to be larger than 1&#39;</span><span class="p">,</span>
+                                  <span class="s1">&#39;otherwise there is nothing to permute.&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">n</span> <span class="o">&gt;=</span> <span class="n">perm_range</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;Not enough realisations per replication &#39;</span>
+                                   <span class="s1">&#39;(</span><span class="si">{0}</span><span class="s1">) to allow for the requested &#39;</span>
+                                   <span class="s1">&#39;&quot;perm_range&quot; of </span><span class="si">{1}</span><span class="s1">.&#39;</span> <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">,</span>
+                                                                  <span class="n">perm_range</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">perm_range</span> <span class="o">==</span> <span class="n">n</span><span class="p">:</span>  <span class="c1"># permute all n samples randomly</span>
+            <span class="n">perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># build a permutation that permutes only within the perm_range</span>
+            <span class="n">perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+            <span class="n">remainder</span> <span class="o">=</span> <span class="n">n</span> <span class="o">%</span> <span class="n">perm_range</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">//</span> <span class="n">perm_range</span><span class="p">):</span>
+                <span class="n">perm</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">perm_range</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">perm_range</span><span class="p">)</span> <span class="o">+</span> <span class="n">i</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="n">perm_range</span>
+            <span class="k">if</span> <span class="n">remainder</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">perm</span><span class="p">[</span><span class="o">-</span><span class="n">remainder</span><span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">remainder</span><span class="p">)</span> <span class="o">+</span> <span class="n">i</span>
+        <span class="k">return</span> <span class="n">perm</span>
+
+    <span class="k">def</span> <span class="nf">_swap_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">block_size</span><span class="p">,</span> <span class="n">perm_range</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Permute blocks of samples in a time series within a given range.</span>
+
+<span class="sd">        Permute n samples by swapping blocks of samples within a given range.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n : int</span>
+<span class="sd">                number of samples</span>
+<span class="sd">            block_size : int</span>
+<span class="sd">                number of samples in a block</span>
+<span class="sd">            perm_range : int</span>
+<span class="sd">                range over which blocks can be swapped</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy array</span>
+<span class="sd">                permuted indices with length n</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n_blocks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">n</span> <span class="o">/</span> <span class="n">block_size</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">rem_samples</span> <span class="o">=</span> <span class="n">n</span> <span class="o">%</span> <span class="n">block_size</span>
+        <span class="n">rem_blocks</span> <span class="o">=</span> <span class="n">n_blocks</span> <span class="o">%</span> <span class="n">perm_range</span>
+        <span class="k">if</span> <span class="n">rem_samples</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">rem_samples</span> <span class="o">=</span> <span class="n">block_size</span>
+
+        <span class="c1"># First permute block(!) indices.</span>
+        <span class="k">if</span> <span class="n">perm_range</span> <span class="o">==</span> <span class="n">n_blocks</span><span class="p">:</span>  <span class="c1"># permute all blocks randomly</span>
+            <span class="n">perm_blocks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">n_blocks</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># build a permutation that permutes only within the perm_range</span>
+            <span class="n">perm_blocks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n_blocks</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_blocks</span> <span class="o">//</span> <span class="n">perm_range</span><span class="p">):</span>
+                <span class="n">perm_blocks</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">perm_range</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span>
+                                                                <span class="n">perm_range</span><span class="p">)</span> <span class="o">+</span> <span class="n">i</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="n">perm_range</span>
+            <span class="k">if</span> <span class="n">rem_blocks</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">perm_blocks</span><span class="p">[</span><span class="o">-</span><span class="n">rem_blocks</span><span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span>
+                                                                <span class="n">rem_blocks</span><span class="p">)</span> <span class="o">+</span> <span class="n">i</span>
+
+        <span class="c1"># Get the block index for each sample index, take into account that the</span>
+        <span class="c1"># last block may have fewer samples if n_samples % block_size isn&#39;t 0.</span>
+        <span class="n">idx_blocks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_blocks</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">block_size</span><span class="p">),</span>
+                                <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">n_blocks</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">rem_samples</span><span class="p">)))</span>
+
+        <span class="c1"># Permute samples indices according to permuted block indices.</span>
+        <span class="n">perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>  <span class="c1"># allocate memory</span>
+        <span class="n">idx_orig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>  <span class="c1"># original order of sample indices</span>
+        <span class="n">i_0</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">perm_blocks</span><span class="p">:</span>  <span class="c1"># loop over permuted blocks</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">idx_blocks</span> <span class="o">==</span> <span class="n">b</span>  <span class="c1"># indices of samples in curr. permuted block</span>
+            <span class="n">i_1</span> <span class="o">=</span> <span class="n">i_0</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+            <span class="n">perm</span><span class="p">[</span><span class="n">i_0</span><span class="p">:</span><span class="n">i_1</span><span class="p">]</span> <span class="o">=</span> <span class="n">idx_orig</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>  <span class="c1"># append samples to permutation</span>
+            <span class="n">i_0</span> <span class="o">=</span> <span class="n">i_1</span>
+
+        <span class="k">return</span> <span class="n">perm</span>
+
+    <span class="k">def</span> <span class="nf">_circular_shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">max_shift</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Permute samples through shifting by a random number of samples.</span>
+
+<span class="sd">        A time series is shifted circularly by a random number of samples. A</span>
+<span class="sd">        circular shift of m means, that the last m samples are included at the</span>
+<span class="sd">        beginning of the time series and all other sample indices are increased</span>
+<span class="sd">        by mn steps. max_shift is an upper limit for m.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n : int</span>
+<span class="sd">                number of samples</span>
+<span class="sd">            max_shift: int</span>
+<span class="sd">                maximum possible shift (default=n)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy array</span>
+<span class="sd">                permuted indices with length n</span>
+<span class="sd">            int</span>
+<span class="sd">                no. samples by which the time series was shifted</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">max_shift</span> <span class="o">&lt;=</span> <span class="n">n</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;Max_shift (</span><span class="si">{0}</span><span class="s1">) has to be equal to or &#39;</span>
+                                  <span class="s1">&#39;smaller than the number of samples in the &#39;</span>
+                                  <span class="s1">&#39;time series (</span><span class="si">{1}</span><span class="s1">).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">max_shift</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+        <span class="n">shift</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">max_shift</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;replications are shifted by </span><span class="si">{0}</span><span class="s2"> samples&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">shift</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">shift</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span>
+                          <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">shift</span><span class="p">))),</span> <span class="n">shift</span>
+
+<div class="viewcode-block" id="Data.generate_mute_data"><a class="viewcode-back" href="../../idtxl_data_class.html#idtxl.data.Data.generate_mute_data">[docs]</a>    <span class="k">def</span> <span class="nf">generate_mute_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">n_replications</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate example data for a 5-process network.</span>
+
+<span class="sd">        Generate example data and overwrite the instance&#39;s current data. The</span>
+<span class="sd">        network is used as an example the paper on the MuTE toolbox (Montalto,</span>
+<span class="sd">        PLOS ONE, 2014, eq. 14) and was orginially proposed by Baccala &amp;</span>
+<span class="sd">        Sameshima (2001). The network consists of five autoregressive (AR)</span>
+<span class="sd">        processes with model orders 2 and the following (non-linear) couplings:</span>
+
+<span class="sd">        0 -&gt; 1, u = 2 (non-linear)</span>
+<span class="sd">        0 -&gt; 2, u = 3</span>
+<span class="sd">        0 -&gt; 3, u = 2 (non-linear)</span>
+<span class="sd">        3 -&gt; 4, u = 1</span>
+<span class="sd">        4 -&gt; 3, u = 1</span>
+
+<span class="sd">        References:</span>
+
+<span class="sd">        - Montalto, A., Faes, L., &amp; Marinazzo, D. (2014) MuTE: A MATLAB toolbox</span>
+<span class="sd">          to compare established and novel estimators of the multivariate</span>
+<span class="sd">          transfer entropy. PLoS ONE 9(10): e109462.</span>
+<span class="sd">          https://doi.org/10.1371/journal.pone.0109462</span>
+<span class="sd">        - Baccala, L.A. &amp; Sameshima, K. (2001). Partial directed coherence: a</span>
+<span class="sd">          new concept in neural structure determination. Biol Cybern 84:</span>
+<span class="sd">          463–474. https://doi.org/10.1007/PL00007990</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n_samples : int</span>
+<span class="sd">                number of samples simulated for each process and replication</span>
+<span class="sd">            n_replications : int</span>
+<span class="sd">                number of replications</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n_processes</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="n">n_samples</span> <span class="o">=</span> <span class="n">n_samples</span>
+        <span class="n">n_replications</span> <span class="o">=</span> <span class="n">n_replications</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_processes</span><span class="p">,</span> <span class="n">n_samples</span> <span class="o">+</span> <span class="mi">3</span><span class="p">,</span>
+                      <span class="n">n_replications</span><span class="p">))</span>
+        <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">n_processes</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span>
+                                              <span class="n">n_replications</span><span class="p">))</span>
+        <span class="n">term_1</span> <span class="o">=</span> <span class="mf">0.95</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">term_2</span> <span class="o">=</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">term_3</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.25</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_replications</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">n_samples</span> <span class="o">+</span> <span class="mi">3</span><span class="p">):</span>
+                <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">term_1</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span> <span class="o">-</span>
+                              <span class="mf">0.9025</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">())</span>
+                <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">()</span>
+                <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.4</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">3</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">()</span>
+                <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span>
+                              <span class="n">term_2</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span> <span class="o">+</span>
+                              <span class="n">term_2</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span> <span class="o">+</span>
+                              <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">())</span>
+                <span class="n">x</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">term_3</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span> <span class="o">+</span>
+                              <span class="n">term_2</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span> <span class="o">+</span>
+                              <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:,</span> <span class="p">:],</span> <span class="s1">&#39;psr&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Data.generate_var_data"><a class="viewcode-back" href="../../idtxl_data_class.html#idtxl.data.Data.generate_var_data">[docs]</a>    <span class="k">def</span> <span class="nf">generate_var_data</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+        <span class="n">n_replications</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">coefficient_matrices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]]]),</span>
+        <span class="n">noise_std</span><span class="o">=</span><span class="mf">0.1</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate discrete-time VAR (vector autoregressive) time series.</span>
+
+<span class="sd">        Generate data and overwrite the instance&#39;s current data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n_samples : int [optional]</span>
+<span class="sd">                number of samples simulated for each process and replication</span>
+<span class="sd">            n_replications : int [optional]</span>
+<span class="sd">                number of replications</span>
+<span class="sd">            coefficient_matrices : numpy array [optional]</span>
+<span class="sd">                coefficient matrices: numpy array with dimensions</span>
+<span class="sd">                (VAR order, number of processes, number of processes). Each</span>
+<span class="sd">                square coefficient matrix corresponds to a lag, starting from</span>
+<span class="sd">                lag=1. The total number of provided matrices implicitly</span>
+<span class="sd">                determines the order of the VAR process.</span>
+<span class="sd">                (default = np.array([[[0.5, 0], [0.4, 0.5]]]))</span>
+<span class="sd">            noise_std : float [optional]</span>
+<span class="sd">                standard deviation of uncorrelated Gaussian noise</span>
+<span class="sd">                (default = 0.1)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">coefficient_matrices</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">n_processes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">coefficient_matrices</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">samples_transient</span> <span class="o">=</span> <span class="n">n_processes</span> <span class="o">*</span> <span class="mi">10</span>
+
+        <span class="c1"># Check stability of the VAR process, which is a sufficient condition</span>
+        <span class="c1"># for stationarity.</span>
+        <span class="n">var_reduced_form</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span>
+            <span class="n">n_processes</span> <span class="o">*</span> <span class="n">order</span><span class="p">,</span>
+            <span class="n">n_processes</span> <span class="o">*</span> <span class="n">order</span>
+        <span class="p">))</span>
+        <span class="n">var_reduced_form</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n_processes</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">coefficient_matrices</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+            <span class="p">[</span><span class="n">n_processes</span><span class="p">,</span> <span class="n">n_processes</span> <span class="o">*</span> <span class="n">order</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="n">var_reduced_form</span><span class="p">[</span><span class="n">n_processes</span><span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="n">n_processes</span> <span class="o">*</span> <span class="p">(</span><span class="n">order</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span>
+            <span class="n">n_processes</span> <span class="o">*</span> <span class="p">(</span><span class="n">order</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="c1"># Condition for stability: the absolute values of all the eigenvalues</span>
+        <span class="c1"># of the reduced-form coefficeint matrix are smaller than 1. A stable</span>
+        <span class="c1"># VAR process is also stationary.</span>
+        <span class="n">is_stable</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvals</span><span class="p">(</span><span class="n">var_reduced_form</span><span class="p">)))</span> <span class="o">&lt;</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_stable</span><span class="p">:</span>
+            <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;VAR process is not stable and may be nonstationary.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Initialise time series matrix. The 3 dimensions represent</span>
+        <span class="c1"># (processes, samples, replications). Only the last n_samples will be</span>
+        <span class="c1"># kept, in order to discard transient effects.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span>
+            <span class="n">n_processes</span><span class="p">,</span>
+            <span class="n">order</span> <span class="o">+</span> <span class="n">samples_transient</span> <span class="o">+</span> <span class="n">n_samples</span><span class="p">,</span>
+            <span class="n">n_replications</span>
+        <span class="p">))</span>
+
+        <span class="c1"># Generate (different) initial conditions for each replication:</span>
+        <span class="c1"># Uniformly sample from the [0,1] interval and tile as many times as</span>
+        <span class="c1"># the VAR process order along the second dimension.</span>
+        <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="n">order</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n_processes</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_replications</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Compute time series</span>
+        <span class="k">for</span> <span class="n">i_repl</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_replications</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i_sample</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">order</span> <span class="o">+</span> <span class="n">samples_transient</span> <span class="o">+</span> <span class="n">n_samples</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">i_delay</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">x</span><span class="p">[:,</span> <span class="n">i_sample</span><span class="p">,</span> <span class="n">i_repl</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>
+                        <span class="n">coefficient_matrices</span><span class="p">[</span><span class="n">i_delay</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span>
+                        <span class="n">x</span><span class="p">[:,</span> <span class="n">i_sample</span> <span class="o">-</span> <span class="n">i_delay</span><span class="p">,</span> <span class="n">i_repl</span><span class="p">]</span>
+                    <span class="p">)</span>
+                <span class="c1"># Add uncorrelated Gaussian noise vector</span>
+                <span class="n">x</span><span class="p">[:,</span> <span class="n">i_sample</span><span class="p">,</span> <span class="n">i_repl</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span>
+                    <span class="mi">0</span><span class="p">,</span>  <span class="c1"># mean</span>
+                    <span class="n">noise_std</span><span class="p">,</span>
+                    <span class="n">x</span><span class="p">[:,</span> <span class="n">i_sample</span><span class="p">,</span> <span class="n">i_repl</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Discard transient effects (only take end of time series)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="o">-</span><span class="p">(</span><span class="n">n_samples</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:],</span> <span class="s1">&#39;psr&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Data.generate_logistic_maps_data"><a class="viewcode-back" href="../../idtxl_data_class.html#idtxl.data.Data.generate_logistic_maps_data">[docs]</a>    <span class="k">def</span> <span class="nf">generate_logistic_maps_data</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+        <span class="n">n_replications</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">coefficient_matrices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]]]),</span>
+        <span class="n">noise_std</span><span class="o">=</span><span class="mf">0.1</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate discrete-time coupled-logistic-maps time series.</span>
+
+<span class="sd">        Generate data and overwrite the instance&#39;s current data.</span>
+
+<span class="sd">        The implemented logistic map function is f(x) = 4 * x * (1 - x).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n_samples : int [optional]</span>
+<span class="sd">                number of samples simulated for each process and replication</span>
+<span class="sd">            n_replications : int [optional]</span>
+<span class="sd">                number of replications</span>
+<span class="sd">            coefficient_matrices : numpy array [optional]</span>
+<span class="sd">                coefficient matrices: numpy array with dimensions</span>
+<span class="sd">                (order, number of processes, number of processes). Each</span>
+<span class="sd">                square coefficient matrix corresponds to a lag, starting from</span>
+<span class="sd">                lag=1. The total number of provided matrices implicitly</span>
+<span class="sd">                determines the order of the stochastic process.</span>
+<span class="sd">                (default = np.array([[[0.5, 0], [0.4, 0.5]]]))</span>
+<span class="sd">            noise_std : float [optional]</span>
+<span class="sd">                standard deviation of uncorrelated Gaussian noise</span>
+<span class="sd">                (default = 0.1)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">coefficient_matrices</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">n_processes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">coefficient_matrices</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">samples_transient</span> <span class="o">=</span> <span class="n">n_processes</span> <span class="o">*</span> <span class="mi">10</span>
+
+        <span class="c1"># Define activation function (logistic map)</span>
+        <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">return</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># Initialise time series matrix. The 3 dimensions represent</span>
+        <span class="c1"># (processes, samples, replications). Only the last n_samples will be</span>
+        <span class="c1"># kept, in order to discard transient effects.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span>
+            <span class="n">n_processes</span><span class="p">,</span>
+            <span class="n">order</span> <span class="o">+</span> <span class="n">samples_transient</span> <span class="o">+</span> <span class="n">n_samples</span><span class="p">,</span>
+            <span class="n">n_replications</span>
+        <span class="p">))</span>
+
+        <span class="c1"># Generate (different) initial conditions for each replication:</span>
+        <span class="c1"># Uniformly sample from the [0,1] interval and tile as many times as</span>
+        <span class="c1"># the stochastic process order along the second dimension.</span>
+        <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="n">order</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n_processes</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_replications</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Compute time series</span>
+        <span class="k">for</span> <span class="n">i_repl</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_replications</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i_sample</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">order</span> <span class="o">+</span> <span class="n">samples_transient</span> <span class="o">+</span> <span class="n">n_samples</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">i_delay</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">x</span><span class="p">[:,</span> <span class="n">i_sample</span><span class="p">,</span> <span class="n">i_repl</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>
+                        <span class="n">coefficient_matrices</span><span class="p">[</span><span class="n">i_delay</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span>
+                        <span class="n">x</span><span class="p">[:,</span> <span class="n">i_sample</span> <span class="o">-</span> <span class="n">i_delay</span><span class="p">,</span> <span class="n">i_repl</span><span class="p">]</span>
+                    <span class="p">)</span>
+                <span class="c1"># Compute activation function</span>
+                <span class="n">x</span><span class="p">[:,</span> <span class="n">i_sample</span><span class="p">,</span> <span class="n">i_repl</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">i_sample</span><span class="p">,</span> <span class="n">i_repl</span><span class="p">])</span>
+                <span class="c1"># Add uncorrelated Gaussian noise vector</span>
+                <span class="n">x</span><span class="p">[:,</span> <span class="n">i_sample</span><span class="p">,</span> <span class="n">i_repl</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span>
+                    <span class="mi">0</span><span class="p">,</span>  <span class="c1"># mean</span>
+                    <span class="n">noise_std</span><span class="p">,</span>
+                    <span class="n">x</span><span class="p">[:,</span> <span class="n">i_sample</span><span class="p">,</span> <span class="n">i_repl</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+                <span class="p">)</span>
+                <span class="c1"># ensure values are in the [0, 1] range</span>
+                <span class="n">x</span><span class="p">[:,</span> <span class="n">i_sample</span><span class="p">,</span> <span class="n">i_repl</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="n">i_sample</span><span class="p">,</span> <span class="n">i_repl</span><span class="p">]</span> <span class="o">%</span> <span class="mi">1</span>
+
+        <span class="c1"># Discard transient effects (only take end of time series)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="o">-</span><span class="p">(</span><span class="n">n_samples</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:],</span> <span class="s1">&#39;psr&#39;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+    </div>
+  </body>
+</html>

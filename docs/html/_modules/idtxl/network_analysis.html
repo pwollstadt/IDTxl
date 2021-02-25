@@ -1,0 +1,589 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>idtxl.network_analysis &#8212; IDTxl 1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="../../_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for idtxl.network_analysis</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Parent class for network inference and network comparison.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">copy</span> <span class="k">as</span> <span class="nn">cp</span>
+<span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">it</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.estimator</span> <span class="k">import</span> <span class="n">find_estimator</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">idtxl_utils</span> <span class="k">as</span> <span class="n">utils</span>
+
+
+<div class="viewcode-block" id="NetworkAnalysis"><a class="viewcode-back" href="../../idtxl.html#idtxl.network_analysis.NetworkAnalysis">[docs]</a><span class="k">class</span> <span class="nc">NetworkAnalysis</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Provide an analysis setup for network inference or comparison.</span>
+
+<span class="sd">    The class provides routines to check user input and set defaults.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_value_realisations</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_min_stats_surr_table</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">current_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get index of the current_value.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_value</span>
+
+    <span class="nd">@current_value</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">current_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">idx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">((</span><span class="s1">&#39;The current value should be a tuple (index &#39;</span> <span class="o">+</span>
+                             <span class="s1">&#39;process, index sample).&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_value</span> <span class="o">=</span> <span class="n">idx</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_current_value_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get realisations of the current_value.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__current_value_realisations</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Attribute has not been set yet.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__current_value_realisations</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">tuple</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;something went wrong&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__current_value_realisations</span>
+
+    <span class="nd">@_current_value_realisations</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">_current_value_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realisations</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__current_value_realisations</span> <span class="o">=</span> <span class="n">realisations</span>
+
+    <span class="nd">@_current_value_realisations</span><span class="o">.</span><span class="n">deleter</span>
+    <span class="k">def</span> <span class="nf">_current_value_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">__current_value_realisations</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">selected_vars_full</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;List of indices of the full conditional set.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_full</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Attribute has not been set yet.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_full</span>
+
+    <span class="nd">@selected_vars_full</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">selected_vars_full</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx_list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">idx_list</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">idx_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">((</span><span class="s1">&#39;Expected a list of tuples (index process, &#39;</span> <span class="o">+</span>
+                             <span class="s1">&#39;index sample).&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_full</span> <span class="o">=</span> <span class="n">idx_list</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">selected_vars_target</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;List of indices of target samples in the conditional set.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Attribute has not been set yet.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_target</span>
+
+    <span class="nd">@selected_vars_target</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">selected_vars_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx_list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">idx_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">idx_list</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">((</span><span class="s1">&#39;Expected a list of tuples (index process, &#39;</span> <span class="o">+</span>
+                             <span class="s1">&#39;index sample).&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_target</span> <span class="o">=</span> <span class="n">idx_list</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">selected_vars_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;List of indices of source samples in the conditional set.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_sources</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Attribute has not been set yet.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_sources</span>
+
+    <span class="nd">@selected_vars_sources</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">selected_vars_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx_list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">idx_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">idx_list</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">((</span><span class="s1">&#39;Expected a list of tuples (index process, &#39;</span> <span class="o">+</span>
+                             <span class="s1">&#39;index sample).&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_sources</span> <span class="o">=</span> <span class="n">idx_list</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_selected_vars_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get realisations of the full conditional set.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__selected_vars_realisations</span>
+
+    <span class="nd">@_selected_vars_realisations</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">_selected_vars_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realisations</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__selected_vars_realisations</span> <span class="o">=</span> <span class="n">realisations</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_selected_vars_target_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get realisations of the target samples in the conditional.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            Each time this property is called, realisations are actually</span>
+<span class="sd">            extracted from the array of all realisations, which may be slow!</span>
+<span class="sd">            Use temporary variables to speed things up.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span><span class="p">):</span>
+            <span class="n">indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_target_realisations</span> <span class="o">=</span> <span class="p">(</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span><span class="p">[:,</span> <span class="n">indices</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__selected_vars_target_realisations</span>
+
+    <span class="nd">@_selected_vars_target_realisations</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">_selected_vars_target_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realisations</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__selected_vars_target_realisations</span> <span class="o">=</span> <span class="n">realisations</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_selected_vars_sources_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get realisations of the source samples in the conditional.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            Each time this property is called, realisations are actually</span>
+<span class="sd">            extracted from the array of all realisations, which may be slow!</span>
+<span class="sd">            Use temporary variables to speed things up.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">):</span>
+            <span class="n">indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_sources_realisations</span> <span class="o">=</span> <span class="p">(</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span><span class="p">[:,</span> <span class="n">indices</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__selected_vars_sources_realisations</span>
+
+    <span class="nd">@_selected_vars_sources_realisations</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">_selected_vars_sources_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realisations</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__selected_vars_sources_realisations</span> <span class="o">=</span> <span class="n">realisations</span>
+
+    <span class="k">def</span> <span class="nf">_append_selected_vars_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realisations</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Append realisations of conditionals to existing realisations.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            realisations: numpy array with dimensions replications x number</span>
+<span class="sd">                of indices.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">realisations</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span> <span class="o">=</span> <span class="n">realisations</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span>
+                            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span><span class="p">,</span> <span class="n">realisations</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_idx_to_lag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx_list</span><span class="p">,</span> <span class="n">current_value_sample</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Change sample indices to lags for each sample in the list.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">current_value_sample</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">current_value_sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Current value not set.&#39;</span><span class="p">)</span>
+
+        <span class="n">lag_list</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">idx_list</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">idx_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">current_value_sample</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;Sample time index larger than current &#39;</span>
+                                 <span class="s1">&#39;value.&#39;</span><span class="p">)</span>
+            <span class="n">lag_list</span><span class="p">[</span><span class="n">idx_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">c</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">current_value_sample</span> <span class="o">-</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">lag_list</span>
+
+    <span class="k">def</span> <span class="nf">_lag_to_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lag_list</span><span class="p">,</span> <span class="n">current_value_sample</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Change sample lags to indices for each sample in the list.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">current_value_sample</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">current_value_sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Current value not set.&#39;</span><span class="p">)</span>
+
+        <span class="n">idx_list</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">lag_list</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">lag_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">current_value_sample</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;Sample lag larger than current value.&#39;</span><span class="p">)</span>
+            <span class="n">idx_list</span><span class="p">[</span><span class="n">lag_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">c</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">current_value_sample</span> <span class="o">-</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">idx_list</span>
+
+    <span class="k">def</span> <span class="nf">_set_cmi_estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check and set requested CMI estimator.&quot;&quot;&quot;</span>
+        <span class="c1"># Set CMI estimator. Check if the user requested the estimation of</span>
+        <span class="c1"># local values. If so, initialise a local estimator additionally to the</span>
+        <span class="c1"># average estimator. Internally, the average estimator is used for</span>
+        <span class="c1"># building the non-uniform embedding, etc. The local estimator is used</span>
+        <span class="c1"># to estimate single-link MI/TE or single-process AIS in the end.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">EstimatorClass</span> <span class="o">=</span> <span class="n">find_estimator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;cmi_estimator&#39;</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Please provide an estimator class or name!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator</span> <span class="o">=</span> <span class="n">EstimatorClass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator_local</span> <span class="o">=</span> <span class="n">EstimatorClass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator</span> <span class="o">=</span> <span class="n">EstimatorClass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_separate_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx_full</span><span class="p">,</span> <span class="n">idx_single</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Separate single index realisations from a set of realisations.</span>
+
+<span class="sd">        Return the realisations of a single index and the realisations of the</span>
+<span class="sd">        remaining set of indices. The function takes realisations from the</span>
+<span class="sd">        array in self._selected_vars_realisations. This allows to reuse the</span>
+<span class="sd">        collected realisations when pruning the conditional set after</span>
+<span class="sd">        candidates have been included.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            idx_full : list of tuples</span>
+<span class="sd">                indices indicating the full set</span>
+<span class="sd">            idx_single : tuple</span>
+<span class="sd">                index to be removed</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy array</span>
+<span class="sd">                realisations of the set without the single index</span>
+<span class="sd">            numpy array</span>
+<span class="sd">                realisations of the variable at the single index</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Get indices of the remaining variables.</span>
+        <span class="n">idx_remaining</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">idx_full</span><span class="p">)</span>
+        <span class="n">idx_remaining</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">idx_remaining</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx_single</span><span class="p">))</span>
+
+        <span class="c1"># Find the indices of the columns with the realisations of the</span>
+        <span class="c1"># requested variables (the single one to be removed and the remaining</span>
+        <span class="c1"># variables).</span>
+        <span class="n">array_col_single</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx_single</span><span class="p">)</span>
+        <span class="n">array_col_remain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">idx_remaining</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">idx_remaining</span><span class="p">):</span>
+            <span class="n">array_col_remain</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+
+        <span class="c1"># Get realisations of the single and remaining variables.</span>
+        <span class="n">real_single</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span><span class="p">[:,</span> <span class="n">array_col_single</span><span class="p">],</span>
+                        <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx_full</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># If no realiastions remain, set variable to None instead of and</span>
+            <span class="c1"># empty array so the JIDT estimator doesn&#39;t break</span>
+            <span class="n">real_remain</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">real_remain</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span><span class="p">[:,</span> <span class="n">array_col_remain</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">real_remain</span><span class="p">,</span> <span class="n">real_single</span>
+
+    <span class="k">def</span> <span class="nf">_define_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">processes</span><span class="p">,</span> <span class="n">samples</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Build a list of candidate indices.</span>
+
+<span class="sd">        Build a list of candidate indices. Note that variables that were</span>
+<span class="sd">        manually added to the conditioning set via the &#39;add_conditionals&#39;</span>
+<span class="sd">        setting are removed from the candidate set if both sets are not</span>
+<span class="sd">        disjoint.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            processes : list of int</span>
+<span class="sd">                process indices</span>
+<span class="sd">            samples: list of int</span>
+<span class="sd">                sample indices</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            a list of tuples, where each tuple holds the index of one</span>
+<span class="sd">            candidate and has the form (process index, sample index), indices</span>
+<span class="sd">            are absolute values with respect to some data array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">candidate_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_variable_list</span><span class="p">(</span><span class="n">processes</span><span class="p">,</span> <span class="n">samples</span><span class="p">)</span>
+        <span class="c1"># Remove candidates that were already manullay added to the</span>
+        <span class="c1"># conditioning set via the &#39;add_conditionals&#39; setting. Otherwise the</span>
+        <span class="c1"># candidates get tested in the inclusion step.</span>
+        <span class="n">candidate_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remove_forced_conditionals</span><span class="p">(</span><span class="n">candidate_set</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">candidate_set</span>
+
+    <span class="k">def</span> <span class="nf">_build_variable_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">processes</span><span class="p">,</span> <span class="n">samples</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Build a list of variable tuples with (process index, sample index).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            processes : list of int</span>
+<span class="sd">                process indices</span>
+<span class="sd">            samples: list of int</span>
+<span class="sd">                sample indices</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            a list of variable tuples</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">var_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">it</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">processes</span><span class="p">,</span> <span class="n">samples</span><span class="p">):</span>
+            <span class="n">var_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">var_list</span>
+
+    <span class="k">def</span> <span class="nf">_remove_forced_conditionals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidate_set</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove enforced conditioning variables from candidate set.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;add_conditionals&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;add_conditionals&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">cond</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">tuple</span><span class="p">:</span>  <span class="c1"># easily add single variable</span>
+                <span class="n">cond</span> <span class="o">=</span> <span class="p">[</span><span class="n">cond</span><span class="p">]</span>
+            <span class="n">cond_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lag_to_idx</span><span class="p">(</span><span class="n">cond</span><span class="p">)</span>            
+            <span class="n">candidate_set</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">candidate_set</span><span class="p">)</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">cond_idx</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">candidate_set</span>
+
+    <span class="k">def</span> <span class="nf">_append_selected_vars_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Append indices of conditionals to existing list.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            idx : list of tuples</span>
+<span class="sd">                indices of selected variables, where each entry is a tuple</span>
+<span class="sd">                (idx process, idx sample), where indices are absolute values</span>
+<span class="sd">                with respect to entries in a data array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span> <span class="o">=</span> <span class="n">idx</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="c1"># separate indices into source and target indices</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_append_selected_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">realisations</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Append indices and realisation of selected variables.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            idx : list of tuples</span>
+<span class="sd">                indices of selected variables, where each entry is a tuple</span>
+<span class="sd">                (idx process, idx sample), where indices are absolute values</span>
+<span class="sd">                with respect to entries in a data array</span>
+<span class="sd">            realisations : numpy array</span>
+<span class="sd">                realisations of the selected variables</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">==</span> <span class="n">realisations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span>
+            <span class="s1">&#39;Dimensionality of realisations array (</span><span class="si">{0}</span><span class="s1">) and length of index &#39;</span>
+            <span class="s1">&#39;list (</span><span class="si">{1}</span><span class="s1">) do not match.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">realisations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_append_selected_vars_idx</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_append_selected_vars_realisations</span><span class="p">(</span><span class="n">realisations</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_remove_selected_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove a single selected variable and its realisations.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">remove_column</span><span class="p">(</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span><span class="p">,</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_calculate_single_link</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">current_value</span><span class="p">,</span> <span class="n">source_vars</span><span class="p">,</span> <span class="n">target_vars</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">sources</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">conditioning</span><span class="o">=</span><span class="s1">&#39;full&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate dependency measure for all links into a target.</span>
+
+<span class="sd">        Calculate dependency measure for all links into a target. A single link</span>
+<span class="sd">        may consist of information that multiple past variables in a source</span>
+<span class="sd">        have about the target. The measure can be transfer entropy or mutual</span>
+<span class="sd">        information and is estimated as the joint information all selected past</span>
+<span class="sd">        variables from a single source have about the target.</span>
+
+<span class="sd">        The conditioning defines which variables are included in the</span>
+<span class="sd">        conditioning set when estimating a dependency measure. This can be set</span>
+<span class="sd">        to</span>
+
+<span class="sd">        - &#39;full&#39; to include all selected variables (for multivariate TE this</span>
+<span class="sd">          includes the target&#39;s past variables and past variables from all</span>
+<span class="sd">          other inferred sources, for multivariate MI this includes past</span>
+<span class="sd">          variables from all other inferred sources) from all other inferred</span>
+<span class="sd">          sources and the target&#39;s past,</span>
+<span class="sd">        - &#39;target&#39; to include variables from the target&#39;s past alone (for</span>
+<span class="sd">          bivariate TE estimation),</span>
+<span class="sd">        - &#39;none&#39; for no conditioning (for bivariate MI estimation).</span>
+
+<span class="sd">        For transfer entropy, the information transfer is calculated</span>
+<span class="sd">        conditional on the target&#39;s past. For multivariate TE or MI, the</span>
+<span class="sd">        information (transfer) is calculated conditionally on selected</span>
+<span class="sd">        variables from further sources in the network.</span>
+
+<span class="sd">        Measures can be estimated either for &#39;all&#39; sources (determined from the</span>
+<span class="sd">        selected source variables) or for individual sources. A list of</span>
+<span class="sd">        estimated values for each link (source-target combination) is returned.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data : Data instance</span>
+<span class="sd">                raw data for analysis</span>
+<span class="sd">            current_value : tuple</span>
+<span class="sd">                index of the current value used for estimation, (idx process,</span>
+<span class="sd">                idx sample)</span>
+<span class="sd">            source_vars : np array of tuples</span>
+<span class="sd">                array of past source variables, where one tuple describes a</span>
+<span class="sd">                single variable as (idx process, idx sample)</span>
+<span class="sd">            target_vars : np array of tuples [optional]</span>
+<span class="sd">                array of past target variables</span>
+<span class="sd">            sources : list of ints | &#39;all&#39; [optional]</span>
+<span class="sd">                return estimates for selected sources or all sources (default)</span>
+<span class="sd">            conditioning : str [optional]</span>
+<span class="sd">                set conditioning set, &#39;full&#39; for all selected variables</span>
+<span class="sd">                (target&#39;s and sources&#39; past), &#39;target&#39; for variables from the</span>
+<span class="sd">                target&#39;s past only, &#39;none&#39; for no conditioning</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy array</span>
+<span class="sd">                estimate of dependency measure for each link</span>
+<span class="sd">                </span>
+<span class="sd">        Raises:</span>
+<span class="sd">            ex.AlgorithmExhaustedError</span>
+<span class="sd">                Raised from estimate() when calculation cannot be made</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Get realisations of target variables and the current value, constant</span>
+        <span class="c1"># over sources. Permute current value realisations to generate</span>
+        <span class="c1"># surrogates if requested.</span>
+        <span class="n">target_realisations</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span>
+            <span class="n">current_value</span><span class="p">,</span> <span class="n">target_vars</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">current_value_realisations</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span>
+            <span class="n">current_value</span><span class="p">,</span> <span class="p">[</span><span class="n">current_value</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Check requested sources.</span>
+        <span class="k">if</span> <span class="n">sources</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
+            <span class="n">sources</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">source_vars</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>  <span class="c1"># handle integer inputs</span>
+                <span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="n">sources</span><span class="p">]</span>
+            <span class="n">sources</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">sources</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">n_processes</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;At least one source (</span><span class="si">{0}</span><span class="s1">) is not in no. &#39;</span>
+                                   <span class="s1">&#39;nodes in the data (</span><span class="si">{1}</span><span class="s1">).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                       <span class="n">sources</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">n_processes</span><span class="p">))</span>
+
+        <span class="c1"># Allocate memory: either a multidimensional array if local values are</span>
+        <span class="c1"># required, or a 1D-array for averaged values for each link.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
+            <span class="c1"># Collect local values in a [sources x samples x replications]</span>
+            <span class="c1"># matrix.</span>
+            <span class="n">links</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">),</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">n_realisations_samples</span><span class="p">(</span><span class="n">current_value</span><span class="p">),</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">n_replications</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">links</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">))</span>
+
+        <span class="c1"># Loop over individual sources.</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sources</span><span class="p">):</span>
+
+            <span class="c1"># Separate source variables in variables belonging to the current</span>
+            <span class="c1"># link and variables belonging to the conditioning set. Get</span>
+            <span class="c1"># realisations for the current link&#39;s selected source variables.</span>
+            <span class="n">link_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">source_vars</span> <span class="k">if</span> <span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">s</span><span class="p">]</span>
+            <span class="n">conditional_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">source_vars</span> <span class="k">if</span> <span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">s</span><span class="p">]</span>
+            <span class="n">source_realisations</span><span class="p">,</span> <span class="n">replication_ind</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span>
+                <span class="n">current_value</span><span class="p">,</span> <span class="n">link_vars</span><span class="p">)</span>
+
+            <span class="c1"># Determine which type of conditioning is requested.</span>
+            <span class="k">if</span> <span class="n">conditioning</span> <span class="o">==</span> <span class="s1">&#39;full&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">target_realisations</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># Use sources&#39; pasts only, returns None if conditional vars</span>
+                    <span class="c1"># is empty.</span>
+                    <span class="n">conditional_realisations</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span>
+                            <span class="n">current_value</span><span class="p">,</span> <span class="n">conditional_vars</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Use target&#39;s and sources&#39; past, check if conditional vars</span>
+                    <span class="c1"># is not empty, otherwise np.hstack crashes.</span>
+                    <span class="k">if</span> <span class="n">conditional_vars</span><span class="p">:</span>
+                        <span class="n">conditional_realisations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span>
+                            <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span>
+                                <span class="n">current_value</span><span class="p">,</span> <span class="n">conditional_vars</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+                            <span class="n">target_realisations</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>   <span class="c1"># use target&#39;s past only</span>
+                        <span class="n">conditional_realisations</span> <span class="o">=</span> <span class="n">target_realisations</span>
+
+            <span class="k">elif</span> <span class="n">conditioning</span> <span class="o">==</span> <span class="s1">&#39;target&#39;</span><span class="p">:</span>  <span class="c1"># use target&#39;s past only (biv. TE)</span>
+                <span class="n">conditional_realisations</span> <span class="o">=</span> <span class="n">target_realisations</span>
+            <span class="k">elif</span> <span class="n">conditioning</span> <span class="o">==</span> <span class="s1">&#39;none&#39;</span><span class="p">:</span>  <span class="c1"># no conditioning (bivariate MI)</span>
+                <span class="n">conditional_realisations</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unknown conditioning: </span><span class="si">{0}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">conditioning</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
+                <span class="n">local_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator_local</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span>
+                    <span class="n">current_value_realisations</span><span class="p">,</span>
+                    <span class="n">source_realisations</span><span class="p">,</span>
+                    <span class="n">conditional_realisations</span><span class="p">)</span>
+                <span class="n">links</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">local_values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                    <span class="nb">max</span><span class="p">(</span><span class="n">replication_ind</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">replication_ind</span> <span class="o">==</span> <span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">links</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span>
+                    <span class="n">current_value_realisations</span><span class="p">,</span>
+                    <span class="n">source_realisations</span><span class="p">,</span>
+                    <span class="n">conditional_realisations</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">links</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+    </div>
+  </body>
+</html>
