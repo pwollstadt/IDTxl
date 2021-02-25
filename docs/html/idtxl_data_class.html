@@ -1,18 +1,17 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>The Data Class &#8212; IDTxl 1.0 documentation</title>
-    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Data Class &#8212; IDTxl 1.2.1 documentation</title>
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Algorithms for network inference" href="idtxl_network_inference.html" />
@@ -40,7 +39,8 @@
         <li class="right" >
           <a href="index.html" title="Welcome to IDTxl’s documentation!"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">The Data Class</a></li> 
       </ul>
     </div>  
 
@@ -51,9 +51,9 @@
             
   <div class="section" id="the-data-class">
 <h1>The Data Class<a class="headerlink" href="#the-data-class" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt>
-<em class="property">class </em><code class="descclassname">idtxl.data.</code><code class="descname">Data</code><span class="sig-paren">(</span><em>data=None</em>, <em>dim_order='psr'</em>, <em>normalise=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data"><span class="viewcode-link">[source]</span></a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.data.</span></code><code class="sig-name descname"><span class="pre">Data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'psr'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Store data for information dynamics estimation.</p>
 <p>Data takes a 1- to 3-dimensional array representing realisations of random
 variables in dimensions: processes, samples (over time), and replications.
@@ -64,7 +64,7 @@ of dimensions in the provided array in a three-character string, e.g. ‘spr’
 for an array with realisations over (1) samples in time, (2) processes, (3)
 replications.</p>
 <p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data_mute</span> <span class="o">=</span> <span class="n">Data</span><span class="p">()</span>              <span class="c1"># initialise empty data object</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data_mute</span> <span class="o">=</span> <span class="n">Data</span><span class="p">()</span>              <span class="c1"># initialise empty data object</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">data_mute</span><span class="o">.</span><span class="n">generate_mute_data</span><span class="p">()</span>  <span class="c1"># simulate data from MuTE paper</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Create data objects with data of various sizes</span>
@@ -79,76 +79,79 @@ replications.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">data_2</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">data_new</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<dl class="docutils">
-<dt>Note:</dt>
-<dd>Realisations are stored as attribute ‘data’. This can only be set via
-the ‘set_data()’ method.</dd>
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">numpy array [optional]</span></dt>
-<dd>1/2/3-dimensional array with raw data</dd>
-<dt>dim_order <span class="classifier-delimiter">:</span> <span class="classifier">string [optional]</span></dt>
-<dd>order of dimensions, accepts any combination of the characters
+<dl class="simple">
+<dt>Note:</dt><dd><p>Realisations are stored as attribute ‘data’. This can only be set via
+the ‘set_data()’ method.</p>
+</dd>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>data<span class="classifier">numpy array [optional]</span></dt><dd><p>1/2/3-dimensional array with raw data</p>
+</dd>
+<dt>dim_order<span class="classifier">string [optional]</span></dt><dd><p>order of dimensions, accepts any combination of the characters
 ‘p’, ‘s’, and ‘r’ for processes, samples, and replications; must
 have the same length as the data dimensionality, e.g., ‘ps’ for a
 two-dimensional array of data from several processes over time
-(default=’psr’)</dd>
-<dt>normalise <span class="classifier-delimiter">:</span> <span class="classifier">bool [optional]</span></dt>
-<dd>if True, data gets normalised per process (default=True)</dd>
-</dl>
+(default=’psr’)</p>
 </dd>
-<dt>Attributes:</dt>
-<dd><dl class="first last docutils">
-<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
-<dd>realisations, can only be set via ‘set_data’ method</dd>
-<dt>n_processes <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd>number of processes</dd>
-<dt>n_replications <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd>number of replications</dd>
-<dt>n_samples <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd>number of samples in time</dd>
-<dt>normalise <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
-<dd>if true, all data gets z-standardised per process</dd>
-</dl>
+<dt>normalise<span class="classifier">bool [optional]</span></dt><dd><p>if True, data gets normalised per process (default=True)</p>
+</dd>
+<dt>seed<span class="classifier">int [optional]</span></dt><dd><p>can be set to a fixed integer to get repetitive results on the
+same data with multiple runs of analyses. Otherwise a random
+seed is set as default.</p>
 </dd>
 </dl>
-<dl class="attribute">
+</dd>
+<dt>Attributes:</dt><dd><dl class="simple">
+<dt>data<span class="classifier">numpy array</span></dt><dd><p>realisations, can only be set via ‘set_data’ method</p>
+</dd>
+<dt>n_processes<span class="classifier">int</span></dt><dd><p>number of processes</p>
+</dd>
+<dt>n_replications<span class="classifier">int</span></dt><dd><p>number of replications</p>
+</dd>
+<dt>n_samples<span class="classifier">int</span></dt><dd><p>number of samples in time</p>
+</dd>
+<dt>normalise<span class="classifier">bool</span></dt><dd><p>if true, all data gets z-standardised per process</p>
+</dd>
+<dt>initial_state<span class="classifier">array</span></dt><dd><p>initial state of the seed for shuffled permutations</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
 <dt>
-<code class="descname">data</code></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">data</span></code></dt>
 <dd><p>Return data array.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt>
-<code class="descname">generate_logistic_maps_data</code><span class="sig-paren">(</span><em>n_samples=1000, n_replications=10, coefficient_matrices=array([[[0.5, 0. ],         [0.4, 0.5]]]), noise_std=0.1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.generate_logistic_maps_data"><span class="viewcode-link">[source]</span></a></dt>
+<code class="sig-name descname"><span class="pre">generate_logistic_maps_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_replications</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient_matrices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[[0.5,</span> <span class="pre">0.0],</span> <span class="pre">[0.4,</span> <span class="pre">0.5]]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.generate_logistic_maps_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Generate discrete-time coupled-logistic-maps time series.</p>
 <p>Generate data and overwrite the instance’s current data.</p>
 <p>The implemented logistic map function is f(x) = 4 * x * (1 - x).</p>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>n_samples <span class="classifier-delimiter">:</span> <span class="classifier">int [optional]</span></dt>
-<dd>number of samples simulated for each process and replication</dd>
-<dt>n_replications <span class="classifier-delimiter">:</span> <span class="classifier">int [optional]</span></dt>
-<dd>number of replications</dd>
-<dt>coefficient_matrices <span class="classifier-delimiter">:</span> <span class="classifier">numpy array [optional]</span></dt>
-<dd>coefficient matrices: numpy array with dimensions
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>n_samples<span class="classifier">int [optional]</span></dt><dd><p>number of samples simulated for each process and replication</p>
+</dd>
+<dt>n_replications<span class="classifier">int [optional]</span></dt><dd><p>number of replications</p>
+</dd>
+<dt>coefficient_matrices<span class="classifier">numpy array [optional]</span></dt><dd><p>coefficient matrices: numpy array with dimensions
 (order, number of processes, number of processes). Each
 square coefficient matrix corresponds to a lag, starting from
 lag=1. The total number of provided matrices implicitly
 determines the order of the stochastic process.
-(default = np.array([[[0.5, 0], [0.4, 0.5]]]))</dd>
-<dt>noise_std <span class="classifier-delimiter">:</span> <span class="classifier">float [optional]</span></dt>
-<dd>standard deviation of uncorrelated Gaussian noise
-(default = 0.1)</dd>
+(default = np.array([[[0.5, 0], [0.4, 0.5]]]))</p>
+</dd>
+<dt>noise_std<span class="classifier">float [optional]</span></dt><dd><p>standard deviation of uncorrelated Gaussian noise
+(default = 0.1)</p>
+</dd>
 </dl>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt>
-<code class="descname">generate_mute_data</code><span class="sig-paren">(</span><em>n_samples=1000</em>, <em>n_replications=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.generate_mute_data"><span class="viewcode-link">[source]</span></a></dt>
+<code class="sig-name descname"><span class="pre">generate_mute_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_replications</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.generate_mute_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Generate example data for a 5-process network.</p>
 <p>Generate example data and overwrite the instance’s current data. The
 network is used as an example the paper on the MuTE toolbox (Montalto,
@@ -162,287 +165,287 @@ processes with model orders 2 and the following (non-linear) couplings:</p>
 4 -&gt; 3, u = 1</p>
 <p>References:</p>
 <ul class="simple">
-<li>Montalto, A., Faes, L., &amp; Marinazzo, D. (2014) MuTE: A MATLAB toolbox
+<li><p>Montalto, A., Faes, L., &amp; Marinazzo, D. (2014) MuTE: A MATLAB toolbox
 to compare established and novel estimators of the multivariate
 transfer entropy. PLoS ONE 9(10): e109462.
-<a class="reference external" href="https://doi.org/10.1371/journal.pone.0109462">https://doi.org/10.1371/journal.pone.0109462</a></li>
-<li>Baccala, L.A. &amp; Sameshima, K. (2001). Partial directed coherence: a
+<a class="reference external" href="https://doi.org/10.1371/journal.pone.0109462">https://doi.org/10.1371/journal.pone.0109462</a></p></li>
+<li><p>Baccala, L.A. &amp; Sameshima, K. (2001). Partial directed coherence: a
 new concept in neural structure determination. Biol Cybern 84:
-463–474. <a class="reference external" href="https://doi.org/10.1007/PL00007990">https://doi.org/10.1007/PL00007990</a></li>
+463–474. <a class="reference external" href="https://doi.org/10.1007/PL00007990">https://doi.org/10.1007/PL00007990</a></p></li>
 </ul>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>n_samples <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd>number of samples simulated for each process and replication</dd>
-<dt>n_replications <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd>number of replications</dd>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>n_samples<span class="classifier">int</span></dt><dd><p>number of samples simulated for each process and replication</p>
+</dd>
+<dt>n_replications<span class="classifier">int</span></dt><dd><p>number of replications</p>
+</dd>
 </dl>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt>
-<code class="descname">generate_var_data</code><span class="sig-paren">(</span><em>n_samples=1000, n_replications=10, coefficient_matrices=array([[[0.5, 0. ],         [0.4, 0.5]]]), noise_std=0.1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.generate_var_data"><span class="viewcode-link">[source]</span></a></dt>
+<code class="sig-name descname"><span class="pre">generate_var_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_replications</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient_matrices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[[0.5,</span> <span class="pre">0.0],</span> <span class="pre">[0.4,</span> <span class="pre">0.5]]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.generate_var_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Generate discrete-time VAR (vector autoregressive) time series.</p>
 <p>Generate data and overwrite the instance’s current data.</p>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>n_samples <span class="classifier-delimiter">:</span> <span class="classifier">int [optional]</span></dt>
-<dd>number of samples simulated for each process and replication</dd>
-<dt>n_replications <span class="classifier-delimiter">:</span> <span class="classifier">int [optional]</span></dt>
-<dd>number of replications</dd>
-<dt>coefficient_matrices <span class="classifier-delimiter">:</span> <span class="classifier">numpy array [optional]</span></dt>
-<dd>coefficient matrices: numpy array with dimensions
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>n_samples<span class="classifier">int [optional]</span></dt><dd><p>number of samples simulated for each process and replication</p>
+</dd>
+<dt>n_replications<span class="classifier">int [optional]</span></dt><dd><p>number of replications</p>
+</dd>
+<dt>coefficient_matrices<span class="classifier">numpy array [optional]</span></dt><dd><p>coefficient matrices: numpy array with dimensions
 (VAR order, number of processes, number of processes). Each
 square coefficient matrix corresponds to a lag, starting from
 lag=1. The total number of provided matrices implicitly
 determines the order of the VAR process.
-(default = np.array([[[0.5, 0], [0.4, 0.5]]]))</dd>
-<dt>noise_std <span class="classifier-delimiter">:</span> <span class="classifier">float [optional]</span></dt>
-<dd>standard deviation of uncorrelated Gaussian noise
-(default = 0.1)</dd>
+(default = np.array([[[0.5, 0], [0.4, 0.5]]]))</p>
+</dd>
+<dt>noise_std<span class="classifier">float [optional]</span></dt><dd><p>standard deviation of uncorrelated Gaussian noise
+(default = 0.1)</p>
+</dd>
 </dl>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt>
-<code class="descname">get_realisations</code><span class="sig-paren">(</span><em>current_value</em>, <em>idx_list</em>, <em>shuffle=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.get_realisations"><span class="viewcode-link">[source]</span></a></dt>
+<code class="sig-name descname"><span class="pre">get_realisations</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.get_realisations"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return realisations for a list of indices.</p>
 <p>Return realisations for indices in list. Optionally, realisations can
 be shuffled to create surrogate data for statistical testing. For
 shuffling, data blocks are permuted over replications while their
 temporal order stays intact within replications:</p>
-<dl class="docutils">
-<dt>Original data:</dt>
-<dd><table border="1" class="first last docutils">
+<dl>
+<dt>Original data:</dt><dd><table class="docutils align-default">
 <colgroup>
-<col width="22%" />
-<col width="14%" />
-<col width="14%" />
-<col width="14%" />
-<col width="14%" />
-<col width="14%" />
-<col width="8%" />
+<col style="width: 22%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 8%" />
 </colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>repl. ind.</td>
-<td>1 1 1 1</td>
-<td>2 2 2 2</td>
-<td>3 3 3 3</td>
-<td>4 4 4 4</td>
-<td>5 5 5 5</td>
-<td>…</td>
+<tbody>
+<tr class="row-odd"><td><p>repl. ind.</p></td>
+<td><p>1 1 1 1</p></td>
+<td><p>2 2 2 2</p></td>
+<td><p>3 3 3 3</p></td>
+<td><p>4 4 4 4</p></td>
+<td><p>5 5 5 5</p></td>
+<td><p>…</p></td>
 </tr>
-<tr class="row-even"><td>sample index</td>
-<td>1 2 3 4</td>
-<td>1 2 3 4</td>
-<td>1 2 3 4</td>
-<td>1 2 3 4</td>
-<td>1 2 3 4</td>
-<td>…</td>
+<tr class="row-even"><td><p>sample index</p></td>
+<td><p>1 2 3 4</p></td>
+<td><p>1 2 3 4</p></td>
+<td><p>1 2 3 4</p></td>
+<td><p>1 2 3 4</p></td>
+<td><p>1 2 3 4</p></td>
+<td><p>…</p></td>
 </tr>
 </tbody>
 </table>
 </dd>
-<dt>Shuffled data:</dt>
-<dd><table border="1" class="first last docutils">
+<dt>Shuffled data:</dt><dd><table class="docutils align-default">
 <colgroup>
-<col width="22%" />
-<col width="14%" />
-<col width="14%" />
-<col width="14%" />
-<col width="14%" />
-<col width="14%" />
-<col width="8%" />
+<col style="width: 22%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 8%" />
 </colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>repl. ind.</td>
-<td>3 3 3 3</td>
-<td>1 1 1 1</td>
-<td>4 4 4 4</td>
-<td>2 2 2 2</td>
-<td>5 5 5 5</td>
-<td>…</td>
+<tbody>
+<tr class="row-odd"><td><p>repl. ind.</p></td>
+<td><p>3 3 3 3</p></td>
+<td><p>1 1 1 1</p></td>
+<td><p>4 4 4 4</p></td>
+<td><p>2 2 2 2</p></td>
+<td><p>5 5 5 5</p></td>
+<td><p>…</p></td>
 </tr>
-<tr class="row-even"><td>sample index</td>
-<td>1 2 3 4</td>
-<td>1 2 3 4</td>
-<td>1 2 3 4</td>
-<td>1 2 3 4</td>
-<td>1 2 3 4</td>
-<td>…</td>
+<tr class="row-even"><td><p>sample index</p></td>
+<td><p>1 2 3 4</p></td>
+<td><p>1 2 3 4</p></td>
+<td><p>1 2 3 4</p></td>
+<td><p>1 2 3 4</p></td>
+<td><p>1 2 3 4</p></td>
+<td><p>…</p></td>
 </tr>
 </tbody>
 </table>
 </dd>
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>idx_list: list of tuples</dt>
-<dd>variable indices</dd>
-<dt>current_value <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
-<dd>index of the current value in current analysis, has to have the
+<dt>Args:</dt><dd><dl class="simple">
+<dt>idx_list: list of tuples</dt><dd><p>variable indices</p>
+</dd>
+<dt>current_value<span class="classifier">tuple</span></dt><dd><p>index of the current value in current analysis, has to have the
 form (idx process, idx sample); if current_value == idx, all
-samples for a process are returned</dd>
-<dt>shuffle: bool</dt>
-<dd>if true permute blocks of replications over trials</dd>
+samples for a process are returned</p>
+</dd>
+<dt>shuffle: bool</dt><dd><p>if true permute blocks of replications over trials</p>
+</dd>
 </dl>
 </dd>
-<dt>Returns:</dt>
-<dd><dl class="first last docutils">
-<dt>numpy array</dt>
-<dd>realisations with dimensions (no. samples * no.replications) x
-number of indices</dd>
-<dt>numpy array</dt>
-<dd>replication index for each realisation with dimensions (no.
-samples * no.replications) x number of indices</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>numpy array</dt><dd><p>realisations with dimensions (no. samples * no.replications) x
+number of indices</p>
+</dd>
+<dt>numpy array</dt><dd><p>replication index for each realisation with dimensions (no.
+samples * no.replications) x number of indices</p>
+</dd>
 </dl>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt>
-<code class="descname">n_realisations</code><span class="sig-paren">(</span><em>current_value=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.n_realisations"><span class="viewcode-link">[source]</span></a></dt>
+<code class="sig-name descname"><span class="pre">get_seed</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.get_seed"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>return the initial seed of the data</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname"><span class="pre">get_state</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.get_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>return the current state of the random seed</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname"><span class="pre">n_realisations</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.n_realisations"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Number of realisations over samples and replications.</p>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>current_value <span class="classifier-delimiter">:</span> <span class="classifier">tuple [optional]</span></dt>
-<dd>reference point for calculation of number of realisations
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>current_value<span class="classifier">tuple [optional]</span></dt><dd><p>reference point for calculation of number of realisations
 (e.g. when using an embedding of length k, we count
 realisations from the k+1th sample because we loose the first k
 samples to the embedding); if no current_value is provided, the
-number of all samples is used</dd>
+number of all samples is used</p>
+</dd>
 </dl>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt>
-<code class="descname">n_realisations_repl</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.n_realisations_repl"><span class="viewcode-link">[source]</span></a></dt>
+<code class="sig-name descname"><span class="pre">n_realisations_repl</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.n_realisations_repl"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Number of realisations over replications.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt>
-<code class="descname">n_realisations_samples</code><span class="sig-paren">(</span><em>current_value=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.n_realisations_samples"><span class="viewcode-link">[source]</span></a></dt>
+<code class="sig-name descname"><span class="pre">n_realisations_samples</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.n_realisations_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Number of realisations over samples.</p>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>current_value <span class="classifier-delimiter">:</span> <span class="classifier">tuple [optional]</span></dt>
-<dd>reference point for calculation of number of realisations
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>current_value<span class="classifier">tuple [optional]</span></dt><dd><p>reference point for calculation of number of realisations
 (e.g. when using an embedding of length k, the current value is
 at sample k + 1; we thus count realisations from the k + 1st
-sample because we loose the first k samples to the embedding)</dd>
+sample because we loose the first k samples to the embedding)</p>
+</dd>
 </dl>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt>
-<code class="descname">permute_replications</code><span class="sig-paren">(</span><em>current_value</em>, <em>idx_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.permute_replications"><span class="viewcode-link">[source]</span></a></dt>
+<code class="sig-name descname"><span class="pre">permute_replications</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.permute_replications"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return realisations with permuted replications (time stays intact).</p>
 <p>Create surrogate data by permuting realisations over replications while
 keeping the temporal structure (order of samples) intact. Return
 realisations for all indices in the list, where an index is expected to
 have the form (process index, sample index). Realisations are permuted
 block-wise by permuting the order of replications:</p>
-<dl class="docutils">
-<dt>Original data:</dt>
-<dd><table border="1" class="first last docutils">
+<dl>
+<dt>Original data:</dt><dd><table class="docutils align-default">
 <colgroup>
-<col width="22%" />
-<col width="14%" />
-<col width="14%" />
-<col width="14%" />
-<col width="14%" />
-<col width="14%" />
-<col width="8%" />
+<col style="width: 22%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 8%" />
 </colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>repl. ind.</td>
-<td>1 1 1 1</td>
-<td>2 2 2 2</td>
-<td>3 3 3 3</td>
-<td>4 4 4 4</td>
-<td>5 5 5 5</td>
-<td>…</td>
+<tbody>
+<tr class="row-odd"><td><p>repl. ind.</p></td>
+<td><p>1 1 1 1</p></td>
+<td><p>2 2 2 2</p></td>
+<td><p>3 3 3 3</p></td>
+<td><p>4 4 4 4</p></td>
+<td><p>5 5 5 5</p></td>
+<td><p>…</p></td>
 </tr>
-<tr class="row-even"><td>sample index</td>
-<td>1 2 3 4</td>
-<td>1 2 3 4</td>
-<td>1 2 3 4</td>
-<td>1 2 3 4</td>
-<td>1 2 3 4</td>
-<td>…</td>
+<tr class="row-even"><td><p>sample index</p></td>
+<td><p>1 2 3 4</p></td>
+<td><p>1 2 3 4</p></td>
+<td><p>1 2 3 4</p></td>
+<td><p>1 2 3 4</p></td>
+<td><p>1 2 3 4</p></td>
+<td><p>…</p></td>
 </tr>
 </tbody>
 </table>
 </dd>
-<dt>Permuted data:</dt>
-<dd><table border="1" class="first last docutils">
+<dt>Permuted data:</dt><dd><table class="docutils align-default">
 <colgroup>
-<col width="22%" />
-<col width="14%" />
-<col width="14%" />
-<col width="14%" />
-<col width="14%" />
-<col width="14%" />
-<col width="8%" />
+<col style="width: 22%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 8%" />
 </colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>repl. ind.</td>
-<td>3 3 3 3</td>
-<td>1 1 1 1</td>
-<td>4 4 4 4</td>
-<td>2 2 2 2</td>
-<td>5 5 5 5</td>
-<td>…</td>
+<tbody>
+<tr class="row-odd"><td><p>repl. ind.</p></td>
+<td><p>3 3 3 3</p></td>
+<td><p>1 1 1 1</p></td>
+<td><p>4 4 4 4</p></td>
+<td><p>2 2 2 2</p></td>
+<td><p>5 5 5 5</p></td>
+<td><p>…</p></td>
 </tr>
-<tr class="row-even"><td>sample index</td>
-<td>1 2 3 4</td>
-<td>1 2 3 4</td>
-<td>1 2 3 4</td>
-<td>1 2 3 4</td>
-<td>1 2 3 4</td>
-<td>…</td>
+<tr class="row-even"><td><p>sample index</p></td>
+<td><p>1 2 3 4</p></td>
+<td><p>1 2 3 4</p></td>
+<td><p>1 2 3 4</p></td>
+<td><p>1 2 3 4</p></td>
+<td><p>1 2 3 4</p></td>
+<td><p>…</p></td>
 </tr>
 </tbody>
 </table>
 </dd>
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>current_value <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
-<dd>index of the current_value in the data</dd>
-<dt>idx_list <span class="classifier-delimiter">:</span> <span class="classifier">list of tuples</span></dt>
-<dd>indices of variables</dd>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>current_value<span class="classifier">tuple</span></dt><dd><p>index of the current_value in the data</p>
+</dd>
+<dt>idx_list<span class="classifier">list of tuples</span></dt><dd><p>indices of variables</p>
+</dd>
 </dl>
 </dd>
-<dt>Returns:</dt>
-<dd><dl class="first last docutils">
-<dt>numpy array</dt>
-<dd>permuted realisations with dimensions replications x number of
-indices</dd>
-<dt>numpy array</dt>
-<dd>replication index for each realisation</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>numpy array</dt><dd><p>permuted realisations with dimensions replications x number of
+indices</p>
+</dd>
+<dt>numpy array</dt><dd><p>replication index for each realisation</p>
+</dd>
 </dl>
 </dd>
-<dt>Raises:</dt>
-<dd>TypeError if idx_realisations is not a list</dd>
+<dt>Raises:</dt><dd><p>TypeError if idx_realisations is not a list</p>
+</dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt>
-<code class="descname">permute_samples</code><span class="sig-paren">(</span><em>current_value</em>, <em>idx_list</em>, <em>perm_settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.permute_samples"><span class="viewcode-link">[source]</span></a></dt>
+<code class="sig-name descname"><span class="pre">permute_samples</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perm_settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.permute_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return realisations with permuted samples (repl. stays intact).</p>
 <p>Create surrogate data by permuting realisations over samples (time)
 while keeping the order of replications intact. Surrogates can be
@@ -459,180 +462,169 @@ permutation of samples in time is chosen instead.</p>
 in time. Note that if data consists of multiple replications, within
 each replication, samples are shuffled following the same permutation
 pattern:</p>
-<dl class="docutils">
-<dt>Original data:</dt>
-<dd><table border="1" class="first last docutils">
+<dl>
+<dt>Original data:</dt><dd><table class="docutils align-default">
 <colgroup>
-<col width="20%" />
-<col width="24%" />
-<col width="24%" />
-<col width="24%" />
-<col width="7%" />
+<col style="width: 20%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 7%" />
 </colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>repl. ind.</td>
-<td>1 1 1 1 1 1 1 1</td>
-<td>2 2 2 2 2 2 2 2</td>
-<td>3 3 3 3 3 3 3 3</td>
-<td>…</td>
+<tbody>
+<tr class="row-odd"><td><p>repl. ind.</p></td>
+<td><p>1 1 1 1 1 1 1 1</p></td>
+<td><p>2 2 2 2 2 2 2 2</p></td>
+<td><p>3 3 3 3 3 3 3 3</p></td>
+<td><p>…</p></td>
 </tr>
-<tr class="row-even"><td>sample index</td>
-<td>1 2 3 4 5 6 7 8</td>
-<td>1 2 3 4 5 6 7 8</td>
-<td>1 2 3 4 5 6 7 8</td>
-<td>…</td>
+<tr class="row-even"><td><p>sample index</p></td>
+<td><p>1 2 3 4 5 6 7 8</p></td>
+<td><p>1 2 3 4 5 6 7 8</p></td>
+<td><p>1 2 3 4 5 6 7 8</p></td>
+<td><p>…</p></td>
 </tr>
 </tbody>
 </table>
 </dd>
-<dt>Circular shift by a random number of samples, e.g. 4 samples:</dt>
-<dd><table border="1" class="first last docutils">
+<dt>Circular shift by a random number of samples, e.g. 4 samples:</dt><dd><table class="docutils align-default">
 <colgroup>
-<col width="20%" />
-<col width="24%" />
-<col width="24%" />
-<col width="24%" />
-<col width="7%" />
+<col style="width: 20%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 7%" />
 </colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>repl. ind.</td>
-<td>1 1 1 1 1 1 1 1</td>
-<td>2 2 2 2 2 2 2 2</td>
-<td>3 3 3 3 3 3 3 3</td>
-<td>…</td>
+<tbody>
+<tr class="row-odd"><td><p>repl. ind.</p></td>
+<td><p>1 1 1 1 1 1 1 1</p></td>
+<td><p>2 2 2 2 2 2 2 2</p></td>
+<td><p>3 3 3 3 3 3 3 3</p></td>
+<td><p>…</p></td>
 </tr>
-<tr class="row-even"><td>sample index</td>
-<td>5 6 7 8 1 2 3 4</td>
-<td>5 6 7 8 1 2 3 4</td>
-<td>5 6 7 8 1 2 3 4</td>
-<td>…</td>
+<tr class="row-even"><td><p>sample index</p></td>
+<td><p>5 6 7 8 1 2 3 4</p></td>
+<td><p>5 6 7 8 1 2 3 4</p></td>
+<td><p>5 6 7 8 1 2 3 4</p></td>
+<td><p>…</p></td>
 </tr>
 </tbody>
 </table>
 </dd>
-<dt>Permute blocks of 3 samples:</dt>
-<dd><table border="1" class="first last docutils">
+<dt>Permute blocks of 3 samples:</dt><dd><table class="docutils align-default">
 <colgroup>
-<col width="20%" />
-<col width="24%" />
-<col width="24%" />
-<col width="24%" />
-<col width="7%" />
+<col style="width: 20%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 7%" />
 </colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>repl. ind.</td>
-<td>1 1 1 1 1 1 1 1</td>
-<td>2 2 2 2 2 2 2 2</td>
-<td>3 3 3 3 3 3 3 3</td>
-<td>…</td>
+<tbody>
+<tr class="row-odd"><td><p>repl. ind.</p></td>
+<td><p>1 1 1 1 1 1 1 1</p></td>
+<td><p>2 2 2 2 2 2 2 2</p></td>
+<td><p>3 3 3 3 3 3 3 3</p></td>
+<td><p>…</p></td>
 </tr>
-<tr class="row-even"><td>sample index</td>
-<td>4 5 6 7 8 1 2 3</td>
-<td>4 5 6 7 8 1 2 3</td>
-<td>4 5 6 7 8 1 2 3</td>
-<td>…</td>
+<tr class="row-even"><td><p>sample index</p></td>
+<td><p>4 5 6 7 8 1 2 3</p></td>
+<td><p>4 5 6 7 8 1 2 3</p></td>
+<td><p>4 5 6 7 8 1 2 3</p></td>
+<td><p>…</p></td>
 </tr>
 </tbody>
 </table>
 </dd>
-<dt>Permute data locally within a range of 4 samples:</dt>
-<dd><table border="1" class="first last docutils">
+<dt>Permute data locally within a range of 4 samples:</dt><dd><table class="docutils align-default">
 <colgroup>
-<col width="20%" />
-<col width="24%" />
-<col width="24%" />
-<col width="24%" />
-<col width="7%" />
+<col style="width: 20%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 7%" />
 </colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>repl. ind.</td>
-<td>1 1 1 1 1 1 1 1</td>
-<td>2 2 2 2 2 2 2 2</td>
-<td>3 3 3 3 3 3 3 3</td>
-<td>…</td>
+<tbody>
+<tr class="row-odd"><td><p>repl. ind.</p></td>
+<td><p>1 1 1 1 1 1 1 1</p></td>
+<td><p>2 2 2 2 2 2 2 2</p></td>
+<td><p>3 3 3 3 3 3 3 3</p></td>
+<td><p>…</p></td>
 </tr>
-<tr class="row-even"><td>sample index</td>
-<td>1 2 4 3 8 5 6 7</td>
-<td>1 2 4 3 8 5 6 7</td>
-<td>1 2 4 3 8 5 6 7</td>
-<td>…</td>
+<tr class="row-even"><td><p>sample index</p></td>
+<td><p>1 2 4 3 8 5 6 7</p></td>
+<td><p>1 2 4 3 8 5 6 7</p></td>
+<td><p>1 2 4 3 8 5 6 7</p></td>
+<td><p>…</p></td>
 </tr>
 </tbody>
 </table>
 </dd>
-<dt>Random permutation:</dt>
-<dd><table border="1" class="first last docutils">
+<dt>Random permutation:</dt><dd><table class="docutils align-default">
 <colgroup>
-<col width="20%" />
-<col width="24%" />
-<col width="24%" />
-<col width="24%" />
-<col width="7%" />
+<col style="width: 20%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 7%" />
 </colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>repl. ind.</td>
-<td>1 1 1 1 1 1 1 1</td>
-<td>2 2 2 2 2 2 2 2</td>
-<td>3 3 3 3 3 3 3 3</td>
-<td>…</td>
+<tbody>
+<tr class="row-odd"><td><p>repl. ind.</p></td>
+<td><p>1 1 1 1 1 1 1 1</p></td>
+<td><p>2 2 2 2 2 2 2 2</p></td>
+<td><p>3 3 3 3 3 3 3 3</p></td>
+<td><p>…</p></td>
 </tr>
-<tr class="row-even"><td>sample index</td>
-<td>4 2 5 7 1 3 2 6</td>
-<td>4 2 5 7 1 3 2 6</td>
-<td>4 2 5 7 1 3 2 6</td>
-<td>…</td>
+<tr class="row-even"><td><p>sample index</p></td>
+<td><p>4 2 5 7 1 3 2 6</p></td>
+<td><p>4 2 5 7 1 3 2 6</p></td>
+<td><p>4 2 5 7 1 3 2 6</p></td>
+<td><p>…</p></td>
 </tr>
 </tbody>
 </table>
 </dd>
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>current_value <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
-<dd>index of the current_value in the data</dd>
-<dt>idx_list <span class="classifier-delimiter">:</span> <span class="classifier">list of tuples</span></dt>
-<dd>indices of variables</dd>
-<dt>perm_settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
-<dd><p class="first">settings specifying the allowed permutations:</p>
-<ul class="last">
-<li><p class="first">perm_type : str
+<dt>Args:</dt><dd><dl>
+<dt>current_value<span class="classifier">tuple</span></dt><dd><p>index of the current_value in the data</p>
+</dd>
+<dt>idx_list<span class="classifier">list of tuples</span></dt><dd><p>indices of variables</p>
+</dd>
+<dt>perm_settings<span class="classifier">dict</span></dt><dd><p>settings specifying the allowed permutations:</p>
+<ul>
+<li><p>perm_type : str
 permutation type, can be</p>
 <blockquote>
 <div><ul class="simple">
-<li>‘random’: swaps samples at random,</li>
-<li>‘circular’: shifts time series by a random number of
-samples</li>
-<li>‘block’: swaps blocks of samples,</li>
-<li>‘local’: swaps samples within a given range, or</li>
+<li><p>‘random’: swaps samples at random,</p></li>
+<li><p>‘circular’: shifts time series by a random number of
+samples</p></li>
+<li><p>‘block’: swaps blocks of samples,</p></li>
+<li><p>‘local’: swaps samples within a given range, or</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p class="first">additional settings depending on the perm_type (n is the
+<li><p>additional settings depending on the perm_type (n is the
 number of samples):</p>
 <blockquote>
 <div><ul>
-<li><p class="first">if perm_type == ‘circular’:</p>
-<dl class="docutils">
-<dt>‘max_shift’ <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd><p class="first last">the maximum number of samples for shifting
+<li><p>if perm_type == ‘circular’:</p>
+<dl class="simple">
+<dt>‘max_shift’<span class="classifier">int</span></dt><dd><p>the maximum number of samples for shifting
 (e.g., number of samples / 2)</p>
 </dd>
 </dl>
 </li>
-<li><p class="first">if perm_type == ‘block’:</p>
-<dl class="docutils">
-<dt>‘block_size’ <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd><p class="first last">no. samples per block (e.g., number of samples / 10)</p>
+<li><p>if perm_type == ‘block’:</p>
+<dl class="simple">
+<dt>‘block_size’<span class="classifier">int</span></dt><dd><p>no. samples per block (e.g., number of samples / 10)</p>
 </dd>
-<dt>‘perm_range’ <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd><p class="first last">range in which blocks can be swapped (e.g., number
+<dt>‘perm_range’<span class="classifier">int</span></dt><dd><p>range in which blocks can be swapped (e.g., number
 of samples / block_size)</p>
 </dd>
 </dl>
 </li>
-<li><p class="first">if perm_type == ‘local’:</p>
-<dl class="docutils">
-<dt>‘perm_range’ <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd><p class="first last">range in samples over which realisations can be
+<li><p>if perm_type == ‘local’:</p>
+<dl class="simple">
+<dt>‘perm_range’<span class="classifier">int</span></dt><dd><p>range in samples over which realisations can be
 permuted (e.g., number of samples / 10)</p>
 </dd>
 </dl>
@@ -644,46 +636,44 @@ permuted (e.g., number of samples / 10)</p>
 </dd>
 </dl>
 </dd>
-<dt>Returns:</dt>
-<dd><dl class="first last docutils">
-<dt>numpy array</dt>
-<dd>permuted realisations with dimensions replications x number of
-indices</dd>
-<dt>numpy array</dt>
-<dd>sample index for each realisation</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>numpy array</dt><dd><p>permuted realisations with dimensions replications x number of
+indices</p>
+</dd>
+<dt>numpy array</dt><dd><p>sample index for each realisation</p>
+</dd>
 </dl>
 </dd>
-<dt>Raises:</dt>
-<dd>TypeError if idx_realisations is not a list</dd>
-<dt>Note:</dt>
-<dd>This permutation scheme is the fall-back option if surrogate data
+<dt>Raises:</dt><dd><p>TypeError if idx_realisations is not a list</p>
+</dd>
+<dt>Note:</dt><dd><p>This permutation scheme is the fall-back option if surrogate data
 can not be created by shuffling replications because the number of
 replications is too small to generate the requested number of
-permutations.</dd>
+permutations.</p>
+</dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt>
-<code class="descname">set_data</code><span class="sig-paren">(</span><em>data</em>, <em>dim_order</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.set_data"><span class="viewcode-link">[source]</span></a></dt>
+<code class="sig-name descname"><span class="pre">set_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_order</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Overwrite data in an existing Data object.</p>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">numpy array</span></dt>
-<dd>1- to 3-dimensional array of realisations</dd>
-<dt>dim_order <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
-<dd>order of dimensions, accepts any combination of the characters
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>data<span class="classifier">numpy array</span></dt><dd><p>1- to 3-dimensional array of realisations</p>
+</dd>
+<dt>dim_order<span class="classifier">string</span></dt><dd><p>order of dimensions, accepts any combination of the characters
 ‘p’, ‘s’, and ‘r’ for processes, samples, and replications;
-must have the same length as number of dimensions in data</dd>
+must have the same length as number of dimensions in data</p>
+</dd>
 </dl>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt>
-<code class="descname">slice_permute_replications</code><span class="sig-paren">(</span><em>process</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.slice_permute_replications"><span class="viewcode-link">[source]</span></a></dt>
+<code class="sig-name descname"><span class="pre">slice_permute_replications</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">process</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.slice_permute_replications"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return data slice with permuted replications (time stays intact).</p>
 <p>Create surrogate data by permuting realisations over replications while
 keeping the temporal structure (order of samples) intact. Return
@@ -692,136 +682,131 @@ have the form (process index, sample index). Realisations are permuted
 block-wise by permuting the order of replications</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt>
-<code class="descname">slice_permute_samples</code><span class="sig-paren">(</span><em>process</em>, <em>perm_settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.slice_permute_samples"><span class="viewcode-link">[source]</span></a></dt>
+<code class="sig-name descname"><span class="pre">slice_permute_samples</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">process</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perm_settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.slice_permute_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return slice of data with permuted samples (repl. stays intact).</p>
 <p>Create surrogate data by permuting data in a slice over samples (time)
 while keeping the order of replications intact. Return slice for the
 entry specified by ‘process’. Realisations are permuted according to
 the settings specified in perm_settings:</p>
-<dl class="docutils">
-<dt>Original data:</dt>
-<dd><table border="1" class="first last docutils">
+<dl>
+<dt>Original data:</dt><dd><table class="docutils align-default">
 <colgroup>
-<col width="20%" />
-<col width="24%" />
-<col width="24%" />
-<col width="24%" />
-<col width="7%" />
+<col style="width: 20%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 7%" />
 </colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>repl. ind.</td>
-<td>1 1 1 1 1 1 1 1</td>
-<td>2 2 2 2 2 2 2 2</td>
-<td>3 3 3 3 3 3 3 3</td>
-<td>…</td>
+<tbody>
+<tr class="row-odd"><td><p>repl. ind.</p></td>
+<td><p>1 1 1 1 1 1 1 1</p></td>
+<td><p>2 2 2 2 2 2 2 2</p></td>
+<td><p>3 3 3 3 3 3 3 3</p></td>
+<td><p>…</p></td>
 </tr>
-<tr class="row-even"><td>sample index</td>
-<td>1 2 3 4 5 6 7 8</td>
-<td>1 2 3 4 5 6 7 8</td>
-<td>1 2 3 4 5 6 7 8</td>
-<td>…</td>
+<tr class="row-even"><td><p>sample index</p></td>
+<td><p>1 2 3 4 5 6 7 8</p></td>
+<td><p>1 2 3 4 5 6 7 8</p></td>
+<td><p>1 2 3 4 5 6 7 8</p></td>
+<td><p>…</p></td>
 </tr>
 </tbody>
 </table>
 </dd>
-<dt>Circular shift by 2, 6, and 4 samples:</dt>
-<dd><table border="1" class="first last docutils">
+<dt>Circular shift by 2, 6, and 4 samples:</dt><dd><table class="docutils align-default">
 <colgroup>
-<col width="20%" />
-<col width="24%" />
-<col width="24%" />
-<col width="24%" />
-<col width="7%" />
+<col style="width: 20%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 7%" />
 </colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>repl. ind.</td>
-<td>1 1 1 1 1 1 1 1</td>
-<td>2 2 2 2 2 2 2 2</td>
-<td>3 3 3 3 3 3 3 3</td>
-<td>…</td>
+<tbody>
+<tr class="row-odd"><td><p>repl. ind.</p></td>
+<td><p>1 1 1 1 1 1 1 1</p></td>
+<td><p>2 2 2 2 2 2 2 2</p></td>
+<td><p>3 3 3 3 3 3 3 3</p></td>
+<td><p>…</p></td>
 </tr>
-<tr class="row-even"><td>sample index</td>
-<td>7 8 1 2 3 4 5 6</td>
-<td>3 4 5 6 7 8 1 2</td>
-<td>5 6 7 8 1 2 3 4</td>
-<td>…</td>
+<tr class="row-even"><td><p>sample index</p></td>
+<td><p>7 8 1 2 3 4 5 6</p></td>
+<td><p>3 4 5 6 7 8 1 2</p></td>
+<td><p>5 6 7 8 1 2 3 4</p></td>
+<td><p>…</p></td>
 </tr>
 </tbody>
 </table>
 </dd>
-<dt>Permute blocks of 3 samples:</dt>
-<dd><table border="1" class="first last docutils">
+<dt>Permute blocks of 3 samples:</dt><dd><table class="docutils align-default">
 <colgroup>
-<col width="20%" />
-<col width="24%" />
-<col width="24%" />
-<col width="24%" />
-<col width="7%" />
+<col style="width: 20%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 7%" />
 </colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>repl. ind.</td>
-<td>1 1 1 1 1 1 1 1</td>
-<td>2 2 2 2 2 2 2 2</td>
-<td>3 3 3 3 3 3 3 3</td>
-<td>…</td>
+<tbody>
+<tr class="row-odd"><td><p>repl. ind.</p></td>
+<td><p>1 1 1 1 1 1 1 1</p></td>
+<td><p>2 2 2 2 2 2 2 2</p></td>
+<td><p>3 3 3 3 3 3 3 3</p></td>
+<td><p>…</p></td>
 </tr>
-<tr class="row-even"><td>sample index</td>
-<td>4 5 6 7 8 1 2 3</td>
-<td>1 2 3 7 8 4 5 6</td>
-<td>7 8 4 5 6 1 2 3</td>
-<td>…</td>
+<tr class="row-even"><td><p>sample index</p></td>
+<td><p>4 5 6 7 8 1 2 3</p></td>
+<td><p>1 2 3 7 8 4 5 6</p></td>
+<td><p>7 8 4 5 6 1 2 3</p></td>
+<td><p>…</p></td>
 </tr>
 </tbody>
 </table>
 </dd>
-<dt>Permute data locally within a range of 4 samples:</dt>
-<dd><table border="1" class="first last docutils">
+<dt>Permute data locally within a range of 4 samples:</dt><dd><table class="docutils align-default">
 <colgroup>
-<col width="20%" />
-<col width="24%" />
-<col width="24%" />
-<col width="24%" />
-<col width="7%" />
+<col style="width: 20%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 7%" />
 </colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>repl. ind.</td>
-<td>1 1 1 1 1 1 1 1</td>
-<td>2 2 2 2 2 2 2 2</td>
-<td>3 3 3 3 3 3 3 3</td>
-<td>…</td>
+<tbody>
+<tr class="row-odd"><td><p>repl. ind.</p></td>
+<td><p>1 1 1 1 1 1 1 1</p></td>
+<td><p>2 2 2 2 2 2 2 2</p></td>
+<td><p>3 3 3 3 3 3 3 3</p></td>
+<td><p>…</p></td>
 </tr>
-<tr class="row-even"><td>sample index</td>
-<td>1 2 4 3 8 5 6 7</td>
-<td>4 1 2 3 5 7 8 6</td>
-<td>3 1 2 4 8 5 6 7</td>
-<td>…</td>
+<tr class="row-even"><td><p>sample index</p></td>
+<td><p>1 2 4 3 8 5 6 7</p></td>
+<td><p>4 1 2 3 5 7 8 6</p></td>
+<td><p>3 1 2 4 8 5 6 7</p></td>
+<td><p>…</p></td>
 </tr>
 </tbody>
 </table>
 </dd>
-<dt>Random permutation:</dt>
-<dd><table border="1" class="first last docutils">
+<dt>Random permutation:</dt><dd><table class="docutils align-default">
 <colgroup>
-<col width="20%" />
-<col width="24%" />
-<col width="24%" />
-<col width="24%" />
-<col width="7%" />
+<col style="width: 20%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 7%" />
 </colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>repl. ind.</td>
-<td>1 1 1 1 1 1 1 1</td>
-<td>2 2 2 2 2 2 2 2</td>
-<td>3 3 3 3 3 3 3 3</td>
-<td>…</td>
+<tbody>
+<tr class="row-odd"><td><p>repl. ind.</p></td>
+<td><p>1 1 1 1 1 1 1 1</p></td>
+<td><p>2 2 2 2 2 2 2 2</p></td>
+<td><p>3 3 3 3 3 3 3 3</p></td>
+<td><p>…</p></td>
 </tr>
-<tr class="row-even"><td>sample index</td>
-<td>4 2 5 7 1 3 2 6</td>
-<td>7 5 3 4 2 1 8 5</td>
-<td>1 2 4 3 6 8 7 5</td>
-<td>…</td>
+<tr class="row-even"><td><p>sample index</p></td>
+<td><p>4 2 5 7 1 3 2 6</p></td>
+<td><p>7 5 3 4 2 1 8 5</p></td>
+<td><p>1 2 4 3 6 8 7 5</p></td>
+<td><p>…</p></td>
 </tr>
 </tbody>
 </table>
@@ -830,52 +815,46 @@ the settings specified in perm_settings:</p>
 <p>Permuting samples is the fall-back option for surrogate creation if the
 number of replications is too small to allow for a sufficient number of
 permutations for the generation of surrogate data.</p>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><dl class="first last docutils">
-<dt>process <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd>process for which to return data slice</dd>
-<dt>perm_settings <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
-<dd><p class="first">settings specifying the allowed permutations:</p>
-<ul class="last">
-<li><p class="first">perm_type : str
+<dl>
+<dt>Args:</dt><dd><dl>
+<dt>process<span class="classifier">int</span></dt><dd><p>process for which to return data slice</p>
+</dd>
+<dt>perm_settings<span class="classifier">dict</span></dt><dd><p>settings specifying the allowed permutations:</p>
+<ul>
+<li><p>perm_type : str
 permutation type, can be</p>
 <blockquote>
 <div><ul class="simple">
-<li>‘circular’: shifts time series by a random
-number of samples</li>
-<li>‘block’: swaps blocks of samples,</li>
-<li>‘local’: swaps samples within a given range, or</li>
-<li>‘random’: swaps samples at random,</li>
+<li><p>‘circular’: shifts time series by a random
+number of samples</p></li>
+<li><p>‘block’: swaps blocks of samples,</p></li>
+<li><p>‘local’: swaps samples within a given range, or</p></li>
+<li><p>‘random’: swaps samples at random,</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p class="first">additional settings depending on the perm_type (n is the
+<li><p>additional settings depending on the perm_type (n is the
 number of samples):</p>
 <blockquote>
 <div><ul>
-<li><p class="first">if perm_type == ‘circular’:</p>
-<dl class="docutils">
-<dt>‘max_shift’ <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd><p class="first last">the maximum number of samples for shifting
+<li><p>if perm_type == ‘circular’:</p>
+<dl class="simple">
+<dt>‘max_shift’<span class="classifier">int</span></dt><dd><p>the maximum number of samples for shifting
 (default=n/2)</p>
 </dd>
 </dl>
 </li>
-<li><p class="first">if perm_type == ‘block’:</p>
-<dl class="docutils">
-<dt>‘block_size’ <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd><p class="first last">no. samples per block (default=n/10)</p>
+<li><p>if perm_type == ‘block’:</p>
+<dl class="simple">
+<dt>‘block_size’<span class="classifier">int</span></dt><dd><p>no. samples per block (default=n/10)</p>
 </dd>
-<dt>‘perm_range’ <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd><p class="first last">range in which blocks can be swapped (default=max)</p>
+<dt>‘perm_range’<span class="classifier">int</span></dt><dd><p>range in which blocks can be swapped (default=max)</p>
 </dd>
 </dl>
 </li>
-<li><p class="first">if perm_type == ‘local’:</p>
-<dl class="docutils">
-<dt>‘perm_range’ <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd><p class="first last">range in samples over which realisations can be
+<li><p>if perm_type == ‘local’:</p>
+<dl class="simple">
+<dt>‘perm_range’<span class="classifier">int</span></dt><dd><p>range in samples over which realisations can be
 permuted (default=n/10)</p>
 </dd>
 </dl>
@@ -887,19 +866,18 @@ permuted (default=n/10)</p>
 </dd>
 </dl>
 </dd>
-<dt>Returns:</dt>
-<dd><dl class="first last docutils">
-<dt>numpy array</dt>
-<dd>data slice with data permuted over samples with dimensions
-samples x number of replications</dd>
-<dt>numpy array</dt>
-<dd>index of permutet samples</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>numpy array</dt><dd><p>data slice with data permuted over samples with dimensions
+samples x number of replications</p>
+</dd>
+<dt>numpy array</dt><dd><p>index of permutet samples</p>
+</dd>
 </dl>
 </dd>
-<dt>Note:</dt>
-<dd>This permutation scheme is the fall-back option if the number of
+<dt>Note:</dt><dd><p>This permutation scheme is the fall-back option if the number of
 replications is too small to allow a sufficient number of
-permutations for the generation of surrogate data.</dd>
+permutations for the generation of surrogate data.</p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -908,6 +886,7 @@ permutations for the generation of surrogate data.</dd>
 </div>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
@@ -927,17 +906,15 @@ permutations for the generation of surrogate data.</dd>
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -957,12 +934,13 @@ permutations for the generation of surrogate data.</dd>
         <li class="right" >
           <a href="index.html" title="Welcome to IDTxl’s documentation!"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">The Data Class</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.1.
     </div>
   </body>
 </html>

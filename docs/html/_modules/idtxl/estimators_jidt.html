@@ -1,18 +1,17 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>idtxl.estimators_jidt &#8212; IDTxl 1.0 documentation</title>
-    <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -33,7 +32,8 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">idtxl.estimators_jidt</a></li> 
       </ul>
     </div>  
 
@@ -132,7 +132,8 @@
         <span class="k">assert</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tau_source&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Source tau must be &gt;= 1&#39;</span>
         <span class="k">assert</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;history_target&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;Target history must be &gt;= 0&#39;</span>
         <span class="k">assert</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;history_source&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Source history must be &gt;= 1&#39;</span>
-        <span class="k">assert</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;source_target_delay&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;Source-target delay must be &gt;= 0&#39;</span>
+        <span class="k">assert</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;source_target_delay&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span>
+            <span class="s1">&#39;Source-target delay must be &gt;= 0&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">settings</span>
 
 <div class="viewcode-block" id="JidtEstimator.is_parallel"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtEstimator.is_parallel">[docs]</a>    <span class="k">def</span> <span class="nf">is_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -349,6 +350,8 @@
 <span class="sd">    Set common estimation parameters for JIDT Kraskov-estimators. For usage of</span>
 <span class="sd">    these estimators see documentation for the child classes.</span>
 
+<span class="sd">    Results are returned in nats.</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        CalcClass : JAVA class</span>
 <span class="sd">            JAVA class returned by jpype.JPackage</span>
@@ -392,7 +395,6 @@
 
 <div class="viewcode-block" id="JidtGaussian.estimate_surrogates_analytic"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussian.estimate_surrogates_analytic">[docs]</a>    <span class="k">def</span> <span class="nf">estimate_surrogates_analytic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_perm</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate the surrogate distribution analytically.</span>
-
 <span class="sd">        This method must be implemented because this class&#39;</span>
 <span class="sd">        is_analytic_null_estimator() method returns true</span>
 
@@ -420,6 +422,8 @@
 <span class="sd">    Call JIDT via jpype and use the Kraskov 1 estimator. If no conditional is</span>
 <span class="sd">    given (is None), the function returns the mutual information between var1</span>
 <span class="sd">    and var2. See parent class for references.</span>
+
+<span class="sd">     Results are returned in nats.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        settings : dict [optional]</span>
@@ -459,11 +463,13 @@
         <span class="k">assert</span> <span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;algorithm_num&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;algorithm_num&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span>
             <span class="s1">&#39;Algorithm number must be 1 or 2&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;algorithm_num&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
-            <span class="n">CalcClass</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.continuous.kraskov&#39;</span><span class="p">)</span><span class="o">.</span>
-                     <span class="n">ConditionalMutualInfoCalculatorMultiVariateKraskov1</span><span class="p">)</span>
+            <span class="n">CalcClass</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.continuous.kraskov&#39;</span><span class="p">)</span><span class="o">.</span>
+                <span class="n">ConditionalMutualInfoCalculatorMultiVariateKraskov1</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">CalcClass</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.continuous.kraskov&#39;</span><span class="p">)</span><span class="o">.</span>
-                     <span class="n">ConditionalMutualInfoCalculatorMultiVariateKraskov2</span><span class="p">)</span>
+            <span class="n">CalcClass</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.continuous.kraskov&#39;</span><span class="p">)</span><span class="o">.</span>
+                <span class="n">ConditionalMutualInfoCalculatorMultiVariateKraskov2</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">CalcClass</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
 
 <div class="viewcode-block" id="JidtKraskovCMI.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtKraskovCMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">conditional</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -508,7 +514,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_number_of_points</span><span class="p">(</span><span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">(</span><span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">var2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">cond</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">setObservations</span><span class="p">(</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">cond</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">setObservations2D</span><span class="p">(</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">cond</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalOfPreviousObservations</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
@@ -521,6 +527,8 @@
 <span class="sd">    Calculate the conditional mutual information between two variables given</span>
 <span class="sd">    the third. Call JIDT via jpype and use the discrete estimator. See parent</span>
 <span class="sd">    class for references.</span>
+
+<span class="sd">    Results are returned in bits.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        settings : dict [optional]</span>
@@ -564,11 +572,16 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
 
         <span class="c1"># Start JAVA virtual machine and create JAVA object. Add JAVA object to</span>
-        <span class="c1"># instance, the discrete estimator requires the variable dimensions</span>
-        <span class="c1"># upon instantiation.</span>
+        <span class="c1"># instance</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_start_jvm</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">CalcClass</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.discrete&#39;</span><span class="p">)</span><span class="o">.</span>
-                          <span class="n">ConditionalMutualInformationCalculatorDiscrete</span><span class="p">)</span>
+        <span class="n">CalcClass</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.discrete&#39;</span><span class="p">)</span><span class="o">.</span>
+                     <span class="n">ConditionalMutualInformationCalculatorDiscrete</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">CalcClass</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">setDebug</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">])</span>
+
+        <span class="c1"># Keep a reference to an MI calculator if we need to use it (memory</span>
+        <span class="c1"># used here is minimal, and better than recreating it each time)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mi_calc</span> <span class="o">=</span> <span class="n">JidtDiscreteMI</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
 
 <div class="viewcode-block" id="JidtDiscreteCMI.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscreteCMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">conditional</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_calc</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate conditional mutual information.</span>
@@ -603,10 +616,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Calculate an MI if no conditional was provided</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">conditional</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alphc&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
-            <span class="n">est</span> <span class="o">=</span> <span class="n">JidtDiscreteMI</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
             <span class="c1"># Return value will be just the estimate if return_calc is False,</span>
             <span class="c1">#  or estimate plus the JIDT MI calculator if return_calc is True:</span>
-            <span class="k">return</span> <span class="n">est</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">return_calc</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mi_calc</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">return_calc</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">assert</span><span class="p">(</span><span class="n">conditional</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">),</span> <span class="s1">&#39;Conditional Array is empty.&#39;</span>
 
@@ -635,34 +647,33 @@
         <span class="n">alph2_base</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph2&#39;</span><span class="p">],</span> <span class="n">var2_dim</span><span class="p">))</span>
         <span class="n">cond_base</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alphc&#39;</span><span class="p">],</span> <span class="n">cond_dim</span><span class="p">))</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">calc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcClass</span><span class="p">(</span><span class="n">alph1_base</span><span class="p">,</span> <span class="n">alph2_base</span><span class="p">,</span> <span class="n">cond_base</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">jp</span><span class="o">.</span><span class="n">JavaException</span><span class="p">:</span>
-            <span class="c1"># Only possible exception that can be raised here</span>
-            <span class="c1">#  (if all bases &gt;= 2) is a Java OutOfMemoryException:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">(</span><span class="n">alph1_base</span><span class="p">,</span> <span class="n">alph2_base</span><span class="p">,</span> <span class="n">cond_base</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="c1"># Handles both jp.JException (JPype v0.7) and jp.JavaException</span>
+            <span class="c1"># (JPype &lt; v0.7). Only possible exception that can be raised here</span>
+            <span class="c1"># (if all bases &gt;= 2) is a Java OutOfMemoryException:</span>
             <span class="k">assert</span><span class="p">(</span><span class="n">alph1_base</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">)</span>
             <span class="k">assert</span><span class="p">(</span><span class="n">alph2_base</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">)</span>
             <span class="k">assert</span><span class="p">(</span><span class="n">cond_base</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">ex</span><span class="o">.</span><span class="n">JidtOutOfMemoryError</span><span class="p">(</span><span class="s1">&#39;Cannot instantiate JIDT CMI &#39;</span>
-                <span class="s1">&#39;discrete estimator with alph1_base = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">alph1_base</span><span class="p">)</span> <span class="o">+</span>
-                <span class="s1">&#39;, alph2_base = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">alph2_base</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;, cond_base = &#39;</span> <span class="o">+</span>
-                <span class="nb">str</span><span class="p">(</span><span class="n">cond_base</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;. Try re-running increasing Java heap size&#39;</span><span class="p">)</span>
-        <span class="n">calc</span><span class="o">.</span><span class="n">setDebug</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">])</span>
-        <span class="n">calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">()</span>
+            <span class="k">raise</span> <span class="n">ex</span><span class="o">.</span><span class="n">JidtOutOfMemoryError</span><span class="p">(</span>
+                <span class="s1">&#39;Cannot instantiate JIDT CMI discrete estimator with &#39;</span>
+                <span class="s1">&#39;alph1_base = </span><span class="si">{}</span><span class="s1">, alph2_base = </span><span class="si">{}</span><span class="s1">, cond_base = </span><span class="si">{}</span><span class="s1">. Try &#39;</span>
+                <span class="s1">&#39;re-running increasing Java heap size.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">alph1_base</span><span class="p">,</span> <span class="n">alph2_base</span><span class="p">,</span> <span class="n">cond_base</span><span class="p">))</span>
         <span class="c1"># Unfortunately no faster way to pass numpy arrays in than this list</span>
         <span class="c1"># conversion</span>
-        <span class="n">calc</span><span class="o">.</span><span class="n">addObservations</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">var1</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span>
-                             <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">var2</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span>
-                             <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">conditional</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">addObservations</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">var1</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span>
+                                  <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">var2</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span>
+                                  <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">conditional</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalFromPreviousObservations</span><span class="p">(</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalFromPreviousObservations</span><span class="p">(</span>
                 <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">var1</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span>
                 <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">var2</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span>
-                <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">conditional</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
-                <span class="p">))</span>
+                <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">conditional</span><span class="o">.</span><span class="n">tolist</span><span class="p">())))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">return_calc</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">calc</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">result</span></div>
 
@@ -699,6 +710,8 @@
 
 <span class="sd">    Calculate the mutual information (MI) between two variables. Call JIDT via</span>
 <span class="sd">    jpype and use the discrete estimator. See parent class for references.</span>
+
+<span class="sd">    Results are returned in bits.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        settings : dict [optional]</span>
@@ -741,11 +754,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;alph2&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
 
         <span class="c1"># Start JAVA virtual machine and create JAVA object. Add JAVA object to</span>
-        <span class="c1"># instance, the discrete estimator requires the variable dimensions</span>
-        <span class="c1"># upon instantiation.</span>
+        <span class="c1"># instance.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_start_jvm</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">CalcClass</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.discrete&#39;</span><span class="p">)</span><span class="o">.</span>
-                          <span class="n">MutualInformationCalculatorDiscrete</span><span class="p">)</span>
+        <span class="n">CalcClass</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.discrete&#39;</span><span class="p">)</span><span class="o">.</span>
+                     <span class="n">MutualInformationCalculatorDiscrete</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">CalcClass</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">setDebug</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">])</span>
 
 <div class="viewcode-block" id="JidtDiscreteMI.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscreteMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">return_calc</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate mutual information.</span>
@@ -792,32 +806,31 @@
         <span class="n">base_for_var1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph1&#39;</span><span class="p">],</span> <span class="n">var1_dim</span><span class="p">))</span>
         <span class="n">base_for_var2</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph2&#39;</span><span class="p">],</span> <span class="n">var2_dim</span><span class="p">))</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">calc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcClass</span><span class="p">(</span><span class="n">base_for_var1</span><span class="p">,</span> <span class="n">base_for_var2</span><span class="p">,</span>
-                                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lag_mi&#39;</span><span class="p">])</span>
-        <span class="k">except</span> <span class="n">jp</span><span class="o">.</span><span class="n">JavaException</span><span class="p">:</span>
-            <span class="c1"># Only possible exception that can be raised here</span>
-            <span class="c1">#  (if base_for_var* &gt;= 2) is a Java OutOfMemoryException:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">(</span><span class="n">base_for_var1</span><span class="p">,</span> <span class="n">base_for_var2</span><span class="p">,</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lag_mi&#39;</span><span class="p">])</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="c1"># Handles both jp.JException (JPype v0.7) and jp.JavaException</span>
+            <span class="c1"># (JPype &lt; v0.7). Only possible exception that can be raised here</span>
+            <span class="c1"># (if base_for_var* &gt;= 2) is a Java OutOfMemoryException:</span>
             <span class="k">assert</span><span class="p">(</span><span class="n">base_for_var1</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">)</span>
             <span class="k">assert</span><span class="p">(</span><span class="n">base_for_var2</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">ex</span><span class="o">.</span><span class="n">JidtOutOfMemoryError</span><span class="p">(</span><span class="s1">&#39;Cannot instantiate JIDT MI &#39;</span>
-                <span class="s1">&#39;discrete estimator with bases = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">base_for_var1</span><span class="p">)</span> <span class="o">+</span>
-                 <span class="s1">&#39; and &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">base_for_var2</span><span class="p">)</span> <span class="o">+</span>
-                 <span class="s1">&#39;. Try re-running increasing Java heap size&#39;</span><span class="p">)</span>
-        <span class="n">calc</span><span class="o">.</span><span class="n">setDebug</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">])</span>
-        <span class="n">calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">()</span>
+            <span class="k">raise</span> <span class="n">ex</span><span class="o">.</span><span class="n">JidtOutOfMemoryError</span><span class="p">(</span>
+                <span class="s1">&#39;Cannot instantiate JIDT MI discrete estimator with bases = </span><span class="si">{}</span><span class="s1">&#39;</span>
+                <span class="s1">&#39; and </span><span class="si">{}</span><span class="s1">. Try re-running increasing Java heap size.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">base_for_var1</span><span class="p">,</span> <span class="n">base_for_var2</span><span class="p">))</span>
 
         <span class="c1"># Unfortunately no faster way to pass numpy arrays in than this list</span>
         <span class="c1"># conversion</span>
-        <span class="n">calc</span><span class="o">.</span><span class="n">addObservations</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">var1</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span>
-                             <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">var2</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">addObservations</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">var1</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span>
+                                  <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">var2</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalFromPreviousObservations</span><span class="p">(</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalFromPreviousObservations</span><span class="p">(</span>
                 <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">var1</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span>
                 <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">var2</span><span class="o">.</span><span class="n">tolist</span><span class="p">())))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">return_calc</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">calc</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">result</span></div>
 
@@ -851,6 +864,8 @@
 
 <span class="sd">    Calculate the mutual information between two variables. Call JIDT via jpype</span>
 <span class="sd">    and use the Kraskov 1 estimator. See parent class for references.</span>
+
+<span class="sd">    Results are returned in nats.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        settings : dict [optional]</span>
@@ -894,10 +909,10 @@
             <span class="s1">&#39;Algorithm number must be 1 or 2&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;algorithm_num&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
             <span class="n">CalcClass</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.continuous.kraskov&#39;</span><span class="p">)</span><span class="o">.</span>
-                     <span class="n">MutualInfoCalculatorMultiVariateKraskov1</span><span class="p">)</span>
+                         <span class="n">MutualInfoCalculatorMultiVariateKraskov1</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">CalcClass</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.continuous.kraskov&#39;</span><span class="p">)</span><span class="o">.</span>
-                     <span class="n">MutualInfoCalculatorMultiVariateKraskov2</span><span class="p">)</span>
+                         <span class="n">MutualInfoCalculatorMultiVariateKraskov2</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">CalcClass</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
 
         <span class="c1"># Get lag and shift second variable to account for a lag if requested</span>
@@ -932,7 +947,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_number_of_points</span><span class="p">(</span><span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">(</span><span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">var2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">setObservations</span><span class="p">(</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">setObservations2D</span><span class="p">(</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalOfPreviousObservations</span><span class="p">())</span>
@@ -953,7 +968,7 @@
 <span class="sd">    tau describes the embedding delay, i.e., the spacing between every two</span>
 <span class="sd">    samples from the processes&#39; past.</span>
 
-<span class="sd">    See parent class for references.</span>
+<span class="sd">    See parent class for references. Results are returned in nats.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        settings : dict</span>
@@ -1037,6 +1052,8 @@
 <span class="sd">    Calculate the active information storage (AIS) for one process. Call JIDT</span>
 <span class="sd">    via jpype and use the discrete estimator. See parent class for references.</span>
 
+<span class="sd">    Results are returned in bits.</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        settings : dict</span>
 <span class="sd">            set estimator parameters:</span>
@@ -1076,12 +1093,14 @@
             <span class="k">pass</span>  <span class="c1"># Do nothing and use the default for alph set below</span>
         <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;alph&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
         <span class="k">assert</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;Number of bins must be &gt;= 2&#39;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
 
         <span class="c1"># Start JAVA virtual machine and create JAVA object.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_start_jvm</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">CalcClass</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.discrete&#39;</span><span class="p">)</span><span class="o">.</span>
-                          <span class="n">ActiveInformationCalculatorDiscrete</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+        <span class="n">CalcClass</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.discrete&#39;</span><span class="p">)</span><span class="o">.</span>
+                     <span class="n">ActiveInformationCalculatorDiscrete</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">CalcClass</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">setDebug</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">])</span>
 
 <div class="viewcode-block" id="JidtDiscreteAIS.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscreteAIS.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process</span><span class="p">,</span> <span class="n">return_calc</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate active information storage.</span>
@@ -1131,26 +1150,28 @@
 
         <span class="c1"># And finally make the AIS calculation:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">calc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcClass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;history&#39;</span><span class="p">])</span>
-        <span class="k">except</span> <span class="n">jp</span><span class="o">.</span><span class="n">JavaException</span><span class="p">:</span>
-            <span class="c1"># Only possible exception that can be raised here</span>
-            <span class="c1">#  (if self.settings[&#39;alph&#39;] &gt;= 2) is a Java OutOfMemoryException:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;history&#39;</span><span class="p">])</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="c1"># Handles both jp.JException (JPype v0.7) and jp.JavaException</span>
+            <span class="c1"># (JPype &lt; v0.7). Only possible exception that can be raised here</span>
+            <span class="c1"># (if self.settings[&#39;alph&#39;] &gt;= 2) is a Java OutOfMemoryException:</span>
             <span class="k">assert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">ex</span><span class="o">.</span><span class="n">JidtOutOfMemoryError</span><span class="p">(</span><span class="s1">&#39;Cannot instantiate JIDT AIS &#39;</span>
-                <span class="s1">&#39;discrete estimator with alph = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph&#39;</span><span class="p">])</span> <span class="o">+</span>
-                 <span class="s1">&#39; and history = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;history&#39;</span><span class="p">])</span> <span class="o">+</span>
-                 <span class="s1">&#39;. Try re-running increasing Java heap size&#39;</span><span class="p">)</span>
-        <span class="n">calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">()</span>
+            <span class="k">raise</span> <span class="n">ex</span><span class="o">.</span><span class="n">JidtOutOfMemoryError</span><span class="p">(</span>
+                <span class="s1">&#39;Cannot instantiate JIDT AIS discrete estimator with alph = </span><span class="si">{}</span><span class="s1">&#39;</span>
+                <span class="s1">&#39; and history = </span><span class="si">{}</span><span class="s1">. Try re-running increasing Java heap &#39;</span>
+                <span class="s1">&#39;size.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;history&#39;</span><span class="p">]))</span>
         <span class="c1"># Unfortunately no faster way to pass numpy arrays in than this list</span>
         <span class="c1"># conversion</span>
-        <span class="n">calc</span><span class="o">.</span><span class="n">addObservations</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">process</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">addObservations</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">process</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalFromPreviousObservations</span><span class="p">(</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalFromPreviousObservations</span><span class="p">(</span>
                                     <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">process</span><span class="o">.</span><span class="n">tolist</span><span class="p">())))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">return_calc</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">calc</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">result</span></div>
 
@@ -1190,7 +1211,7 @@
 <span class="sd">    tau describes the embedding delay, i.e., the spacing between every two</span>
 <span class="sd">    samples from the processes&#39; past.</span>
 
-<span class="sd">    See parent class for references.</span>
+<span class="sd">    See parent class for references.Results are returned in nats.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        settings : dict</span>
@@ -1260,6 +1281,8 @@
 <span class="sd">    Calculate the mutual information between two variables. Call JIDT via jpype</span>
 <span class="sd">    and use the Gaussian estimator. See parent class for references.</span>
 
+<span class="sd">    Results are returned in nats.</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        settings : dict [optional]</span>
 <span class="sd">            sets estimation parameters:</span>
@@ -1317,7 +1340,7 @@
             <span class="n">var2</span> <span class="o">=</span> <span class="n">var2</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lag_mi&#39;</span><span class="p">]:,</span> <span class="p">:]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">(</span><span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">var2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">setObservations</span><span class="p">(</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">setObservations2D</span><span class="p">(</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalOfPreviousObservations</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1336,7 +1359,7 @@
 <span class="sd">    If no conditional is given (is None), the function returns the mutual</span>
 <span class="sd">    information between var1 and var2.</span>
 
-<span class="sd">    See parent class for references.</span>
+<span class="sd">    See parent class for references. Results are returned in nats.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        settings : dict [optional]</span>
@@ -1403,7 +1426,7 @@
                 <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cond</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">(</span><span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">var2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">cond</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">setObservations</span><span class="p">(</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">cond</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">setObservations2D</span><span class="p">(</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">cond</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalOfPreviousObservations</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1453,7 +1476,7 @@
 <span class="sd">    tau descrices the embedding delay, i.e., the spacing between every two</span>
 <span class="sd">    samples from the processes&#39; past.</span>
 
-<span class="sd">    See parent class for references.</span>
+<span class="sd">    See parent class for references. Results are returned in nats.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        settings : dict</span>
@@ -1494,7 +1517,6 @@
         <span class="c1"># Get embedding and delay parameters.</span>
         <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_te_defaults</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">CalcClass</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
-
 
 <div class="viewcode-block" id="JidtKraskovTE.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtKraskovTE.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate transfer entropy from a source to a target variable.</span>
@@ -1539,6 +1561,8 @@
 <span class="sd">    defined as the conditional mutual information between the source&#39;s past</span>
 <span class="sd">    state and the target&#39;s current value, conditional on the target&#39;s past.</span>
 <span class="sd">    See parent class for references.</span>
+
+<span class="sd">    Results are returned in bits.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        settings : dict</span>
@@ -1593,14 +1617,18 @@
             <span class="s1">&#39;Num discrete levels for source has to be an integer.&#39;</span><span class="p">)</span>
         <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph2&#39;</span><span class="p">])</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">,</span> <span class="p">(</span>
             <span class="s1">&#39;Num discrete levels for target has to be an integer.&#39;</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph1&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;Num discrete levels for source must be &gt;= 2&#39;</span>
-        <span class="k">assert</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph2&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;Num discrete levels for target must be &gt;= 2&#39;</span>
+        <span class="k">assert</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph1&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">,</span> <span class="p">(</span>
+            <span class="s1">&#39;Num discrete levels for source must be &gt;= 2&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph2&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">,</span> <span class="p">(</span>
+            <span class="s1">&#39;Num discrete levels for target must be &gt;= 2&#39;</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
 
         <span class="c1"># Start JAVA virtual machine and create JAVA object.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_start_jvm</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">CalcClass</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.discrete&#39;</span><span class="p">)</span><span class="o">.</span>
-                          <span class="n">TransferEntropyCalculatorDiscrete</span><span class="p">)</span>
+        <span class="n">CalcClass</span> <span class="o">=</span> <span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s1">&#39;infodynamics.measures.discrete&#39;</span><span class="p">)</span><span class="o">.</span>
+                     <span class="n">TransferEntropyCalculatorDiscrete</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">CalcClass</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">setDebug</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">])</span>
 
 <div class="viewcode-block" id="JidtDiscreteTE.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscreteTE.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">return_calc</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate transfer entropy from a source to a target variable.</span>
@@ -1639,34 +1667,37 @@
         <span class="c1"># And finally make the TE calculation:</span>
         <span class="n">max_base</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph1&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;alph2&#39;</span><span class="p">])</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">calc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcClass</span><span class="p">(</span><span class="n">max_base</span><span class="p">,</span>
-                              <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;history_target&#39;</span><span class="p">],</span>
-                              <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tau_target&#39;</span><span class="p">],</span>
-                              <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;history_source&#39;</span><span class="p">],</span>
-                              <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tau_source&#39;</span><span class="p">],</span>
-                              <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;source_target_delay&#39;</span><span class="p">])</span>
-        <span class="k">except</span> <span class="n">jp</span><span class="o">.</span><span class="n">JavaException</span><span class="p">:</span>
-            <span class="c1"># Only possible exception that can be raised here</span>
-            <span class="c1">#  (if max_base &gt;= 2) is a Java OutOfMemoryException:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">(</span><span class="n">max_base</span><span class="p">,</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;history_target&#39;</span><span class="p">],</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tau_target&#39;</span><span class="p">],</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;history_source&#39;</span><span class="p">],</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tau_source&#39;</span><span class="p">],</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;source_target_delay&#39;</span><span class="p">])</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="c1"># Handles both jp.JException (JPype v0.7) and jp.JavaException</span>
+            <span class="c1"># (JPype &lt; v0.7). Only possible exception that can be raised here</span>
+            <span class="c1"># (if max_base &gt;= 2) is a Java OutOfMemoryException:</span>
             <span class="k">assert</span><span class="p">(</span><span class="n">max_base</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">ex</span><span class="o">.</span><span class="n">JidtOutOfMemoryError</span><span class="p">(</span><span class="s1">&#39;Cannot instantiate JIDT TE &#39;</span>
-                <span class="s1">&#39;discrete estimator with max_base = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">max_base</span><span class="p">)</span> <span class="o">+</span>
-                 <span class="s1">&#39; and history_target = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;history_target&#39;</span><span class="p">])</span> <span class="o">+</span>
-                 <span class="s1">&#39; and history_source = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;history_source&#39;</span><span class="p">])</span> <span class="o">+</span>
-                 <span class="s1">&#39;. Try re-running increasing Java heap size&#39;</span><span class="p">)</span>
-        <span class="n">calc</span><span class="o">.</span><span class="n">initialise</span><span class="p">()</span>
+            <span class="k">raise</span> <span class="n">ex</span><span class="o">.</span><span class="n">JidtOutOfMemoryError</span><span class="p">(</span>
+                <span class="s1">&#39;Cannot instantiate JIDT TE discrete estimator with max_base =&#39;</span>
+                <span class="s1">&#39; </span><span class="si">{}</span><span class="s1"> and history_target = </span><span class="si">{}</span><span class="s1"> and history_source = </span><span class="si">{}</span><span class="s1">. Try &#39;</span>
+                <span class="s1">&#39;re-running increasing Java heap size.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">max_base</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;history_target&#39;</span><span class="p">],</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;history_source&#39;</span><span class="p">]))</span>
         <span class="c1"># Unfortunately no faster way to pass numpy arrays in than this list</span>
         <span class="c1"># conversion</span>
-        <span class="n">calc</span><span class="o">.</span><span class="n">addObservations</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">source</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span>
-                             <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">target</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">addObservations</span><span class="p">(</span>
+            <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">source</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span>
+            <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">target</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalFromPreviousObservations</span><span class="p">(</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalFromPreviousObservations</span><span class="p">(</span>
                 <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">source</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span>
                 <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">target</span><span class="o">.</span><span class="n">tolist</span><span class="p">())))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">return_calc</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">calc</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">result</span></div>
 
@@ -1709,7 +1740,7 @@
 <span class="sd">    tau descrices the embedding delay, i.e., the spacing between every two</span>
 <span class="sd">    samples from the processes&#39; past.</span>
 
-<span class="sd">    See parent class for references.</span>
+<span class="sd">    See parent class for references. Results are returned in nats.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        settings : dict</span>
@@ -1814,23 +1845,22 @@
     <span class="k">return</span> <span class="n">surrogate_estimates</span></div>
 </pre></div>
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -1845,12 +1875,13 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">idtxl.estimators_jidt</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.1.
     </div>
   </body>
 </html>

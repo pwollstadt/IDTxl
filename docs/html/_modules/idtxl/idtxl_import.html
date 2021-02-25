@@ -1,0 +1,342 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>idtxl.idtxl_import &#8212; IDTxl 1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="../../_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">idtxl.idtxl_import</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for idtxl.idtxl_import</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Import external file formats into IDTxl.</span>
+
+<span class="sd">Provide functions to import the following into IDTxl:</span>
+
+<span class="sd">    - mat-files (version&gt;7.3, hdf5)</span>
+<span class="sd">    - FieldTrip-style mat-files (version&gt;7.3, hdf5)</span>
+
+<span class="sd">Matlab supports hdf5 only for files saved as version 7.3 or higher:</span>
+<span class="sd">https://au.mathworks.com/help/matlab/ref/save.html#inputarg_version</span>
+
+<span class="sd">Creates a numpy array usable as input to IDTxl.</span>
+
+<span class="sd">Methods:</span>
+<span class="sd">    ft_trial_2_numpyarray(file_name, ft_struct_name)</span>
+<span class="sd">    matarray2idtxlconverter(file_name, array_name, order) =     takes a file_name,</span>
+<span class="sd">                    the name of the array variable (array_name) inside,</span>
+<span class="sd">                    and the order of sensor axis,  time axisand (CHECK THIS!!)</span>
+<span class="sd">                    repetition axis (as a list)</span>
+
+<span class="sd">Note:</span>
+<span class="sd">    Written for Python 3.4+</span>
+
+<span class="sd">Created on Wed Mar 19 12:34:36 2014</span>
+
+<span class="sd">@author: Michael Wibral</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.io</span> <span class="k">import</span> <span class="n">loadmat</span>
+<span class="kn">from</span> <span class="nn">idtxl.data</span> <span class="k">import</span> <span class="n">Data</span>
+
+<span class="n">VERBOSE</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="import_fieldtrip"><a class="viewcode-back" href="../../idtxl.html#idtxl.idtxl_import.import_fieldtrip">[docs]</a><span class="k">def</span> <span class="nf">import_fieldtrip</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">ft_struct_name</span><span class="p">,</span> <span class="n">file_version</span><span class="p">,</span> <span class="n">normalise</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert FieldTrip-style MATLAB-file into an IDTxl Data object.</span>
+
+<span class="sd">    Import a MATLAB structure with fields  &quot;trial&quot; (data), &quot;label&quot; (channel</span>
+<span class="sd">    labels), &quot;time&quot; (time stamps for data samples), and &quot;fsample&quot; (sampling</span>
+<span class="sd">    rate). This structure is the standard file format in the MATLAB toolbox</span>
+<span class="sd">    FieldTrip and commonly use to represent neurophysiological data (see also</span>
+<span class="sd">    http://www.fieldtriptoolbox.org/reference/ft_datatype_raw). The data is</span>
+<span class="sd">    returned as a IDTxl Data() object.</span>
+
+<span class="sd">    The structure is assumed to be saved as a matlab hdf5 file (&quot;-v7.3&#39; or</span>
+<span class="sd">    higher, .mat) with a SINGLE FieldTrip data structure inside.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        file_name : string</span>
+<span class="sd">            full (matlab) file_name on disk</span>
+<span class="sd">        ft_struct_name : string</span>
+<span class="sd">            variable name of the MATLAB structure that is in FieldTrip format</span>
+<span class="sd">            (autodetect will hopefully be possible later ...)</span>
+<span class="sd">        file_version : string</span>
+<span class="sd">            version of the file, e.g. &#39;v7.3&#39; for MATLAB&#39;s 7.3 format</span>
+<span class="sd">        normalise : bool [optional]</span>
+<span class="sd">            normalise data after import (default=True)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Data() instance</span>
+<span class="sd">            instance of IDTxl Data object, containing data from the &#39;trial&#39;</span>
+<span class="sd">            field</span>
+<span class="sd">        list of strings</span>
+<span class="sd">            list of channel labels, corresponding to the &#39;label&#39; field</span>
+<span class="sd">        numpy array</span>
+<span class="sd">            time stamps for samples, corresponding to one entry in the &#39;time&#39;</span>
+<span class="sd">            field</span>
+<span class="sd">        int</span>
+<span class="sd">            sampling rate, corresponding to the &#39;fsample&#39; field</span>
+
+<span class="sd">    @author: Michael Wibral</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">file_version</span> <span class="o">!=</span> <span class="s2">&quot;v7.3&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;At present only m-files in format 7.3 are &#39;</span>
+                           <span class="s1">&#39;supported, please consider reopening and resaving &#39;</span>
+                           <span class="s1">&#39;your m-file in that version.&#39;</span><span class="p">)</span>
+        <span class="c1"># TODO we could write a fallback option using numpy&#39;s loadmat?</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Creating Python dictionary from FT data structure: </span><span class="si">{0}</span><span class="s1">&#39;</span>
+          <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ft_struct_name</span><span class="p">))</span>
+    <span class="n">trial_data</span> <span class="o">=</span> <span class="n">_ft_import_trial</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">ft_struct_name</span><span class="p">)</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">_ft_import_label</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">ft_struct_name</span><span class="p">)</span>
+    <span class="n">fsample</span> <span class="o">=</span> <span class="n">_ft_fsample_2_float</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">ft_struct_name</span><span class="p">)</span>
+    <span class="n">timestamps</span> <span class="o">=</span> <span class="n">_ft_import_time</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">ft_struct_name</span><span class="p">)</span>
+
+    <span class="n">dat</span> <span class="o">=</span> <span class="n">Data</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">trial_data</span><span class="p">,</span> <span class="n">dim_order</span><span class="o">=</span><span class="s1">&#39;spr&#39;</span><span class="p">,</span> <span class="n">normalise</span><span class="o">=</span><span class="n">normalise</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dat</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">timestamps</span><span class="p">,</span> <span class="n">fsample</span></div>
+
+
+<span class="k">def</span> <span class="nf">_ft_import_trial</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">ft_struct_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Import FieldTrip trial data into Python.&quot;&quot;&quot;</span>
+    <span class="n">ft_file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+    <span class="n">ft_struct</span> <span class="o">=</span> <span class="n">ft_file</span><span class="p">[</span><span class="n">ft_struct_name</span><span class="p">]</span>  <span class="c1"># TODO: ft_struct_name = automagic...</span>
+
+    <span class="c1"># Get the trial cells that contain the references (pointers) to the data</span>
+    <span class="c1"># we need. Then get the data from matrices in cells of a 1 x numtrials cell</span>
+    <span class="c1"># array in the original FieldTrip structure.</span>
+    <span class="n">trial</span> <span class="o">=</span> <span class="n">ft_struct</span><span class="p">[</span><span class="s1">&#39;trial&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Get the trial cells that contain the references (pointers) to the data</span>
+    <span class="c1"># we need. Then get the data from matrices in cells of a 1 x numtrials cell</span>
+    <span class="c1"># array in the original FieldTrip structure.</span>
+    <span class="n">trial</span> <span class="o">=</span> <span class="n">ft_struct</span><span class="p">[</span><span class="s1">&#39;trial&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Allocate memory to hold actual data, read shape of first trial to know</span>
+    <span class="c1"># the data size.</span>
+    <span class="n">trial_data_tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ft_file</span><span class="p">[</span><span class="n">trial</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>  <span class="c1"># get data from 1st trial</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Found data with first dimension: </span><span class="si">{0}</span><span class="s1">, and second: </span><span class="si">{1}</span><span class="s1">&#39;</span>
+          <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">trial_data_tmp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">trial_data_tmp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">geometry</span> <span class="o">=</span> <span class="n">trial_data_tmp</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="n">trial</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],)</span>
+    <span class="n">trial_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">geometry</span><span class="p">)</span>
+
+    <span class="c1"># Get actual data from h5py structure.</span>
+    <span class="k">for</span> <span class="n">tt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">trial</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">trialref</span> <span class="o">=</span> <span class="n">trial</span><span class="p">[</span><span class="n">tt</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># get trial reference</span>
+        <span class="n">trial_data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">tt</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ft_file</span><span class="p">[</span><span class="n">trialref</span><span class="p">])</span>  <span class="c1"># get data</span>
+
+    <span class="n">ft_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">trial_data</span>
+
+
+<span class="k">def</span> <span class="nf">_ft_import_label</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">ft_struct_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Import FieldTrip labels into Python.&quot;&quot;&quot;</span>
+    <span class="c1"># for details of the data handling see comments in _ft_import_trial</span>
+    <span class="n">ft_file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+    <span class="n">ft_struct</span> <span class="o">=</span> <span class="n">ft_file</span><span class="p">[</span><span class="n">ft_struct_name</span><span class="p">]</span>
+    <span class="n">ft_label</span> <span class="o">=</span> <span class="n">ft_struct</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Converting FT labels to python list of strings&#39;</span><span class="p">)</span>
+
+    <span class="n">label</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ll</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ft_label</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="c1"># There is only one item in labelref, but we have to index it.</span>
+        <span class="c1"># Matlab has character arrays that are read as bytes in Python 3.</span>
+        <span class="c1"># Here, map maps the stuff in labeltmp to characters and &quot;&quot;.</span>
+        <span class="c1"># makes it into a real Python string.</span>
+        <span class="n">labelref</span> <span class="o">=</span> <span class="n">ft_label</span><span class="p">[</span><span class="n">ll</span><span class="p">]</span>
+        <span class="n">labeltmp</span> <span class="o">=</span> <span class="n">ft_file</span><span class="p">[</span><span class="n">labelref</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="n">strlabeltmp</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">chr</span><span class="p">,</span> <span class="n">labeltmp</span><span class="p">[</span><span class="mi">0</span><span class="p">:]))</span>
+        <span class="n">label</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">strlabeltmp</span><span class="p">)</span>
+
+    <span class="n">ft_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">label</span>
+
+
+<span class="k">def</span> <span class="nf">_ft_import_time</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">ft_struct_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Import FieldTrip time stamps into Python.&quot;&quot;&quot;</span>
+    <span class="c1"># for details of the data handling see comments in ft_trial_2_numpyarray</span>
+    <span class="n">ft_file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+    <span class="n">ft_struct</span> <span class="o">=</span> <span class="n">ft_file</span><span class="p">[</span><span class="n">ft_struct_name</span><span class="p">]</span>
+    <span class="n">ft_time</span> <span class="o">=</span> <span class="n">ft_struct</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Converting FT time cell array to numpy array&#39;</span><span class="p">)</span>
+
+    <span class="n">np_timeaxis_tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ft_file</span><span class="p">[</span><span class="n">ft_time</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
+    <span class="n">geometry</span> <span class="o">=</span> <span class="n">np_timeaxis_tmp</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="n">ft_time</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],)</span>
+    <span class="n">timestamps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">geometry</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">tt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ft_time</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">timeref</span> <span class="o">=</span> <span class="n">ft_time</span><span class="p">[</span><span class="n">tt</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">timestamps</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">tt</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ft_file</span><span class="p">[</span><span class="n">timeref</span><span class="p">])</span>
+    <span class="n">ft_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">timestamps</span>
+
+
+<span class="k">def</span> <span class="nf">_ft_fsample_2_float</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">ft_struct_name</span><span class="p">):</span>
+    <span class="n">ft_file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+    <span class="n">ft_struct</span> <span class="o">=</span> <span class="n">ft_file</span><span class="p">[</span><span class="n">ft_struct_name</span><span class="p">]</span>
+    <span class="n">FTfsample</span> <span class="o">=</span> <span class="n">ft_struct</span><span class="p">[</span><span class="s1">&#39;fsample&#39;</span><span class="p">]</span>
+    <span class="n">fsample</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">FTfsample</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Converting FT fsample array (1x1) to numpy array (1x1)&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fsample</span>
+
+
+<div class="viewcode-block" id="import_matarray"><a class="viewcode-back" href="../../idtxl.html#idtxl.idtxl_import.import_matarray">[docs]</a><span class="k">def</span> <span class="nf">import_matarray</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">array_name</span><span class="p">,</span> <span class="n">file_version</span><span class="p">,</span> <span class="n">dim_order</span><span class="p">,</span>
+                    <span class="n">normalise</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read Matlab hdf5 file into IDTxl.</span>
+
+<span class="sd">    reads a matlab hdf5 file (&quot;-v7.3&#39; or higher, .mat) with a SINGLE</span>
+<span class="sd">    array inside and returns a numpy array with dimensions that</span>
+<span class="sd">    are channel x time x trials, using np.swapaxes where necessary</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        The import function squeezes the loaded mat-file, i.e., any singleton</span>
+<span class="sd">        dimension will be removed. Hence do not enter singleton dimension into</span>
+<span class="sd">        the &#39;dim_order&#39;, e.g., don&#39;t pass dim_order=&#39;ps&#39; but dim_order=&#39;s&#39; if</span>
+<span class="sd">        you want to load a 1D-array where entries represent samples recorded</span>
+<span class="sd">        from a single channel.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        file_name : string</span>
+<span class="sd">            full (matlab) file_name on disk</span>
+<span class="sd">        array_name : string</span>
+<span class="sd">            variable name of the MATLAB structure to be read</span>
+<span class="sd">        file_version : string</span>
+<span class="sd">            version of the file, e.g. &#39;v7.3&#39; for MATLAB&#39;s 7.3 format, currently</span>
+<span class="sd">            versions &#39;v4&#39;, &#39;v6&#39;, &#39;v7&#39;, and &#39;v7&#39; are supported</span>
+<span class="sd">        dim_order : string</span>
+<span class="sd">            order of dimensions, accepts any combination of the characters</span>
+<span class="sd">            &#39;p&#39;, &#39;s&#39;, and &#39;r&#39; for processes, samples, and replications; must</span>
+<span class="sd">            have the same length as the data dimensionality, e.g., &#39;ps&#39; for a</span>
+<span class="sd">            two-dimensional array of data from several processes over time</span>
+<span class="sd">        normalise : bool [optional]</span>
+<span class="sd">            normalise data after import (default=True)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Data() instance</span>
+<span class="sd">            instance of IDTxl Data object, containing data from the &#39;trial&#39;</span>
+<span class="sd">            field</span>
+<span class="sd">        list of strings</span>
+<span class="sd">            list of channel labels, corresponding to the &#39;label&#39; field</span>
+<span class="sd">        numpy array</span>
+<span class="sd">            time stamps for samples, corresponding to one entry in the &#39;time&#39;</span>
+<span class="sd">            field</span>
+<span class="sd">        int</span>
+<span class="sd">            sampling rate, corresponding to the &#39;fsample&#39; field</span>
+
+<span class="sd">    Created on Wed Mar 19 12:34:36 2014</span>
+
+<span class="sd">    @author: Michael Wibral</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">file_version</span> <span class="o">==</span> <span class="s1">&#39;v7.3&#39;</span><span class="p">:</span>
+        <span class="n">mat_file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+        <span class="c1"># Assert that at least one of the keys found at the top level of the</span>
+        <span class="c1"># HDF file  matches the name of the array we wanted</span>
+        <span class="k">if</span> <span class="n">array_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">mat_file</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Array </span><span class="si">{0}</span><span class="s1"> not in mat file or not a variable &#39;</span>
+                               <span class="s1">&#39;at the file&#39;&#39;s top level.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">array_name</span><span class="p">))</span>
+
+        <span class="c1"># 2. Create an object for the matlab array (from the hdf5 hierachy),</span>
+        <span class="c1"># the trailing [()] ensures everything is read</span>
+        <span class="n">mat_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mat_file</span><span class="p">[</span><span class="n">array_name</span><span class="p">][()]))</span>
+
+    <span class="k">elif</span> <span class="n">file_version</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;v4&#39;</span><span class="p">,</span> <span class="s1">&#39;v6&#39;</span><span class="p">,</span> <span class="s1">&#39;v7&#39;</span><span class="p">]:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">loadmat</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">squeeze_me</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">variable_names</span><span class="o">=</span><span class="n">array_name</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;You may have provided an incorrect file &#39;</span>
+                               <span class="s1">&#39;version. The mat file was probably saved as &#39;</span>
+                               <span class="s1">&#39;version 7.3 (hdf5).&#39;</span><span class="p">)</span>
+        <span class="n">mat_data</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">array_name</span><span class="p">]</span>  <span class="c1"># loadmat returns a dict containing variables</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unkown file version: </span><span class="si">{0}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_version</span><span class="p">))</span>
+
+    <span class="c1"># Create output: IDTxl data object, list of labels, sampling info in unit</span>
+    <span class="c1"># time steps (sampling rate of 1).</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Creating Data object from matlab array: </span><span class="si">{0}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">array_name</span><span class="p">))</span>
+    <span class="n">dat</span> <span class="o">=</span> <span class="n">Data</span><span class="p">(</span><span class="n">mat_data</span><span class="p">,</span> <span class="n">dim_order</span><span class="o">=</span><span class="n">dim_order</span><span class="p">,</span> <span class="n">normalise</span><span class="o">=</span><span class="n">normalise</span><span class="p">)</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dat</span><span class="o">.</span><span class="n">n_processes</span><span class="p">):</span>
+        <span class="n">label</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;channel_</span><span class="si">{0:03d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+    <span class="n">fsample</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">timestamps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">dat</span><span class="o">.</span><span class="n">n_samples</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dat</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">timestamps</span><span class="p">,</span> <span class="n">fsample</span></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">idtxl.idtxl_import</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.1.
+    </div>
+  </body>
+</html>
