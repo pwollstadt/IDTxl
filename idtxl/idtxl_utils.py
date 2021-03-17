@@ -1,7 +1,65 @@
 """Provide IDTxl utility functions."""
 import pprint
 import numpy as np
+import ctypes
+import copy as cp
 
+def get_cuda_lib():
+    libnames = ('libcuda.so', 'libcuda.dylib', 'cuda.dll')
+    for libname in libnames:
+        try:
+            return ctypes.CDLL(libname)
+        except OSError:
+            continue
+        else:
+            break
+    else:
+        raise OSError("could not load any of: " + ' '.join(libnames))
+
+
+class DotDict(dict):
+    """Dictionary with dot-notation access to values.
+
+    Provides the same functionality as a regular dict, but also allows
+    accessing values using dot-notation.
+
+    Example:
+
+        >>> from idtxl.results import DotDict
+        >>> d = DotDict({'a': 1, 'b': 2})
+        >>> d.a
+        >>> # Out: 1
+        >>> d['a']
+        >>> # Out: 1
+    """
+
+    __getattr__ = dict.get
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
+
+    def __dir__(self):
+        """Return dictionary keys as list of attributes."""
+        return self.keys()
+
+    def __deepcopy__(self, memo):
+        """Provide deep copy capabilities.
+
+        Following a fix described here:
+        https://github.com/aparo/pyes/pull/115/commits/d2076b385c38d6d00cebfe0df7b0d1ba8df934bc
+        """
+        dot_dict_copy = DotDict([
+            (cp.deepcopy(k, memo),
+             cp.deepcopy(v, memo)) for k, v in self.items()])
+        return dot_dict_copy
+
+    def __getstate__(self):
+        # For pickling the object
+        return self
+
+    def __setstate__(self, state):
+        # For un-pickling the object
+        self.update(state)
+        # self.__dict__ = self
 
 def swap_chars(s, i_1, i_2):
     """Swap to characters in a string.
