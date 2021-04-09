@@ -263,8 +263,8 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             raise RuntimeError('max_lag has to be an integer >= 0.')
         if type(self.settings['tau']) is not int or self.settings['tau'] <= 0:
             raise RuntimeError('tau has to be an integer > 0.')
-        if self.settings['tau'] >= self.settings['max_lag']:
-            raise RuntimeError('tau ({0}) has to be smaller than max_lag ({1})'
+        if self.settings['tau'] > self.settings['max_lag']:
+            raise RuntimeError('tau ({0}) has to be equal to or smaller than max_lag ({1})'
                                '.'.format(self.settings['tau'],
                                           self.settings['max_lag']))
 
@@ -332,6 +332,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                     self.current_value[1] - self.settings['max_lag'] - 1,
                     -self.settings['tau'])
         candidates = self._define_candidates(process, samples)
+        print(candidates)
         self._include_candidates(candidates, data)
 
     def _include_candidates(self, candidate_set, data):
