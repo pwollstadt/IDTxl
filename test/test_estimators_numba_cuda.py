@@ -28,11 +28,9 @@ jpype_missing = pytest.mark.skipif(
     reason="Jpype is missing, JIDT estimators are not available")
 
 SEED = 0
-obs = 100000
-nrtrial = 1
 
 
-def _get_gauss_data(n=10000, nrtrials=1, covariance=0.4, expand=True, seed=None):
+def _get_gauss_data(n=100000, nrtrials=1, covariance=0.4, expand=True, seed=None):
     """Generate correlated and uncorrelated Gaussian variables.
 
     Generate two sets of random normal data, where one set has a given
@@ -81,7 +79,7 @@ def test_mi_correlated_gaussians():
 
     print("test_mi_correlated_gaussion")
 
-    expected_mi, source, source_uncorr, target = _get_gauss_data(n=obs, nrtrials=nrtrial, seed=SEED)
+    expected_mi, source, source_uncorr, target = _get_gauss_data(seed=SEED)
 
     # Run NumbaCuda MI estimator
     print('\tNumbaCuda')
@@ -373,10 +371,9 @@ def test_knn_two_dim():
 
 
 if __name__ == '__main__':
-    #test_knn_one_dim()
-    #test_knn_two_dim()
-
+    test_knn_one_dim()
+    test_knn_two_dim()
     test_mi_uncorrelated_gaussians()
-    #test_mi_correlated_gaussians()
-    #test_mi_uncorrelated_gaussians_three_dims()
-    #test_cmi_correlated_gaussians()
+    test_mi_correlated_gaussians()
+    test_mi_uncorrelated_gaussians_three_dims()
+    test_cmi_correlated_gaussians()

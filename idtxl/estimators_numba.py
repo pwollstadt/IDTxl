@@ -436,18 +436,16 @@ class NumbaCudaKraskovMI(NumbaKraskov):
 
 
         # copy data to device
-        start1 = time.process_time()
         d_pointset = cuda.to_device(pointset)
         d_distances = cuda.to_device(distances)
         d_kdistances = cuda.to_device(kdistances)
-        print("\t\tcopy to device", time.process_time() - start1)
 
         # get number of sm
         device = cuda.get_current_device()
         my_sms = getattr(cuda.gpus[self.settings['gpuid']]._device, 'MULTIPROCESSOR_COUNT')
         max_mem = self._get_max_mem()
 
-        tpb = device.WARP_SIZE
+        tpb = int32(device.WARP_SIZE)
         bpg = int(np.ceil(float(self.signallength) / tpb))
 
         # knn search on device
@@ -462,10 +460,8 @@ class NumbaCudaKraskovMI(NumbaKraskov):
                                    self.settings['kraskov_k'],
                                    self.settings['theiler_t'],
                                    d_kdistances)
-        x=time.process_time() - start2
-        print("\t\tknn time", x)
+
         d_distances.copy_to_host(distances)
-        print("\t\tcopy to host", time.process_time() - start1 -x)
         vecradius = distances[:, self.settings['kraskov_k']-1].copy()
 
         # initialize data for ncount 1
