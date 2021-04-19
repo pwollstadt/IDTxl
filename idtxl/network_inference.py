@@ -78,7 +78,7 @@ class NetworkInference(NetworkAnalysis):
                 self.target, self.source_set))
 
     def _include_candidates(self, candidate_set, data):
-        """Inlcude informative candidates into the conditioning set.
+        """Include informative candidates into the conditioning set.
 
         Loop over each candidate in the candidate set and test if it has
         significant mutual information with the current value, conditional
