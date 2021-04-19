@@ -805,7 +805,7 @@ class NetworkInferenceBivariate(NetworkInference):
             self.pvalue_omnibus = p
             # Test individual links if the omnibus test is significant using
             # the sequential max stats. Remove non-significant links.
-            if self.sign_omnibus:
+            if self.sign_omnibus or self.settings['n_perm_omnibus'] == 0:
                 # If there is an ex.AlgorithmExhaustedError exception inside
                 #  max_stats_sequential, it will catch it and return
                 #  everything as not significant:

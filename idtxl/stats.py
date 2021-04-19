@@ -277,7 +277,7 @@ def _perform_fdr_corretion(pval, constant, alpha):
             const = np.log(n) + np.e  # aprx. harmonic sum with Euler's number
     elif constant == 1:
         # This is less strict than the other one and corresponds to a
-        # Bonoferroni-correction for the first p-value, however, it makes more
+        # Bonferroni-correction for the first p-value, however, it makes more
         # strict assumptions on the distribution of p-values, while constant 2
         # works for any joint distribution of the p-values.
         const = 1
@@ -306,8 +306,8 @@ def omnibus_test(analysis_setup, data):
             information on the current analysis, can have an optional attribute
             'settings', a dictionary with parameters for statistical testing:
 
-            - n_perm_omnibus : int [optional] - number of permutations
-              (default=500)
+            - n_perm_omnibus : int [optional] - number of permutations, if set
+              to 0, test is skipped (default=500)
             - alpha_omnibus : float [optional] - critical alpha level
               (default=0.05)
             - permute_in_time : bool [optional] - generate surrogates by
@@ -323,7 +323,7 @@ def omnibus_test(analysis_setup, data):
         float
             the test's p-value
         float
-            the estimated test statisic, i.e., the information transfer from
+            the estimated test statistic, i.e., the information transfer from
             all sources into the target
 
     Raises:
@@ -338,6 +338,12 @@ def omnibus_test(analysis_setup, data):
     permute_in_time = _check_permute_in_time(analysis_setup, data,
                                              n_permutations)
     assert analysis_setup.selected_vars_sources, 'No sources to test.'
+
+    # Do not return a result if skipping the omnibus test was requested.
+    if n_permutations == 0:
+        if analysis_setup.settings['verbose']:
+            print('skipping omnibus test')
+        return False, None, None
 
     # Create temporary variables b/c realisations for sources and targets are
     # created on the fly, which is costly, so we want to re-use them after
