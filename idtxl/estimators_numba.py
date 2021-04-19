@@ -122,68 +122,9 @@ class NumbaKraskov(GPUKraskov):
 
         return my_gpu_devices
 
-    '''
-    def _get_device(self, gpuid):
-        """Return GPU devices, test requested GPU id."""
-        self.cuda = get_cuda_lib()  # load CUDA library
-
-        success = self.cuda.cuInit(0)
-        if success != 0:
-            #raise RuntimeError('cuInit failed with error code {0}: {1}'.format(
-            #    success, self._get_error_str(success)))
-            raise RuntimeError('cuInit failed with error code {0}'.format(
-                success))
-
-        # Test if requested GPU ID is available
-        n_devices = ctypes.c_int()
-        success = self.cuda.cuDeviceGetCount(ctypes.byref(n_devices))
-        if gpuid > n_devices.value:
-            raise RuntimeError(
-                'No device with gpuid {0} (available device IDs: {1}).'.format(
-                    gpuid, np.arange(n_devices.value)))
-
-        # Get global memory for available devices
-        my_gpu_devices = {}
-        device = ctypes.c_int()
-        context = ctypes.c_void_p()
-        name = b' ' * 100
-        free_mem = ctypes.c_size_t()
-        total_mem = ctypes.c_size_t()
-        for i in range(n_devices.value):
-            self.cuda.cuDeviceGet(ctypes.byref(device), i)
-            self.cuda.cuDeviceGetName(ctypes.c_char_p(name), len(name), device)
-            device_name = name.split(b'\0', 1)[0].decode()
-            success = self.cuda.cuCtxCreate(ctypes.byref(context), 0, device)
-            if success != 0:
-                #raise RuntimeError(
-                #    'Couldn''t create context for device: {} - {}, failed with error code {}: {}'.format(
-                #        i, device_name, success, self._get_error_str(success)))
-                raise RuntimeError(
-                    'Couldn''t create context for device: {} - {}, failed with error code {}'.format(
-                        i, device_name, success))
-
-            self.cuda.cuMemGetInfo(
-                ctypes.byref(free_mem), ctypes.byref(total_mem))
-            self.cuda.cuCtxDetach(context)
-
-            my_gpu_devices[i] = DotDict()
-            my_gpu_devices[i].name = device_name
-            my_gpu_devices[i].global_mem_size = total_mem.value
-            my_gpu_devices[i].free_mem_size = free_mem.value
-
-        logger.debug("Selected Device: {}".format(my_gpu_devices[gpuid].name))
-
-        return my_gpu_devices
-
-    def is_parallel(self):
-        return True
-
-    def is_analytic_null_estimator(self):
-        return False
-    '''
 
 class NumbaCPUKraskovMI(NumbaKraskov):
-    """Calculate mutual information with Numba Kraskov implementation.
+    """Calculate mutual information with Kraskov implementation using Numba on CPU.
 
     Calculate the mutual information (MI) between two variables using Numba
     for CPU. See parent class for references.
@@ -350,6 +291,7 @@ class NumbaCudaKraskovMI(NumbaKraskov):
         super().__init__(settings)
         self.settings.setdefault('lag_mi', 0)
 
+        # get CUDA devices
         self.devices = self._get_numba_device(self.settings['gpuid'])
 
         # select device
@@ -357,9 +299,6 @@ class NumbaCudaKraskovMI(NumbaKraskov):
 
         #if self.settings['debug']:
         #    cuda.profile_start()
-
-        self.shared_library_path = resource_filename(
-            __name__, 'gpuKnnLibrary.so')
 
     def estimate(self, var1, var2, n_chunks=1):
         """Estimate mutual information.
