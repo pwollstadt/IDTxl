@@ -7,6 +7,7 @@ import ctypes
 import math
 import idtxl.numba_kernels as nk
 import time
+import sys
 from . import idtxl_exceptions as ex
 try:
     from numba import float32, float64, int32, int64, cuda
@@ -100,9 +101,12 @@ class NumbaKraskov(GPUKraskov):
             raise RuntimeError('No cuda driver available!')
 
         # detect if supported CUDA device are available
+        std_ref = sys.stdout
+        sys.stdout = open('/dev/null', 'w')
         if not cuda.detect():
             raise RuntimeError('No cuda devices available!')
-
+        sys.stdout = std_ref
+        
         nr_devices = len(cuda.gpus.lst)
         if gpuid > nr_devices:
             raise RuntimeError(
