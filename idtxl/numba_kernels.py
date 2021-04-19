@@ -271,6 +271,9 @@ def _knnNumbaCuda(gquery,
                 for d in range(pointdim):
                     r_u = gquery[d, tid]
                     r_v = gpointset[d, np.int(tid / chunklength) * chunklength + t]
+                    #r_u = gquery[tid, d]
+                    #r_v = gpointset[np.int(tid / chunklength) * chunklength + t, d]
+
                     #                    r_v = gpointset[d, ichunk * chunklength + t]
                     rd = r_v - r_u
                     if rd < 0.0:
@@ -294,14 +297,13 @@ def _knnNumbaCuda(gquery,
                     # Replace
                     kdistances[tid, ik] = temp_dist
 
-                    r_kdist = kdistances[tx, kth - 1]
+                    r_kdist = kdistances[tid, kth - 1]
 
         cuda.syncthreads()
 
         # copy to global memory
         for k in range(kth):
-            gdistances[tid, k] = kdistances[
-                tx, k]  # ?????????????????????????????????????????????????????????????????????????
+            gdistances[tid, k] = kdistances[tid, k]  # ?????????????????????????????????????????????????????????????????????????
 
 
 
@@ -326,6 +328,7 @@ def _rsAllNumbaCuda(gquery, gpointset, vecradius, npoints, pointdim, chunklength
     # loop over all datapoints in query
     if tid < signallength_orig:
 
+        #npointsrange = cuda.shared.array(shape=(1, 1), dtype=int32)
         npointsrange = 0
 
         # loop over corresponding chunk samples of datapoints tid
@@ -338,10 +341,13 @@ def _rsAllNumbaCuda(gquery, gpointset, vecradius, npoints, pointdim, chunklength
                 # brute force ncount
 
                 # maxPointMetric
-                temp_dist = float32(0.0)
+                #temp_dist = float32(0.0)
+                temp_dist = 0.0
                 for d in range(pointdim):
                     r_u = gquery[d, tid]
                     r_v = gpointset[d, np.int(tid / chunklength) * chunklength + t]
+                    # r_u = gquery[tid, d]
+                    # r_v = gpointset[np.int(tid / chunklength) * chunklength + t, d]
                     #                    r_v = gpointset[d, ichunk * chunklength + t]
                     rd = r_v - r_u
                     if rd < 0.0:
@@ -349,12 +355,15 @@ def _rsAllNumbaCuda(gquery, gpointset, vecradius, npoints, pointdim, chunklength
                     if temp_dist < rd:
                         temp_dist = rd
 
-                # add new smaller dist to kdistances output
-                if temp_dist <= float32(vecradius[tid, kth]):
+                # add point to radius
+                #if temp_dist < vecradius[tid, kth - 1]:
+                if temp_dist < vecradius[tid]:
+                    #npointsrange[0,0] += 1
                     npointsrange += 1
 
         cuda.syncthreads()
 
+        #npoints[tid] = npointsrange[0, 0]
         npoints[tid] = npointsrange
 
 

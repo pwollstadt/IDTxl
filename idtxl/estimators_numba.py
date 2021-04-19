@@ -92,14 +92,47 @@ class NumbaKraskov(GPUKraskov):
     #         raise RuntimeError(
     #             'Set debug option to True to return neighbor counts.')
 
+    def _get_numba_device(self, gpuid):
+        """Tests availablility of CUDA driver and supported hardware, test requested GPU id and returns
+         list of supported GPU devices"""
+        # check if cuda driver is available
+        if not cuda.is_available():
+            raise RuntimeError('No cuda driver available!')
+
+        # detect if supported CUDA device are available
+        if not cuda.detect():
+            raise RuntimeError('No cuda devices available!')
+
+        nr_devices = len(cuda.gpus.lst)
+        if gpuid > nr_devices:
+            raise RuntimeError(
+                'No device with gpuid {0} (available device IDs: {1}).'.format(
+                    gpuid, np.arange(nr_devices)))
+
+        # list of cuda devices
+        gpus = cuda.list_devices()
+
+        my_gpu_devices = {}
+        for i in range(nr_devices):
+            my_gpu_devices[i] = DotDict()
+            name = gpus[0]._device.name
+            my_gpu_devices[i].name = name.decode('utf-8')
+            my_gpu_devices[i].global_mem_size = cuda.cudadrv.devices.get_context(gpuid).get_memory_info().total
+            my_gpu_devices[i].free_mem_size = cuda.cudadrv.devices.get_context(gpuid).get_memory_info().free
+
+        return my_gpu_devices
+
+    '''
     def _get_device(self, gpuid):
         """Return GPU devices, test requested GPU id."""
         self.cuda = get_cuda_lib()  # load CUDA library
 
         success = self.cuda.cuInit(0)
         if success != 0:
-            raise RuntimeError('cuInit failed with error code {0}: {1}'.format(
-                success, self._get_error_str(success)))
+            #raise RuntimeError('cuInit failed with error code {0}: {1}'.format(
+            #    success, self._get_error_str(success)))
+            raise RuntimeError('cuInit failed with error code {0}'.format(
+                success))
 
         # Test if requested GPU ID is available
         n_devices = ctypes.c_int()
@@ -122,9 +155,13 @@ class NumbaKraskov(GPUKraskov):
             device_name = name.split(b'\0', 1)[0].decode()
             success = self.cuda.cuCtxCreate(ctypes.byref(context), 0, device)
             if success != 0:
+                #raise RuntimeError(
+                #    'Couldn''t create context for device: {} - {}, failed with error code {}: {}'.format(
+                #        i, device_name, success, self._get_error_str(success)))
                 raise RuntimeError(
-                    'Couldn''t create context for device: {} - {}, failed with error code {}: {}'.format(
-                        i, device_name, success, self._get_error_str(success)))
+                    'Couldn''t create context for device: {} - {}, failed with error code {}'.format(
+                        i, device_name, success))
+
             self.cuda.cuMemGetInfo(
                 ctypes.byref(free_mem), ctypes.byref(total_mem))
             self.cuda.cuCtxDetach(context)
@@ -143,7 +180,7 @@ class NumbaKraskov(GPUKraskov):
 
     def is_analytic_null_estimator(self):
         return False
-
+    '''
 
 class NumbaCPUKraskovMI(NumbaKraskov):
     """Calculate mutual information with Numba Kraskov implementation.
@@ -313,7 +350,14 @@ class NumbaCudaKraskovMI(NumbaKraskov):
         super().__init__(settings)
         self.settings.setdefault('lag_mi', 0)
 
-        self.devices = self._get_device(self.settings['gpuid'])
+        self.devices = self._get_numba_device(self.settings['gpuid'])
+
+        # select device
+        cuda.select_device(self.settings['gpuid'])
+
+        #if self.settings['debug']:
+        #    cuda.profile_start()
+
         self.shared_library_path = resource_filename(
             __name__, 'gpuKnnLibrary.so')
 
@@ -388,6 +432,13 @@ class NumbaCudaKraskovMI(NumbaKraskov):
             else:
                 mi_array = np.concatenate((mi_array, results))
 
+        #if self.settings['debug']:
+        #    cuda.profile_stop()
+
+        #device = cuda.get_current_device()
+        #device.reset()
+        #cuda.close()
+
         # return distances
         if self.settings['return_counts']:
             return mi_array, distances, count_var1, count_var2
@@ -424,8 +475,8 @@ class NumbaCudaKraskovMI(NumbaKraskov):
             'No. samples not divisible by no. chunks')
 
         pointset = np.hstack((var1, var2)).T.copy()
-        #pointset_var1 = var1.T.copy()
-        #pointset_var2 = var2.T.copy()
+        pointset_var1 = var1.T.copy()
+        pointset_var2 = var2.T.copy()
         var1dim = var1.shape[1]
         var2dim = var2.shape[1]
         pointdim = var1dim + var2dim
@@ -433,6 +484,9 @@ class NumbaCudaKraskovMI(NumbaKraskov):
         # initialize distances as zero vector with float32
         distances = np.zeros([self.signallength, self.settings['kraskov_k']])
         distances.fill(math.inf)
+        kdistances = np.zeros([self.signallength, self.settings['kraskov_k']])
+        kdistances.fill(math.inf)
+
         # if self.settings['floattype'] == 32:
         #     if not dist.dtype == np.float32:
         #         dist = dist.astype(np.float32)
@@ -442,10 +496,11 @@ class NumbaCudaKraskovMI(NumbaKraskov):
             #pointset, var1, var2 = self._add_noise_all(pointset, var1, var2)
             pointset = self._add_noise(pointset)
 
+
         # copy data to device
         d_pointset = cuda.to_device(pointset)
         d_distances = cuda.to_device(distances)
-        d_kdistances = cuda.to_device(distances)
+        d_kdistances = cuda.to_device(kdistances)
 
         # get number of sm
         device = cuda.get_current_device()
@@ -467,28 +522,29 @@ class NumbaCudaKraskovMI(NumbaKraskov):
                                    self.settings['theiler_t'],
                                    d_kdistances)
 
-        result_distances = d_kdistances.copy_to_host()
-
-
+        d_distances.copy_to_host(distances)
+        vecradius = distances[:, self.settings['kraskov_k']-1].copy()
 
         # initialize data for ncount 1
         npoints1 = np.zeros([self.signallength])
 
         # copy data to device
-        d_var1 = cuda.to_device(var1)
+        d_var1 = cuda.to_device(pointset_var1)
         d_npoints1 = cuda.to_device(npoints1)
+        d_vecradius = cuda.to_device(vecradius)
 
         # ncount 1
         nk._rsAllNumbaCuda[bpg, tpb](
             d_var1,
             d_var1,
-            d_kdistances,
+            d_vecradius,
             d_npoints1,
-            pointdim,
+            var1dim,
             self.chunklength,
             self.signallength,
             self.settings['kraskov_k'],
             self.settings['theiler_t'])
+
 
         # copy ncounts from device to host
         ncount_var1 = d_npoints1.copy_to_host()
@@ -497,23 +553,23 @@ class NumbaCudaKraskovMI(NumbaKraskov):
         npoints2 = np.zeros([self.signallength])
 
         # copy data to device
-        d_var2 = cuda.to_device(var2)
+        d_var2 = cuda.to_device(pointset_var2)
         d_npoints2 = cuda.to_device(npoints2)
 
         # n_count2
         nk._rsAllNumbaCuda[bpg, tpb](
             d_var2,
             d_var2,
-            d_kdistances,
+            d_vecradius,
             d_npoints2,
-            pointdim,
+            var2dim,
             self.chunklength,
             self.signallength,
             self.settings['kraskov_k'],
             self.settings['theiler_t'])
 
         # copy variables from device to host
-        result_distances = d_kdistances.copy_to_host()
+        #result_distances = d_distances.copy_to_host()
         ncount_var2 = d_npoints2.copy_to_host()
 
         # Calculate and sum digammas
@@ -526,6 +582,6 @@ class NumbaCudaKraskovMI(NumbaKraskov):
 
 
         if self.settings['debug']:
-            return mi_array, result_distances[:, self.settings['kraskov_k']-1], ncount_var1, ncount_var2
+            return mi_array, distances[:, 0], ncount_var1, ncount_var2
         else:
             return mi_array
