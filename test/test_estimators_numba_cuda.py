@@ -10,7 +10,7 @@ import numpy as np
 import time
 from idtxl.estimators_opencl import OpenCLKraskovMI, OpenCLKraskovCMI
 from idtxl.estimators_jidt import JidtKraskovMI, JidtKraskovCMI
-from idtxl.estimators_numba import NumbaCPUKraskovMI, NumbaCudaKraskovMI
+from idtxl.estimators_numba import NumbaCudaKraskovMI, NumbaCudaKraskovCMI
 from idtxl.idtxl_utils import calculate_mi
 import random as rn
 
@@ -75,7 +75,6 @@ def _get_gauss_data(n=10000, nrtrials=1, covariance=0.4, expand=True, seed=None)
     return expected_mi, src_corr, src_uncorr, target
 
 
-
 @jpype_missing
 def test_mi_correlated_gaussians():
     """Test MI estimator on uncorrelated Gaussian data."""
@@ -135,8 +134,6 @@ def test_mi_correlated_gaussians():
     print("passed")
 
 
-
-
 @jpype_missing
 def test_mi_uncorrelated_gaussians():
     """Test estimators on correlated Gaussian data with conditional."""
@@ -192,6 +189,7 @@ def test_mi_uncorrelated_gaussians():
                         'MI estimation for uncorrelated Gaussians using the '
                         'NumbaCuda estimator failed (error larger 0.05).')
 
+    print("passed")
 
 
 @jpype_missing
@@ -207,19 +205,27 @@ def test_mi_uncorrelated_gaussians_three_dims():
     print('Numba Cuda')
     settings = {'debug': True, 'return_counts': True}
     numbaCuda_est = NumbaCudaKraskovMI(settings=settings)
+    start1 = time.process_time()
     (mi_numbaCuda, dist_numbaCuda,
      n_range_var1_numbaCuda, n_range_var2_numbaCuda) = numbaCuda_est.estimate(var1, var2)
+    print("\t\tcalculation time", time.process_time() - start1)
     mi_numbaCuda = mi_numbaCuda[0]
 
     # Run OpenCL estimator.
+    print('openCL')
     settings = {'debug': True, 'return_counts': True}
     ocl_est = OpenCLKraskovMI(settings=settings)
+    start2 = time.process_time()
     mi_ocl, dist, n_range_var1, n_range_var2 = ocl_est.estimate(var1, var2)
+    print("\t\tcalculation time", time.process_time() - start2)
     mi_ocl = mi_ocl[0]
 
     # Run JIDT estimator.
+    print('jidt')
     jidt_est = JidtKraskovMI(settings={})
+    start3 = time.process_time()
     mi_jidt = jidt_est.estimate(var1, var2)
+    print("\t\tcalculation time", time.process_time() - start3)
 
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; Numba Cuda MI result: {2:.4f} nats; '
           'expected to be close to 0 nats for uncorrelated '
@@ -240,8 +246,65 @@ def test_mi_uncorrelated_gaussians_three_dims():
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.05).')
 
+    print("passed")
 
-'''
+
+@jpype_missing
+def test_cmi_correlated_gaussians():
+    """Test estimators on correlated Gaussian data with conditional."""
+    expected_mi, source, source_uncorr, target = _get_gauss_data(seed=SEED)
+
+    # Run Numba Cuda estimator.
+    print('Numba Cuda')
+    settings = {'debug': True, 'return_counts': True}
+    numbaCuda_est = NumbaCudaKraskovCMI(settings=settings)
+    start1 = time.process_time()
+    (mi_numbaCuda, dist_numbaCuda,
+    n_range_var1cond_numbaCuda, n_range_condvar2_numbaCuda, n_range_cond_numbaCuda) = numbaCuda_est.estimate(source, target,
+                                                    source_uncorr)
+    print("\t\tcalculation time", time.process_time() - start1)
+    mi_numbaCuda = mi_numbaCuda[0]
+
+    # Run OpenCL estimator.
+    print('openCL')
+    settings = {'debug': True, 'return_counts': True}
+    ocl_est = OpenCLKraskovCMI(settings=settings)
+    start2 = time.process_time()
+    (mi_ocl, dist, n_range_var1,
+     n_range_var2, n_range_cond) = ocl_est.estimate(source, target,
+                                                    source_uncorr)
+    print("\t\tcalculation time", time.process_time() - start2)
+    mi_ocl = mi_ocl[0]
+
+    # Run JIDT estimator.
+    print('jidt')
+    jidt_est = JidtKraskovCMI(settings={})
+    start3 = time.process_time()
+    mi_jidt = jidt_est.estimate(source, target, source_uncorr)
+    print("\t\tcalculation time", time.process_time() - start3)
+
+    print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
+          'NumbaCuda MI result: {2:.4f} nats; expected to be close to {3:.4f} nats for uncorrelated '
+          'Gaussians.'.format(mi_jidt, mi_ocl, mi_numbaCuda, expected_mi))
+    assert np.isclose(mi_jidt, expected_mi, atol=0.05), (
+                        'MI estimation for uncorrelated Gaussians using the '
+                        'JIDT estimator failed (error larger 0.05).')
+    assert np.isclose(mi_ocl, expected_mi, atol=0.05), (
+                        'MI estimation for uncorrelated Gaussians using the '
+                        'OpenCL estimator failed (error larger 0.05).')
+    assert np.isclose(mi_numbaCuda, expected_mi, atol=0.05), (
+                        'MI estimation for uncorrelated Gaussians using the '
+                        'numba CUDA estimator failed (error larger 0.05).')
+    assert np.isclose(mi_ocl, mi_jidt, atol=0.005), (
+                        'MI estimation for uncorrelated Gaussians using the '
+                        'OpenCL estimator failed (error larger 0.005).')
+    assert np.isclose(mi_numbaCuda, mi_jidt, atol=0.005), (
+                        'MI estimation for uncorrelated Gaussians using the '
+                        'numba CUDA estimator failed (error larger 0.005).')
+
+    print("passed")
+
+
 def test_knn_one_dim():
     """Test kNN search in 1D."""
 
@@ -272,6 +335,7 @@ def test_knn_one_dim():
     assert np.isclose(dist1[3], 0.1), 'Distance 3 not correct.'
 
     print("passed")
+
 
 def test_knn_two_dim():
     """Test kNN search in 2D."""
@@ -306,11 +370,13 @@ def test_knn_two_dim():
     assert np.isclose(dist1[3], 0.9), 'Distances 3 not correct.'
 
     print("passed")
-'''
+
 
 if __name__ == '__main__':
     #test_knn_one_dim()
     #test_knn_two_dim()
+
     test_mi_uncorrelated_gaussians()
-    test_mi_correlated_gaussians()
-    test_mi_uncorrelated_gaussians_three_dims()
+    #test_mi_correlated_gaussians()
+    #test_mi_uncorrelated_gaussians_three_dims()
+    #test_cmi_correlated_gaussians()
