@@ -4,10 +4,8 @@ This module provides unit tests for Numba estimators.
 Estimators are tested against JIDT and OpenCL estimators.
 """
 
-import math
 import pytest
 import numpy as np
-import time
 from idtxl.estimators_opencl import OpenCLKraskovMI, OpenCLKraskovCMI
 from idtxl.estimators_jidt import JidtKraskovMI, JidtKraskovCMI
 from idtxl.estimators_numba import NumbaCudaKraskovMI, NumbaCudaKraskovCMI

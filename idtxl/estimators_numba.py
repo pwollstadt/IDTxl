@@ -18,6 +18,7 @@ except ImportError as err:
 
 logger = logging.getLogger(__name__)
 
+global KGLOBAL
 
 class NumbaKraskov(GPUKraskov):
     """Abstract class for implementation of Numba estimators.
@@ -304,6 +305,11 @@ class NumbaCudaKraskovMI(NumbaKraskov):
         #if self.settings['debug']:
         #    cuda.profile_start()
 
+        #global KGLOBAL
+        KGLOBAL = self.settings['kraskov_k']
+
+        a=1
+
     def estimate(self, var1, var2, n_chunks=1):
         """Estimate mutual information.
 
@@ -442,18 +448,14 @@ class NumbaCudaKraskovMI(NumbaKraskov):
         # copy data to device
         d_pointset = cuda.to_device(pointset)
         d_distances = cuda.to_device(distances)
-        d_kdistances = cuda.to_device(kdistances)
 
         # get number of sm
         device = cuda.get_current_device()
-        my_sms = getattr(cuda.gpus[self.settings['gpuid']]._device, 'MULTIPROCESSOR_COUNT')
-        max_mem = self._get_max_mem()
 
         tpb = int32(device.WARP_SIZE)
         bpg = int(np.ceil(float(self.signallength) / tpb))
 
         # knn search on device
-        start2 = time.process_time()
         nk._knnNumbaCuda[bpg, tpb](d_pointset,
                                    d_pointset,
                                    d_distances,
@@ -462,8 +464,7 @@ class NumbaCudaKraskovMI(NumbaKraskov):
                                    self.signallength,
                                    self.signallength,
                                    self.settings['kraskov_k'],
-                                   self.settings['theiler_t'],
-                                   d_kdistances)
+                                   self.settings['theiler_t'])
 
         d_distances.copy_to_host(distances)
         vecradius = distances[:, self.settings['kraskov_k']-1].copy()
@@ -485,9 +486,7 @@ class NumbaCudaKraskovMI(NumbaKraskov):
             var1dim,
             self.chunklength,
             self.signallength,
-            self.settings['kraskov_k'],
             self.settings['theiler_t'])
-
 
         # copy ncounts from device to host
         ncount_var1 = d_npoints1.copy_to_host()
@@ -508,7 +507,6 @@ class NumbaCudaKraskovMI(NumbaKraskov):
             var2dim,
             self.chunklength,
             self.signallength,
-            self.settings['kraskov_k'],
             self.settings['theiler_t'])
 
         # copy variables from device to host
@@ -720,12 +718,9 @@ class NumbaCudaKraskovCMI(NumbaKraskov):
         # copy data to device
         d_pointset = cuda.to_device(pointset)
         d_distances = cuda.to_device(distances)
-        d_kdistances = cuda.to_device(kdistances)
 
         # get number of sm
         device = cuda.get_current_device()
-        my_sms = getattr(cuda.gpus[self.settings['gpuid']]._device, 'MULTIPROCESSOR_COUNT')
-        max_mem = self._get_max_mem()
 
         tpb = device.WARP_SIZE
         bpg = int(np.ceil(float(self.signallength) / tpb))
@@ -739,8 +734,7 @@ class NumbaCudaKraskovCMI(NumbaKraskov):
                                    self.signallength,
                                    self.signallength,
                                    self.settings['kraskov_k'],
-                                   self.settings['theiler_t'],
-                                   d_kdistances)
+                                   self.settings['theiler_t'])
 
         d_distances.copy_to_host(distances)
         vecradius = distances[:, self.settings['kraskov_k'] - 1].copy()
@@ -765,7 +759,6 @@ class NumbaCudaKraskovCMI(NumbaKraskov):
             var1conddim,
             self.chunklength,
             self.signallength,
-            self.settings['kraskov_k'],
             self.settings['theiler_t'])
 
         # copy variables from device to host
@@ -785,7 +778,6 @@ class NumbaCudaKraskovCMI(NumbaKraskov):
             condvar2dim,
             self.chunklength,
             self.signallength,
-            self.settings['kraskov_k'],
             self.settings['theiler_t'])
 
         # copy variables from device to host
@@ -805,7 +797,6 @@ class NumbaCudaKraskovCMI(NumbaKraskov):
             conddim,
             self.chunklength,
             self.signallength,
-            self.settings['kraskov_k'],
             self.settings['theiler_t'])
 
         # copy variables from device to host

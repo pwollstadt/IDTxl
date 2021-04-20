@@ -2,6 +2,9 @@ import sys
 from . import idtxl_exceptions as ex
 import numpy as np
 import math
+
+#from idtxl.estimators_numba import KGLOBAL
+
 try:
     from numba import njit, prange, cuda, float32, float64, int32, int64, jitclass, types
 except ImportError as err:
@@ -9,6 +12,9 @@ except ImportError as err:
                             ' it using pip or the package manager to use '
                             'the Numba estimators.')
 
+device = cuda.get_current_device()
+tpb = int32(device.WARP_SIZE)
+TPB = int(tpb.T)
 
 @njit()
 def _insertPointKlistNumbaCPU(kth, dist, kdist):
@@ -136,8 +142,7 @@ def _knnNumbaCuda(gquery,
                  signallength_padded,
                  signallength_orig,
                  kth,
-                 exclude,
-                 kdistances):
+                 exclude):
 
     # thread indexes
     tx = cuda.threadIdx.x
@@ -179,26 +184,26 @@ def _knnNumbaCuda(gquery,
                     # insertPointKlist
                     # get dist position for kdist
                     ik = 0
-                    while (temp_dist > kdistances[tid, ik]) and (ik < kth - 1):
+                    while (temp_dist > gdistances[tid, ik]) and (ik < kth - 1):
                         ik += 1
 
                     for k2 in range(kth - 1, ik, -1):
-                        kdistances[tid, k2] = kdistances[tid, k2 - 1]
+                        gdistances[tid, k2] = gdistances[tid, k2 - 1]
 
                     # Replace
-                    kdistances[tid, ik] = temp_dist
+                    gdistances[tid, ik] = temp_dist
 
-                    r_kdist = kdistances[tid, kth - 1]
+                    r_kdist = gdistances[tid, kth - 1]
 
         cuda.syncthreads()
 
         # copy to global memory
-        for k in range(kth):
-            gdistances[tid, k] = kdistances[tid, k]
+        #for k in range(kth):
+        #    gdistances[tid, k] = kdistances[tid, k]
 
 
 @cuda.jit
-def _rsAllNumbaCuda(gquery, gpointset, vecradius, npoints, pointdim, chunklength, signallength_orig, kth, exclude):
+def _rsAllNumbaCuda(gquery, gpointset, vecradius, npoints, pointdim, chunklength, signallength_orig, exclude):
 
     # thread indexes
     tx = cuda.threadIdx.x
