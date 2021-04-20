@@ -74,7 +74,6 @@ def _get_gauss_data(n=obs, nrtrials=1, covariance=0.4, expand=True, seed=None):
     return expected_mi, src_corr, src_uncorr, target
 
 
-
 @jpype_missing
 def test_mi_correlated_gaussians():
     """Test MI estimator on uncorrelated Gaussian data."""
@@ -283,8 +282,7 @@ def test_mi_uncorrelated_gaussians():
     print('passed')
 
 
-
-def test_knn_one_dim_CPU():
+def test_knn_one_dim_cpu():
     """Test kNN search in 1D."""
 
     print("Numba CPU: test_knn_one_dim")
@@ -315,7 +313,8 @@ def test_knn_one_dim_CPU():
 
     print("passed")
 
-def test_knn_two_dim_CPU():
+
+def test_knn_two_dim_cpu():
     """Test kNN search in 2D."""
 
     print("Numba CPU: test_knn_two_dim")
@@ -351,7 +350,7 @@ def test_knn_two_dim_CPU():
 
 
 if __name__ == '__main__':
-    test_knn_one_dim_CPU()
-    test_knn_two_dim_CPU()
+    test_knn_one_dim_cpu()
+    test_knn_two_dim_cpu()
     test_mi_uncorrelated_gaussians()
     test_mi_correlated_gaussians()
