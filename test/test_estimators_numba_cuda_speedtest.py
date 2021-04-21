@@ -1,6 +1,6 @@
 """Speedtest Numba estimators.
-
 This module provides a huge dataset speed test for Numba estimators against JIDT and OpenCL estimators.
+by Michael Lindner, Uni Göttingen, 2021
 """
 
 import pytest
@@ -85,7 +85,7 @@ def _get_gauss_data(n=10000, nrtrials=1, covariance=0.4, expand=True, seed=None)
 
 
 def initialize_numba():
-    """precpmole numba kernels before speed test"""
+    """precompile numba kernels before speed test"""
     expected_mi, source, source_uncorr, target = _get_gauss_data(n=100, seed=SEED)
     settings = {'debug': False}
     numbaCuda_est = NumbaCudaKraskovMI(settings=settings)
@@ -102,7 +102,7 @@ def test_mi_correlated_gaussians():
 
     # Run NumbaCuda MI estimator
     print('\tNumbaCuda')
-    settings = {'debug': True, 'return_counts': True}
+    settings = {'debug': True, 'return_counts': True, 'threadsperblock': 160}
     numbaCuda_est = NumbaCudaKraskovMI(settings=settings)
     start1 = time.process_time()
     (mi_numbaCuda, dist_numbaCuda,

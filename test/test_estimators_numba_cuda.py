@@ -2,6 +2,8 @@
 
 This module provides unit tests for Numba estimators.
 Estimators are tested against JIDT and OpenCL estimators.
+
+by Michael Lindner, Uni Göttingen, 2021
 """
 
 import pytest
