@@ -1,8 +1,12 @@
+"""Provides numba CPU and CUDA estimators
+by Michael Lindner, Uni Göttingen, 2021
+"""
+
 import logging
 from pkg_resources import resource_filename
 import numpy as np
 from idtxl.estimators_gpu import GPUKraskov
-from idtxl.idtxl_utils import DotDict, get_cuda_lib
+from idtxl.idtxl_utils import DotDict
 import ctypes
 import math
 import idtxl.numba_kernels as nk
@@ -68,11 +72,14 @@ class NumbaKraskov(GPUKraskov):
             - return_counts : bool [optional] - return intermediate results,
               i.e. neighbour counts from range searches and KNN distances
               (default=False)
+
+    by Michael Lindner, Uni Göttingen, 2021
     """
 
     def __init__(self, settings=None):
         super().__init__(settings)  # set defaults
         self.settings.setdefault('lag_mi', 0)
+        self.settings.setdefault('threadsperblock', 0)
 
     # def __init__(self, settings=None):
     #     # Get defaults for estimator settings
@@ -155,6 +162,8 @@ class NumbaCPUKraskovMI(NumbaKraskov):
               the lagged MI between processes (default=0)
             - floattype : int [optional] - 32 or 64 - type of input data float32
               or float64  (default=32)
+
+    by Michael Lindner, Uni Göttingen, 2021
     """
 
     def __init__(self, settings=None):
@@ -287,8 +296,11 @@ class NumbaCudaKraskovMI(NumbaKraskov):
               (default=False)
             - lag_mi : int [optional] - time difference in samples to calculate
               the lagged MI between processes (default=0)
-            - floattype : int [optional] - 32 or 64 - type of input data float32
-              or float64  (default=32)
+            - threadsperblock [optional] - threads per block for CUDA calculation -
+              should be round multiple of warp size (default is the warp size of
+              graphic card)
+
+    by Michael Lindner, Uni Göttingen, 2021
     """
 
     def __init__(self, settings=None):
@@ -304,11 +316,6 @@ class NumbaCudaKraskovMI(NumbaKraskov):
 
         #if self.settings['debug']:
         #    cuda.profile_start()
-
-        #global KGLOBAL
-        KGLOBAL = self.settings['kraskov_k']
-
-        a=1
 
     def estimate(self, var1, var2, n_chunks=1):
         """Estimate mutual information.
@@ -368,8 +375,6 @@ class NumbaCudaKraskovMI(NumbaKraskov):
             n_chunks_current_run = subset1.shape[0] // self.chunklength
             results = self._estimate_single_run(subset1, subset2, n_chunks_current_run)
 
-            ### debugging distances
-            #distances = np.concatenate((distances, results[:, 0]))
             if self.settings['debug']:
                 logger.debug(
                     'MI estimation results - MI: {} - Distances: {}'.format(
@@ -436,10 +441,6 @@ class NumbaCudaKraskovMI(NumbaKraskov):
         kdistances = np.zeros([self.signallength, self.settings['kraskov_k']])
         kdistances.fill(math.inf)
 
-        # if self.settings['floattype'] == 32:
-        #     if not dist.dtype == np.float32:
-        #         dist = dist.astype(np.float32)
-
         # add noise
         if self.settings['noise_level'] > 0:
             pointset, pointset_var1, pointset_var2 = self._add_noise_all(pointset, pointset_var1, pointset_var2)
@@ -449,10 +450,14 @@ class NumbaCudaKraskovMI(NumbaKraskov):
         d_pointset = cuda.to_device(pointset)
         d_distances = cuda.to_device(distances)
 
-        # get number of sm
+        # get current device
         device = cuda.get_current_device()
 
-        tpb = int32(device.WARP_SIZE)
+        if self.settings['threadsperblock'] == 0:
+            tpb = device.WARP_SIZE
+        else:
+            tpb = self.settings['threadsperblock']
+
         bpg = int(np.ceil(float(self.signallength) / tpb))
 
         # knn search on device
@@ -555,6 +560,11 @@ class NumbaCudaKraskovCMI(NumbaKraskov):
             - return_counts : bool [optional] - return intermediate results,
               i.e. neighbour counts from range searches and KNN distances
               (default=False)
+            - threadsperblock [optional] - threads per block for CUDA calculation -
+              should be round multiple of warp size (default is the warp size of
+              graphic card)
+
+    by Michael Lindner, Uni Göttingen, 2021
     """
 
     def __init__(self, settings=None):
@@ -722,7 +732,11 @@ class NumbaCudaKraskovCMI(NumbaKraskov):
         # get number of sm
         device = cuda.get_current_device()
 
-        tpb = device.WARP_SIZE
+        if self.settings['threadsperblock'] == 0:
+            tpb = device.WARP_SIZE
+        else:
+            tpb = self.settings['threadsperblock']
+
         bpg = int(np.ceil(float(self.signallength) / tpb))
 
         # knn search on device
