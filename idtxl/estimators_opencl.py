@@ -151,6 +151,8 @@ class OpenCLKraskovMI(OpenCLKraskov):
     Calculate the mutual information (MI) between two variables using OpenCL
     GPU-code. See parent class for references.
 
+    Results are returned in nats.
+
     Args:
         settings : dict [optional]
             set estimator parameters:
@@ -478,6 +480,8 @@ class OpenCLKraskovCMI(OpenCLKraskov):
     using OpenCL GPU-code. If no conditional is given (is None), the function
     returns the mutual information between var1 and var2. See parent class for
     references.
+
+    Results are returned in nats.
 
     Args:
         settings : dict [optional]
