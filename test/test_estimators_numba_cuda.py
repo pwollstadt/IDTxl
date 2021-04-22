@@ -88,7 +88,6 @@ def test_mi_correlated_gaussians():
      n_range_var1_numbaCuda, n_range_var2_numbaCuda) = numbaCuda_est.estimate(source, target)
     mi_numbaCuda = mi_numbaCuda[0]
 
-
     # Run OpenCL MI estimator
     settings = {'debug': True, 'return_counts': True}
     ocl_est = OpenCLKraskovMI(settings=settings)
@@ -99,8 +98,9 @@ def test_mi_correlated_gaussians():
     jidt_est = JidtKraskovMI(settings={})
     mi_jidt = jidt_est.estimate(source, target)
 
-    print('\tJIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
-          'NumbaCuda MI result: {2:.4f} nats; expected to be close to {3:.4f} nats for uncorrelated '
+    print('\tJIDT MI result: {0:.4f} nats\n\tOpenCL MI result: {1:.4f} nats '
+          '\n\tNumbaCUDA MI result: {2:.4f} nats '
+          '\n\texpected to be close to {3:.4f} nats for correlated '
           'Gaussians.'.format(mi_jidt, mi_ocl, mi_numbaCuda, expected_mi))
     assert np.isclose(mi_jidt, expected_mi, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
@@ -110,10 +110,10 @@ def test_mi_correlated_gaussians():
                         'OpenCL estimator failed (error larger 0.05).')
     assert np.isclose(mi_numbaCuda, expected_mi, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'NumbaCuda estimator failed (error larger 0.05).')
+                        'NumbaCUDA estimator failed (error larger 0.05).')
     assert np.isclose(mi_numbaCuda, mi_jidt, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'NumbaCuda estimator failed (error larger 0.05).')
+                        'NumbaCUDA estimator failed (error larger 0.05).')
 
     print("passed")
 
@@ -146,8 +146,8 @@ def test_mi_uncorrelated_gaussians():
     jidt_est = JidtKraskovMI(settings={})
     mi_jidt = jidt_est.estimate(var1, var2)
 
-    print('\tJIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; NumbaCuda MI result: {2:.4f} nats; '
-          'expected to be close to 0 for uncorrelated Gaussians.'.format(mi_jidt, mi_ocl, mi_numbaCuda))
+    print('\tJIDT MI result: {0:.4f} nats\n\tOpenCL MI result: {1:.4f} nats\n\tNumbaCUDA MI result: {2:.4f} nats '
+          '\n\texpected to be close to 0 for uncorrelated Gaussians.'.format(mi_jidt, mi_ocl, mi_numbaCuda))
     assert np.isclose(mi_jidt, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'JIDT estimator failed (error larger 0.05).')
@@ -156,14 +156,14 @@ def test_mi_uncorrelated_gaussians():
                         'OpenCL estimator failed (error larger 0.05).')
     assert np.isclose(mi_numbaCuda, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'NumbaCuda estimator failed (error larger 0.05).')
+                        'NumbaCUDA estimator failed (error larger 0.05).')
 
     assert np.isclose(mi_ocl, mi_jidt, atol=0.005), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.05).')
     assert np.isclose(mi_numbaCuda, mi_jidt, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'NumbaCuda estimator failed (error larger 0.05).')
+                        'NumbaCUDA estimator failed (error larger 0.05).')
 
     print("passed")
 
@@ -197,8 +197,8 @@ def test_mi_uncorrelated_gaussians_three_dims():
     jidt_est = JidtKraskovMI(settings={})
     mi_jidt = jidt_est.estimate(var1, var2)
 
-    print('\tJIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; Numba Cuda MI result: {2:.4f} nats; '
-          'expected to be close to 0 nats for uncorrelated '
+    print('\tJIDT MI result: {0:.4f} nats\n\tOpenCL MI result: {1:.4f} nats\n\tNumbaCUDA MI result: {2:.4f} nats; '
+          '\n\texpected to be close to 0 nats for uncorrelated 3D'
           'Gaussians.'.format(mi_jidt, mi_ocl, mi_numbaCuda))
     assert np.isclose(mi_jidt, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
@@ -208,7 +208,7 @@ def test_mi_uncorrelated_gaussians_three_dims():
                         'OpenCL estimator failed (error larger 0.05).')
     assert np.isclose(mi_numbaCuda, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'NumbaCuda estimator failed (error larger 0.05).')
+                        'NumbaCUDA estimator failed (error larger 0.05).')
     assert np.isclose(mi_ocl, mi_jidt, atol=0.005), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.05).')
@@ -249,25 +249,25 @@ def test_mi_correlated_gaussians_two_chunks():
     mi_jidt = jidt_est.estimate(source[0:int(n_points/2), :],
                                 target[0:int(n_points/2), :])
 
-    print('\tJIDT MI result: {0:.4f} nats; OpenCL MI result: [{1:.4f}, {2:.4f}] '
-          'nats; OpenCL MI result: [{3:.4f}, {4:.4f}] '
-          'expected to be close to {5:.4f} nats for correlated '
-          'Gaussians.'.format(mi_jidt, mi_ocl[0], mi_ocl[1], mi_numbaCuda[0], mi_numbaCuda[1], expected_mi))
+    print('\tJIDT MI result: {0:.4f} nats\n\tOpenCL MI result: [{1:.4f}, {2:.4f}] '
+          'nats\n\tNumbaCUDA MI result: [{3:.4f}, {4:.4f}] nats'
+          '\n\texpected to be close to {5:.4f} nats for correlated Gaussians '
+          'with two chunks.'.format(mi_jidt, mi_ocl[0], mi_ocl[1], mi_numbaCuda[0], mi_numbaCuda[1], expected_mi))
     assert np.isclose(mi_jidt, expected_mi, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'JIDT estimator failed (error larger 0.05).')
     assert np.isclose(mi_numbaCuda[0], expected_mi, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'numba CUDA estimator failed (error larger 0.05).')
+                        'NumbaCUDA estimator failed (error larger 0.05).')
     assert np.isclose(mi_numbaCuda[0], mi_jidt, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'numba CUDA estimator failed (error larger 0.05).')
+                        'NumbaCUDA estimator failed (error larger 0.05).')
     assert np.isclose(mi_numbaCuda[1], mi_jidt, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'numba CUDA estimator failed (error larger 0.05).')
+                        'NumbaCUDA estimator failed (error larger 0.05).')
     assert np.isclose(mi_numbaCuda[0], mi_numbaCuda[1], atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'numba CUDA estimator failed (error larger 0.05).')
+                        'NumbaCUDA estimator failed (error larger 0.05).')
 
     assert np.isclose(mi_ocl[0], expected_mi, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
@@ -312,8 +312,8 @@ def test_cmi_correlated_gaussians():
     jidt_est = JidtKraskovCMI(settings={})
     mi_jidt = jidt_est.estimate(source, target, source_uncorr)
 
-    print('\tJIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
-          'NumbaCuda MI result: {2:.4f} nats; expected to be close to {3:.4f} nats for uncorrelated '
+    print('\tJIDT CMI result: {0:.4f} nats\n\tOpenCL CMI result: {1:.4f} nats '
+          '\n\tNumbaCUDA CMI result: {2:.4f} nats\n\texpected to be close to {3:.4f} nats for correlated '
           'Gaussians.'.format(mi_jidt, mi_ocl, mi_numbaCuda, expected_mi))
     assert np.isclose(mi_jidt, expected_mi, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
@@ -323,13 +323,13 @@ def test_cmi_correlated_gaussians():
                         'OpenCL estimator failed (error larger 0.05).')
     assert np.isclose(mi_numbaCuda, expected_mi, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'numba CUDA estimator failed (error larger 0.05).')
+                        'NumbaCUDA estimator failed (error larger 0.05).')
     assert np.isclose(mi_ocl, mi_jidt, atol=0.005), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.005).')
     assert np.isclose(mi_numbaCuda, mi_jidt, atol=0.005), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'numba CUDA estimator failed (error larger 0.005).')
+                        'NumbaCUDA estimator failed (error larger 0.005).')
 
     print("passed")
 
@@ -346,7 +346,7 @@ def test_cmi_uncorrelated_gaussians():
     var2 = np.random.randn(n_obs, 1)
     var3 = np.random.randn(n_obs, 1)
 
-        # Run Numba Cuda estimator.
+    # Run Numba Cuda estimator.
     settings = {'debug': True, 'return_counts': True}
     numbaCuda_est = NumbaCudaKraskovCMI(settings=settings)
     (mi_numbaCuda, dist_numbaCuda, n_range_var1cond_numbaCuda, n_range_condvar2_numbaCuda,
@@ -364,8 +364,8 @@ def test_cmi_uncorrelated_gaussians():
     jidt_est = JidtKraskovCMI(settings={})
     mi_jidt = jidt_est.estimate(var1, var2, var3)
 
-    print('\tJIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
-          'NumbaCuda MI result: {2:.4f} nats; expected to be close to {3:.4f} nats for uncorrelated '
+    print('\tJIDT CMI result: {0:.4f} nats\n\tOpenCL CMI result: {1:.4f} nats '
+          '\n\tNumbaCUDA CMI result: {2:.4f} nats\n\texpected to be close to {3:.4f} nats for uncorrelated '
           'Gaussians.'.format(mi_jidt, mi_ocl, mi_numbaCuda, 0))
     assert np.isclose(mi_jidt, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
@@ -375,13 +375,13 @@ def test_cmi_uncorrelated_gaussians():
                         'OpenCL estimator failed (error larger 0.05).')
     assert np.isclose(mi_numbaCuda, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'numba CUDA estimator failed (error larger 0.05).')
+                        'NumbaCUDA estimator failed (error larger 0.05).')
     assert np.isclose(mi_ocl, mi_jidt, atol=0.005), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.005).')
     assert np.isclose(mi_numbaCuda, mi_jidt, atol=0.005), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'numba CUDA estimator failed (error larger 0.005).')
+                        'NumbaCUDA estimator failed (error larger 0.005).')
     print("passed")
 
 
@@ -416,12 +416,12 @@ def test_cmi_uncorrelated_gaussians_three_dims():
     jidt_est = JidtKraskovCMI(settings={})
     mi_jidt = jidt_est.estimate(var1, var2)
 
-    print('\tJIDT MI result: {0:.4f} nats; numba CUDA MI result: {1:.4f} nats; OpenCL MI result: {2:.4f} nats; '
-          'expected to be close to 0 nats for uncorrelated '
+    print('\tJIDT CMI result: {0:.4f} nats\n\tOpenCL CMI result: {2:.4f} nats\n\tNumbaCUDA CMI result: {1:.4f} nats'
+          '\n\texpected to be close to 0 nats for uncorrelated 3D'
           'Gaussians.'.format(mi_jidt, mi_numbaCuda, mi_ocl))
     assert np.isclose(mi_numbaCuda, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'numba CUDA estimator failed (error larger 0.05).')
+                        'NumbaCUDA estimator failed (error larger 0.05).')
     assert np.isclose(mi_jidt, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'JIDT estimator failed (error larger 0.05).')
@@ -430,7 +430,7 @@ def test_cmi_uncorrelated_gaussians_three_dims():
                         'OpenCL estimator failed (error larger 0.05).')
     assert np.isclose(mi_numbaCuda, mi_jidt, atol=0.005), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'numba CUDA estimator failed (error larger 0.05).')
+                        'NumbaCUDA estimator failed (error larger 0.05).')
     assert np.isclose(mi_ocl, mi_jidt, atol=0.0001), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.05).')
@@ -446,21 +446,21 @@ def test_cmi_uncorrelated_gaussians_three_dims():
     mi_ocl = mi_ocl[0]
     mi_jidt = jidt_est.estimate(var1, var2, var3)
 
-    print('\tJIDT MI result: {0:.4f} nats; numba CUDA MI result: {1:.4f} nats; OpenCL MI result: {2:.4f} nats; '
-          'expected to be close to 0 nats for uncorrelated '
+    print('\tJIDT MI result: {0:.4f} nats\n\tOpenCL MI result: {2:.4f} nats\n\tNumbaCUDA MI result: {1:.4f} nats '
+          '\n\texpected to be close to 0 nats for uncorrelated 3D'
           'Gaussians.'.format(mi_jidt, mi_numbaCuda, mi_ocl))
     assert np.isclose(mi_jidt, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'JIDT estimator failed (error larger 0.05).')
     assert np.isclose(mi_numbaCuda, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'numba CUDA estimator failed (error larger 0.05).')
+                        'NumbaCUDA estimator failed (error larger 0.05).')
     assert np.isclose(mi_ocl, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.05).')
     assert np.isclose(mi_numbaCuda, mi_jidt, atol=0.005), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'numba CUDA estimator failed (error larger 0.05).')
+                        'NumbaCUDA estimator failed (error larger 0.05).')
     assert np.isclose(mi_ocl, mi_jidt, atol=0.0001), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.05).')
@@ -497,9 +497,9 @@ def test_cmi_uncorrelated_gaussians_unequal_dims():
     jidt_est = JidtKraskovCMI(settings={})
     mi_jidt = jidt_est.estimate(var1, var2)
 
-    print('\tJIDT MI result: {0:.4f} nats; numba CUDA MI result: {1:.4f} nats; OpenCL MI result: {2:.4f} nats; '
-          'expected to be close to 0 nats for uncorrelated '
-          'Gaussians.'.format(mi_jidt, mi_numbaCuda, mi_ocl))
+    print('\tJIDT MI result: {0:.4f} nats\n\tOpenCL MI result: {2:.4f} nats \n\tNumbaCUDA MI result: {1:.4f} nats'
+          '\n\texpected to be close to 0 nats for uncorrelated '
+          'Gaussians with unequal dims.'.format(mi_jidt, mi_numbaCuda, mi_ocl))
     assert np.isclose(mi_jidt, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'JIDT estimator failed (error larger 0.05).')
@@ -511,7 +511,7 @@ def test_cmi_uncorrelated_gaussians_unequal_dims():
                         'OpenCL estimator failed (error larger 0.05).')
     assert np.isclose(mi_numbaCuda, mi_jidt, atol=0.005), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'numba CUDA estimator failed (error larger 0.05).')
+                        'NumbaCUDA estimator failed (error larger 0.05).')
     assert np.isclose(mi_ocl, mi_jidt, atol=0.0001), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.05).')
@@ -527,21 +527,21 @@ def test_cmi_uncorrelated_gaussians_unequal_dims():
     mi_ocl = mi_ocl[0]
     mi_jidt = jidt_est.estimate(var1, var2, var3)
 
-    print('\tJIDT MI result: {0:.4f} nats; numba CUDA MI result: {1:.4f} nats; OpenCL MI result: {2:.4f} nats; '
-          'expected to be close to 0 nats for uncorrelated '
-          'Gaussians.'.format(mi_jidt, mi_numbaCuda, mi_ocl))
+    print('\tJIDT CMI result: {0:.4f} nats\n\tNumbaCUDA MI result: {1:.4f} nats\n\tOpenCL MI result: {2:.4f} nats '
+          '\n\texpected to be close to 0 nats for uncorrelated '
+          'Gaussians with unequal dims.'.format(mi_jidt, mi_numbaCuda, mi_ocl))
     assert np.isclose(mi_jidt, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'JIDT estimator failed (error larger 0.05).')
     assert np.isclose(mi_numbaCuda, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'numba CUDA estimator failed (error larger 0.05).')
+                        'NumbaCUDA estimator failed (error larger 0.05).')
     assert np.isclose(mi_ocl, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.05).')
     assert np.isclose(mi_numbaCuda, mi_jidt, atol=0.005), (
                         'MI estimation for uncorrelated Gaussians using the '
-                        'numba CUDA estimator failed (error larger 0.005).')
+                        'NumbaCUDA estimator failed (error larger 0.005).')
     assert np.isclose(mi_ocl, mi_jidt, atol=0.0001), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.0001).')
@@ -550,7 +550,7 @@ def test_cmi_uncorrelated_gaussians_unequal_dims():
 
 @jpype_missing
 def test_local_values():
-    """Test estimation of local MI and CMI using numba CUDA estimators."""
+    """Test estimation of local MI and CMI using NumbaCUDA estimators."""
 
     print('test local MI and CMI on correlated Gaussian data: ')
 
@@ -599,12 +599,12 @@ def test_local_values():
 
     # Report results
     print('\tOpenCL MI result: {0:.4f} nats (chunk 1); {1:.4f} nats (chunk 2) '
-          'numba CUDA MI result: {2:.4f} nats (chunk 1); {3:.4f} nats (chunk 2) '
-          'expected to be close to {4:.4f} nats for uncorrelated '
+          '\n\tNumbaCUDA MI result: {2:.4f} nats (chunk 1); {3:.4f} nats (chunk 2) '
+          '\n\texpected to be close to {4:.4f} nats for uncorrelated '
           'Gaussians.'.format(mi_ch1, mi_ch2, mi_numbaCuda_ch1, mi_numbaCuda_ch2, expec_mi))
     print('\tOpenCL CMI result: {0:.4f} nats (chunk 1); {1:.4f} nats (chunk 2) '
-          'numba CUDA CMI result: {2:.4f} nats (chunk 1); {3:.4f} nats (chunk 2) '
-          'expected to be close to {4:.4f} nats for uncorrelated '
+          '\n\tNumbaCUDA CMI result: {2:.4f} nats (chunk 1); {3:.4f} nats (chunk 2) '
+          '\n\texpected to be close to {4:.4f} nats for uncorrelated '
           'Gaussians.'.format(cmi_ch1, cmi_ch2, cmi_numbaCuda_ch1, cmi_numbaCuda_ch2, expec_mi))
 
     assert np.isclose(mi_ch1, expec_mi, atol=0.05)
@@ -665,7 +665,7 @@ def test_insufficient_no_points():
 
 
 def test_user_input():
-    """Test Numba CUDA estimator for invalid user input"""
+    """Test numba CUDA estimator for invalid user input"""
 
     print('Test invalid user input')
 

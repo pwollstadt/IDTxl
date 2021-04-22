@@ -23,7 +23,7 @@ except ImportError as err:
 
 # ---------- Set values for benchmarking here --------------------------
 gpuid = 0  # id of the GPU you want to test on
-signallength = 100000  # signallength of the data you want to use the numba CUDA estimator on
+signallength = 10000  # signallength of the data you want to use the numba CUDA estimator on
 dimension = 1  # dimension of the data you want to use the numba CUDA estimator on
 iterations = 5  # number of iterations for the mean calculation time
 maxtpb = 512  # maximum value for TPB that should be tested (round multiples of warp size are test until this value)
@@ -162,7 +162,7 @@ def benchmark_mi():
 
     a = np.arange(warpsize, maxtpb+1, warpsize)
 
-    print('Benchmark numba CUDA MI estimator on {0} with'
+    print('\nBenchmark numba CUDA MI estimator on {0} with'
           ' signallength {1:d} and {2:d} iterations:'.format(GPU, signallength, iterations))
 
     tpbtime = np.empty(shape=(len(a), 1), dtype=float)
@@ -193,7 +193,7 @@ def benchmark_cmi():
 
     a = np.arange(warpsize, maxtpb+1, warpsize)
 
-    print('Benchmark numba CUDA CMI estimator on {0} with'
+    print('\nBenchmark numba CUDA CMI estimator on {0} with'
           ' signallength {1:d} and {2:d} iterations:'.format(GPU, signallength, iterations))
 
     tpbtime = np.empty(shape=(len(a), 1), dtype=float)
