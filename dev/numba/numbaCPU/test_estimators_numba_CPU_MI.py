@@ -133,9 +133,9 @@ def test_mi_correlated_gaussians():
     print("\tResults of mi calculations")
     print("\t\t", mi_jidt, " mi JIDT")
     print("\t\t", mi_ocl, " mi ocl",)
-    print("\t\t", mi_numbaCPU, " mi numbaCPU 32bit")
-    print("\t\t", mi_numbaCPU64, " mi numbaCPU 64bit")
-    print("\t\t", mi_numbaCuda, " mi numbaCPU CUDA")
+    print("\t\t", mi_numbaCPU, " mi numba 32bit")
+    print("\t\t", mi_numbaCPU64, " mi numba 64bit")
+    print("\t\t", mi_numbaCuda, " mi numba CUDA")
 
     '''
     import matplotlib.pyplot as plt
