@@ -6,13 +6,13 @@ Estimators are tested against JIDT and OpenCL estimators.
 by Michael Lindner, Uni Göttingen, 2021
 """
 
-import math
 import pytest
 import numpy as np
 import time
 from idtxl.estimators_opencl import OpenCLKraskovMI, OpenCLKraskovCMI
 from idtxl.estimators_jidt import JidtKraskovMI, JidtKraskovCMI
-from idtxl.estimators_numba import NumbaCPUKraskovMI, NumbaCudaKraskovMI
+from idtxl.estimators_numba import NumbaCudaKraskovMI, NumbaCudaKraskovCMI
+from dev.numba.numbaCPU.estimators_numba_CPU import NumbaCPUKraskovMI, NumbaCPUKraskovCMI
 from idtxl.idtxl_utils import calculate_mi
 import random as rn
 
@@ -30,7 +30,7 @@ jpype_missing = pytest.mark.skipif(
     reason="Jpype is missing, JIDT estimators are not available")
 
 SEED = 0
-obs = 100000
+obs = 10000
 
 
 def _get_gauss_data(n=obs, nrtrials=1, covariance=0.4, expand=True, seed=None):
@@ -94,16 +94,6 @@ def test_mi_correlated_gaussians():
     print("\t\tcalculation time", time.process_time() - start1)
     mi_numbaCuda = mi_numbaCuda[0]
 
-    # Run NumbaCPU MI estimator 32bit
-    print('\tNumbaCPU 32bit')
-    settings = {'debug': True, 'return_counts': True, 'floattype': int(32)}
-    numbaCPU_est = NumbaCPUKraskovMI(settings=settings)
-    start1 = time.process_time()
-    (mi_numbaCPU, dist_numbaCPU,
-     n_range_var1_numbaCPU, n_range_var2_numbaCPU) = numbaCPU_est.estimate(source, target)
-    print("\t\tcalculation time", time.process_time() - start1)
-    mi_numbaCPU = mi_numbaCPU[0]
-
     # Run NumbaCPU MI estimator 64bit
     print('\tNumbaCPU 64bit')
     settings = {'debug': True, 'return_counts': True, 'floattype': int(64)}
@@ -130,12 +120,6 @@ def test_mi_correlated_gaussians():
     mi_jidt = jidt_est.estimate(source, target)
     print("\t\tcalculation time", time.process_time() - start3)
 
-    print("\tResults of mi calculations")
-    print("\t\t", mi_jidt, " mi JIDT")
-    print("\t\t", mi_ocl, " mi ocl",)
-    print("\t\t", mi_numbaCPU, " mi numba 32bit")
-    print("\t\t", mi_numbaCPU64, " mi numba 64bit")
-    print("\t\t", mi_numbaCuda, " mi numba CUDA")
 
     '''
     import matplotlib.pyplot as plt
@@ -158,18 +142,15 @@ def test_mi_correlated_gaussians():
     plt.show()
     '''
 
-    print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; NumbaCPU MI result: {2:.4f} nats; '
-          'NumbaCuda MI result: {3:.4f} nats; expected to be close to {4:.4f} nats for uncorrelated '
-          'Gaussians.'.format(mi_jidt, mi_ocl, mi_numbaCPU, mi_numbaCuda, expected_mi))
+    print('\n\tJIDT MI result: {0:.4f} nats\n\tOpenCL MI result: {1:.4f} nats\n\tNumbaCPU 64bit MI result: {2:.4f} nats\n\t'
+          'NumbaCuda MI result: {3:.4f} nats\n\texpected to be close to {4:.4f} nats for uncorrelated '
+          'Gaussians.'.format(mi_jidt, mi_ocl, mi_numbaCPU64, mi_numbaCuda, expected_mi))
     assert np.isclose(mi_jidt, expected_mi, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'JIDT estimator failed (error larger 0.05).')
     assert np.isclose(mi_ocl, expected_mi, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.05).')
-    assert np.isclose(mi_numbaCPU, expected_mi, atol=0.05), (
-                        'MI estimation for uncorrelated Gaussians using the '
-                        'NumbaCPU estimator failed (error larger 0.05).')
     assert np.isclose(mi_numbaCPU64, expected_mi, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'NumbaCPU64 estimator failed (error larger 0.05).')
@@ -177,9 +158,6 @@ def test_mi_correlated_gaussians():
                         'MI estimation for uncorrelated Gaussians using the '
                         'NumbaCuda estimator failed (error larger 0.05).')
 
-    assert np.isclose(mi_numbaCPU, mi_jidt, atol=0.001), (
-                        'MI estimation for uncorrelated Gaussians using the '
-                        'NumbaCPU estimator failed (error larger 0.001).')
     assert np.isclose(mi_numbaCPU64, mi_jidt, atol=0.005), (
                         'MI estimation for uncorrelated Gaussians using the '
                         'NumbaCPU64 estimator failed (error larger 0.005).')
@@ -208,9 +186,9 @@ def test_mi_uncorrelated_gaussians():
     mi_numbaCuda = mi_numbaCuda[0]
     print("\t\tcalculation time", time.process_time() - start1)
 
-    # Run NumbaCPU MI estimator 32bit
-    print('\tNumbaCPU 32bit')
-    settings = {'debug': True, 'return_counts': True, 'floattype': int(32)}
+    # Run NumbaCPU MI estimator 64bit
+    print('\tNumbaCPU 64bit')
+    settings = {'debug': True, 'return_counts': True, 'floattype': int(64)}
     numbaCPU_est = NumbaCPUKraskovMI(settings=settings)
     start2 = time.process_time()
     (mi_numbaCPU, dist_numbaCPU,
@@ -256,8 +234,8 @@ def test_mi_uncorrelated_gaussians():
     plt.show()
     '''
 
-    print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; NumbaCuda MI result: {2:.4f} nats; '
-          'NumbaCPU MI result: {3:.4f} nats; expected to be close to 0 for uncorrelated '
+    print('\n\tJIDT MI result: {0:.4f} nats\n\tOpenCL MI result: {1:.4f} nats\n\tNumbaCuda MI result: {2:.4f} nats\n\t'
+          'NumbaCPU 64 bit MI result: {3:.4f} nats\n\texpected to be close to 0 for uncorrelated '
           'Gaussians.'.format(mi_jidt, mi_ocl, mi_numbaCuda, mi_numbaCPU))
     assert np.isclose(mi_jidt, 0, atol=0.05), (
                         'MI estimation for uncorrelated Gaussians using the '
@@ -282,6 +260,82 @@ def test_mi_uncorrelated_gaussians():
                         'MI estimation for uncorrelated Gaussians using the '
                         'NumbaCuda estimator failed (error larger 0.05).')
     print('passed')
+
+
+@jpype_missing
+def test_cmi_correlated_gaussians():
+    """Test estimators on correlated Gaussian data with conditional."""
+
+    print('test CMI on correlated Gaussian data with conditional')
+
+    expected_mi, source, source_uncorr, target = _get_gauss_data(seed=SEED)
+
+    # Run Numba Cuda estimator.
+    settings = {'debug': True, 'return_counts': True}
+    print('\tNumbaCuda')
+    numbaCuda_est = NumbaCudaKraskovCMI(settings=settings)
+    start1 = time.process_time()
+    (mi_numbaCuda, dist_numbaCuda,
+    n_range_var1cond_numbaCuda, n_range_condvar2_numbaCuda, n_range_cond_numbaCuda) = numbaCuda_est.estimate(source, target,
+                                                    source_uncorr)
+    print("\t\tcalculation time", time.process_time() - start1)
+    mi_numbaCuda = mi_numbaCuda[0]
+
+    # Run Numba CPU estimator.
+    settings = {'debug': True, 'return_counts': True}
+    print('\tNumbaCPU')
+    numbaCPU_est = NumbaCPUKraskovCMI(settings=settings)
+    start2 = time.process_time()
+    (mi_numbaCPU, dist_numbaCPU, n_range_var1cond_numbaCPU,
+    n_range_condvar2_numbaCPU, n_range_cond_numbaCPU) = numbaCPU_est.estimate(source, target, source_uncorr)
+    print("\t\tcalculation time", time.process_time() - start2)
+    mi_numbaCPU = mi_numbaCPU[0]
+
+    # Run OpenCL estimator.
+    settings = {'debug': True, 'return_counts': True}
+    print('\tOpenCL')
+    ocl_est = OpenCLKraskovCMI(settings=settings)
+    start3 = time.process_time()
+    (mi_ocl, dist, n_range_var1,
+     n_range_var2, n_range_cond) = ocl_est.estimate(source, target,
+                                                    source_uncorr)
+    print("\t\tcalculation time", time.process_time() - start3)
+    mi_ocl = mi_ocl[0]
+
+    # Run JIDT estimator.
+    print('\tJIDT')
+    jidt_est = JidtKraskovCMI(settings={})
+    start4 = time.process_time()
+    mi_jidt = jidt_est.estimate(source, target, source_uncorr)
+    print("\t\tcalculation time", time.process_time() - start4)
+
+    print('\tJIDT CMI result: {0:.4f} nats\n\tOpenCL CMI result: {1:.4f} nats '
+          '\n\tNumbaCUDA CMI result: {2:.4f} nats\n\tNumbaCPU CMI result: {3:.4f} nats'
+          '\n\texpected to be close to {4:.4f} nats for correlated '
+          'Gaussians.'.format(mi_jidt, mi_ocl, mi_numbaCuda, mi_numbaCPU, expected_mi))
+    assert np.isclose(mi_jidt, expected_mi, atol=0.05), (
+                        'MI estimation for uncorrelated Gaussians using the '
+                        'JIDT estimator failed (error larger 0.05).')
+    assert np.isclose(mi_ocl, expected_mi, atol=0.05), (
+                        'MI estimation for uncorrelated Gaussians using the '
+                        'OpenCL estimator failed (error larger 0.05).')
+    assert np.isclose(mi_numbaCuda, expected_mi, atol=0.05), (
+                        'MI estimation for uncorrelated Gaussians using the '
+                        'NumbaCUDA estimator failed (error larger 0.05).')
+    assert np.isclose(mi_numbaCPU, expected_mi, atol=0.05), (
+                        'MI estimation for uncorrelated Gaussians using the '
+                        'NumbaCPU estimator failed (error larger 0.05).')
+    assert np.isclose(mi_ocl, mi_jidt, atol=0.005), (
+                        'MI estimation for uncorrelated Gaussians using the '
+                        'OpenCL estimator failed (error larger 0.005).')
+    assert np.isclose(mi_numbaCuda, mi_jidt, atol=0.005), (
+                        'MI estimation for uncorrelated Gaussians using the '
+                        'NumbaCUDA estimator failed (error larger 0.005).')
+    assert np.isclose(mi_numbaCPU, mi_jidt, atol=0.005), (
+                        'MI estimation for uncorrelated Gaussians using the '
+                        'NumbaCPU estimator failed (error larger 0.005).')
+
+    print("passed")
 
 
 def test_knn_one_dim_cpu():
@@ -356,3 +410,4 @@ if __name__ == '__main__':
     test_knn_two_dim_cpu()
     test_mi_uncorrelated_gaussians()
     test_mi_correlated_gaussians()
+    test_cmi_correlated_gaussians()

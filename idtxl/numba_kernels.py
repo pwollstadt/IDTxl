@@ -3,8 +3,6 @@ from . import idtxl_exceptions as ex
 import numpy as np
 import math
 
-#from idtxl.estimators_numba import KGLOBAL
-
 try:
     from numba import njit, prange, cuda, float32, float64, int32, int64, jitclass, types
 except ImportError as err:
@@ -46,7 +44,7 @@ def _maxPointMetricNumbaCPU(queryvec, pointsvec, pointdim):
     return rdim
 
 
-@njit(parallel=True)
+@njit(parallel=True, fastmath=True)
 def _knnNumbaCPU(query, pointset, kdistances, pointdim, chunklength, signallength, kth, exclude, datatype):
 
     # loop over all data points in query
@@ -89,7 +87,7 @@ def _knnNumbaCPU(query, pointset, kdistances, pointdim, chunklength, signallengt
     return kdistances
 
 
-@njit(parallel=True)
+@njit(parallel=True, fastmath=True)
 def _rsAllNumbaCPU(uquery, vpointset, vecradius, npoints, pointdim, chunklength, signallength, exclude, datatype):
 
     # loop over all datapoints in query
@@ -111,8 +109,8 @@ def _rsAllNumbaCPU(uquery, vpointset, vecradius, npoints, pointdim, chunklength,
             if t < (indexi - exclude) or t > (indexi + exclude):
 
                 # data points for distance search
-                queryvec = uquery[tid]
-                pointsvec = vpointset[ichunk * chunklength + t]
+                queryvec = uquery[:, tid]
+                pointsvec = vpointset[:, ichunk * chunklength + t]
 
                 # brute force knn search
                 temp_dist = _maxPointMetricNumbaCPU(queryvec, pointsvec, pointdim)
