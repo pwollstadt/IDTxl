@@ -622,7 +622,7 @@ class NumbaCudaKraskovCMI(NumbaKraskov):
         npointscondvar2 = np.zeros([self.signallength])
         npointscond = np.zeros([self.signallength])
 
-        # -----------  range search condvar2
+        # -----------  range search var1cond
         # copy data to device for ncount var1cond
         d_var1cond = cuda.to_device(pointset_var1cond)
         d_npointsvar1cond = cuda.to_device(npointsvar1cond)
@@ -685,6 +685,6 @@ class NumbaCudaKraskovCMI(NumbaKraskov):
             n_chunks, var1.shape[0] // n_chunks, npointscond, npointsvar1cond, npointscondvar2)
 
         if self.settings['debug']:
-            return cmi_array, distances, npointscond, npointsvar1cond, npointscondvar2
+            return cmi_array, distances, npointsvar1cond, npointscondvar2, npointscond
         else:
             return cmi_array
