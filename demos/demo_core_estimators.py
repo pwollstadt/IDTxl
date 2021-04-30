@@ -7,6 +7,7 @@ from idtxl.estimators_jidt import (JidtDiscreteAIS, JidtDiscreteCMI,
                                    JidtGaussianAIS, JidtGaussianCMI,
                                    JidtGaussianMI, JidtGaussianTE)
 from idtxl.estimators_opencl import OpenCLKraskovMI, OpenCLKraskovCMI
+from idtxl.estimators_numba import NumbaCudaKraskovMI, NumbaCudaKraskovCMI
 from idtxl.estimators_pid import SydneyPID, TartuPID
 from idtxl.idtxl_utils import calculate_mi
 
@@ -80,6 +81,17 @@ print('Estimated CMI: {0:.5f}, expected CMI: {1:.5f}'.format(cmi[0],
 est = OpenCLKraskovMI(settings)
 mi = est.estimate(source_cor, target)
 print('Estimated MI: {0:.5f}, expected MI: {1:.5f}'.format(mi[0], expected_mi))
+
+# Numba CUDA Kraskov estimators
+settings = {}
+est = NumbaCudaKraskovCMI(settings)
+cmi = est.estimate(source_cor, target, source_uncor)
+print('Estimated CMI: {0:.5f}, expected CMI: {1:.5f}'.format(cmi[0],
+                                                             expected_mi))
+est = NumbaCudaKraskovMI(settings)
+mi = est.estimate(source_cor, target)
+print('Estimated MI: {0:.5f}, expected MI: {1:.5f}'.format(mi[0], expected_mi))
+
 
 # Generate binary test data
 alph_x = 2
