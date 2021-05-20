@@ -56,8 +56,9 @@ http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf*
 + Kraskov estimator: [*Kraskov et al., 2004, Phys Rev E 69, 066138*](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.69.066138)
 + Nonuniform embedding: [*Faes et al., 2011, Phys Rev E 83, 051112*](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.83.051112)
 + Faes' compensated transfer entropy: [*Faes et al., 2013, Entropy 15, 198-219*](https://www.mdpi.com/1099-4300/15/1/198)
-+ PID: [Williams & Beer, 2010, arXiv:1004.2515 [cs.IT]](http://arxiv.org/abs/1004.2515);
-  [Makkeh et al., 2020, arXiv:2002.03356 [cs.IT]](https://arxiv.org/abs/2002.03356)
++ PID: [*Williams & Beer, 2010, arXiv:1004.2515 [cs.IT]*](http://arxiv.org/abs/1004.2515);
+  [*Makkeh et al., 2021, Phys Rev E 103, 032149*](https://doi.org/10.1103/PhysRevE.103.032149);
+  [*Gutknecht et al., 2020, arXiv:2008.09535 [cs.AI]*](https://arxiv.org/abs/2008.09535)
 + PID estimators: *[Bertschinger et al., 2014, Entropy, 16(4)](https://www.mdpi.com/1099-4300/16/4/2161);
 [Makkeh et al., 2017, Entropy, 19(10)](https://www.mdpi.com/1099-4300/19/10/530);
 [Makkeh et al., 2018, Entropy, 20(271)](https://www.mdpi.com/1099-4300/20/4/271)*

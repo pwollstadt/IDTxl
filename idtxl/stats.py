@@ -395,7 +395,7 @@ def omnibus_test(analysis_setup, data):
 
 
 def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
-                  conditional=None):
+                  conditional):
     """Perform maximum statistics for one candidate source.
 
     Test if a transfer entropy value is significantly bigger than the maximum
@@ -420,10 +420,9 @@ def max_statistic(analysis_setup, data, candidate_set, te_max_candidate,
             list of indices of remaning candidates
         te_max_candidate : float
             transfer entropy value to be tested
-        conditional : numpy array [optional]
+        conditional : numpy array
             realisations of conditional, 2D numpy array where array dimensions
-            represent [realisations x variable dimension] (default=None, no
-            conditioning performed)
+            represent [realisations x variable dimension]
 
     Returns:
         bool

@@ -78,7 +78,7 @@ class NetworkInference(NetworkAnalysis):
                 self.target, self.source_set))
 
     def _include_candidates(self, candidate_set, data):
-        """Inlcude informative candidates into the conditioning set.
+        """Include informative candidates into the conditioning set.
 
         Loop over each candidate in the candidate set and test if it has
         significant mutual information with the current value, conditional
@@ -137,7 +137,8 @@ class NetworkInference(NetworkAnalysis):
                     self._idx_to_lag([max_candidate])[0]), end='')
             try:
                 significant = stats.max_statistic(
-                    self, data, candidate_set, te_max_candidate)[0]
+                    self, data, candidate_set, te_max_candidate,
+                    conditional=self._selected_vars_realisations)[0]
             except ex.AlgorithmExhaustedError as aee:
                 # The algorithm cannot continue here, so we'll terminate the
                 # check of significance for this candidate, though those
