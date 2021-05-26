@@ -21,10 +21,9 @@ import io
 from sys import stderr
 import hashlib
 from collections import Counter
-from idtxl.hde_estimators import hde_api as hapi
-import idtxl.hde_embedding as emb
-from idtxl.hde_estimators import hde_bbc_estimator as bbc
-from idtxl.hde_estimators import hde_shuffling_estimator as sh
+#import idtxl.hde_embedding as emb
+#from idtxl.hde_estimators import hde_bbc_estimator as bbc
+#from idtxl.hde_estimators import hde_shuffling_estimator as sh
 
 # FAST_UTILS_AVAILABLE = True
 # try:
@@ -39,242 +38,9 @@ from idtxl.hde_estimators import hde_shuffling_estimator as sh
 #
 # main routines
 #
-    
-def save_history_dependence_for_embeddings(f, spike_times, estimation_method,
-                                           embedding_past_range_set,
-                                           embedding_number_of_bins_set,
-                                           embedding_scaling_exponent_set,
-                                           embedding_step_size,
-                                           **kwargs):
-    """
-    Apply embeddings to spike times to obtain symbol counts.  Estimate
-    the history dependence for each embedding.  Save results to file.
-    """
 
-    if kwargs['cross_val'] == None or kwargs['cross_val'] == 'h1':
-        embeddings = emb.get_embeddings(embedding_past_range_set,
-                                        embedding_number_of_bins_set,
-                                        embedding_scaling_exponent_set)
-    elif kwargs['cross_val'] == 'h2':
-        # here we set cross_val to h1, because we load the
-        # embeddings that maximise R from the optimisation step
-        embeddings = get_embeddings_that_maximise_R(f,
-                                                    estimation_method,
-                                                    embedding_step_size,
-                                                    bbc_tolerance=kwargs['bbc_tolerance'],
-                                                    get_as_list=True,
-                                                    cross_val='h1')
-        
-    for embedding in embeddings:
-        past_range_T = embedding[0]
-        number_of_bins_d = embedding[1]
-        first_bin_size = emb.get_fist_bin_size_for_embedding(embedding)
 
-        symbol_counts = load_from_analysis_file(f,
-                                                "symbol_counts",
-                                                embedding_step_size=embedding_step_size,
-                                                embedding=embedding,
-                                                cross_val=kwargs['cross_val'])
-        if symbol_counts == None:
-            symbol_counts = add_up_dicts([emb.get_symbol_counts(spt,
-                                                                embedding,
-                                                                embedding_step_size)
-                                          for spt in spike_times])
-            save_to_analysis_file(f,
-                                  "symbol_counts",
-                                  embedding_step_size=embedding_step_size,
-                                  embedding=embedding,
-                                  symbol_counts=symbol_counts,
-                                  cross_val=kwargs['cross_val'])
 
-        if estimation_method == 'bbc':
-            history_dependence = load_from_analysis_file(f,
-                                                         "history_dependence",
-                                                         embedding_step_size=embedding_step_size,
-                                                         embedding=embedding,
-                                                         estimation_method="bbc",
-                                                         cross_val=kwargs['cross_val'])
-
-            if history_dependence == None:
-                history_dependence, bbc_term = hapi.get_history_dependence(estimation_method,
-                                                                           symbol_counts,
-                                                                           number_of_bins_d)
-                save_to_analysis_file(f,
-                                      "history_dependence",
-                                      embedding_step_size=embedding_step_size,
-                                      embedding=embedding,
-                                      first_bin_size=first_bin_size,
-                                      estimation_method="bbc",
-                                      history_dependence=history_dependence,
-                                      bbc_term=bbc_term,
-                                      cross_val=kwargs['cross_val'])
-      
-        elif estimation_method == 'shuffling':
-            history_dependence = load_from_analysis_file(f,
-                                                         "history_dependence",
-                                                         embedding_step_size=embedding_step_size,
-                                                         embedding=embedding,
-                                                         estimation_method="shuffling",
-                                                         cross_val=kwargs['cross_val'])
-            if history_dependence == None:
-                history_dependence = hapi.get_history_dependence(estimation_method,
-                                                                 symbol_counts,
-                                                                 number_of_bins_d)
-                save_to_analysis_file(f,
-                                      "history_dependence",
-                                      embedding_step_size=embedding_step_size,
-                                      embedding=embedding,
-                                      first_bin_size=first_bin_size,
-                                      estimation_method="shuffling",
-                                      history_dependence=history_dependence,
-                                      cross_val=kwargs['cross_val'])
-
-def save_spike_times_stats(f, spike_times,
-                           embedding_step_size,
-                           **kwargs):
-    """
-    Save some statistics about the spike times.
-    """
-
-    recording_length = load_from_analysis_file(f,
-                                               "recording_length")
-    if recording_length == None:
-        recording_lengths = [spt[-1] - spt[0] for spt in spike_times]
-        recording_length = sum(recording_lengths)
-        recording_length_sd = np.std(recording_lengths)
-
-        save_to_analysis_file(f,
-                              "recording_length",
-                              recording_length=recording_length)
-        save_to_analysis_file(f,
-                              "recording_length_sd",
-                              recording_length_sd=recording_length_sd)
-
-    
-    firing_rate = load_from_analysis_file(f,
-                                          "firing_rate")
-    if firing_rate == None:
-        firing_rates = [get_binned_firing_rate(spt, embedding_step_size)
-                        for spt in spike_times]
-        recording_lengths = [spt[-1] - spt[0] for spt in spike_times]
-        recording_length = sum(recording_lengths)
-
-        firing_rate = np.average(firing_rates, weights=recording_lengths)
-        firing_rate_sd = np.sqrt(np.average((firing_rates - firing_rate) ** 2,
-                                            weights=recording_lengths))
-
-        save_to_analysis_file(f,
-                              "firing_rate",
-                              firing_rate=firing_rate)
-        save_to_analysis_file(f,
-                              "firing_rate_sd",
-                              firing_rate_sd=firing_rate_sd)
-
-    H_spiking = load_from_analysis_file(f,
-                                       "H_spiking")
-    
-    if H_spiking == None:
-        H_spiking = get_shannon_entropy([firing_rate * embedding_step_size,
-                                        1 - firing_rate * embedding_step_size])
-        
-        save_to_analysis_file(f,
-                              "H_spiking",
-                              H_spiking=H_spiking)
-
-                
-def get_embeddings_that_maximise_R(f,
-                                   estimation_method,
-                                   embedding_step_size,
-                                   bbc_tolerance=None,
-                                   dependent_var="T",
-                                   get_as_list=False,
-                                   cross_val=None,
-                                   **kwargs):
-    """
-    For each T (or d), get the embedding for which R is maximised.
-
-    For the bbc estimator, here the bbc_tolerance is applied, ie 
-    get the unbiased embeddings that maximise R.
-    """
-
-    assert dependent_var in ["T", "d"]
-    assert cross_val in [None, "h1", "h2"]
-
-    if bbc_tolerance == None \
-       or cross_val == "h2": # apply bbc only for optimization
-        bbc_tolerance = np.inf
-
-    if cross_val == None:
-        root_dir = 'embeddings'
-    else:
-        root_dir = '{}_embeddings'.format(cross_val)
-        
-    max_Rs = {}
-    embeddings_that_maximise_R = {}
-
-    embedding_step_size_label = get_parameter_label(embedding_step_size)
-    
-    for past_range_T_label in f["{}/{}".format(root_dir, embedding_step_size_label)].keys():
-        for number_of_bins_d_label in f["{}/{}/{}".format(root_dir,
-                                                          embedding_step_size_label,
-                                                          past_range_T_label)].keys():
-            for scaling_k_label in f["{}/{}/{}/{}".format(root_dir,
-                                                          embedding_step_size_label,
-                                                          past_range_T_label,
-                                                          number_of_bins_d_label)].keys():
-                past_range_T = float(past_range_T_label)
-                number_of_bins_d = int(float(number_of_bins_d_label))
-                scaling_k = float(scaling_k_label)
-                embedding = (past_range_T,
-                             number_of_bins_d,
-                             scaling_k)
-                history_dependence = load_from_analysis_file(f,
-                                                             "history_dependence",
-                                                             embedding_step_size=embedding_step_size,
-                                                             embedding=embedding,
-                                                             estimation_method=estimation_method,
-                                                             cross_val=cross_val)
-                # if it has been estimated for one estimator, but not the other
-                # it might be None. skip if this is the case
-                if history_dependence == None:
-                    continue
-                
-                if estimation_method == "bbc":
-                    bbc_term = load_from_analysis_file(f,
-                                                       "bbc_term",
-                                                       embedding_step_size=embedding_step_size,
-                                                       embedding=embedding,
-                                                       estimation_method=estimation_method,
-                                                       cross_val=cross_val)
-                    if bbc_term >= bbc_tolerance:
-                        continue
-
-                if dependent_var == "T":
-                    if not past_range_T in embeddings_that_maximise_R \
-                       or history_dependence > max_Rs[past_range_T]:
-                        max_Rs[past_range_T] = history_dependence
-                        embeddings_that_maximise_R[past_range_T] = (number_of_bins_d,
-                                                                    scaling_k)
-                elif dependent_var == "d":
-                    if not number_of_bins_d in embeddings_that_maximise_R \
-                       or history_dependence > max_Rs[number_of_bins_d]:
-                        max_Rs[number_of_bins_d] = history_dependence
-                        embeddings_that_maximise_R[number_of_bins_d] = (past_range_T,
-                                                                        scaling_k)
-
-    if get_as_list:
-        embeddings = []
-        if dependent_var == "T":
-            for past_range_T in embeddings_that_maximise_R:
-                number_of_bins_d, scaling_k = embeddings_that_maximise_R[past_range_T]
-                embeddings += [(past_range_T, number_of_bins_d, scaling_k)]
-        elif dependent_var == "d":
-            for number_of_bins_d in embeddings_that_maximise_R:
-                past_range_T, scaling_k = embeddings_that_maximise_R[number_of_bins_d]
-                embeddings += [(past_range_T, number_of_bins_d, scaling_k)]
-        return embeddings
-    else:
-        return embeddings_that_maximise_R, max_Rs
 
 def get_CI_bounds(R,
                   bs_Rs,
@@ -327,159 +93,8 @@ def get_max_R_T(max_Rs):
     max_R = max_Rs[max_R_T]
     return max_R, max_R_T
 
-def get_temporal_depth_T_D(f,
-                           estimation_method,
-                           bootstrap_CI_use_sd=True,
-                           bootstrap_CI_percentile_lo=2.5,
-                           bootstrap_CI_percentile_hi=97.5,
-                           get_R_thresh=False,
-                           **kwargs):
-    """
-    Get the temporal depth T_D, the past range for the 
-    'optimal' embedding parameters.
-
-    Given the maximal history dependence R at each past range T,
-    (cf get_embeddings_that_maximise_R), first find the smallest T at 
-    which R is maximised (cf get_max_R_T).  If bootstrap replications
-    for this R are available, get the smallest T at which this R minus
-    one standard deviation of the bootstrap estimates is attained.
-    """
-
-    # load data
-    embedding_maximising_R_at_T, max_Rs \
-        = get_embeddings_that_maximise_R(f,
-                                         estimation_method=estimation_method,
-                                         **kwargs)
-
-    Ts = sorted([key for key in max_Rs.keys()])
-    Rs = [max_Rs[T] for T in Ts]
-
-    # first get the max history dependence, and if available its bootstrap replications
-    max_R, max_R_T = get_max_R_T(max_Rs)
-
-    number_of_bins_d, scaling_k = embedding_maximising_R_at_T[max_R_T]
-    bs_Rs = load_from_analysis_file(f,
-                                    "bs_history_dependence",
-                                    embedding_step_size=kwargs["embedding_step_size"],
-                                    embedding=(max_R_T,
-                                               number_of_bins_d,
-                                               scaling_k),
-                                    estimation_method=estimation_method,
-                                    cross_val=kwargs['cross_val'])
-
-    if isinstance(bs_Rs, np.ndarray):
-        max_R_sd = np.std(bs_Rs)
-    else:
-        max_R_sd = 0
-
-    R_tot_thresh = max_R - max_R_sd
-
-    T_D = min(Ts)
-    for R, T in zip(Rs, Ts):
-        if R >= R_tot_thresh:
-            T_D = T
-            break
-
-    if not get_R_thresh:
-        return T_D
-    else:
-        return T_D, R_tot_thresh
-
-def get_information_timescale_tau_R(f,
-                                    estimation_method,
-                                    **kwargs):
-    """
-    Get the information timescale tau_R, a characteristic
-    timescale of history dependence similar to an autocorrelation 
-    time.
-    """
-
-    # load data
-    embedding_maximising_R_at_T, max_Rs \
-        = get_embeddings_that_maximise_R(f,
-                                         estimation_method=estimation_method,
-                                         **kwargs)
-
-    Ts = np.array(sorted([key for key in max_Rs.keys()]))
-    Rs = np.array([max_Rs[T] for T in Ts])
-
-    R_tot = get_R_tot(f,
-                      estimation_method=estimation_method,
-                      **kwargs)
-
-    T_0 = kwargs["timescale_minimum_past_range"]
-
-    # get dRs
-    dRs = []
-    R_prev = 0.
-
-    # No values higher than R_tot are allowed,
-    # otherwise the information timescale might be
-    # misestimated because of spurious contributions
-    # at large T
-    for R, T in zip(Rs[Rs <= R_tot], Ts[Rs <= R_tot]):
-
-        # No negative increments are allowed
-        dRs += [np.amax([0.0, R - R_prev])]
-        
-        # The increment is taken with respect to the highest previous value of R
-        if R > R_prev:
-            R_prev = R
-
-    dRs = np.pad(dRs, (0, len(Rs) - len(dRs)),
-                 mode='constant', constant_values=0)
 
 
-    # compute tau_R
-    Ts_0 = np.append([0], Ts)
-    dRs_0 = dRs[Ts_0[:-1] >= T_0]
-    
-    # Only take into considerations contributions beyond T_0
-    Ts_0 = Ts_0[Ts_0 >= T_0]
-    norm = np.sum(dRs_0)
-    
-    if norm == 0.:
-        tau = 0.0
-    else:
-        Ts_0 -= Ts_0[0]
-        tau = np.dot(((Ts_0[:-1] + Ts_0[1:]) / 2), dRs_0) / norm
-    return tau
-
-    
-def get_R_tot(f,
-              estimation_method,
-              return_averaged_R=False,
-              **kwargs):
-    embedding_maximising_R_at_T, max_Rs \
-        = get_embeddings_that_maximise_R(f,
-                                         estimation_method=estimation_method,
-                                         **kwargs)
-    
-    if return_averaged_R:
-        T_D, R_tot_thresh = get_temporal_depth_T_D(f,
-                                                   estimation_method=estimation_method,
-                                                   get_R_thresh=True,
-                                                   **kwargs)
-
-        Ts = sorted([key for key in max_Rs.keys()])
-        Rs = [max_Rs[T] for T in Ts]
-
-        T_max = T_D
-        for R, T in zip(Rs, Ts):
-            if T < T_D:
-                continue
-            T_max = T
-            if R < R_tot_thresh:
-                break
-            
-        return np.average([R for R, T in zip(Rs, Ts) if T >= T_D and T < T_max])
-
-    else:
-        temporal_depth_T_D = get_temporal_depth_T_D(f,
-                                                    estimation_method=estimation_method,
-                                                    **kwargs)
-        
-        return max_Rs[temporal_depth_T_D]
 
 
 # # FIXME make this more general, pass embedding and do not
@@ -529,7 +144,6 @@ def get_R_tot(f,
 #                                      alphabet_size_past)
 
 #     N = np.sum((mk[n] * n for n in mk.keys()))
-
 #     H_plugin_joint = bbc.plugin_entropy(mk, N)
 #     H_plugin_past = bbc.plugin_entropy(mk_past, N)
 #     H_plugin_cond = H_plugin_joint - H_plugin_past
@@ -541,344 +155,6 @@ def get_R_tot(f,
 #     return np.average(bs_Rs) - history_dependence_plugin
 
 
-def compute_CIs(f,
-                spike_times,
-                estimation_method,
-                embedding_step_size,
-                block_length_l=None,
-                target_R='R_max',
-                **kwargs):
-    """ 
-    Compute bootstrap replications of the history dependence estimate
-    which can be used to obtain confidence intervals.
-
-    Load symbol counts, resample, then estimate entropy for each sample
-    and save to file.
-
-    :param target_R: One of 'R_max', 'R_tot' or 'nonessential'.
-    If set to R_max, replications of R are produced for the T at which
-    R is maximised.
-    If set to R_tot, replications of R are produced for T = T_D (cf 
-    get_temporal_depth_T_D).  
-    If set to nonessential, replications of R are produced for each T
-    (one embedding per T, cf get_embeddings_that_maximise_R).  These 
-    are not otherwise used in the analysis and are probably only useful
-    if the resulting plot is visually inspected, so in most cases it can
-    be set to zero.
-    """
-
-    assert target_R in ['nonessential', 'R_max', 'R_tot']
-
-    number_of_bootstraps = kwargs['number_of_bootstraps_{}'.format(target_R)]
-
-    if number_of_bootstraps == 0:
-        return
-    
-    embedding_maximising_R_at_T, max_Rs \
-        = get_embeddings_that_maximise_R(f,
-                                         embedding_step_size=embedding_step_size,
-                                         estimation_method=estimation_method,
-                                         **kwargs)
-
-    recording_length = load_from_analysis_file(f,
-                                               "recording_length")
-
-    firing_rate = load_from_analysis_file(f,
-                                          "firing_rate")
-
-    if block_length_l == None:
-        # eg firing rate is 4 Hz, ie there is 1 spikes per 1/4 seconds, 
-        # for every second the number of symbols is 1/ embedding_step_size
-        # so we observe on average one spike every 1 / (firing_rate * embedding_step_size) symbols
-        # (in the reponse, ignoring the past activity)
-        block_length_l = max(1, int(1 / (firing_rate * embedding_step_size)))
-
-    if target_R == 'nonessential':
-        # bootstrap R for unessential Ts (not required for the main analysis)
-        embeddings = []
-
-        for past_range_T in embedding_maximising_R_at_T:
-            number_of_bins_d, scaling_k = embedding_maximising_R_at_T[past_range_T]
-            embeddings += [(past_range_T, number_of_bins_d, scaling_k)]
-
-    elif target_R == 'R_max':
-        # bootstrap R for the max R, to get a good estimate for the standard deviation
-        # which is used to determine R_tot
-        max_R, max_R_T = get_max_R_T(max_Rs)
-        number_of_bins_d, scaling_k = embedding_maximising_R_at_T[max_R_T]
-        
-        embeddings = [(max_R_T, number_of_bins_d, scaling_k)]
-    elif target_R == 'R_tot':
-        T_D = get_temporal_depth_T_D(f,
-                                     estimation_method,
-                                     embedding_step_size=embedding_step_size,
-                                     **kwargs)
-        number_of_bins_d, scaling_k = embedding_maximising_R_at_T[T_D]
-        
-        embeddings = [(T_D, number_of_bins_d, scaling_k)]
-
-    for embedding in embeddings:
-        stored_bs_Rs = load_from_analysis_file(f,
-                                               "bs_history_dependence",
-                                               embedding_step_size=embedding_step_size,
-                                               embedding=embedding,
-                                               estimation_method=estimation_method,
-                                               cross_val=kwargs['cross_val'])
-        if isinstance(stored_bs_Rs, np.ndarray):
-            number_of_stored_bootstraps = len(stored_bs_Rs)
-        else:
-            number_of_stored_bootstraps = 0
-
-        if not number_of_bootstraps > number_of_stored_bootstraps:
-            continue
-
-        bs_history_dependence \
-            = get_bootstrap_history_dependence(spike_times,
-                                               embedding,
-                                               embedding_step_size,
-                                               estimation_method,
-                                               number_of_bootstraps - number_of_stored_bootstraps,
-                                               block_length_l)
-
-        save_to_analysis_file(f,
-                              "bs_history_dependence",
-                              embedding_step_size=embedding_step_size,
-                              embedding=embedding,
-                              estimation_method=estimation_method,
-                              bs_history_dependence=bs_history_dependence,
-                              cross_val=kwargs['cross_val'])
-
-
-def get_bootstrap_history_dependence(spike_times,
-                                     embedding,
-                                     embedding_step_size,
-                                     estimation_method,
-                                     number_of_bootstraps,
-                                     block_length_l):
-    """
-    For a given embedding, return bootstrap replications for R.
-    """
-    past_range_T, number_of_bins_d, scaling_k = embedding
-
-    # compute total number of symbols in original data:
-    # this is the amount of symbols we want to replicate
-    min_num_symbols = 1 + int((min([spt[-1] - spt[0] for spt in spike_times])
-                               - (past_range_T + embedding_step_size))
-                              / embedding_step_size)
-    
-    symbol_block_length = int(block_length_l)
-    
-    if symbol_block_length >= min_num_symbols:
-        print("Warning. Block length too large given number of symbols. Skipping.")
-        return []
-
-    # compute the bootstrap replications
-
-    bs_Rs = np.zeros(number_of_bootstraps)
-
-    symbols_array \
-        = [get_symbols_array(spt, embedding, embedding_step_size)
-           for spt in spike_times]
-
-    for rep in range(number_of_bootstraps):
-        bs_symbol_counts \
-            = add_up_dicts([get_bootstrap_symbol_counts_from_symbols_array(symbols_array[i],
-                                                                           symbol_block_length)
-                            for i in range(len(symbols_array))])
-
-        bs_history_dependence = hapi.get_history_dependence(estimation_method,
-                                                            bs_symbol_counts,
-                                                            number_of_bins_d,
-                                                            bbc_tolerance=np.inf)
-
-        bs_Rs[rep] = bs_history_dependence
-
-    return bs_Rs
-
-def get_symbols_array(spike_times, embedding, embedding_step_size):
-    """
-    Apply an embedding to a spike train and get the resulting symbols.
-    """
-    
-    past_range_T, number_of_bins_d, scaling_k = embedding
-    first_bin_size = emb.get_fist_bin_size_for_embedding(embedding)
-
-    raw_symbols = emb.get_raw_symbols(spike_times,
-                                      embedding,
-                                      first_bin_size,
-                                      embedding_step_size)
-
-    median_number_of_spikes_per_bin = emb.get_median_number_of_spikes_per_bin(raw_symbols)
-
-    # symbols_array: array containing symbols
-    # symbol_array: array of spikes representing symbol
-    symbols_array = np.zeros(len(raw_symbols))
-    
-    for symbol_index, raw_symbol in enumerate(raw_symbols):
-        symbol_array = [int(raw_symbol[i] > median_number_of_spikes_per_bin[i])
-                        for i in range(number_of_bins_d + 1)]
-
-        symbol = emb.symbol_array_to_binary(symbol_array, number_of_bins_d + 1)
-
-        symbols_array[symbol_index] = symbol
-
-    return symbols_array
-
-def get_bootstrap_symbol_counts_from_symbols_array(symbols_array,
-                                                   symbol_block_length):
-    """
-    Given an array of symbols (cf get_symbols_array), get bootstrap 
-    replications of the symbol counts.
-    """
-
-    num_symbols = len(symbols_array)
-
-    rand_indices = np.random.randint(0, num_symbols - (symbol_block_length - 1),
-                                     size=int(num_symbols/ symbol_block_length))
-
-    symbol_counts = Counter()
-    
-    for rand_index in rand_indices:
-        for symbol in symbols_array[rand_index:rand_index + symbol_block_length]:
-            symbol_counts[symbol] += 1
-
-    residual_block_length = num_symbols - sum(symbol_counts.values())
-
-    if residual_block_length > 0:
-        rand_index_residual = np.random.randint(0, num_symbols - (residual_block_length - 1))
-
-        for symbol in symbols_array[rand_index_residual:rand_index_residual + residual_block_length]:
-            symbol_counts[symbol] += 1
-
-    return symbol_counts
-
-# def perform_permutation_test(f,
-#                              number_of_permutations,
-#                              embedding_step_size,
-#                              estimation_method,
-#                              **kwargs):
-#     """
-#     Perform a permutation test to check whether th history dependece 
-#     in the target neuron is significantly different from zero.
-    
-#     This is performed for R_tot, the R for which T = T_D (cf 
-#     get_temporal_depth_T_D).
-#     """
-    
-#     embedding_maximising_R_at_T, max_Rs = get_embeddings_that_maximise_R(f,
-#                                                                           embedding_step_size=embedding_step_size,
-#                                                                           estimation_method=estimation_method,
-#                                                                           **kwargs)
-
-#     temporal_depth_T_D = get_temporal_depth_T_D(f,
-#                                                 estimation_method=estimation_method,
-#                                                 embedding_step_size=embedding_step_size,
-#                                                 **kwargs)
-
-#     R_tot = max_Rs[temporal_depth_T_D]
-#     opt_number_of_bins_d, opt_scaling_k \
-#         = embedding_maximising_R_at_T[temporal_depth_T_D]
-    
-#     opt_embedding = (temporal_depth_T_D, opt_number_of_bins_d, opt_scaling_k)
-
-#     symbol_counts = load_from_analysis_file(f,
-#                                             "symbol_counts",
-#                                             embedding_step_size=embedding_step_size,
-#                                             embedding=opt_embedding,
-#                                             cross_val=kwargs['cross_val'])
-
-#     stored_pt_Rs = load_from_analysis_file(f,
-#                                            "pt_history_dependence",
-#                                            embedding_step_size=embedding_step_size,
-#                                            embedding=opt_embedding,
-#                                            estimation_method=estimation_method,
-#                                            cross_val=kwargs['cross_val'])
-    
-#     if isinstance(stored_pt_Rs, np.ndarray):
-#         number_of_stored_permutations = len(stored_pt_Rs)
-#     else:
-#         number_of_stored_permutations = 0
-
-#     if not number_of_permutations - number_of_stored_permutations > 0:
-#         return
-
-#     pt_history_dependence = np.zeros(number_of_permutations - number_of_stored_permutations)
-
-#     for rep in range(number_of_permutations - number_of_stored_permutations):
-#         if FAST_UTILS_AVAILABLE:
-#             pt_symbol_counts, pt_number_of_spikes \
-#                 = fast_utl.get_permutation_symbol_counts(symbol_counts)
-#         else:
-#             pt_symbol_counts, pt_number_of_spikes = get_permutation_symbol_counts(symbol_counts)
-
-#         history_dependence = hapi.get_history_dependence(estimation_method,
-#                                                          pt_symbol_counts,
-#                                                          opt_number_of_bins_d,
-#                                                          bbc_tolerance=np.inf)
-        
-#         pt_history_dependence[rep] = history_dependence
-
-#     save_to_analysis_file(f,
-#                           "pt_history_dependence",
-#                           embedding_step_size=embedding_step_size,
-#                           embedding=opt_embedding,
-#                           estimation_method=estimation_method,
-#                           pt_history_dependence=pt_history_dependence)
-
-
-# def get_permutation_symbol_counts(symbol_counts):
-#     """
-#     Get symbols counts with permutated responses.
-
-#     input:  dictionary with counts as computed from the data
-#     output: dictionary with counts as produced by permutation re-draw
-#     """
-
-#     total_number_of_symbols = sum((number_of_occurrences
-#                                    for number_of_occurrences in symbol_counts.values()))
-#     number_of_spikes = sum((symbol_counts[symbol]
-#                             for symbol in symbol_counts if symbol % 2 == 1))
-
-#     past_symbol_counts = get_past_symbol_counts(symbol_counts)
-
-#     remaining_number_of_symbols = total_number_of_symbols
-#     remaining_past_symbol_counts = past_symbol_counts.copy()
-
-#     permutated_symbol_counts = {}
-
-#     for draw in range(number_of_spikes):
-#         past_symbol = get_random_symbol(remaining_past_symbol_counts,
-#                                         remaining_number_of_symbols)
-#         symbol = past_symbol * 2 + 1
-#         if symbol in permutated_symbol_counts:
-#             permutated_symbol_counts[symbol] += 1
-#         else:
-#             permutated_symbol_counts[symbol] = 1
-#         remaining_number_of_symbols -= 1
-#         remaining_past_symbol_counts[past_symbol] -= 1
-        
-#     for past_symbol in remaining_past_symbol_counts:
-#         symbol = past_symbol * 2
-#         permutated_symbol_counts[symbol] = remaining_past_symbol_counts[past_symbol]
-
-#     return permutated_symbol_counts, number_of_spikes
-
-# def get_random_symbol(symbol_counts, number_of_symbols):
-#     """
-#     Get a random symbol from the symbol_counts dictionary.
-#     """
-
-#     randint = np.random.randint(number_of_symbols)
-#     count_index = 0
-#     for symbol in symbol_counts:
-#         count_index += symbol_counts[symbol]
-#         if count_index > randint:
-#             return symbol
-
-#
-# information theoretic measure of entropy
-#
-
 def get_shannon_entropy(probabilities):
     """
     Get the entropy of a random variable based on the probabilities
@@ -886,6 +162,7 @@ def get_shannon_entropy(probabilities):
     """
 
     return - sum((p * np.log(p) for p in probabilities if not p == 0))
+
 
 def get_H_spiking(symbol_counts):
     """
@@ -907,11 +184,12 @@ def get_H_spiking(symbol_counts):
     return get_shannon_entropy([p_spike,
                                 1 - p_spike])
 
+
 def get_binned_neuron_activity(spike_times, bin_size, relative_to_median_activity=False):
     """
     Get an array of 0s and 1s representing the spike train.
     """
-    
+
     number_of_bins = int(spike_times[-1] / bin_size) + 1
     binned_neuron_activity = np.zeros(number_of_bins, dtype=int)
     if relative_to_median_activity:
@@ -925,6 +203,7 @@ def get_binned_neuron_activity(spike_times, bin_size, relative_to_median_activit
         binned_neuron_activity[[int(spike_time / bin_size) for spike_time in spike_times]] = 1
     return binned_neuron_activity
 
+
 def get_binned_firing_rate(spike_times, bin_size):
     """
     Get the firing rate of a spike train, as obtained after binning the activity.
@@ -933,6 +212,7 @@ def get_binned_firing_rate(spike_times, bin_size):
     binned_neuron_activity = get_binned_neuron_activity(spike_times, bin_size)
     number_of_bins = int(spike_times[-1] / bin_size) + 1
     return sum(binned_neuron_activity) / (number_of_bins * bin_size)
+
 
 def get_smoothed_neuron_activity(spt,
                                  averaging_time,
@@ -965,6 +245,7 @@ def remove_key(d, key):
     r = d.copy()
     del r[key]
     return r
+
 
 def get_past_symbol_counts(symbol_counts, merge=True):
     """
@@ -1040,6 +321,7 @@ def create_default_settings_file(ESTIMATOR_DIR="."):
             else:
                 settings_file.write("{} : {}\n".format(setting_name, settings[setting_name]))
     settings_file.close()
+
 
 def get_analysis_stats(f,
                        analysis_num,
@@ -1485,86 +767,6 @@ def load_auto_MI_data(f_csv_auto_MI_data):
 #     return sum([1 for R in pt_history_dependence
 #                 if R > R_tot]) / len(pt_history_dependence)
 
-def analyse_auto_MI(f,
-                    spike_times,
-                    auto_MI_bin_size_set,
-                    auto_MI_max_delay,
-                    **settings):
-    """
-    Get the auto MI for the spike times.  If it is available from file, load
-    it, else compute it.
-    """
-    
-    for auto_MI_bin_size in auto_MI_bin_size_set:
-        number_of_delays = int(auto_MI_max_delay / auto_MI_bin_size) + 1
-        
-        auto_MI = load_from_analysis_file(f,
-                                          "auto_MI",
-                                          auto_MI_bin_size=auto_MI_bin_size)
-        
-        if isinstance(auto_MI, np.ndarray) and len(auto_MI) >= number_of_delays:
-            continue
-
-        # if no analysis found or new analysis includes more delays:
-        # perform the analysis
-
-        auto_MI = get_auto_MI(spike_times, auto_MI_bin_size, number_of_delays)
-
-        save_to_analysis_file(f,
-                              "auto_MI",
-                              auto_MI_bin_size=auto_MI_bin_size,
-                              auto_MI=auto_MI)
-
-
-def get_auto_MI(spike_times, bin_size, number_of_delays):
-    """
-    Compute the auto mutual information in the neuron's activity, a 
-    measure closely related to history dependence.
-    """
-
-    binned_neuron_activity = []
-
-    for spt in spike_times:
-        # represent the neural activity as an array of 0s (no spike) and 1s (spike)
-        binned_neuron_activity += [get_binned_neuron_activity(spt,
-                                                              bin_size,
-                                                              relative_to_median_activity=True)]
-
-    p_spike = sum([sum(bna)
-                  for bna in binned_neuron_activity]) / sum([len(bna)
-                                                             for bna in binned_neuron_activity])
-    H_spiking = get_shannon_entropy([p_spike,
-                                    1 - p_spike])
-
-    auto_MIs = []
-    
-    # compute auto MI
-    for delay in range(number_of_delays):
-
-        symbol_counts = []
-        for bna in binned_neuron_activity:
-            number_of_symbols = len(bna) - delay - 1
-            
-            symbols = np.array([2 * bna[i] + bna[i + delay + 1]
-                                for i in range(number_of_symbols)])
-
-            symbol_counts += [dict([(unq_symbol, len(np.where(symbols==unq_symbol)[0]))
-                                    for unq_symbol in np.unique(symbols)])]
-
-        symbol_counts = add_up_dicts(symbol_counts)
-        number_of_symbols = sum(symbol_counts.values())
-        # number_of_symbols = sum([len(bna) - delay - 1 for bna in binned_neuron_activity])
-
-        H_joint = get_shannon_entropy([number_of_occurrences / number_of_symbols
-                                       for number_of_occurrences in symbol_counts.values()])
-
-        # I(X : Y) = H(X) - H(X|Y) = H(X) - (H(X,Y) - H(Y)) = H(X) + H(Y) - H(X,Y)
-        # auto_MI = 2 * H_spiking - H_joint
-        auto_MI = 2 - H_joint/ H_spiking # normalized auto MI = auto MI / H_spiking
-
-        auto_MIs += [auto_MI]
-
-    return auto_MIs
 
 def get_auto_MI_data(f_analysis,
                      analysis_num,
@@ -2014,14 +1216,14 @@ def get_hash(spike_times):
         return m.hexdigest()
 
 
-def Gile(persistent_analysis, analysis_dir):
+def get_analysis_file(persistent_analysis, analysis_dir):
     """
     Get the hdf5 file to store the analysis in (either
     temporarily or persistently.)
     """
-    
+
     analysis_file_name = "analysis_data.h5"
-    
+
     if not persistent_analysis:
         if check_version(h5py.__version__, '2.9.0'):
             return h5py.File(io.BytesIO(), 'a')
@@ -2031,8 +1233,9 @@ def Gile(persistent_analysis, analysis_dir):
 
     analysis_file = h5py.File("{}/{}".format(analysis_dir,
                                              analysis_file_name), 'a')
-        
+
     return analysis_file
+
 
 def get_or_create_analysis_dir(spike_times,
                                spike_times_file_names,

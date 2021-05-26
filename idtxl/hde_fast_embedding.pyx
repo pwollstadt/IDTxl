@@ -1,7 +1,7 @@
 # cython: profile=True
 
 import numpy as np
-import hde_embedding as emb
+import hde_fast_embedding_utils as emb
 from sys import stderr, exit
 
 cimport cython
@@ -127,7 +127,7 @@ def count_symbols(DTYPE_t[:] symbols):
 
 def get_symbol_counts(spike_times, embedding, embedding_step_size):
     past_range_T, number_of_bins_d, scaling_k = embedding
-    first_bin_size = emb.get_fist_bin_size_for_embedding(embedding)
+    first_bin_size = emb.get_first_bin_size_for_embedding(embedding)
 
     cdef np.ndarray[DTYPE_t, ndim=2] raw_symbols = get_raw_symbols(spike_times,
                                                                    embedding,
