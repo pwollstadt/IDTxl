@@ -397,7 +397,11 @@ class hdAbstractEstimator(Estimator):
 
             auto_MI_data["auto_MI_bin_size"] += [str(auto_MI_bin_size)]
             auto_MI_data["delay"] += [str(number_of_delays)]
-            auto_MI_dict[str(auto_MI_bin_size)] = auto_MI
+            auto_MI_d = {}
+            auto_MI_d[0] = np.linspace(0, self.settings['auto_MI_max_delay'], len(auto_MI))
+            auto_MI_d[1] = auto_MI
+
+            auto_MI_dict[str(auto_MI_bin_size)] = auto_MI_d
 
         auto_MI_data['auto_MI'] = auto_MI_dict
         self.settings['auto_MI'] = auto_MI_data
@@ -1744,7 +1748,7 @@ class hdEstimatorShuffling(hdAbstractEstimator):
 
         max_Rs = self.settings['max_Rs']
         mr = np.array(list(max_Rs.items()), dtype=float)
-        HD_max_R = mr[:,1]
+        HD_max_R = mr[:, 1]
 
         results = {'estimation_method': 'shuffling',
                    'T_D': T_D,
@@ -1759,6 +1763,7 @@ class hdEstimatorShuffling(hdAbstractEstimator):
                    'max_Rs': self.settings['max_Rs'],
                    'max_R_T': self.settings['max_R_T'],
                    'HD_max_R': HD_max_R,
+                   'auto_MI': self.settings['auto_MI']['auto_MI'],
                    'settings': self.settings}
 
         return results
