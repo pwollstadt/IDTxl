@@ -20,7 +20,7 @@ settings = {'debug': False,
 
 data = np.loadtxt('/home/mlindner/Dropbox/hdestimator-master/sample_data/spike_times.dat', dtype=float)
 
-"""
+
 est = hdEstimatorShuffling(settings)
 results_shuffling = est.estimate(data)
 print("Shuffling estimator")
@@ -33,7 +33,7 @@ print("opt_scaling_k: ", str(results_shuffling['opt_scaling_k']))
 print("---------------------------------")
 toc = time.perf_counter()
 print(f"Estimation time: {toc-tic:0.5f}")
-"""
+
 
 est = hdEstimatorBBC(settings)
 results_bbc = est.estimate(data)
@@ -47,7 +47,8 @@ print("opt_scaling_k: ", str(results_bbc['opt_scaling_k']))
 print("---------------------------------")
 toc = time.perf_counter()
 print(f"Estimation time: {toc-tic:0.5f}")
-"""
+
+
 ax = plt.subplot(221)
 y = results_shuffling['HD_max_R']
 x = np.array(results_shuffling['settings']['embedding_past_range_set'])
@@ -74,10 +75,7 @@ ax2.tick_params(
     bottom=False,      # ticks along the bottom edge are off
     top=False,         # ticks along the top edge are off
     labelbottom=False)
-plt.show()
-"""
 
-"""
 ax3 = plt.subplot(222)
 y = results_shuffling['HD_max_R']
 x = np.array(results_bbc['settings']['embedding_past_range_set'])
@@ -88,16 +86,14 @@ ax3.set_xticks(x)
 ax3.set_xticklabels(x, fontsize=6)
 ax3.title.set_text('History Dependence bbc')
 
-
 ax4 = plt.subplot(224)
-leg = []
+leg2 = []
 for key in results_bbc['auto_MI'].keys():
     x = results_bbc['auto_MI'][key][0]
     y = results_bbc['auto_MI'][key][1]
-    leg.append(key)
-    ax2.plot(x, y, label=str(float(key)*1000))
+    leg2.append(key)
+    ax4.plot(x, y, label=str(float(key)*1000))
 ax4.set_xscale('log')
 ax4.title.set_text('auto MI bbc')
 ax4.legend(loc="upper right")
 plt.show()
-"""
