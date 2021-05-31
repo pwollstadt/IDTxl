@@ -4,9 +4,11 @@ This module provides unit tests for OpenCL estimators. Estimators are tested
 against JIDT estimators.
 """
 import numpy as np
-from idtxl.estimators_hd import hdEstimatorShuffling
+from idtxl.estimators_hd import hdEstimatorShuffling, hdEstimatorBBC
 import matplotlib.pyplot as plt
+import time
 
+tic = time.perf_counter()
 settings = {'debug': False,
             'embedding_past_range_set': [0.005, 0.00998, 0.01991, 0.03972, 0.07924, 0.15811, 0.31548, 0.62946, 1.25594,
                                        2.50594, 5.0],
@@ -18,6 +20,7 @@ settings = {'debug': False,
 
 data = np.loadtxt('/home/mlindner/Dropbox/hdestimator-master/sample_data/spike_times.dat', dtype=float)
 
+"""
 est = hdEstimatorShuffling(settings)
 results_shuffling = est.estimate(data)
 print("Shuffling estimator")
@@ -28,8 +31,10 @@ print("AIS_tot: ", str(results_shuffling['AIS_tot']))
 print("opt_number_of_bins_d: ", str(results_shuffling['opt_number_of_bins_d']))
 print("opt_scaling_k: ", str(results_shuffling['opt_scaling_k']))
 print("---------------------------------")
-
+toc = time.perf_counter()
+print(f"Estimation time: {toc-tic:0.5f}")
 """
+
 est = hdEstimatorBBC(settings)
 results_bbc = est.estimate(data)
 print("bbc estimator")
@@ -40,8 +45,9 @@ print("AIS_tot: ", str(results_bbc['AIS_tot']))
 print("opt_number_of_bins_d: ", str(results_bbc['opt_number_of_bins_d']))
 print("opt_scaling_k: ", str(results_bbc['opt_scaling_k']))
 print("---------------------------------")
+toc = time.perf_counter()
+print(f"Estimation time: {toc-tic:0.5f}")
 """
-
 ax = plt.subplot(221)
 y = results_shuffling['HD_max_R']
 x = np.array(results_shuffling['settings']['embedding_past_range_set'])
@@ -69,6 +75,7 @@ ax2.tick_params(
     top=False,         # ticks along the top edge are off
     labelbottom=False)
 plt.show()
+"""
 
 """
 ax3 = plt.subplot(222)
@@ -93,5 +100,4 @@ ax4.set_xscale('log')
 ax4.title.set_text('auto MI bbc')
 ax4.legend(loc="upper right")
 plt.show()
-
 """

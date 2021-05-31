@@ -738,7 +738,7 @@ class hdAbstractEstimator(Estimator):
             history_dependence = self.settings['history_dependence'][i]
 
             if self.settings['estimation_method'] == "bbc":
-                if self.settings['bbc_term'] >= self.settings['bbc_tolerance']:
+                if self.settings['bbc_term'][i] >= self.settings['bbc_tolerance']:
                     continue
 
             if dependent_var == "T":
@@ -766,50 +766,7 @@ class hdAbstractEstimator(Estimator):
         else:
             return embeddings_that_maximise_R, max_Rs
 
-    def get_history_dependence_for_embeddings_bbc(self, data):
-        """
-        Apply embeddings to spike times to obtain symbol counts.  Estimate
-        the history dependence for each embedding.  Save results to file.
-        """
-        if self.settings['cross_val'] is None or self.settings['cross_val'] == 'h1':
-            embeddings = self.get_embeddings(self.settings['embedding_past_range_set'],
-                                             self.settings['embedding_number_of_bins_set'],
-                                             self.settings['embedding_scaling_exponent_set'])
-        elif self.settings['cross_val'] == 'h2':
-            # here we set cross_val to h1, because we load the
-            # embeddings that maximise R from the optimisation step
-            embeddings = self.get_embeddings_that_maximise_R(bbc_tolerance=self.settings['bbc_tolerance'],
-                                                             get_as_list=True,
-                                                             cross_val='h1')
-
-        history_dependence = np.empty(len(embeddings))
-        history_dependence = []
-        bbc_term = []
-        count = 0
-        for embedding in embeddings:
-            past_range_T = embedding[0]
-            number_of_bins_d = embedding[1]
-            first_bin_size = self.get_first_bin_size_for_embedding(embedding)
-
-            symbol_counts = utl.add_up_dicts([self.get_symbol_counts(spt,
-                                                                     embedding,
-                                                                     self.settings['embedding_step_size'])
-                                              for spt in data])
-
-            history_dependence, bbc_term = self.get_history_dependence(symbol_counts, number_of_bins_d)
-
-            history_dependence[count] = history_dependence
-            bbc_term[count] = bbc_term
-
-            count += 1
-
-        self.settings['embeddings'] = embeddings
-        self.settings['history_dependence'] = history_dependence
-
-        return history_dependence, bbc_term
-
-
-    def get_history_dependence_for_embeddings_shuffling(self, data):
+    def get_history_dependence_for_embeddings(self, data):
         """
         Apply embeddings to spike times to obtain symbol counts.  Estimate
         the history dependence for each embedding.  Save results to file.
@@ -827,6 +784,9 @@ class hdAbstractEstimator(Estimator):
                                                              cross_val='h1')
 
         history_dependence = np.empty(len(embeddings))
+        if self.settings['estimation_method'] == 'bbc':
+            bbc_term = np.empty(len(embeddings))
+
         count = 0
         for embedding in embeddings:
             past_range_T = embedding[0]
@@ -837,14 +797,19 @@ class hdAbstractEstimator(Estimator):
                                                                  self.settings['embedding_step_size'])
                                               for spt in data])
 
-            history_dependence[count] = self.get_history_dependence(symbol_counts, number_of_bins_d)
+            if self.settings['estimation_method'] == 'shuffling':
+                history_dependence[count] = self.get_history_dependence(symbol_counts, number_of_bins_d)
+            elif self.settings['estimation_method'] == 'bbc':
+                history_dependence[count], bbc_term[count] = self.get_history_dependence(symbol_counts, number_of_bins_d)
 
             count += 1
 
         self.settings['embeddings'] = embeddings
         self.settings['history_dependence'] = history_dependence
+        if self.settings['estimation_method'] == 'bbc':
+            self.settings['bbc_term'] = bbc_term
 
-        return history_dependence
+        # return history_dependence
 
     def get_bootstrap_history_dependence(self,
                                          spike_times,
@@ -1387,7 +1352,7 @@ class hdEstimatorBBC(hdAbstractEstimator):
         else:
             return ret_val, np.float(self.get_bbc_term(R_nsb, R_plugin))
 
-
+    """
     def get_history_dependence_for_single_embedding(self,
                                                     spike_times,
                                                     recording_length,
@@ -1396,10 +1361,9 @@ class hdEstimatorBBC(hdAbstractEstimator):
                                                     embedding_step_size,
                                                     bbc_tolerance=None,
                                                     **kwargs):
-        """
-        Apply embedding to spike_times to obtain symbol counts.
-        Get history dependence from symbol counts.
-        """
+        # Apply embedding to spike_times to obtain symbol counts.
+        # Get history dependence from symbol counts.
+        
 
         past_range_T, number_of_bins_d, scaling_k = embedding
 
@@ -1415,9 +1379,86 @@ class hdEstimatorBBC(hdAbstractEstimator):
 
         if bbc_term >= bbc_tolerance:
             return None
+    """
 
     def estimate(self, data):
-        a=1
+        """Estimate HDE bbc
+
+                    Args:
+                        data : numpy array
+                            realisations of first variable,
+
+                        Returns:
+                        ???????????????????????????????????????????????????????????????????????????????????????????????????????????
+                """
+
+        if self.settings['debug']:
+            import pprint
+            pprint.pprint(self.settings, width=1)
+
+        # get spike times
+        spike_times = np.sort(data) - min(data)
+
+        # check inputs
+        self._check_input(spike_times)
+
+        # check data
+        data = self._ensure_one_dim_input(spike_times)
+
+        if len(data.shape) == 1:
+            data = spike_times[np.newaxis, :]
+        elif data.shape[0] > data.shape[1]:
+            data = spike_times.T
+
+        self.get_spike_times_stats(data, self.settings['embedding_step_size'])
+
+        self.settings['estimation_method'] = 'bbc'
+
+        if self.settings['cross_validated_optimization']:
+            spike_times_optimization, spike_times_validation = np.split(data, 2, axis=1)
+            self.settings['cross_val'] = 'h1'  # first half of the data
+            self.get_history_dependence_for_embeddings(spike_times_optimization)
+
+            self.settings['cross_val'] = 'h2'  # second half of the data
+            self.get_history_dependence_for_embeddings(spike_times_validation)
+            self.compute_CIs(data, target_R='R_max', **self.settings)
+        else:
+            self.settings['cross_val'] = None
+            self.get_history_dependence_for_embeddings(data)
+            self.compute_CIs(data, target_R='R_max', **self.settings)
+
+        self.compute_CIs(data, target_R='R_tot', **self.settings)
+        self.compute_CIs(data, target_R='nonessential', **self.settings)
+
+        self.analyse_auto_MI(data)
+
+        T_D = self.get_temporal_depth_T_D()
+        tau_R = self.get_information_timescale_tau_R()
+        R_tot = self.get_R_tot()
+        AIS_tot = R_tot * self.settings['H_spiking']
+        opt_number_of_bins_d, opt_scaling_k = self.settings['embedding_maximising_R_at_T'][T_D]
+
+        max_Rs = self.settings['max_Rs']
+        mr = np.array(list(max_Rs.items()), dtype=float)
+        HD_max_R = mr[:, 1]
+
+        results = {'estimation_method': 'bbc',
+                   'T_D': T_D,
+                   'tau_R': tau_R,
+                   'R_tot': R_tot,
+                   'AIS_tot': AIS_tot,
+                   'opt_number_of_bins_d': opt_number_of_bins_d,
+                   'opt_scaling_k': opt_scaling_k,
+                   'history_dependence': self.settings['history_dependence'],
+                   'embedding_maximising_R_at_T': self.settings['embedding_maximising_R_at_T'],
+                   'auto_MI': self.settings['auto_MI'],
+                   'max_Rs': self.settings['max_Rs'],
+                   'max_R_T': self.settings['max_R_T'],
+                   'HD_max_R': HD_max_R,
+                   'auto_MI': self.settings['auto_MI']['auto_MI'],
+                   'settings': self.settings}
+
+        return results
 
 
 class hdEstimatorShuffling(hdAbstractEstimator):
@@ -1664,7 +1705,7 @@ class hdEstimatorShuffling(hdAbstractEstimator):
         else:
             return I_sh / H_uncond
 
-
+    """
     def get_history_dependence_for_single_embedding(self,
                                                     spike_times,
                                                     recording_length,
@@ -1673,10 +1714,10 @@ class hdEstimatorShuffling(hdAbstractEstimator):
                                                     embedding_step_size,
                                                     bbc_tolerance=None,
                                                     **kwargs):
-        """
-        Apply embedding to spike_times to obtain symbol counts.
-        Get history dependence from symbol counts.
-        """
+        
+        #Apply embedding to spike_times to obtain symbol counts.
+        #Get history dependence from symbol counts.
+        
 
         past_range_T, number_of_bins_d, scaling_k = embedding
 
@@ -1687,6 +1728,7 @@ class hdEstimatorShuffling(hdAbstractEstimator):
                                                         **kwargs)
 
         return history_dependence
+    """
 
     def estimate(self, data):
 
@@ -1725,14 +1767,14 @@ class hdEstimatorShuffling(hdAbstractEstimator):
         if self.settings['cross_validated_optimization']:
             spike_times_optimization, spike_times_validation = np.split(data, 2, axis=1)
             self.settings['cross_val'] = 'h1'  # first half of the data
-            self.get_history_dependence_for_embeddings_shuffling(spike_times_optimization)
+            self.get_history_dependence_for_embeddings(spike_times_optimization)
 
             self.settings['cross_val'] = 'h2'  # second half of the data
-            self.get_history_dependence_for_embeddings_shuffling(spike_times_validation)
+            self.get_history_dependence_for_embeddings(spike_times_validation)
             self.compute_CIs(data, target_R='R_max', **self.settings)
         else:
             self.settings['cross_val'] = None
-            self.get_history_dependence_for_embeddings_shuffling(data)
+            self.get_history_dependence_for_embeddings(data)
             self.compute_CIs(data, target_R='R_max', **self.settings)
 
         self.compute_CIs(data, target_R='R_tot', **self.settings)
