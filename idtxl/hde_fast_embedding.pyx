@@ -15,10 +15,11 @@ def get_median_number_of_spikes_per_bin(raw_symbols):
 @cython.boundscheck(False)  # Deactivate bounds checking
 @cython.wraparound(False)   # Deactivate negative indexing.
 cdef np.ndarray[DTYPE_t, ndim=2] get_raw_symbols(np.ndarray[np.double_t, ndim= 1] spike_times,
-                                                 embedding,
+                                                 past_range_T,
+                                                 number_of_bins_d,
+                                                 scaling_k,
                                                  first_bin_size,
                                                  embedding_step_size):
-    past_range_T, number_of_bins_d, scaling_k = embedding
 
     # the window is the embedding plus the response,
     # ie the embedding and one additional bin of size embedding_step_size
@@ -74,7 +75,63 @@ cdef np.ndarray[DTYPE_t, ndim=2] get_raw_symbols(np.ndarray[np.double_t, ndim= 1
 
 @cython.boundscheck(False)  # Deactivate bounds checking
 @cython.wraparound(False)   # Deactivate negative indexing.
-cdef np.ndarray[DTYPE_t, ndim=1] get_symbols(DTYPE_t[:,:] raw_symbols,
+cdef np.ndarray[DTYPE_t, ndim=1] get_symbols(DTYPE_t[:,:] raw_symbols, exponent_base, mode=None):
+    cdef long num_symbols
+    cdef int symbol_length
+    num_symbols, symbol_length = np.shape(raw_symbols) # symbol_length: number_of_bins_d + 1
+    cdef np.ndarray[np.float64_t, ndim=1] median_number_of_spikes_per_bin
+    if mode == 'median':
+        median_number_of_spikes_per_bin = get_median_number_of_spikes_per_bin(raw_symbols)
+    else:
+        median_number_of_spikes_per_bin = np.zeros(symbol_length)
+
+    cdef np.ndarray[DTYPE_t, ndim=1] raw_symbol
+    cdef np.ndarray[DTYPE_t, ndim=1] symbols = np.zeros(num_symbols, dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1] past_symbols = np.zeros(num_symbols, dtype=DTYPE)
+    cdef int symbol, i, past_symbol
+    cdef int symbol_num = 0
+    
+    for symbol_num in range(num_symbols):
+        symbol = 0
+        for i in range(symbol_length):
+            if raw_symbols[symbol_num][i] > median_number_of_spikes_per_bin[i]:
+                symbol += exponent_base ** (symbol_length - i - 1)
+        symbols[symbol_num] = symbol
+
+    return symbols
+
+
+@cython.boundscheck(False)  # Deactivate bounds checking
+@cython.wraparound(False)   # Deactivate negative indexing.
+cdef np.ndarray[DTYPE_t, ndim=1] get_past_symbols(DTYPE_t[:,:] raw_symbols, exponent_base, mode=None):
+    cdef long num_symbols
+    cdef int symbol_length
+    num_symbols, symbol_length = np.shape(raw_symbols) # symbol_length: number_of_bins_d + 1
+    cdef np.ndarray[np.float64_t, ndim=1] median_number_of_spikes_per_bin
+    if mode == 'median':
+        median_number_of_spikes_per_bin = get_median_number_of_spikes_per_bin(raw_symbols)
+    else:
+        median_number_of_spikes_per_bin = np.zeros(symbol_length)
+
+    cdef np.ndarray[DTYPE_t, ndim=1] raw_symbol
+    cdef np.ndarray[DTYPE_t, ndim=1] symbols = np.zeros(num_symbols, dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1] past_symbols = np.zeros(num_symbols, dtype=DTYPE)
+    cdef int symbol, i, past_symbol
+    cdef int symbol_num = 0
+
+    for symbol_num in range(num_symbols):
+        symbol = 0
+        for i in range(symbol_length-1):
+            if raw_symbols[symbol_num][i] > median_number_of_spikes_per_bin[i]:
+                symbol += exponent_base ** (symbol_length -1 - i - 1)
+        symbols[symbol_num] = symbol
+
+    return symbols
+
+
+@cython.boundscheck(False)  # Deactivate bounds checking
+@cython.wraparound(False)   # Deactivate negative indexing.
+cdef np.ndarray[DTYPE_t, ndim=1] get_current_symbols(DTYPE_t[:,:] raw_symbols,
                                              mode=None):
     cdef long num_symbols
     cdef int symbol_length
@@ -87,18 +144,21 @@ cdef np.ndarray[DTYPE_t, ndim=1] get_symbols(DTYPE_t[:,:] raw_symbols,
 
     cdef np.ndarray[DTYPE_t, ndim=1] raw_symbol
     cdef np.ndarray[DTYPE_t, ndim=1] symbols = np.zeros(num_symbols, dtype=DTYPE)
-    cdef int symbol, i
+    cdef np.ndarray[DTYPE_t, ndim=1] past_symbols = np.zeros(num_symbols, dtype=DTYPE)
+    cdef int symbol, i, past_symbol
     cdef int symbol_num = 0
-    
-    for symbol_num in range(num_symbols):
-        symbol = 0
-        for i in range(symbol_length):
-            if raw_symbols[symbol_num][i] > median_number_of_spikes_per_bin[i]:
-                symbol += 2 ** (symbol_length - i - 1)
 
-        symbols[symbol_num] = symbol
+    for symbol_num in range(num_symbols):
+        # symbol = raw_symbols[symbol_num][symbol_length]
+        # if raw_symbols[symbol_num][symbol_length] > median_number_of_spikes_per_bin[symbol_length]:
+        #    symbol += 1
+            # symbol += exponent_base ** (symbol_length -1 - i - 1)
+        symbols[symbol_num] = raw_symbols[symbol_num][symbol_length]
 
     return symbols
+
+
+
 
 def count_symbols(DTYPE_t[:] symbols):
     symbols = np.sort(symbols)
@@ -125,18 +185,19 @@ def count_symbols(DTYPE_t[:] symbols):
     return symbol_counts
 
 
-def get_symbol_counts(spike_times, embedding, embedding_step_size):
-    past_range_T, number_of_bins_d, scaling_k = embedding
-    first_bin_size = emb.get_first_bin_size_for_embedding(embedding)
+def get_symbol_array(spike_times, past_range_T, number_of_bins_d, scaling_k,
+                     embedding_step_size, first_bin_size, exponent_base):
 
-    cdef np.ndarray[DTYPE_t, ndim=2] raw_symbols = get_raw_symbols(spike_times,
-                                                                   embedding,
+    cdef np.ndarray[DTYPE_t, ndim=2] raw_symbols = get_raw_symbols(spike_times, past_range_T,
+                                                                   number_of_bins_d,
+                                                                   scaling_k,
                                                                    first_bin_size,
                                                                    embedding_step_size)
 
-    cdef np.ndarray[DTYPE_t, ndim=1] symbols = get_symbols(raw_symbols,
-                                                           mode='median')
+    cdef np.ndarray[DTYPE_t, ndim=1] symbols = get_symbols(raw_symbols, exponent_base, mode='median')
 
-    symbol_counts = count_symbols(symbols)
+    cdef np.ndarray[DTYPE_t, ndim=1] past_symbols = get_past_symbols(raw_symbols, exponent_base, mode='median')
 
-    return symbol_counts
+    cdef np.ndarray[DTYPE_t, ndim=1] current_symbols = get_current_symbols(raw_symbols, mode='median')
+
+    return symbols, past_symbols, current_symbols
