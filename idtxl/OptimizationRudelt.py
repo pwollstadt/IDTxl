@@ -1,14 +1,20 @@
 
+
+import logging
 import numpy as np
-import hde_utils as utl
+from scipy.optimize import newton, minimize
+import ast
+from sys import exit, stderr, argv, path
+from idtxl.estimators_Rudelt import RudeltNSBEstimatorAIS, RudeltEstimatorPluginMI1
+import idtxl.hde_utils as utl
+from collections import Counter
+import mpmath as mp
 
 
 
 
 
-
-
-class optimization_Rudelt():
+class OptimizationRudelt():
 
     def __init__(self, settings=None):
         settings = self._check_settings(settings)
@@ -17,6 +23,14 @@ class optimization_Rudelt():
         self.settings.setdefault('auto_MI_bin_size_set', [0.005, 0.01, 0.025, 0.05, 0.25, 0.5])
         self.settings.setdefault('auto_MI_max_delay', 5)
 
+        self.settings.setdefault('number_of_bootstraps_R_max', 250)
+        self.settings.setdefault('number_of_bootstraps_R_tot', 250)
+        self.settings.setdefault('number_of_bootstraps_nonessential', 0)
+        self.settings.setdefault('block_length_l', None)
+        self.settings.setdefault('bootstrap_CI_use_sd', True)
+        self.settings.setdefault('bootstrap_CI_percentile_lo', 2.5)
+        self.settings.setdefault('bootstrap_CI_percentile_hi', 97.5)
+        self.settings.setdefault('timescale_minimum_past_range', 0.01)
 
     def analyse_auto_MI(self, spike_times):
         """
@@ -387,6 +401,79 @@ class optimization_Rudelt():
             return T_D
         else:
             return T_D, R_tot_thresh
+
+
+
+    # ----------------------------------------------------------------------------- TODO embedding
+    def get_embeddings(self,
+                       embedding_past_range_set,
+                       embedding_number_of_bins_set,
+                       embedding_scaling_exponent_set):
+        """
+        Get all combinations of parameters T, d, k, based on the
+        sets of selected parameters.
+        """
+
+        embeddings = []
+        for past_range_T in embedding_past_range_set:
+            for number_of_bins_d in embedding_number_of_bins_set:
+                if not isinstance(number_of_bins_d, int) or number_of_bins_d < 1:
+                    print("Error: numer of bins {} is not a positive integer. Skipping.".format(number_of_bins_d),
+                          file=stderr, flush=True)
+                    continue
+
+                if type(embedding_scaling_exponent_set) == dict:
+                    scaling_set_given_T_and_d = self.get_set_of_scalings(past_range_T,
+                                                                         number_of_bins_d,
+                                                                         **embedding_scaling_exponent_set)
+                else:
+                    scaling_set_given_T_and_d = embedding_scaling_exponent_set
+
+                for scaling_k in scaling_set_given_T_and_d:
+                    embeddings += [(past_range_T, number_of_bins_d, scaling_k)]
+
+        return embeddings
+
+
+
+    def get_set_of_scalings(self, past_range_T,
+                            number_of_bins_d,
+                            number_of_scalings,
+                            min_first_bin_size,
+                            min_step_for_scaling):
+        """
+        Get scaling exponents such that the uniform embedding as well as
+        the embedding for which the first bin has a length of
+        min_first_bin_size (in seconds), as well as linearly spaced
+        scaling factors in between, such that in total
+        number_of_scalings scalings are obtained.
+        """
+
+        min_scaling = 0
+        if past_range_T / number_of_bins_d <= min_first_bin_size or number_of_bins_d == 1:
+            max_scaling = 0
+        else:
+            # for the initial guess assume the largest bin dominates, so k is approx. log(T) / d
+
+            max_scaling = newton(lambda scaling: self.get_past_range(number_of_bins_d,
+                                                                     min_first_bin_size,
+                                                                     scaling)
+                                                 - past_range_T,
+                                 np.log10(past_range_T
+                                          / min_first_bin_size) / (number_of_bins_d - 1),
+                                 tol=1e-04, maxiter=500)
+
+        while np.linspace(min_scaling, max_scaling,
+                          number_of_scalings, retstep=True)[1] < min_step_for_scaling:
+            number_of_scalings -= 1
+
+        return np.linspace(min_scaling, max_scaling, number_of_scalings)
+
+
+
+
+
+
 
     def get_embeddings_that_maximise_R(self,
                                        bbc_tolerance=None,
