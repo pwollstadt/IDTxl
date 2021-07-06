@@ -1,24 +1,39 @@
 
 
-import logging
 import numpy as np
-from scipy.optimize import newton, minimize
-import ast
+from scipy.optimize import newton
 from sys import exit, stderr, argv, path
-from idtxl.estimators_Rudelt import RudeltNSBEstimatorAIS, RudeltEstimatorPluginMI1
+from idtxl.estimators_Rudelt import RudeltBBCEstimator, RudeltShufflingEstimator
 import idtxl.hde_utils as utl
 from collections import Counter
-import mpmath as mp
 
 
-
-
-
-class OptimizationRudelt():
+# noinspection PyAttributeOutsideInit
+class OptimizationRudelt():             # ------------------------------------------------------------------------------------ TODO order defs
 
     def __init__(self, settings=None):
-        settings = self._check_settings(settings)
+        settings = self._check_settings(settings)              # ------------------------------------------------------------- TODO SET DEFAULTS AND CHECK INPUTS
         self.settings = settings.copy()
+
+        self.settings.setdefault('embedding_step_size', 0.005)
+        self.settings.setdefault('embedding_past_range_set', [0.005, 0.00561, 0.00629, 0.00706, 0.00792,
+                                   0.00889, 0.00998, 0.01119, 0.01256, 0.01409, 0.01581, 0.01774,
+                                   0.01991, 0.02233, 0.02506, 0.02812, 0.03155, 0.0354, 0.03972, 0.04456,
+                                   0.05, 0.0561, 0.06295, 0.07063, 0.07924, 0.08891, 0.09976, 0.11194,
+                                   0.12559, 0.14092, 0.15811, 0.17741, 0.19905, 0.22334, 0.25059,
+                                   0.28117, 0.31548, 0.35397, 0.39716, 0.44563, 0.5, 0.56101, 0.62946,
+                                   0.70627, 0.79245, 0.88914, 0.99763, 1.11936, 1.25594, 1.40919,
+                                   1.58114, 1.77407, 1.99054, 2.23342, 2.50594, 2.81171, 3.15479,
+                                   3.53973, 3.97164, 4.45625, 5.0])
+        self.settings.setdefault('embedding_number_of_bins_set', [1, 2, 3, 4, 5])
+        self.settings.setdefault('embedding_scaling_exponent_set',
+                                 {'number_of_scalings': 10,
+                                  'min_first_bin_size': 0.005,
+                                  'min_step_for_scaling': 0.01})
+
+        self.settings.setdefault('bbc_tolerance', 0.05)
+        self.settings.setdefault('return_averaged_R', True)
+        self.settings.setdefault('timescale_minimum_past_range', 0.01)
 
         self.settings.setdefault('auto_MI_bin_size_set', [0.005, 0.01, 0.025, 0.05, 0.25, 0.5])
         self.settings.setdefault('auto_MI_max_delay', 5)
@@ -31,229 +46,295 @@ class OptimizationRudelt():
         self.settings.setdefault('bootstrap_CI_percentile_lo', 2.5)
         self.settings.setdefault('bootstrap_CI_percentile_hi', 97.5)
         self.settings.setdefault('timescale_minimum_past_range', 0.01)
+        self.settings.setdefault('debug', False)
 
-    def analyse_auto_MI(self, spike_times):
+        self.embeddings = self.get_embeddings(self.settings['embedding_past_range_set'],
+                                              self.settings['embedding_number_of_bins_set'],
+                                              self.settings['embedding_scaling_exponent_set'])
+
+    @staticmethod
+    def _check_settings(settings=None):
+        """Set default for settings dictionary.
+
+        Check if settings dictionary is None. If None, initialise an empty
+        dictionary. If not None check if type is dictionary. Function should be
+        called before setting default values.
         """
-        Get the auto MI for the spike times.  If it is available from file, load
-        it, else compute it.
+        if settings is None:
+            return {}
+        elif type(settings) is not dict:
+            raise TypeError('settings should be a dictionary.')
+        else:
+            return settings
+
+
+    def get_embeddings(self,
+                       embedding_past_range_set,
+                       embedding_number_of_bins_set,
+                       embedding_scaling_exponent_set):
         """
-
-        auto_MI_data = {
-            "auto_MI_bin_size": [],
-            "delay": [],
-            "auto_MI": []
-        }
-        auto_MI_dict = {}
-        for auto_MI_bin_size in self.settings['auto_MI_bin_size_set']:
-            number_of_delays = int(self.settings['auto_MI_max_delay'] / auto_MI_bin_size) + 1
-
-            # auto_MI = self.settings['auto_MI']
-            # if isinstance(auto_MI, np.ndarray) and len(auto_MI) >= number_of_delays:
-            #    continue
-
-            # if no analysis found or new analysis includes more delays:
-            # perform the analysis
-            auto_MI = self.get_auto_MI(spike_times, auto_MI_bin_size, number_of_delays)
-
-            auto_MI_data["auto_MI_bin_size"] += [str(auto_MI_bin_size)]
-            auto_MI_data["delay"] += [str(number_of_delays)]
-            auto_MI_d = {}
-            auto_MI_d[0] = np.linspace(0, self.settings['auto_MI_max_delay'], len(auto_MI))
-            auto_MI_d[1] = auto_MI
-
-            auto_MI_dict[str(auto_MI_bin_size)] = auto_MI_d
-
-        auto_MI_data['auto_MI'] = auto_MI_dict
-        self.settings['auto_MI'] = auto_MI_data
-
-    def get_auto_MI(self, spike_times, bin_size, number_of_delays):
-        """
-        Compute the auto mutual information in the neuron's activity, a
-        measure closely related to history dependence.
+        Get all combinations of parameters T, d, k, based on the
+        sets of selected parameters.
         """
 
-        binned_neuron_activity = []
+        embeddings = []
+        for past_range_T in embedding_past_range_set:
+            for number_of_bins_d in embedding_number_of_bins_set:
+                if not isinstance(number_of_bins_d, int) or number_of_bins_d < 1:
+                    print("Error: numer of bins {} is not a positive integer. Skipping.".format(number_of_bins_d),
+                          file=stderr, flush=True)
+                    continue
 
-        for spt in spike_times:
-            # represent the neural activity as an array of 0s (no spike) and 1s (spike)
-            binned_neuron_activity += [utl.get_binned_neuron_activity(spt,
-                                                                      bin_size,
-                                                                      relative_to_median_activity=True)]
+                if type(embedding_scaling_exponent_set) == dict:
+                    scaling_set_given_T_and_d = self.get_set_of_scalings(past_range_T,
+                                                                         number_of_bins_d,
+                                                                         **embedding_scaling_exponent_set)
+                else:
+                    scaling_set_given_T_and_d = embedding_scaling_exponent_set
 
-        p_spike = sum([sum(bna)
-                       for bna in binned_neuron_activity]) / sum([len(bna)
-                                                                  for bna in binned_neuron_activity])
-        H_spiking = utl.get_shannon_entropy([p_spike,
-                                         1 - p_spike])
+                for scaling_k in scaling_set_given_T_and_d:
+                    embeddings += [(past_range_T, number_of_bins_d, scaling_k)]
 
-        auto_MIs = []
+        return embeddings
 
-        # compute auto MI
-        for delay in range(number_of_delays):
-
-            symbol_counts = []
-            for bna in binned_neuron_activity:
-                number_of_symbols = len(bna) - delay - 1
-
-                symbols = np.array([2 * bna[i] + bna[i + delay + 1]
-                                    for i in range(number_of_symbols)])
-
-                symbol_counts += [dict([(unq_symbol, len(np.where(symbols == unq_symbol)[0]))
-                                        for unq_symbol in np.unique(symbols)])]
-
-            symbol_counts = utl.add_up_dicts(symbol_counts)
-            number_of_symbols = sum(symbol_counts.values())
-            # number_of_symbols = sum([len(bna) - delay - 1 for bna in binned_neuron_activity])
-
-            H_joint = utl.get_shannon_entropy([number_of_occurrences / number_of_symbols
-                                           for number_of_occurrences in symbol_counts.values()])
-
-            # I(X : Y) = H(X) - H(X|Y) = H(X) - (H(X,Y) - H(Y)) = H(X) + H(Y) - H(X,Y)
-            # auto_MI = 2 * H_spiking - H_joint
-            auto_MI = 2 - H_joint / H_spiking  # normalized auto MI = auto MI / H_spiking
-
-            auto_MIs += [auto_MI]
-
-        return auto_MIs
-
-
-    def get_history_dependence_for_embeddings(self, symbol_array, past_symbol_array, current_symbol_array):
+    def get_set_of_scalings(self, past_range_T,
+                            number_of_bins_d,
+                            number_of_scalings,
+                            min_first_bin_size,
+                            min_step_for_scaling):
         """
-        Apply embeddings to spike times to obtain symbol counts.  Estimate
-        the history dependence for each embedding.  Save results to file.
+        Get scaling exponents such that the uniform embedding as well as
+        the embedding for which the first bin has a length of
+        min_first_bin_size (in seconds), as well as linearly spaced
+        scaling factors in between, such that in total
+        number_of_scalings scalings are obtained.
         """
 
-        if self.settings['cross_val'] is None or self.settings['cross_val'] == 'h1':
-            embeddings = self.get_embeddings(self.settings['embedding_past_range_set'],
-                                             self.settings['embedding_number_of_bins_set'],
-                                             self.settings['embedding_scaling_exponent_set'])
-        elif self.settings['cross_val'] == 'h2':
-            # here we set cross_val to h1, because we load the
-            # embeddings that maximise R from the optimisation step
-            embeddings = self.get_embeddings_that_maximise_R(bbc_tolerance=self.settings['bbc_tolerance'],
-                                                             get_as_list=True,
-                                                             cross_val='h1')
+        min_scaling = 0
+        if past_range_T / number_of_bins_d <= min_first_bin_size or number_of_bins_d == 1:
+            max_scaling = 0
+        else:
+            # for the initial guess assume the largest bin dominates, so k is approx. log(T) / d
 
-        history_dependence = np.empty(len(embeddings))
+            max_scaling = newton(lambda scaling: self.get_past_range(number_of_bins_d,
+                                                                     min_first_bin_size,
+                                                                     scaling)
+                                                 - past_range_T,
+                                 np.log10(past_range_T
+                                          / min_first_bin_size) / (number_of_bins_d - 1),
+                                 tol=1e-04, maxiter=500)
+
+        while np.linspace(min_scaling, max_scaling,
+                          number_of_scalings, retstep=True)[1] < min_step_for_scaling:
+            number_of_scalings -= 1
+
+        return np.linspace(min_scaling, max_scaling, number_of_scalings)
+
+    def get_past_range(self, number_of_bins_d, first_bin_size, scaling_k):
+        """
+        Get the past range T of the embedding, based on the parameters d, tau_1 and k.
+        """
+
+        return np.sum([first_bin_size * 10 ** ((number_of_bins_d - i) * scaling_k)
+                       for i in range(1, number_of_bins_d + 1)])
+
+
+
+
+
+
+
+#    def get_history_dependence_for_embeddings(self, symbol_array, past_symbol_array, current_symbol_array): # ------- TODO delete
+#        """
+#        Apply embeddings to spike times to obtain symbol counts.  Estimate
+#        the history dependence for each embedding.  Save results to file.
+#        """
+#
+#        if self.settings['cross_val'] is None or self.settings['cross_val'] == 'h1':
+#            embeddings = self.get_embeddings(self.settings['embedding_past_range_set'],
+#                                             self.settings['embedding_number_of_bins_set'],
+#                                             self.settings['embedding_scaling_exponent_set'])
+#        elif self.settings['cross_val'] == 'h2':
+#            # here we set cross_val to h1, because we load the
+#            # embeddings that maximise R from the optimisation step
+#            embeddings = self.get_embeddings_that_maximise_R(bbc_tolerance=self.settings['bbc_tolerance'],
+#                                                             get_as_list=True,
+#                                                             cross_val='h1')
+#
+#        history_dependence = np.empty(len(embeddings))
+#        if self.settings['estimation_method'] == 'bbc':
+#            bbc_term = np.empty(len(embeddings))
+#
+#        count = 0
+#        for embedding in embeddings:
+#            #past_range_T = embedding[0]
+#            #number_of_bins_d = embedding[1]
+#            #first_bin_size = self.get_first_bin_size_for_embedding(embedding)
+#            #symbol_counts = utl.add_up_dicts([self.get_symbol_counts(spt,
+#            #                                                     embedding,
+#            #                                                     self.settings['embedding_step_size'])
+#            #                                  for spt in data])
+#
+#
+#            if self.settings['estimation_method'] == 'shuffling':
+#                #history_dependence[count] = self.get_history_dependence(symbol_counts, number_of_bins_d)
+#            elif self.settings['estimation_method'] == 'bbc':
+#                history_dependence[count], bbc_term[count] = self.get_history_dependence(symbol_counts, number_of_bins_d)
+#
+#            count += 1
+#
+#        self.settings['embeddings'] = embeddings
+#        self.settings['history_dependence'] = history_dependence
+#        if self.settings['estimation_method'] == 'bbc':
+#            self.settings['bbc_term'] = bbc_term
+#
+#        # return history_dependence
+
+
+#    def get_history_dependence(self,
+#                               symbol_counts,
+#                               number_of_bins_d,
+#                               past_symbol_counts=None,
+#                               bbc_tolerance=None,
+#                               H_uncond=None,
+#                               return_ais=False,
+#                               **kwargs):
+#        """
+#        Get history dependence for binary random variable that takes
+#        into account outcomes with dimension d into the past, and dim 1
+#        at response, based on symbol counts.
+#
+#        If no past_symbol_counts are provided, uses representation for
+#        symbols as given by emb.symbol_array_to_binary to obtain them.
+#        """
+#
+#        # if no (unconditional) entropy of the response is provided,
+#        # assume it is a one-dimensional binary outcome (as in
+#        # a spike train) and compute it based on that assumption
+#        if H_uncond is None:
+#            H_uncond = utl.get_H_spiking(symbol_counts)
+#
+#        if past_symbol_counts is None:
+#            past_symbol_counts = utl.get_past_symbol_counts(symbol_counts)
+#
+#        alphabet_size_past = 2 ** int(number_of_bins_d)  # K for past activity
+#        alphabet_size = alphabet_size_past * 2  # K
+#
+#        if self.settings['estimation_method'] == "bbc":
+#            return self.b_estimator(symbol_counts,
+#                                     past_symbol_counts,
+#                                     alphabet_size,
+#                                     alphabet_size_past,
+#                                     H_uncond,
+#                                     bbc_tolerance=bbc_tolerance,
+#                                     return_ais=return_ais)
+#
+#        elif self.settings['estimation_method'] == "shuffling":
+#            return self.p_estimator(symbol_counts,
+#                                          number_of_bins_d,
+#                                          H_uncond,
+#                                          return_ais=return_ais)
+#
+#
+#
+#    def get_history_dependence_for_embeddings(self, data):
+#        """
+#        Apply embeddings to spike times to obtain symbol counts.  Estimate
+#        the history dependence for each embedding.  Save results to file.
+#        """
+#
+#        if self.settings['cross_val'] is None or self.settings['cross_val'] == 'h1':
+#            embeddings = self.get_embeddings(self.settings['embedding_past_range_set'],
+#                                             self.settings['embedding_number_of_bins_set'],
+#                                             self.settings['embedding_scaling_exponent_set'])
+#        elif self.settings['cross_val'] == 'h2':
+#            # here we set cross_val to h1, because we load the
+#            # embeddings that maximise R from the optimisation step
+#            embeddings = self.get_embeddings_that_maximise_R(bbc_tolerance=self.settings['bbc_tolerance'],
+#                                                             get_as_list=True,
+#                                                             cross_val='h1')
+#
+#        history_dependence = np.empty(len(embeddings))
+#        if self.settings['estimation_method'] == 'bbc':
+#            bbc_term = np.empty(len(embeddings))
+#
+#        count = 0
+#        for embedding in embeddings:
+#            past_range_T = embedding[0]
+#            number_of_bins_d = embedding[1]
+#            first_bin_size = self.get_first_bin_size_for_embedding(embedding)
+#            symbol_counts = utl.add_up_dicts([self.get_symbol_counts(spt,
+#                                                                 embedding,
+#                                                                 self.settings['embedding_step_size'])
+#                                              for spt in data])
+#
+#            if self.settings['estimation_method'] == 'shuffling':
+#                history_dependence[count] = self.get_history_dependence(symbol_counts, number_of_bins_d)
+#            elif self.settings['estimation_method'] == 'bbc':
+#                history_dependence[count], bbc_term[count] = self.get_history_dependence(symbol_counts, number_of_bins_d)
+#
+#            count += 1
+#
+#        self.settings['embeddings'] = embeddings
+#        self.settings['history_dependence'] = history_dependence
+#        if self.settings['estimation_method'] == 'bbc':
+#            self.settings['bbc_term'] = bbc_term
+#
+#        # return history_dependence
+
+    def get_history_dependence(self, data, process, replication):
+
+        realisations = data.n_replications
+
+        # get history dependence
+        estbbc = RudeltBBCEstimator()
+        estshu = RudeltShufflingEstimator()
+
+        history_dependence = np.empty(shape=(len(self.embeddings)))
         if self.settings['estimation_method'] == 'bbc':
-            bbc_term = np.empty(len(embeddings))
+            bbc_term = np.empty(shape=(len(self.embeddings)))
 
-        count = 0
-        for embedding in embeddings:
-            #past_range_T = embedding[0]
-            #number_of_bins_d = embedding[1]
-            #first_bin_size = self.get_first_bin_size_for_embedding(embedding)
-            #symbol_counts = utl.add_up_dicts([self.get_symbol_counts(spt,
-            #                                                     embedding,
-            #                                                     self.settings['embedding_step_size'])
-            #                                  for spt in data])
+        embedding_count = 0
+        for embedding in self.embeddings:
+
+            if self.settings['debug']:
+                print("Embedding: " + str(embedding[0]) + ", " + str(embedding[1]) + ", " + str(embedding[2]))
+
+            symbol_array, past_symbol_array, current_symbol_array, symbol_array_length = \
+                    data.get_realisations_symbols(process,
+                                                  embedding[0],
+                                                  embedding[1],
+                                                  embedding[2],
+                                                  self.settings['embedding_step_size'],
+                                                  replication_list=[replication],
+                                                  output_spike_times=False)
+
+            if self.settings['estimation_method'] == 'bbc':
+                I_bbc, R_bbc, bbc_t = \
+                            estbbc.estimate(symbol_array[0, 0], past_symbol_array[0, 0], current_symbol_array[0, 0])
+                history_dependence[embedding_count] = R_bbc
+                bbc_term[embedding_count] = bbc_t
+
+                if self.settings['debug']:
+                    print("\tHD: " + str(R_bbc) + " BBC: " + str(bbc_t))
+
+            elif self.settings['estimation_method'] == 'shuffling':
+                I_sh, R_sh = estshu(symbol_array[0,0])
+                history_dependence[embedding_count] = R_sh
+
+                if self.settings['debug']:
+                    print("\tHD: " + str(R_bbc))
 
 
-            if self.settings['estimation_method'] == 'shuffling':
-                #history_dependence[count] = self.get_history_dependence(symbol_counts, number_of_bins_d)
-            elif self.settings['estimation_method'] == 'bbc':
-                history_dependence[count], bbc_term[count] = self.get_history_dependence(symbol_counts, number_of_bins_d)
+            embedding_count += 1
 
-            count += 1
-
-        self.settings['embeddings'] = embeddings
-        self.settings['history_dependence'] = history_dependence
         if self.settings['estimation_method'] == 'bbc':
-            self.settings['bbc_term'] = bbc_term
-
-        # return history_dependence
-
-
-    def get_history_dependence(self,
-                               symbol_counts,
-                               number_of_bins_d,
-                               past_symbol_counts=None,
-                               bbc_tolerance=None,
-                               H_uncond=None,
-                               return_ais=False,
-                               **kwargs):
-        """
-        Get history dependence for binary random variable that takes
-        into account outcomes with dimension d into the past, and dim 1
-        at response, based on symbol counts.
-
-        If no past_symbol_counts are provided, uses representation for
-        symbols as given by emb.symbol_array_to_binary to obtain them.
-        """
-
-        # if no (unconditional) entropy of the response is provided,
-        # assume it is a one-dimensional binary outcome (as in
-        # a spike train) and compute it based on that assumption
-        if H_uncond is None:
-            H_uncond = utl.get_H_spiking(symbol_counts)
-
-        if past_symbol_counts is None:
-            past_symbol_counts = utl.get_past_symbol_counts(symbol_counts)
-
-        alphabet_size_past = 2 ** int(number_of_bins_d)  # K for past activity
-        alphabet_size = alphabet_size_past * 2  # K
-
-        if self.settings['estimation_method'] == "bbc":
-            return self.b_estimator(symbol_counts,
-                                     past_symbol_counts,
-                                     alphabet_size,
-                                     alphabet_size_past,
-                                     H_uncond,
-                                     bbc_tolerance=bbc_tolerance,
-                                     return_ais=return_ais)
-
-        elif self.settings['estimation_method'] == "shuffling":
-            return self.p_estimator(symbol_counts,
-                                          number_of_bins_d,
-                                          H_uncond,
-                                          return_ais=return_ais)
+            return history_dependence, bbc_term
+        elif self.settings['estimation_method'] == 'shuffling':
+            return history_dependence
 
 
 
-    def get_history_dependence_for_embeddings(self, data):
-        """
-        Apply embeddings to spike times to obtain symbol counts.  Estimate
-        the history dependence for each embedding.  Save results to file.
-        """
-
-        if self.settings['cross_val'] is None or self.settings['cross_val'] == 'h1':
-            embeddings = self.get_embeddings(self.settings['embedding_past_range_set'],
-                                             self.settings['embedding_number_of_bins_set'],
-                                             self.settings['embedding_scaling_exponent_set'])
-        elif self.settings['cross_val'] == 'h2':
-            # here we set cross_val to h1, because we load the
-            # embeddings that maximise R from the optimisation step
-            embeddings = self.get_embeddings_that_maximise_R(bbc_tolerance=self.settings['bbc_tolerance'],
-                                                             get_as_list=True,
-                                                             cross_val='h1')
-
-        history_dependence = np.empty(len(embeddings))
-        if self.settings['estimation_method'] == 'bbc':
-            bbc_term = np.empty(len(embeddings))
-
-        count = 0
-        for embedding in embeddings:
-            past_range_T = embedding[0]
-            number_of_bins_d = embedding[1]
-            first_bin_size = self.get_first_bin_size_for_embedding(embedding)
-            symbol_counts = utl.add_up_dicts([self.get_symbol_counts(spt,
-                                                                 embedding,
-                                                                 self.settings['embedding_step_size'])
-                                              for spt in data])
-
-            if self.settings['estimation_method'] == 'shuffling':
-                history_dependence[count] = self.get_history_dependence(symbol_counts, number_of_bins_d)
-            elif self.settings['estimation_method'] == 'bbc':
-                history_dependence[count], bbc_term[count] = self.get_history_dependence(symbol_counts, number_of_bins_d)
-
-            count += 1
-
-        self.settings['embeddings'] = embeddings
-        self.settings['history_dependence'] = history_dependence
-        if self.settings['estimation_method'] == 'bbc':
-            self.settings['bbc_term'] = bbc_term
-
-        # return history_dependence
 
     def get_bootstrap_history_dependence(self,
                                          spike_times,
@@ -270,8 +351,8 @@ class OptimizationRudelt():
         # compute total number of symbols in original data:
         # this is the amount of symbols we want to replicate
         min_num_symbols = 1 + int((min([spt[-1] - spt[0] for spt in spike_times])
-                                   - (past_range_T + embedding_step_size))
-                                  / embedding_step_size)
+                                   - (past_range_T + self.settings['embedding_step_size']))
+                                  / self.settings['embedding_step_size'])
 
         symbol_block_length = int(block_length_l)
 
@@ -374,76 +455,6 @@ class OptimizationRudelt():
             return T_D
         else:
             return T_D, R_tot_thresh
-
-
-
-    # ----------------------------------------------------------------------------- TODO embedding
-    def get_embeddings(self,
-                       embedding_past_range_set,
-                       embedding_number_of_bins_set,
-                       embedding_scaling_exponent_set):
-        """
-        Get all combinations of parameters T, d, k, based on the
-        sets of selected parameters.
-        """
-
-        embeddings = []
-        for past_range_T in embedding_past_range_set:
-            for number_of_bins_d in embedding_number_of_bins_set:
-                if not isinstance(number_of_bins_d, int) or number_of_bins_d < 1:
-                    print("Error: numer of bins {} is not a positive integer. Skipping.".format(number_of_bins_d),
-                          file=stderr, flush=True)
-                    continue
-
-                if type(embedding_scaling_exponent_set) == dict:
-                    scaling_set_given_T_and_d = self.get_set_of_scalings(past_range_T,
-                                                                         number_of_bins_d,
-                                                                         **embedding_scaling_exponent_set)
-                else:
-                    scaling_set_given_T_and_d = embedding_scaling_exponent_set
-
-                for scaling_k in scaling_set_given_T_and_d:
-                    embeddings += [(past_range_T, number_of_bins_d, scaling_k)]
-
-        return embeddings
-
-
-
-    def get_set_of_scalings(self, past_range_T,
-                            number_of_bins_d,
-                            number_of_scalings,
-                            min_first_bin_size,
-                            min_step_for_scaling):
-        """
-        Get scaling exponents such that the uniform embedding as well as
-        the embedding for which the first bin has a length of
-        min_first_bin_size (in seconds), as well as linearly spaced
-        scaling factors in between, such that in total
-        number_of_scalings scalings are obtained.
-        """
-
-        min_scaling = 0
-        if past_range_T / number_of_bins_d <= min_first_bin_size or number_of_bins_d == 1:
-            max_scaling = 0
-        else:
-            # for the initial guess assume the largest bin dominates, so k is approx. log(T) / d
-
-            max_scaling = newton(lambda scaling: self.get_past_range(number_of_bins_d,
-                                                                     min_first_bin_size,
-                                                                     scaling)
-                                                 - past_range_T,
-                                 np.log10(past_range_T
-                                          / min_first_bin_size) / (number_of_bins_d - 1),
-                                 tol=1e-04, maxiter=500)
-
-        while np.linspace(min_scaling, max_scaling,
-                          number_of_scalings, retstep=True)[1] < min_step_for_scaling:
-            number_of_scalings -= 1
-
-        return np.linspace(min_scaling, max_scaling, number_of_scalings)
-
-
-
 
 
 
@@ -623,11 +634,8 @@ class OptimizationRudelt():
 
 
 
-
     def compute_CIs(self,
                     spike_times,
-                    estimation_method,
-                    embedding_step_size,
                     block_length_l=None,
                     target_R='R_max',
                     **kwargs):
@@ -693,6 +701,10 @@ class OptimizationRudelt():
 
             embeddings = [(T_D, number_of_bins_d, scaling_k)]
 
+        # initialize array
+        bs_history_dependence = np.empty(len(embeddings))
+
+        embedding_count = 0
         for embedding in embeddings:
 
             if 'bs_history_dependence' in self.settings:
@@ -708,30 +720,111 @@ class OptimizationRudelt():
             if not number_of_bootstraps > number_of_stored_bootstraps:
                 continue
 
-            self.settings['bs_history_dependence'] \
-                = self.get_bootstrap_history_dependence(spike_times,
-                                                        embedding,
-                                                        embedding_step_size,
-                                                        estimation_method,
-                                                        number_of_bootstraps - number_of_stored_bootstraps,
-                                                        block_length_l)
+            bs_history_dependence[embedding_count] = \
+                self.get_bootstrap_history_dependence(spike_times,
+                                                      embedding,
+                                                      self.settings['embedding_step_size'],
+                                                      self.settings['estimation_method'],
+                                                      number_of_bootstraps - number_of_stored_bootstraps,
+                                                      block_length_l)
 
-            a=1 # ------------------------------------------------------------------------------------------------------to remove / for debugging
+            embedding_count += 1
 
-
-
-
+        return bs_history_dependence
 
 
-
-    def optimize(self, data):
+    def analyse_auto_MI(self, spike_times):
         """
-        Estimate the history dependence and temporal depth of a single
-        neuron, based on information-theoretical measures for spike time
-        data
+        Get the auto MI for the spike times.  If it is available from file, load
+        it, else compute it.
+        """
 
-        Optimization of
-        using Rudelt bbc estimator
+        auto_MI_data = {
+            "auto_MI_bin_size": [],
+            "delay": [],
+            "auto_MI": []
+        }
+        auto_MI_dict = {}
+        for auto_MI_bin_size in self.settings['auto_MI_bin_size_set']:
+            number_of_delays = int(self.settings['auto_MI_max_delay'] / auto_MI_bin_size) + 1
+
+            # auto_MI = self.settings['auto_MI']
+            # if isinstance(auto_MI, np.ndarray) and len(auto_MI) >= number_of_delays:
+            #    continue
+
+            # if no analysis found or new analysis includes more delays:
+            # perform the analysis
+            auto_MI = self.get_auto_MI(spike_times, auto_MI_bin_size, number_of_delays)
+
+            auto_MI_data["auto_MI_bin_size"] += [str(auto_MI_bin_size)]
+            auto_MI_data["delay"] += [str(number_of_delays)]
+            auto_MI_d = {}
+            auto_MI_d[0] = np.linspace(0, self.settings['auto_MI_max_delay'], len(auto_MI))
+            auto_MI_d[1] = auto_MI
+
+            auto_MI_dict[str(auto_MI_bin_size)] = auto_MI_d
+
+        auto_MI_data['auto_MI'] = auto_MI_dict
+        self.settings['auto_MI'] = auto_MI_data
+
+    def get_auto_MI(self, spike_times, bin_size, number_of_delays):
+        """
+        Compute the auto mutual information in the neuron's activity, a
+        measure closely related to history dependence.
+        """
+
+        binned_neuron_activity = []
+
+        for spt in spike_times:
+            # represent the neural activity as an array of 0s (no spike) and 1s (spike)
+            binned_neuron_activity += [utl.get_binned_neuron_activity(spt,
+                                                                      bin_size,
+                                                                      relative_to_median_activity=True)]
+
+        p_spike = sum([sum(bna)
+                       for bna in binned_neuron_activity]) / sum([len(bna)
+                                                                  for bna in binned_neuron_activity])
+        H_spiking = utl.get_shannon_entropy([p_spike,
+                                         1 - p_spike])
+
+        auto_MIs = []
+
+        # compute auto MI
+        for delay in range(number_of_delays):
+
+            symbol_counts = []
+            for bna in binned_neuron_activity:
+                number_of_symbols = len(bna) - delay - 1
+
+                symbols = np.array([2 * bna[i] + bna[i + delay + 1]
+                                    for i in range(number_of_symbols)])
+
+                symbol_counts += [dict([(unq_symbol, len(np.where(symbols == unq_symbol)[0]))
+                                        for unq_symbol in np.unique(symbols)])]
+
+            symbol_counts = utl.add_up_dicts(symbol_counts)
+            number_of_symbols = sum(symbol_counts.values())
+            # number_of_symbols = sum([len(bna) - delay - 1 for bna in binned_neuron_activity])
+
+            H_joint = utl.get_shannon_entropy([number_of_occurrences / number_of_symbols
+                                           for number_of_occurrences in symbol_counts.values()])
+
+            # I(X : Y) = H(X) - H(X|Y) = H(X) - (H(X,Y) - H(Y)) = H(X) + H(Y) - H(X,Y)
+            # auto_MI = 2 * H_spiking - H_joint
+            auto_MI = 2 - H_joint / H_spiking  # normalized auto MI = auto MI / H_spiking
+
+            auto_MIs += [auto_MI]
+
+        return auto_MIs
+
+
+
+
+
+
+
+    def optimize(self, data, processes='all', replications='all' ):
+        """
 
         ??????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
 
@@ -773,25 +866,63 @@ class OptimizationRudelt():
             ???????????????????????????????????????????????????????????????????????????????????????????????????????????
         """
 
+
+        if processes == 'all':
+            processes = [t for t in range(data.n_processes)]
+        if (type(processes) is list) and (type(processes[0]) is int):
+            pass
+        else:
+            raise ValueError('Processes were not specified correctly: '
+                             '{0}.'.format(processes))
+
+        if replications == 'all':
+            replications = [t for t in range(data.n_replications)]
+        if (type(replications) is list) and (type(replications[0]) is int):
+            pass
+        else:
+            raise ValueError('Replications were not specified correctly: '
+                             '{0}.'.format(replications))
+
+        ## get embeddings
+        #self.embeddings = self.get_embeddings(self.settings['embedding_past_range_set'],
+        #                                      self.settings['embedding_number_of_bins_set'],
+        #                                      self.settings['embedding_scaling_exponent_set'])
+
         if self.settings['debug']:
             import pprint
             pprint.pprint(self.settings, width=1)
 
-        # get spike times
-        spike_times = np.sort(data) - min(data)
+        for process in processes:
+            for replication in replications:
 
-        # check inputs
-        self._check_input(spike_times)
+                if self.settings['debug']:
+                    print("\n\nGet History dependence\n")
 
-        # check data
-        data = self._ensure_one_dim_input(spike_times)
+                if self.settings['estimation_method'] == 'bbc':
+                    self.history_dependence, self.bbc_term = self.get_history_dependence(data, process, replication)
+                elif self.settings['estimation_method'] == 'shuffling':
+                    self.history_dependence = self.get_history_dependence(data, process, replication)
 
-        if len(data.shape) == 1:
-            data = spike_times[np.newaxis, :]
-        elif data.shape[0] > data.shape[1]:
-            data = spike_times.T
+                a=1
 
-        #self.get_spike_times_stats(data, self.settings['embedding_step_size'])
+                if self.settings['debug']:
+                    print("\n\nCompute CI\n")
+
+
+                self.compute_CIs()
+
+
+
+
+
+
+
+
+
+
+
+
+"""
 
         if self.settings['cross_validated_optimization']:
             spike_times_optimization, spike_times_validation = np.split(data, 2, axis=1)
@@ -838,3 +969,4 @@ class OptimizationRudelt():
                    'settings': self.settings}
 
         return results
+"""
