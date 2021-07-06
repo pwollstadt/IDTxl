@@ -52,14 +52,18 @@ settings = {'debug': False,
 #spiketimedata2[0, 0] = spiketimes
 #data = Data_spiketime(spiketimedata2, dim_order='pr')
 
-data = Data_spiketime()              # initialise empty data object
-data.load_Rudelt_data()
+data = Data_spiketime()             # initialise empty data object
+data.load_Rudelt_data()             # load Rudelt spike time data
 
 
 process_list = [0]
+replication_list = [0]
 symbol_array, past_symbol_array, current_symbol_array, symbol_array_length, spiketimes = \
-    data.get_realisations_symbols(process_list, 0.005, 1, 0.0, 0.005, output_spike_times=True)
+    data.get_realisations_symbols(process_list, 0.005, 1, 0.0, 0.005, replication_list=replication_list, output_spike_times=True)
 number_of_bins_d = np.array(list(np.binary_repr(max(symbol_array[0, 0])))).astype(np.int8)
+
+a=symbol_array[0, 0]
+
 
 estnsb = RudeltNSBEstimatorSymbolsMI()
 I_nsb, R_nsb = estnsb.estimate(symbol_array[0, 0], past_symbol_array[0, 0], current_symbol_array[0, 0])
@@ -73,3 +77,5 @@ I_bbc, history_dependence, bbc_term = \
 
 estsh = RudeltShufflingEstimator()
 I_sh, R_sh = estsh.estimate(symbol_array[0, 0])
+
+a=1
