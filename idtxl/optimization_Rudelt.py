@@ -117,35 +117,7 @@ class OptimizationRudelt():
         return auto_MIs
 
 
-    def bayesian_bias_criterion(self, R_nsb, R_plugin, bbc_tolerance):
-        """
-        Get whether the Bayesian bias criterion (bbc) is passed.
-
-        :param R_nsb: history dependence computed with NSB estimator
-        :param R_plugin: history dependence computed with plugin estimator
-        :param bbc_tolerance: tolerance for the Bayesian bias criterion
-        """
-
-        if self.get_bbc_term(R_nsb, R_plugin) < bbc_tolerance:
-            return 1
-        else:
-            return 0
-
-    def get_bbc_term(self, R_nsb, R_plugin):
-        """
-        Get the bbc tolerance-independent term of the Bayesian bias
-        criterion (bbc).
-
-        :param R_nsb: history dependence computed with NSB estimator
-        :param R_plugin: history dependence computed with plugin estimator
-        """
-
-        if R_nsb > 0:
-            return np.abs(R_nsb - R_plugin) / R_nsb
-        else:
-            return np.inf
-
-    def get_history_dependence_for_embeddings(self, data):
+    def get_history_dependence_for_embeddings(self, symbol_array, past_symbol_array, current_symbol_array):
         """
         Apply embeddings to spike times to obtain symbol counts.  Estimate
         the history dependence for each embedding.  Save results to file.
@@ -168,16 +140,17 @@ class OptimizationRudelt():
 
         count = 0
         for embedding in embeddings:
-            past_range_T = embedding[0]
-            number_of_bins_d = embedding[1]
-            first_bin_size = self.get_first_bin_size_for_embedding(embedding)
-            symbol_counts = utl.add_up_dicts([self.get_symbol_counts(spt,
-                                                                 embedding,
-                                                                 self.settings['embedding_step_size'])
-                                              for spt in data])
+            #past_range_T = embedding[0]
+            #number_of_bins_d = embedding[1]
+            #first_bin_size = self.get_first_bin_size_for_embedding(embedding)
+            #symbol_counts = utl.add_up_dicts([self.get_symbol_counts(spt,
+            #                                                     embedding,
+            #                                                     self.settings['embedding_step_size'])
+            #                                  for spt in data])
+
 
             if self.settings['estimation_method'] == 'shuffling':
-                history_dependence[count] = self.get_history_dependence(symbol_counts, number_of_bins_d)
+                #history_dependence[count] = self.get_history_dependence(symbol_counts, number_of_bins_d)
             elif self.settings['estimation_method'] == 'bbc':
                 history_dependence[count], bbc_term[count] = self.get_history_dependence(symbol_counts, number_of_bins_d)
 
@@ -737,11 +710,11 @@ class OptimizationRudelt():
 
             self.settings['bs_history_dependence'] \
                 = self.get_bootstrap_history_dependence(spike_times,
-                                                   embedding,
-                                                   embedding_step_size,
-                                                   estimation_method,
-                                                   number_of_bootstraps - number_of_stored_bootstraps,
-                                                   block_length_l)
+                                                        embedding,
+                                                        embedding_step_size,
+                                                        estimation_method,
+                                                        number_of_bootstraps - number_of_stored_bootstraps,
+                                                        block_length_l)
 
             a=1 # ------------------------------------------------------------------------------------------------------to remove / for debugging
 
@@ -751,7 +724,7 @@ class OptimizationRudelt():
 
 
 
-    def optimize(self, data, settings):
+    def optimize(self, data):
         """
         Estimate the history dependence and temporal depth of a single
         neuron, based on information-theoretical measures for spike time
@@ -818,7 +791,7 @@ class OptimizationRudelt():
         elif data.shape[0] > data.shape[1]:
             data = spike_times.T
 
-        self.get_spike_times_stats(data, self.settings['embedding_step_size'])
+        #self.get_spike_times_stats(data, self.settings['embedding_step_size'])
 
         if self.settings['cross_validated_optimization']:
             spike_times_optimization, spike_times_validation = np.split(data, 2, axis=1)

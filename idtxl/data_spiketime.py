@@ -153,7 +153,7 @@ class Data_spiketime():
         """return the initial seed of the data"""
         return self.initial_state
 
-    def n_realisations_repl(self):
+    def n_replications(self):
         """Number of realisations over replications."""
         return self.n_replications
 
@@ -162,13 +162,14 @@ class Data_spiketime():
         return self.n_spiketimes[process, replication]
 
     def get_realisations_symbols(self,
-                         process_list,
-                         past_range_T,
-                         number_of_bins_d,
-                         scaling_k,
-                         embedding_step_size,
-                         shuffle=False,
-                         output_spike_times=False):
+                                 process_list,
+                                 past_range_T,
+                                 number_of_bins_d,
+                                 scaling_k,
+                                 embedding_step_size,
+                                 replication_list=None,
+                                 shuffle=False,
+                                 output_spike_times=False):
 
         """
          # ------------------------------------------------------------------------------------------ TODO
@@ -231,19 +232,31 @@ class Data_spiketime():
         # Shuffle the replication order if requested. This creates surrogate
         # data by permuting replications while keeping the order of samples
         # intact.
-        if shuffle:
-            replications_order = np.random.permutation(self.n_replications)
+        if replication_list == None:
+            if shuffle:
+                replications_order = np.random.permutation(self.n_replications)
+            else:
+                replications_order = np.arange(self.n_replications)
         else:
-            replications_order = np.arange(self.n_replications)
+            replications_order = replication_list
+
 
         # create output array
-        past_symbol_array = np.empty((len(process_list), len(replications_order)), dtype=np.ndarray)
-        current_symbol_array = np.empty((len(process_list), len(replications_order)), dtype=np.ndarray)
-        symbol_array = np.empty((len(process_list), len(replications_order)), dtype=np.ndarray)
-        symbol_array_lengths = np.empty((len(process_list), len(replications_order)), dtype=int)
+        if isinstance(process_list, list):
+            processlen = len(process_list)
+        elif isinstance(process_list, int):
+            processlen = 1
+            process_list = [process_list]
+        else:
+            raise RuntimeError('Process_list must be list or integer!')
+
+        past_symbol_array = np.empty((processlen, len(replications_order)), dtype=np.ndarray)
+        current_symbol_array = np.empty((processlen, len(replications_order)), dtype=np.ndarray)
+        symbol_array = np.empty((processlen, len(replications_order)), dtype=np.ndarray)
+        symbol_array_lengths = np.empty((processlen, len(replications_order)), dtype=int)
 
         if output_spike_times:
-            spike_times_array = np.empty((len(process_list), len(replications_order)), dtype=np.ndarray)
+            spike_times_array = np.empty((processlen, len(replications_order)), dtype=np.ndarray)
 
         # Retrieve data.
         i = 0
@@ -424,6 +437,98 @@ class Data_spiketime():
         return sum([self.exponent_base ** (len(symbol_array) - i - 1) * symbol_array[i]
                     for i in range(0, len(symbol_array))])
 
+    def get_bootstrap_realisations_symbols(self,
+                                           process_list,
+                                           past_range_T,
+                                           number_of_bins_d,
+                                           scaling_k,
+                                           embedding_step_size,
+                                           symbol_block_length=None):
+
+        """
+         # ------------------------------------------------------------------------------------------ TODO
+
+        """
+
+        symbol_array, past_symbol_array, current_symbol_array, sl = \
+            self.get_realisations_symbols(process_list,
+                                          past_range_T,
+                                          number_of_bins_d,
+                                          scaling_k,
+                                          embedding_step_size,
+                                          shuffle=False,
+                                          output_spike_times=False)
+
+
+
+        # create output array
+        bs_symbol_array = np.empty((np.shape(symbol_array)[0], np.shape(symbol_array)[1]), dtype=np.ndarray)
+        bs_past_symbol_array = np.empty((np.shape(symbol_array)[0], np.shape(symbol_array)[1]), dtype=np.ndarray)
+        bs_current_symbol_array = np.empty((np.shape(symbol_array)[0], np.shape(symbol_array)[1]), dtype=np.ndarray)
+
+        i = 0
+        for i in range(np.shape(symbol_array)[0]):
+            #r = 0
+            for r in range(np.shape(symbol_array)[1]):
+                if symbol_block_length == None:
+                    spike_times = self.data[process_list[i], r]
+                    firing_rate = self.get_spiketime_firingrate(spike_times,
+                                                                        embedding_step_size)
+                    symbol_block_length = max(1, int(1 / (firing_rate * embedding_step_size)))
+
+                try:
+                    if FAST_EMBEDDING_AVAILABLE:
+                        bs_symbol, bs_past_symbol, bs_current_symbol = \
+                            fast_emb.get_bootstrap_arrays(symbol_array[i, r],
+                                                          past_symbol_array[i, r],
+                                                          current_symbol_array[i, r],
+                                                          symbol_block_length)
+                    else:
+                        bs_symbol = np.empty(len(symbol_array), dtype=int)
+                        bs_past_symbol = np.empty(len(symbol_array), dtype=int)
+                        bs_current_symbol = np.empty(len(symbol_array), dtype=int)
+
+                        on = 0
+                        for i in range(int(np.floor(len(symbol_array[i, r]) / symbol_block_length))):
+                            r = np.random.randint(0, len(symbol_array[i, r]) - (symbol_block_length - 1))
+                            bs_symbol[on:on + symbol_block_length] = symbol_array[i, r][r:r + symbol_block_length]
+                            bs_past_symbol[on:on + symbol_block_length] = past_symbol_array[i, r][r:r + symbol_block_length]
+                            bs_current_symbol[on:on + symbol_block_length] = current_symbol_array[i, r][r:r + symbol_block_length]
+
+                            on += symbol_block_length
+
+                        res = int(len(symbol_array[i, r]) % symbol_block_length)
+                        r = np.random.randint(0, len(symbol_array) - (res - 1))
+                        bs_symbol[on:on + res] = symbol_array[i, r][r:r + res]
+                        bs_past_symbol[on:on + res] = past_symbol_array[i, r][r:r + res]
+                        bs_current_symbol[on:on + res] = current_symbol_array[i, r][r:r + res]
+
+                    bs_symbol_array[i, r] = bs_symbol
+                    bs_past_symbol_array[i, r] = bs_past_symbol
+                    bs_current_symbol_array[i, r] = bs_current_symbol
+
+                except IndexError:
+                    raise IndexError('You tried to access process {0} in a '
+                                     'data set with {1} processes.'.format(i, self.n_processes))
+
+                #r += 1
+            i += 1
+
+        return bs_symbol_array, bs_past_symbol_array, bs_current_symbol_array
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def load_Rudelt_data(self):
 
         """
@@ -449,37 +554,56 @@ class Data_spiketime():
 
     # ----------------------------------------------------------------------------- TODO spiketime stats  - add check for data
 
-    def _spike_times_stats(self,
-                              spike_times,
-                              embedding_step_size):
-        """
-        Save some statistics about the spike times.
-        """
+    #def _spike_times_stats(self,
+    #                       spike_times,
+    #                       embedding_step_size):
+    #    """
+    #    Save some statistics about the spike times.
+    #    """
 
-        self.recording_lengths = [spt[-1] - spt[0] for spt in spike_times]
-        self.recording_length = sum(self.recording_lengths)
-        self.recording_length_sd = np.std(self.recording_lengths)
+    #    self.recording_lengths = [spt[-1] - spt[0] for spt in spike_times]
+    #    self.recording_length = sum(self.recording_lengths)
+    #    self.recording_length_sd = np.std(self.recording_lengths)
 
-        firing_rates = [utl.get_binned_firing_rate(spt, embedding_step_size)
-                        for spt in spike_times]
+    #    firing_rates = [utl.get_binned_firing_rate(spt, embedding_step_size)
+    #                    for spt in spike_times]
+
+    #    self.firing_rate = np.average(firing_rates, weights=self.recording_lengths)
+    #    self.firing_rate_sd = np.sqrt(np.average((firing_rates - self.firing_rate) ** 2,
+    #                                                         weights=self.recording_lengths))
+
+    #    self.H_spiking = utl.get_shannon_entropy([self.firing_rate * embedding_step_size,
+    #                                              1 - self.firing_rate * embedding_step_size])
+
+    #def get_recording_length(self):
+    #    """get recording length of spike times"""
+    #    return self.recording_length
+
+    def get_spiketime_firingrate(self,
+                                 spike_times,
+                                 embedding_step_size):
+        """get firing rate of spike times"""
+        self.recording_lengths = spike_times[-1] - spike_times[0]
+
+        firing_rates = utl.get_binned_firing_rate(spike_times, embedding_step_size)
 
         self.firing_rate = np.average(firing_rates, weights=self.recording_lengths)
-        self.firing_rate_sd = np.sqrt(np.average((firing_rates - self.firing_rate) ** 2,
-                                                             weights=self.recording_lengths))
+
+        return self.firing_rate
+
+    def get_H_spiking(self,
+                      spike_times,
+                      embedding_step_size
+                      ):
+        """get entropy of spike times"""
+        self.recording_lengths = spike_times[-1] - spike_times[0]
+
+        firing_rates = utl.get_binned_firing_rate(spike_times, embedding_step_size)
+
+        self.firing_rate = np.average(firing_rates, weights=self.recording_lengths)
 
         self.H_spiking = utl.get_shannon_entropy([self.firing_rate * embedding_step_size,
                                                   1 - self.firing_rate * embedding_step_size])
-
-    def get_recording_length(self):
-        """get recording length of spike times"""
-        return self.recording_length
-
-    def get_spiketime_firingrate(self):
-        """get firing rate of spike times"""
-        return self.firing_rate
-
-    def get_H_spiking(self):
-        """get entropy of spike times"""
         return self.H_spiking
 
 
