@@ -235,7 +235,7 @@ class RudeltAbstractEstimator(Estimator):
 
         return mk
 
-    def _check_input(self, data):
+    def _check_input(self, data):       # -------------------------------------------------------------------------------- TODO
 
         EXIT_SUCCESS = 0
         EXIT_FAILURE = 1
@@ -654,7 +654,7 @@ class RudeltNSBEstimatorSymbolsMI(RudeltAbstractNSBEstimator):
 
         current_symbol_counts = self.get_symbol_counts(current_symbol_array)
         # H_uncond_orig = utl.get_H_spiking(symbol_counts)
-        H_uncond = utl.get_H_spiking(current_symbol_counts)
+        H_uncond = utl.get_H_spiking(symbol_counts)
 
         # past_symbol_counts = utl.get_past_symbol_counts(symbol_counts)
         past_symbol_counts = self.get_symbol_counts(past_symbol_array)
@@ -798,7 +798,7 @@ class RudeltPluginEstimatorSymbolsMI(RudeltAbstractEstimator):
 
         current_symbol_counts = self.get_symbol_counts(current_symbol_array)
         # H_uncond_orig = utl.get_H_spiking(symbol_counts)
-        H_uncond = utl.get_H_spiking(current_symbol_counts)
+        H_uncond = utl.get_H_spiking(symbol_counts)
 
         # past_symbol_counts = utl.get_past_symbol_counts(symbol_counts)
         past_symbol_counts = self.get_symbol_counts(past_symbol_array)
@@ -872,6 +872,10 @@ class RudeltBBCEstimator(RudeltAbstractEstimator):
         else:
             return np.float(I_nsb), np.float(R_nsb), np.float(self.get_bbc_term(R_nsb,
                                                   R_plugin))
+
+
+
+
 
 
 
