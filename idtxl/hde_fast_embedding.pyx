@@ -158,8 +158,6 @@ cdef np.ndarray[DTYPE_t, ndim=1] get_current_symbols(DTYPE_t[:,:] raw_symbols,
     return symbols
 
 
-
-
 def count_symbols(DTYPE_t[:] symbols):
     symbols = np.sort(symbols)
     cdef np.ndarray[DTYPE_t, ndim=1] unq_symbols = np.unique(symbols)
@@ -201,3 +199,32 @@ def get_symbol_array(spike_times, past_range_T, number_of_bins_d, scaling_k,
     cdef np.ndarray[DTYPE_t, ndim=1] current_symbols = get_current_symbols(raw_symbols, mode='median')
 
     return symbols, past_symbols, current_symbols
+
+
+def get_bootstrap_arrays(symbol_array, past_symbol_array, current_symbol_array, symbol_block_length):
+
+    cdef int num_sym = 0
+    cdef np.ndarray[DTYPE_t, ndim=1] bs_symbol_array = np.empty(len(symbol_array), dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1] bs_past_symbol_array = np.empty(len(symbol_array), dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1] bs_current_symbol_array = np.empty(len(symbol_array), dtype=DTYPE)
+    cdef int onset, r
+
+
+    onset = 0
+    for i in range(int(np.floor(len(symbol_array) / symbol_block_length))):
+        r = np.random.randint(0, len(symbol_array) - (symbol_block_length - 1))
+        bs_symbol_array[onset:onset+symbol_block_length] = symbol_array[r:r + symbol_block_length]
+        bs_past_symbol_array[onset:onset+symbol_block_length] = past_symbol_array[r:r + symbol_block_length]
+        bs_current_symbol_array[onset:onset+symbol_block_length] = current_symbol_array[r:r + symbol_block_length]
+
+        onset += symbol_block_length
+
+    res = int(len(symbol_array) % symbol_block_length)
+    r = np.random.randint(0, len(symbol_array) - (res - 1))
+    bs_symbol_array[onset:onset + res] = symbol_array[r:r + res]
+    bs_past_symbol_array[onset:onset + res] = past_symbol_array[r:r + res]
+    bs_current_symbol_array[onset:onset + res] = current_symbol_array[r:r + res]
+
+
+    return bs_symbol_array, bs_past_symbol_array, bs_current_symbol_array
+
