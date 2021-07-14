@@ -161,6 +161,10 @@ class Data_spiketime():
         """Number of spiketimes."""
         return self.n_spiketimes[process, replication]
 
+    def get_spike_times_single(self, process, replication):
+        """get spike times of one process and replication"""
+        return self.data[process, replication]
+
     def get_realisations_symbols(self,
                                  process_list,
                                  past_range_T,
@@ -238,7 +242,12 @@ class Data_spiketime():
             else:
                 replications_order = np.arange(self.n_replications)
         else:
-            replications_order = replication_list
+            if isinstance(replication_list, list):
+                replications_order = replication_list
+            elif isinstance(replication_list, int):
+                replications_order = [replication_list]
+            else:
+                raise RuntimeError('Replication_list must be list or integer!')
 
 
         # create output array
@@ -443,12 +452,32 @@ class Data_spiketime():
                                            number_of_bins_d,
                                            scaling_k,
                                            embedding_step_size,
-                                           symbol_block_length=None):
+                                           symbol_block_length=None,
+                                           replication_list=None):
 
         """
-         # ------------------------------------------------------------------------------------------ TODO
+         # ----------------------------------------------------------------------------------------------------------------- TODO
 
         """
+        if replication_list == None:
+            replications_order = np.arange(self.n_replications)
+        else:
+            if isinstance(replication_list, list):
+                replications_order = replication_list
+            elif isinstance(replication_list, int):
+                replications_order = [replication_list]
+            else:
+                raise RuntimeError('Replication_list must be list or integer!')
+        nr_replications = len(replications_order)
+
+        # create output array
+        if isinstance(process_list, list):
+            nr_processes = len(process_list)
+        elif isinstance(process_list, int):
+            nr_processes = 1
+            process_list = [process_list]
+        else:
+            raise RuntimeError('Process_list must be list or integer!')
 
         symbol_array, past_symbol_array, current_symbol_array, sl = \
             self.get_realisations_symbols(process_list,
@@ -456,25 +485,31 @@ class Data_spiketime():
                                           number_of_bins_d,
                                           scaling_k,
                                           embedding_step_size,
+                                          replication_list=replication_list,
                                           shuffle=False,
                                           output_spike_times=False)
 
-
-
         # create output array
-        bs_symbol_array = np.empty((np.shape(symbol_array)[0], np.shape(symbol_array)[1]), dtype=np.ndarray)
-        bs_past_symbol_array = np.empty((np.shape(symbol_array)[0], np.shape(symbol_array)[1]), dtype=np.ndarray)
-        bs_current_symbol_array = np.empty((np.shape(symbol_array)[0], np.shape(symbol_array)[1]), dtype=np.ndarray)
+        bs_symbol_array = np.empty((nr_processes, nr_replications), dtype=np.ndarray)
+        bs_past_symbol_array = np.empty((nr_processes, nr_replications), dtype=np.ndarray)
+        bs_current_symbol_array = np.empty((nr_processes, nr_replications), dtype=np.ndarray)
 
-        i = 0
-        for i in range(np.shape(symbol_array)[0]):
-            #r = 0
-            for r in range(np.shape(symbol_array)[1]):
-                if symbol_block_length == None:
-                    spike_times = self.data[process_list[i], r]
-                    firing_rate = self.get_spiketime_firingrate(spike_times,
-                                                                        embedding_step_size)
+        # get bootstrap realisations - loop over processes
+        for i in range(nr_processes):
+            for r in replications_order:
+                spike_times = self.data[process_list[i], r]
+                firing_rate = self.get_spiketime_firingrate(spike_times,
+                                                            embedding_step_size)
+                if symbol_block_length is None:
                     symbol_block_length = max(1, int(1 / (firing_rate * embedding_step_size)))
+
+                else:
+                    min_num_symbols = 1 + int((spike_times[-1] - spike_times[0]
+                                               - (past_range_T + embedding_step_size))
+                                              / embedding_step_size)
+                    if symbol_block_length >= min_num_symbols:
+                        print("Warning. Block length too large given number of symbols. Skipping.")
+                        return []
 
                 try:
                     if FAST_EMBEDDING_AVAILABLE:
@@ -489,19 +524,22 @@ class Data_spiketime():
                         bs_current_symbol = np.empty(len(symbol_array), dtype=int)
 
                         on = 0
-                        for i in range(int(np.floor(len(symbol_array[i, r]) / symbol_block_length))):
-                            r = np.random.randint(0, len(symbol_array[i, r]) - (symbol_block_length - 1))
-                            bs_symbol[on:on + symbol_block_length] = symbol_array[i, r][r:r + symbol_block_length]
-                            bs_past_symbol[on:on + symbol_block_length] = past_symbol_array[i, r][r:r + symbol_block_length]
-                            bs_current_symbol[on:on + symbol_block_length] = current_symbol_array[i, r][r:r + symbol_block_length]
+                        for rep in range(int(np.floor(len(symbol_array[i, r]) / symbol_block_length))):
+                            randidx = np.random.randint(0, len(symbol_array[i, r]) - (symbol_block_length - 1))
+                            bs_symbol[on:on + symbol_block_length] = \
+                                symbol_array[i, r][randidx:randidx + symbol_block_length]
+                            bs_past_symbol[on:on + symbol_block_length] = \
+                                past_symbol_array[i, r][randidx:randidx + symbol_block_length]
+                            bs_current_symbol[on:on + symbol_block_length] = \
+                                current_symbol_array[i, r][randidx:randidx + symbol_block_length]
 
                             on += symbol_block_length
 
                         res = int(len(symbol_array[i, r]) % symbol_block_length)
-                        r = np.random.randint(0, len(symbol_array) - (res - 1))
-                        bs_symbol[on:on + res] = symbol_array[i, r][r:r + res]
-                        bs_past_symbol[on:on + res] = past_symbol_array[i, r][r:r + res]
-                        bs_current_symbol[on:on + res] = current_symbol_array[i, r][r:r + res]
+                        randidx = np.random.randint(0, len(symbol_array) - (res - 1))
+                        bs_symbol[on:on + res] = symbol_array[i, r][randidx:randidx + res]
+                        bs_past_symbol[on:on + res] = past_symbol_array[i, r][randidx:randidx + res]
+                        bs_current_symbol[on:on + res] = current_symbol_array[i, r][randidx:randidx + res]
 
                     bs_symbol_array[i, r] = bs_symbol
                     bs_past_symbol_array[i, r] = bs_past_symbol
@@ -510,9 +548,6 @@ class Data_spiketime():
                 except IndexError:
                     raise IndexError('You tried to access process {0} in a '
                                      'data set with {1} processes.'.format(i, self.n_processes))
-
-                #r += 1
-            i += 1
 
         return bs_symbol_array, bs_past_symbol_array, bs_current_symbol_array
 
