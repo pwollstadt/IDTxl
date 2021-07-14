@@ -1036,3 +1036,104 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
         """
         v = self.get_single_target(target)['selected_vars_sources']
         return np.unique(np.array([s[0] for s in v]))
+
+
+class ResultsSingleProcessRudelt():
+    """Store results of single process analysis.
+
+    Provide a container for the results of algorithms for the Rudelt estimators
+
+    Note that for convenience all dictionaries in this class can additionally
+    be accessed using dot-notation:
+
+    >>> res_network.settings.estimation_method
+
+    or
+
+    >>> res_network.settings['estimation_method'].
+
+    Attributes:
+        settings : dict
+            settings used for estimation of information theoretic measures
+        data_properties : dict
+            data properties, contains
+
+                - n_processes : int - total number of processes analysed
+                - n_replications : int - number of replications pre process
+
+        processes_analysed : list
+            list of analysed processes
+    """
+
+    def __init__(self, n_processes, n_replications):
+        self.settings = DotDict({})
+        self.data_properties = DotDict({
+                'n_processes': n_processes,
+                'n_replications': n_replications
+        })
+        self.processes_analysed = []
+        self._single_process = {}
+        for ii in range(n_processes):
+            self._single_process[ii] = {}
+
+    @property
+    def processes_analysed(self):
+        """Get index of the current_value."""
+        return self._processes_analysed
+
+    @processes_analysed.setter
+    def processes_analysed(self, processes):
+        self._processes_analysed = processes
+
+    def _add_single_result(self, process, replication, results, settings):
+        """Add analysis result for a single process."""
+        #self._check_result(process, settings)
+        self.settings.update(DotDict(settings))
+        self._single_process[process][replication] = DotDict(results)
+        self.processes_analysed = list(self._single_process.keys())
+
+    def get_single_process(self, process, replication):
+        """Return results for a single process in the network.
+
+        Return results for individual processes, contains for each process
+
+            - ais : float - AIS-value for current process
+            - ais_pval : float - p-value of AIS estimate
+            - ais_sign : bool - significance of AIS estimate wrt. to the
+                alpha_mi specified in the settings
+            - selected_var : list of tuples - variables with significant
+                information about the current value of the process that have
+                been added to the processes past state, a variable is
+                described by the index of the process in the data and its lag
+                in samples
+            - current_value : tuple - current value used for analysis,
+                described by target and sample index in the data
+
+        Setting fdr to True returns FDR-corrected results (Benjamini, 1995).
+
+        Args:
+            process : int
+                process id
+            fdr : bool [optional]
+                return FDR-corrected results, see documentation of network
+                inference algorithms and stats.network_fdr (default=True)
+
+        Returns:
+            dict
+                results for single process. Note that for convenience
+                dictionary entries can either be accessed via keywords
+                (result['selected_vars']) or via dot-notation
+                (result.selected_vars).
+        """
+        # Return required key from required _single_process dictionary, dealing
+        # with the FDR at a high level
+        if process not in self.processes_analysed:
+            raise RuntimeError('No results for process {0}.'.format(process))
+
+        try:
+            return self._single_process[process][replication]
+        except AttributeError:
+            raise RuntimeError('No results have been added.')
+        except KeyError:
+            raise RuntimeError(
+                'No results for process {0}.'.format(process))
