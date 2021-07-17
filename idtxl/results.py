@@ -1057,10 +1057,8 @@ class ResultsSingleProcessRudelt():
             settings used for estimation of information theoretic measures
         data_properties : dict
             data properties, contains
-
                 - n_processes : int - total number of processes analysed
                 - n_replications : int - number of replications pre process
-
         processes_analysed : list
             list of analysed processes
     """
