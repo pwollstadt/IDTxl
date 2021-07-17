@@ -20,16 +20,61 @@ except:
     """, file=stderr, flush=True)
 
 class Data_spiketime():
-    """
+    """Store data for Rudelt estimators and optimization.
 
-        # ------------------------------------------------------------------------------------------ TODO
+        Data takes a 1- or 2-dimensional numpy array representing
+        realisations of spike times in dimensions: processes x replications.
+        hThe spike times for each process and replication needs to be added
+        as nested numpy arrays.
+        Indicate the actual order of dimensions in the provided array in a
+        two-character string, e.g. 'pr' for an array with realisations over
+        (1) processes and (2) replications.
 
-        INPUT NESTED NUMPY ARRAY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        Example:
 
-        data
-        dim_order
-        exponent_base
-        seed
+            >>> data_Rudelt = Data()              # initialise empty data object
+            >>> data_Rudelt.load_Rudelt_data()    # load example data
+            >>>
+            >>> # Create a numpy array for processes and replication
+            >>> spiketimedata = np.empty(shape=(2,3), dtype=np.ndarray) # 2 processes, 3 replications
+            >>> # add nested array of spike times, e.g. for first process and replication
+            >>> spiketimedata[0, 0] = [0.0032, 0.0043, ........]
+            >>> # insert the spiketimedata array into the data object:
+            >>> data = Data_spiketime(spiketimedata, dim_order='pr')
+
+        Note:
+            Realisations are stored as attribute 'data'. This can only be set via
+            the 'set_data()' method.
+
+        Args:
+            data : numpy array [optional]
+                1/2-dimensional array with nested spike time data
+            dim_order : string [optional]
+                order of dimensions, accepts any combination of the characters
+                'p' and 'r' for processes and replications; must
+                have the same length as the data dimensionality, e.g., 'pr' for a
+                two-dimensional array of data from several processes over time
+                (default='pr')
+            normalise : bool [optional]
+                if True, data gets normalised (rebase spike times to zero) per process (default=True)
+            exponent_base: int
+                exponent base used for creating the symbols from binary data
+            seed : int [optional]
+                can be set to a fixed integer to get repetitive results on the
+                same data with multiple runs of analyses. Otherwise a random
+                seed is set as default.
+
+        Attributes:
+            data : numpy array
+                realisations, can only be set via 'set_data' method
+            n_processes : int
+                number of processes
+            n_replications : int
+                number of replications
+            n_spiketimes(process, replication) : int
+                number of spike times of given process and replication
+
+        implemented in idtxl by Michael Lindner, Göttingen 2021
     """
 
     def __init__(self, data=None, dim_order='pr', exponent_base=2, seed=None):
@@ -114,9 +159,8 @@ class Data_spiketime():
         if dim_order[0] != 'p':
             ind_p = dim_order.index('p')
             data = data.swapaxes(0, ind_p)
-            dim_order = utils.swap_chars(dim_order, 0, ind_p) # ------------------------------------------------------------- TODO check
-        #if dim_order[1] != 's':
-        #    data = data.swapaxes(1, dim_order.index('s'))
+            # dim_order = utils.swap_chars(dim_order, 0, ind_p) # ------------- TODO check
+
         return data
 
     def _get_nr_spiketimes(self, data):
@@ -176,55 +220,71 @@ class Data_spiketime():
                                  output_spike_times=False):
 
         """
-         # ------------------------------------------------------------------------------------------ TODO
-        Return realisations for a list of indices.
+        Return arrays of symbols (joint symbols), past symbols and current symbols of the spike times
+        for the given embedding options for the indices in process list and the optional replication list.
+        Additionally it returns the lengths of spike times and optionally the original spike times.
 
-        Return symbols, symbols lengths of spike times and their realisation
-        for indices in process list and given embedding options.
+        Example for exponent_base of 2
+             1    0   1   1   0     -->     joint symbol: 10110 --> 22  (1·2^4 + 0·2^3 + 1·2^2 + 1·2^1 + 0·2^0 )
+            |-past range T-|  t             past symbol:  1011  --> 11  (1·2^3 + 0·2^2 + 1·2^1 + 1·2^0)
+                                            current symbol    0 --> 0
 
         Optionally, realisations can
         be shuffled to create surrogate data for statistical testing. For
         shuffling, data blocks are permuted over replications while their
         temporal order stays intact within replications:
 
-        Original data:
-            +--------------+---------+---------+---------+---------+---------+-----+
-            | repl. ind.   | 1 1 1 1 | 2 2 2 2 | 3 3 3 3 | 4 4 4 4 | 5 5 5 5 | ... |
-            +--------------+---------+---------+---------+---------+---------+-----+
-            | sample index | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | ... |
-            +--------------+---------+---------+---------+---------+---------+-----+
+#        Original data:
+#            +--------------+---------+---------+---------+---------+---------+-----+
+#            | repl. ind.   | 1 1 1 1 | 2 2 2 2 | 3 3 3 3 | 4 4 4 4 | 5 5 5 5 | ... |
+#            +--------------+---------+---------+---------+---------+---------+-----+
+#            | sample index | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | ... |
+#            +--------------+---------+---------+---------+---------+---------+-----+#
+#
+#        Shuffled data:
+#            +--------------+---------+---------+---------+---------+---------+-----+
+#            | repl. ind.   | 3 3 3 3 | 1 1 1 1 | 4 4 4 4 | 2 2 2 2 | 5 5 5 5 | ... |
+#            +--------------+---------+---------+---------+---------+---------+-----+
+#            | sample index | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | ... |
+#            +--------------+---------+---------+---------+---------+---------+-----+
 
-        Shuffled data:
-            +--------------+---------+---------+---------+---------+---------+-----+
-            | repl. ind.   | 3 3 3 3 | 1 1 1 1 | 4 4 4 4 | 2 2 2 2 | 5 5 5 5 | ... |
-            +--------------+---------+---------+---------+---------+---------+-----+
-            | sample index | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | ... |
-            +--------------+---------+---------+---------+---------+---------+-----+
-
-        Args:# ------------------------------------------------------------------------------------------ TODO describe inputs
-            process_list:
-
-            past_range_T:
-
-            number_of_bins_d:
-
-            scaling_k:
-
-            embedding_step_size:
-
-            shuffle: bool
+        Args:
+            process_list : int or list of int
+                list or processes that should be extracted from the data
+            past_range_T : float
+                The past range T (in seconds) to be used for embeddings
+            number_of_bins_d : int
+                The number of bins d in the embedding
+            scaling_k : float
+                The scaling exponent k for the bins in the embedding.
+            embedding_step_size : float
+                Step size ∆t (in seconds) with which the window is slid through the data
+            replication_list : None, int or list of int
+                List or replications per process that should be extracted from the data
+                If set to None, all replications of the processes are extracted.
+                (default: None)
+            shuffle : bool
                 if true permute blocks of replications over trials
+                (default: False)
+            output_spike_times : bool
+                return the original spike times additionally to the symbols
+                (default: False)
 
         Returns:
-            numpy array # ------------------------------------------------------------------------------------------ TODO check output dimensions
-                raw symbols with dimensions no. samples x no.replications
-                (number of indices)
-            numpy array
-                median number of spikes per bin each realisation with dimensions (no.
-                samples x no.replications (number of indices)
-            numpy array
-                original spiketimes (optional) (default = False)
-
+            symbol_array : numpy array
+                array with dimensions no. process x no.replications
+                the raw joint symbols (over time) are included as nested array
+            past_symbol_array : numpy array
+                array with dimensions no. process x no.replications
+                the raw past symbols (over time) are included as nested array
+            current_symbol_array : numpy array
+                array with dimensions no. process x no.replications
+                the raw current symbols (over time) are included as nested array
+            symbol_length : numpy array
+                array with dimensions no. process x no.replications including the length of joint symbols
+            spike_times : numpy array (optional)
+                array with dimensions no. process x no.replications
+                original spike times are included as nested array
         """
 
         if not hasattr(self, 'data'):
@@ -456,9 +516,41 @@ class Data_spiketime():
                                            replication_list=None):
 
         """
-         # ----------------------------------------------------------------------------------------------------------------- TODO
+        Get symbols using get_realisation_symbols of the processes and replications and then
+        resample the symbols using boostrap method for each process and replication separately.
 
+            Args:
+            process_list : int or list of int
+                list or processes that should be extracted from the data
+            past_range_T : float
+                The past range T (in seconds) to be used for embeddings
+            number_of_bins_d : int
+                The number of bins d in the embedding
+            scaling_k : float
+                The scaling exponent k for the bins in the embedding.
+            embedding_step_size : float
+                Step size ∆t (in seconds) with which the window is slid through the data
+            replication_list : None, int or list of int
+                List or replications per process that should be extracted from the data
+                If set to None, all replications of the processes are extracted.
+                (default: None)
+            symbol_block_length : int
+                The number of symbols that should be drawn in each block for bootstrap resampling
+                If it is set to None (recommended), the length is automatically chosen, based
+                on heuristics
+
+        Returns:
+            bs_symbol_array : numpy array
+                array with dimensions no. process x no.replications
+                the raw joint symbols (over time) are included as nested array
+            bs_past_symbol_array : numpy array
+                array with dimensions no. process x no.replications
+                the raw past symbols (over time) are included as nested array
+            bs_current_symbol_array : numpy array
+                array with dimensions no. process x no.replications
+                the raw current symbols (over time) are included as nested array
         """
+
         if replication_list == None:
             replications_order = np.arange(self.n_replications)
         else:
@@ -498,8 +590,9 @@ class Data_spiketime():
         for i in range(nr_processes):
             for r in replications_order:
                 spike_times = self.data[process_list[i], r]
-                firing_rate = self.get_spiketime_firingrate(spike_times,
-                                                            embedding_step_size)
+                firing_rate = self.get_firingrate(process_list[i],
+                                                  r,
+                                                  embedding_step_size)
                 if symbol_block_length is None:
                     symbol_block_length = max(1, int(1 / (firing_rate * embedding_step_size)))
 
@@ -551,23 +644,16 @@ class Data_spiketime():
 
         return bs_symbol_array, bs_past_symbol_array, bs_current_symbol_array
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     def load_Rudelt_data(self):
 
         """
-                                                        # ---------------------------------------------------------------------TODO
+        Load the Rudelt data into the data_spiketime object for testing the estimators and optimization algorithm
+            References:
+                [1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding
+                    optimization reveals long-lasting history dependence in
+                    neural spiking activity (in prep.)
+
+                [2]: https://github.com/Priesemann-Group/hdestimator
 
         """
 
@@ -586,59 +672,30 @@ class Data_spiketime():
         dim_order = 'pr'
         self.set_data(spiketimedata, dim_order)
 
+    def get_recording_length(self, process, replication):
+        """get recording length of spike times"""
+        spike_times = self.data[process, replication]
+        return spike_times[-1] - spike_times[0]
 
-    # ----------------------------------------------------------------------------- TODO spiketime stats  - add check for data
-
-    #def _spike_times_stats(self,
-    #                       spike_times,
-    #                       embedding_step_size):
-    #    """
-    #    Save some statistics about the spike times.
-    #    """
-
-    #    self.recording_lengths = [spt[-1] - spt[0] for spt in spike_times]
-    #    self.recording_length = sum(self.recording_lengths)
-    #    self.recording_length_sd = np.std(self.recording_lengths)
-
-    #    firing_rates = [utl.get_binned_firing_rate(spt, embedding_step_size)
-    #                    for spt in spike_times]
-
-    #    self.firing_rate = np.average(firing_rates, weights=self.recording_lengths)
-    #    self.firing_rate_sd = np.sqrt(np.average((firing_rates - self.firing_rate) ** 2,
-    #                                                         weights=self.recording_lengths))
-
-    #    self.H_spiking = utl.get_shannon_entropy([self.firing_rate * embedding_step_size,
-    #                                              1 - self.firing_rate * embedding_step_size])
-
-    #def get_recording_length(self):
-    #    """get recording length of spike times"""
-    #    return self.recording_length
-
-    def get_spiketime_firingrate(self,
-                                 spike_times,
-                                 embedding_step_size):
+    def get_firingrate(self,
+                       process,
+                       replication,
+                       embedding_step_size):
         """get firing rate of spike times"""
-        self.recording_lengths = spike_times[-1] - spike_times[0]
-
+        spike_times = self.data[process, replication]
+        recording_lengths = spike_times[-1] - spike_times[0]
         firing_rates = utl.get_binned_firing_rate(spike_times, embedding_step_size)
-
-        self.firing_rate = np.average(firing_rates, weights=self.recording_lengths)
-
-        return self.firing_rate
+        return np.average(firing_rates, weights=recording_lengths)
 
     def get_H_spiking(self,
-                      spike_times,
+                      process,
+                      replication,
                       embedding_step_size
                       ):
         """get entropy of spike times"""
-        self.recording_lengths = spike_times[-1] - spike_times[0]
-
-        firing_rates = utl.get_binned_firing_rate(spike_times, embedding_step_size)
-
-        self.firing_rate = np.average(firing_rates, weights=self.recording_lengths)
-
-        self.H_spiking = utl.get_shannon_entropy([self.firing_rate * embedding_step_size,
-                                                  1 - self.firing_rate * embedding_step_size])
-        return self.H_spiking
+        firing_rate = self.get_firingrate(process,
+                                          replication,
+                                          embedding_step_size)
+        return utl.get_shannon_entropy([firing_rate * embedding_step_size, 1 - firing_rate * embedding_step_size])
 
 
