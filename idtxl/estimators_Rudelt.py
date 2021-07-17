@@ -29,7 +29,7 @@ class RudeltAbstractEstimator(Estimator):
     Abstract class for implementation of nsb and plugin estimators from Rudelt.
 
     Abstract class for implementation of nsb and plugin estimators, child classes
-    implement estimators for active information storage (AIS) and mutual information (MI) .
+    implement estimators for mutual information (MI) .
 
     References:
 
@@ -43,26 +43,26 @@ class RudeltAbstractEstimator(Estimator):
 
     Args:
         settings : dict
-            set estimator parameters:
-
-            - past_range_T : float - Past range T (in seconds) to be used for embedding
-            - number_of_bins_d : int - Number of bins in the embedding
-            - scaling_k : float - Number of scalings
-            - embedding_step_size : float [optional] - Step size delta t (in seconds) with which the window is slid
-                            through the data (default = 0.005).
-            - normalise : bool [optional] - z-standardise data (default=True)
-
+            - embedding_step_size : float [optional]
+                Step size delta t (in seconds) with which the window is slid through the data
+                (default = 0.005).
+            - normalise : bool [optional]
+                rebase spike times to zero
+                (default=True)
+            - return_averaged_R : bool [optional]
+                If set to True, compute R̂tot as the average over R̂(T ) for T ∈ [T̂D, Tmax ] instead of
+                R̂tot = R(T̂D ). If set to True, the setting for number_of_bootstraps_R_tot is ignored and
+                set to 0
+                (default=True)
     """
 
     def __init__(self, settings=None):
-
+                # ---------------------------------------------------------------------------------------------------------- TODO check input and chekc inf settings are given from optimization
         # Get defaults for estimator settings
         settings = self._check_settings(settings)
         self.settings = settings.copy()
-        #self.settings.setdefault('noise_level', np.float32(1e-8))
         self.settings.setdefault('normalize', True)
         self.settings.setdefault('embedding_step_size', 0.005)
-
         self.settings.setdefault('return_averaged_R', True)
 
 
@@ -200,7 +200,6 @@ class RudeltAbstractEstimator(Estimator):
 
         return raw_symbols
 
-# --------------------------------------------------------------------------------------------------------------TODO
     def get_symbol_counts(self, symbol_array):
         """
         Count how often symbols occur
@@ -211,7 +210,6 @@ class RudeltAbstractEstimator(Estimator):
             symbol_counts[symbol] += len(np.where(symbol_array == symbol)[0])
 
         return symbol_counts
-
 
     def get_multiplicities(self, symbol_counts, alphabet_size):
         """
@@ -328,46 +326,23 @@ class RudeltAbstractNSBEstimator(RudeltAbstractEstimator):
     """Abstract class for implementation of nsb estimators from Rudelt.
 
     Abstract class for implementation of nsb estimators, child classes
-    implement estimators for active information storage (AIS) and mutual information (MI) .
+    implement nsb estimators for mutual information (MI) .
 
     implemented in idtxl by Michael Lindner, Göttingen 2021
 
     Args:
         settings : dict
-            set estimator parameters:
-
-            - past_range_T : float - Past range T (in seconds) to be used for embedding
-            - number_of_bins_d : int - Number of bins in the embedding
-            - scaling_k : float - Number of scalings
-            - embedding_step_size : float [optional] - Step size delta t (in seconds) with which the window is slid
-                            through the data (default = 0.005).
-            - normalise : bool [optional] - z-standardise data (default=True)
-
-
-
-    ??????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
-
-    implemented in idtxl by Michael Lindner, Göttingen 2021
-
-
-    settings??????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
-    """
-
-    """
-    Estimate the history dependence and temporal depth of a single
-    neuron, based on information-theoretical measures for spike time
-    data
-
-    References:
-
-        [1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding
-            optimization reveals long-lasting history dependence in
-            neural spiking activity (in prep.)
-
-        [2]: https://github.com/Priesemann-Group/hdestimator
-
-
-
+            - embedding_step_size : float [optional]
+                Step size delta t (in seconds) with which the window is slid through the data
+                (default = 0.005).
+            - normalise : bool [optional]
+                rebase spike times to zero
+                (default=True)
+            - return_averaged_R : bool [optional]
+                If set to True, compute R̂tot as the average over R̂(T ) for T ∈ [T̂D, Tmax ] instead of
+                R̂tot = R(T̂D ). If set to True, the setting for number_of_bootstraps_R_tot is ignored and
+                set to 0
+                (default=True)
     """
 
     def __init__(self, settings=None):
@@ -583,28 +558,27 @@ class RudeltAbstractNSBEstimator(RudeltAbstractEstimator):
         return H_nsb
 
 
-
-
-
-
 class RudeltNSBEstimatorSymbolsMI(RudeltAbstractNSBEstimator):
-    """Calculate active information storage with NSB implementation.
+    """History dependence NSB estimator
 
-    Calculate the active information storage (AIS) of one variable depending on its past
+    Calculate the mutual information (MI) of one variable depending on its past
     using NSB estimator. See parent class for references.
 
     implemented in idtxl by Michael Lindner, Göttingen 2021
 
-    Args: # ---------------------------------------------------------------------------------------------------------------- TODO
+    Args:
         settings : dict
-            set estimator parameters:
-
-            - past_range_T : float - Past range T (in seconds) to be used for embedding
-            - number_of_bins_d : int - Number of bins in the embedding
-            - scaling_k : float - Number of scalings
-            - embedding_step_size : float [optional] - Step size delta t (in seconds) with which the window is slid
-                            through the data (default = 0.005).
-            - normalise : bool [optional] - z-standardise data (default=True)
+            - embedding_step_size : float [optional]
+                Step size delta t (in seconds) with which the window is slid through the data
+                (default = 0.005).
+            - normalise : bool [optional]
+                rebase spike times to zero
+                (default=True)
+            - return_averaged_R : bool [optional]
+                If set to True, compute R̂tot as the average over R̂(T ) for T ∈ [T̂D, Tmax ] instead of
+                R̂tot = R(T̂D ). If set to True, the setting for number_of_bootstraps_R_tot is ignored and
+                set to 0
+                (default=True)
     """
 
     def __init__(self, settings=None):
@@ -637,29 +611,33 @@ class RudeltNSBEstimatorSymbolsMI(RudeltAbstractNSBEstimator):
         return I_nsb, R_nsb
 
     def estimate(self, symbol_array, past_symbol_array, current_symbol_array):
-        """Estimate NSB
+        """Estimate mutual information using NSB estimator.
 
-                    Args:
-                        var1 : 1D numpy array
+        Args:
+            symbol_array : 1D numpy array
+                realisations of symbols based on current and past states.
+                (first output of get_realisations_symbol from data_spiketimes object)
+            past_symbol_array : numpy array
+                realisations of symbols based on current and past states.
+                (first output of get_realisations_symbol from data_spiketimes object)
+            current_symbol_array : numpy array
+                realisations of symbols based on current and past states.
+                (first output of get_realisations_symbol from data_spiketimes object)
 
-
-
-                    Returns:
-                        # --------------------------------------------------------------------------------------------------------------TODO
-                        ???????????????????????????????????????????????????????????????????????????????????????????????????????????
-                """
+        Returns:
+            float
+                MI (AIS)
+            float
+                MI / H_uncond (History dependence)
+        """
 
         symbol_counts = self.get_symbol_counts(symbol_array)
 
-
         current_symbol_counts = self.get_symbol_counts(current_symbol_array)
-        # H_uncond_orig = utl.get_H_spiking(symbol_counts)
         H_uncond = utl.get_H_spiking(symbol_counts)
 
-        # past_symbol_counts = utl.get_past_symbol_counts(symbol_counts)
         past_symbol_counts = self.get_symbol_counts(past_symbol_array)
 
-        # number_of_bins_d_join = np.array(list(np.binary_repr(np.max(past_symbol_array)))).astype(np.int8)
         number_of_bins_d_join = len(list(np.binary_repr(np.max(symbol_array))))
 
         alphabet_size_past = 2 ** int(number_of_bins_d_join - 1)  # K for past activity
@@ -674,73 +652,20 @@ class RudeltNSBEstimatorSymbolsMI(RudeltAbstractNSBEstimator):
         return np.float(I), np.float(R)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 class RudeltPluginEstimatorSymbolsMI(RudeltAbstractEstimator):
-    """Pluigin History dependence estimator
-                            # --------------------------------------------------------------------------------------------------------------TODO
-    ??????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+    """Plugin History dependence estimator
+
+    Calculate the mutual information (MI) of one variable depending on its past
+    using plugin estimator. See parent class for references.
 
     implemented in idtxl by Michael Lindner, Göttingen 2021
 
-
-    settings??????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
-    """
-
-    """
-    Estimate the history dependence and temporal depth of a single
-    neuron, based on information-theoretical measures for spike time
-    data
-
-    References:
-
-        [1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding
-            optimization reveals long-lasting history dependence in
-            neural spiking activity (in prep.)
-
-        [2]: https://github.com/Priesemann-Group/hdestimator
-
-
+    Args:
+        settings : dict
+            - embedding_step_size : float [optional] - Step size delta t (in seconds) with which the window is slid
+                            through the data (default = 0.005).
+            - normalise : bool [optional] - rebase spike times to zero (default=True)
+            - return_averaged_R : bool [optional] - rebase spike times to zero (default=True)
 
     """
 
@@ -783,16 +708,25 @@ class RudeltPluginEstimatorSymbolsMI(RudeltAbstractEstimator):
         return I_plugin, R_plugin
 
     def estimate(self, symbol_array, past_symbol_array, current_symbol_array):
-        """Estimate HDE NPC
+        """Estimate mutual information using plugin estimator.
 
-                # --------------------------------------------------------------------------------------------------------------TODO
-                    Args:
-                        var1 : numpy array
-                            realisations of first variable,
+        Args:
+            symbol_array : 1D numpy array
+                realisations of symbols based on current and past states.
+                (first output of get_realisations_symbol from data_spiketimes object)
+            past_symbol_array : numpy array
+                realisations of symbols based on current and past states.
+                (first output of get_realisations_symbol from data_spiketimes object)
+            current_symbol_array : numpy array
+                realisations of symbols based on current and past states.
+                (first output of get_realisations_symbol from data_spiketimes object)
 
-                        Returns:
-                        ???????????????????????????????????????????????????????????????????????????????????????????????????????????
-                """
+        Returns:
+            float
+                MI (AIS)
+            float
+                MI / H_uncond (History dependence)
+        """
 
         symbol_counts = self.get_symbol_counts(symbol_array)
 
@@ -818,14 +752,29 @@ class RudeltPluginEstimatorSymbolsMI(RudeltAbstractEstimator):
         return np.float(I), np.float(R)
 
 
-
-
 class RudeltBBCEstimator(RudeltAbstractEstimator):
-
     """
+    BBC Estimator using NSB and Plugin estimator
 
-        # ---------------------------------------------------------------------------------------------------------------------------- TODO
+    Calculate the mutual information (MI) of one variable depending on its past
+    using nsb and plugin estimator and check if bias criterion is passed/
+    See parent class for references.
 
+    implemented in idtxl by Michael Lindner, Göttingen 2021
+
+    Args:
+        settings : dict
+            - embedding_step_size : float [optional]
+                Step size delta t (in seconds) with which the window is slid through the data
+                (default = 0.005).
+            - normalise : bool [optional]
+                rebase spike times to zero
+                (default=True)
+            - return_averaged_R : bool [optional]
+                If set to True, compute R̂tot as the average over R̂(T ) for T ∈ [T̂D, Tmax ] instead of
+                R̂tot = R(T̂D ). If set to True, the setting for number_of_bootstraps_R_tot is ignored and
+                set to 0
+                (default=True)
     """
 
     def bayesian_bias_criterion(self, R_nsb, R_plugin, bbc_tolerance):
@@ -857,7 +806,29 @@ class RudeltBBCEstimator(RudeltAbstractEstimator):
             return np.inf
 
     def estimate(self, symbol_array, past_symbol_array, current_symbol_array, bbc_tolerance=None):
+        """
+        Calculate the mutual information (MI) of one variable depending on its past
+        using nsb and plugin estimator and check if bias criterion is passed/
 
+        Args:
+            symbol_array : 1D numpy array
+                realisations of symbols based on current and past states.
+                (first output of get_realisations_symbol from data_spiketimes object)
+            past_symbol_array : numpy array
+                realisations of symbols based on current and past states.
+                (first output of get_realisations_symbol from data_spiketimes object)
+            current_symbol_array : numpy array
+                realisations of symbols based on current and past states.
+                (first output of get_realisations_symbol from data_spiketimes object)
+
+        Returns:
+            float
+                MI (AIS)
+            float
+                MI / H_uncond (History dependence)
+            float
+                bbc_term
+        """
         estnsb = RudeltNSBEstimatorSymbolsMI()
         I_nsb, R_nsb = estnsb.estimate(symbol_array, past_symbol_array, current_symbol_array)
 
@@ -874,17 +845,13 @@ class RudeltBBCEstimator(RudeltAbstractEstimator):
                                                   R_plugin))
 
 
-
-
-
-
-
 class RudeltShufflingEstimator(RudeltAbstractEstimator):
-
     """
+    Estimate the history dependence in a spike train using the shuffling estimator.
 
-        # --------------------------------------------------------------------------------------------------------------------TODO
+    See parent class for references.
 
+    implemented in idtxl by Michael Lindner, Göttingen 2021
     """
 
     def get_P_X_uncond(self, number_of_symbols):
@@ -1095,9 +1062,18 @@ class RudeltShufflingEstimator(RudeltAbstractEstimator):
 
     def estimate(self, symbol_array):
         """
+        Estimate the history dependence in a spike train using the shuffling estimator.
 
-            # --------------------------------------------------------------------------------------------------------------- TODO
+         Args:
+            symbol_array : 1D numpy array
+                realisations of symbols based on current and past states.
+                (first output of get_realisations_symbol from data_spiketimes object)
 
+        Returns:
+            float
+                MI (AIS)
+            float
+                MI / H_uncond (History dependence)
         """
         symbol_counts = self.get_symbol_counts(symbol_array)
 
