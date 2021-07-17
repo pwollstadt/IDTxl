@@ -62,8 +62,6 @@ symbol_array, past_symbol_array, current_symbol_array, symbol_array_length, spik
     data.get_realisations_symbols(process_list, 0.005, 1, 0.0, 0.005, replication_list=replication_list, output_spike_times=True)
 number_of_bins_d = np.array(list(np.binary_repr(max(symbol_array[0, 0])))).astype(np.int8)
 
-a=symbol_array[0, 0]
-
 
 estnsb = RudeltNSBEstimatorSymbolsMI()
 I_nsb, R_nsb = estnsb.estimate(symbol_array[0, 0], past_symbol_array[0, 0], current_symbol_array[0, 0])
