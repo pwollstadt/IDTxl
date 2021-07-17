@@ -10,9 +10,116 @@ from idtxl.results import DotDict, ResultsSingleProcessRudelt
 
 # noinspection PyAttributeOutsideInit
 class OptimizationRudelt():
+    """
+    Optimization of embedding parameters of spike times using the history dependence estimators
+    # ----------------------------------------------------------------------------------------------------------------------- TODO
+
+    References:
+
+        [1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding
+            optimization reveals long-lasting history dependence in
+            neural spiking activity (in prep.)
+
+        [2]: https://github.com/Priesemann-Group/hdestimator
+
+    implemented in idtxl by Michael Lindner, Göttingen 2021
+
+    Args:
+        settings : dict
+            . estimation_method : string
+                The method to be used to estimate the history dependence 'bbc' or 'shuffling'.
+            - embedding_step_size : float
+                Step size delta t (in seconds) with which the window is slid through the data.
+                (default: 0.005)
+            - embedding_number_of_bins_set : array of integer values
+                Set of values for d, the number of bins in the embedding.
+                (default: [1, 2, 3, 4, 5])
+            - embedding_past_range_set : array of floating-point values
+                Set of values for T, the past range (in seconds) to be used for embeddings.
+                (default: [0.005, 0.00561, 0.00629, 0.00706, 0.00792, 0.00889, 0.00998, 0.01119, 0.01256,
+                           0.01409, 0.01581, 0.01774, 0.01991, 0.02233, 0.02506, 0.02812, 0.03155, 0.0354,
+                           0.03972, 0.04456, 0.05, 0.0561, 0.06295, 0.07063, 0.07924, 0.08891, 0.09976, 0.11194,
+                           0.12559, 0.14092, 0.15811, 0.17741, 0.19905, 0.22334, 0.25059, 0.28117, 0.31548,
+                           0.35397, 0.39716, 0.44563, 0.5, 0.56101, 0.62946, 0.70627, 0.79245, 0.88914, 0.99763,
+                           1.11936, 1.25594, 1.40919, 1.58114, 1.77407, 1.99054, 2.23342, 2.50594, 2.81171, 3.15479,
+                           3.53973, 3.97164, 4.45625, 5.0])
+            - embedding_scaling_exponent_set : dict
+                Set of values for kappa, the scaling exponent for the bins in the embedding.
+                Should be either an array of floating-point values or a python-dictionary with the
+                three entries 'number_of_scalings', 'min_first_bin_size' and
+                'min_step_for_scaling'.
+                defaults: {'number_of_scalings': 10,
+                           'min_first_bin_size': 0.005,
+                           'min_step_for_scaling': 0.01})
+
+            - bbc_tolerance : float
+                The tolerance for the Bayesian Bias Criterion. Influences which embeddings are
+                discarded from the analysis.
+                (default: 0.05)
+            - return_averaged_R : bool
+                Return R_tot as the average over R(T) for T in [T_D, T_max], instead of R_tot = R(T_D).
+                If set to True, the setting for number_of_bootstraps_R_tot (see below) is ignored and set to 0.
+                (default: True)
+            - timescale_minimum_past_range : float
+                Minimum past range T_0 (in seconds) to take into consideration for the estimation of the
+                information timescale tau_R.
+                (default: 0.01)
+
+            - number_of_bootstraps_R_max : int
+                The number of bootstrap re-shuffles that should be used to determine the optimal
+                embedding. (Bootstrap the estimates of R_max to determine R_tot.)
+                These are computed during the 'history-dependence' task because they are essential
+                to obtain R_tot.
+                (default: 250)
+            - number_of_bootstraps_R_tot : int
+                The number of bootstrap re-shuffles that should be used to estimate the confidence
+                interval of the optimal embedding. (Bootstrap the estimates of R_tot = R(T_D) to
+                obtain a confidence interval for R_tot.).
+                These are computed during the 'confidence-intervals' task.
+                The setting return_averaged_R (see above) needs to be set to False for this setting
+                to take effect.
+                (default: 250)
+            - number_of_bootstraps_nonessential : int
+                The number of bootstrap re-shuffles that should be used to estimate the confidence
+                intervals for embeddings other than the optimal one. (Bootstrap the estimates of
+                R(T) for all other T.)
+                (These are not necessary for the main analysis and therefore default to 0.)
+            - symbol_block_length : int
+                The number of symbols that should be drawn in each block for bootstrap resampling
+                If it is set to None (recommended), the length is automatically chosen, based
+                on heuristics
+                (default: None)
+            - bootstrap_CI_use_sd : bool
+                Most of the time we observed normally-distributed bootstrap replications,
+                so it is sufficient (and more efficient) to compute confidence intervals
+                based on the standard deviation
+                (default: True)
+            - bootstrap_CI_percentile_lo : float
+                The lower percentile for the confidence interval.
+                This has no effect if bootstrap_CI_use_sd is set to True
+                (default: 2.5)
+            - bootstrap_CI_percentile_hi : float
+                The upper percentiles for the confidence interval.
+                This has no effect if bootstrap_CI_use_sd is set to True
+                (default: 97.5)
+
+            - analyse_auto_MI : bool
+                perform calculation of auto mutual information of the spike train
+                (default: True)
+                If set to True:
+                - auto_MI_bin_size_set : array of floating-point values
+                    Set of values for the sizes of the bins (in seconds).
+                    (default: [0.005, 0.01, 0.025, 0.05, 0.25, 0.5])
+                - auto_MI_max_delay : int
+                    The maximum delay (in seconds) between the past bin and the response.
+                    (default: 5)
+
+            - debug
+                (default: False)
+    """
 
     def __init__(self, settings=None):
-        settings = self._check_settings(settings)              # ------------------------------------------------------------- TODO SET DEFAULTS AND CHECK INPUTS
+        settings = self._check_settings(settings)              # ------------------------------------------------------------- TODO CHECK INPUTS
         self.settings = settings.copy()
 
         self.settings.setdefault('embedding_step_size', 0.005)
@@ -47,7 +154,6 @@ class OptimizationRudelt():
         self.settings.setdefault('bootstrap_CI_use_sd', True)
         self.settings.setdefault('bootstrap_CI_percentile_lo', 2.5)
         self.settings.setdefault('bootstrap_CI_percentile_hi', 97.5)
-        self.settings.setdefault('timescale_minimum_past_range', 0.01)
         self.settings.setdefault('debug', False)
 
         self.embeddings = self.get_embeddings(self.settings['embedding_past_range_set'],
@@ -82,7 +188,7 @@ class OptimizationRudelt():
         for past_range_T in embedding_past_range_set:
             for number_of_bins_d in embedding_number_of_bins_set:
                 if not isinstance(number_of_bins_d, int) or number_of_bins_d < 1:
-                    print("Error: numer of bins {} is not a positive integer. Skipping.".format(number_of_bins_d),
+                    print("Error: number of bins {} is not a positive integer. Skipping.".format(number_of_bins_d),
                           file=stderr, flush=True)
                     continue
 
@@ -138,8 +244,6 @@ class OptimizationRudelt():
                        for i in range(1, number_of_bins_d + 1)])
 
     def get_history_dependence(self, data, process, replication):
-
-        # -------------------------------------------------------------------------------------------------------- TODO
         """
             Estimate the history dependence for each embedding to all given processes and replications.
         """
@@ -421,23 +525,27 @@ class OptimizationRudelt():
                     data,
                     target_R='R_max',
                     symbol_block_length=None):
-        """                                                                             # ------------------------------------- TODO
+        """
         Compute bootstrap replications of the history dependence estimate
         which can be used to obtain confidence intervals.
 
-        Load symbol counts, resample, then estimate entropy for each sample
-        and save to file.
-
-        :param target_R: One of 'R_max', 'R_tot' or 'nonessential'.
-        If set to R_max, replications of R are produced for the T at which
-        R is maximised.
-        If set to R_tot, replications of R are produced for T = T_D (cf
-        get_temporal_depth_T_D).
-        If set to nonessential, replications of R are produced for each T
-        (one embedding per T, cf get_embeddings_that_maximise_R).  These
-        are not otherwise used in the analysis and are probably only useful
-        if the resulting plot is visually inspected, so in most cases it can
-        be set to zero.
+        Args:
+            data : data_spiketime object
+            target_R : String
+                One of 'R_max', 'R_tot' or 'nonessential'.
+                If set to R_max, replications of R are produced for the T at which
+                R is maximised.
+                If set to R_tot, replications of R are produced for T = T_D (cf
+                get_temporal_depth_T_D).
+                If set to nonessential, replications of R are produced for each T
+                (one embedding per T, cf get_embeddings_that_maximise_R).  These
+                are not otherwise used in the analysis and are probably only useful
+                if the resulting plot is visually inspected, so in most cases it can
+                be set to zero.
+            symbol_block_length : int
+                The number of symbols that should be drawn in each block for bootstrap resampling
+                If it is set to None (recommended), the length is automatically chosen, based
+                on heuristics
         """
 
         assert target_R in ['nonessential', 'R_max', 'R_tot']
@@ -511,7 +619,6 @@ class OptimizationRudelt():
         """
 
         auto_MI_data = {
-            "auto_MI_bin_size": [],
             "delay": [],
             "auto_MI": []
         }
@@ -522,13 +629,9 @@ class OptimizationRudelt():
             # perform the MI analysis
             auto_MI = self.get_auto_MI(spike_times, auto_MI_bin_size, number_of_delays)
 
-            auto_MI_data["auto_MI_bin_size"] += [str(auto_MI_bin_size)]
-            auto_MI_data["delay"] += [str(number_of_delays)]
-            auto_MI_d = {}
-            auto_MI_d[0] = np.linspace(0, self.settings['auto_MI_max_delay'], len(auto_MI))
-            auto_MI_d[1] = auto_MI
+            auto_MI_data["delay"] += [number_of_delays]
 
-            auto_MI_dict[str(auto_MI_bin_size)] = auto_MI_d
+            auto_MI_dict[auto_MI_bin_size] = auto_MI
 
         auto_MI_data['auto_MI'] = auto_MI_dict
         self.auto_MI = auto_MI_data
@@ -568,18 +671,11 @@ class OptimizationRudelt():
             # auto_MI = 2 * H_spiking - H_joint
             auto_MIs[delay] = 2 - H_joint / self.H_spiking  # normalized auto MI = auto MI / H_spiking
 
-
         return auto_MIs
 
     def optimize(self, data, processes='all', replications='all'):
         """
-
-        ??????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
-
-
-
-
-        settings??????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+        Optimize the embedding parameters of spike time data using the Rudelt history dependence estimator.
 
         References:
 
@@ -591,29 +687,22 @@ class OptimizationRudelt():
 
         implemented in idtxl by Michael Lindner, Göttingen 2021
 
-        Args: # ----------------------------------------------------------------------------------------------------------------- TODO
-            data : data_spiketime object
-            processes:
-            replications:
+        Args:
+            data : Data_spiketime instance
+                raw data for analysis
+            processes : list of int
+                index of processes;
+                spike times are optimized all processes specified in the list separately.
+            replications : list of int
+                index of replications;
+                spike times are optimized all replications specified in the list separately.
+
+        Returns: # -------------------------------------------------------------------------------------------------------- TODO
+            ResultsSingleProcessRudelt instance
+                results of Rudelt optimization, see documentation of
+                ResultsSingleProcessRudelt()
 
 
-            settings
-        ???????????????????????????????????????????????????????????????????????????????????????????????????????????
-        Returns:
-            T_D
-            tau_R
-            R_tot
-            AIS_tot
-            opt_number_of_bins_d
-            opt_scaling_k
-            history_dependence
-            embedding_maximising_R_at_T
-            max_Rs
-            max_R_T
-            HD_max_R
-
-            auto_MI  (optional ?
-            ???????????????????????????????????????????????????????????????????????????????????????????????????????????
         """
 
         if processes == 'all':
@@ -658,7 +747,53 @@ class OptimizationRudelt():
 
     def optimize_single_run(self, data, process, replication):
         """
-            # -------------------------------------------------------------------------------------------------------------------- TODO
+            optimizes a single realisation of spike time data given the process and replication number
+
+            Args:
+            data : Data_spiketime instance
+                raw data for analysis
+            process : int
+                index of process;
+            replications : int
+                index of replication;
+
+            Returns:
+            returns a DotDict with the following keys
+                Process : int
+                    Process that was optimized
+                Replication : int
+                    Replication that was optimized
+                estimation_method : String
+                    Estimation method that was used for optimization
+                T_D : float
+                    Estimated optimal value for the temporal depth TD
+                tau_R :
+                    Information timescale tau_R, a characteristic timescale of history
+                    dependence similar to an autocorrelation time.
+                R_tot : float
+                    Estimated value for the total history dependence Rtot,
+                AIS_tot : float
+                    Estimated value for the total active information storage
+                opt_number_of_bins_d : int
+                    Number of bins d for the embedding that yields (R̂tot ,T̂D)
+                opt_scaling_k : int
+                    Scaling exponent κ for the embedding that yields (R̂tot , T̂D)
+                opt_first_bin_size : int
+                    Size of the first bin τ1 for the embedding that yields (R̂tot , T̂D ),
+                history_dependence : array with floating-point values
+                    Estimated history dependence for each embedding
+                firing_rate : float
+                    Firing rate of the neuron/ spike train
+                recording_length : float
+                    Length of the recording (in seconds)
+                H_spiking : float
+                    Entropy of the spike time
+
+            if analyse_auto_MI was set to True additionally:
+                auto_MI : dict
+                    numpy array of MI values for each delay
+                auto_MI_delays : list of int
+                    list of delays depending on the given auto_MI_bin_sizes and auto_MI_max_delay
         """
 
         if (type(process) is int):
@@ -725,6 +860,9 @@ class OptimizationRudelt():
                                                               first_bin_size,
                                                               opt_scaling_k) - T_D,
                                     0.005, tol=1e-03, maxiter=100)
+        firing_rate = data.get_firingrate(process, replication, self.settings['embedding_step_size'])
+        recording_length = data.get_recording_length(process, replication)
+        H_spiking = data.get_H_spiking(process, replication, self.settings['embedding_step_size'])
 
         if self.settings['debug']:
             print('Process: ' + str(process))
@@ -735,6 +873,9 @@ class OptimizationRudelt():
             print('opt_number_of_bins_d: ' + str(opt_number_of_bins_d))
             print('opt_scaling_k: ' + str(opt_scaling_k))
             print('opt_first_bin_size: ' + str(opt_first_bin_size))
+            print('firing_rate: ' + str(firing_rate))
+            print('recording_length: ' + str(recording_length))
+            print('H_spiking: ' + str(H_spiking))
 
         # create output dict
         results = {'Process': process,
@@ -748,15 +889,13 @@ class OptimizationRudelt():
                    'opt_scaling_k': opt_scaling_k,
                    'opt_first_bin_size': opt_first_bin_size,
                    'history_dependence': self.history_dependence,
-                   'embedding_maximising_R_at_T': self.embedding_maximising_R_at_T,
-                   'max_Rs': self.max_Rs,
-                   'max_R_T': self.max_R_T,
-                   'HD_max_R': HD_max_R}
+                   'firing_rate': firing_rate,
+                   'recording_length': recording_length,
+                   'H_spiking': H_spiking}
 
         if self.settings['analyse_auto_MI']:
             results['auto_MI'] = self.auto_MI.get('auto_MI')
             results['auto_MI_delays'] = self.auto_MI.get('delay')
-            results['auto_MI_bin_size'] = self.auto_MI.get('auto_MI_bin_size')
 
         results_d = DotDict(results)
 
