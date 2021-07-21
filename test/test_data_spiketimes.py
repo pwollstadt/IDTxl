@@ -164,7 +164,7 @@ def test_get_bootstrap_realisations():
     data = Data_spiketime()
     data.set_data(spiketimedata2)
 
-    # get realisation of single process
+    # get bootstrap realisation of single process
     process_list = 5
     past_range_T = 0.31548
     number_of_bins_d = 5
@@ -195,8 +195,24 @@ def test_get_bootstrap_realisations():
         ('length of symbol array does not match with '
             'with length of current symbol array')
 
-    # get realisations of multiple processes
-    process_list = [1, 3, 5, 7, 8]
+    # test manual block length input
+    bs_symbol_array, bs_past_symbol_array, bs_current_symbol_array = \
+        data.get_bootstrap_realisations_symbols(process_list,
+                                                past_range_T,
+                                                number_of_bins_d,
+                                                scaling_k,
+                                                embedding_step_size,
+                                                symbol_block_length=49)
+    bs_symbol_array, bs_past_symbol_array, bs_current_symbol_array = \
+        data.get_bootstrap_realisations_symbols(process_list,
+                                                past_range_T,
+                                                number_of_bins_d,
+                                                scaling_k,
+                                                embedding_step_size,
+                                                symbol_block_length=30)
+
+    # get bootstrap realisations of multiple processes
+    process_list = [1, 7, 5, 3, 9]
 
     bs_symbol_array2, bs_past_symbol_array2, bs_current_symbol_array2 = \
         data.get_bootstrap_realisations_symbols(process_list,
