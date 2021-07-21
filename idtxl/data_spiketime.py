@@ -22,7 +22,7 @@ except:
 class Data_spiketime():
     """Store data for Rudelt estimators and optimization.
 
-        Data takes a 1- or 2-dimensional numpy array representing
+        Data takes a 1- or 2-dimensional numpy array representing   # --------------------------------------------------- TODO remove replications
         realisations of spike times in dimensions: processes x replications.
         hThe spike times for each process and replication needs to be added
         as nested numpy arrays.
@@ -48,7 +48,7 @@ class Data_spiketime():
 
         Args:
             data : numpy array [optional]
-                1/2-dimensional array with nested spike time data
+                1/2-dimensional array with nested spike time data    # --------------------------------------------------- TODO remove replications
             dim_order : string [optional]
                 order of dimensions, accepts any combination of the characters
                 'p' and 'r' for processes and replications; must
@@ -69,7 +69,7 @@ class Data_spiketime():
                 realisations, can only be set via 'set_data' method
             n_processes : int
                 number of processes
-            n_replications : int
+            n_replications : int   # --------------------------------------------------- TODO remove replications
                 number of replications
             n_spiketimes(process, replication) : int
                 number of spike times of given process and replication
@@ -102,37 +102,32 @@ class Data_spiketime():
         print('overwriting existing data')
         del(self._data)
 
-    def set_data(self, data, dim_order):
+    def set_data(self, data):
         """Overwrite data in an existing Data object.
 
         Args:
             data : numpy array
-                1- to 2-dimensional array of realisations
-            dim_order : string
-                order of dimensions, accepts any combination of the characters
-                'p' and 'r' for processes and replications;
-                must have the same length as number of dimensions in data
+                1-dimensional array of realisations
         """
-        if len(dim_order) > 2:
-            raise RuntimeError('dim_order can not have more than two '
-                               'entries')
-        if len(dim_order) != data.ndim:
-            raise RuntimeError('Data array dimension ({0}) and length of '
-                               'dim_order ({1}) are not equal.'.format(
-                                           data.ndim, len(dim_order)))
+        #if len(dim_order) > 2:   # --------------------------------------------------- TODO remove replications
+        #    raise RuntimeError('dim_order can not have more than two '
+        #                       'entries')
+        #if len(dim_order) != data.ndim:   # --------------------------------------------------- TODO remove
+        #    raise RuntimeError('Data array dimension ({0}) and length of '
+        #                       'dim_order ({1}) are not equal.'.format(
+        #                                   data.ndim, len(dim_order)))
 
         # Bring data into the order processes x replications
-        data_ordered = self._reorder_data(data, dim_order)
+        #data_ordered = self._reorder_data(data)   # ------------------------------------------- TODO remove method
 
         # get number of processes and replications
-        self._set_data_size(data_ordered)
+        self._set_data_size(data)
         # get number of spike times and check arrays
         self._get_nr_spiketimes(data)
 
-        print('Adding data with properties: {0} processes and {1} '
-              'replications with variable number of spike times: {2}'.format(self.n_processes,
-                                                                             self.n_replications,
-                                                                             self.n_spiketimes))
+        print('Adding data with properties: {0} processes '
+              'with variable number of spike times: {1}'.format(self.n_processes,
+                                                                self.n_spiketimes))
 
         try:
             delattr(self, 'data')
@@ -140,74 +135,66 @@ class Data_spiketime():
             pass
 
         # order and rebase timestamps
-        self.data = self._sort_rebase_spiketimes(data_ordered)
+        self.data = self._sort_rebase_spiketimes(data)
 
-        self.data_type = type(self.data[0, 0])
+        self.data_type = type(self.data[0])
 
 
-    def _reorder_data(self, data, dim_order):
-        """Reorder data dimensions to processes x samples x replications."""
-        # add singletons for missing dimensions
-        missing_dims = 'pr'
-        for dim in dim_order:
-            missing_dims = missing_dims.replace(dim, '')
-        for dim in missing_dims:
-            data = np.expand_dims(data, data.ndim)
-            dim_order += dim
+    #def _reorder_data(self, data, dim_order):
+    #    """Reorder data dimensions to processes x samples x replications."""
+    #    # add singletons for missing dimensions
+    #    missing_dims = 'pr'
+    #    for dim in dim_order:
+    #        missing_dims = missing_dims.replace(dim, '')
+    #    for dim in missing_dims:
+    #        data = np.expand_dims(data, data.ndim)
+    #        dim_order += dim
 
-        # reorder array dims if necessary
-        if dim_order[0] != 'p':
-            ind_p = dim_order.index('p')
-            data = data.swapaxes(0, ind_p)
-            # dim_order = utils.swap_chars(dim_order, 0, ind_p) # ------------- TODO check
+    #    # reorder array dims if necessary
+    #    if dim_order[0] != 'p':
+    #        ind_p = dim_order.index('p')
+    #        data = data.swapaxes(0, ind_p)
+    #        # dim_order = utils.swap_chars(dim_order, 0, ind_p) # ------------- TODO check
 
-        return data
+    #    return data
 
     def _get_nr_spiketimes(self, data):
         """Get number of spike times for each process and replication"""
-        n_spiketimes = np.empty(shape=(self.n_processes, self.n_replications))
+        n_spiketimes = np.empty(shape=(self.n_processes))
         for process in range(self.n_processes):
-            for replication in range(self.n_replications):
-                slicetimes = data[process, replication]
-                if type(slicetimes) is not np.ndarray:
-                    raise RuntimeError('Data array must contain numpy array of spike times. '
-                                       'Process {0}''s replication {1} does not contain a numpy array.'.format(
-                                        str(process), str(replication)))
-                n_spiketimes[process, replication] = int(len(slicetimes))
+            slicetimes = data[process]
+            if type(slicetimes) is not np.ndarray:
+                raise RuntimeError('Data array must contain numpy array of spike times. '
+                                   'Process {0} does not contain a numpy array.'.format(
+                                    str(process)))
+            n_spiketimes[process] = int(len(slicetimes))
 
         self.n_spiketimes = n_spiketimes
 
     def _sort_rebase_spiketimes(self, data):
         """Sort spike times ascending and start with 0 by subtracting min """
         for process in range(self.n_processes):
-            for replication in range(self.n_replications):
-                slicetimes = data[process, replication]
-                slicetimes_sort = np.sort(slicetimes)
-                slicetimes_sort = slicetimes_sort - np.min(slicetimes_sort)
-                data[process, replication] = slicetimes_sort
-
+            slicetimes = data[process]
+            slicetimes_sort = np.sort(slicetimes)
+            slicetimes_sort = slicetimes_sort - np.min(slicetimes_sort)
+            data[process] = slicetimes_sort
         return data
 
     def _set_data_size(self, data):
         """Set the data size."""
         self.n_processes = data.shape[0]
-        self.n_replications = data.shape[1]
 
     def get_seed(self):
         """return the initial seed of the data"""
         return self.initial_state
 
-    def n_replications(self):
-        """Number of realisations over replications."""
-        return self.n_replications
-
-    def n_spiketimes(self, process, replication):
+    def n_spiketimes(self, process):
         """Number of spiketimes."""
-        return self.n_spiketimes[process, replication]
+        return self.n_spiketimes[process]
 
-    def get_spike_times_single(self, process, replication):
+    def get_spike_times_single(self, process):
         """get spike times of one process and replication"""
-        return self.data[process, replication]
+        return self.data[process]
 
     def get_realisations_symbols(self,
                                  process_list,
@@ -215,13 +202,12 @@ class Data_spiketime():
                                  number_of_bins_d,
                                  scaling_k,
                                  embedding_step_size,
-                                 replication_list=None,
                                  shuffle=False,
                                  output_spike_times=False):
 
         """
         Return arrays of symbols (joint symbols), past symbols and current symbols of the spike times
-        for the given embedding options for the indices in process list and the optional replication list.
+        for the given embedding options for the indices in process list.
         Additionally it returns the lengths of spike times and optionally the original spike times.
 
         Example for exponent_base of 2
@@ -229,24 +215,6 @@ class Data_spiketime():
             |-past range T-|  t             past symbol:  1011  --> 11  (1·2^3 + 0·2^2 + 1·2^1 + 1·2^0)
                                             current symbol    0 --> 0
 
-        Optionally, realisations can
-        be shuffled to create surrogate data for statistical testing. For
-        shuffling, data blocks are permuted over replications while their
-        temporal order stays intact within replications:
-
-#        Original data:
-#            +--------------+---------+---------+---------+---------+---------+-----+
-#            | repl. ind.   | 1 1 1 1 | 2 2 2 2 | 3 3 3 3 | 4 4 4 4 | 5 5 5 5 | ... |
-#            +--------------+---------+---------+---------+---------+---------+-----+
-#            | sample index | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | ... |
-#            +--------------+---------+---------+---------+---------+---------+-----+#
-#
-#        Shuffled data:
-#            +--------------+---------+---------+---------+---------+---------+-----+
-#            | repl. ind.   | 3 3 3 3 | 1 1 1 1 | 4 4 4 4 | 2 2 2 2 | 5 5 5 5 | ... |
-#            +--------------+---------+---------+---------+---------+---------+-----+
-#            | sample index | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | 1 2 3 4 | ... |
-#            +--------------+---------+---------+---------+---------+---------+-----+
 
         Args:
             process_list : int or list of int
@@ -259,11 +227,7 @@ class Data_spiketime():
                 The scaling exponent k for the bins in the embedding.
             embedding_step_size : float
                 Step size ∆t (in seconds) with which the window is slid through the data
-            replication_list : None, int or list of int
-                List or replications per process that should be extracted from the data
-                If set to None, all replications of the processes are extracted.
-                (default: None)
-            shuffle : bool
+           shuffle : bool
                 if true permute blocks of replications over trials
                 (default: False)
             output_spike_times : bool
@@ -272,18 +236,18 @@ class Data_spiketime():
 
         Returns:
             symbol_array : numpy array
-                array with dimensions no. process x no.replications
+                array with lengths of no. process
                 the raw joint symbols (over time) are included as nested array
             past_symbol_array : numpy array
-                array with dimensions no. process x no.replications
+                array with lengths of no. process
                 the raw past symbols (over time) are included as nested array
             current_symbol_array : numpy array
-                array with dimensions no. process x no.replications
+                array with lengths of no. process
                 the raw current symbols (over time) are included as nested array
             symbol_length : numpy array
-                array with dimensions no. process x no.replications including the length of joint symbols
+                array with lengths of no. process including the length of joint symbols
             spike_times : numpy array (optional)
-                array with dimensions no. process x no.replications
+                array with lengths of no. process
                 original spike times are included as nested array
         """
 
@@ -292,23 +256,6 @@ class Data_spiketime():
                                          'instance.')
 
         first_bin_size = self.get_first_bin_size_for_embedding(past_range_T, number_of_bins_d, scaling_k)
-
-        # Shuffle the replication order if requested. This creates surrogate
-        # data by permuting replications while keeping the order of samples
-        # intact.
-        if replication_list == None:
-            if shuffle:
-                replications_order = np.random.permutation(self.n_replications)
-            else:
-                replications_order = np.arange(self.n_replications)
-        else:
-            if isinstance(replication_list, list):
-                replications_order = replication_list
-            elif isinstance(replication_list, int):
-                replications_order = [replication_list]
-            else:
-                raise RuntimeError('Replication_list must be list or integer!')
-
 
         # create output array
         if isinstance(process_list, list):
@@ -319,69 +266,65 @@ class Data_spiketime():
         else:
             raise RuntimeError('Process_list must be list or integer!')
 
-        past_symbol_array = np.empty((processlen, len(replications_order)), dtype=np.ndarray)
-        current_symbol_array = np.empty((processlen, len(replications_order)), dtype=np.ndarray)
-        symbol_array = np.empty((processlen, len(replications_order)), dtype=np.ndarray)
-        symbol_array_lengths = np.empty((processlen, len(replications_order)), dtype=int)
+        past_symbol_array = np.empty(processlen, dtype=np.ndarray)
+        current_symbol_array = np.empty(processlen, dtype=np.ndarray)
+        symbol_array = np.empty(processlen, dtype=np.ndarray)
+        symbol_array_lengths = np.empty(processlen, dtype=int)
 
         if output_spike_times:
-            spike_times_array = np.empty((processlen, len(replications_order)), dtype=np.ndarray)
+            spike_times_array = np.empty(processlen, dtype=np.ndarray)
 
         # Retrieve data.
         i = 0
         for idx in process_list:
-            r = 0
-            for replication in replications_order:
-                try:
-                    spike_times = self.data[idx, replication]
-                    if FAST_EMBEDDING_AVAILABLE:
-                        int_symbols, int_past_symbols, int_current_symbols = \
-                            fast_emb.get_symbol_array(spike_times,
-                                                      past_range_T,
-                                                      number_of_bins_d,
-                                                      scaling_k,
-                                                      embedding_step_size,
-                                                      first_bin_size,
-                                                      self.exponent_base)
-                    else:
-                        raw_symbols = self.get_raw_symbols(spike_times,
-                                                           number_of_bins_d,
-                                                           scaling_k,
-                                                           first_bin_size,
-                                                           embedding_step_size)
+            spike_times = self.data[idx]
+            try:
+                if FAST_EMBEDDING_AVAILABLE:
+                    int_symbols, int_past_symbols, int_current_symbols = \
+                        fast_emb.get_symbol_array(spike_times,
+                                                  past_range_T,
+                                                  number_of_bins_d,
+                                                  scaling_k,
+                                                  embedding_step_size,
+                                                  first_bin_size,
+                                                  self.exponent_base)
+                else:
+                    raw_symbols = self.get_raw_symbols(spike_times,
+                                                       number_of_bins_d,
+                                                       scaling_k,
+                                                       first_bin_size,
+                                                       embedding_step_size)
 
-                        median_number_of_spikes_per_bin = self.get_median_number_of_spikes_per_bin(raw_symbols)
+                    median_number_of_spikes_per_bin = self.get_median_number_of_spikes_per_bin(raw_symbols)
 
-                        int_symbols = np.empty(shape=len(raw_symbols), dtype=int)
-                        int_past_symbols = np.empty(shape=len(raw_symbols), dtype=int)
-                        int_current_symbols = np.empty(shape=len(raw_symbols), dtype=int)
-                        j = 0
-                        for raw_symbol in raw_symbols:
-                            symbol = raw_symbol > median_number_of_spikes_per_bin
-                            past_symbol = symbol[0:-1]
-                            current_symbol = symbol[-1]
-                            symbol = symbol.astype(int)
-                            past_symbol = past_symbol.astype(int)
-                            current_symbol = current_symbol.astype(int)
-                            int_symbols[j] = int(self.symbol_array_to_binary(symbol))
-                            int_past_symbols[j] = int(self.symbol_array_to_binary(past_symbol))
-                            int_current_symbols[j] = int(current_symbol)
-                            j += 1
+                    int_symbols = np.empty(shape=len(raw_symbols), dtype=int)
+                    int_past_symbols = np.empty(shape=len(raw_symbols), dtype=int)
+                    int_current_symbols = np.empty(shape=len(raw_symbols), dtype=int)
+                    j = 0
+                    for raw_symbol in raw_symbols:
+                        symbol = raw_symbol > median_number_of_spikes_per_bin
+                        past_symbol = symbol[0:-1]
+                        current_symbol = symbol[-1]
+                        symbol = symbol.astype(int)
+                        past_symbol = past_symbol.astype(int)
+                        current_symbol = current_symbol.astype(int)
+                        int_symbols[j] = int(self.symbol_array_to_binary(symbol))
+                        int_past_symbols[j] = int(self.symbol_array_to_binary(past_symbol))
+                        int_current_symbols[j] = int(current_symbol)
+                        j += 1
 
-                    symbol_array[i, r] = int_symbols
-                    past_symbol_array[i, r] = int_past_symbols
-                    current_symbol_array[i, r] = int_current_symbols
-                    symbol_array_lengths[i, r] = len(int_symbols)
+                symbol_array[i] = int_symbols
+                past_symbol_array[i] = int_past_symbols
+                current_symbol_array[i] = int_current_symbols
+                symbol_array_lengths[i] = len(int_symbols)
 
-                    if output_spike_times:
-                        spike_times_array[i, r] = spike_times
+                if output_spike_times:
+                    spike_times_array[i] = spike_times
+            except IndexError:
+                raise IndexError('You tried to access process {0} in a '
+                                 'data set with {1} processes.'.format(idx, self.n_processes))
 
-                except IndexError:
-                    raise IndexError('You tried to access process {0} in a '
-                                     'data set with {1} processes.'.format(idx, self.n_processes))
-
-                r += 1
-            i += 1
+        i += 1
 
         if output_spike_times:
             return symbol_array, past_symbol_array, current_symbol_array, symbol_array_lengths, spike_times_array
@@ -512,9 +455,7 @@ class Data_spiketime():
                                            number_of_bins_d,
                                            scaling_k,
                                            embedding_step_size,
-                                           symbol_block_length=None,
-                                           replication_list=None):
-
+                                           symbol_block_length=None):
         """
         Get symbols using get_realisation_symbols of the processes and replications and then
         resample the symbols using boostrap method for each process and replication separately.
@@ -530,10 +471,6 @@ class Data_spiketime():
                 The scaling exponent k for the bins in the embedding.
             embedding_step_size : float
                 Step size ∆t (in seconds) with which the window is slid through the data
-            replication_list : None, int or list of int
-                List or replications per process that should be extracted from the data
-                If set to None, all replications of the processes are extracted.
-                (default: None)
             symbol_block_length : int
                 The number of symbols that should be drawn in each block for bootstrap resampling
                 If it is set to None (recommended), the length is automatically chosen, based
@@ -541,26 +478,15 @@ class Data_spiketime():
 
         Returns:
             bs_symbol_array : numpy array
-                array with dimensions no. process x no.replications
+                array with length no. process
                 the raw joint symbols (over time) are included as nested array
             bs_past_symbol_array : numpy array
-                array with dimensions no. process x no.replications
+                array with length no. process
                 the raw past symbols (over time) are included as nested array
             bs_current_symbol_array : numpy array
-                array with dimensions no. process x no.replications
+                array with length no. process
                 the raw current symbols (over time) are included as nested array
         """
-
-        if replication_list == None:
-            replications_order = np.arange(self.n_replications)
-        else:
-            if isinstance(replication_list, list):
-                replications_order = replication_list
-            elif isinstance(replication_list, int):
-                replications_order = [replication_list]
-            else:
-                raise RuntimeError('Replication_list must be list or integer!')
-        nr_replications = len(replications_order)
 
         # create output array
         if isinstance(process_list, list):
@@ -577,70 +503,67 @@ class Data_spiketime():
                                           number_of_bins_d,
                                           scaling_k,
                                           embedding_step_size,
-                                          replication_list=replication_list,
                                           shuffle=False,
                                           output_spike_times=False)
 
         # create output array
-        bs_symbol_array = np.empty((nr_processes, nr_replications), dtype=np.ndarray)
-        bs_past_symbol_array = np.empty((nr_processes, nr_replications), dtype=np.ndarray)
-        bs_current_symbol_array = np.empty((nr_processes, nr_replications), dtype=np.ndarray)
+        bs_symbol_array = np.empty(nr_processes, dtype=np.ndarray)
+        bs_past_symbol_array = np.empty(nr_processes, dtype=np.ndarray)
+        bs_current_symbol_array = np.empty(nr_processes, dtype=np.ndarray)
 
         # get bootstrap realisations - loop over processes
         for i in range(nr_processes):
-            for r in replications_order:
-                spike_times = self.data[process_list[i], r]
-                firing_rate = self.get_firingrate(process_list[i],
-                                                  r,
-                                                  embedding_step_size)
-                if symbol_block_length is None:
-                    symbol_block_length = max(1, int(1 / (firing_rate * embedding_step_size)))
+            spike_times = self.data[process_list[i]]
+            firing_rate = self.get_firingrate(process_list[i],
+                                              embedding_step_size)
+            if symbol_block_length is None:
+                symbol_block_length = max(1, int(1 / (firing_rate * embedding_step_size)))
 
+            else:
+                min_num_symbols = 1 + int((spike_times[-1] - spike_times[0]
+                                           - (past_range_T + embedding_step_size))
+                                          / embedding_step_size)
+                if symbol_block_length >= min_num_symbols:
+                    print("Warning. Block length too large given number of symbols. Skipping.")
+                    return []
+
+            try:
+                if FAST_EMBEDDING_AVAILABLE:
+                    bs_symbol, bs_past_symbol, bs_current_symbol = \
+                        fast_emb.get_bootstrap_arrays(symbol_array[i],
+                                                      past_symbol_array[i],
+                                                      current_symbol_array[i],
+                                                      symbol_block_length)
                 else:
-                    min_num_symbols = 1 + int((spike_times[-1] - spike_times[0]
-                                               - (past_range_T + embedding_step_size))
-                                              / embedding_step_size)
-                    if symbol_block_length >= min_num_symbols:
-                        print("Warning. Block length too large given number of symbols. Skipping.")
-                        return []
+                    bs_symbol = np.empty(len(symbol_array), dtype=int)
+                    bs_past_symbol = np.empty(len(symbol_array), dtype=int)
+                    bs_current_symbol = np.empty(len(symbol_array), dtype=int)
 
-                try:
-                    if FAST_EMBEDDING_AVAILABLE:
-                        bs_symbol, bs_past_symbol, bs_current_symbol = \
-                            fast_emb.get_bootstrap_arrays(symbol_array[i, r],
-                                                          past_symbol_array[i, r],
-                                                          current_symbol_array[i, r],
-                                                          symbol_block_length)
-                    else:
-                        bs_symbol = np.empty(len(symbol_array), dtype=int)
-                        bs_past_symbol = np.empty(len(symbol_array), dtype=int)
-                        bs_current_symbol = np.empty(len(symbol_array), dtype=int)
+                    on = 0
+                    for rep in range(int(np.floor(len(symbol_array[i]) / symbol_block_length))):
+                        randidx = np.random.randint(0, len(symbol_array[i]) - (symbol_block_length - 1))
+                        bs_symbol[on:on + symbol_block_length] = \
+                            symbol_array[i][randidx:randidx + symbol_block_length]
+                        bs_past_symbol[on:on + symbol_block_length] = \
+                            past_symbol_array[i][randidx:randidx + symbol_block_length]
+                        bs_current_symbol[on:on + symbol_block_length] = \
+                            current_symbol_array[i][randidx:randidx + symbol_block_length]
 
-                        on = 0
-                        for rep in range(int(np.floor(len(symbol_array[i, r]) / symbol_block_length))):
-                            randidx = np.random.randint(0, len(symbol_array[i, r]) - (symbol_block_length - 1))
-                            bs_symbol[on:on + symbol_block_length] = \
-                                symbol_array[i, r][randidx:randidx + symbol_block_length]
-                            bs_past_symbol[on:on + symbol_block_length] = \
-                                past_symbol_array[i, r][randidx:randidx + symbol_block_length]
-                            bs_current_symbol[on:on + symbol_block_length] = \
-                                current_symbol_array[i, r][randidx:randidx + symbol_block_length]
+                        on += symbol_block_length
 
-                            on += symbol_block_length
+                    res = int(len(symbol_array[i]) % symbol_block_length)
+                    randidx = np.random.randint(0, len(symbol_array) - (res - 1))
+                    bs_symbol[on:on + res] = symbol_array[i][randidx:randidx + res]
+                    bs_past_symbol[on:on + res] = past_symbol_array[i][randidx:randidx + res]
+                    bs_current_symbol[on:on + res] = current_symbol_array[i][randidx:randidx + res]
 
-                        res = int(len(symbol_array[i, r]) % symbol_block_length)
-                        randidx = np.random.randint(0, len(symbol_array) - (res - 1))
-                        bs_symbol[on:on + res] = symbol_array[i, r][randidx:randidx + res]
-                        bs_past_symbol[on:on + res] = past_symbol_array[i, r][randidx:randidx + res]
-                        bs_current_symbol[on:on + res] = current_symbol_array[i, r][randidx:randidx + res]
+                bs_symbol_array[i] = bs_symbol
+                bs_past_symbol_array[i] = bs_past_symbol
+                bs_current_symbol_array[i] = bs_current_symbol
 
-                    bs_symbol_array[i, r] = bs_symbol
-                    bs_past_symbol_array[i, r] = bs_past_symbol
-                    bs_current_symbol_array[i, r] = bs_current_symbol
-
-                except IndexError:
-                    raise IndexError('You tried to access process {0} in a '
-                                     'data set with {1} processes.'.format(i, self.n_processes))
+            except IndexError:
+                raise IndexError('You tried to access process {0} in a '
+                                 'data set with {1} processes.'.format(i, self.n_processes))
 
         return bs_symbol_array, bs_past_symbol_array, bs_current_symbol_array
 
@@ -662,39 +585,35 @@ class Data_spiketime():
         datafile = os.path.join(currentpath, 'test/data/spike_times.dat')
         spiketimes = np.loadtxt(datafile, dtype=float)
 
-        spiketimedata = np.empty(shape=(1, 1), dtype=np.ndarray)
-        spiketimedata[0, 0] = spiketimes
+        spiketimedata = np.empty(shape=(1), dtype=np.ndarray)
+        spiketimedata[0] = spiketimes
 
         np.random.seed(None)
         self.initial_state = np.random.get_state()
         self.exponent_base = 2
 
-        dim_order = 'pr'
-        self.set_data(spiketimedata, dim_order)
+        self.set_data(spiketimedata)
 
-    def get_recording_length(self, process, replication):
+    def get_recording_length(self, process):
         """get recording length of spike times"""
-        spike_times = self.data[process, replication]
+        spike_times = self.data[process]
         return spike_times[-1] - spike_times[0]
 
     def get_firingrate(self,
                        process,
-                       replication,
                        embedding_step_size):
         """get firing rate of spike times"""
-        spike_times = self.data[process, replication]
+        spike_times = self.data[process]
         recording_lengths = spike_times[-1] - spike_times[0]
         firing_rates = utl.get_binned_firing_rate(spike_times, embedding_step_size)
         return np.average(firing_rates, weights=recording_lengths)
 
     def get_H_spiking(self,
                       process,
-                      replication,
                       embedding_step_size
                       ):
         """get entropy of spike times"""
         firing_rate = self.get_firingrate(process,
-                                          replication,
                                           embedding_step_size)
         return utl.get_shannon_entropy([firing_rate * embedding_step_size, 1 - firing_rate * embedding_step_size])
 

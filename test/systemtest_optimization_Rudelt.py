@@ -25,10 +25,10 @@ def test_optimization_Rudelt_bbc():
     #    'debug': True}
 
     processes = [0]
-    replications = [0]
     optimization_rudelt = OptimizationRudelt(settings)
-    results_bbc = optimization_rudelt.optimize(data, processes, replications)
+    results_bbc = optimization_rudelt.optimize(data, processes)
 
+    a=1
 
 def test_optimization_Rudelt_shuffling():
     data = Data_spiketime()             # initialise empty data object
@@ -52,9 +52,8 @@ def test_optimization_Rudelt_shuffling():
     #    'debug': True}
 
     processes = [0]
-    replications = [0]
     optimization_rudelt = OptimizationRudelt(settings)
-    results_shuffling = optimization_rudelt.optimize(data, processes, replications)
+    results_shuffling = optimization_rudelt.optimize(data, processes)
 
 
 if __name__ == '__main__':

@@ -1063,11 +1063,10 @@ class ResultsSingleProcessRudelt():
             list of analysed processes
     """
 
-    def __init__(self, n_processes, n_replications):
+    def __init__(self, n_processes):
         self.settings = DotDict({})
         self.data_properties = DotDict({
-                'n_processes': n_processes,
-                'n_replications': n_replications
+                'n_processes': n_processes
         })
         self.processes_analysed = []
         self._single_process = {}
@@ -1083,15 +1082,15 @@ class ResultsSingleProcessRudelt():
     def processes_analysed(self, processes):
         self._processes_analysed = processes
 
-    def _add_single_result(self, process, replication, results, settings):
+    def _add_single_result(self, process, results, settings):
         """Add analysis result for a single process."""
         #self._check_result(process, settings)
         self.settings.update(DotDict(settings))
-        self._single_process[process][replication] = DotDict(results)
+        self._single_process[process] = DotDict(results)
         self.processes_analysed = list(self._single_process.keys())
 
-    def get_single_process(self, process, replication):
-        """Return results for a single process in the network.
+    def get_single_process(self, process):
+        """Return results for a single process in the network.  # --------------------------------------------------- TODO change DocString
 
         Return results for individual processes, contains for each process
 
@@ -1129,7 +1128,7 @@ class ResultsSingleProcessRudelt():
             raise RuntimeError('No results for process {0}.'.format(process))
 
         try:
-            return self._single_process[process][replication]
+            return self._single_process[process]
         except AttributeError:
             raise RuntimeError('No results have been added.')
         except KeyError:

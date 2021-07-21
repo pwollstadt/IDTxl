@@ -243,9 +243,9 @@ class OptimizationRudelt():
         return np.sum([first_bin_size * 10 ** ((number_of_bins_d - i) * scaling_k)
                        for i in range(1, number_of_bins_d + 1)])
 
-    def get_history_dependence(self, data, process, replication):
+    def get_history_dependence(self, data, process):
         """
-            Estimate the history dependence for each embedding to all given processes and replications.
+            Estimate the history dependence for each embedding to all given processes.
         """
 
         # load estimators
@@ -271,12 +271,11 @@ class OptimizationRudelt():
                                                   embedding[1],
                                                   embedding[2],
                                                   self.settings['embedding_step_size'],
-                                                  replication_list=[replication],
                                                   output_spike_times=False)
 
             if self.settings['estimation_method'] == 'bbc':
                 I_bbc, R_bbc, bbc_t = \
-                            estbbc.estimate(symbol_array[0, 0], past_symbol_array[0, 0], current_symbol_array[0, 0])
+                            estbbc.estimate(symbol_array[0], past_symbol_array[0], current_symbol_array[0])
                 history_dependence[embedding_count] = R_bbc
                 bbc_term[embedding_count] = bbc_t
 
@@ -284,7 +283,7 @@ class OptimizationRudelt():
                     print("\tHD: " + str(R_bbc) + " BBC: " + str(bbc_t))
 
             elif self.settings['estimation_method'] == 'shuffling':
-                I_sh, R_sh = estshu.estimate(symbol_array[0, 0])
+                I_sh, R_sh = estshu.estimate(symbol_array[0])
                 history_dependence[embedding_count] = R_sh
 
                 if self.settings['debug']:
@@ -321,19 +320,18 @@ class OptimizationRudelt():
                                                         embedding[1],
                                                         embedding[2],
                                                         self.settings['embedding_step_size'],
-                                                        replication_list=self.replication,
                                                         symbol_block_length=symbol_block_length)
 
             if self.settings['estimation_method'] == 'bbc':
                 I_bbc, R_bbc, bbc_t = \
-                    estbbc.estimate(bs_symbol_array[0, 0], bs_past_symbol_array[0, 0], bs_current_symbol_array[0, 0])
+                    estbbc.estimate(bs_symbol_array[0], bs_past_symbol_array[0], bs_current_symbol_array[0])
                 bs_Rs[rep] = R_bbc
 
                 if self.settings['debug']:
                     print("\tHD: " + str(R_bbc) + " BBC: " + str(bbc_t))
 
             elif self.settings['estimation_method'] == 'shuffling':
-                I_sh, R_sh = estshu.estimate(bs_symbol_array[0, 0])
+                I_sh, R_sh = estshu.estimate(bs_symbol_array[0])
                 bs_Rs[rep] = R_sh
 
                 if self.settings['debug']:
@@ -673,7 +671,7 @@ class OptimizationRudelt():
 
         return auto_MIs
 
-    def optimize(self, data, processes='all', replications='all'):
+    def optimize(self, data, processes='all'):
         """
         Optimize the embedding parameters of spike time data using the Rudelt history dependence estimator.
 
@@ -693,9 +691,6 @@ class OptimizationRudelt():
             processes : list of int
                 index of processes;
                 spike times are optimized all processes specified in the list separately.
-            replications : list of int
-                index of replications;
-                spike times are optimized all replications specified in the list separately.
 
         Returns: # -------------------------------------------------------------------------------------------------------- TODO
             ResultsSingleProcessRudelt instance
@@ -713,56 +708,41 @@ class OptimizationRudelt():
             raise ValueError('Processes were not specified correctly: '
                              '{0}.'.format(processes))
 
-        if replications == 'all':
-            replications = [t for t in range(data.n_replications)]
-        if (type(replications) is list) and (type(replications[0]) is int):
-            pass
-        else:
-            raise ValueError('Replications were not specified correctly: '
-                             '{0}.'.format(replications))
-
         if self.settings['debug']:
             import pprint
             pprint.pprint(self.settings, width=1)
 
         # open result dict
         results = ResultsSingleProcessRudelt(
-            n_processes=data.n_processes,
-            n_replications=data.n_replications)
+            n_processes=data.n_processes)
 
-        # start optimizing given processes and replications
+        # start optimizing given processes
         for process in processes:
-            for replication in replications:
 
-                # optimize single process/replication
-                single_result = self.optimize_single_run(data, process, replication)
+            # optimize single process
+            single_result = self.optimize_single_run(data, process)
 
-                results._add_single_result(
-                    process=process,
-                    replication=replication,
-                    settings=self.settings,
-                    results=single_result)
+            results._add_single_result(
+                process=process,
+                settings=self.settings,
+                results=single_result)
 
         return results
 
-    def optimize_single_run(self, data, process, replication):
+    def optimize_single_run(self, data, process):
         """
-            optimizes a single realisation of spike time data given the process and replication number
+            optimizes a single realisation of spike time data given the process number
 
             Args:
             data : Data_spiketime instance
                 raw data for analysis
             process : int
                 index of process;
-            replications : int
-                index of replication;
 
             Returns:
             returns a DotDict with the following keys
                 Process : int
                     Process that was optimized
-                Replication : int
-                    Replication that was optimized
                 estimation_method : String
                     Estimation method that was used for optimization
                 T_D : float
@@ -787,7 +767,7 @@ class OptimizationRudelt():
                 recording_length : float
                     Length of the recording (in seconds)
                 H_spiking : float
-                    Entropy of the spike time
+                    Entropy of the spike times
 
             if analyse_auto_MI was set to True additionally:
                 auto_MI : dict
@@ -801,14 +781,8 @@ class OptimizationRudelt():
         else:
             raise ValueError('Process is not specified correctly: '
                              '{0}.'.format(process))
-        if (type(replication) is int):
-            pass
-        else:
-            raise ValueError('Replication is not specified correctly: '
-                             '{0}.'.format(replication))
 
         self.process = process
-        self.replication = replication
 
         # get history dependence
         if self.settings['debug']:
@@ -816,10 +790,10 @@ class OptimizationRudelt():
 
         if self.settings['estimation_method'] == 'bbc':
             self.history_dependence, self.bbc_term = \
-                self.get_history_dependence(data, process, replication)
+                self.get_history_dependence(data, process) # --------------------------------------------------- TODO remove replica
         elif self.settings['estimation_method'] == 'shuffling':
             self.history_dependence = \
-                self.get_history_dependence(data, process, replication)
+                self.get_history_dependence(data, process) # --------------------------------------------------- TODO remove replica
 
         if self.settings['debug']:
             print("\n\nCompute CI\n")
@@ -845,7 +819,7 @@ class OptimizationRudelt():
         if self.settings['analyse_auto_MI']:
             if self.settings['debug']:
                 print("\nAnalyse auto MI\n")
-            spike_times = data.get_spike_times_single(process, replication)
+            spike_times = data.get_spike_times_single(process)
             self.analyse_auto_MI(spike_times)
 
         # get output values
@@ -860,13 +834,12 @@ class OptimizationRudelt():
                                                               first_bin_size,
                                                               opt_scaling_k) - T_D,
                                     0.005, tol=1e-03, maxiter=100)
-        firing_rate = data.get_firingrate(process, replication, self.settings['embedding_step_size'])
-        recording_length = data.get_recording_length(process, replication)
-        H_spiking = data.get_H_spiking(process, replication, self.settings['embedding_step_size'])
+        firing_rate = data.get_firingrate(process, self.settings['embedding_step_size'])
+        recording_length = data.get_recording_length(process)
+        H_spiking = data.get_H_spiking(process, self.settings['embedding_step_size'])
 
         if self.settings['debug']:
             print('Process: ' + str(process))
-            print('Replication: ' + str(replication))
             print('T_D: ' + str(T_D))
             print('tau_R: ' + str(tau_R))
             print('R_tot: ' + str(R_tot))
@@ -879,7 +852,6 @@ class OptimizationRudelt():
 
         # create output dict
         results = {'Process': process,
-                   'Replication': replication,
                    'estimation_method': self.settings['estimation_method'],
                    'T_D': T_D,
                    'tau_R': tau_R,
