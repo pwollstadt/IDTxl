@@ -22,25 +22,20 @@ except:
 class Data_spiketime():
     """Store data for Rudelt estimators and optimization.
 
-        Data takes a 1- or 2-dimensional numpy array representing   # --------------------------------------------------- TODO remove replications
-        realisations of spike times in dimensions: processes x replications.
-        hThe spike times for each process and replication needs to be added
-        as nested numpy arrays.
-        Indicate the actual order of dimensions in the provided array in a
-        two-character string, e.g. 'pr' for an array with realisations over
-        (1) processes and (2) replications.
+        Data takes a 1-dimensional numpy array representing the processes.
+        The spike times for each process needs to be added as nested numpy arrays.
 
         Example:
 
             >>> data_Rudelt = Data()              # initialise empty data object
             >>> data_Rudelt.load_Rudelt_data()    # load example data
             >>>
-            >>> # Create a numpy array for processes and replication
-            >>> spiketimedata = np.empty(shape=(2,3), dtype=np.ndarray) # 2 processes, 3 replications
-            >>> # add nested array of spike times, e.g. for first process and replication
-            >>> spiketimedata[0, 0] = [0.0032, 0.0043, ........]
+            >>> # Create a numpy array for all processes
+            >>> spiketimedata = np.empty(shape=(2), dtype=np.ndarray) # 2 processes
+            >>> # add nested array of spike times, e.g. for first process
+            >>> spiketimedata[0] = [0.0032, 0.0043, ........]
             >>> # insert the spiketimedata array into the data object:
-            >>> data = Data_spiketime(spiketimedata, dim_order='pr')
+            >>> data = Data_spiketime(spiketimedata)
 
         Note:
             Realisations are stored as attribute 'data'. This can only be set via
@@ -48,7 +43,7 @@ class Data_spiketime():
 
         Args:
             data : numpy array [optional]
-                1/2-dimensional array with nested spike time data    # --------------------------------------------------- TODO remove replications
+                1-dimensional array with nested spike time data
             dim_order : string [optional]
                 order of dimensions, accepts any combination of the characters
                 'p' and 'r' for processes and replications; must
@@ -69,20 +64,18 @@ class Data_spiketime():
                 realisations, can only be set via 'set_data' method
             n_processes : int
                 number of processes
-            n_replications : int   # --------------------------------------------------- TODO remove replications
-                number of replications
             n_spiketimes(process, replication) : int
                 number of spike times of given process and replication
 
         implemented in idtxl by Michael Lindner, Göttingen 2021
     """
 
-    def __init__(self, data=None, dim_order='pr', exponent_base=2, seed=None):
+    def __init__(self, data=None, exponent_base=2, seed=None):
         np.random.seed(seed)
         self.initial_state = np.random.get_state()
         self.exponent_base = exponent_base
         if data is not None:
-            self.set_data(data, dim_order)
+            self.set_data(data)
 
     @property
     def data(self):
@@ -109,21 +102,11 @@ class Data_spiketime():
             data : numpy array
                 1-dimensional array of realisations
         """
-        #if len(dim_order) > 2:   # --------------------------------------------------- TODO remove replications
-        #    raise RuntimeError('dim_order can not have more than two '
-        #                       'entries')
-        #if len(dim_order) != data.ndim:   # --------------------------------------------------- TODO remove
-        #    raise RuntimeError('Data array dimension ({0}) and length of '
-        #                       'dim_order ({1}) are not equal.'.format(
-        #                                   data.ndim, len(dim_order)))
-
-        # Bring data into the order processes x replications
-        #data_ordered = self._reorder_data(data)   # ------------------------------------------- TODO remove method
 
         # get number of processes and replications
         self._set_data_size(data)
         # get number of spike times and check arrays
-        self._get_nr_spiketimes(data)
+        self.get_nr_spiketimes(data)
 
         print('Adding data with properties: {0} processes '
               'with variable number of spike times: {1}'.format(self.n_processes,
@@ -158,7 +141,7 @@ class Data_spiketime():
 
     #    return data
 
-    def _get_nr_spiketimes(self, data):
+    def get_nr_spiketimes(self, data):
         """Get number of spike times for each process and replication"""
         n_spiketimes = np.empty(shape=(self.n_processes))
         for process in range(self.n_processes):
@@ -324,7 +307,7 @@ class Data_spiketime():
                 raise IndexError('You tried to access process {0} in a '
                                  'data set with {1} processes.'.format(idx, self.n_processes))
 
-        i += 1
+            i += 1
 
         if output_spike_times:
             return symbol_array, past_symbol_array, current_symbol_array, symbol_array_lengths, spike_times_array
@@ -610,8 +593,7 @@ class Data_spiketime():
 
     def get_H_spiking(self,
                       process,
-                      embedding_step_size
-                      ):
+                      embedding_step_size):
         """get entropy of spike times"""
         firing_rate = self.get_firingrate(process,
                                           embedding_step_size)
