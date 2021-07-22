@@ -569,14 +569,14 @@ class OptimizationRudelt():
             # bootstrap R for the max R, to get a good estimate for the standard deviation
             # which is used to determine R_tot
             max_R, max_R_T = utl.get_max_R_T(max_Rs)
-            self.settings['max_R'] = max_R
+            self.max_R = max_R
             self.max_R_T = max_R_T
             number_of_bins_d, scaling_k = embedding_maximising_R_at_T[max_R_T]
             embeddings = [(max_R_T, number_of_bins_d, scaling_k)]
 
         elif target_R == 'R_tot':
             T_D = self.get_temporal_depth_T_D()
-            self.settings['T_D'] = T_D
+            self.T_D = T_D
             number_of_bins_d, scaling_k = embedding_maximising_R_at_T[T_D]
 
             embeddings = [(T_D, number_of_bins_d, scaling_k)]
@@ -714,18 +714,26 @@ class OptimizationRudelt():
 
         # open result dict
         results = ResultsSingleProcessRudelt(
-            n_processes=data.n_processes)
+            processes=processes)
 
         # start optimizing given processes
+        process_count = 0
         for process in processes:
 
             # optimize single process
             single_result = self.optimize_single_run(data, process)
 
+            # add results of single process to result object
             results._add_single_result(
+                process_count=process_count,
                 process=process,
                 settings=self.settings,
                 results=single_result)
+
+            # remove results from single process from self
+            self.remove_subresults_single_process()
+
+            process_count += 1
 
         return results
 
@@ -872,3 +880,18 @@ class OptimizationRudelt():
         results_d = DotDict(results)
 
         return results_d
+
+    def remove_subresults_single_process(self):
+        """delete results from self from single process"""
+
+        del self.auto_MI
+        del self.bbc_term
+        del self.bs_history_dependence
+        del self.embedding_maximising_R_at_T
+        del self.history_dependence
+        del self.H_spiking
+        del self.max_R
+        del self.max_Rs
+        del self.max_R_T
+        del self.process
+        del self.T_D

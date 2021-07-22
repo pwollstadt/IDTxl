@@ -1062,14 +1062,14 @@ class ResultsSingleProcessRudelt():
             list of analysed processes
     """
 
-    def __init__(self, n_processes):
+    def __init__(self, processes):
         self.settings = DotDict({})
         self.data_properties = DotDict({
-                'n_processes': n_processes
+                'n_processes': len(processes)
         })
-        self.processes_analysed = []
+        self.processes_analysed = np.zeros(shape=3, dtype=int)
         self._single_process = {}
-        for ii in range(n_processes):
+        for ii in processes:
             self._single_process[ii] = {}
 
     @property
@@ -1081,12 +1081,12 @@ class ResultsSingleProcessRudelt():
     def processes_analysed(self, processes):
         self._processes_analysed = processes
 
-    def _add_single_result(self, process, results, settings):
+    def _add_single_result(self, process_count, process, results, settings):
         """Add analysis result for a single process."""
         #self._check_result(process, settings)
         self.settings.update(DotDict(settings))
         self._single_process[process] = DotDict(results)
-        self.processes_analysed = list(self._single_process.keys())
+        self.processes_analysed[process_count] = process #list(self._single_process.keys())
 
     def get_single_process(self, process):
         """Return results for a single process.
