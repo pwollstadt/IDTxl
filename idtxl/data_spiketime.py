@@ -210,9 +210,6 @@ class Data_spiketime():
                 The scaling exponent k for the bins in the embedding.
             embedding_step_size : float
                 Step size ∆t (in seconds) with which the window is slid through the data
-           shuffle : bool
-                if true permute blocks of replications over trials
-                (default: False)
             output_spike_times : bool
                 return the original spike times additionally to the symbols
                 (default: False)
@@ -486,7 +483,6 @@ class Data_spiketime():
                                           number_of_bins_d,
                                           scaling_k,
                                           embedding_step_size,
-                                          shuffle=False,
                                           output_spike_times=False)
 
         # create output array
@@ -599,4 +595,42 @@ class Data_spiketime():
                                           embedding_step_size)
         return utl.get_shannon_entropy([firing_rate * embedding_step_size, 1 - firing_rate * embedding_step_size])
 
+    def get_realisations(self,
+                         process_list):
+        """
+        Return arrays  original spike times for the given indices in process list.
+
+        Args:
+            process_list : int or list of int
+                list or processes that should be extracted from the data
+
+        Returns:
+            spike_times : numpy array (optional)
+                array with lengths of no. process
+                original spike times are included as nested array
+        """
+
+        # create output array
+        if isinstance(process_list, list):
+            processlen = len(process_list)
+        elif isinstance(process_list, int):
+            processlen = 1
+            process_list = [process_list]
+        else:
+            raise RuntimeError('Process_list must be list or integer!')
+
+        spike_times_array = np.empty(processlen, dtype=np.ndarray)
+
+        i = 0
+        for idx in process_list:
+            try:
+                spike_times = self.data[idx]
+                spike_times_array[i] = spike_times
+            except IndexError:
+                raise IndexError('You tried to access process {0} in a '
+                                 'data set with {1} processes.'.format(idx, self.n_processes))
+
+            i += 1
+
+        return spike_times_array
 

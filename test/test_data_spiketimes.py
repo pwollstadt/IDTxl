@@ -53,7 +53,7 @@ def test_load_Rudelt():
                                                                         'input spikketimes.')
 
 
-def test_get_realisations():
+def test_get_realisations_symbols():
     """Test low-level function for data retrieval."""
     # add multiple processes to data
     spiketimes = np.loadtxt(os.path.join(os.path.dirname(__file__),
@@ -267,10 +267,55 @@ def test_get_H_spiking():
     assert (abs(Hspiking - 0.09842958352312628) == 0), ('Entropy does not match the one of the example data')
 
 
+def test_get_realisations():
+    """Test low-level function for data retrieval."""
+    # add multiple processes to data
+    spiketimes = np.loadtxt(os.path.join(os.path.dirname(__file__),
+                                         'data/spike_times.dat'), dtype=float)
+    nr_processes = 10
+    spiketimedata2 = np.empty(shape=(nr_processes), dtype=np.ndarray)
+    nr_spikes = np.empty(shape=(nr_processes), dtype=int)
+
+    for i in range(nr_processes):
+        if i == 5:
+            spiketimedata2[i] = spiketimes
+            nr_spikes[i] = len(spiketimes)
+        else:
+            ran = np.random.rand(len(spiketimes)) * 1000
+            new = spiketimes + ran
+            sampl = int(np.random.uniform(low=0.6 * len(spiketimes), high=0.9 * len(spiketimes), size=(1,)))
+            nr_spikes[i] = sampl
+            spiketimedata2[i] = new[0:sampl]
+
+    data = Data_spiketime()
+    data.set_data(spiketimedata2)
+
+    # get realisation of single process
+    process_list = 5
+
+    orig_spiketimes = \
+        data.get_realisations(process_list)
+
+    assert (orig_spiketimes[0].T == spiketimes.T - min(spiketimes)).all(), ('Class ouput data does not match '
+                                                                            'input spiketimes.')
+
+    # get realisations of multiple processes
+    process_list = [1, 3, 5, 7, 8]
+
+    orig_spiketimes2 = data.get_realisations(process_list)
+
+    assert (len(orig_spiketimes2) == len(process_list)), \
+        ('length of spike time array does not match with '
+         'number of processes given')
+    for i in range(len(process_list)):
+        assert (orig_spiketimes2[i].T == spiketimedata2[process_list[i]].T - min(spiketimedata2[process_list[i]])).all(), \
+                'extracted spike times do not match the input spike times'
+
 if __name__ == '__main__':
     test_set_data()
     test_load_Rudelt()
-    test_get_realisations()
+    test_get_realisations_symbols()
     test_get_bootstrap_realisations()
     test_get_firingrate()
     test_get_H_spiking()
+    test_get_realisations()
