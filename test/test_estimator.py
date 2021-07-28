@@ -7,7 +7,7 @@ This functionality is handled by the estimator class and tested here.
 import inspect
 import pytest
 import numpy as np
-from idtxl.estimator import find_estimator
+from idtxl.estimator import _find_estimator
 from idtxl.multivariate_te import MultivariateTE
 from idtxl.estimators_jidt import JidtKraskovMI
 from test_estimators_jidt import jpype_missing, _get_gauss_data
@@ -17,18 +17,18 @@ def test_find_estimator():
     """Test dynamic loading of classes."""
 
     # Test if a class is returned.
-    e = find_estimator('JidtKraskovMI')
+    e = _find_estimator('JidtKraskovMI')
     assert inspect.isclass(e)
-    f = find_estimator(e)
+    f = _find_estimator(e)
     assert inspect.isclass(f)
 
     # Try loading non-existent estimator
     with pytest.raises(RuntimeError):
-        find_estimator('test')
+        _find_estimator('test')
 
     # Try using a class without an estimate method
     with pytest.raises(RuntimeError):
-        find_estimator(MultivariateTE)
+        _find_estimator(MultivariateTE)
 
 
 @jpype_missing
