@@ -499,16 +499,16 @@ class NetworkAnalysis():
 
             if self.settings['local_values']:
                 local_values = self._cmi_estimator_local.estimate(
-                    current_value_realisations,
-                    source_realisations,
-                    conditional_realisations)
+                    var1=current_value_realisations,
+                    var2=source_realisations,
+                    conditional=conditional_realisations)
                 links[i] = local_values.reshape(
                     max(replication_ind) + 1, sum(replication_ind == 0)).T
             else:
                 links[i] = self._cmi_estimator.estimate(
-                    current_value_realisations,
-                    source_realisations,
-                    conditional_realisations)
+                    var1=current_value_realisations,
+                    var2=source_realisations,
+                    conditional=conditional_realisations)
 
         return links
 
