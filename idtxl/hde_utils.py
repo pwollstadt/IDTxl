@@ -186,13 +186,11 @@ def hde_visualize_results(results, process, filename=None):
     settings = results.settings
     res = results.get_single_process(process)
 
-    # fig = plt.figure(figsize=(18, 18))
-    # ax0 = plt.subplot(121)
     plt.figure(figsize=(18, 18))
+    maintitle = "Results of Process " + str(res.Process) + " using estimation method " + settings['estimation_method']
+    plt.suptitle(maintitle, fontsize=25)
     plt.subplot(121)
-    row_labels = ['Estimation method',
-                  'Process',
-                  '$\mathit{T}_{D}$ [s]',
+    row_labels = ['$\mathit{T}_{D}$ [s]',
                   '$\\tau_{R}$ [s]',
                   '$\mathit{R}_{tot}$',
                   '$\mathit{R}_{tot}$ CI',
@@ -202,12 +200,17 @@ def hde_visualize_results(results, process, filename=None):
                   'firing rate [Hz]',
                   'recording length [s]',
                   'H spiking']
-    table_vals = [[settings['estimation_method']],
-                  [str(res.Process)],
-                  [str(round(res.T_D, 3))],
+    if res.R_tot_CI[0] is None:
+        r_tot_ci_lo = "nan"
+        r_tot_ci_hi = "nan"
+    else:
+        r_tot_ci_lo = str(round(res.R_tot_CI[0], 3))
+        r_tot_ci_hi = str(round(res.R_tot_CI[1], 3))
+
+    table_vals = [[str(round(res.T_D, 3))],
                   [str(round(res.tau_R, 3))],
                   [str(round(res.R_tot, 3))],
-                  [str(round(res.R_tot_CI[0], 3)) + ", " + str(round(res.R_tot_CI[0], 3))],
+                  [r_tot_ci_lo + ", " + r_tot_ci_hi],
                   [str(round(res.opt_number_of_bins_d, 3))],
                   [str(round(res.opt_scaling_k, 3))],
                   [str(round(res.opt_first_bin_size, 3))],
