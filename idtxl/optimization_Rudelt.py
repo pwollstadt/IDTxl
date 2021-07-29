@@ -6,6 +6,7 @@ from sys import stderr
 from idtxl.estimators_Rudelt import RudeltBBCEstimator, RudeltShufflingEstimator
 import idtxl.hde_utils as utl
 from idtxl.results import DotDict, ResultsSingleProcessRudelt
+import os
 
 
 # noinspection PyAttributeOutsideInit
@@ -58,7 +59,8 @@ class OptimizationRudelt():
                 (default: 0.05)
             - return_averaged_R : bool
                 Return R_tot as the average over R(T) for T in [T_D, T_max], instead of R_tot = R(T_D).
-                If set to True, the setting for number_of_bootstraps_R_tot (see below) is ignored and set to 0.
+                If set to True, the setting for number_of_bootstraps_R_tot (see below) is ignored and set to 0
+                and CI bounds are not calculated.
                 (default: True)
             - timescale_minimum_past_range : float
                 Minimum past range T_0 (in seconds) to take into consideration for the estimation of the
@@ -114,7 +116,19 @@ class OptimizationRudelt():
                     The maximum delay (in seconds) between the past bin and the response.
                     (default: 5)
 
-            - debug
+            - visualization : bool
+                create .eps output image showing the optimization values and graphs for
+                the history dependence and the auto mutual information
+                (default: False)
+                if set to True:
+                - output_path : String
+                    Path where the .eps images should be saved
+                - output_prefix : String
+                    Prefix of the output images
+                    e.g. <output_prefix>_process0.eps
+
+            - debug: bool
+                show values while calculating
                 (default: False)
     """
 
@@ -154,11 +168,14 @@ class OptimizationRudelt():
         self.settings.setdefault('bootstrap_CI_use_sd', True)
         self.settings.setdefault('bootstrap_CI_percentile_lo', 2.5)
         self.settings.setdefault('bootstrap_CI_percentile_hi', 97.5)
+        self.settings.setdefault('visualization', False)
         self.settings.setdefault('debug', False)
 
         self.embeddings = self.get_embeddings(self.settings['embedding_past_range_set'],
                                               self.settings['embedding_number_of_bins_set'],
                                               self.settings['embedding_scaling_exponent_set'])
+
+        self.check_inputs()
 
     @staticmethod
     def _check_settings(settings=None):
@@ -174,6 +191,19 @@ class OptimizationRudelt():
             raise TypeError('settings should be a dictionary.')
         else:
             return settings
+
+    def check_inputs(self):
+        """
+        Check input settings for completeness
+
+        """
+
+
+        if self.settings['visualization']:
+            assert ('output_path' in self.settings), \
+                'If visualization is set to True an output path has to be specified (see help)!'
+            assert ('output_prefix' in self.settings), \
+                'If visualization is set to True an output prefix has to be specified (see help)!'
 
     def get_embeddings(self,
                        embedding_past_range_set,
@@ -696,13 +726,17 @@ class OptimizationRudelt():
             ResultsSingleProcessRudelt instance
                 results of Rudelt optimization, see documentation of
                 ResultsSingleProcessRudelt()
-
+            if visulization in settings was set True (see class OptimizationRudelt):
+                .eps images are created for each optimized process containing:
+                    - optimized values for the process
+                    - graph for the history dependence
+                    - graph for auto mutual information (if calculated)
 
         """
 
         if processes == 'all':
             processes = [t for t in range(data.n_processes)]
-        if (type(processes) is list) and (type(processes[0]) is int):
+        elif (type(processes) is list) and (type(processes[0]) is int):
             pass
         else:
             raise ValueError('Processes were not specified correctly: '
@@ -730,10 +764,15 @@ class OptimizationRudelt():
                 settings=self.settings,
                 results=single_result)
 
+            process_count += 1
+
+            if self.settings['visualization'] == True:
+                filename = os.path.join(self.settings['output_path'], self.settings['output_prefix']) + \
+                           "_process" + str(process) + '.svg'
+                utl.hde_visualize_results(results, process, filename)
+
             # remove results from single process from self
             self.remove_subresults_single_process()
-
-            process_count += 1
 
         return results
 
@@ -798,10 +837,10 @@ class OptimizationRudelt():
 
         if self.settings['estimation_method'] == 'bbc':
             self.history_dependence, self.bbc_term = \
-                self.get_history_dependence(data, process) # --------------------------------------------------- TODO remove replica
+                self.get_history_dependence(data, process)
         elif self.settings['estimation_method'] == 'shuffling':
             self.history_dependence = \
-                self.get_history_dependence(data, process) # --------------------------------------------------- TODO remove replica
+                self.get_history_dependence(data, process)
 
         if self.settings['debug']:
             print("\n\nCompute CI\n")
@@ -830,6 +869,7 @@ class OptimizationRudelt():
             spike_times = data.get_spike_times_single(process)
             self.analyse_auto_MI(spike_times)
 
+
         # get output values
         T_D = self.get_temporal_depth_T_D()
         tau_R = self.get_information_timescale_tau_R()
@@ -846,11 +886,28 @@ class OptimizationRudelt():
         recording_length = data.get_recording_length(process)
         H_spiking = data.get_H_spiking(process, self.settings['embedding_step_size'])
 
+        # get CI bounds
+        if not self.settings['return_averaged_R']:
+            embedding = (T_D,
+                         opt_number_of_bins_d,
+                         opt_scaling_k)
+            emb_ind = self.embeddings.index(embedding)
+            R_tot_CI_lo, R_tot_CI_hi = utl.get_CI_bounds(R_tot,
+                                                         self.bs_history_dependence[emb_ind],
+                                                         self.settings['bootstrap_CI_use_sd'],
+                                                         self.settings['bootstrap_CI_percentile_lo'],
+                                                         self.settings['bootstrap_CI_percentile_hi'])
+        else:
+            R_tot_CI_lo = None
+            R_tot_CI_hi = None
+        R_tot_CI = [R_tot_CI_lo, R_tot_CI_hi]
+
         if self.settings['debug']:
             print('Process: ' + str(process))
             print('T_D: ' + str(T_D))
             print('tau_R: ' + str(tau_R))
             print('R_tot: ' + str(R_tot))
+            print('R_tot_CI: ' + str(R_tot_CI))
             print('opt_number_of_bins_d: ' + str(opt_number_of_bins_d))
             print('opt_scaling_k: ' + str(opt_scaling_k))
             print('opt_first_bin_size: ' + str(opt_first_bin_size))
@@ -864,14 +921,16 @@ class OptimizationRudelt():
                    'T_D': T_D,
                    'tau_R': tau_R,
                    'R_tot': R_tot,
-                   'AIS_tot': R_tot * self.H_spiking,
+                   'R_tot_CI': R_tot_CI,
+                   'AIS_tot': R_tot * H_spiking,
                    'opt_number_of_bins_d': opt_number_of_bins_d,
                    'opt_scaling_k': opt_scaling_k,
                    'opt_first_bin_size': opt_first_bin_size,
                    'history_dependence': self.history_dependence,
                    'firing_rate': firing_rate,
                    'recording_length': recording_length,
-                   'H_spiking': H_spiking}
+                   'H_spiking': H_spiking,
+                   'max_R': max_Rs}
 
         if self.settings['analyse_auto_MI']:
             results['auto_MI'] = self.auto_MI.get('auto_MI')
@@ -884,14 +943,16 @@ class OptimizationRudelt():
     def remove_subresults_single_process(self):
         """delete results from self from single process"""
 
-        del self.auto_MI
-        del self.bbc_term
         del self.bs_history_dependence
         del self.embedding_maximising_R_at_T
         del self.history_dependence
-        del self.H_spiking
         del self.max_R
         del self.max_Rs
         del self.max_R_T
         del self.process
         del self.T_D
+        if self.settings['analyse_auto_MI']:
+            del self.auto_MI
+            del self.H_spiking
+        if self.settings['estimation_method'] == 'bbc':
+            del self.bbc_term
