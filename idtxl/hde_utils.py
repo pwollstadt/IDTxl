@@ -1,6 +1,6 @@
 """Utils for the history dependence estimators
 
-from:
+All but the visualization function are adapted from:
     [1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding
         optimization reveals long-lasting history dependence in
         neural spiking activity (in prep.)
@@ -13,6 +13,7 @@ implemented in idtxl by Michael Lindner, Göttingen 2021
 
 import numpy as np
 from collections import Counter
+import matplotlib.pyplot as plt
 
 
 def get_CI_bounds(R,
@@ -34,7 +35,7 @@ def get_CI_bounds(R,
     else:
         CI_lo = np.percentile(bs_Rs, bootstrap_CI_percentile_lo)
         CI_hi = np.percentile(bs_Rs, bootstrap_CI_percentile_hi)
-    return (CI_lo, CI_hi)
+    return CI_lo, CI_hi
 
 
 def add_up_dicts(dicts):
@@ -159,3 +160,102 @@ def get_past_symbol_counts(symbol_counts, merge=True):
     else:
         return past_symbol_counts
 
+
+def hde_visualize_results(results, process, filename=None):
+    """
+    This method provides a plot or an output .eps image for the given process containing:
+        - optimized values for the process
+        - graph for the history dependence
+        - graph for auto mutual information (if calculated)
+
+    implemented in idtxl by Michael Lindner, Göttingen 2021
+
+    Args:
+        results : ResultsSingleProcessRudelt instance
+            Results from optimization_Rudelt
+        process : int
+            index of optimized process
+        filename : String
+            path and filename where the result image should be store.
+            If filename is not set or None, the result image is shown
+
+    Returns:
+        returns a plot or an .eps image with the content mentioned above
+
+    """
+    settings = results.settings
+    res = results.get_single_process(process)
+
+    # fig = plt.figure(figsize=(18, 18))
+    # ax0 = plt.subplot(121)
+    plt.figure(figsize=(18, 18))
+    plt.subplot(121)
+    row_labels = ['Estimation method',
+                  'Process',
+                  '$\mathit{T}_{D}$ [s]',
+                  '$\\tau_{R}$ [s]',
+                  '$\mathit{R}_{tot}$',
+                  '$\mathit{R}_{tot}$ CI',
+                  'opt. $\mathit{d}$',
+                  'opt. $\mathit{k}$',
+                  'opt. $\\tau_{1}$ [s]',
+                  'firing rate [Hz]',
+                  'recording length [s]',
+                  'H spiking']
+    table_vals = [[settings['estimation_method']],
+                  [str(res.Process)],
+                  [str(round(res.T_D, 3))],
+                  [str(round(res.tau_R, 3))],
+                  [str(round(res.R_tot, 3))],
+                  [str(round(res.R_tot_CI[0], 3)) + ", " + str(round(res.R_tot_CI[0], 3))],
+                  [str(round(res.opt_number_of_bins_d, 3))],
+                  [str(round(res.opt_scaling_k, 3))],
+                  [str(round(res.opt_first_bin_size, 3))],
+                  [str(round(res.firing_rate, 1))],
+                  [str(round(res.recording_length, 1))],
+                  [str(round(res.H_spiking, 3))]]
+    the_table = plt.table(cellText=table_vals,
+                          colWidths=[0.1] * 3,
+                          rowLabels=row_labels,
+                          loc='center', edges='open')
+    the_table.auto_set_font_size(False)
+    the_table.set_fontsize(20)
+    the_table.scale(4, 4)
+    plt.axis('off')
+    ax1 = plt.subplot(222)
+    y = np.zeros(len(res.max_R))
+    count = 0
+    for key in res.max_R:
+        y[count] = res.max_R[key]
+        count += 1
+    x = settings['embedding_past_range_set']
+    ax1.plot(x, y)
+    ax1.axvline(x=res.tau_R, color='k', ls='--', label=r"$\tau_R$")
+    ax1.set_xscale('log')
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(x, fontsize=6)
+    ax1.title.set_text('History Dependence')
+    ax1.legend(loc="lower right")
+    ax1.set_ylabel('History Dependence R')
+
+    ax2 = plt.subplot(224)
+    ax2.title.set_text('Auto Mutual Information')
+    if 'auto_MI' in res:
+        leg2 = []
+        for key in res.auto_MI.keys():
+            y = res.auto_MI[key]
+            leg2.append(key)
+            x = np.linspace(0, settings['auto_MI_max_delay'], len(res.auto_MI[key]))
+            ax2.plot(x, y, label=str(int(float(key) * 1000)))
+        ax2.set_xscale('log')
+        ax2.set_ylabel('normalized Auto MI')
+        ax2.legend(loc="upper right", title="bin size [ms]")
+    else:
+        plt.text(0.5, 0.5, 'was not calculated', horizontalalignment='center',
+                 verticalalignment='center', transform=ax2.transAxes)
+        plt.axis('off')
+
+    if filename is None:
+        plt.show()
+    else:
+        plt.savefig(filename, format='svg')
