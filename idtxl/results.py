@@ -1060,6 +1060,45 @@ class ResultsSingleProcessRudelt():
                 - n_processes : int - total number of processes analysed
         processes_analysed : list
             list of analysed processes
+        _single_processes : dict
+            containing the results of all analysed processes
+            The results of each process can be extracted using:
+                >>> <single_process_result> = <result>.get_single_process(<process_index>)
+                The extracted single process results contains a DotDict with the following entries:
+                    Process : int
+                        Process that was optimized
+                    estimation_method : String
+                        Estimation method that was used for optimization
+                    T_D : float
+                        Estimated optimal value for the temporal depth TD
+                    tau_R :
+                        Information timescale tau_R, a characteristic timescale of history
+                        dependence similar to an autocorrelation time.
+                    R_tot : float
+                        Estimated value for the total history dependence Rtot,
+                    AIS_tot : float
+                        Estimated value for the total active information storage
+                    opt_number_of_bins_d : int
+                        Number of bins d for the embedding that yields (R̂tot ,T̂D)
+                    opt_scaling_k : int
+                        Scaling exponent κ for the embedding that yields (R̂tot , T̂D)
+                    opt_first_bin_size : int
+                        Size of the first bin τ1 for the embedding that yields (R̂tot , T̂D ),
+                    history_dependence : array with floating-point values
+                        Estimated history dependence for each embedding
+                    firing_rate : float
+                        Firing rate of the neuron/ spike train
+                    recording_length : float
+                        Length of the recording (in seconds)
+                    H_spiking : float
+                        Entropy of the spike times
+
+                    if analyse_auto_MI was set to True additionally:
+                    auto_MI : dict
+                        numpy array of MI values for each delay
+                    auto_MI_delays : list of int
+                        list of delays depending on the given auto_MI_bin_sizes and auto_MI_max_delay
+
     """
 
     def __init__(self, processes):
