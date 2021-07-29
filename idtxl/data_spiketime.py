@@ -514,9 +514,9 @@ class Data_spiketime():
                                                       current_symbol_array[i],
                                                       symbol_block_length)
                 else:
-                    bs_symbol = np.empty(len(symbol_array), dtype=int)
-                    bs_past_symbol = np.empty(len(symbol_array), dtype=int)
-                    bs_current_symbol = np.empty(len(symbol_array), dtype=int)
+                    bs_symbol = np.empty(len(symbol_array[i]), dtype=int)
+                    bs_past_symbol = np.empty(len(symbol_array[i]), dtype=int)
+                    bs_current_symbol = np.empty(len(symbol_array[i]), dtype=int)
 
                     on = 0
                     for rep in range(int(np.floor(len(symbol_array[i]) / symbol_block_length))):
@@ -531,7 +531,7 @@ class Data_spiketime():
                         on += symbol_block_length
 
                     res = int(len(symbol_array[i]) % symbol_block_length)
-                    randidx = np.random.randint(0, len(symbol_array) - (res - 1))
+                    randidx = np.random.randint(0, len(symbol_array[i]) - (res - 1))
                     bs_symbol[on:on + res] = symbol_array[i][randidx:randidx + res]
                     bs_past_symbol[on:on + res] = past_symbol_array[i][randidx:randidx + res]
                     bs_current_symbol[on:on + res] = current_symbol_array[i][randidx:randidx + res]
