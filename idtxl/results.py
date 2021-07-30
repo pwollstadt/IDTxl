@@ -1041,7 +1041,7 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
 class ResultsSingleProcessRudelt():
     """Store results of single process analysis.
 
-    Provide a container for the results of algorithms for the Rudelt estimators
+    Provides a container for the results Rudelt optimization algorithm
 
     Note that for convenience all dictionaries in this class can additionally
     be accessed using dot-notation:
