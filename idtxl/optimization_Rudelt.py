@@ -7,14 +7,14 @@ from idtxl.estimators_Rudelt import RudeltBBCEstimator, RudeltShufflingEstimator
 import idtxl.hde_utils as utl
 from idtxl.results import DotDict, ResultsSingleProcessRudelt
 import os
+from idtxl.data_spiketime import Data_spiketime
 
 
 # noinspection PyAttributeOutsideInit
 class OptimizationRudelt():
     """
     Optimization of embedding parameters of spike times using the history dependence estimators
-    # ----------------------------------------------------------------------------------------------------------------------- TODO
-
+    
     References:
 
         [1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding
@@ -32,10 +32,10 @@ class OptimizationRudelt():
             - embedding_step_size : float
                 Step size delta t (in seconds) with which the window is slid through the data.
                 (default: 0.005)
-            - embedding_number_of_bins_set : array of integer values
+            - embedding_number_of_bins_set : list of integer values
                 Set of values for d, the number of bins in the embedding.
                 (default: [1, 2, 3, 4, 5])
-            - embedding_past_range_set : array of floating-point values
+            - embedding_past_range_set : list of floating-point values
                 Set of values for T, the past range (in seconds) to be used for embeddings.
                 (default: [0.005, 0.00561, 0.00629, 0.00706, 0.00792, 0.00889, 0.00998, 0.01119, 0.01256,
                            0.01409, 0.01581, 0.01774, 0.01991, 0.02233, 0.02506, 0.02812, 0.03155, 0.0354,
@@ -46,8 +46,7 @@ class OptimizationRudelt():
                            3.53973, 3.97164, 4.45625, 5.0])
             - embedding_scaling_exponent_set : dict
                 Set of values for kappa, the scaling exponent for the bins in the embedding.
-                Should be either an array of floating-point values or a python-dictionary with the
-                three entries 'number_of_scalings', 'min_first_bin_size' and
+                Should be a python-dictionary with the three entries 'number_of_scalings', 'min_first_bin_size' and
                 'min_step_for_scaling'.
                 defaults: {'number_of_scalings': 10,
                            'min_first_bin_size': 0.005,
@@ -109,7 +108,7 @@ class OptimizationRudelt():
                 perform calculation of auto mutual information of the spike train
                 (default: True)
                 If set to True:
-                - auto_MI_bin_size_set : array of floating-point values
+                - auto_MI_bin_size_set : list of floating-point values
                     Set of values for the sizes of the bins (in seconds).
                     (default: [0.005, 0.01, 0.025, 0.05, 0.25, 0.5])
                 - auto_MI_max_delay : int
@@ -133,7 +132,7 @@ class OptimizationRudelt():
     """
 
     def __init__(self, settings=None):
-        settings = self._check_settings(settings)              # ------------------------------------------------------------- TODO CHECK INPUTS
+        settings = self._check_settings(settings)
         self.settings = settings.copy()
 
         self.settings.setdefault('embedding_step_size', 0.005)
@@ -171,11 +170,12 @@ class OptimizationRudelt():
         self.settings.setdefault('visualization', False)
         self.settings.setdefault('debug', False)
 
+        self.check_inputs()                                 # ------------------------------------------------------------- TODO CHECK INPUTS
+
         self.embeddings = self.get_embeddings(self.settings['embedding_past_range_set'],
                                               self.settings['embedding_number_of_bins_set'],
                                               self.settings['embedding_scaling_exponent_set'])
 
-        self.check_inputs()
 
     @staticmethod
     def _check_settings(settings=None):
@@ -198,8 +198,93 @@ class OptimizationRudelt():
 
         """
 
+        args_float = ['embedding_step_size',
+                      'timescale_minimum_past_range',
+                      'bootstrap_CI_percentile_lo',
+                      'bootstrap_CI_percentile_hi',
+                      'bbc_tolerance']
+        for key in args_float:
+            assert (key in self.settings), \
+                (key + ' has to be specified (see help)!')
+            assert (isinstance(self.settings[key], float)), \
+                ("Error: setting '" + key + "' needs to an floating point value (see help!!). Aborting.")
+
+        args_int = ['number_of_bootstraps_R_max',
+                    'number_of_bootstraps_R_tot',
+                    'number_of_bootstraps_nonessential']
+        for key in args_int:
+            assert (key in self.settings), \
+                (key + ' has to be specified (see help)!')
+            assert (isinstance(self.settings[key], int)), \
+                ("Error: setting '" + key + "' needs to an integer value (see help!!). Aborting.")
+
+        args_bool = ['return_averaged_R',
+                     'bootstrap_CI_use_sd',
+                     'debug']
+        for key in args_bool:
+            assert (key in self.settings), \
+                (key + ' has to be specified (see help)!')
+            assert (isinstance(self.settings[key], bool)), \
+                ("Error: setting '" + key + "' needs to a boolean expression (see help!!). Aborting.")
+
+        assert('embedding_past_range_set' in self.settings), \
+            'embedding_past_range_set has to be specified (see help)!'
+        assert (isinstance(self.settings['embedding_past_range_set'], list)), \
+            "Error: setting 'embedding_past_range_set' needs to a numpy array but is defined as {0}. " \
+            "Aborting.".format(type(self.settings['embedding_past_range_set']))
+
+        assert ('embedding_number_of_bins_set' in self.settings), \
+            'embedding_number_of_bins_set has to be specified (see help)!'
+        assert (isinstance(self.settings['embedding_number_of_bins_set'], list)), \
+            "Error: setting 'embedding_number_of_bins_set' needs to a numpy array but is defined as {0}. " \
+            "Aborting.".format(type(self.settings['embedding_number_of_bins_set']))
+
+        assert ('embedding_scaling_exponent_set' in self.settings), \
+            'embedding_scaling_exponent_set has to be specified (see help)!'
+
+        assert ('number_of_scalings' in self.settings['embedding_scaling_exponent_set']), \
+            "'number_of_scalings' have to be specified in self.settings['embedding_scaling_exponent_set'] (see help)!"
+        assert (isinstance(self.settings['embedding_scaling_exponent_set']['number_of_scalings'], int)), \
+            "Error: setting 'number_of_scalings' needs to be an integer value but is defined as {0}. " \
+            "Aborting.".format(type(self.settings['number_of_scalings']))
+        assert ('min_first_bin_size' in self.settings['embedding_scaling_exponent_set']), \
+            "'min_first_bin_size' have to be specified in self.settings['embedding_scaling_exponent_set'] (see help)!"
+        assert (isinstance(self.settings['embedding_scaling_exponent_set']['min_first_bin_size'], float)), \
+            "Error: setting 'min_first_bin_sizes' needs to be a floating point value but is defined as {0}. " \
+            "Aborting.".format(type(self.settings['min_first_bin_sizes']))
+        assert ('min_step_for_scaling' in self.settings['embedding_scaling_exponent_set']), \
+            "'min_step_for_scaling' have to be specified in self.settings['embedding_scaling_exponent_set'] (see help)!"
+        assert (isinstance(self.settings['embedding_scaling_exponent_set']['min_step_for_scaling'], float)), \
+            "Error: setting 'min_step_for_scaling' needs to be a floating point value but is defined as {0}. " \
+            "Aborting.".format(type(self.settings['min_step_for_scaling']))
+
+
+        assert ('symbol_block_length' in self.settings), \
+            'symbol_block_length has to be specified (see help)!'
+        if self.settings['symbol_block_length'] is not None:
+            assert (isinstance(self.settings['symbol_block_length'], int)), \
+                "Error: setting 'symbol_block_length' needs to an integer value but is defined as {0}. " \
+                "Aborting.".format(type(self.settings['symbol_block_length']))
+
+        if self.settings['analyse_auto_MI']:
+            assert (isinstance(self.settings['analyse_auto_MI'], bool)), \
+                "Error: setting 'analyse_auto_MI' needs to be a boolean expression but is defined as {0}. " \
+                "Aborting.".format(type(self.settings['analyse_auto_MI']))
+            assert ('auto_MI_bin_size_set' in self.settings), \
+                'If analyse_auto_MI is set to True, auto_MI_bin_size_set has to be specified (see help)!'
+            assert (isinstance(self.settings['auto_MI_bin_size_set'], list)), \
+                "Error: setting 'auto_MI_bin_size_set' needs to a numpy array but is defined as {0}. " \
+                "Aborting.".format(type(self.settings['auto_MI_bin_size_set']))
+            assert ('auto_MI_max_delay' in self.settings), \
+                'If analyse_auto_MI is set to True, auto_MI_max_delay has to be specified (see help)!'
+            assert (isinstance(self.settings['auto_MI_max_delay'], int)), \
+                "Error: setting 'auto_MI_max_delay' needs to be an integer value but is defined as {0}. " \
+                "Aborting.".format(type(self.settings['auto_MI_max_delay']))
 
         if self.settings['visualization']:
+            assert (isinstance(self.settings['visualization'], bool)), \
+                "Error: setting 'visualization' needs to be boolean but is defined as {0}. " \
+                "Aborting.".format(type(self.settings['visualization']))
             assert ('output_path' in self.settings), \
                 'If visualization is set to True an output path has to be specified (see help)!'
             assert ('output_prefix' in self.settings), \
@@ -734,6 +819,12 @@ class OptimizationRudelt():
 
         """
 
+        # check input data
+        if type(data) != Data_spiketime:
+            raise ValueError('Input Data nneds to be Data_spiketime object but is defined as: '
+                             '{0}.'.format(type(data)))
+
+        # check input process list
         if processes == 'all':
             processes = [t for t in range(data.n_processes)]
         elif (type(processes) is list) and (type(processes[0]) is int):
