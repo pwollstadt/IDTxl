@@ -311,6 +311,7 @@ def test_get_realisations():
         assert (orig_spiketimes2[i].T == spiketimedata2[process_list[i]].T - min(spiketimedata2[process_list[i]])).all(), \
                 'extracted spike times do not match the input spike times'
 
+
 if __name__ == '__main__':
     test_set_data()
     test_load_Rudelt()
