@@ -3,7 +3,7 @@
 import logging
 import numpy as np
 from scipy.optimize import newton, minimize
-import ast
+import sys
 from sys import exit, stderr
 from idtxl.estimator import Estimator
 import idtxl.hde_utils as utl
@@ -57,14 +57,18 @@ class RudeltAbstractEstimator(Estimator):
     """
 
     def __init__(self, settings=None):
-                # ---------------------------------------------------------------------------------------------------------- TODO check input and chekc inf settings are given from optimization
-        # Get defaults for estimator settings
-        settings = self._check_settings(settings)
+        # check settings
+        settings = self._check_settings()
+        # import given settings
         self.settings = settings.copy()
+
+        # Get defaults for estimator settings
         self.settings.setdefault('normalize', True)
         self.settings.setdefault('embedding_step_size', 0.005)
         self.settings.setdefault('return_averaged_R', True)
 
+        # check settings
+        self._check_input_settings()
 
     def is_parallel(self):
         return False
@@ -72,6 +76,83 @@ class RudeltAbstractEstimator(Estimator):
     def is_analytic_null_estimator(self):
         return False
 
+    def _check_settings(self, settings=None):
+        """Set default for settings dictionary.
+
+        Check if settings dictionary is None. If None, initialise an empty
+        dictionary. If not None check if type is dictionary. Function should be
+        called before setting default values.
+        """
+        if settings is None:
+            return {}
+        elif type(settings) is not dict:
+            raise TypeError('settings should be a dictionary.')
+        else:
+            return settings
+
+    def _check_input_settings(self):
+
+        # check that required settings are defined
+        required_settings = ['normalize',
+                             'embedding_step_size',
+                             'return_averaged_R']
+
+        # check if all settings are defined
+        for required_setting in required_settings:
+            if not required_setting in self.settings:
+                sys.exit("Error in settings file: {} is not defined. Aborting.".format(required_setting))
+
+        assert (isinstance(self.settings['normalize'], bool)), \
+                                    "Error: setting 'normalize' needs to be boolean but is defined as {0}. " \
+                                     "Aborting.".format(type(self.settings['normalize']))
+
+        assert (isinstance(self.settings['return_averaged_R'], bool)),\
+                                    "Error: setting 'return_averaged_R' needs to be boolean but is " \
+                                    "defined as {0}. Aborting.".format(type(self.settings['normalize']))
+
+        assert (isinstance(self.settings['embedding_step_size'], float)),\
+                                    "Error: setting 'embedding_step_size' " \
+                                    "needs to be float but is defined " \
+                                    "as {0}. Aborting.".format(type(self.settings['embedding_step_size']))
+
+    def _check_estimator_inputs(self,
+                                symbol_array,
+                                past_symbol_array,
+                                current_symbol_array,
+                                bbc_tolerance):
+        assert (isinstance(symbol_array, np.ndarray)), \
+            "Error: symbol_array needs to be a numpy array but is defines as {0}." \
+            "Aborting.".format(type(symbol_array))
+
+        if past_symbol_array is not None:
+            assert (isinstance(past_symbol_array, np.ndarray)), \
+                "Error: past_symbol_array needs to be a numpy array but is defines as {0}." \
+                "Aborting.".format(type(past_symbol_array))
+            assert (len(past_symbol_array) == len(symbol_array)), \
+                "Error: symbol_array and past_symbol_array need to have the same length but have:" \
+                "len(symbol_array): {0} len(past_symbol_array): {1}. " \
+                "Aborting". format(len(symbol_array), len(past_symbol_array))
+
+        if current_symbol_array is not None:
+            assert (isinstance(current_symbol_array, np.ndarray)), \
+                "Error: current_symbol_array needs to be a numpy array but is defines as {0}." \
+                "Aborting.".format(type(current_symbol_array))
+            assert (len(current_symbol_array) == len(symbol_array)), \
+                "Error: symbol_array and current_symbol_array need to have the same length but have:" \
+                "len(symbol_array): {0} len(current_symbol_array): {1}. " \
+                "Aborting".format(len(symbol_array), len(current_symbol_array))
+
+        if bbc_tolerance is not None:
+            assert (isinstance(bbc_tolerance, np.ndarray)), \
+                "Error: symbol array needs to be a numpy array but is defines as {0}." \
+                "Aborting.".format(type(current_symbol_array))
+
+    def _ensure_one_dim(self, var):
+        """
+        check if array is 1D
+        """
+        var = np.squeeze(var)
+        assert (var.ndim == 1), "Input variable needs to be one dimensional. Aborting"
 
     def get_past_range(self, number_of_bins_d, first_bin_size, scaling_k):
         """
@@ -232,94 +313,6 @@ class RudeltAbstractEstimator(Estimator):
         mk[0] = alphabet_size - number_of_observed_symbols
 
         return mk
-
-    def _check_input(self, data):       # -------------------------------------------------------------------------------- TODO
-
-        EXIT_SUCCESS = 0
-        EXIT_FAILURE = 1
-
-        # check that required settings are defined
-        required_parameters = ['embedding_past_range_set', 'embedding_number_of_bins_set',
-                               'embedding_scaling_exponent_set', 'embedding_step_size',
-                               'bbc_tolerance', 'timescale_minimum_past_range',
-                               'number_of_bootstraps_R_max', 'number_of_bootstraps_R_tot',
-                               'number_of_bootstraps_nonessential',
-                               'block_length_l',
-                               'bootstrap_CI_percentile_lo',
-                               'bootstrap_CI_percentile_hi']
-
-        required_settings = ['cross_validated_optimization',
-                             'return_averaged_R',
-                             'bootstrap_CI_use_sd'] + required_parameters
-
-        # check if all settings are defined
-        for required_setting in required_settings:
-            if not required_setting in self.settings:
-                print("Error in settings file: {} is not defined. Aborting.".format(required_setting),
-                      file=stderr, flush=True)
-                exit(EXIT_FAILURE)
-
-        # evaluate settings (turn strings into booleans etc if applicable)
-        for setting_key in ['cross_validated_optimization',
-                            'return_averaged_R',
-                            'bootstrap_CI_use_sd']:
-            try:
-                if not type(self.settings[setting_key]) == bool:
-                    self.settings[setting_key] = ast.literal_eval(self.settings[setting_key])
-            except:
-                print("Error: setting {0} needs to be boolean but is defined as {1}. Aborting.".format(setting_key, self.settings[setting_key]),
-                      file=stderr, flush=True)
-                exit(EXIT_FAILURE)
-
-        for parameter_key in required_parameters:
-            if isinstance(self.settings[parameter_key], list):
-                # self.settings[parameter_key] = [ast.literal_eval(element) for element in self.settings[parameter_key]]
-                try:
-                    all(isinstance(x, float) for x in self.settings[parameter_key])
-                except:
-                    print("Error: list in {} must contain only float values! Aborted.".format(self.settings[parameter_key]))
-                    exit(EXIT_FAILURE)
-            elif parameter_key == 'embedding_scaling_exponent_set' \
-                    and isinstance(self.settings['embedding_scaling_exponent_set'], dict):
-                # embedding_scaling_exponent_set can be passed either as a
-                # list, in which case it is evaluated as such or it can be
-                # passed by specifying three parameters that determine how
-                # many scaling exponents should be used.  In the latter case, the
-                # uniform embedding as well as the embedding for which
-                # the first bin has a length of min_first_bin_size (in
-                # seconds) are used, as well as linearly spaced scaling
-                # factors in between, such that in total
-                # number_of_scalings scalings are used
-
-                for key in self.settings['embedding_scaling_exponent_set']:
-                    if not isinstance(self.settings['embedding_scaling_exponent_set'][key], float):
-                        if not isinstance(self.settings['embedding_scaling_exponent_set'][key], int):
-                            print("Error: {} must contain only float or integer values! Aborted.".format(
-                                self.settings['embedding_scaling_exponent_set']))
-                            exit(EXIT_FAILURE)
-            else:
-                # self.settings[parameter_key] = ast.literal_eval(self.settings[parameter_key])       ??????????????????????????????????????????????????
-                a=1  # ------------------------------------------------------------------------------------------------------to remove / for debugging
-
-        # Cython implementation uses 64bit unsigned integers for the symbols,
-        # we allow up to 62 bins (window has 1 bin more..)
-        if max(self.settings['embedding_number_of_bins_set']) > 62:
-            print("Error: Max number of bins too large; use less than 63. Aborting.",
-                  file=stderr, flush=True)
-            exit(EXIT_FAILURE)
-
-        # If R_tot is computed as an average over Rs, no confidence interval can be estimated
-        if self.settings['return_averaged_R']:
-            self.settings['number_of_bootstraps_R_tot'] = 0
-
-        """
-        if 'parallel' in self.settings:
-            if 'numberCPUs' not in self.settings:
-                self.settings['numberCPUs'] = multiprocessing.cpu_count()
-        else:
-            self.settings['parallel'] = False
-        """
-    # end of def _check_input
 
 
 class RudeltAbstractNSBEstimator(RudeltAbstractEstimator):
@@ -585,7 +578,6 @@ class RudeltNSBEstimatorSymbolsMI(RudeltAbstractNSBEstimator):
         # Set default estimator settings.
         super().__init__(settings)
 
-
     def nsb_estimator(self,
                       symbol_counts,
                       past_symbol_counts,
@@ -630,6 +622,15 @@ class RudeltNSBEstimatorSymbolsMI(RudeltAbstractNSBEstimator):
             float
                 MI / H_uncond (History dependence)
         """
+
+        self._check_estimator_inputs(symbol_array,
+                                     past_symbol_array,
+                                     current_symbol_array,
+                                     None)
+
+        self._ensure_one_dim(symbol_array)
+        self._ensure_one_dim(past_symbol_array)
+        self._ensure_one_dim(current_symbol_array)
 
         symbol_counts = self.get_symbol_counts(symbol_array)
 
@@ -727,6 +728,15 @@ class RudeltPluginEstimatorSymbolsMI(RudeltAbstractEstimator):
             float
                 MI / H_uncond (History dependence)
         """
+
+        self._check_estimator_inputs(symbol_array,
+                                     past_symbol_array,
+                                     current_symbol_array,
+                                     None)
+
+        self._ensure_one_dim(symbol_array)
+        self._ensure_one_dim(past_symbol_array)
+        self._ensure_one_dim(current_symbol_array)
 
         symbol_counts = self.get_symbol_counts(symbol_array)
 
@@ -829,6 +839,16 @@ class RudeltBBCEstimator(RudeltAbstractEstimator):
             float
                 bbc_term
         """
+
+        self._check_estimator_inputs(symbol_array,
+                                     past_symbol_array,
+                                     current_symbol_array,
+                                     bbc_tolerance)
+
+        self._ensure_one_dim(symbol_array)
+        self._ensure_one_dim(past_symbol_array)
+        self._ensure_one_dim(current_symbol_array)
+
         estnsb = RudeltNSBEstimatorSymbolsMI()
         I_nsb, R_nsb = estnsb.estimate(symbol_array, past_symbol_array, current_symbol_array)
 
@@ -1075,6 +1095,14 @@ class RudeltShufflingEstimator(RudeltAbstractEstimator):
             float
                 MI / H_uncond (History dependence)
         """
+
+        self._check_estimator_inputs(symbol_array,
+                                     None,
+                                     None,
+                                     None)
+
+        self._ensure_one_dim(symbol_array)
+
         symbol_counts = self.get_symbol_counts(symbol_array)
 
         # number_of_bins_d_join = np.array(list(np.binary_repr(np.max(symbol_array)))).astype(np.int8)
