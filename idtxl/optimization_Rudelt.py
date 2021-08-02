@@ -14,7 +14,7 @@ from idtxl.data_spiketime import Data_spiketime
 class OptimizationRudelt():
     """
     Optimization of embedding parameters of spike times using the history dependence estimators
-    
+
     References:
 
         [1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding
