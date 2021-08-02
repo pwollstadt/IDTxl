@@ -1,8 +1,9 @@
 """Test data_spiketimes class."""
-import pytest
+
+from idtxl.data_spiketime import Data_spiketime
 import numpy as np
 import os
-from idtxl.data_spiketime import Data_spiketime
+
 
 
 def test_set_data():

@@ -2,9 +2,7 @@
 
 import numpy as np
 import pytest
-import os
 from idtxl.data_spiketime import Data_spiketime
-import idtxl.hde_utils as utl
 from idtxl.estimators_Rudelt import RudeltNSBEstimatorSymbolsMI, \
     RudeltPluginEstimatorSymbolsMI, RudeltBBCEstimator, RudeltShufflingEstimator
 

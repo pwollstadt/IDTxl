@@ -1,8 +1,7 @@
 """Provide spiketime data structures for IDTxl analysis."""
 
 import numpy as np
-from . import idtxl_utils as utils
-from sys import stderr, exit
+from sys import stderr
 from scipy.optimize import newton
 import idtxl.hde_utils as utl
 import os

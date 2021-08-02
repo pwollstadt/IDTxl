@@ -4,7 +4,7 @@ import logging
 import numpy as np
 from scipy.optimize import newton, minimize
 import sys
-from sys import exit, stderr
+from sys import stderr
 from idtxl.estimator import Estimator
 import idtxl.hde_utils as utl
 from collections import Counter
