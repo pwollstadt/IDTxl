@@ -189,7 +189,7 @@ def hde_visualize_results(results, process, filename=None):
     plt.figure(figsize=(18, 18))
     maintitle = "Results of Process " + str(res.Process) + " using estimation method " + settings['estimation_method']
     plt.suptitle(maintitle, fontsize=25)
-    plt.subplot(121)
+    plt.subplot(221)
     row_labels = ['$\mathit{T}_{D}$ [s]',
                   '$\\tau_{R}$ [s]',
                   '$\mathit{R}_{tot}$',
@@ -225,33 +225,50 @@ def hde_visualize_results(results, process, filename=None):
     the_table.set_fontsize(20)
     the_table.scale(4, 4)
     plt.axis('off')
-    ax1 = plt.subplot(222)
-    y = np.zeros(len(res.max_R))
+
+    ax1 = plt.subplot(322)
+    #y = np.zeros(len(res.max_R))
+    #count = 0
+    #for key in res.max_R:
+    #    y[count] = res.max_R[key]
+    #    count += 1
+    y2 = np.zeros(len(settings['embedding_past_range_set']))
     count = 0
-    for key in res.max_R:
-        y[count] = res.max_R[key]
+    for key in settings['embedding_past_range_set']:
+        try:
+            y2[count] = res.max_R[key]
+        except:
+            a = 1
         count += 1
+    #x = np.linspace(0, max(settings['embedding_past_range_set']), len(y))
     x = settings['embedding_past_range_set']
-    ax1.plot(x, y)
-    ax1.axvline(x=res.tau_R, color='k', ls='--', label=r"$\tau_R$")
-    ax1.set_xscale('log')
-    ax1.set_xticks(x)
-    ax1.set_xticklabels(x, fontsize=6)
+    ind = np.where(y2 == 0.000)
+    xs = np.delete(x, ind)
+    ys = np.delete(y2, ind)
+    ax1.plot(ys)
+    ax1.axvline(x=(np.abs(ys - res.tau_R)).argmin(), color='k', ls='--', label=r"$\tau_R$ "+str(round(res.tau_R,3)))
+    # ax1.set_xscale('log')
+    # xla = np.arange(0, len(xs), 2)
+    xla = [0, len(xs)-1]
+    ax1.set_xticks(xla)
+    ax1.set_xticklabels(xs[xla], fontsize=6, rotation=45)
     ax1.title.set_text('History Dependence')
     ax1.legend(loc="lower right")
+    ax1.set_xlabel('past range T [ms]')
     ax1.set_ylabel('History Dependence R')
 
-    ax2 = plt.subplot(224)
+    ax2 = plt.subplot(326)
     ax2.title.set_text('Auto Mutual Information')
     if 'auto_MI' in res:
         leg2 = []
         for key in res.auto_MI.keys():
-            y = res.auto_MI[key]
+            y2 = res.auto_MI[key]
             leg2.append(key)
-            x = np.linspace(0, settings['auto_MI_max_delay'], len(res.auto_MI[key]))
-            ax2.plot(x, y, label=str(int(float(key) * 1000)))
+            x2 = np.linspace(0, settings['auto_MI_max_delay'], len(res.auto_MI[key]))
+            ax2.plot(x2, y2, label=str(int(float(key) * 1000)))
         ax2.set_xscale('log')
         ax2.set_ylabel('normalized Auto MI')
+        ax1.set_xlabel('time t [ms]')
         ax2.legend(loc="upper right", title="bin size [ms]")
     else:
         plt.text(0.5, 0.5, 'was not calculated', horizontalalignment='center',
