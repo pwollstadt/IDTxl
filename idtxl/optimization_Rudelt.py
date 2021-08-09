@@ -258,7 +258,6 @@ class OptimizationRudelt():
             "Error: setting 'min_step_for_scaling' needs to be a floating point value but is defined as {0}. " \
             "Aborting.".format(type(self.settings['min_step_for_scaling']))
 
-
         assert ('symbol_block_length' in self.settings), \
             'symbol_block_length has to be specified (see help)!'
         if self.settings['symbol_block_length'] is not None:
@@ -289,6 +288,15 @@ class OptimizationRudelt():
                 'If visualization is set to True an output path has to be specified (see help)!'
             assert ('output_prefix' in self.settings), \
                 'If visualization is set to True an output prefix has to be specified (see help)!'
+
+        # Cython implementation uses 64bit unsigned integers for the symbols,
+        # we allow up to 62 bins (window has 1 bin more..)
+        assert (max(self.settings['embedding_number_of_bins_set']) <= 62), \
+            'Error: Max number of bins too large; use less than 63. Aborting.'
+
+        # If R_tot is computed as an average over Rs, no confidence interval can be estimated
+        if self.settings['return_averaged_R']:
+            self.settings['number_of_bootstraps_R_tot'] = 0
 
     def get_embeddings(self,
                        embedding_past_range_set,
@@ -691,7 +699,6 @@ class OptimizationRudelt():
 
         elif target_R == 'R_tot':
             T_D = self.get_temporal_depth_T_D()
-            self.T_D = T_D
             number_of_bins_d, scaling_k = embedding_maximising_R_at_T[T_D]
 
             embeddings = [(T_D, number_of_bins_d, scaling_k)]
@@ -1041,7 +1048,7 @@ class OptimizationRudelt():
         del self.max_Rs
         del self.max_R_T
         del self.process
-        del self.T_D
+        # del self.T_D
         if self.settings['analyse_auto_MI']:
             del self.auto_MI
             del self.H_spiking
