@@ -227,28 +227,22 @@ def hde_visualize_results(results, process, filename=None):
     plt.axis('off')
 
     ax1 = plt.subplot(322)
-    #y = np.zeros(len(res.max_R))
-    #count = 0
-    #for key in res.max_R:
-    #    y[count] = res.max_R[key]
-    #    count += 1
-    y2 = np.zeros(len(settings['embedding_past_range_set']))
+    y = np.zeros(len(settings['embedding_past_range_set']))
     count = 0
     for key in settings['embedding_past_range_set']:
         try:
-            y2[count] = res.max_R[key]
+            y[count] = res.max_R[key]
         except:
             a = 1
         count += 1
-    #x = np.linspace(0, max(settings['embedding_past_range_set']), len(y))
+
     x = settings['embedding_past_range_set']
-    ind = np.where(y2 == 0.000)
+    ind = np.where(y == 0.000)
     xs = np.delete(x, ind)
-    ys = np.delete(y2, ind)
+    ys = np.delete(y, ind)
     ax1.plot(ys)
     ax1.axvline(x=(np.abs(ys - res.tau_R)).argmin(), color='k', ls='--', label=r"$\tau_R$ "+str(round(res.tau_R,3)))
     # ax1.set_xscale('log')
-    # xla = np.arange(0, len(xs), 2)
     xla = [0, len(xs)-1]
     ax1.set_xticks(xla)
     ax1.set_xticklabels(xs[xla], fontsize=6, rotation=45)
