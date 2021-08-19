@@ -1,7 +1,7 @@
 """System test for Rudelt optimization on example data."""
 
 from idtxl.data_spiketime import Data_spiketime
-from idtxl.optimization_Rudelt import OptimizationRudelt
+from idtxl.embedding_optimization_ais_Rudelt import OptimizationRudelt
 import numpy as np
 import os
 import sys
