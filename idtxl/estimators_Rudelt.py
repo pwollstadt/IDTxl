@@ -617,9 +617,9 @@ class RudeltNSBEstimatorSymbolsMI(RudeltAbstractNSBEstimator):
                 (first output of get_realisations_symbol from data_spiketimes object)
 
         Returns:
-            float
+            I (float)
                 MI (AIS)
-            float
+            R (float)
                 MI / H_uncond (History dependence)
         """
 
@@ -723,9 +723,9 @@ class RudeltPluginEstimatorSymbolsMI(RudeltAbstractEstimator):
                 (first output of get_realisations_symbol from data_spiketimes object)
 
         Returns:
-            float
+            I (float)
                 MI (AIS)
-            float
+            R (float)
                 MI / H_uncond (History dependence)
         """
 
@@ -832,12 +832,13 @@ class RudeltBBCEstimator(RudeltAbstractEstimator):
                 (first output of get_realisations_symbol from data_spiketimes object)
 
         Returns:
-            float
+            I (float)
                 MI (AIS)
-            float
+            R (float)
                 MI / H_uncond (History dependence)
-            float
-                bbc_term
+            bbc_term (float)
+                bbc tolerance-independent term of the Bayesian bias
+                criterion (bbc)
         """
 
         self._check_estimator_inputs(symbol_array,
@@ -1090,9 +1091,9 @@ class RudeltShufflingEstimator(RudeltAbstractEstimator):
                 (first output of get_realisations_symbol from data_spiketimes object)
 
         Returns:
-            float
+            I (float)
                 MI (AIS)
-            float
+            R (float)
                 MI / H_uncond (History dependence)
         """
 
