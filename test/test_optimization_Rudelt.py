@@ -1,4 +1,4 @@
-"""System test for Rudelt optimization on example data."""
+"""Provides unit test for Rudelt optimization on example data."""
 
 from idtxl.data_spiketime import Data_spiketime
 from idtxl.embedding_optimization_ais_Rudelt import OptimizationRudelt

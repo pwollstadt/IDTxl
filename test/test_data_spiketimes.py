@@ -1,4 +1,4 @@
-"""Test data_spiketimes class."""
+"""Provides unit test for data_spiketimes class."""
 
 from idtxl.data_spiketime import Data_spiketime
 import numpy as np
