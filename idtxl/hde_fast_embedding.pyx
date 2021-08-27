@@ -1,7 +1,7 @@
 # cython: profile=True
 
 import numpy as np
-import hde_fast_embedding_utils as emb
+import idtxl.hde_fast_embedding_utils as emb
 from sys import stderr, exit
 
 cimport cython
