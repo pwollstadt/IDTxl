@@ -45,7 +45,7 @@ class MPIEstimator(Estimator):
 
         # Create the MPIPoolExecutor
         self._executor = MPIPoolExecutor(
-            max_workers=self._settings.get('max_workers', None))
+            max_workers=self._settings.get('max_workers', None), path=['./test'])
 
         # Create Estimator for rank 0.
         self._estimator = self._create_estimator()
