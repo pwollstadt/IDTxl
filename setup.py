@@ -10,7 +10,11 @@ setup(
     name='idtxl',
     packages=['idtxl'],
     include_package_data=True,
+<<<<<<< HEAD
     version='1.2.1',
+=======
+    version='1.2.2',
+>>>>>>> master
     description='Information Dynamics Toolkit xl',
     author='Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral',
     author_email='p.wollstadt@gmail.com',

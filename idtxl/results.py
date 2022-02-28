@@ -1036,3 +1036,155 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
         """
         v = self.get_single_target(target)['selected_vars_sources']
         return np.unique(np.array([s[0] for s in v]))
+
+
+class ResultsSingleProcessRudelt():
+    """Store results of single process analysis.
+
+    Provides a container for the results Rudelt optimization algorithm
+
+    Note that for convenience all dictionaries in this class can additionally
+    be accessed using dot-notation:
+
+    >>> res_network.settings.estimation_method
+
+    or
+
+    >>> res_network.settings['estimation_method'].
+
+    Attributes:
+        settings : dict
+            settings used for estimation of information theoretic measures
+        data_properties : dict
+            data properties, contains
+                - n_processes : int - total number of processes analysed
+        processes_analysed : list
+            list of analysed processes
+        _single_processes : dict
+            containing the results of all analysed processes
+            The results of each process can be extracted using:
+                >>> <single_process_result> = <result>.get_single_process(<process_index>)
+                The extracted single process results contains a DotDict with the following entries:
+                    Process : int
+                        Process that was optimized
+                    estimation_method : String
+                        Estimation method that was used for optimization
+                    T_D : float
+                        Estimated optimal value for the temporal depth TD
+                    tau_R :
+                        Information timescale tau_R, a characteristic timescale of history
+                        dependence similar to an autocorrelation time.
+                    R_tot : float
+                        Estimated value for the total history dependence Rtot,
+                    AIS_tot : float
+                        Estimated value for the total active information storage
+                    opt_number_of_bins_d : int
+                        Number of bins d for the embedding that yields (R̂tot ,T̂D)
+                    opt_scaling_k : int
+                        Scaling exponent κ for the embedding that yields (R̂tot , T̂D)
+                    opt_first_bin_size : int
+                        Size of the first bin τ1 for the embedding that yields (R̂tot , T̂D ),
+                    history_dependence : array with floating-point values
+                        Estimated history dependence for each embedding
+                    firing_rate : float
+                        Firing rate of the neuron/ spike train
+                    recording_length : float
+                        Length of the recording (in seconds)
+                    H_spiking : float
+                        Entropy of the spike times
+
+                    if analyse_auto_MI was set to True additionally:
+                    auto_MI : dict
+                        numpy array of MI values for each delay
+                    auto_MI_delays : list of int
+                        list of delays depending on the given auto_MI_bin_sizes and auto_MI_max_delay
+
+    """
+
+    def __init__(self, processes):
+        self.settings = DotDict({})
+        self.data_properties = DotDict({
+                'n_processes': len(processes)
+        })
+        self.processes_analysed = np.zeros(shape=3, dtype=int)
+        self._single_process = {}
+        for ii in processes:
+            self._single_process[ii] = {}
+
+    @property
+    def processes_analysed(self):
+        """Get index of the current_value."""
+        return self._processes_analysed
+
+    @processes_analysed.setter
+    def processes_analysed(self, processes):
+        self._processes_analysed = processes
+
+    def _add_single_result(self, process_count, process, results, settings):
+        """Add analysis result for a single process."""
+        #self._check_result(process, settings)
+        self.settings.update(DotDict(settings))
+        self._single_process[process] = DotDict(results)
+        self.processes_analysed[process_count] = process #list(self._single_process.keys())
+
+    def get_single_process(self, process):
+        """Return results for a single process.
+
+        Return results for individual processes, contains for each process
+
+            Process : int
+                Process that was optimized
+            estimation_method : String
+                Estimation method that was used for optimization
+            T_D : float
+                Estimated optimal value for the temporal depth TD
+            tau_R :
+                Information timescale tau_R, a characteristic timescale of history
+                dependence similar to an autocorrelation time.
+            R_tot : float
+                Estimated value for the total history dependence Rtot,
+            AIS_tot : float
+                Estimated value for the total active information storage
+            opt_number_of_bins_d : int
+                Number of bins d for the embedding that yields (R̂tot ,T̂D)
+            opt_scaling_k : int
+                Scaling exponent κ for the embedding that yields (R̂tot , T̂D)
+            opt_first_bin_size : int
+                Size of the first bin τ1 for the embedding that yields (R̂tot , T̂D ),
+            history_dependence : array with floating-point values
+                Estimated history dependence for each embedding
+            firing_rate : float
+                Firing rate of the neuron/ spike train
+            recording_length : float
+                Length of the recording (in seconds)
+            H_spiking : float
+                Entropy of the spike times
+
+            if analyse_auto_MI was set to True additionally:
+            auto_MI : dict
+                numpy array of MI values for each delay
+            auto_MI_delays : list of int
+                list of delays depending on the given auto_MI_bin_sizes and auto_MI_max_delay
+
+        Args:
+            process : int
+                process id
+          
+        Returns:
+            dict
+                results for single process. Note that for convenience
+                dictionary entries can either be accessed via keywords
+                (result['selected_vars']) or via dot-notation
+                (result.selected_vars).
+        """
+        # Return required key from required _single_process dictionary
+        if process not in self.processes_analysed:
+            raise RuntimeError('No results for process {0}.'.format(process))
+
+        try:
+            return self._single_process[process]
+        except AttributeError:
+            raise RuntimeError('No results have been added.')
+        except KeyError:
+            raise RuntimeError(
+                'No results for process {0}.'.format(process))

@@ -6,6 +6,8 @@
 ###################
 *.pyc
 *.py~
+*.c
+*.so
 
 # Sphinx documentation #
 ########################
@@ -24,6 +26,7 @@ docs/_build
 *.bac*
 *.in~
 .vscode
+.idea
 
 # Code Coverage      #
 ######################
