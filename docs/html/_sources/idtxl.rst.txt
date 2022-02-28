@@ -69,6 +69,22 @@ idtxl.active_information_storage module
     :undoc-members:
     :show-inheritance:
 
+idtxl.embedding_optimization_ais_Rudelt module
+----------------------------------------------
+
+.. automodule:: idtxl.embedding_optimization_ais_Rudelt
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+idtxl.estimators_Rudelt module
+------------------------------
+
+.. automodule:: idtxl.estimators_Rudelt
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 idtxl.estimators_jidt module
 ----------------------------
 
@@ -101,14 +117,6 @@ idtxl.estimators_pid module
     :undoc-members:
     :show-inheritance:
 
-
-idtxl.idtxl_import module
--------------------------
-
-.. automodule:: idtxl.idtxl_import
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 idtxl.idtxl_exceptions module
 -----------------------------

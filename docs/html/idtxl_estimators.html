@@ -4,11 +4,12 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Information theoretic estimators &#8212; IDTxl 1.2.1 documentation</title>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Information theoretic estimators &#8212; IDTxl 1.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
@@ -39,7 +40,7 @@
         <li class="right" >
           <a href="idtxl_results_class.html" title="The Results Class"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Information theoretic estimators</a></li> 
       </ul>
     </div>  
@@ -49,14 +50,14 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="information-theoretic-estimators">
+  <section id="information-theoretic-estimators">
 <h1>Information theoretic estimators<a class="headerlink" href="#information-theoretic-estimators" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="jidt-estimators-cpu">
+<section id="jidt-estimators-cpu">
 <h2>JIDT Estimators (CPU)<a class="headerlink" href="#jidt-estimators-cpu" title="Permalink to this headline">¶</a></h2>
 <p>Provide JIDT estimators.</p>
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></code><code class="sig-name descname"><span class="pre">JidtDiscrete</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscrete"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></span><span class="sig-name descname"><span class="pre">JidtDiscrete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscrete"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Abstract class for implementation of discrete JIDT-estimators.</p>
 <p>Abstract class for implementation of plug-in JIDT-estimators for discrete
 data. Child classes implement estimators for mutual information (MI),
@@ -88,8 +89,8 @@ latter, objects can be instantiated independent of data properties).</p>
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">estimate_surrogates_analytic</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscrete.estimate_surrogates_analytic"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">estimate_surrogates_analytic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscrete.estimate_surrogates_analytic"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return estimate of the analytical surrogate distribution.</p>
 <p>This method must be implemented because this class’
 is_analytic_null_estimator() method returns true.</p>
@@ -114,8 +115,8 @@ var2 (in the context of conditional)</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<em class="property"><span class="pre">abstract</span> </em><code class="sig-name descname"><span class="pre">get_analytic_distribution</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscrete.get_analytic_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_analytic_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscrete.get_analytic_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return a JIDT AnalyticNullDistribution object.</p>
 <p>Required so that our estimate_surrogates_analytic method can use the
 common_estimate_surrogates_analytic() method, where data is formatted
@@ -137,8 +138,8 @@ CMI). Formatted as per the estimate method for this estimator.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">is_analytic_null_estimator</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscrete.is_analytic_null_estimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">is_analytic_null_estimator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscrete.is_analytic_null_estimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Indicate if estimator supports analytic surrogates.</p>
 <p>Return true if the estimator implements estimate_surrogates_analytic()
 where data is formatted as per the estimate method for this estimator.</p>
@@ -151,8 +152,8 @@ where data is formatted as per the estimate method for this estimator.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></code><code class="sig-name descname"><span class="pre">JidtDiscreteAIS</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteAIS"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></span><span class="sig-name descname"><span class="pre">JidtDiscreteAIS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteAIS"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Calculate AIS with JIDT’s discrete-variable implementation.</p>
 <p>Calculate the active information storage (AIS) for one process. Call JIDT
 via jpype and use the discrete estimator. See parent class for references.</p>
@@ -182,8 +183,8 @@ levels or the base of each dimension of the discrete variables
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">estimate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">process</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_calc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteAIS.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">process</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_calc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteAIS.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Estimate active information storage.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -215,8 +216,8 @@ return_calc was set.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">get_analytic_distribution</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">process</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteAIS.get_analytic_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">get_analytic_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">process</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteAIS.get_analytic_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return a JIDT AnalyticNullDistribution object.</p>
 <p>Required so that our estimate_surrogates_analytic method can use the
 common_estimate_surrogates_analytic() method, where data is formatted
@@ -241,8 +242,8 @@ discretisation) or int</p>
 </dd></dl>
 
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></code><code class="sig-name descname"><span class="pre">JidtDiscreteCMI</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteCMI"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></span><span class="sig-name descname"><span class="pre">JidtDiscreteCMI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteCMI"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Calculate CMI with JIDT’s implementation for discrete variables.</p>
 <p>Calculate the conditional mutual information between two variables given
 the third. Call JIDT via jpype and use the discrete estimator. See parent
@@ -276,8 +277,8 @@ conditional (default=2, or the value set for n_discrete_bins)</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">estimate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_calc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteCMI.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_calc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteCMI.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Estimate conditional mutual information.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -314,8 +315,8 @@ return_calc was set.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">get_analytic_distribution</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteCMI.get_analytic_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">get_analytic_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteCMI.get_analytic_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return a JIDT AnalyticNullDistribution object.</p>
 <p>Required so that our estimate_surrogates_analytic method can use the
 common_estimate_surrogates_analytic() method, where data is formatted
@@ -345,8 +346,8 @@ no conditional is provided, return MI between var1 and var2</p>
 </dd></dl>
 
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></code><code class="sig-name descname"><span class="pre">JidtDiscreteMI</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteMI"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></span><span class="sig-name descname"><span class="pre">JidtDiscreteMI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteMI"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Calculate MI with JIDT’s discrete-variable implementation.</p>
 <p>Calculate the mutual information (MI) between two variables. Call JIDT via
 jpype and use the discrete estimator. See parent class for references.</p>
@@ -379,8 +380,8 @@ the lagged MI between processes (default=0)</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">estimate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_calc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteMI.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_calc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteMI.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Estimate mutual information.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -414,8 +415,8 @@ return_calc was set.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">get_analytic_distribution</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteMI.get_analytic_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">get_analytic_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteMI.get_analytic_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return a JIDT AnalyticNullDistribution object.</p>
 <p>Required so that our estimate_surrogates_analytic method can use the
 common_estimate_surrogates_analytic() method, where data is formatted
@@ -442,8 +443,8 @@ float (requires discretisation) or int</p>
 </dd></dl>
 
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></code><code class="sig-name descname"><span class="pre">JidtDiscreteTE</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteTE"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></span><span class="sig-name descname"><span class="pre">JidtDiscreteTE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteTE"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Calculate TE with JIDT’s implementation for discrete variables.</p>
 <p>Calculate the transfer entropy between two time series processes.
 Call JIDT via jpype and use the discrete estimator. Transfer entropy is
@@ -488,8 +489,8 @@ average TE (default=False)</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">estimate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_calc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteTE.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_calc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteTE.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Estimate transfer entropy from a source to a target variable.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -523,8 +524,8 @@ return_calc was set.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">get_analytic_distribution</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteTE.get_analytic_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">get_analytic_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtDiscreteTE.get_analytic_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return a JIDT AnalyticNullDistribution object.</p>
 <p>Required so that our estimate_surrogates_analytic method can use the
 common_estimate_surrogates_analytic() method, where data is formatted
@@ -551,8 +552,8 @@ float (requires discretisation) or int</p>
 </dd></dl>
 
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></code><code class="sig-name descname"><span class="pre">JidtEstimator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtEstimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></span><span class="sig-name descname"><span class="pre">JidtEstimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtEstimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Abstract class for implementation of JIDT estimators.</p>
 <p>Abstract class for implementation of JIDT estimators, child classes
 implement estimators for mutual information (MI), conditional mutual
@@ -588,8 +589,8 @@ average TE (default=False)</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">is_parallel</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtEstimator.is_parallel"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">is_parallel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtEstimator.is_parallel"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Indicate if estimator supports parallel estimation over chunks.</p>
 <p>Return true if the supports parallel estimation over chunks, where a
 chunk is one independent data set.</p>
@@ -602,8 +603,8 @@ chunk is one independent data set.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></code><code class="sig-name descname"><span class="pre">JidtGaussian</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">CalcClass</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussian"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></span><span class="sig-name descname"><span class="pre">JidtGaussian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">CalcClass</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussian"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Abstract class for implementation of JIDT Gaussian-estimators.</p>
 <p>Abstract class for implementation of JIDT Gaussian-estimators, child
 classes implement estimators for mutual information (MI), conditional
@@ -629,10 +630,10 @@ average TE (default=False)</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">estimate_surrogates_analytic</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussian.estimate_surrogates_analytic"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Estimate the surrogate distribution analytically.
-This method must be implemented because this class’
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">estimate_surrogates_analytic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussian.estimate_surrogates_analytic"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Estimate the surrogate distribution analytically.</p>
+<p>This method must be implemented because this class’
 is_analytic_null_estimator() method returns true</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -655,8 +656,8 @@ var2 (in the context of conditional)</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">get_analytic_distribution</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussian.get_analytic_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">get_analytic_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussian.get_analytic_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return a JIDT AnalyticNullDistribution object.</p>
 <p>Required so that our estimate_surrogates_analytic method can use the
 common_estimate_surrogates_analytic() method, where data is formatted
@@ -678,8 +679,8 @@ CMI). Formatted as per the estimate method for this estimator.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">is_analytic_null_estimator</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussian.is_analytic_null_estimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">is_analytic_null_estimator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussian.is_analytic_null_estimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Indicate if estimator supports analytic surrogates.</p>
 <p>Return true if the estimator implements estimate_surrogates_analytic()
 where data is formatted as per the estimate method for this estimator.</p>
@@ -692,8 +693,8 @@ where data is formatted as per the estimate method for this estimator.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></code><code class="sig-name descname"><span class="pre">JidtGaussianAIS</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianAIS"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></span><span class="sig-name descname"><span class="pre">JidtGaussianAIS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianAIS"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Calculate active information storage with JIDT’s Gaussian implementation.</p>
 <p>Calculate active information storage (AIS) for some process using JIDT’s
 implementation of the Gaussian estimator. AIS is defined as the
@@ -727,8 +728,8 @@ runs replicable set noise_level to 0.</p>
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">estimate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">process</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianAIS.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">process</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianAIS.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Estimate active information storage.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -750,8 +751,8 @@ samples if ‘local_values’=True</p>
 </dd></dl>
 
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></code><code class="sig-name descname"><span class="pre">JidtGaussianCMI</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianCMI"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></span><span class="sig-name descname"><span class="pre">JidtGaussianCMI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianCMI"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Calculate conditional mutual infor with JIDT’s Gaussian implementation.</p>
 <p>Computes the differential conditional mutual information of two
 multivariate sets of observations, conditioned on another, assuming that
@@ -782,8 +783,8 @@ runs replicable set noise_level to 0.</p>
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">estimate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianCMI.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianCMI.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Estimate conditional mutual information.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -808,8 +809,8 @@ samples if ‘local_values’=True</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">get_analytic_distribution</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianCMI.get_analytic_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">get_analytic_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianCMI.get_analytic_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return a JIDT AnalyticNullDistribution object.</p>
 <p>Required so that our estimate_surrogates_analytic method can use the
 common_estimate_surrogates_analytic() method, where data is formatted
@@ -838,8 +839,8 @@ no conditional is provided, return MI between var1 and var2</p>
 </dd></dl>
 
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></code><code class="sig-name descname"><span class="pre">JidtGaussianMI</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianMI"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></span><span class="sig-name descname"><span class="pre">JidtGaussianMI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianMI"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Calculate mutual information with JIDT’s Gaussian implementation.</p>
 <p>Calculate the mutual information between two variables. Call JIDT via jpype
 and use the Gaussian estimator. See parent class for references.</p>
@@ -866,8 +867,8 @@ runs replicable set noise_level to 0.</p>
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">estimate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianMI.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianMI.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Estimate mutual information.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -891,8 +892,8 @@ samples if ‘local_values’=True</p>
 </dd></dl>
 
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></code><code class="sig-name descname"><span class="pre">JidtGaussianTE</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianTE"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></span><span class="sig-name descname"><span class="pre">JidtGaussianTE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianTE"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Calculate transfer entropy with JIDT’s Gaussian implementation.</p>
 <p>Calculate transfer entropy between a source and a target variable using
 JIDT’s implementation of the Gaussian estimator. Transfer entropy is
@@ -935,8 +936,8 @@ runs replicable set noise_level to 0.</p>
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">estimate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianTE.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtGaussianTE.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Estimate transfer entropy from a source to a target variable.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -960,8 +961,8 @@ samples if ‘local_values’=True</p>
 </dd></dl>
 
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></code><code class="sig-name descname"><span class="pre">JidtKraskov</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">CalcClass</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskov"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></span><span class="sig-name descname"><span class="pre">JidtKraskov</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">CalcClass</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskov"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Abstract class for implementation of JIDT Kraskov-estimators.</p>
 <p>Abstract class for implementation of JIDT Kraskov-estimators, child classes
 implement estimators for mutual information (MI), conditional mutual
@@ -1001,8 +1002,8 @@ AIS KSG estimator.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">is_analytic_null_estimator</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskov.is_analytic_null_estimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">is_analytic_null_estimator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskov.is_analytic_null_estimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Indicate if estimator supports analytic surrogates.</p>
 <p>Return true if the estimator implements estimate_surrogates_analytic()
 where data is formatted as per the estimate method for this estimator.</p>
@@ -1015,8 +1016,8 @@ where data is formatted as per the estimate method for this estimator.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></code><code class="sig-name descname"><span class="pre">JidtKraskovAIS</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovAIS"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></span><span class="sig-name descname"><span class="pre">JidtKraskovAIS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovAIS"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Calculate active information storage with JIDT’s Kraskov implementation.</p>
 <p>Calculate active information storage (AIS) for some process using JIDT’s
 implementation of the Kraskov type 1 estimator. AIS is defined as the
@@ -1062,8 +1063,8 @@ runs replicable set noise_level to 0.</p>
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">estimate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">process</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovAIS.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">process</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovAIS.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Estimate active information storage.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -1085,8 +1086,8 @@ samples if ‘local_values’=True</p>
 </dd></dl>
 
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></code><code class="sig-name descname"><span class="pre">JidtKraskovCMI</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovCMI"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></span><span class="sig-name descname"><span class="pre">JidtKraskovCMI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovCMI"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Calculate conditional mutual inform with JIDT’s Kraskov implementation.</p>
 <p>Calculate the conditional mutual information (CMI) between three variables.
 Call JIDT via jpype and use the Kraskov 1 estimator. If no conditional is
@@ -1127,8 +1128,8 @@ runs replicable set noise_level to 0.</p>
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">estimate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovCMI.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovCMI.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Estimate conditional mutual information.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -1155,8 +1156,8 @@ samples if ‘local_values’=True</p>
 </dd></dl>
 
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></code><code class="sig-name descname"><span class="pre">JidtKraskovMI</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovMI"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></span><span class="sig-name descname"><span class="pre">JidtKraskovMI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovMI"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Calculate mutual information with JIDT’s Kraskov implementation.</p>
 <p>Calculate the mutual information between two variables. Call JIDT via jpype
 and use the Kraskov 1 estimator. See parent class for references.</p>
@@ -1195,8 +1196,8 @@ runs replicable set noise_level to 0.</p>
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">estimate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovMI.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovMI.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Estimate mutual information.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -1220,8 +1221,8 @@ samples if ‘local_values’=True</p>
 </dd></dl>
 
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></code><code class="sig-name descname"><span class="pre">JidtKraskovTE</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovTE"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></span><span class="sig-name descname"><span class="pre">JidtKraskovTE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovTE"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Calculate transfer entropy with JIDT’s Kraskov implementation.</p>
 <p>Calculate transfer entropy between a source and a target variable using
 JIDT’s implementation of the Kraskov type 1 estimator. Transfer entropy is
@@ -1266,8 +1267,8 @@ runs replicable set noise_level to 0.</p>
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">estimate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovTE.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#JidtKraskovTE.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Estimate transfer entropy from a source to a target variable.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -1291,8 +1292,8 @@ samples if ‘local_values’=True</p>
 </dd></dl>
 
 <dl class="py function">
-<dt>
-<code class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></code><code class="sig-name descname"><span class="pre">common_estimate_surrogates_analytic</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#common_estimate_surrogates_analytic"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">idtxl.estimators_jidt.</span></span><span class="sig-name descname"><span class="pre">common_estimate_surrogates_analytic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_jidt.html#common_estimate_surrogates_analytic"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Estimate the surrogate distribution analytically for JidtEstimator.</p>
 <p>Estimate the surrogate distribution analytically for a JidtEstimator
 which is_analytic_null_estimator(), by sampling estimates at random
@@ -1318,12 +1319,12 @@ var2 (in the context of conditional)</p>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="opencl-estimators-gpu">
+</section>
+<section id="opencl-estimators-gpu">
 <h2>OpenCL Estimators (GPU)<a class="headerlink" href="#opencl-estimators-gpu" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_opencl.</span></code><code class="sig-name descname"><span class="pre">OpenCLKraskov</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskov"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_opencl.</span></span><span class="sig-name descname"><span class="pre">OpenCLKraskov</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskov"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Abstract class for implementation of OpenCL estimators.</p>
 <p>Abstract class for implementation of OpenCL estimators, child classes
 implement estimators for mutual information (MI) and conditional mutual
@@ -1375,8 +1376,8 @@ i.e. neighbour counts from range searches and KNN distances
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">is_analytic_null_estimator</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskov.is_analytic_null_estimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">is_analytic_null_estimator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskov.is_analytic_null_estimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Indicate if estimator supports analytic surrogates.</p>
 <p>Return true if the estimator implements estimate_surrogates_analytic()
 where data is formatted as per the estimate method for this estimator.</p>
@@ -1387,8 +1388,8 @@ where data is formatted as per the estimate method for this estimator.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">is_parallel</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskov.is_parallel"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">is_parallel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskov.is_parallel"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Indicate if estimator supports parallel estimation over chunks.</p>
 <p>Return true if the supports parallel estimation over chunks, where a
 chunk is one independent data set.</p>
@@ -1401,8 +1402,8 @@ chunk is one independent data set.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_opencl.</span></code><code class="sig-name descname"><span class="pre">OpenCLKraskovCMI</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskovCMI"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_opencl.</span></span><span class="sig-name descname"><span class="pre">OpenCLKraskovCMI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskovCMI"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Calculate conditional mutual inform with OpenCL Kraskov implementation.</p>
 <p>Calculate the conditional mutual information (CMI) between three variables
 using OpenCL GPU-code. If no conditional is given (is None), the function
@@ -1434,8 +1435,8 @@ i.e. neighbour counts from range searches and KNN distances
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">estimate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskovCMI.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskovCMI.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Estimate conditional mutual information.</p>
 <p>If conditional is None, the mutual information between var1 and var2 is
 calculated.</p>
@@ -1470,8 +1471,8 @@ debug=True and return_counts=True</p>
 </dd></dl>
 
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_opencl.</span></code><code class="sig-name descname"><span class="pre">OpenCLKraskovMI</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskovMI"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_opencl.</span></span><span class="sig-name descname"><span class="pre">OpenCLKraskovMI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskovMI"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Calculate mutual information with OpenCL Kraskov implementation.</p>
 <p>Calculate the mutual information (MI) between two variables using OpenCL
 GPU-code. See parent class for references.</p>
@@ -1503,8 +1504,8 @@ the lagged MI between processes (default=0)</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">estimate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskovMI.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_opencl.html#OpenCLKraskovMI.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Estimate mutual information.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -1534,8 +1535,8 @@ debug=True and return_counts=True</p>
 
 </dd></dl>
 
-</div>
-<div class="section" id="pid-estimators">
+</section>
+<section id="pid-estimators">
 <h2>PID Estimators<a class="headerlink" href="#pid-estimators" title="Permalink to this headline">¶</a></h2>
 <p>Partical information decomposition for discrete random variables.</p>
 <p>This module provides an estimator for partial information decomposition
@@ -1543,8 +1544,8 @@ as proposed in</p>
 <p>Bertschinger, N., Rauh, J., Olbrich, E., Jost, J., &amp; Ay, N. (2014). Quantifying
 Unique Information. Entropy, 16(4), 2161–2183. <a class="reference external" href="http://doi.org/10.3390/e16042161">http://doi.org/10.3390/e16042161</a></p>
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_pid.</span></code><code class="sig-name descname"><span class="pre">SydneyPID</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#SydneyPID"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_pid.</span></span><span class="sig-name descname"><span class="pre">SydneyPID</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#SydneyPID"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Estimate partial information decomposition of discrete variables.</p>
 <p>Fast implementation of the BROJA partial information decomposition (PID)
 estimator for discrete data (Bertschinger, 2014). The estimator does not
@@ -1603,8 +1604,8 @@ removed in the future).</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">estimate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#SydneyPID.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#SydneyPID.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
 <dt>s1<span class="classifier">numpy array</span></dt><dd><p>1D array containing realizations of a discrete random variable</p>
@@ -1625,8 +1626,8 @@ unique, shared, and synergistic information</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">is_analytic_null_estimator</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#SydneyPID.is_analytic_null_estimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">is_analytic_null_estimator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#SydneyPID.is_analytic_null_estimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Indicate if estimator supports analytic surrogates.</p>
 <p>Return true if the estimator implements estimate_surrogates_analytic()
 where data is formatted as per the estimate method for this estimator.</p>
@@ -1637,8 +1638,8 @@ where data is formatted as per the estimate method for this estimator.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">is_parallel</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#SydneyPID.is_parallel"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">is_parallel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#SydneyPID.is_parallel"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Indicate if estimator supports parallel estimation over chunks.</p>
 <p>Return true if the supports parallel estimation over chunks, where a
 chunk is one independent data set.</p>
@@ -1651,8 +1652,8 @@ chunk is one independent data set.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.estimators_pid.</span></code><code class="sig-name descname"><span class="pre">TartuPID</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#TartuPID"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_pid.</span></span><span class="sig-name descname"><span class="pre">TartuPID</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#TartuPID"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Estimate partial information decomposition for two inputs and one output</p>
 <p>Implementation of the partial information decomposition (PID) estimator for
 discrete data. The estimator finds shared information, unique information
@@ -1684,8 +1685,8 @@ programming based Partial Information Decomposition estimator. Entropy,
 </dd>
 </dl>
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">estimate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#TartuPID.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#TartuPID.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
 <dt>s1<span class="classifier">numpy array</span></dt><dd><p>1D array containing realizations of a discrete random variable</p>
@@ -1705,8 +1706,8 @@ programming based Partial Information Decomposition estimator. Entropy,
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">is_analytic_null_estimator</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#TartuPID.is_analytic_null_estimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">is_analytic_null_estimator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#TartuPID.is_analytic_null_estimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Indicate if estimator supports analytic surrogates.</p>
 <p>Return true if the estimator implements estimate_surrogates_analytic()
 where data is formatted as per the estimate method for this estimator.</p>
@@ -1717,8 +1718,8 @@ where data is formatted as per the estimate method for this estimator.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">is_parallel</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#TartuPID.is_parallel"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">is_parallel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_pid.html#TartuPID.is_parallel"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Indicate if estimator supports parallel estimation over chunks.</p>
 <p>Return true if the supports parallel estimation over chunks, where a
 chunk is one independent data set.</p>
@@ -1730,8 +1731,8 @@ chunk is one independent data set.</p>
 
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
             <div class="clearer"></div>
@@ -1740,8 +1741,9 @@ chunk is one independent data set.</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table of Contents</a></h3>
-  <ul>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
 <li><a class="reference internal" href="#">Information theoretic estimators</a><ul>
 <li><a class="reference internal" href="#jidt-estimators-cpu">JIDT Estimators (CPU)</a></li>
 <li><a class="reference internal" href="#opencl-estimators-gpu">OpenCL Estimators (GPU)</a></li>
@@ -1750,12 +1752,17 @@ chunk is one independent data set.</p>
 </li>
 </ul>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="idtxl_results_class.html"
-                        title="previous chapter">The Results Class</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="idtxl_helper.html"
-                        title="next chapter">Helper functions</a></p>
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="idtxl_results_class.html"
+                          title="previous chapter">The Results Class</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="idtxl_helper.html"
+                          title="next chapter">Helper functions</a></p>
+  </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -1767,7 +1774,7 @@ chunk is one independent data set.</p>
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -1792,13 +1799,13 @@ chunk is one independent data set.</p>
         <li class="right" >
           <a href="idtxl_results_class.html" title="The Results Class"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Information theoretic estimators</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.1.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
     </div>
   </body>
 </html>
