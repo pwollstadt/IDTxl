@@ -15,10 +15,9 @@ settings = {'embedding_past_range_set': [0.005, 0.00998, 0.01991, 0.03972, 0.079
             'estimation_method': 'bbc',
             'debug': True,
             'visualization': True,
-            'output_path': '/home/mlindner/test_vis',
+            'output_path': './test_vis',
             'output_prefix': 'systemtest_optimizationRudelt_image1'}
 
 processes = [0]
 optimization_rudelt = OptimizationRudelt(settings)
 results_bbc = optimization_rudelt.optimize(data, processes)
-

@@ -3,7 +3,7 @@
 All but the visualization function are adapted from:
     [1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding
         optimization reveals long-lasting history dependence in
-        neural spiking activity (in prep.)
+        neural spiking activity, 2021, PLOS Computational Biology, 17(6)
 
     [2]: https://github.com/Priesemann-Group/hdestimator
 
@@ -25,7 +25,7 @@ def get_CI_bounds(R,
                   bootstrap_CI_percentile_hi=97.5):
     """
     Given bootstrap replications bs_Rs of the estimate for R,
-    obtain the lower and upper bound of a 95% confidence 
+    obtain the lower and upper bound of a 95% confidence
     interval based on the standard deviation; or an arbitrary
     confidence interval based on percentiles of the replications.
     """
@@ -48,7 +48,7 @@ def add_up_dicts(dicts):
 def get_min_key_for_max_value(d):
     """
     For a dictionary d, get the key for the largest value.
-    If largest value is attained several times, get the 
+    If largest value is attained several times, get the
     smallest respective key.
     """
 
@@ -62,9 +62,9 @@ def get_min_key_for_max_value(d):
 
 def get_max_R_T(max_Rs):
     """
-    Get R and T for which R is maximised. 
+    Get R and T for which R is maximised.
 
-    If R is maximised at several T, get the 
+    If R is maximised at several T, get the
     smallest respective T.
     """
 
@@ -133,7 +133,7 @@ def get_binned_firing_rate(spike_times, bin_size):
 
 
 def remove_key(d, key):
-    """    
+    """
     Remove an entry from a dictionary .
     """
 

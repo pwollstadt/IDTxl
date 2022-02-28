@@ -62,3 +62,5 @@ http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf*
 + PID estimators: *[Bertschinger et al., 2014, Entropy, 16(4)](https://www.mdpi.com/1099-4300/16/4/2161);
 [Makkeh et al., 2017, Entropy, 19(10)](https://www.mdpi.com/1099-4300/19/10/530);
 [Makkeh et al., 2018, Entropy, 20(271)](https://www.mdpi.com/1099-4300/20/4/271)*
++ History-dependence estimator for neural spiking data: *[Rudelt et al., 2021, PLOS Computational Biology, 17(6)](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1008927)*
++

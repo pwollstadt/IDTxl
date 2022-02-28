@@ -552,7 +552,7 @@ class Data_spiketime():
             References:
                 [1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding
                     optimization reveals long-lasting history dependence in
-                    neural spiking activity (in prep.)
+                    neural spiking activity, 2021, PLOS Computational Biology, 17(6)
 
                 [2]: https://github.com/Priesemann-Group/hdestimator
 

@@ -6,7 +6,7 @@ from sys import stderr
 from idtxl.estimators_Rudelt import RudeltBBCEstimator, RudeltShufflingEstimator
 import idtxl.hde_utils as utl
 from idtxl.results import DotDict, ResultsSingleProcessRudelt
-import os
+from pathlib import Path
 from idtxl.data_spiketime import Data_spiketime
 
 
@@ -19,7 +19,7 @@ class OptimizationRudelt():
 
         [1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding
             optimization reveals long-lasting history dependence in
-            neural spiking activity (in prep.)
+            neural spiking activity, 2021, PLOS Computational Biology, 17(6)
 
         [2]: https://github.com/Priesemann-Group/hdestimator
 
@@ -230,13 +230,13 @@ class OptimizationRudelt():
         assert('embedding_past_range_set' in self.settings), \
             'embedding_past_range_set has to be specified (see help)!'
         assert (isinstance(self.settings['embedding_past_range_set'], list)), \
-            "Error: setting 'embedding_past_range_set' needs to a numpy array but is defined as {0}. " \
+            "Error: setting 'embedding_past_range_set' needs to be a list but is defined as {0}. " \
             "Aborting.".format(type(self.settings['embedding_past_range_set']))
 
         assert ('embedding_number_of_bins_set' in self.settings), \
             'embedding_number_of_bins_set has to be specified (see help)!'
         assert (isinstance(self.settings['embedding_number_of_bins_set'], list)), \
-            "Error: setting 'embedding_number_of_bins_set' needs to a numpy array but is defined as {0}. " \
+            "Error: setting 'embedding_number_of_bins_set' needs to a list but is defined as {0}. " \
             "Aborting.".format(type(self.settings['embedding_number_of_bins_set']))
 
         assert ('embedding_scaling_exponent_set' in self.settings), \
@@ -272,7 +272,7 @@ class OptimizationRudelt():
             assert ('auto_MI_bin_size_set' in self.settings), \
                 'If analyse_auto_MI is set to True, auto_MI_bin_size_set has to be specified (see help)!'
             assert (isinstance(self.settings['auto_MI_bin_size_set'], list)), \
-                "Error: setting 'auto_MI_bin_size_set' needs to a numpy array but is defined as {0}. " \
+                "Error: setting 'auto_MI_bin_size_set' needs to a list but is defined as {0}. " \
                 "Aborting.".format(type(self.settings['auto_MI_bin_size_set']))
             assert ('auto_MI_max_delay' in self.settings), \
                 'If analyse_auto_MI is set to True, auto_MI_max_delay has to be specified (see help)!'
@@ -801,7 +801,7 @@ class OptimizationRudelt():
 
             [1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding
                 optimization reveals long-lasting history dependence in
-                neural spiking activity (in prep.)
+                neural spiking activity, 2021, PLOS Computational Biology, 17(6)
 
             [2]: https://github.com/Priesemann-Group/hdestimator
 
@@ -865,8 +865,8 @@ class OptimizationRudelt():
             process_count += 1
 
             if self.settings['visualization'] == True:
-                filename = os.path.join(self.settings['output_path'], self.settings['output_prefix']) + \
-                           "_process" + str(process) + '.svg'
+                filename = Path(self.settings['output_path']).joinpath(
+                     '{}_process{}.svg'.format(self.settings['output_prefix'], process))
                 utl.hde_visualize_results(results, process, filename)
 
             # remove results from single process from self

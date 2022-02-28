@@ -35,7 +35,7 @@ class RudeltAbstractEstimator(Estimator):
 
         [1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding
             optimization reveals long-lasting history dependence in
-            neural spiking activity (in prep.)
+            neural spiking activity, 2021, PLOS Computational Biology, 17(6)
 
         [2]: https://github.com/Priesemann-Group/hdestimator
 
@@ -316,12 +316,23 @@ class RudeltAbstractEstimator(Estimator):
 
 
 class RudeltAbstractNSBEstimator(RudeltAbstractEstimator):
-    """Abstract class for implementation of nsb estimators from Rudelt.
+    """Abstract class for implementation of NSB estimators from Rudelt.
 
-    Abstract class for implementation of nsb estimators, child classes
-    implement nsb estimators for mutual information (MI) .
+    Abstract class for implementation of Nemenman-Shafee-Bialek (NSB)
+    estimators, child classes implement nsb estimators for mutual information
+    (MI).
 
     implemented in idtxl by Michael Lindner, Göttingen 2021
+
+    References:
+
+        [1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding
+            optimization reveals long-lasting history dependence in
+            neural spiking activity, 2021, PLOS Computational Biology, 17(6)
+        [2]: I. Nemenman, F. Shafee, W. Bialek: Entropy and inference,
+            revisited. In T.G. Dietterich, S. Becker, and Z. Ghahramani,
+            editors, Advances in Neural Information Processing Systems 14,
+            Cambridge, MA, 2002. MIT Press.
 
     Args:
         settings : dict
@@ -764,10 +775,10 @@ class RudeltPluginEstimatorSymbolsMI(RudeltAbstractEstimator):
 
 class RudeltBBCEstimator(RudeltAbstractEstimator):
     """
-    BBC Estimator using NSB and Plugin estimator
+    Bayesian bias criterion (BBC) Estimator using NSB and Plugin estimator
 
     Calculate the mutual information (MI) of one variable depending on its past
-    using nsb and plugin estimator and check if bias criterion is passed/
+    using nsb and plugin estimator and check if bias criterion is passed.
     See parent class for references.
 
     implemented in idtxl by Michael Lindner, Göttingen 2021
