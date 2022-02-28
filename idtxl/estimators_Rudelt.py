@@ -1020,48 +1020,48 @@ class RudeltShufflingEstimator(RudeltAbstractEstimator):
         a correction term to reduce its bias.
 
         For the plug-in estimate:
+
         - Extract the past_symbol_counts from the symbol_counts.
         - I_plugin = H(X_past) - H(X_past | X)
 
         Notation:
-        X: current activity, aka response
-        X_past: past activity
 
-        P_X_uncond: P(X)
-        P_X_past_uncond: P(X_past)
-        P_X_past_cond_X: P(X_past | X)
-
-        H_X_past_uncond: H(X_past)
-        H_X_past_cond_X: H(X_past | X)
-
-        I_plugin: plugin estimate of I(X_past; X)
-
+        - X: current activity, aka response
+        - X_past: past activity
+        - P_X_uncond: P(X)
+        - P_X_past_uncond: P(X_past)
+        - P_X_past_cond_X: P(X_past | X)
+        - H_X_past_uncond: H(X_past)
+        - H_X_past_cond_X: H(X_past | X)
+        - I_plugin: plugin estimate of I(X_past; X)
 
         For the correction term:
+
         - Simulate additional data under the assumption that activity
-        in the past contributes independently towards the current activity.
+            in the past contributes independently towards the current activity.
         - Compute the entropy under the assumptions of the model, which
-        due to its simplicity is easy to sample and the estimate unbiased
+            due to its simplicity is easy to sample and the estimate unbiased
         - Compute the entropy using the plug-in estimate, whose bias is
-        similar to that of the plug-in estimate on the original data
+            similar to that of the plug-in estimate on the original data
         - Compute the correction term as the difference between the
-        unbiased and biased terms
+            unbiased and biased terms
 
         Notation:
-        P0_sh_X_past_cond_X: P_0,sh(X_past | X), equiv. to P(X_past | X)
-                             on the shuffled data
 
-        H0_X_past_cond_X: H_0(X_past | X), based on the model of independent
-        contributions
-        H0_sh_X_past_cond_X: H_0,sh(X_past | X), based on
-        P0_sh_X_past_cond_X, ie the plug-in estimate
+        - P0_sh_X_past_cond_X: P_0,sh(X_past | X), equiv. to P(X_past | X)
+          on the shuffled data
+        - H0_X_past_cond_X: H_0(X_past | X), based on the model of independent
+          contributions
+        - H0_sh_X_past_cond_X: H_0,sh(X_past | X), based on
+        - P0_sh_X_past_cond_X, ie the plug-in estimate
+        - I_corr: the correction term to reduce the bias of I_plugin
 
-        I_corr: the correction term to reduce the bias of I_plugin
-
-
-        :param symbol_counts: the activity of a spike train is embedded into symbols,
-        whose occurences are counted (cf emb.get_symbol_counts)
-        :param number_of_bins_d: the number of bins of the embedding
+        Args:
+            symbol_counts : iterable
+                the activity of a spike train is embedded into symbols,
+                whose occurrences are counted (cf emb.get_symbol_counts)
+            number_of_bins_d : int
+                the number of bins of the embedding
         """
 
         # plug-in estimate

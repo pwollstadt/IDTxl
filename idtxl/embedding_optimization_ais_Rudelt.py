@@ -27,7 +27,7 @@ class OptimizationRudelt():
 
     Args:
         settings : dict
-            . estimation_method : string
+            - estimation_method : string
                 The method to be used to estimate the history dependence 'bbc' or 'shuffling'.
             - embedding_step_size : float
                 Step size delta t (in seconds) with which the window is slid through the data.
@@ -37,21 +37,20 @@ class OptimizationRudelt():
                 (default: [1, 2, 3, 4, 5])
             - embedding_past_range_set : list of floating-point values
                 Set of values for T, the past range (in seconds) to be used for embeddings.
-                (default: [0.005, 0.00561, 0.00629, 0.00706, 0.00792, 0.00889, 0.00998, 0.01119, 0.01256,
-                           0.01409, 0.01581, 0.01774, 0.01991, 0.02233, 0.02506, 0.02812, 0.03155, 0.0354,
-                           0.03972, 0.04456, 0.05, 0.0561, 0.06295, 0.07063, 0.07924, 0.08891, 0.09976, 0.11194,
-                           0.12559, 0.14092, 0.15811, 0.17741, 0.19905, 0.22334, 0.25059, 0.28117, 0.31548,
-                           0.35397, 0.39716, 0.44563, 0.5, 0.56101, 0.62946, 0.70627, 0.79245, 0.88914, 0.99763,
-                           1.11936, 1.25594, 1.40919, 1.58114, 1.77407, 1.99054, 2.23342, 2.50594, 2.81171, 3.15479,
-                           3.53973, 3.97164, 4.45625, 5.0])
+                (default: [0.005, 0.00561, 0.00629, 0.00706, 0.00792, 0.00889,
+                0.00998, 0.01119, 0.01256, 0.01409, 0.01581, 0.01774, 0.01991,
+                0.02233, 0.02506, 0.02812, 0.03155, 0.0354, 0.03972, 0.04456,
+                0.05, 0.0561, 0.06295, 0.07063, 0.07924, 0.08891, 0.09976,
+                0.11194, 0.12559, 0.14092, 0.15811, 0.17741, 0.19905, 0.22334,
+                0.25059, 0.28117, 0.31548, 0.35397, 0.39716, 0.44563, 0.5,
+                0.56101, 0.62946, 0.70627, 0.79245, 0.88914, 0.99763, 1.11936,
+                1.25594, 1.40919, 1.58114, 1.77407, 1.99054, 2.23342, 2.50594,
+                2.81171, 3.15479, 3.53973, 3.97164, 4.45625, 5.0])
             - embedding_scaling_exponent_set : dict
                 Set of values for kappa, the scaling exponent for the bins in the embedding.
                 Should be a python-dictionary with the three entries 'number_of_scalings', 'min_first_bin_size' and
                 'min_step_for_scaling'.
-                defaults: {'number_of_scalings': 10,
-                           'min_first_bin_size': 0.005,
-                           'min_step_for_scaling': 0.01})
-
+                defaults: {'number_of_scalings': 10, 'min_first_bin_size': 0.005, 'min_step_for_scaling': 0.01})
             - bbc_tolerance : float
                 The tolerance for the Bayesian Bias Criterion. Influences which embeddings are
                 discarded from the analysis.
@@ -65,7 +64,6 @@ class OptimizationRudelt():
                 Minimum past range T_0 (in seconds) to take into consideration for the estimation of the
                 information timescale tau_R.
                 (default: 0.01)
-
             - number_of_bootstraps_R_max : int
                 The number of bootstrap re-shuffles that should be used to determine the optimal
                 embedding. (Bootstrap the estimates of R_max to determine R_tot.)
@@ -103,11 +101,11 @@ class OptimizationRudelt():
                 The upper percentiles for the confidence interval.
                 This has no effect if bootstrap_CI_use_sd is set to True
                 (default: 97.5)
-
             - analyse_auto_MI : bool
                 perform calculation of auto mutual information of the spike train
                 (default: True)
                 If set to True:
+
                 - auto_MI_bin_size_set : list of floating-point values
                     Set of values for the sizes of the bins (in seconds).
                     (default: [0.005, 0.01, 0.025, 0.05, 0.25, 0.5])
@@ -120,6 +118,7 @@ class OptimizationRudelt():
                 the history dependence and the auto mutual information
                 (default: False)
                 if set to True:
+
                 - output_path : String
                     Path where the .eps images should be saved
                 - output_prefix : String
@@ -652,6 +651,7 @@ class OptimizationRudelt():
 
         Args:
             data : data_spiketime object
+                Input data
             target_R : String
                 One of 'R_max', 'R_tot' or 'nonessential'.
                 If set to R_max, replications of R are produced for the T at which
@@ -879,40 +879,42 @@ class OptimizationRudelt():
             optimizes a single realisation of spike time data given the process number
 
             Args:
-            data : Data_spiketime instance
-                raw data for analysis
-            process : int
-                index of process;
+                data : Data_spiketime instance
+                    raw data for analysis
+                process : int
+                    index of process;
 
             Returns:
-            returns a DotDict with the following keys
-                Process : int
-                    Process that was optimized
-                estimation_method : String
-                    Estimation method that was used for optimization
-                T_D : float
-                    Estimated optimal value for the temporal depth TD
-                tau_R :
-                    Information timescale tau_R, a characteristic timescale of history
-                    dependence similar to an autocorrelation time.
-                R_tot : float
-                    Estimated value for the total history dependence Rtot,
-                AIS_tot : float
-                    Estimated value for the total active information storage
-                opt_number_of_bins_d : int
-                    Number of bins d for the embedding that yields (R̂tot ,T̂D)
-                opt_scaling_k : int
-                    Scaling exponent κ for the embedding that yields (R̂tot , T̂D)
-                opt_first_bin_size : int
-                    Size of the first bin τ1 for the embedding that yields (R̂tot , T̂D ),
-                history_dependence : array with floating-point values
-                    Estimated history dependence for each embedding
-                firing_rate : float
-                    Firing rate of the neuron/ spike train
-                recording_length : float
-                    Length of the recording (in seconds)
-                H_spiking : float
-                    Entropy of the spike times
+                DotDict
+                    with the following keys
+
+                    Process : int
+                        Process that was optimized
+                    estimation_method : String
+                        Estimation method that was used for optimization
+                    T_D : float
+                        Estimated optimal value for the temporal depth TD
+                    tau_R :
+                        Information timescale tau_R, a characteristic timescale of history
+                        dependence similar to an autocorrelation time.
+                    R_tot : float
+                        Estimated value for the total history dependence Rtot,
+                    AIS_tot : float
+                        Estimated value for the total active information storage
+                    opt_number_of_bins_d : int
+                        Number of bins d for the embedding that yields (R̂tot ,T̂D)
+                    opt_scaling_k : int
+                        Scaling exponent κ for the embedding that yields (R̂tot , T̂D)
+                    opt_first_bin_size : int
+                        Size of the first bin τ1 for the embedding that yields (R̂tot , T̂D ),
+                    history_dependence : array with floating-point values
+                        Estimated history dependence for each embedding
+                    firing_rate : float
+                        Firing rate of the neuron/ spike train
+                    recording_length : float
+                        Length of the recording (in seconds)
+                    H_spiking : float
+                        Entropy of the spike times
 
             if analyse_auto_MI was set to True additionally:
                 auto_MI : dict

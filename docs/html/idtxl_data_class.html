@@ -4,11 +4,12 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>The Data Class &#8212; IDTxl 1.2.1 documentation</title>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>The Data Class &#8212; IDTxl 1.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
@@ -39,7 +40,7 @@
         <li class="right" >
           <a href="index.html" title="Welcome to IDTxl’s documentation!"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">The Data Class</a></li> 
       </ul>
     </div>  
@@ -49,11 +50,11 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="the-data-class">
+  <section id="the-data-class">
 <h1>The Data Class<a class="headerlink" href="#the-data-class" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
-<dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.data.</span></code><code class="sig-name descname"><span class="pre">Data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'psr'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.data.</span></span><span class="sig-name descname"><span class="pre">Data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'psr'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Store data for information dynamics estimation.</p>
 <p>Data takes a 1- to 3-dimensional array representing realisations of random
 variables in dimensions: processes, samples (over time), and replications.
@@ -116,15 +117,15 @@ seed is set as default.</p>
 </dl>
 </dd>
 </dl>
-<dl class="py method">
-<dt>
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">data</span></code></dt>
+<dl class="py property">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">data</span></span></dt>
 <dd><p>Return data array.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">generate_logistic_maps_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_replications</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient_matrices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[[0.5,</span> <span class="pre">0.0],</span> <span class="pre">[0.4,</span> <span class="pre">0.5]]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.generate_logistic_maps_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">generate_logistic_maps_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_replications</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient_matrices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[[0.5,</span> <span class="pre">0.],</span> <span class="pre">[0.4,</span> <span class="pre">0.5]]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.generate_logistic_maps_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Generate discrete-time coupled-logistic-maps time series.</p>
 <p>Generate data and overwrite the instance’s current data.</p>
 <p>The implemented logistic map function is f(x) = 4 * x * (1 - x).</p>
@@ -150,8 +151,8 @@ determines the order of the stochastic process.
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">generate_mute_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_replications</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.generate_mute_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">generate_mute_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_replications</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.generate_mute_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Generate example data for a 5-process network.</p>
 <p>Generate example data and overwrite the instance’s current data. The
 network is used as an example the paper on the MuTE toolbox (Montalto,
@@ -185,8 +186,8 @@ new concept in neural structure determination. Biol Cybern 84:
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">generate_var_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_replications</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient_matrices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[[0.5,</span> <span class="pre">0.0],</span> <span class="pre">[0.4,</span> <span class="pre">0.5]]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.generate_var_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">generate_var_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_replications</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient_matrices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[[0.5,</span> <span class="pre">0.],</span> <span class="pre">[0.4,</span> <span class="pre">0.5]]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.generate_var_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Generate discrete-time VAR (vector autoregressive) time series.</p>
 <p>Generate data and overwrite the instance’s current data.</p>
 <dl class="simple">
@@ -211,8 +212,8 @@ determines the order of the VAR process.
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">get_realisations</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.get_realisations"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">get_realisations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.get_realisations"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return realisations for a list of indices.</p>
 <p>Return realisations for indices in list. Optionally, realisations can
 be shuffled to create surrogate data for statistical testing. For
@@ -303,20 +304,20 @@ samples * no.replications) x number of indices</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">get_seed</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.get_seed"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">get_seed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.get_seed"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>return the initial seed of the data</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">get_state</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.get_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">get_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.get_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>return the current state of the random seed</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">n_realisations</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.n_realisations"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">n_realisations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.n_realisations"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Number of realisations over samples and replications.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -332,14 +333,14 @@ number of all samples is used</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">n_realisations_repl</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.n_realisations_repl"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">n_realisations_repl</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.n_realisations_repl"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Number of realisations over replications.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">n_realisations_samples</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.n_realisations_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">n_realisations_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.n_realisations_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Number of realisations over samples.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -354,8 +355,8 @@ sample because we loose the first k samples to the embedding)</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">permute_replications</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.permute_replications"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">permute_replications</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.permute_replications"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return realisations with permuted replications (time stays intact).</p>
 <p>Create surrogate data by permuting realisations over replications while
 keeping the temporal structure (order of samples) intact. Return
@@ -444,8 +445,8 @@ indices</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">permute_samples</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perm_settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.permute_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">permute_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perm_settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.permute_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return realisations with permuted samples (repl. stays intact).</p>
 <p>Create surrogate data by permuting realisations over samples (time)
 while keeping the order of replications intact. Surrogates can be
@@ -655,8 +656,8 @@ permutations.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">set_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_order</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_order</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Overwrite data in an existing Data object.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -672,8 +673,8 @@ must have the same length as number of dimensions in data</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">slice_permute_replications</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">process</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.slice_permute_replications"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">slice_permute_replications</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">process</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.slice_permute_replications"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return data slice with permuted replications (time stays intact).</p>
 <p>Create surrogate data by permuting realisations over replications while
 keeping the temporal structure (order of samples) intact. Return
@@ -683,8 +684,8 @@ block-wise by permuting the order of replications</p>
 </dd></dl>
 
 <dl class="py method">
-<dt>
-<code class="sig-name descname"><span class="pre">slice_permute_samples</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">process</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perm_settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.slice_permute_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">slice_permute_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">process</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perm_settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.slice_permute_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return slice of data with permuted samples (repl. stays intact).</p>
 <p>Create surrogate data by permuting data in a slice over samples (time)
 while keeping the order of replications intact. Return slice for the
@@ -883,7 +884,7 @@ permutations for the generation of surrogate data.</p>
 
 </dd></dl>
 
-</div>
+</section>
 
 
             <div class="clearer"></div>
@@ -892,12 +893,16 @@ permutations for the generation of surrogate data.</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="index.html"
-                        title="previous chapter">Welcome to IDTxl’s documentation!</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="idtxl_network_inference.html"
-                        title="next chapter">Algorithms for network inference</a></p>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="index.html"
+                          title="previous chapter">Welcome to IDTxl’s documentation!</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="idtxl_network_inference.html"
+                          title="next chapter">Algorithms for network inference</a></p>
+  </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -909,7 +914,7 @@ permutations for the generation of surrogate data.</p>
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -934,13 +939,13 @@ permutations for the generation of surrogate data.</p>
         <li class="right" >
           <a href="index.html" title="Welcome to IDTxl’s documentation!"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">The Data Class</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.1.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
     </div>
   </body>
 </html>
