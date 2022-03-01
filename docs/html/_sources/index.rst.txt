@@ -24,6 +24,7 @@ look at the IDTxl `google discussion group <https://groups.google.com/forum/#!fo
    idtxl_network_comparison.rst
    idtxl_results_class.rst
    idtxl_estimators.rst
+   idtxl_postprocessing.rst
    idtxl_helper.rst
 
 

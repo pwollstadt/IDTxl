@@ -22,78 +22,78 @@ class SignificantSubgraphMining:
     https://www.biorxiv.org/content/10.1101/2021.11.03.467050v1.full
 
     Attributes:
-        resultsA: list
+        resultsA : list
             List of lists of IDTxl results dicts. One list per subject in
             Group A and one results dict per target.
-        resultsB: list
+        resultsB : list
             List of lists of IDTxl results dicts. One list per subject in
             Group B and one results dict per target
-        coding_list: list
+        coding_list : list
             List of all target-source-lag triplets in data set. Used to encode
             networks as lists of indices.
-        groupA_networks: list
+        groupA_networks : list
             List of lists of indices representing networks of subjects in
             Group A
-        groupB_networks: list
+        groupB_networks : list
             List of lists of indices representing networks of subjects in
             Group B
-        graph_type: string
+        graph_type : string
             can be either "directed" or "undirected" (undirected is only
             possible if data_format is "adjacency")
-        data_format: string
+        data_format : string
             can be either "idtxl" or "adjacency"
-        design: string
+        design : string
             Sampling design. Either "within" for within-subject designs (the
             same group of subjects is measured under two different conditions)
             or "between" for between-subjects designs (two different groups
             of subjects are measured under the same condition)
-        n_A: int
+        n_A : int
             Sample size of group A
-        n_B: int
+        n_B : int
             Sample size of group B
-        N: int
+        N : int
             Total sample size
-        alpha: float
+        alpha : float
             Uncorrected significance level
-        min_p_value_table: list
+        min_p_value_table : list
             List of minimum achievable p-values for all possible numbers of
             total occurrences of a subgraph (0 to N)
-        p_value_table: numpy array
+        p_value_table : numpy array
             Lookup table of p-values for each combination of occurrences in
             Group A and total occurrences between 0 and N
-        min_freq: int
+        min_freq : int
             Minimum number of occurrences required for testability at
             level alpha
-        link_counts: list
+        link_counts : list
             List of links counts for each link that occurs at least once
             in the data set (i.e. for each target-source-lag triplet
             in coding_list)
-        union_indices: list
+        union_indices : list
             List of indices of target-source-lag triplets in coding_list
             occuring at east min_freq times. All other triplets and all their
             supergraphs can be ignored because they are not even testable at
             level alpha
-        frequent_graphs: list
+        frequent_graphs : list
             List of frequent subgraphs in data set occuring at least min_freq
             times. Initialized empty and filled by calling the
             enumerate_frequent_subgraphs method
-        p_values: list
+        p_values : list
             List of p-values for each frequent subgraph. Initialized empty and
             filled by calling the enumerate_frequent_subgraphs method
-        minimum_p_values: list
+        minimum_p_values : list
             List of minimum p-values for each frequent subgraph. Initialized
             empty and  filled by calling the enumerate_frequent_subgraphs
             method
-        num_testable_graphs: int
+        num_testable_graphs : int
             Number of subgraphs testable at level alpha. Initialized as 0 and
             determined by calling the enumerate_significant_subgraphs method.
-        k_rt: int
+        k_rt : int
             Tarones correction factor. Initialized as None. Determined by
             calling the enumerate_significant_subgraphs method
-        p_values_corr: list
+        p_values_corr : list
             List of corrected p-values. Intialized empty and filled by calling
             the enumerate_significant_subgraphs method
-        significant_graphs: list
+        significant_graphs : list
             List of tuples of significant subgraphs in data set and their
             associated corrected p-values. Initialized empty and filled by
             calling the enumerate_significant_subgraphs method
@@ -291,7 +291,7 @@ class SignificantSubgraphMining:
         described in the coding list.
 
         Args:
-            indices: list of integers
+            indices : list of integers
 
         Returns:
             List of 3-tuples
@@ -396,7 +396,7 @@ class SignificantSubgraphMining:
         sample sizes.
 
         Args:
-            design: string
+            design : string
                 sampling design. either "within" or "between"
 
         Returns:
@@ -512,9 +512,9 @@ class SignificantSubgraphMining:
         indices
 
         Args:
-            indices: list of integers
+            indices : list of integers
                 indices of all links the subgraph to be counted consists of
-            where: string
+            where : string
                 if "original" then the subgraph is counted in the original
                 data set. if "perm" the subgraph is counted in the permuted
                 data set (for WY procedure)
@@ -555,9 +555,9 @@ class SignificantSubgraphMining:
         list of indices.
 
         Args:
-            indices: list of integers
+            indices : list of integers
                 indices of all links the subgraph to be counted consists of
-            where: string
+            where : string
                 if "original" then the discordants are counted in the original
                 data set. if "perm" the discordants are counted in the permuted
                 data set (for WY procedure)
@@ -601,16 +601,17 @@ class SignificantSubgraphMining:
         Frequent subgraphs are appended to self.frequent_subgraphs.
 
         Args:
-            to_be_extended: list
+            to_be_extended : list
                 list of indices describing the locations of 1s in the union
                 network. Each such list represent a particular subgraph.
-           freq: int
+           freq : int
                desired minimum frequency
-           max_depth: int
+           max_depth : int
                If specified, only subgraphs with at most max_depth links are
                considered. For instance, if max_depth = 1 only individual
                links are tested. The default value is infinity meaning that
                all possible subgraphs are considered.
+
         Returns:
             None
         '''
@@ -679,11 +680,12 @@ class SignificantSubgraphMining:
         designs
 
         Args:
-            to_be_extended: list
+            to_be_extended : list
                 list of indices describing the locations of 1s in the union
                 network. Each such list represent a particular subgraph.
-           freq: int
+           freq : int
                desired minimum frequency
+
         Returns:
             None
         '''
@@ -908,7 +910,7 @@ class SignificantSubgraphMining:
         subgraphs.
 
         Args:
-            freq: int
+            freq : int
                 desired minimum frequency
         '''
         # create union network consisting of all individual links occuring
@@ -952,20 +954,20 @@ class SignificantSubgraphMining:
         methods depending on the input arguments.
 
         Args:
-            verbose: bool
+            verbose : bool
                 If True, print summary of results
-            method: string
+            method : string
                 Determines method used for multiple comparisons correction. can
                 be "Tarone", "Hommel", or "Westfall-Young"
-            num_perm: int
+            num_perm : int
                 Number of permutations used for Westfall-Young procedure.
-            wy_algorithm: string
+            wy_algorithm : string
                 algorithm used for Westfall-Young permutation procedure. Can be
                 either "simple_depth_fist" (evaluates one permuted data set
                 at a time) or "wy_light" for the Westfall-Young light algorithm
                 introduced by Llinares-Lopez et al 2015 (distributes
                 computations across permutations)
-            max_depth: integer
+            max_depth : integer
                 maximum complexity of subgraphs (number of links) up to which
                 subgraphs are mined.
 
@@ -1123,9 +1125,9 @@ class SignificantSubgraphMining:
         permutation-by-permutation.
 
         Args:
-            num_perm: int
+            num_perm : int
                 Number of permutation used for Westfall-Young procedure.
-            verbose: bool
+            verbose : bool
                 If True, print summary of results
 
         Returns:
@@ -1280,9 +1282,9 @@ class SignificantSubgraphMining:
         Knowledge Discovery and Data Mining. ACM; 2015. p. 725–734.
 
         Args:
-            num_perm: int
+            num_perm : int
                 Number of permutation used for Westfall-Young procedure.
-            verbose: bool
+            verbose : bool
                 If True, print summary of results
 
         Returns:
@@ -1404,7 +1406,7 @@ class SignificantSubgraphMining:
         self.wy_level_light.
 
         Args:
-            indices: list of integers
+            indices : list of integers
                 indices of all links of the subgraph
         Returns:
             None
@@ -1471,9 +1473,9 @@ class SignificantSubgraphMining:
         Counts subgraph occurrences in k-th permuted data set
 
         Args:
-            indices: list of integers
+            indices : list of integers
                 indices of all links of the subgraph
-            k: integer
+            k : integer
                 index of permuted data set
 
         Returns:
@@ -1506,7 +1508,7 @@ class SignificantSubgraphMining:
         self.wy_level_light.
 
         Args:
-            indices: list of integers
+            indices : list of integers
                 indices of all links of the subgraph
         Returns:
             None
@@ -1577,9 +1579,9 @@ class SignificantSubgraphMining:
         in k-th permuted data set.
 
         Args:
-            indices: list of integers
+            indices : list of integers
                 indices of all links of the subgraph
-            k: integer
+            k : integer
                 index of permuted data set
 
         Returns:

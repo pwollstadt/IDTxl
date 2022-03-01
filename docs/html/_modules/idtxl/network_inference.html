@@ -5,13 +5,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>idtxl.network_inference &#8212; IDTxl 1.0 documentation</title>
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <title>idtxl.network_inference &#8212; IDTxl 1.4 documentation</title>
     <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
     <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -31,7 +32,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.4 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl.network_inference</a></li> 
       </ul>
@@ -45,9 +46,9 @@
   <h1>Source code for idtxl.network_inference</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Parent class for all network inference.&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">.network_analysis</span> <span class="k">import</span> <span class="n">NetworkAnalysis</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">stats</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">idtxl_exceptions</span> <span class="k">as</span> <span class="n">ex</span>
+<span class="kn">from</span> <span class="nn">.network_analysis</span> <span class="kn">import</span> <span class="n">NetworkAnalysis</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">idtxl_exceptions</span> <span class="k">as</span> <span class="n">ex</span>
 
 
 <div class="viewcode-block" id="NetworkInference"><a class="viewcode-back" href="../../idtxl.html#idtxl.network_inference.NetworkInference">[docs]</a><span class="k">class</span> <span class="nc">NetworkInference</span><span class="p">(</span><span class="n">NetworkAnalysis</span><span class="p">):</span>
@@ -72,7 +73,7 @@
 <span class="sd">            indices of the set of conditionals coming from source processes</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Create class attributes for estimation</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">statistic_omnibus</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sign_omnibus</span> <span class="o">=</span> <span class="kc">False</span>
@@ -123,7 +124,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_set</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">_include_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidate_set</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Inlcude informative candidates into the conditioning set.</span>
+        <span class="sd">&quot;&quot;&quot;Include informative candidates into the conditioning set.</span>
 
 <span class="sd">        Loop over each candidate in the candidate set and test if it has</span>
 <span class="sd">        significant mutual information with the current value, conditional</span>
@@ -182,7 +183,8 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">([</span><span class="n">max_candidate</span><span class="p">])[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">significant</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">max_statistic</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">candidate_set</span><span class="p">,</span> <span class="n">te_max_candidate</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">candidate_set</span><span class="p">,</span> <span class="n">te_max_candidate</span><span class="p">,</span>
+                    <span class="n">conditional</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">except</span> <span class="n">ex</span><span class="o">.</span><span class="n">AlgorithmExhaustedError</span> <span class="k">as</span> <span class="n">aee</span><span class="p">:</span>
                 <span class="c1"># The algorithm cannot continue here, so we&#39;ll terminate the</span>
                 <span class="c1"># check of significance for this candidate, though those</span>
@@ -275,7 +277,7 @@
 <div class="viewcode-block" id="NetworkInferenceMI"><a class="viewcode-back" href="../../idtxl.html#idtxl.network_inference.NetworkInferenceMI">[docs]</a><span class="k">class</span> <span class="nc">NetworkInferenceMI</span><span class="p">(</span><span class="n">NetworkInference</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Parent class for mutual information network inference algorithms.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">measure</span> <span class="o">=</span> <span class="s1">&#39;mi&#39;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
@@ -387,7 +389,7 @@
 <div class="viewcode-block" id="NetworkInferenceTE"><a class="viewcode-back" href="../../idtxl.html#idtxl.network_inference.NetworkInferenceTE">[docs]</a><span class="k">class</span> <span class="nc">NetworkInferenceTE</span><span class="p">(</span><span class="n">NetworkInference</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Parent class for transfer entropy network inference algorithms.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">measure</span> <span class="o">=</span> <span class="s1">&#39;te&#39;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
@@ -531,7 +533,7 @@
 <div class="viewcode-block" id="NetworkInferenceBivariate"><a class="viewcode-back" href="../../idtxl.html#idtxl.network_inference.NetworkInferenceBivariate">[docs]</a><span class="k">class</span> <span class="nc">NetworkInferenceBivariate</span><span class="p">(</span><span class="n">NetworkInference</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Parent class for bivariate network inference algorithms.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_include_source_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
@@ -894,7 +896,7 @@
 <div class="viewcode-block" id="NetworkInferenceMultivariate"><a class="viewcode-back" href="../../idtxl.html#idtxl.network_inference.NetworkInferenceMultivariate">[docs]</a><span class="k">class</span> <span class="nc">NetworkInferenceMultivariate</span><span class="p">(</span><span class="n">NetworkInference</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Parent class for multivariate network inference algorithms.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_include_source_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
@@ -1138,14 +1140,14 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.4 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl.network_inference</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.1.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
     </div>
   </body>
 </html>
