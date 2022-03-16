@@ -207,9 +207,9 @@ def _print_result(res):
     res.adjacency_matrix.print_matrix()
     tp = 0
     fp = 0
-    if res.adjacency_matrix._edge_matrix[0, 1] == True: tp += 1
-    if res.adjacency_matrix._edge_matrix[1, 2] == True: tp += 1
-    if res.adjacency_matrix._edge_matrix[0, 2] == True: fp += 1
+    if res.adjacency_matrix.edge_matrix[0, 1] == True: tp += 1
+    if res.adjacency_matrix.edge_matrix[1, 2] == True: tp += 1
+    if res.adjacency_matrix.edge_matrix[0, 2] == True: fp += 1
     fn = 2 - tp
     print('TP: {0}, FP: {1}, FN: {2}'.format(tp, fp, fn))
 
