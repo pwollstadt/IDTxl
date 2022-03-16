@@ -555,6 +555,31 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
             raise KeyError('No entry with network inference measure found for '
                            'current target')
 
+    def get_source_variables(self, fdr=True):
+        """Return list of inferred past source variables for all targets.
+
+        Return a list of dictionaries, where each dictionary holds the selected
+        past source variables for one analysed target. The list may be used as
+        and input to significant subgraph mining in the postprocessing module.
+
+        Args:
+            fdr : bool [optional]
+                return FDR-corrected results (default=True)
+
+        Returns:
+            list of dicts
+                selected past source variables for each target
+        """
+        source_variables = []
+        for target in self.targets_analysed:
+            source_variables.append(
+                {
+                    'target': target,
+                    'selected_vars_sources': self.get_single_target(target=target, fdr=fdr)['selected_vars_sources']
+                }
+            )
+        return source_variables
+
     def get_target_delays(self, target, criterion='max_te', fdr=True):
         """Return list of information-transfer delays for a given target.
 
