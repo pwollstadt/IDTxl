@@ -27,6 +27,7 @@ docs/_build
 *.in~
 .vscode
 .idea
+.flake8
 
 # Code Coverage      #
 ######################
