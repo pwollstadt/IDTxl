@@ -1,7 +1,10 @@
 from .estimator import Estimator
 from .estimator import get_estimator
 from . import idtxl_exceptions as ex
+
 import numpy as np
+import itertools
+from uuid import uuid4
 
 try:
     from mpi4py.futures import MPIPoolExecutor
@@ -11,20 +14,58 @@ except ImportError as err:
                        'MPI parallelization.')
     raise err
 
+_worker_estimators = {}
+"""Estimator instances on worker ranks
+
+Used so that Estimators do not have to be created new for each task given to them.
+Estimators are indexed by the ID of the corresponding MPIEstimator instance on the MPI main rank.
+"""
+
+
+def _get_worker_estimator(id_, est, settings):
+    """Return Estimator instance on worker rank.
+    If no Estimator for the given MPIEstimator id exists, create a new one
+    """
+
+    # Create new estimator if necessary
+    if id_ not in _worker_estimators:
+
+        # There is currently no good way to delete Estimators from _worker_estimators
+        # caches when the corresponding MPIEstimator ceases to exist.
+        # To avoid memory leaks, we currently allow only a single cached estimator that is replaced for new MPIEstimators.
+        _worker_estimators.clear()
+
+        _worker_estimators[id_] = get_estimator(est, settings)
+
+    return _worker_estimators[id_]
+
+
+def _dispatch_task(id_, est, settings, data):
+    """Estimates a single chunk of data on an MPI worker rank.
+    Calls the estimate function of the base Estimator
+    """
+
+    estimator = _get_worker_estimator(id_, est, settings)
+
+    if estimator.is_parallel():
+        return estimator.estimate(n_chunks=1, **data)
+    else:
+        return estimator.estimate(**data)
+
 
 class MPIEstimator(Estimator):
     """MPI Wrapper for arbitrary Estimator implementations
 
-    Upon calling estimate, one instance of the base Estimator is created
-    on each worker rank.
-
-    Requires MPI 2 or later as MPIPoolExecutor makes use of the spawn command.
-
-    Make sure to have an "if __name__=='__main__':" guard in your script to avoid
+    Make sure to have an "if __name__=='__main__':" guard in your main script to avoid
     infinite recursion!
+
+    To use MPI, add MPI=True to the Estimator settings dictionary and optionally provide max_workers
 
     Call using mpiexec:
     mpiexec -n 1 -usize <max workers + 1> python <python script>
+
+    or, if MPI does not support spawning new workers (i.e. MPI version < 2)
+    mpiexec -n <max workers + 1> python -m mpi4py.futures <python script>
 
     Call using slurm:
     srun -n $SLURM_NTASKS --mpi=pmi2 python -m mpi4py.futures <python script> 
@@ -34,110 +75,74 @@ class MPIEstimator(Estimator):
     def __init__(self, est, settings):
         """Creates new MPIEstimator instance
 
+        Immediately creates instances of est on each MPI worker.
+
         Args:
-            est (str): Name of the base Estimator
+            est (str | Callable[[dict], Estimator]): Name of of or callable returning an instance of the base Estimator
             settings (dict): settings for the base Estimator.
                 max_workers (optional): Number of MPI workers. Default: MPI_UNIVERSE_SIZE
         """
 
+        self._est = est
         self._settings = self._check_settings(settings).copy()
-        self._settings['estimator'] = est
 
-        # Create the MPIPoolExecutor
+        # Create unique id for this instance to access cached estimators
+        self._id = uuid4().int
+
+        # Create the MPIPoolExecutor and initialize Estimators on worker ranks
         self._executor = MPIPoolExecutor(
-            max_workers=self._settings.get('max_workers', None), path=['./test'])
+            max_workers=settings.get('max_workers', None))
+
+        self._executor.bootup(wait=True)
 
         # Create Estimator for rank 0.
-        self._estimator = self._create_estimator()
+        _get_worker_estimator(self._id, est, settings)
 
     def __del__(self):
-        """De-initializer
-
+        """
+        Shut down MPIPoolExecutor upon deletion of MPIEstimator
         """
 
-        # If this is rank 0, clean up MPIPoolExecutor
-        if self._executor is not None:
-            self._executor.shutdown()
+        self._executor.shutdown()
 
-    def __getstate__(self):
-        """Returns the state dict of the MPIEstimator instance for pickling.
-
-        Called on rank 0 to broadcast self to the workers.
-        Exclude both self._executor and self._estimator from pickling.
-
-        Returns:
-            dict: [description]
+    def _chunk_data(self, data, chunksize, n_chunks):
         """
-
-        # Do not pickle _executor or _estimator.
-        state = self.__dict__.copy()
-        del state['_executor']
-        del state['_estimator']
-        return state
-
-    def __setstate__(self, state):
-        """Restores the instance from a pickle state dict.
-
-        Called on worker ranks.
-        self._executor is not necessar on the worker ranks, but a static _estimator is created.
-
-        Args:
-            state (dict): state dictionary
+        Iterator chopping data dictionary into n_chunks chunks of size chunksize
         """
+        for i in range(n_chunks):
+            yield {var: (None if data[var] is None else data[var][i*chunksize:(i+1)*chunksize]) for var in data}
 
-        # Restore instance attributes (exept for self._executor and self._estimator).
-        self.__dict__.update(state)
-        self._executor = None
-
-        # Create separate Estimator instances on the worker ranks
-        self._estimator = self._create_estimator()
-
-    def _create_estimator(self):
-        """Creates the Estimator
-
-        """
-
-        return get_estimator(self._settings['estimator'], self._settings)
-
-    def estimate(self, n_chunks=1, **data):
+    def estimate(self, *, n_chunks=1, **data):
         """Distributes the given chunks of a task to Estimators on worker ranks using MPI.
-
         Needs to be called with kwargs only.
-
         Args:
             n_chunks (int, optional): Number of chunks to split the data into. Defaults to 1.
-
+            data (dict[str, Sequence]): Dictionary of random variable realizations
         Returns:
-            numpy array: Estimates of information-theoretic quantities
+            numpy array: Estimates of information-theoretic quantities as np.double values
         """
 
         assert n_chunks > 0, 'Number of chunks must be at least one.'
 
-        samplesize = len(list(data.values())[0])
+        samplesize = len(next(iter(data.values())))
 
         assert all(var is None or len(var) == samplesize for var in data.values(
         )), 'All variables must have the same number of realizations.'
 
+        assert samplesize % n_chunks == 0, 'Number of realizations must be divisible by number of chunks!'
+
         # Split the data into chunks
         chunksize = samplesize // n_chunks
 
-        chunked_data = ({var: (None if data[var] is None else data[var][i*chunksize:min(
-            (i+1)*chunksize, samplesize)]) for var in data} for i in range(n_chunks))
+        chunked_data = self._chunk_data(data, chunksize, n_chunks)
 
-        # This call implicitly pickles self and sends it to the worker ranks along with the chunked data
-        return np.fromiter(self._executor.map(self._estimate_single_chunk, chunked_data), dtype=np.double)
+        result_generator = self._executor.map(_dispatch_task,
+                                              itertools.repeat(self._id),
+                                              itertools.repeat(self._est),
+                                              itertools.repeat(self._settings),
+                                              chunked_data)
 
-    def _estimate_single_chunk(self, data):
-        """Estimates a single chunk of data on an MPI worker rank.
-
-        Calls the estimate function of the base Estimator
-
-        """
-
-        if self._estimator.is_parallel():
-            return self._estimator.estimate(n_chunks=1, **data)
-        else:
-            return self._estimator.estimate(**data)
+        return np.fromiter(result_generator, dtype=np.double)
 
     def is_parallel(self):
         return True
@@ -147,12 +152,11 @@ class MPIEstimator(Estimator):
 
         """
 
-        return self._estimator.is_analytic_null_estimator()
+        return _get_worker_estimator(self._id, self._est, self._settings).is_analytic_null_estimator()
 
     def estimate_surrogates_analytic(self, **data):
         """Forward analytic estimation to the base Estimator.
-
-        Analytic estimation is assumed to have negligible runtime and is thus performed on rank 0 alone.
+        Analytic estimation is assumed to have shorter runtime and is thus performed on rank 0 alone for now.
         """
 
-        return self._estimator.estimate_surrogates_analytic(**data)
+        return _get_worker_estimator(self._id, self._est, self._settings).estimate_surrogates_analytic(**data)
