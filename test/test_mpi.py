@@ -10,7 +10,7 @@ import pytest
 from mpi4py import MPI
 from idtxl.estimator import get_estimator
 from idtxl.estimators_jidt import JidtKraskov
-from idtxl.estimators_mpi import MPIEstimator
+from idtxl.estimators_mpi import MPIEstimator, _get_worker_estimator
 from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
 import time
@@ -37,8 +37,7 @@ def test_mpi_estimator_creation():
         settings['cmi_estimator'], settings)
 
     assert isinstance(estimator, MPIEstimator), 'MPIEstimator has wrong class!'
-    assert isinstance(estimator._estimator,
-                      JidtKraskov), 'MPIEstimator wraps the wrong estimator!'
+    assert isinstance(_get_worker_estimator(estimator._id, None, None), JidtKraskov), 'MPIEstimator wraps the wrong estimator!'
 
 
 @pytest.mark.mpi
