@@ -95,7 +95,7 @@ class MPIEstimator(Estimator):
             max_workers=settings.get('max_workers', None))
 
         # Boot up the executor with timeout
-        with timeout(timeout_duration=10, exception_message='Failed to boot up MPIPoolExecutor. Make sure to start script in MPI environment, \
+        with timeout(timeout_duration=settings.get('mpi_bootup_timeout', 10), exception_message='Failed to boot up MPIPoolExecutor. Make sure to start script in MPI environment, \
                                                                 i.e. using mpiexec, mpirun, srun (on SLURM) or equivalent.'):
             self._executor.bootup(wait=True)
 
