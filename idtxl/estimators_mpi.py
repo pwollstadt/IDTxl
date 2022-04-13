@@ -1,6 +1,7 @@
 from .estimator import Estimator
 from .estimator import get_estimator
 from . import idtxl_exceptions as ex
+from .idtxl_utils import timeout
 
 import numpy as np
 import itertools
@@ -93,7 +94,10 @@ class MPIEstimator(Estimator):
         self._executor = MPIPoolExecutor(
             max_workers=settings.get('max_workers', None))
 
-        self._executor.bootup(wait=True)
+        # Boot up the executor with timeout
+        with timeout(timeout_duration=10, exception_message='Failed to boot up MPIPoolExecutor. Make sure to start script in MPI environment, \
+                                                                i.e. using mpiexec, mpirun, srun (on SLURM) or equivalent.'):
+            self._executor.bootup(wait=True)
 
         # Create Estimator for rank 0.
         _get_worker_estimator(self._id, est, settings)
