@@ -246,19 +246,47 @@ def _ft_import_label(file_name, ft_struct_name):
         print('Converting FT labels to python list of strings')
 
     label = []
+    try:
+        for ll in range(0, ft_label.shape[0]):
+            # There is only one item in labelref, but we have to index it.
+            # Matlab has character arrays that are read as bytes in Python 3.
+            # Here, map maps the stuff in labeltmp to characters and "".
+            # makes it into a real Python string.
+            labelref = ft_label[ll]
+            labeltmp = ft_file[labelref[0]]
+            strlabeltmp = "".join(map(chr, labeltmp[0:]))
+            label.append(strlabeltmp)
+    except TypeError:
+        label = _ft_import_label_new(file_name, ft_struct_name)
+
+    ft_file.close()
+    return label
+
+def _ft_import_label_new(file_name, ft_struct_name):
+    """Import FieldTrip labels into Python."""
+    # for details of the data handling see comments in _ft_import_trial
+    ft_file = h5py.File(file_name)
+    ft_struct = ft_file[ft_struct_name]
+    ft_label = ft_struct['label']
+
+    if DEBUG:
+        print('Converting FT labels to python list of strings')
+
+    label = []    
     for ll in range(0, ft_label.shape[0]):
         # There is only one item in labelref, but we have to index it.
         # Matlab has character arrays that are read as bytes in Python 3.
         # Here, map maps the stuff in labeltmp to characters and "".
         # makes it into a real Python string.
         labelref = ft_label[ll]
-        labeltmp = ft_file[labelref[0]]
-        strlabeltmp = "".join(map(chr, labeltmp[0:]))
-        label.append(strlabeltmp)
-
+        for jj in range(0, labelref.shape[0]):
+            labeltmp = ft_file[labelref[jj]]
+            auxiliary = [element[0] for element in labeltmp[0:]]
+            strlabeltmp = "".join(map(chr, auxiliary))
+            label.append(strlabeltmp)
+    
     ft_file.close()
     return label
-
 
 def _ft_import_time(file_name, ft_struct_name):
     """Import FieldTrip time stamps into Python."""
