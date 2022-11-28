@@ -706,14 +706,14 @@ class NetworkInferenceSpectral(NetworkAnalysis):
                     cur_cond_set_realisations)
 
             print(tee)
-            te_all = results.get_single_target(
-                self._target, fdr=self.settings['fdr_corrected'])['te']
-            print(te_all)
+            #te_all = results.get_single_target(
+               # self._target, fdr=self.settings['fdr_corrected'])['te']
+            #print(te_all)
 
-            if len(te_all) > 1:
-                te_all = te_all[0]
-            else:
-                print(te_all)
+            #if len(te_all) > 1:
+              #  te_all = te_all[0]
+            #else:
+             #   print(te_all)
 
             te_full = tee
             te_orig_full = te_full
@@ -974,16 +974,16 @@ class NetworkInferenceSpectral(NetworkAnalysis):
                     cur_source_realisationsO,
                     cur_cond_set_realisations)
             print(tee)
-            te_all = results.get_single_target(self._target, fdr=self.settings['fdr_corrected'])['te']
-            print(te_all)
+            #te_all = results.get_single_target(self._target, fdr=self.settings['fdr_corrected'])['te']
+            #print(te_all)
 
             # te_full = te_all[results.get_target_sources(self._target, fdr=self.settings['fdr_corrected'])]
 
-            if len(te_all)>1:
-                te_all=te_all[0]
+            #if len(te_all)>1:
+              #  te_all=te_all[0]
 
-            else:
-                print('te')
+            #else:
+              #  print('te')
 
             te_full = tee
             te_orig_full = te_full

@@ -218,8 +218,56 @@ class NetworkComparison(NetworkAnalysis):
         self._reset()  # remove attributes
         return results
 
+    def compare_anova(self, settings, network_set_a, network_set_b,network_set_c, network_set_d,
+                        data_set_a, data_set_b,data_set_c, data_set_d):
+
+         # Check input and analysis parameters.
+        self._initialise(settings)
+        #self._check_n_subjects(data_set_a, data_set_b)
+        data_all = np.hstack((data_set_a, data_set_b,data_set_c, data_set_d))
+        self._check_equal_realisations(*data_all)
+        network_all = np.hstack((network_set_a, network_set_b,network_set_c, network_set_d))
+
+        # Main comparison.
+        print('\n-------------------------- (1) create union of networks')
+        self._create_union(*network_all)
+        print('\n-------------------------- (2) calculate differences in TE '
+              'values')
+
+
+
+        print( self.union._single_target[2]['selected_vars_sources'])
+        # convert time indices to lags for selected variables
+        for t in self.union.targets_analysed:
+            self.union._single_target[t]['selected_vars_sources'] = (
+               self._idx_to_lag(
+                    self.union._single_target[t]['selected_vars_sources'],
+                    self.union['max_lag']))
+            self.union._single_target[t]['selected_vars_target'] = (
+                self._idx_to_lag(
+                   self.union._single_target[t]['selected_vars_target'],
+                    self.union['max_lag']))
+
+
+        print( self.union._single_target[2]['selected_vars_target'])
+        print( self.union._single_target[2]['selected_vars_sources'])
+        
+        print( self.union._single_target[2]['selected_vars_sources'])
+        print( self.union._single_target[2]['selected_vars_target'])
+     #   source_vars = self.union._single_target[0]['selected_vars_sources']
+      #  target_vars = self.union._single_target[0]['selected_vars_target']
+      #  source_vars1 = self.union._single_target[1]['selected_vars_sources']
+      #  target_vars1 = self.union._single_target[1]['selected_vars_target']
+
+        return  self.union
+
+
+
     def compare_between(self, settings, network_set_a, network_set_b,
                         data_set_a, data_set_b):
+
+       
+
         """Compare networks inferred under two conditions between subjects.
 
         Compare two sets of networks inferred from two sets of data recorded

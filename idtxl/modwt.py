@@ -17,7 +17,7 @@ lib = ctypes.CDLL(resource_filename(__name__, 'libmodwtj.so'))
 
 def modwt_C(data, wavelet_name, levels):
     [ht, gt, filter_len] = wavelet_filter(wavelet_name)
-
+    print(str(filter_len))
     N = int(data.shape[0])
     if len(data.shape) > 1:
         repl = int(data.shape[1])
