@@ -1,7 +1,9 @@
 import os
 import time
 import pickle
+from pathlib import Path
 import numpy as np
+
 from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
 
@@ -29,6 +31,8 @@ res_1 = lorenz_analysis.analyse_single_target(settings, data, 1)
 runtime = time.time() - start_time
 print("---- {0} minutes".format(runtime / 60))
 
-path = '{0}data/'.format(os.path.dirname(__file__))
-pickle.dump(res_0, open('{0}test_lorenz_opencl_res_{1}'.format(path, 0), 'wb'))
-pickle.dump(res_1, open('{0}test_lorenz_opencl_res_{1}'.format(path, 1), 'wb'))
+path = Path(os.path.dirname(__file__)).joinpath('data')
+with open(path.jointpath('test_lorenz_opencl_res_0'), 'wb') as output_file:
+        pickle.dump(res_0, output_file)
+with open(path.jointpath('test_lorenz_opencl_res_1'), 'wb') as output_file:
+        pickle.dump(res_1, output_file)
