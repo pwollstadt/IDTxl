@@ -12,7 +12,9 @@ variables and looks like this:
     1 -> 2 -> 3  with a delay of 1 sample for each coupling
 """
 import pickle
+from pathlib import Path
 import numpy as np
+
 from idtxl.multivariate_te import MultivariateTE
 from idtxl.bivariate_te import BivariateTE
 from idtxl.multivariate_mi import MultivariateMI
@@ -21,7 +23,7 @@ from idtxl.estimators_jidt import JidtDiscreteCMI
 from idtxl.data import Data
 
 # path = os.path.join(os.path.dirname(__file__) + '/data/')
-path = 'data/'
+path = Path('data/')
 
 
 def analyse_mute_te_data():
@@ -42,24 +44,15 @@ def analyse_mute_te_data():
         'permute_in_time': True
         }
     # network inference for individual data sets
-    nw_0 = MultivariateTE()
-    res_0 = nw_0.analyse_network(
-        settings, data, targets=[0, 1], sources='all')
-    pickle.dump(res_0, open(path + 'mute_results_0.p', 'wb'))
-    res_1 = nw_0.analyse_network(
-        settings, data,  targets=[1, 2], sources='all')
-    pickle.dump(res_1, open(path + 'mute_results_1.p', 'wb'))
-    res_2 = nw_0.analyse_network(
-        settings, data,  targets=[0, 2], sources='all')
-    pickle.dump(res_2, open(path + 'mute_results_2.p', 'wb'))
-    res_3 = nw_0.analyse_network(
-        settings, data,  targets=[0, 1, 2], sources='all')
-    pickle.dump(res_3, open(path + 'mute_results_3.p', 'wb'))
-    res_4 = nw_0.analyse_network(
-        settings, data,  targets=[1, 2], sources='all')
-    pickle.dump(res_4, open(path + 'mute_results_4.p', 'wb'))
-    res_5 = nw_0.analyse_network(settings, data)
-    pickle.dump(res_5, open(path + 'mute_results_full.p', 'wb'))
+    nw = MultivariateTE()
+    list_of_targets = [[0, 1], [1, 2], [0, 2], [0, 1, 2], [1, 2]]
+    for i, targets in enumerate(list_of_targets):
+        res = nw.analyse_network(settings, data, targets=targets, sources='all')
+        with open(path.joinpath(f'mute_results_{i}.p'), 'wb') as output_file:
+            pickle.dump(res, output_file)
+    res = nw.analyse_network(settings, data)
+    with open(path.joinpath('mute_results_full.p'), 'wb') as output_file:
+        pickle.dump(res, output_file)
 
 
 def generate_discrete_data(n_replications=1):
