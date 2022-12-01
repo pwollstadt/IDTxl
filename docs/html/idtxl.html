@@ -6581,6 +6581,27 @@ uncorrected results. Multiple options for the weight are available.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="idtxl.results.ResultsNetworkInference.get_source_variables">
+<code class="sig-name descname">get_source_variables</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fdr</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/results.html#ResultsNetworkInference.get_source_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.results.ResultsNetworkInference.get_source_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return list of inferred past source variables for all targets.</p>
+<p>Return a list of dictionaries, where each dictionary holds the selected
+past source variables for one analysed target. The list may be used as
+and input to significant subgraph mining in the postprocessing module.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>fdr<span class="classifier">bool [optional]</span></dt><dd><p>return FDR-corrected results (default=True)</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>list of dicts</dt><dd><p>selected past source variables for each target</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="idtxl.results.ResultsNetworkInference.get_target_delays">
 <code class="sig-name descname">get_target_delays</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">target</span></em>, <em class="sig-param"><span class="n">criterion</span><span class="o">=</span><span class="default_value">'max_te'</span></em>, <em class="sig-param"><span class="n">fdr</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/results.html#ResultsNetworkInference.get_target_delays"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#idtxl.results.ResultsNetworkInference.get_target_delays" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return list of information-transfer delays for a given target.</p>

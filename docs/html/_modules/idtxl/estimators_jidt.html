@@ -520,7 +520,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalOfPreviousObservations</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span></div></div>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">())</span></div></div>
 
 
 <div class="viewcode-block" id="JidtDiscreteCMI"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscreteCMI">[docs]</a><span class="k">class</span> <span class="nc">JidtDiscreteCMI</span><span class="p">(</span><span class="n">JidtDiscrete</span><span class="p">):</span>
@@ -673,7 +673,7 @@
                 <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">var2</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span>
                 <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">conditional</span><span class="o">.</span><span class="n">tolist</span><span class="p">())))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">())</span>
         <span class="k">if</span> <span class="n">return_calc</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -830,7 +830,7 @@
                 <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">var1</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span>
                 <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">var2</span><span class="o">.</span><span class="n">tolist</span><span class="p">())))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">())</span>
         <span class="k">if</span> <span class="n">return_calc</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -954,7 +954,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalOfPreviousObservations</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span></div></div>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">())</span></div></div>
 
 
 <div class="viewcode-block" id="JidtKraskovAIS"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtKraskovAIS">[docs]</a><span class="k">class</span> <span class="nc">JidtKraskovAIS</span><span class="p">(</span><span class="n">JidtKraskov</span><span class="p">):</span>
@@ -1045,7 +1045,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalOfPreviousObservations</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span></div></div>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">())</span></div></div>
 
 
 <div class="viewcode-block" id="JidtDiscreteAIS"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscreteAIS">[docs]</a><span class="k">class</span> <span class="nc">JidtDiscreteAIS</span><span class="p">(</span><span class="n">JidtDiscrete</span><span class="p">):</span>
@@ -1171,7 +1171,7 @@
             <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalFromPreviousObservations</span><span class="p">(</span>
                                     <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">process</span><span class="o">.</span><span class="n">tolist</span><span class="p">())))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">())</span>
         <span class="k">if</span> <span class="n">return_calc</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1274,7 +1274,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalOfPreviousObservations</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span></div></div>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">())</span></div></div>
 
 
 <div class="viewcode-block" id="JidtGaussianMI"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussianMI">[docs]</a><span class="k">class</span> <span class="nc">JidtGaussianMI</span><span class="p">(</span><span class="n">JidtGaussian</span><span class="p">):</span>
@@ -1346,7 +1346,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalOfPreviousObservations</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span></div></div>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">())</span></div></div>
 
 
 <div class="viewcode-block" id="JidtGaussianCMI"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussianCMI">[docs]</a><span class="k">class</span> <span class="nc">JidtGaussianCMI</span><span class="p">(</span><span class="n">JidtGaussian</span><span class="p">):</span>
@@ -1433,7 +1433,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalOfPreviousObservations</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span></div>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">())</span></div>
 
 <div class="viewcode-block" id="JidtGaussianCMI.get_analytic_distribution"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussianCMI.get_analytic_distribution">[docs]</a>    <span class="k">def</span> <span class="nf">get_analytic_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">conditional</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a JIDT AnalyticNullDistribution object.</span>
@@ -1553,7 +1553,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalOfPreviousObservations</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span></div></div>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">())</span></div></div>
 
 
 <div class="viewcode-block" id="JidtDiscreteTE"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtDiscreteTE">[docs]</a><span class="k">class</span> <span class="nc">JidtDiscreteTE</span><span class="p">(</span><span class="n">JidtDiscrete</span><span class="p">):</span>
@@ -1698,7 +1698,7 @@
                 <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">source</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span>
                 <span class="n">jp</span><span class="o">.</span><span class="n">JArray</span><span class="p">(</span><span class="n">jp</span><span class="o">.</span><span class="n">JInt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">target</span><span class="o">.</span><span class="n">tolist</span><span class="p">())))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">())</span>
         <span class="k">if</span> <span class="n">return_calc</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1811,7 +1811,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeLocalOfPreviousObservations</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">()</span></div></div>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">computeAverageLocalOfObservations</span><span class="p">())</span></div></div>
 
 
 <div class="viewcode-block" id="common_estimate_surrogates_analytic"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.common_estimate_surrogates_analytic">[docs]</a><span class="k">def</span> <span class="nf">common_estimate_surrogates_analytic</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">n_perm</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
