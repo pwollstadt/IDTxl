@@ -1,5 +1,7 @@
 """Provide data structures for IDTxl analysis."""
 import numpy as np
+
+from idtxl.stats import _get_surrogate
 from . import idtxl_utils as utils
 
 VERBOSE = False
@@ -210,8 +212,24 @@ class Data():
     def get_state(self):
         """return the current state of the random seed"""
         return np.random.get_state()
+    
+    def get_realisations_for_token(self, token):
+        """Return realisations for a given token.
 
-    def get_realisations(self, current_value, idx_list, shuffle=False):
+        Args:
+            token : tuple
+                token for which realisations are returned
+        """
+
+        if token.variables is None:
+            return None
+        
+        if token.surrogate_creation_info is None:
+            return self.get_realisations(token.current_value, token.variables)[0]
+        
+        return _get_surrogate(self, token.current_value, token.variables, token.surrogate_creation_info['n_perm'], token.surrogate_creation_info)
+
+    def get_realisations(self, current_value, idx_list, shuffle=False, rng=None):
         """Return realisations for a list of indices.
 
         Return realisations for indices in list. Optionally, realisations can
@@ -242,6 +260,8 @@ class Data():
                 samples for a process are returned
             shuffle: bool
                 if true permute blocks of replications over trials
+            rng: numpy.random.Generator
+                random number generator
 
         Returns:
             numpy array
@@ -258,7 +278,7 @@ class Data():
         if not idx_list:
             return None, None
         # Check if requested indices are smaller than the current_value.
-        if not all(np.array([x[1] for x in idx_list]) <= current_value[1]):
+        if not all(x[1] <= current_value[1] for x in idx_list):
             print('Index list: {0}\ncurrent value: {1}'.format(idx_list,
                                                                current_value))
             raise RuntimeError('All indices for which data is retrieved must '
@@ -274,7 +294,7 @@ class Data():
         # data by permuting replications while keeping the order of samples
         # intact.
         if shuffle:
-            replications_order = np.random.permutation(self.n_replications)
+            replications_order = rng.permutation(self.n_replications)
         else:
             replications_order = np.arange(self.n_replications)
 
@@ -311,8 +331,8 @@ class Data():
                'There seems to be a problem with the replications index.')
 
         return realisations, replications_index
-
-    def _get_data_slice(self, process, offset_samples=0, shuffle=False):
+    
+    def _get_data_slice(self, process, offset_samples=0, shuffle=False, rng=None):
         """Return data slice for a single process.
 
         Return data slice for process. Optionally, an offset can be provided
@@ -347,6 +367,8 @@ class Data():
                 offset in samples
             shuffle: bool
                 if true permute blocks of data over trials
+            rng: numpy.random.Generator
+                random number generator
 
         Returns:
             numpy array
@@ -365,7 +387,7 @@ class Data():
         # data by permuting replications while keeping the order of samples
         # intact.
         if shuffle:
-            replication_index = np.random.permutation(self.n_replications)
+            replication_index = rng.permutation(self.n_replications)
         else:
             replication_index = np.arange(self.n_replications)
 
@@ -381,7 +403,7 @@ class Data():
                                                  'retrieved data slice.')
         return data_slice.T, replication_index
 
-    def slice_permute_replications(self, process):
+    def slice_permute_replications(self, process, rng):
         """Return data slice with permuted replications (time stays intact).
 
         Create surrogate data by permuting realisations over replications while
@@ -390,9 +412,9 @@ class Data():
         have the form (process index, sample index). Realisations are permuted
         block-wise by permuting the order of replications
         """
-        return self._get_data_slice(process, shuffle=True)
+        return self._get_data_slice(process, shuffle=True, rng=rng)
 
-    def slice_permute_samples(self, process, perm_settings):
+    def slice_permute_samples(self, process, perm_settings, rng):
         """Return slice of data with permuted samples (repl. stays intact).
 
         Create surrogate data by permuting data in a slice over samples (time)
@@ -487,7 +509,7 @@ class Data():
             replications is too small to allow a sufficient number of
             permutations for the generation of surrogate data.
         """
-        data_slice = self._get_data_slice(process, shuffle=True)[0]
+        data_slice = self._get_data_slice(process, shuffle=True, rng=rng)[0]
         data_slice_perm = np.empty(data_slice.shape).astype(self.data_type)
         perm = self._get_permutation_samples(data_slice.shape[0],
                                              perm_settings)
@@ -495,7 +517,7 @@ class Data():
             data_slice_perm[:, r] = data_slice[perm, r]
         return data_slice_perm, perm
 
-    def permute_replications(self, current_value, idx_list):
+    def permute_replications(self, current_value, idx_list, rng):
         """Return realisations with permuted replications (time stays intact).
 
         Create surrogate data by permuting realisations over replications while
@@ -524,6 +546,8 @@ class Data():
                 index of the current_value in the data
             idx_list : list of tuples
                 indices of variables
+            rng : np.random.Generator
+                random number generator
 
         Returns:
             numpy array
@@ -537,9 +561,9 @@ class Data():
         """
         if type(idx_list) is not list:
             raise TypeError('idx needs to be a list of tuples.')
-        return self.get_realisations(current_value, idx_list, shuffle=True)
+        return self.get_realisations(current_value, idx_list, shuffle=True, rng=rng)
 
-    def permute_samples(self, current_value, idx_list, perm_settings):
+    def permute_samples(self, current_value, idx_list, perm_settings, rng):
         """Return realisations with permuted samples (repl. stays intact).
 
         Create surrogate data by permuting realisations over samples (time)
@@ -634,6 +658,8 @@ class Data():
                       'perm_range' : int
                         range in samples over which realisations can be
                         permuted (e.g., number of samples / 10)
+            rng: numpy.random.Generator
+                random number generator
 
         Returns:
             numpy array
@@ -653,8 +679,8 @@ class Data():
         """
         [realisations, replication_idx] = self.get_realisations(current_value,
                                                                 idx_list)
-        n_samples = sum(replication_idx == 0)
-        perm = self._get_permutation_samples(n_samples, perm_settings)
+        n_samples = np.sum(replication_idx == 0)
+        perm = self._get_permutation_samples(n_samples, perm_settings, rng)
         # Apply the permutation to data from each replication.
         realisations_perm = np.empty(realisations.shape).astype(self.data_type)
         perm_idx = np.empty(realisations_perm.shape[0])
@@ -665,7 +691,7 @@ class Data():
             perm_idx[mask] = perm
         return realisations_perm, perm_idx
 
-    def _get_permutation_samples(self, n_samples, perm_settings):
+    def _get_permutation_samples(self, n_samples, perm_settings, rng):
         """Generate permutation of n samples.
 
         Generate a permutation of n samples under various, possible
@@ -693,13 +719,13 @@ class Data():
         # Get the permutaion 'mask' for one replication (the same mask is then
         # applied to each replication).
         if perm_type == 'random':
-            perm = np.random.permutation(n_samples)
+            perm = rng.permutation(n_samples)
 
         elif perm_type == 'circular':
             max_shift = perm_settings['max_shift']
             if type(max_shift) is not int or max_shift < 1:
                 raise TypeError(' ''max_shift'' has to be an int > 0.')
-            perm = self._circular_shift(n_samples, max_shift)[0]
+            perm = self._circular_shift(n_samples, max_shift, rng)[0]
 
         elif perm_type == 'block':
             block_size = perm_settings['block_size']
@@ -708,20 +734,20 @@ class Data():
                 raise TypeError(' ''block_size'' has to be an int > 0.')
             if type(perm_range) is not int or perm_range < 1:
                 raise TypeError(' ''perm_range'' has to be an int > 0.')
-            perm = self._swap_blocks(n_samples, block_size, perm_range)
+            perm = self._swap_blocks(n_samples, block_size, perm_range, rng)
 
         elif perm_type == 'local':
             perm_range = perm_settings['perm_range']
             if type(perm_range) is not int or perm_range < 1:
                 raise TypeError(' ''perm_range'' has to be an int > 0.')
-            perm = self._swap_local(n_samples, perm_range)
+            perm = self._swap_local(n_samples, perm_range, rng)
 
         else:
             raise ValueError('Unknown permutation type ({0}).'.format(
                                                                     perm_type))
         return perm
 
-    def _swap_local(self, n, perm_range):
+    def _swap_local(self, n, perm_range, rng):
         """Permute n samples within blocks of length 'perm_range'.
 
         Args:
@@ -729,6 +755,8 @@ class Data():
                 number of samples
             perm_range : int
                 range over which realisations are permuted
+            rng : np.random.Generator
+                random number generator
 
         Returns:
             numpy array
@@ -742,19 +770,19 @@ class Data():
                                                                   perm_range))
 
         if perm_range == n:  # permute all n samples randomly
-            perm = np.random.permutation(n)
+            perm = rng.permutation(n)
         else:  # build a permutation that permutes only within the perm_range
             perm = np.empty(n, dtype=int)
             remainder = n % perm_range
             i = 0
             for p in range(n // perm_range):
-                perm[i:i + perm_range] = np.random.permutation(perm_range) + i
+                perm[i:i + perm_range] = rng.permutation(perm_range) + i
                 i += perm_range
             if remainder > 0:
-                perm[-remainder:] = np.random.permutation(remainder) + i
+                perm[-remainder:] = rng.permutation(remainder) + i
         return perm
 
-    def _swap_blocks(self, n, block_size, perm_range):
+    def _swap_blocks(self, n, block_size, perm_range, rng):
         """Permute blocks of samples in a time series within a given range.
 
         Permute n samples by swapping blocks of samples within a given range.
@@ -766,6 +794,8 @@ class Data():
                 number of samples in a block
             perm_range : int
                 range over which blocks can be swapped
+            rng : np.random.Generator
+                random number generator
 
         Returns:
             numpy array
@@ -779,18 +809,16 @@ class Data():
 
         # First permute block(!) indices.
         if perm_range == n_blocks:  # permute all blocks randomly
-            perm_blocks = np.random.permutation(n_blocks)
+            perm_blocks = rng.permutation(n_blocks)
         else:  # build a permutation that permutes only within the perm_range
             perm_blocks = np.empty(n_blocks, dtype=int)
 
             i = 0
             for p in range(n_blocks // perm_range):
-                perm_blocks[i:i + perm_range] = np.random.permutation(
-                                                                perm_range) + i
+                perm_blocks[i:i + perm_range] = rng.permutation(perm_range) + i
                 i += perm_range
             if rem_blocks > 0:
-                perm_blocks[-rem_blocks:] = np.random.permutation(
-                                                                rem_blocks) + i
+                perm_blocks[-rem_blocks:] = rng.permutation(rem_blocks) + i
 
         # Get the block index for each sample index, take into account that the
         # last block may have fewer samples if n_samples % block_size isn't 0.
@@ -809,7 +837,7 @@ class Data():
 
         return perm
 
-    def _circular_shift(self, n, max_shift):
+    def _circular_shift(self, n, max_shift, rng):
         """Permute samples through shifting by a random number of samples.
 
         A time series is shifted circularly by a random number of samples. A
@@ -822,6 +850,8 @@ class Data():
                 number of samples
             max_shift: int
                 maximum possible shift (default=n)
+            rng : np.random.Generator
+                random number generator
 
         Returns:
             numpy array
@@ -832,7 +862,7 @@ class Data():
         assert (max_shift <= n), ('Max_shift ({0}) has to be equal to or '
                                   'smaller than the number of samples in the '
                                   'time series ({1}).'.format(max_shift, n))
-        shift = np.random.randint(low=1, high=max_shift + 1)
+        shift = rng.randint(low=1, high=max_shift + 1)
         if VERBOSE:
             print("replications are shifted by {0} samples".format(shift))
         return np.hstack((np.arange(n - shift, n),

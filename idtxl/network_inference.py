@@ -3,6 +3,7 @@ import numpy as np
 from .network_analysis import NetworkAnalysis
 from . import stats
 from . import idtxl_exceptions as ex
+from .data_access import DataAccessToken
 
 
 class NetworkInference(NetworkAnalysis):
@@ -103,21 +104,13 @@ class NetworkInference(NetworkAnalysis):
             print('candidate set: {0}'.format(
                 self._idx_to_lag(candidate_set)))
         while candidate_set:
-            # Get realisations for all candidates.
-            cand_real = data.get_realisations(self.current_value,
-                                              candidate_set)[0]
-            # Reshape candidates to a 1D-array, where realisations for a single
-            # candidate are treated as one chunk.
-            cand_real = cand_real.T.reshape(cand_real.size, 1)
 
             # Calculate the (C)MI for each candidate and the target.
             try:
-                temp_te = self._cmi_estimator.estimate_parallel(
-                                n_chunks=len(candidate_set),
-                                re_use=['var2', 'conditional'],
-                                var1=cand_real,
-                                var2=self._current_value_realisations,
-                                conditional=self._selected_vars_realisations)
+                temp_te = self._cmi_estimator.access_data_and_estimate_parallel(
+                                var1=[DataAccessToken(self.current_value, [candidate]) for candidate in candidate_set],
+                                var2=DataAccessToken(self.current_value, [self.current_value]),
+                                conditional=DataAccessToken(self.current_value, self._selected_vars_full if self._selected_vars_full else None))
             except ex.AlgorithmExhaustedError as aee:
                 # The algorithm cannot continue here, so
                 #  we'll terminate the search for more candidates,
@@ -138,7 +131,7 @@ class NetworkInference(NetworkAnalysis):
             try:
                 significant = stats.max_statistic(
                     self, data, candidate_set, te_max_candidate,
-                    conditional=self._selected_vars_realisations)[0]
+                    conditional=self._selected_vars_full)[0]
             except ex.AlgorithmExhaustedError as aee:
                 # The algorithm cannot continue here, so we'll terminate the
                 # check of significance for this candidate, though those
@@ -158,10 +151,7 @@ class NetworkInference(NetworkAnalysis):
                 #     print(' -- significant')
                 success = True
                 candidate_set.pop(np.argmax(temp_te))
-                self._append_selected_vars(
-                        [max_candidate],
-                        data.get_realisations(self.current_value,
-                                              [max_candidate])[0])
+                self._append_selected_vars([max_candidate])
                 if self.settings['write_ckp']:
                     self._write_checkpoint()
             else:
@@ -398,7 +388,7 @@ class NetworkInferenceTE(NetworkInference):
                                    self.settings['max_lag_target']))
 
         # Set CMI estimator.
-        self._set_cmi_estimator()
+        self._set_cmi_estimator(data)
 
         # Check the provided target and sources.
         self._check_target(target, data.n_processes)
@@ -414,14 +404,6 @@ class NetworkInferenceTE(NetworkInference):
             'lag ({1})'.format(data.n_samples, max_lag))
 
         self.current_value = (self.target, max_lag)
-        [cv_realisation, repl_idx] = data.get_realisations(
-                                             current_value=self.current_value,
-                                             idx_list=[self.current_value])
-        self._current_value_realisations = cv_realisation
-
-        # Remember which realisations come from which replication. This may be
-        # needed for surrogate creation at a later point.
-        self._replication_index = repl_idx
 
         # Check the permutation type and no. permutations requested by the
         # user. This tests if there is sufficient data to do all tests.
@@ -436,7 +418,6 @@ class NetworkInferenceTE(NetworkInference):
         # MultivariateTE has been used before.
         if self.selected_vars_full:
             self.selected_vars_full = []
-            self._selected_vars_realisations = None
             self.selected_vars_sources = []
             self.selected_vars_target = []
             self.statistic_omnibus = None
@@ -468,8 +449,7 @@ class NetworkInferenceTE(NetworkInference):
             print('\nNo informative sources in the target\'s past - '
                   'adding target sample with lag 1.')
             idx = (self.current_value[0], self.current_value[1] - 1)
-            realisations = data.get_realisations(self.current_value, [idx])[0]
-            self._append_selected_vars([idx], realisations)
+            self._append_selected_vars([idx])
 
     def _reset(self):
         """Reset instance after analysis."""
@@ -896,43 +876,16 @@ class NetworkInferenceMultivariate(NetworkInference):
                 print(' -- significant')
             return
         while self.selected_vars_sources:
-            # Find the candidate with the minimum TE into the target.
-            temp_te = np.empty(len(self.selected_vars_sources))
-            cond_dim = len(self.selected_vars_full) - 1
-            candidate_realisations = np.empty(
-                (data.n_realisations(self.current_value) *
-                 len(self.selected_vars_sources), 1)).astype(data.data_type)
-            conditional_realisations = np.empty(
-                (data.n_realisations(self.current_value) *
-                 len(self.selected_vars_sources),
-                 cond_dim)).astype(data.data_type)
 
+            # Find the candidate with the minimum TE into the target.
             # calculate TE simultaneously for all candidates
-            i_1 = 0
-            i_2 = data.n_realisations(self.current_value)
-            for candidate in self.selected_vars_sources:
-                # Separate the candidate realisations and all other
-                # realisations to test the candidate's individual contribution.
-                [temp_cond, temp_cand] = self._separate_realisations(
-                                                    self.selected_vars_full,
-                                                    candidate)
-                if temp_cond is None:
-                    conditional_realisations = None
-                    re_use = ['var2', 'conditional']
-                else:
-                    conditional_realisations[i_1:i_2, ] = temp_cond
-                    re_use = ['var2']
-                candidate_realisations[i_1:i_2, ] = temp_cand
-                i_1 = i_2
-                i_2 += data.n_realisations(self.current_value)
+            all_but_candidate_list = [[source for source in self.selected_vars_sources if source != candidate] for candidate in self.selected_vars_sources]
 
             try:
-                temp_te = self._cmi_estimator.estimate_parallel(
-                                n_chunks=len(self.selected_vars_sources),
-                                re_use=re_use,
-                                var1=candidate_realisations,
-                                var2=self._current_value_realisations,
-                                conditional=conditional_realisations)
+                temp_te = self._cmi_estimator.access_data_and_estimate_parallel(
+                                var1=[DataAccessToken(self.current_value, [candidate]) for candidate in self.selected_vars_sources],
+                                var2=DataAccessToken(self.current_value, [self.current_value]),
+                                conditional=[DataAccessToken(self.current_value, all_but_candidate) for all_but_candidate in all_but_candidate_list])
             except ex.AlgorithmExhaustedError as aee:
                 # The algorithm cannot continue here, so
                 #  we'll terminate the pruning check,
@@ -954,16 +907,16 @@ class NetworkInferenceMultivariate(NetworkInference):
                 print('testing candidate: {0} '.format(
                     self._idx_to_lag([min_candidate])[0]), end='')
 
-            remaining_candidates = set(self.selected_vars_full).difference(
-                    set([min_candidate]))
-            conditional_realisations = data.get_realisations(
-                        self.current_value, remaining_candidates)[0]
+            remaining_candidates = list(set(self.selected_vars_full).difference(
+                    set([min_candidate])))
+
             try:
                 [significant, p, surr_table] = stats.min_statistic(
-                                              self, data,
+                                              self,
+                                              data,
                                               self.selected_vars_sources,
                                               te_min_candidate,
-                                              conditional_realisations)
+                                              remaining_candidates)
             except ex.AlgorithmExhaustedError as aee:
                 # The algorithm cannot continue here, so
                 #  we'll terminate the pruning check,

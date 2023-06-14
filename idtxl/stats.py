@@ -1,6 +1,9 @@
 """Provide statistics functions."""
 import copy as cp
 import numpy as np
+
+from .data_access import DataAccessToken
+
 from . import idtxl_utils as utils
 from . import idtxl_exceptions as ex
 
@@ -339,23 +342,10 @@ def omnibus_test(analysis_setup, data):
                                              n_permutations)
     assert analysis_setup.selected_vars_sources, 'No sources to test.'
 
-    # Create temporary variables b/c realisations for sources and targets are
-    # created on the fly, which is costly, so we want to re-use them after
-    # creation. (This does not apply to the current value realisations).
-    # If there was no target variable selected (e.g., if MI is used for network
-    # inference), set conditional to None such that the MI instead of the CMI
-    # estimator is used when calculating the statistic.
-    cond_source_realisations = (analysis_setup
-                                ._selected_vars_sources_realisations)
-    if analysis_setup._selected_vars_target:
-        cond_target_realisations = (analysis_setup
-                                    ._selected_vars_target_realisations)
-    else:
-        cond_target_realisations = None
-    statistic = analysis_setup._cmi_estimator.estimate(
-                            var1=cond_source_realisations,
-                            var2=analysis_setup._current_value_realisations,
-                            conditional=cond_target_realisations)
+    statistic = analysis_setup._cmi_estimator.access_data_and_estimate_parallel(
+                            var1=DataAccessToken(analysis_setup.current_value, analysis_setup._selected_vars_sources),
+                            var2=DataAccessToken(analysis_setup.current_value, [analysis_setup.current_value]),
+                            conditional=DataAccessToken(analysis_setup.current_value, analysis_setup._selected_vars_target))
 
     # Create the surrogate distribution by permuting the conditional sources.
     if analysis_setup.settings['verbose']:
@@ -365,25 +355,20 @@ def omnibus_test(analysis_setup, data):
         # Generate the surrogates analytically
         analysis_setup.settings['analytical_surrogates'] = True
         surr_distribution = (analysis_setup._cmi_estimator.
-                             estimate_surrogates_analytic(
+                             access_data_and_estimate_surrogates_analytic(
                                n_perm=n_permutations,
-                               var1=cond_source_realisations,
-                               var2=analysis_setup._current_value_realisations,
-                               conditional=cond_target_realisations))
+                               var1=DataAccessToken(analysis_setup.current_value, analysis_setup.selected_vars_sources),
+                               var2=DataAccessToken(analysis_setup.current_value, [analysis_setup.current_value]),
+                               conditional=DataAccessToken(analysis_setup.current_value, analysis_setup._selected_vars_target)))
     else:
         analysis_setup.settings['analytical_surrogates'] = False
-        surr_cond_real = _get_surrogates(data,
-                                         analysis_setup.current_value,
-                                         analysis_setup.selected_vars_sources,
-                                         n_permutations,
-                                         analysis_setup.settings)
+        surrogate_creation_info = analysis_setup.settings.copy()
+        surrogate_creation_info['n_perm'] = n_permutations
 
-        surr_distribution = analysis_setup._cmi_estimator.estimate_parallel(
-                            n_chunks=n_permutations,
-                            re_use=['var2', 'conditional'],
-                            var1=surr_cond_real,
-                            var2=analysis_setup._current_value_realisations,
-                            conditional=cond_target_realisations)
+        surr_distribution = analysis_setup._cmi_estimator.access_data_and_estimate_parallel(
+                            var1=DataAccessToken.generate_surrogate_tokens(analysis_setup.current_value, analysis_setup.selected_vars_sources, n_permutations, surrogate_creation_info),
+                            var2=DataAccessToken(analysis_setup.current_value, [analysis_setup.current_value]),
+                            conditional=DataAccessToken(analysis_setup.current_value, analysis_setup._selected_vars_target))
     [significance, pvalue] = _find_pvalue(statistic, surr_distribution,
                                           alpha, 'one_bigger')
     if analysis_setup.settings['verbose']:
@@ -525,72 +510,41 @@ def max_statistic_sequential(analysis_setup, data):
 
     assert analysis_setup.selected_vars_sources, 'No sources to test.'
 
-    idx_conditional = analysis_setup.selected_vars_full
-    conditional_realisations = np.empty(
-        (data.n_realisations(analysis_setup.current_value) *
-            len(analysis_setup.selected_vars_sources),
-            len(idx_conditional) - 1)).astype(data.data_type)
-    candidate_realisations = np.empty(
-        (data.n_realisations(analysis_setup.current_value) *
-         len(analysis_setup.selected_vars_sources), 1)).astype(data.data_type)
-
     # Calculate TE for each candidate in the conditional source set, i.e.,
     # calculate the conditional MI between each candidate and the current
     # value, conditional on all selected variables in the conditioning set,
     # excluding the current source. Calculate surrogates for each candidate by
     # shuffling the candidate realisations n_perm times. Afterwards, sort the
     # estimated TE values.
-    i_1 = 0
-    i_2 = data.n_realisations(analysis_setup.current_value)
     surr_table = np.zeros((len(analysis_setup.selected_vars_sources),
                            n_permutations))
     # Collect data for each candidate and the corresponding conditioning set.
     # Use realisations for parallel estimation of the test statistic later.
     for idx_c, candidate in enumerate(analysis_setup.selected_vars_sources):
-        [conditional_realisations_current,
-         candidate_realisations_current] = analysis_setup._separate_realisations(
-                                            idx_conditional, candidate)
 
-        # The following may happen if either the requested conditing is 'none'
-        # or if the conditiong set that is tested consists only of a single
-        # candidate.
-        if conditional_realisations_current is None:
-            conditional_realisations = None
-            re_use = ['var2', 'conditional']
-        else:
-            conditional_realisations[i_1:i_2, ] = conditional_realisations_current
-            re_use = ['var2']
-        candidate_realisations[i_1:i_2, ] = candidate_realisations_current
-        i_1 = i_2
-        i_2 += data.n_realisations(analysis_setup.current_value)
+        all_but_candidate_list = [source for source in analysis_setup.selected_vars_full if source != candidate]
 
         # Generate surrogates for the current candidate.
         if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
                 permute_in_time):
             # Generate the surrogates analytically
             surr_table[idx_c, :] = (
-                analysis_setup._cmi_estimator.estimate_surrogates_analytic(
+                analysis_setup._cmi_estimator.access_data_and_estimate_surrogates_analytic(
                     n_perm=n_permutations,
-                    var1=data.get_realisations(analysis_setup.current_value,
-                                               [candidate])[0],
-                    var2=analysis_setup._current_value_realisations,
-                    conditional=conditional_realisations_current))
+                    var1=DataAccessToken(analysis_setup.current_value,[candidate]),
+                    var2=DataAccessToken(analysis_setup._current_value, [analysis_setup.current_value]),
+                    conditional=DataAccessToken(analysis_setup.current_value, all_but_candidate_list),))
         else:
             analysis_setup.settings['analytical_surrogates'] = False
-            surr_candidate_realisations = _get_surrogates(
-                                                data,
-                                                analysis_setup.current_value,
-                                                [candidate],
-                                                n_permutations,
-                                                analysis_setup.settings)
             try:
+                surrogate_creation_info = analysis_setup.settings.copy()
+                surrogate_creation_info['n_perm'] = n_permutations
+
                 surr_table[idx_c, :] = (
-                    analysis_setup._cmi_estimator.estimate_parallel(
-                        n_chunks=n_permutations,
-                        re_use=['var2', 'conditional'],
-                        var1=surr_candidate_realisations,
-                        var2=analysis_setup._current_value_realisations,
-                        conditional=conditional_realisations_current))
+                    analysis_setup._cmi_estimator.access_data_and_estimate_parallel(
+                        var1=DataAccessToken.generate_surrogate_tokens(analysis_setup.current_value, [candidate], n_permutations, surrogate_creation_info),
+                        var2=DataAccessToken(analysis_setup.current_value, [analysis_setup.current_value]),
+                        conditional=DataAccessToken(analysis_setup.current_value, all_but_candidate_list)))
             except ex.AlgorithmExhaustedError as aee:
                 # The aglorithm cannot continue here, so
                 #  we'll terminate the max sequential stats test,
@@ -605,12 +559,10 @@ def max_statistic_sequential(analysis_setup, data):
 
     # Calculate original statistic (multivariate/bivariate TE/MI)
     try:
-        individual_stat = analysis_setup._cmi_estimator.estimate_parallel(
-                            n_chunks=len(analysis_setup.selected_vars_sources),
-                            re_use=re_use,
-                            var1=candidate_realisations,
-                            var2=analysis_setup._current_value_realisations,
-                            conditional=conditional_realisations)
+        individual_stat = analysis_setup._cmi_estimator.access_data_and_estimate_parallel(
+                            var1=[DataAccessToken(analysis_setup.current_value, [candidate]) for candidate in analysis_setup.selected_vars_sources],
+                            var2=DataAccessToken(analysis_setup.current_value, [analysis_setup.current_value]),
+                            conditional=DataAccessToken(analysis_setup.current_value, all_but_candidate_list))
     except ex.AlgorithmExhaustedError as aee:
         # The aglorithm cannot continue here, so
         #  we'll terminate the max sequential stats test,
@@ -1034,7 +986,8 @@ def mi_against_surrogates(analysis_setup, data):
                             var1=surr_realisations,
                             var2=analysis_setup._selected_vars_realisations,
                             conditional=None)
-    orig_mi = analysis_setup._cmi_estimator.estimate(
+    orig_mi = analysis_setup._cmi_estimator.estimate_parallel(
+                            n_chunks=1,
                             var1=analysis_setup._current_value_realisations,
                             var2=analysis_setup._selected_vars_realisations,
                             conditional=None
@@ -1322,7 +1275,6 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm,
 
     # Create surrogate table.
     surr_table = np.zeros((len(idx_test_set), n_perm))
-    current_value_realisations = analysis_setup._current_value_realisations
     idx_c = 0
     for candidate in idx_test_set:
         if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
@@ -1330,27 +1282,23 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm,
             # Generate the surrogates analytically
             analysis_setup.settings['analytical_surrogates'] = True
             surr_table[idx_c, :] = (
-                analysis_setup._cmi_estimator.estimate_surrogates_analytic(
+                analysis_setup._cmi_estimator.access_data_and_estimate_surrogates_analytic(
                     n_perm=n_perm,
-                    var1=data.get_realisations(analysis_setup.current_value,
-                                               [candidate])[0],
-                    var2=current_value_realisations,
-                    conditional=conditional))
+                    var1=DataAccessToken(analysis_setup.current_value, [candidate]),
+                    var2=DataAccessToken(analysis_setup.current_value, [analysis_setup.current_value]),
+                    conditional=DataAccessToken(analysis_setup.current_value, conditional)))
         else:
             analysis_setup.settings['analytical_surrogates'] = False
-            surr_candidate_realisations = _get_surrogates(
-                                                 data,
-                                                 analysis_setup.current_value,
-                                                 [candidate],
-                                                 n_perm,
-                                                 analysis_setup.settings)
+
+            surrogate_creation_info = analysis_setup.settings.copy()
+            surrogate_creation_info['n_perm'] = n_perm
+
             surr_table[idx_c, :] = (
-                analysis_setup._cmi_estimator.estimate_parallel(
-                    n_chunks=n_perm,
-                    re_use=['var2', 'conditional'],
-                    var1=surr_candidate_realisations,
-                    var2=current_value_realisations,
-                    conditional=conditional))
+                analysis_setup._cmi_estimator.access_data_and_estimate_parallel(
+                    var1=DataAccessToken.generate_surrogate_tokens(analysis_setup.current_value, [candidate], n_perm, surrogate_creation_info=surrogate_creation_info),
+                    var2=DataAccessToken(analysis_setup.current_value, [analysis_setup.current_value]),
+                    conditional=DataAccessToken(analysis_setup.current_value, conditional),
+                    ))
         idx_c += 1
 
     return surr_table
@@ -1405,6 +1353,10 @@ def _find_pvalue(statistic, distribution, alpha, tail):
     """
     assert alpha <= 1.0, 'Critical alpha levels needs to be smaller than 1.'
     assert distribution.ndim == 1, 'Test distribution must be 1D.'
+    
+    if alpha == 1.0 and len(distribution) == 0:
+        return True, np.nan
+    
     check_n_perm(distribution.shape[0], alpha)
 
     if tail == 'one_bigger' or tail == 'one':
@@ -1441,6 +1393,66 @@ def _sufficient_replications(data, n_perm):
     else:
         return False
 
+def _get_surrogate(data, current_value, idx_list, n_perm, perm_settings, output=None):
+    """Returns a single data surrogate for statistical testing.
+    
+    Calls surrogate generation methods of the data instance. The method for
+    surrogate generation depends on whether sufficient replications of the data
+    exists. If the number of replications is high enough (reps! >
+    n_permutations), surrogates are created by shuffling data over replications
+    (while keeping the temporal order of samples intact). If the number of
+    replications is too low, samples are shuffled over time (while keeping the
+    order of replications intact). The latter method can be forced by setting
+    'permute_in_time' to True in 'perm_settings'.
+
+    Args:
+        data : Data instance
+            raw data for analysis
+        current_value : tuple
+            index of the current value in current analysis, has to have the
+            form (idx process, idx sample)
+        idx_list : list of tuples
+            list of variables, for which surrogates have to be created
+        n_perm : int
+            number of permutations
+        perm_settings : dict
+            settings for surrogate creation by shuffling samples over time, set
+            'permute_in_time' to True to create surrogates by shuffling data
+            over time. See Data.permute_samples() for settings for surrogate
+            creation.
+        output : numpy array (optional)
+            array to store the surrogate in
+
+    Returns:
+        numpy array
+            surrogate data with dimensions
+            realisations x len(idx_list)
+    """
+
+    # If output is none, allocate memory for surrogate
+    if output is None:
+        n_realisations = data.n_realisations(current_value)
+        output = np.empty((n_realisations, len(idx_list))).astype(data.data_type)
+
+    # Check if the user requested to permute samples in time and not over
+    # replications
+    permute_in_time = perm_settings['permute_in_time']
+
+    # Generate surrogates by permuting over replications if possible (no.
+    # replications needs to be sufficient); else permute samples over time.
+
+    # Create random number generator
+    rng = np.random.default_rng(perm_settings['rng_seed'])
+
+    # permute samples
+    if permute_in_time:
+        output[:] = data.permute_samples(current_value, idx_list, perm_settings, rng)[0]
+    else:
+        assert _sufficient_replications(data, n_perm), (
+                'Not enough replications for surrogate creation.')
+        output[:] = data.permute_replications(current_value, idx_list, rng)[0]
+
+    return output
 
 def _get_surrogates(data, current_value, idx_list, n_perm, perm_settings):
     """Return surrogate data for statistical testing.
@@ -1475,36 +1487,19 @@ def _get_surrogates(data, current_value, idx_list, n_perm, perm_settings):
             surrogate data with dimensions
             (realisations * n_perm) x len(idx_list)
     """
+   
     # Allocate memory for surrogates
     n_realisations = data.n_realisations(current_value)
-    surrogates = np.empty((n_realisations * n_perm,
-                           len(idx_list))).astype(data.data_type)
+    surrogates = np.empty((n_realisations * n_perm, len(idx_list))).astype(data.data_type)
+   
+    # Generate random number gerenators for surrogate creation
+    seeds = np.random.randint(2**32, size=n_perm)
+    
+    for perm, seed in zip(range(n_perm), seeds):
+        settings = perm_settings.copy()
+        settings['rng_seed'] = seed
+        _get_surrogate(data, current_value, idx_list, n_perm, settings, output=surrogates[perm*n_realisations:(perm+1)*n_realisations])
 
-    # Check if the user requested to permute samples in time and not over
-    # replications
-    permute_in_time = perm_settings['permute_in_time']
-
-    # Generate surrogates by permuting over replications if possible (no.
-    # replications needs to be sufficient); else permute samples over time.
-    i_1 = 0
-    i_2 = n_realisations
-    # permute samples
-    if permute_in_time:
-        for perm in range(n_perm):
-            surrogates[i_1:i_2, ] = data.permute_samples(current_value,
-                                                         idx_list,
-                                                         perm_settings)[0]
-            i_1 = i_2
-            i_2 += n_realisations
-
-    else:  # permute replications
-        assert _sufficient_replications(data, n_perm), (
-                'Not enough replications for surrogate creation.')
-        for perm in range(n_perm):
-            surrogates[i_1:i_2, ] = data.permute_replications(current_value,
-                                                              idx_list)[0]
-            i_1 = i_2
-            i_2 += n_realisations
     return surrogates
 
 
@@ -1548,7 +1543,6 @@ def _generate_spectral_surrogates(data, scale, n_perm, perm_settings):
         for perm in range(n_perm):
             surrogates[:, :, perm] = data.slice_permute_replications(scale)[0]
     return surrogates
-
 
 def _check_permute_in_time(analysis_setup, data, n_perm):
     """Set defaults for permuting samples in time.

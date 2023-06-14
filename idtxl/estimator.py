@@ -1,4 +1,5 @@
 """Provide estimator base class for information theoretic measures."""
+from functools import lru_cache
 import imp
 import os
 import importlib
@@ -6,7 +7,8 @@ import inspect
 from pprint import pprint
 from abc import ABCMeta, abstractmethod
 import numpy as np
-from . import idtxl_exceptions as ex
+
+from .data_access import DataAccessToken
 
 MODULE_EXTENSIONS = ('.py')  # ('.py', '.pyc', '.pyo')
 ESTIMATOR_PREFIX = ('estimators_')
@@ -32,7 +34,7 @@ def list_estimators():
         if class_list:
             pprint(class_list)
 
-
+@lru_cache()
 def _find_estimator(est):
     """Return estimator class.
 
@@ -73,7 +75,7 @@ def _find_estimator(est):
                         'estimator as string.')
 
 
-def get_estimator(est, settings):
+def get_estimator(est, data, settings):
     """Factory method that creates an Estimator instance with the given settings.
 
     If the MPI flag is set to True, return an MPIEstimator instead.
@@ -98,12 +100,26 @@ def get_estimator(est, settings):
         # Import just in time to avoid cyclic import
         from .estimators_mpi import MPIEstimator
 
-        return MPIEstimator(est, settings_mpi)
+        return MPIEstimator(est, data, settings_mpi)
+    
+    if settings.get('multiprocessing', False):
+        settings_multiprocessing = settings.copy()
+
+        # Remove multiprocessing flag to avoid infinite recursion
+        del settings_multiprocessing['multiprocessing']
+
+        # Import just in time to avoid cyclic import
+        from .estimators_multiprocessing import MultiprocessingEstimator
+
+        return MultiprocessingEstimator(est, data, settings_multiprocessing)
 
     # Otherwise find Estimator and return instance
     EstimatorClass = _find_estimator(est)
 
-    return EstimatorClass(settings)
+    estimator = EstimatorClass(settings)
+    estimator.set_data(data)
+
+    return estimator
 
 
 class Estimator(metaclass=ABCMeta):
@@ -127,7 +143,16 @@ class Estimator(metaclass=ABCMeta):
     """
 
     def __init__(self, settings=None):
-        pass
+        self._data = None
+
+    def set_data(self, data):
+        """Set data for estimator.
+
+        Args:
+            data : Data
+                data object
+        """
+        self._data = data
 
     @abstractmethod
     def estimate(self, **vars):
@@ -252,6 +277,56 @@ class Estimator(metaclass=ABCMeta):
         elif len(var.shape) > 2:
             raise TypeError('Input arrays must be 1D or 2D')
         return var
+    
+    def access_data_and_estimate_parallel(self, **vars):
+        """Extract the data from the Data object and estimate sequentially.
+
+        Args:
+            data: Data object
+                data object containing the data to be estimated
+            vars: dictionary
+                dictionary of variable names to be estimated"""
+        
+        # get the number of chunks and check that it is the same for all variables
+
+        n_chunks = 1
+        for var in vars.values():
+            if not isinstance(var, DataAccessToken):
+                n_chunks = len(var)
+                break
+
+        assert all(len(var_list) == n_chunks for var_list in vars.values() if not isinstance(var_list, DataAccessToken)), "The number of chunks is not the same for all variables"
+        
+        # repeat vars which are only a single token
+        vars = {var_name:var_list if not isinstance(var_list, DataAccessToken) else [var_list]*n_chunks for var_name, var_list in vars.items()}
+
+        # estimate for each chunk
+        estimates = np.empty(n_chunks)
+        for chunk in range(n_chunks):
+            estimates[chunk] = self.access_data_and_estimate(**{var_name:var_list[chunk] for var_name, var_list in vars.items()})
+
+        return estimates
+    
+    def access_data_and_estimate(self, **vars):
+        """Extract the data from the Data object and estimate.
+        
+        Args:
+            vars: dictionary
+                dictionary of variable names to be estimated"""
+        
+        realizations = {var_name:self._data.get_realisations_for_token(token) for var_name, token in vars.items()}
+        return self.estimate(**realizations)
+
+    def access_data_and_estimate_surrogates_analytic(self, n_perm, **vars):
+        """Extract the data from the Data object and estimate analytically.
+        
+        Args:
+            vars: dictionary
+                dictionary of variable names to be estimated"""
+        
+        realizations = {var_name:self._data.get_realisations_for_token(token) for var_name, token in vars.items()}
+        return self.estimate_surrogates_analytic(n_perm=n_perm, **realizations)
+        
 
     def estimate_parallel(self, n_chunks=1, re_use=None, **data):
         """Estimate measure for multiple data sets (chunks).
@@ -298,7 +373,11 @@ class Estimator(metaclass=ABCMeta):
             ex.AlgorithmExhaustedError
                 Raised from self.estimate() when calculation cannot be made
         """
-        assert n_chunks > 0, 'n_chunks must be positive.'
+        assert n_chunks >= 0, 'n_chunks must be non-negative.'
+        
+        if n_chunks == 0:
+            return np.array([])
+        
         if re_use is None:
             re_use = []
 

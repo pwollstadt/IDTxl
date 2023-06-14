@@ -8,6 +8,8 @@ import ast
 import copy as cp
 import itertools as it
 import numpy as np
+
+from idtxl.data_access import DataAccessToken
 from .estimator import get_estimator
 from . import idtxl_utils as utils
 from . import idtxl_io as io
@@ -25,8 +27,6 @@ class NetworkAnalysis():
         self.selected_vars_full = []
         self.selected_vars_sources = []
         self.selected_vars_target = []
-        self._current_value_realisations = None
-        self._selected_vars_realisations = None
         self._min_stats_surr_table = None
 
     @property
@@ -41,22 +41,6 @@ class NetworkAnalysis():
                              'process, index sample).'))
         self._current_value = idx
 
-    @property
-    def _current_value_realisations(self):
-        """Get realisations of the current_value."""
-        if self.__current_value_realisations is None:
-            print('Attribute has not been set yet.')
-        if type(self.__current_value_realisations) is tuple:
-            raise TypeError('something went wrong')
-        return self.__current_value_realisations
-
-    @_current_value_realisations.setter
-    def _current_value_realisations(self, realisations):
-        self.__current_value_realisations = realisations
-
-    @_current_value_realisations.deleter
-    def _current_value_realisations(self):
-        del self.__current_value_realisations
 
     @property
     def selected_vars_full(self):
@@ -100,69 +84,6 @@ class NetworkAnalysis():
                              'index sample).'))
         self._selected_vars_sources = idx_list
 
-    @property
-    def _selected_vars_realisations(self):
-        """Get realisations of the full conditional set."""
-        return self.__selected_vars_realisations
-
-    @_selected_vars_realisations.setter
-    def _selected_vars_realisations(self, realisations):
-        self.__selected_vars_realisations = realisations
-
-    @property
-    def _selected_vars_target_realisations(self):
-        """Get realisations of the target samples in the conditional.
-
-        Note:
-            Each time this property is called, realisations are actually
-            extracted from the array of all realisations, which may be slow!
-            Use temporary variables to speed things up.
-        """
-        if self.selected_vars_target is None:
-            return None
-        indices = np.zeros(len(self.selected_vars_target)).astype(int)
-        for i, idx in enumerate(self.selected_vars_target):
-            indices[i] = self.selected_vars_full.index(idx)
-        self._selected_vars_target_realisations = (
-                                self._selected_vars_realisations[:, indices])
-        return self.__selected_vars_target_realisations
-
-    @_selected_vars_target_realisations.setter
-    def _selected_vars_target_realisations(self, realisations):
-        self.__selected_vars_target_realisations = realisations
-
-    @property
-    def _selected_vars_sources_realisations(self):
-        """Get realisations of the source samples in the conditional.
-
-        Note:
-            Each time this property is called, realisations are actually
-            extracted from the array of all realisations, which may be slow!
-            Use temporary variables to speed things up.
-        """
-        indices = np.zeros(len(self.selected_vars_sources)).astype(int)
-        for (i, idx) in enumerate(self.selected_vars_sources):
-            indices[i] = self.selected_vars_full.index(idx)
-        self._selected_vars_sources_realisations = (
-                                self._selected_vars_realisations[:, indices])
-        return self.__selected_vars_sources_realisations
-
-    @_selected_vars_sources_realisations.setter
-    def _selected_vars_sources_realisations(self, realisations):
-        self.__selected_vars_sources_realisations = realisations
-
-    def _append_selected_vars_realisations(self, realisations):
-        """Append realisations of conditionals to existing realisations.
-
-        Returns:
-            realisations: numpy array with dimensions replications x number
-                of indices.
-        """
-        if self._selected_vars_realisations is None or realisations.size == 0:
-            self._selected_vars_realisations = realisations
-        else:
-            self._selected_vars_realisations = np.hstack(
-                            (self._selected_vars_realisations, realisations))
 
     def _idx_to_lag(self, idx_list, current_value_sample=None):
         """Change sample indices to lags for each sample in the list."""
@@ -195,7 +116,7 @@ class NetworkAnalysis():
             idx_list[lag_list.index(c)] = (c[0], current_value_sample - c[1])
         return idx_list
 
-    def _set_cmi_estimator(self):
+    def _set_cmi_estimator(self, data):
         """Check and set requested CMI estimator."""
         # Set CMI estimator. Check if the user requested the estimation of
         # local values. If so, initialise a local estimator additionally to the
@@ -204,59 +125,14 @@ class NetworkAnalysis():
         # to estimate single-link MI/TE or single-process AIS in the end.
         assert 'cmi_estimator' in self.settings, 'Estimator was not specified!'
 
-        if self.settings['local_values']:
-            self.settings['local_values'] = False
-            self._cmi_estimator = get_estimator(self.settings['cmi_estimator'], self.settings)
-            self.settings['local_values'] = True
-            self._cmi_estimator_local = get_estimator(self.settings['cmi_estimator'], self.settings)
-        else:
-            self._cmi_estimator = get_estimator(self.settings['cmi_estimator'], self.settings)
 
-    def _separate_realisations(self, idx_full, idx_single):
-        """Separate single index realisations from a set of realisations.
+        settings_copy = cp.copy(self.settings)
 
-        Return the realisations of a single index and the realisations of the
-        remaining set of indices. The function takes realisations from the
-        array in self._selected_vars_realisations. This allows to reuse the
-        collected realisations when pruning the conditional set after
-        candidates have been included.
-
-        Args:
-            idx_full : list of tuples
-                indices indicating the full set
-            idx_single : tuple
-                index to be removed
-
-        Returns:
-            numpy array
-                realisations of the set without the single index
-            numpy array
-                realisations of the variable at the single index
-        """
-        # Get indices of the remaining variables.
-        idx_remaining = cp.copy(idx_full)
-        idx_remaining.pop(idx_remaining.index(idx_single))
-
-        # Find the indices of the columns with the realisations of the
-        # requested variables (the single one to be removed and the remaining
-        # variables).
-        array_col_single = self.selected_vars_full.index(idx_single)
-        array_col_remain = np.zeros(len(idx_remaining)).astype(int)
-        for (i, idx) in enumerate(idx_remaining):
-            array_col_remain[i] = self.selected_vars_full.index(idx)
-
-        # Get realisations of the single and remaining variables.
-        real_single = np.expand_dims(
-                        self._selected_vars_realisations[:, array_col_single],
-                        axis=1)
-        if len(idx_full) == 1:
-            # If no realiastions remain, set variable to None instead of and
-            # empty array so the JIDT estimator doesn't break
-            real_remain = None
-        else:
-            real_remain = self._selected_vars_realisations[:, array_col_remain]
-
-        return real_remain, real_single
+        if self.settings_copy['local_values']:
+            self._cmi_estimator_local = get_estimator(settings_copy['cmi_estimator'], data, settings_copy)
+        
+        settings_copy['local_values'] = False
+        self._cmi_estimator = get_estimator(settings_copy['cmi_estimator'], data, settings_copy)
 
     def _define_candidates(self, processes, samples):
         """Build a list of candidate indices.
@@ -337,7 +213,7 @@ class NetworkAnalysis():
             else:
                 self.selected_vars_sources.append(i)
 
-    def _append_selected_vars(self, idx, realisations):
+    def _append_selected_vars(self, idx):
         """Append indices and realisation of selected variables.
 
         Args:
@@ -348,17 +224,11 @@ class NetworkAnalysis():
             realisations : numpy array
                 realisations of the selected variables
         """
-        assert len(idx) == realisations.shape[1], (
-            'Dimensionality of realisations array ({0}) and length of index '
-            'list ({1}) do not match.'.format(realisations.shape[1], len(idx)))
         self._append_selected_vars_idx(idx)
-        self._append_selected_vars_realisations(realisations)
 
     def _remove_selected_var(self, idx):
         """Remove a single selected variable and its realisations."""
-        self._selected_vars_realisations = utils.remove_column(
-                                         self._selected_vars_realisations,
-                                         self.selected_vars_full.index(idx))
+        
         self.selected_vars_full.pop(self.selected_vars_full.index(idx))
         if idx[0] == self.target:
             self.selected_vars_target.pop(
@@ -474,39 +344,32 @@ class NetworkAnalysis():
                 if target_realisations is None:
                     # Use sources' pasts only, returns None if conditional vars
                     # is empty.
-                    conditional_realisations = data.get_realisations(
-                            current_value, conditional_vars)[0]
+                    conditional_vars = conditional_vars
                 else:
                     # Use target's and sources' past, check if conditional vars
                     # is not empty, otherwise np.hstack crashes.
-                    if conditional_vars:
-                        conditional_realisations = np.hstack((
-                            data.get_realisations(
-                                current_value, conditional_vars)[0],
-                            target_realisations))
-                    else:   # use target's past only
-                        conditional_realisations = target_realisations
+                        conditional_vars = conditional_vars + target_vars
 
             elif conditioning == 'target':  # use target's past only (biv. TE)
-                conditional_realisations = target_realisations
+                conditional_vars = target_vars
             elif conditioning == 'none':  # no conditioning (bivariate MI)
-                conditional_realisations = None
+                conditional_vars = None
             else:
                 raise RuntimeError('Unknown conditioning: {0}.'.format(
                     conditioning))
 
             if self.settings['local_values']:
-                local_values = self._cmi_estimator_local.estimate(
-                    var1=current_value_realisations,
-                    var2=source_realisations,
-                    conditional=conditional_realisations)
+                local_values = self._cmi_estimator.access_data_and_estimate_parallel(
+                    var1=DataAccessToken(current_value, [current_value]),
+                    var2=DataAccessToken(current_value, link_vars),
+                    conditional=DataAccessToken(current_value, conditional_vars))
                 links[i] = local_values.reshape(
                     max(replication_ind) + 1, sum(replication_ind == 0)).T
             else:
-                links[i] = self._cmi_estimator.estimate(
-                    var1=current_value_realisations,
-                    var2=source_realisations,
-                    conditional=conditional_realisations)
+                links[i] = self._cmi_estimator.access_data_and_estimate_parallel(
+                    var1=DataAccessToken(current_value, [current_value]),
+                    var2=DataAccessToken(current_value, link_vars),
+                    conditional=DataAccessToken(current_value, conditional_vars))
 
         return links
 

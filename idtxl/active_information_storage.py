@@ -569,7 +569,8 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 replication_ind = data.get_realisations(
                     self.current_value, self._selected_vars_sources)[1]
                 try:
-                    local_ais = self._cmi_estimator_local.estimate(
+                    local_ais = self._cmi_estimator_local.estimate_parallel(
+                                n_chunks=1,
                                 var1=self._current_value_realisations,
                                 var2=self._selected_vars_realisations,
                                 conditional=None)
