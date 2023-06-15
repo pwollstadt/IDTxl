@@ -128,7 +128,7 @@ class NetworkAnalysis():
 
         settings_copy = cp.copy(self.settings)
 
-        if self.settings_copy['local_values']:
+        if settings_copy['local_values']:
             self._cmi_estimator_local = get_estimator(settings_copy['cmi_estimator'], data, settings_copy)
         
         settings_copy['local_values'] = False
