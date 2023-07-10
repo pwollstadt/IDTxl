@@ -4,8 +4,6 @@ from . import idtxl_exceptions as ex
 from .idtxl_utils import timeout
 
 import numpy as np
-import itertools
-from uuid import uuid4
 
 try:
     from mpi4py.futures import MPIPoolExecutor
@@ -15,44 +13,15 @@ except ImportError as err:
                        'MPI parallelization.')
     raise err
 
-_worker_estimators = {}
-"""Estimator instances on worker ranks
+def worker_estimate(tokens):
+    return worker_estimate._estimator.access_data_and_estimate(**tokens)
 
-Used so that Estimators do not have to be created new for each task given to them.
-Estimators are indexed by the ID of the corresponding MPIEstimator instance on the MPI main rank.
-"""
+def _init_worker(estimator_name, data, settings):
+    worker_estimate._estimator = get_estimator(estimator_name, data, settings)
 
-
-def _get_worker_estimator(id_, est, settings):
-    """Return Estimator instance on worker rank.
-    If no Estimator for the given MPIEstimator id exists, create a new one
-    """
-
-    # Create new estimator if necessary
-    if id_ not in _worker_estimators:
-
-        # There is currently no good way to delete Estimators from _worker_estimators
-        # caches when the corresponding MPIEstimator ceases to exist.
-        # To avoid memory leaks, we currently allow only a single cached estimator that is replaced for new MPIEstimators.
-        _worker_estimators.clear()
-
-        _worker_estimators[id_] = get_estimator(est, settings)
-
-    return _worker_estimators[id_]
-
-
-def _dispatch_task(id_, est, settings, data):
-    """Estimates a single chunk of data on an MPI worker rank.
-    Calls the estimate function of the base Estimator
-    """
-
-    estimator = _get_worker_estimator(id_, est, settings)
-
-    if estimator.is_parallel():
-        return estimator.estimate(n_chunks=1, **data)
-    else:
-        return estimator.estimate(**data)
-
+def unzip_dict(d):
+    """Unzip a dictionary of lists into a list of dictionaries"""
+    return [{k: v[i] if isinstance(v, list) else v for k, v in d.items()} for i in range(max([1] + [len(v) for v in d.values() if isinstance(v, list)]))]
 
 class MPIEstimator(Estimator):
     """MPI Wrapper for arbitrary Estimator implementations
@@ -73,35 +42,18 @@ class MPIEstimator(Estimator):
 
     """
 
-    def __init__(self, est, settings):
-        """Creates new MPIEstimator instance
-
-        Immediately creates instances of est on each MPI worker.
-
-        Args:
-            est (str | Callable[[dict], Estimator]): Name of of or callable returning an instance of the base Estimator
-            settings (dict): settings for the base Estimator.
-                max_workers (optional): Number of MPI workers. Default: MPI_UNIVERSE_SIZE
-        """
-
-        self._est = est
-        self._settings = self._check_settings(settings).copy()
-
-        # Create unique id for this instance to access cached estimators
-        self._id = uuid4().int
+    def __init__(self, est, data, settings):
+        
+        _init_worker(est, data, settings)
 
         # Create the MPIPoolExecutor and initialize Estimators on worker ranks
-        self._executor = MPIPoolExecutor(
-            max_workers=settings.get('max_workers', None))
+        self._executor = MPIPoolExecutor(max_workers=settings.get('max_workers', None), initializer=_init_worker, initargs=(est, data, settings))
 
         # Boot up the executor with timeout
         with timeout(timeout_duration=settings.get('mpi_bootup_timeout', 10), exception_message='Bootup of MPI workers timed out.\n\
                 Make sure the script was started in an MPI enrivonment using mpiexec, mpirun, srun (SLURM) or equivalent.\n\
                 If necessary, increase the timeout in the settings dictionary using the key mpi_bootup_timeout.'):
             self._executor.bootup(wait=True)
-
-        # Create Estimator for rank 0.
-        _get_worker_estimator(self._id, est, settings)
 
     def __del__(self):
         """
@@ -110,58 +62,21 @@ class MPIEstimator(Estimator):
 
         self._executor.shutdown()
 
-    def _chunk_data(self, data, chunksize, n_chunks):
-        """
-        Iterator chopping data dictionary into n_chunks chunks of size chunksize
-        """
-        for i in range(n_chunks):
-            yield {var: (None if data[var] is None else data[var][i*chunksize:(i+1)*chunksize]) for var in data}
+    def estimate(self, **vars):
+        raise NotImplementedError("This method is not implemented for this estimator.")
 
-    def estimate(self, *, n_chunks=1, **data):
-        """Distributes the given chunks of a task to Estimators on worker ranks using MPI.
-        Needs to be called with kwargs only.
-        Args:
-            n_chunks (int, optional): Number of chunks to split the data into. Defaults to 1.
-            data (dict[str, Sequence]): Dictionary of random variable realizations
-        Returns:
-            numpy array: Estimates of information-theoretic quantities as np.double values
-        """
+    def access_data_and_estimate_parallel(self, **tokens):
+        """Distribute the tokens among the workers"""
 
-        assert n_chunks > 0, 'Number of chunks must be at least one.'
+        results_generator = self._executor.map(worker_estimate, unzip_dict(tokens))
 
-        samplesize = len(next(iter(data.values())))
-
-        assert all(var is None or len(var) == samplesize for var in data.values(
-        )), 'All variables must have the same number of realizations.'
-
-        assert samplesize % n_chunks == 0, 'Number of realizations must be divisible by number of chunks!'
-
-        # Split the data into chunks
-        chunksize = samplesize // n_chunks
-
-        chunked_data = self._chunk_data(data, chunksize, n_chunks)
-
-        result_generator = self._executor.map(_dispatch_task,
-                                              itertools.repeat(self._id),
-                                              itertools.repeat(self._est),
-                                              itertools.repeat(self._settings),
-                                              chunked_data)
-
-        return np.fromiter(result_generator, dtype=np.double)
+        return np.fromiter(results_generator, dtype=np.double)
 
     def is_parallel(self):
         return True
 
     def is_analytic_null_estimator(self):
-        """Test if the base Estimator is an analytic null estimator.
-
-        """
-
-        return _get_worker_estimator(self._id, self._est, self._settings).is_analytic_null_estimator()
-
-    def estimate_surrogates_analytic(self, **data):
-        """Forward analytic estimation to the base Estimator.
-        Analytic estimation is assumed to have shorter runtime and is thus performed on rank 0 alone for now.
-        """
-
-        return _get_worker_estimator(self._id, self._est, self._settings).estimate_surrogates_analytic(**data)
+        return worker_estimate._estimator.is_analytic_null_estimator()
+    
+    def estimate_surrogates_analytic(self, *args, **kwargs):
+        return worker_estimate._estimator.estimate_surrogates_analytic(*args, **kwargs)
