@@ -6,10 +6,10 @@ from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
 
 """
-This script uses the Lorenz 2 example to test the runtime scaling using multiprocessing.
+This script uses the Lorenz 2 example to test the runtime scaling using multiprocessing and mpi.
 """
 
-def profile_lorenz_2(n_java_threads, multiprocessing, n_processes=1):
+def profile_lorenz_2(n_java_threads, multiprocessing, n_processes, mpi, n_workers):
     
     assert multiprocessing or n_processes == 1, 'n_processes must be 1 if multithreading is disabled'
 
@@ -33,29 +33,32 @@ def profile_lorenz_2(n_java_threads, multiprocessing, n_processes=1):
         'num_threads': n_java_threads,
         'multiprocessing': multiprocessing,
         'n_processes': n_processes,
+        'mpi': mpi,
+        'max_workers': n_workers,
         }
     lorenz_analysis = MultivariateTE()
     _ = lorenz_analysis.analyse_single_target(settings, data, 0)
-    _ = lorenz_analysis.analyse_single_target(settings, data, 1)
     runtime = time.perf_counter() - start_time
     
     print(f'Lorenz 2 with {n_java_threads} Java threads and {n_processes} Python processes ({multiprocessing=}) took {runtime:.2f} seconds')
 
     # Create results file if it doesn't exist
-    if not os.path.exists('lorenz_2_runtimes.csv'):
+    if not os.path.exists('performancetest_lorenz_2_runtimes.csv'):
         with open('lorenz_2_runtimes.csv', 'w') as f:
-            f.write('n_java_threads,multiprocessing,n_processes,runtime\n')
+            f.write('n_java_threads,multiprocessing,n_processes,mpi,max_workers,runtime\n')
 
     # Append runtime to file
-    with open('lorenz_2_runtimes.csv', 'a') as f:
-        f.write(f'{n_java_threads},{multiprocessing},{n_processes},{runtime}\n')
+    with open('performancetest_lorenz_2_runtimes.csv', 'a') as f:
+        f.write(f'{n_java_threads},{multiprocessing},{n_processes},{mpi},{n_workers},{runtime}\n')
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('--n_java_threads', type=int, default=1)
     argparser.add_argument('--multiprocessing', type=bool, default=False)
     argparser.add_argument('--n_processes', type=int, default=1)
+    argparser.add_argument('--mpi', type=bool, default=False)
+    argparser.add_argument('--n_workers', type=int, default=1)
 
     args = argparser.parse_args()
-    print(f'Running Lorenz 2 with {args.n_java_threads} Java threads and {args.n_processes} Python processes ({args.multiprocessing=})')
-    profile_lorenz_2(args.n_java_threads, args.multiprocessing, args.n_processes)
+    print(f'Running Lorenz 2 with {args.n_java_threads} Java threads and {args.n_processes} Python processes (multiprocessing={args.multiprocessing}), on {args.n_workers} workers (MPI={args.mpi}))')
+    profile_lorenz_2(args.n_java_threads, args.multiprocessing, args.n_processes, args.mpi, args.n_workers)
