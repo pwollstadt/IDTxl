@@ -26,7 +26,7 @@ date
 # Run tests with a single java thread
 for n_workers in 64 32 16 8 4 2 1
 do
-    mpirun -n $n_processes python -m mpi4py.futures test/performancetest_lorenz_2.py --n_java_threads=1 --mpi=1 --n_processes=$n_workers
+    mpirun -n $n_workers python -m mpi4py.futures test/performancetest_lorenz_2.py --n_java_threads=1 --mpi=1 --n_processes=$n_workers
     wait
     date
 done
