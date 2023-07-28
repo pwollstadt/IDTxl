@@ -33,7 +33,7 @@ def profile_lorenz_2(n_java_threads, multiprocessing, n_processes, mpi, n_worker
         'num_threads': n_java_threads,
         'multiprocessing': multiprocessing,
         'n_processes': n_processes,
-        'mpi': mpi,
+        'MPI': mpi,
         'max_workers': n_workers,
         }
     lorenz_analysis = MultivariateTE()
@@ -44,7 +44,7 @@ def profile_lorenz_2(n_java_threads, multiprocessing, n_processes, mpi, n_worker
 
     # Create results file if it doesn't exist
     if not os.path.exists('performancetest_lorenz_2_runtimes.csv'):
-        with open('lorenz_2_runtimes.csv', 'w') as f:
+        with open('performancetest_lorenz_2_runtimes.csv', 'w') as f:
             f.write('n_java_threads,multiprocessing,n_processes,mpi,max_workers,runtime\n')
 
     # Append runtime to file
