@@ -21,12 +21,7 @@ class MultiprocessingEstimator(Estimator):
         # Create worker for the main process.
         _init_worker(estimator_name, data, settings)
 
-        # If the start method is fork, we can use shared memory and do not need to re-initialize the worker.
-        if get_context().get_start_method() == 'fork':
-            self._pool = Pool(processes=settings.get('n_processes', None))
-        else:
-            # Otherwise, we need to re-initialize the worker in each process.
-            self._pool = Pool(processes=settings.get('n_processes', None), initializer=_init_worker, initargs=(estimator_name, data, settings))
+        self._pool = get_context('spawn').Pool(processes=settings.get('n_processes', None), initializer=_init_worker, initargs=(estimator_name, data, settings))
     
     def access_data_and_estimate_parallel(self, **tokens):
         """Distribute the tokens among the workers"""
