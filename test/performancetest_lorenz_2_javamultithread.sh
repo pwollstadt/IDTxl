@@ -6,10 +6,10 @@
 #SBATCH -A cidbn
 #SBATCH -p cidbn
 #SBATCH --job-name=te_mp
-#SBATCH --output=performancetest_lorenz_2_mpi_%A.txt
+#SBATCH --output=performancetest_lorenz_2_javamultithread_%A.txt
 #SBATCH --time=24:00:00
-#SBATCH --ntasks=64
-#SBATCH --cpus-per-task=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=64
 #SBATCH --mem=128gb
 #SBATCH --exclusive
 
@@ -24,9 +24,9 @@ conda activate idtxl
 date
 
 # Run tests with a single java thread
-for n_workers in 64 32 16 8 4 2 1
+for n_java_threads in 64 32 16 8 4 2 1
 do
-    mpirun -n $n_workers python -m mpi4py.futures test/performancetest_lorenz_2.py --n_java_threads=1 --mpi=1 --n_workers=$n_workers
+    python test/performancetest_lorenz_2.py --n_java_threads=$n_java_threads
     wait
     date
 done
