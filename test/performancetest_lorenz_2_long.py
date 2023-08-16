@@ -47,12 +47,13 @@ def profile_lorenz_2(n_java_threads, multiprocessing, n_processes, mpi, n_worker
     print(f'Lorenz 2 with {n_java_threads} Java threads and {n_processes} Python processes ({multiprocessing=}) took {runtime:.2f} seconds')
 
     # Create results file if it doesn't exist
-    if not os.path.exists('performancetest_lorenz_2_runtimes.csv'):
-        with open('performancetest_lorenz_2_long_runtimes.csv', 'w') as f:
+    filename = 'performancetest_lorenz_2_long_runtimes.csv'
+    if not os.path.exists(filename):
+        with open(filename, 'w') as f:
             f.write('n_java_threads,multiprocessing,n_processes,mpi,max_workers,runtime\n')
 
     # Append runtime to file
-    with open('performancetest_lorenz_2_long_runtimes.csv', 'a') as f:
+    with open(filename, 'a') as f:
         f.write(f'{n_java_threads},{multiprocessing},{n_processes},{mpi},{n_workers},{runtime}\n')
 
 if __name__ == '__main__':
