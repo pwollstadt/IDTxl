@@ -18,3 +18,16 @@ Bivariate Partial Information Decomposition (PID)
 .. autoclass:: idtxl.bivariate_pid.BivariatePID
     :members:
     :noindex:
+
+History-dependence estimator for neural spiking data
+----------------------------------------------------
+Embedding optimization
+^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: idtxl.embedding_optimization_ais_Rudelt.OptimizationRudelt
+    :members:
+    :noindex:
+Estimators
+^^^^^^^^^^
+.. automodule:: idtxl.estimators_Rudelt
+    :members:
+    :noindex:

@@ -4,14 +4,16 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Algorithms for network inference &#8212; IDTxl 1.2.1 documentation</title>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Algorithms for network inference &#8212; IDTxl 1.4 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Algorithms for the analysis of node dynamics" href="idtxl_process_analysis.html" />
@@ -39,7 +41,7 @@
         <li class="right" >
           <a href="idtxl_data_class.html" title="The Data Class"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Algorithms for network inference</a></li> 
       </ul>
     </div>  
@@ -49,13 +51,13 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="algorithms-for-network-inference">
+  <section id="algorithms-for-network-inference">
 <h1>Algorithms for network inference<a class="headerlink" href="#algorithms-for-network-inference" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="multivariate-transfer-entropy-mte">
+<section id="multivariate-transfer-entropy-mte">
 <h2>Multivariate Transfer Entropy (mTE)<a class="headerlink" href="#multivariate-transfer-entropy-mte" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.multivariate_te.</span></code><code class="sig-name descname"><span class="pre">MultivariateTE</span></code><a class="reference internal" href="_modules/idtxl/multivariate_te.html#MultivariateTE"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">idtxl.multivariate_te.</code><code class="sig-name descname">MultivariateTE</code><a class="reference internal" href="_modules/idtxl/multivariate_te.html#MultivariateTE"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Perform network inference using multivariate transfer entropy.</p>
 <p>Perform network inference using multivariate transfer entropy (TE). To
 perform network inference call analyse_network() on the whole network or a
@@ -78,8 +80,9 @@ of nonlinear Granger causality in multivariate processes via a
 nonuniform embedding technique. Phys Rev E, 83, 1–15.
 <a class="reference external" href="http://doi.org/10.1103/PhysRevE.83.051112">http://doi.org/10.1103/PhysRevE.83.051112</a></p></li>
 </ul>
-<dl class="simple">
-<dt>Attributes:</dt><dd><dl class="simple">
+<p>Attributes:</p>
+<blockquote>
+<div><dl class="simple">
 <dt>source_set<span class="classifier">list</span></dt><dd><p>indices of source processes tested for their influence on the
 target</p>
 </dd>
@@ -107,11 +110,10 @@ idx sample)</p>
 <dt>sign_ominbus<span class="classifier">bool</span></dt><dd><p>statistical significance of the over-all TE</p>
 </dd>
 </dl>
-</dd>
-</dl>
+</div></blockquote>
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">analyse_network</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/multivariate_te.html#MultivariateTE.analyse_network"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<code class="sig-name descname">analyse_network</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">targets</span><span class="o">=</span><span class="default_value">'all'</span></em>, <em class="sig-param"><span class="n">sources</span><span class="o">=</span><span class="default_value">'all'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/multivariate_te.html#MultivariateTE.analyse_network"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Find multivariate transfer entropy between all nodes in the network.</p>
 <p>Estimate multivariate transfer entropy (TE) between all nodes in the
 network or between selected sources and targets.</p>
@@ -174,7 +176,7 @@ ResultsNetworkInference()</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">analyse_single_target</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/multivariate_te.html#MultivariateTE.analyse_single_target"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<code class="sig-name descname">analyse_single_target</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">target</span></em>, <em class="sig-param"><span class="n">sources</span><span class="o">=</span><span class="default_value">'all'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/multivariate_te.html#MultivariateTE.analyse_single_target"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Find multivariate transfer entropy between sources and a target.</p>
 <p>Find multivariate transfer entropy (TE) between all source processes
 and the target process. Uses multivariate, non-uniform embedding found
@@ -283,12 +285,12 @@ ResultsNetworkInference()</p>
 
 </dd></dl>
 
-</div>
-<div class="section" id="bivariate-transfer-entropy-bte">
+</section>
+<section id="bivariate-transfer-entropy-bte">
 <h2>Bivariate Transfer Entropy (bTE)<a class="headerlink" href="#bivariate-transfer-entropy-bte" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.bivariate_te.</span></code><code class="sig-name descname"><span class="pre">BivariateTE</span></code><a class="reference internal" href="_modules/idtxl/bivariate_te.html#BivariateTE"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">idtxl.bivariate_te.</code><code class="sig-name descname">BivariateTE</code><a class="reference internal" href="_modules/idtxl/bivariate_te.html#BivariateTE"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Perform network inference using bivariate transfer entropy.</p>
 <p>Perform network inference using bivariate transfer entropy (TE). To
 perform network inference call analyse_network() on the whole network or a
@@ -344,7 +346,7 @@ idx sample)</p>
 </dl>
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">analyse_network</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/bivariate_te.html#BivariateTE.analyse_network"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<code class="sig-name descname">analyse_network</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">targets</span><span class="o">=</span><span class="default_value">'all'</span></em>, <em class="sig-param"><span class="n">sources</span><span class="o">=</span><span class="default_value">'all'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/bivariate_te.html#BivariateTE.analyse_network"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Find bivariate transfer entropy between all nodes in the network.</p>
 <p>Estimate bivariate transfer entropy (TE) between all nodes in the
 network or between selected sources and targets.</p>
@@ -406,7 +408,7 @@ ResultsNetworkInference()</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">analyse_single_target</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/bivariate_te.html#BivariateTE.analyse_single_target"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<code class="sig-name descname">analyse_single_target</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">target</span></em>, <em class="sig-param"><span class="n">sources</span><span class="o">=</span><span class="default_value">'all'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/bivariate_te.html#BivariateTE.analyse_single_target"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Find bivariate transfer entropy between sources and a target.</p>
 <p>Find bivariate transfer entropy (TE) between all potential source
 processes and the target process. Uses bivariate, non-uniform embedding
@@ -519,12 +521,12 @@ ResultsNetworkInference()</p>
 
 </dd></dl>
 
-</div>
-<div class="section" id="multivariate-mutual-information-mmi">
+</section>
+<section id="multivariate-mutual-information-mmi">
 <h2>Multivariate Mutual Information (mMI)<a class="headerlink" href="#multivariate-mutual-information-mmi" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.multivariate_mi.</span></code><code class="sig-name descname"><span class="pre">MultivariateMI</span></code><a class="reference internal" href="_modules/idtxl/multivariate_mi.html#MultivariateMI"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">idtxl.multivariate_mi.</code><code class="sig-name descname">MultivariateMI</code><a class="reference internal" href="_modules/idtxl/multivariate_mi.html#MultivariateMI"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Perform network inference using multivariate mutual information.</p>
 <p>Perform network inference using multivariate mutual information (MI). To
 perform network inference call analyse_network() on the whole network or a
@@ -572,7 +574,7 @@ idx sample)</p>
 </dl>
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">analyse_network</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/multivariate_mi.html#MultivariateMI.analyse_network"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<code class="sig-name descname">analyse_network</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">targets</span><span class="o">=</span><span class="default_value">'all'</span></em>, <em class="sig-param"><span class="n">sources</span><span class="o">=</span><span class="default_value">'all'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/multivariate_mi.html#MultivariateMI.analyse_network"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Find multivariate mutual information between nodes in the network.</p>
 <p>Estimate multivariate mutual information (MI) between all nodes in the
 network or between selected sources and targets.</p>
@@ -641,7 +643,7 @@ documentation of stats.network_fdr()</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">analyse_single_target</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/multivariate_mi.html#MultivariateMI.analyse_single_target"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<code class="sig-name descname">analyse_single_target</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">target</span></em>, <em class="sig-param"><span class="n">sources</span><span class="o">=</span><span class="default_value">'all'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/multivariate_mi.html#MultivariateMI.analyse_single_target"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Find multivariate mutual information between sources and a target.</p>
 <p>Find multivariate mutual information (MI) between all source processes
 and the target process. Uses multivariate, non-uniform embedding found
@@ -752,12 +754,12 @@ significance); NOTE that all variables are listed as tuples
 
 </dd></dl>
 
-</div>
-<div class="section" id="bivariate-mutual-information-bmi">
+</section>
+<section id="bivariate-mutual-information-bmi">
 <h2>Bivariate Mutual Information (bMI)<a class="headerlink" href="#bivariate-mutual-information-bmi" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.bivariate_mi.</span></code><code class="sig-name descname"><span class="pre">BivariateMI</span></code><a class="reference internal" href="_modules/idtxl/bivariate_mi.html#BivariateMI"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">idtxl.bivariate_mi.</code><code class="sig-name descname">BivariateMI</code><a class="reference internal" href="_modules/idtxl/bivariate_mi.html#BivariateMI"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Perform network inference using bivariate mutual information.</p>
 <p>Perform network inference using bivariate mutual information (MI). To
 perform network inference call analyse_network() on the whole network or a
@@ -807,7 +809,7 @@ idx sample)</p>
 </dl>
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">analyse_network</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/bivariate_mi.html#BivariateMI.analyse_network"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<code class="sig-name descname">analyse_network</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">targets</span><span class="o">=</span><span class="default_value">'all'</span></em>, <em class="sig-param"><span class="n">sources</span><span class="o">=</span><span class="default_value">'all'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/bivariate_mi.html#BivariateMI.analyse_network"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Find bivariate mutual information between all nodes in the network.</p>
 <p>Estimate bivariate mutual information (MI) between all nodes in the
 network or between selected sources and targets.</p>
@@ -872,7 +874,7 @@ analyse_single_target()</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">analyse_single_target</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/bivariate_mi.html#BivariateMI.analyse_single_target"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<code class="sig-name descname">analyse_single_target</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">target</span></em>, <em class="sig-param"><span class="n">sources</span><span class="o">=</span><span class="default_value">'all'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/bivariate_mi.html#BivariateMI.analyse_single_target"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Find bivariate mutual information between sources and a target.</p>
 <p>Find bivariate mutual information (MI) between all potential source
 processes and the target process. Uses bivariate, non-uniform embedding
@@ -986,8 +988,8 @@ significance); NOTE that all variables are listed as tuples
 
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
             <div class="clearer"></div>
@@ -1049,13 +1051,13 @@ significance); NOTE that all variables are listed as tuples
         <li class="right" >
           <a href="idtxl_data_class.html" title="The Data Class"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Algorithms for network inference</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.1.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
     </div>
   </body>
 </html>

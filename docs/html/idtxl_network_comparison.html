@@ -4,14 +4,16 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Network comparison &#8212; IDTxl 1.2.1 documentation</title>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Network comparison &#8212; IDTxl 1.4 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="The Results Class" href="idtxl_results_class.html" />
@@ -39,7 +41,7 @@
         <li class="right" >
           <a href="idtxl_process_analysis.html" title="Algorithms for the analysis of node dynamics"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Network comparison</a></li> 
       </ul>
     </div>  
@@ -49,21 +51,16 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="network-comparison">
+  <section id="network-comparison">
 <h1>Network comparison<a class="headerlink" href="#network-comparison" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.network_comparison.</span></code><code class="sig-name descname"><span class="pre">NetworkComparison</span></code><a class="reference internal" href="_modules/idtxl/network_comparison.html#NetworkComparison"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">idtxl.network_comparison.</code><code class="sig-name descname">NetworkComparison</code><a class="reference internal" href="_modules/idtxl/network_comparison.html#NetworkComparison"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Set up network comparison between two experimental conditions.</p>
 <p>The class provides methods for the comparison of networks inferred from
 data recorded under two experimental conditions A and B. Four statistical
 tests are implemented:</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 31%" />
-<col style="width: 17%" />
-<col style="width: 52%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>units of observation/
 comparison type</p></th>
@@ -99,7 +96,7 @@ collection of variables in the source, the joint information in all
 variables about the target is used as a test statistic.</p>
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">calculate_link_te</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/network_comparison.html#NetworkComparison.calculate_link_te"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<code class="sig-name descname">calculate_link_te</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">target</span></em>, <em class="sig-param"><span class="n">sources</span><span class="o">=</span><span class="default_value">'all'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/network_comparison.html#NetworkComparison.calculate_link_te"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Calculate the information transfer for whole links into a target.</p>
 <p>Calculate the information transfer for whole links as the joint
 information transfer from all variables selected for a single source
@@ -130,7 +127,7 @@ the target (default=’all’)</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">compare_between</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network_set_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network_set_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_set_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_set_b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/network_comparison.html#NetworkComparison.compare_between"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<code class="sig-name descname">compare_between</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">network_set_a</span></em>, <em class="sig-param"><span class="n">network_set_b</span></em>, <em class="sig-param"><span class="n">data_set_a</span></em>, <em class="sig-param"><span class="n">data_set_b</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/network_comparison.html#NetworkComparison.compare_between"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Compare networks inferred under two conditions between subjects.</p>
 <p>Compare two sets of networks inferred from two sets of data recorded
 under different experimental conditions within multiple subjects, i.e.,
@@ -164,7 +161,7 @@ ResultsNetworkComparison()</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">compare_links_within</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/network_comparison.html#NetworkComparison.compare_links_within"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<code class="sig-name descname">compare_links_within</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">link_a</span></em>, <em class="sig-param"><span class="n">link_b</span></em>, <em class="sig-param"><span class="n">network</span></em>, <em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/network_comparison.html#NetworkComparison.compare_links_within"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Compare two links within the same network.</p>
 <p>Compare two links within the same network. Check if information
 transfer is different from information transfer in a second link.</p>
@@ -214,7 +211,7 @@ ResultsNetworkComparison()</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">compare_within</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/network_comparison.html#NetworkComparison.compare_within"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<code class="sig-name descname">compare_within</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">network_a</span></em>, <em class="sig-param"><span class="n">network_b</span></em>, <em class="sig-param"><span class="n">data_a</span></em>, <em class="sig-param"><span class="n">data_b</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/network_comparison.html#NetworkComparison.compare_within"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Compare networks inferred under two conditions within one subject.</p>
 <p>Compare two networks inferred from data recorded under two different
 experimental conditions within one subject (units of observations are
@@ -263,7 +260,7 @@ ResultsNetworkComparison()</p>
 
 </dd></dl>
 
-</div>
+</section>
 
 
             <div class="clearer"></div>
@@ -314,13 +311,13 @@ ResultsNetworkComparison()</p>
         <li class="right" >
           <a href="idtxl_process_analysis.html" title="Algorithms for the analysis of node dynamics"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Network comparison</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.1.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
     </div>
   </body>
 </html>

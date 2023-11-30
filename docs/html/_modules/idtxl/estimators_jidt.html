@@ -5,13 +5,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>idtxl.estimators_jidt &#8212; IDTxl 1.0 documentation</title>
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <title>idtxl.estimators_jidt &#8212; IDTxl 1.4 documentation</title>
     <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
     <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -31,7 +32,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.4 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl.estimators_jidt</a></li> 
       </ul>
@@ -44,12 +45,12 @@
             
   <h1>Source code for idtxl.estimators_jidt</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Provide JIDT estimators.&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="k">import</span> <span class="n">resource_filename</span>
+<span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">resource_filename</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span> <span class="nn">idtxl.estimator</span> <span class="k">import</span> <span class="n">Estimator</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">idtxl_exceptions</span> <span class="k">as</span> <span class="n">ex</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">idtxl_utils</span> <span class="k">as</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">idtxl.estimator</span> <span class="kn">import</span> <span class="n">Estimator</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">idtxl_exceptions</span> <span class="k">as</span> <span class="n">ex</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">idtxl_utils</span> <span class="k">as</span> <span class="n">utils</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">jpype</span> <span class="k">as</span> <span class="nn">jp</span>
 <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
@@ -93,7 +94,7 @@
 <span class="sd">              average TE (default=False)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Set default estimator settings.&quot;&quot;&quot;</span>
         <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;local_values&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;debug&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
@@ -179,7 +180,7 @@
 <span class="sd">              AIS KSG estimator.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">CalcClass</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">CalcClass</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
         <span class="c1"># Set default estimator settings.</span>
         <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;kraskov_k&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
@@ -242,7 +243,7 @@
 <span class="sd">        latter, objects can be instantiated independent of data properties).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
         <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;discretise_method&#39;</span><span class="p">,</span> <span class="s1">&#39;none&#39;</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
 
@@ -364,7 +365,7 @@
 <span class="sd">              average TE (default=False)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">CalcClass</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">CalcClass</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">CalcClass</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">setDebug</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">])</span>
@@ -395,6 +396,7 @@
 
 <div class="viewcode-block" id="JidtGaussian.estimate_surrogates_analytic"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_jidt.JidtGaussian.estimate_surrogates_analytic">[docs]</a>    <span class="k">def</span> <span class="nf">estimate_surrogates_analytic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_perm</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Estimate the surrogate distribution analytically.</span>
+
 <span class="sd">        This method must be implemented because this class&#39;</span>
 <span class="sd">        is_analytic_null_estimator() method returns true</span>
 
@@ -453,7 +455,7 @@
 <span class="sd">        runs replicable set noise_level to 0.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
         <span class="c1"># Start JAVA virtual machine and create JAVA object.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_start_jvm</span><span class="p">()</span>
@@ -554,7 +556,7 @@
 <span class="sd">              conditional (default=2, or the value set for n_discrete_bins)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
         <span class="c1"># Set default alphabet sizes. Try to overwrite alphabet sizes with</span>
         <span class="c1"># number of bins for discretisation if provided, otherwise assume</span>
@@ -737,7 +739,7 @@
 <span class="sd">              the lagged MI between processes (default=0)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
         <span class="c1"># Set default alphabet sizes. Try to overwrite alphabet sizes with</span>
         <span class="c1"># number of bins for discretisation if provided, otherwise assume</span>
@@ -898,7 +900,7 @@
 <span class="sd">        runs replicable set noise_level to 0.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
         <span class="c1"># Start JAVA virtual machine and create JAVA object.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_start_jvm</span><span class="p">()</span>
@@ -1001,7 +1003,7 @@
 <span class="sd">        runs replicable set noise_level to 0.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
         <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
         <span class="c1"># Check for history for AIS estimation.</span>
         <span class="k">try</span><span class="p">:</span>
@@ -1075,7 +1077,7 @@
 <span class="sd">              (default=2 , or the value set for n_discrete_bins). (&gt;= 2)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
         <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;history&#39;</span><span class="p">]</span>
@@ -1233,7 +1235,7 @@
 <span class="sd">        runs replicable set noise_level to 0.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
         <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
         <span class="c1"># Check for history for AIS estimation.</span>
         <span class="k">try</span><span class="p">:</span>
@@ -1302,7 +1304,7 @@
 <span class="sd">        runs replicable set noise_level to 0.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
         <span class="c1"># Start JAVA virtual machine and create JAVA object.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_start_jvm</span><span class="p">()</span>
@@ -1361,6 +1363,7 @@
 
 <span class="sd">    See parent class for references. Results are returned in nats.</span>
 
+
 <span class="sd">    Args:</span>
 <span class="sd">        settings : dict [optional]</span>
 <span class="sd">            sets estimation parameters:</span>
@@ -1378,7 +1381,7 @@
 <span class="sd">        runs replicable set noise_level to 0.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
         <span class="c1"># Start JAVA virtual machine and create JAVA object.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_start_jvm</span><span class="p">()</span>
@@ -1508,7 +1511,7 @@
 <span class="sd">        runs replicable set noise_level to 0.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
         <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
         <span class="c1"># Start JAVA virtual machine.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_start_jvm</span><span class="p">()</span>
@@ -1597,7 +1600,7 @@
 <span class="sd">              average TE (default=False)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
         <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
         <span class="c1"># Get embedding and delay parameters.</span>
         <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_te_defaults</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
@@ -1770,7 +1773,7 @@
 <span class="sd">        runs replicable set noise_level to 0.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
         <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
         <span class="c1"># Start JAVA virtual machine and create JAVA object.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_start_jvm</span><span class="p">()</span>
@@ -1874,14 +1877,14 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.4 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl.estimators_jidt</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.1.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
     </div>
   </body>
 </html>

@@ -4,14 +4,16 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Algorithms for the analysis of node dynamics &#8212; IDTxl 1.2.1 documentation</title>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Algorithms for the analysis of node dynamics &#8212; IDTxl 1.4 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Network comparison" href="idtxl_network_comparison.html" />
@@ -39,7 +41,7 @@
         <li class="right" >
           <a href="idtxl_network_inference.html" title="Algorithms for network inference"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Algorithms for the analysis of node dynamics</a></li> 
       </ul>
     </div>  
@@ -49,13 +51,13 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="algorithms-for-the-analysis-of-node-dynamics">
+  <section id="algorithms-for-the-analysis-of-node-dynamics">
 <h1>Algorithms for the analysis of node dynamics<a class="headerlink" href="#algorithms-for-the-analysis-of-node-dynamics" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="active-information-storage-ais">
+<section id="active-information-storage-ais">
 <h2>Active Information Storage (AIS)<a class="headerlink" href="#active-information-storage-ais" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.active_information_storage.</span></code><code class="sig-name descname"><span class="pre">ActiveInformationStorage</span></code><a class="reference internal" href="_modules/idtxl/active_information_storage.html#ActiveInformationStorage"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">idtxl.active_information_storage.</code><code class="sig-name descname">ActiveInformationStorage</code><a class="reference internal" href="_modules/idtxl/active_information_storage.html#ActiveInformationStorage"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Estimate active information storage in individual processes.</p>
 <p>Estimate active information storage (AIS) in individual processes of the
 network. To perform AIS estimation call analyse_network() on the whole
@@ -98,7 +100,7 @@ idx sample)</p>
 </dl>
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">analyse_network</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/active_information_storage.html#ActiveInformationStorage.analyse_network"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<code class="sig-name descname">analyse_network</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">processes</span><span class="o">=</span><span class="default_value">'all'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/active_information_storage.html#ActiveInformationStorage.analyse_network"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Estimate active information storage for multiple network processes.</p>
 <p>Estimate active information storage for all or a subset of processes in
 the network.</p>
@@ -157,7 +159,7 @@ ResultsSingleProcessAnalysis()</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">analyse_single_process</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/active_information_storage.html#ActiveInformationStorage.analyse_single_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<code class="sig-name descname">analyse_single_process</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">process</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/active_information_storage.html#ActiveInformationStorage.analyse_single_process"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Estimate active information storage for a single process.</p>
 <p>Estimate active information storage for one process in the network.
 Uses non-uniform embedding found through information maximisation. This
@@ -229,12 +231,12 @@ ResultsSingleProcessAnalysis()</p>
 
 </dd></dl>
 
-</div>
-<div class="section" id="multivariate-partial-information-decomposition-pid">
+</section>
+<section id="multivariate-partial-information-decomposition-pid">
 <h2>Multivariate Partial Information Decomposition (PID)<a class="headerlink" href="#multivariate-partial-information-decomposition-pid" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.multivariate_pid.</span></code><code class="sig-name descname"><span class="pre">MultivariatePID</span></code><a class="reference internal" href="_modules/idtxl/multivariate_pid.html#MultivariatePID"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">idtxl.multivariate_pid.</code><code class="sig-name descname">MultivariatePID</code><a class="reference internal" href="_modules/idtxl/multivariate_pid.html#MultivariatePID"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Perform partial information decomposition for individual processes.</p>
 <p>Perform partial information decomposition (PID) for multiple source
 processes (up to 4 sources) and a target process in the network.
@@ -266,7 +268,7 @@ for shared information. 1- 27 Retrieved from
 </dl>
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">analyse_network</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sources</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/multivariate_pid.html#MultivariatePID.analyse_network"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<code class="sig-name descname">analyse_network</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">targets</span></em>, <em class="sig-param"><span class="n">sources</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/multivariate_pid.html#MultivariatePID.analyse_network"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Estimate partial information decomposition for network nodes.</p>
 <p>Estimate, for multiple nodes (target processes), the partial
 information decomposition (PID) for multiple source processes
@@ -331,7 +333,7 @@ ResultsMultivariatePID()</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">analyse_single_target</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sources</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/multivariate_pid.html#MultivariatePID.analyse_single_target"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<code class="sig-name descname">analyse_single_target</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">target</span></em>, <em class="sig-param"><span class="n">sources</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/multivariate_pid.html#MultivariatePID.analyse_single_target"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Estimate partial information decomposition for a network node.</p>
 <p>Estimate partial information decomposition (PID) for multiple source
 processes (up to 4 sources) and a target process in the network.</p>
@@ -392,12 +394,12 @@ ResultsPID()</p>
 
 </dd></dl>
 
-</div>
-<div class="section" id="bivariate-partial-information-decomposition-pid">
+</section>
+<section id="bivariate-partial-information-decomposition-pid">
 <h2>Bivariate Partial Information Decomposition (PID)<a class="headerlink" href="#bivariate-partial-information-decomposition-pid" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt>
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">idtxl.bivariate_pid.</span></code><code class="sig-name descname"><span class="pre">BivariatePID</span></code><a class="reference internal" href="_modules/idtxl/bivariate_pid.html#BivariatePID"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">idtxl.bivariate_pid.</code><code class="sig-name descname">BivariatePID</code><a class="reference internal" href="_modules/idtxl/bivariate_pid.html#BivariatePID"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Perform partial information decomposition for individual processes.</p>
 <p>Perform partial information decomposition (PID) for two source processes
 and one target process in the network. Estimate unique, shared, and
@@ -429,7 +431,7 @@ Quantifying Unique Information. Entropy, 16(4), 2161–2183.
 </dl>
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">analyse_network</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sources</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/bivariate_pid.html#BivariatePID.analyse_network"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<code class="sig-name descname">analyse_network</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">targets</span></em>, <em class="sig-param"><span class="n">sources</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/bivariate_pid.html#BivariatePID.analyse_network"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Estimate partial information decomposition for network nodes.</p>
 <p>Estimate partial information decomposition (PID) for multiple nodes in
 the network.</p>
@@ -493,7 +495,7 @@ ResultsPID()</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname"><span class="pre">analyse_single_target</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sources</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/bivariate_pid.html#BivariatePID.analyse_single_target"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<code class="sig-name descname">analyse_single_target</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">target</span></em>, <em class="sig-param"><span class="n">sources</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/bivariate_pid.html#BivariatePID.analyse_single_target"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Estimate partial information decomposition for a network node.</p>
 <p>Estimate partial information decomposition (PID) for a target node in
 the network.</p>
@@ -557,8 +559,1130 @@ ResultsPID()</p>
 
 </dd></dl>
 
-</div>
-</div>
+</section>
+<section id="history-dependence-estimator-for-neural-spiking-data">
+<h2>History-dependence estimator for neural spiking data<a class="headerlink" href="#history-dependence-estimator-for-neural-spiking-data" title="Permalink to this headline">¶</a></h2>
+<section id="embedding-optimization">
+<h3>Embedding optimization<a class="headerlink" href="#embedding-optimization" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">idtxl.embedding_optimization_ais_Rudelt.</code><code class="sig-name descname">OptimizationRudelt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/embedding_optimization_ais_Rudelt.html#OptimizationRudelt"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Optimization of embedding parameters of spike times using the history dependence estimators</p>
+<p>References:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>[1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding</dt><dd><p>optimization reveals long-lasting history dependence in
+neural spiking activity, 2021, PLOS Computational Biology, 17(6)</p>
+</dd>
+</dl>
+<p>[2]: <a class="reference external" href="https://github.com/Priesemann-Group/hdestimator">https://github.com/Priesemann-Group/hdestimator</a></p>
+</div></blockquote>
+<p>implemented in idtxl by Michael Lindner, Göttingen 2021</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>settings<span class="classifier">dict</span></dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>estimation_method<span class="classifier">string</span></dt><dd><p>The method to be used to estimate the history dependence ‘bbc’ or ‘shuffling’.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>embedding_step_size<span class="classifier">float</span></dt><dd><p>Step size delta t (in seconds) with which the window is slid through the data.
+(default: 0.005)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>embedding_number_of_bins_set<span class="classifier">list of integer values</span></dt><dd><p>Set of values for d, the number of bins in the embedding.
+(default: [1, 2, 3, 4, 5])</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>embedding_past_range_set<span class="classifier">list of floating-point values</span></dt><dd><p>Set of values for T, the past range (in seconds) to be used for embeddings.
+(default: [0.005, 0.00561, 0.00629, 0.00706, 0.00792, 0.00889,
+0.00998, 0.01119, 0.01256, 0.01409, 0.01581, 0.01774, 0.01991,
+0.02233, 0.02506, 0.02812, 0.03155, 0.0354, 0.03972, 0.04456,
+0.05, 0.0561, 0.06295, 0.07063, 0.07924, 0.08891, 0.09976,
+0.11194, 0.12559, 0.14092, 0.15811, 0.17741, 0.19905, 0.22334,
+0.25059, 0.28117, 0.31548, 0.35397, 0.39716, 0.44563, 0.5,
+0.56101, 0.62946, 0.70627, 0.79245, 0.88914, 0.99763, 1.11936,
+1.25594, 1.40919, 1.58114, 1.77407, 1.99054, 2.23342, 2.50594,
+2.81171, 3.15479, 3.53973, 3.97164, 4.45625, 5.0])</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>embedding_scaling_exponent_set<span class="classifier">dict</span></dt><dd><p>Set of values for kappa, the scaling exponent for the bins in the embedding.
+Should be a python-dictionary with the three entries ‘number_of_scalings’, ‘min_first_bin_size’ and
+‘min_step_for_scaling’.
+defaults: {‘number_of_scalings’: 10, ‘min_first_bin_size’: 0.005, ‘min_step_for_scaling’: 0.01})</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>bbc_tolerance<span class="classifier">float</span></dt><dd><p>The tolerance for the Bayesian Bias Criterion. Influences which embeddings are
+discarded from the analysis.
+(default: 0.05)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>return_averaged_R<span class="classifier">bool</span></dt><dd><p>Return R_tot as the average over R(T) for T in [T_D, T_max], instead of R_tot = R(T_D).
+If set to True, the setting for number_of_bootstraps_R_tot (see below) is ignored and set to 0
+and CI bounds are not calculated.
+(default: True)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>timescale_minimum_past_range<span class="classifier">float</span></dt><dd><p>Minimum past range T_0 (in seconds) to take into consideration for the estimation of the
+information timescale tau_R.
+(default: 0.01)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>number_of_bootstraps_R_max<span class="classifier">int</span></dt><dd><p>The number of bootstrap re-shuffles that should be used to determine the optimal
+embedding. (Bootstrap the estimates of R_max to determine R_tot.)
+These are computed during the ‘history-dependence’ task because they are essential
+to obtain R_tot.
+(default: 250)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>number_of_bootstraps_R_tot<span class="classifier">int</span></dt><dd><p>The number of bootstrap re-shuffles that should be used to estimate the confidence
+interval of the optimal embedding. (Bootstrap the estimates of R_tot = R(T_D) to
+obtain a confidence interval for R_tot.).
+These are computed during the ‘confidence-intervals’ task.
+The setting return_averaged_R (see above) needs to be set to False for this setting
+to take effect.
+(default: 250)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>number_of_bootstraps_nonessential<span class="classifier">int</span></dt><dd><p>The number of bootstrap re-shuffles that should be used to estimate the confidence
+intervals for embeddings other than the optimal one. (Bootstrap the estimates of
+R(T) for all other T.)
+(These are not necessary for the main analysis and therefore default to 0.)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>symbol_block_length<span class="classifier">int</span></dt><dd><p>The number of symbols that should be drawn in each block for bootstrap resampling
+If it is set to None (recommended), the length is automatically chosen, based
+on heuristics
+(default: None)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>bootstrap_CI_use_sd<span class="classifier">bool</span></dt><dd><p>Most of the time we observed normally-distributed bootstrap replications,
+so it is sufficient (and more efficient) to compute confidence intervals
+based on the standard deviation
+(default: True)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>bootstrap_CI_percentile_lo<span class="classifier">float</span></dt><dd><p>The lower percentile for the confidence interval.
+This has no effect if bootstrap_CI_use_sd is set to True
+(default: 2.5)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>bootstrap_CI_percentile_hi<span class="classifier">float</span></dt><dd><p>The upper percentiles for the confidence interval.
+This has no effect if bootstrap_CI_use_sd is set to True
+(default: 97.5)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>analyse_auto_MI<span class="classifier">bool</span></dt><dd><p>perform calculation of auto mutual information of the spike train
+(default: True)
+If set to True:</p>
+<ul>
+<li><dl class="simple">
+<dt>auto_MI_bin_size_set<span class="classifier">list of floating-point values</span></dt><dd><p>Set of values for the sizes of the bins (in seconds).
+(default: [0.005, 0.01, 0.025, 0.05, 0.25, 0.5])</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>auto_MI_max_delay<span class="classifier">int</span></dt><dd><p>The maximum delay (in seconds) between the past bin and the response.
+(default: 5)</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>visualization<span class="classifier">bool</span></dt><dd><p>create .eps output image showing the optimization values and graphs for
+the history dependence and the auto mutual information
+(default: False)
+if set to True:</p>
+<ul>
+<li><dl class="simple">
+<dt>output_path<span class="classifier">String</span></dt><dd><p>Path where the .eps images should be saved</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>output_prefix<span class="classifier">String</span></dt><dd><p>Prefix of the output images
+e.g. &lt;output_prefix&gt;_process0.eps</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>debug: bool</dt><dd><p>show values while calculating
+(default: False)</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt>
+<code class="sig-name descname">analyse_auto_MI</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">spike_times</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/embedding_optimization_ais_Rudelt.html#OptimizationRudelt.analyse_auto_MI"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Get the auto MI for the spike times.  If it is available from file, load
+it, else compute it.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">check_inputs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/embedding_optimization_ais_Rudelt.html#OptimizationRudelt.check_inputs"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Check input settings for completeness</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">compute_CIs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">target_R</span><span class="o">=</span><span class="default_value">'R_max'</span></em>, <em class="sig-param"><span class="n">symbol_block_length</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/embedding_optimization_ais_Rudelt.html#OptimizationRudelt.compute_CIs"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute bootstrap replications of the history dependence estimate
+which can be used to obtain confidence intervals.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>data<span class="classifier">data_spiketime object</span></dt><dd><p>Input data</p>
+</dd>
+<dt>target_R<span class="classifier">String</span></dt><dd><p>One of ‘R_max’, ‘R_tot’ or ‘nonessential’.
+If set to R_max, replications of R are produced for the T at which
+R is maximised.
+If set to R_tot, replications of R are produced for T = T_D (cf
+get_temporal_depth_T_D).
+If set to nonessential, replications of R are produced for each T
+(one embedding per T, cf get_embeddings_that_maximise_R).  These
+are not otherwise used in the analysis and are probably only useful
+if the resulting plot is visually inspected, so in most cases it can
+be set to zero.</p>
+</dd>
+<dt>symbol_block_length<span class="classifier">int</span></dt><dd><p>The number of symbols that should be drawn in each block for bootstrap resampling
+If it is set to None (recommended), the length is automatically chosen, based
+on heuristics</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_auto_MI</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">spike_times</span></em>, <em class="sig-param"><span class="n">bin_size</span></em>, <em class="sig-param"><span class="n">number_of_delays</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/embedding_optimization_ais_Rudelt.html#OptimizationRudelt.get_auto_MI"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute the auto mutual information in the neuron’s activity, a
+measure closely related to history dependence.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_bootstrap_history_dependence</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">embedding</span></em>, <em class="sig-param"><span class="n">number_of_bootstraps</span></em>, <em class="sig-param"><span class="n">symbol_block_length</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/embedding_optimization_ais_Rudelt.html#OptimizationRudelt.get_bootstrap_history_dependence"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>For a given embedding, return bootstrap replications for R.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_embeddings</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">embedding_past_range_set</span></em>, <em class="sig-param"><span class="n">embedding_number_of_bins_set</span></em>, <em class="sig-param"><span class="n">embedding_scaling_exponent_set</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/embedding_optimization_ais_Rudelt.html#OptimizationRudelt.get_embeddings"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Get all combinations of parameters T, d, k, based on the
+sets of selected parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_embeddings_that_maximise_R</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bbc_tolerance</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dependent_var</span><span class="o">=</span><span class="default_value">'T'</span></em>, <em class="sig-param"><span class="n">get_as_list</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/embedding_optimization_ais_Rudelt.html#OptimizationRudelt.get_embeddings_that_maximise_R"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>For each T (or d), get the embedding for which R is maximised.</p>
+<p>For the bbc estimator, here the bbc_tolerance is applied, ie
+get the unbiased embeddings that maximise R.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_history_dependence</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">process</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/embedding_optimization_ais_Rudelt.html#OptimizationRudelt.get_history_dependence"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate the history dependence for each embedding to all given processes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_information_timescale_tau_R</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/embedding_optimization_ais_Rudelt.html#OptimizationRudelt.get_information_timescale_tau_R"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Get the information timescale tau_R, a characteristic
+timescale of history dependence similar to an autocorrelation
+time.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_past_range</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">number_of_bins_d</span></em>, <em class="sig-param"><span class="n">first_bin_size</span></em>, <em class="sig-param"><span class="n">scaling_k</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/embedding_optimization_ais_Rudelt.html#OptimizationRudelt.get_past_range"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Get the past range T of the embedding, based on the parameters d, tau_1 and k.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_set_of_scalings</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">past_range_T</span></em>, <em class="sig-param"><span class="n">number_of_bins_d</span></em>, <em class="sig-param"><span class="n">number_of_scalings</span></em>, <em class="sig-param"><span class="n">min_first_bin_size</span></em>, <em class="sig-param"><span class="n">min_step_for_scaling</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/embedding_optimization_ais_Rudelt.html#OptimizationRudelt.get_set_of_scalings"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Get scaling exponents such that the uniform embedding as well as
+the embedding for which the first bin has a length of
+min_first_bin_size (in seconds), as well as linearly spaced
+scaling factors in between, such that in total
+number_of_scalings scalings are obtained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_temporal_depth_T_D</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">get_R_thresh</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/embedding_optimization_ais_Rudelt.html#OptimizationRudelt.get_temporal_depth_T_D"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Get the temporal depth T_D, the past range for the
+‘optimal’ embedding parameters.</p>
+<p>Given the maximal history dependence R at each past range T,
+(cf get_embeddings_that_maximise_R), first find the smallest T at
+which R is maximised (cf get_max_R_T).  If bootstrap replications
+for this R are available, get the smallest T at which this R minus
+one standard deviation of the bootstrap estimates is attained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">optimize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">processes</span><span class="o">=</span><span class="default_value">'all'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/embedding_optimization_ais_Rudelt.html#OptimizationRudelt.optimize"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Optimize the embedding parameters of spike time data using the Rudelt history dependence estimator.</p>
+<p>References:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>[1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding</dt><dd><p>optimization reveals long-lasting history dependence in
+neural spiking activity, 2021, PLOS Computational Biology, 17(6)</p>
+</dd>
+</dl>
+<p>[2]: <a class="reference external" href="https://github.com/Priesemann-Group/hdestimator">https://github.com/Priesemann-Group/hdestimator</a></p>
+</div></blockquote>
+<p>implemented in idtxl by Michael Lindner, Göttingen 2021</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>data<span class="classifier">Data_spiketime instance</span></dt><dd><p>raw data for analysis</p>
+</dd>
+<dt>processes<span class="classifier">list of int</span></dt><dd><p>index of processes;
+spike times are optimized all processes specified in the list separately.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns: # ——————————————————————————————————– TODO</dt><dd><dl class="simple">
+<dt>ResultsSingleProcessRudelt instance</dt><dd><p>results of Rudelt optimization, see documentation of
+ResultsSingleProcessRudelt()</p>
+</dd>
+<dt>if visulization in settings was set True (see class OptimizationRudelt):</dt><dd><dl class="simple">
+<dt>.eps images are created for each optimized process containing:</dt><dd><ul class="simple">
+<li><p>optimized values for the process</p></li>
+<li><p>graph for the history dependence</p></li>
+<li><p>graph for auto mutual information (if calculated)</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">optimize_single_run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">process</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/embedding_optimization_ais_Rudelt.html#OptimizationRudelt.optimize_single_run"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>optimizes a single realisation of spike time data given the process number</p>
+<dl>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>data<span class="classifier">Data_spiketime instance</span></dt><dd><p>raw data for analysis</p>
+</dd>
+<dt>process<span class="classifier">int</span></dt><dd><p>index of process;</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl>
+<dt>DotDict</dt><dd><p>with the following keys</p>
+<dl class="simple">
+<dt>Process<span class="classifier">int</span></dt><dd><p>Process that was optimized</p>
+</dd>
+<dt>estimation_method<span class="classifier">String</span></dt><dd><p>Estimation method that was used for optimization</p>
+</dd>
+<dt>T_D<span class="classifier">float</span></dt><dd><p>Estimated optimal value for the temporal depth TD</p>
+</dd>
+<dt>tau_R :</dt><dd><p>Information timescale tau_R, a characteristic timescale of history
+dependence similar to an autocorrelation time.</p>
+</dd>
+<dt>R_tot<span class="classifier">float</span></dt><dd><p>Estimated value for the total history dependence Rtot,</p>
+</dd>
+<dt>AIS_tot<span class="classifier">float</span></dt><dd><p>Estimated value for the total active information storage</p>
+</dd>
+<dt>opt_number_of_bins_d<span class="classifier">int</span></dt><dd><p>Number of bins d for the embedding that yields (R̂tot ,T̂D)</p>
+</dd>
+<dt>opt_scaling_k<span class="classifier">int</span></dt><dd><p>Scaling exponent κ for the embedding that yields (R̂tot , T̂D)</p>
+</dd>
+<dt>opt_first_bin_size<span class="classifier">int</span></dt><dd><p>Size of the first bin τ1 for the embedding that yields (R̂tot , T̂D ),</p>
+</dd>
+<dt>history_dependence<span class="classifier">array with floating-point values</span></dt><dd><p>Estimated history dependence for each embedding</p>
+</dd>
+<dt>firing_rate<span class="classifier">float</span></dt><dd><p>Firing rate of the neuron/ spike train</p>
+</dd>
+<dt>recording_length<span class="classifier">float</span></dt><dd><p>Length of the recording (in seconds)</p>
+</dd>
+<dt>H_spiking<span class="classifier">float</span></dt><dd><p>Entropy of the spike times</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+<dt>if analyse_auto_MI was set to True additionally:</dt><dd><dl class="simple">
+<dt>auto_MI<span class="classifier">dict</span></dt><dd><p>numpy array of MI values for each delay</p>
+</dd>
+<dt>auto_MI_delays<span class="classifier">list of int</span></dt><dd><p>list of delays depending on the given auto_MI_bin_sizes and auto_MI_max_delay</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">remove_subresults_single_process</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/embedding_optimization_ais_Rudelt.html#OptimizationRudelt.remove_subresults_single_process"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>delete results from self from single process</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="estimators">
+<h3>Estimators<a class="headerlink" href="#estimators" title="Permalink to this headline">¶</a></h3>
+<p>Provide HDE estimators.</p>
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">idtxl.estimators_Rudelt.</code><code class="sig-name descname">RudeltAbstractEstimator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractEstimator"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Abstract class for implementation of nsb and plugin estimators from Rudelt.</p>
+<p>Abstract class for implementation of nsb and plugin estimators, child classes
+implement estimators for mutual information (MI) .</p>
+<p>References:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>[1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding</dt><dd><p>optimization reveals long-lasting history dependence in
+neural spiking activity, 2021, PLOS Computational Biology, 17(6)</p>
+</dd>
+</dl>
+<p>[2]: <a class="reference external" href="https://github.com/Priesemann-Group/hdestimator">https://github.com/Priesemann-Group/hdestimator</a></p>
+</div></blockquote>
+<p>implemented in idtxl by Michael Lindner, Göttingen 2021</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>settings<span class="classifier">dict</span></dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>embedding_step_size<span class="classifier">float [optional]</span></dt><dd><p>Step size delta t (in seconds) with which the window is slid through the data
+(default = 0.005).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>normalise<span class="classifier">bool [optional]</span></dt><dd><p>rebase spike times to zero
+(default=True)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>return_averaged_R<span class="classifier">bool [optional]</span></dt><dd><p>If set to True, compute R̂tot as the average over R̂(T ) for T ∈ [T̂D, Tmax ] instead of
+R̂tot = R(T̂D ). If set to True, the setting for number_of_bootstraps_R_tot is ignored and
+set to 0
+(default=True)</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_median_number_of_spikes_per_bin</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">raw_symbols</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractEstimator.get_median_number_of_spikes_per_bin"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Given raw symbols (in which the number of spikes per bin are counted,
+ie not necessarily binary quantity), get the median number of spikes
+for each bin, among all symbols obtained by the embedding.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_multiplicities</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symbol_counts</span></em>, <em class="sig-param"><span class="n">alphabet_size</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractEstimator.get_multiplicities"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Get the multiplicities of some given symbol counts.</p>
+<p>To estimate the entropy of a system, it is only important how
+often a symbol/ event occurs (the probability that it occurs), not
+what it represents. Therefore, computations can be simplified by
+summarizing symbols by their frequency, as represented by the
+multiplicities.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_past_range</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">number_of_bins_d</span></em>, <em class="sig-param"><span class="n">first_bin_size</span></em>, <em class="sig-param"><span class="n">scaling_k</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractEstimator.get_past_range"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Get the past range T of the embedding, based on the parameters d, tau_1 and k.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_raw_symbols</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">spike_times</span></em>, <em class="sig-param"><span class="n">embedding</span></em>, <em class="sig-param"><span class="n">first_bin_size</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractEstimator.get_raw_symbols"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Get the raw symbols (in which the number of spikes per bin are counted,
+ie not necessarily binary quantity), as obtained by applying the
+embedding.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_symbol_counts</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symbol_array</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractEstimator.get_symbol_counts"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Count how often symbols occur</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_window_delimiters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">number_of_bins_d</span></em>, <em class="sig-param"><span class="n">scaling_k</span></em>, <em class="sig-param"><span class="n">first_bin_size</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractEstimator.get_window_delimiters"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Get delimiters of the window, used to describe the embedding. The
+window includes both the past embedding and the response.</p>
+<p>The delimiters are times, relative to the first bin, that separate
+two consequent bins.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">is_analytic_null_estimator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractEstimator.is_analytic_null_estimator"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Indicate if estimator supports analytic surrogates.</p>
+<p>Return true if the estimator implements estimate_surrogates_analytic()
+where data is formatted as per the estimate method for this estimator.</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">is_parallel</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractEstimator.is_parallel"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Indicate if estimator supports parallel estimation over chunks.</p>
+<p>Return true if the supports parallel estimation over chunks, where a
+chunk is one independent data set.</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">symbol_array_to_binary</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">spikes_in_window</span></em>, <em class="sig-param"><span class="n">number_of_bins_d</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractEstimator.symbol_array_to_binary"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Given an array of 1s and 0s, representing spikes and the absence
+thereof, read the array as a binary number to obtain a
+(base 10) integer.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">symbol_binary_to_array</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symbol_binary</span></em>, <em class="sig-param"><span class="n">number_of_bins_d</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractEstimator.symbol_binary_to_array"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Given a binary representation of a symbol (cf symbol_array_to_binary),
+convert it back into its array-representation.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">idtxl.estimators_Rudelt.</code><code class="sig-name descname">RudeltAbstractNSBEstimator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractNSBEstimator"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Abstract class for implementation of NSB estimators from Rudelt.</p>
+<p>Abstract class for implementation of Nemenman-Shafee-Bialek (NSB)
+estimators, child classes implement nsb estimators for mutual information
+(MI).</p>
+<p>implemented in idtxl by Michael Lindner, Göttingen 2021</p>
+<p>References:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>[1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding</dt><dd><p>optimization reveals long-lasting history dependence in
+neural spiking activity, 2021, PLOS Computational Biology, 17(6)</p>
+</dd>
+<dt>[2]: I. Nemenman, F. Shafee, W. Bialek: Entropy and inference,</dt><dd><p>revisited. In T.G. Dietterich, S. Becker, and Z. Ghahramani,
+editors, Advances in Neural Information Processing Systems 14,
+Cambridge, MA, 2002. MIT Press.</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>settings<span class="classifier">dict</span></dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>embedding_step_size<span class="classifier">float [optional]</span></dt><dd><p>Step size delta t (in seconds) with which the window is slid through the data
+(default = 0.005).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>normalise<span class="classifier">bool [optional]</span></dt><dd><p>rebase spike times to zero
+(default=True)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>return_averaged_R<span class="classifier">bool [optional]</span></dt><dd><p>If set to True, compute R̂tot as the average over R̂(T ) for T ∈ [T̂D, Tmax ] instead of
+R̂tot = R(T̂D ). If set to True, the setting for number_of_bootstraps_R_tot is ignored and
+set to 0
+(default=True)</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt>
+<code class="sig-name descname">H1</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">beta</span></em>, <em class="sig-param"><span class="n">mk</span></em>, <em class="sig-param"><span class="n">K</span></em>, <em class="sig-param"><span class="n">N</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractNSBEstimator.H1"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute the first moment (expectation value) of the entropy H.</p>
+<p>H is the entropy one obtains with a symmetric Dirichlet prior
+with concentration parameter beta and a multinomial likelihood.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">alpha_ML</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mk</span></em>, <em class="sig-param"><span class="n">K1</span></em>, <em class="sig-param"><span class="n">N</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractNSBEstimator.alpha_ML"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute first guess for the beta_MAP (cf get_beta_MAP) parameter
+via the posterior of a Dirichlet process.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">d2_log_rho</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">beta</span></em>, <em class="sig-param"><span class="n">mk</span></em>, <em class="sig-param"><span class="n">K</span></em>, <em class="sig-param"><span class="n">N</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractNSBEstimator.d2_log_rho"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Second derivate of the logarithm of the Dirichlet multinomial likelihood.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">d2_log_rho_xi</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">beta</span></em>, <em class="sig-param"><span class="n">mk</span></em>, <em class="sig-param"><span class="n">K</span></em>, <em class="sig-param"><span class="n">N</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractNSBEstimator.d2_log_rho_xi"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Second derivative of the logarithm of the nsb (unnormalized) posterior.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">d2_xi</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">beta</span></em>, <em class="sig-param"><span class="n">K</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractNSBEstimator.d2_xi"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Second derivative of xi(beta) (cf d_xi).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">d3_xi</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">beta</span></em>, <em class="sig-param"><span class="n">K</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractNSBEstimator.d3_xi"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Third derivative of xi(beta) (cf d_xi).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">d_log_rho</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">beta</span></em>, <em class="sig-param"><span class="n">mk</span></em>, <em class="sig-param"><span class="n">K</span></em>, <em class="sig-param"><span class="n">N</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractNSBEstimator.d_log_rho"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>First derivate of the logarithm of the Dirichlet multinomial likelihood.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">d_log_rho_xi</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">beta</span></em>, <em class="sig-param"><span class="n">mk</span></em>, <em class="sig-param"><span class="n">K</span></em>, <em class="sig-param"><span class="n">N</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractNSBEstimator.d_log_rho_xi"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>First derivative of the logarithm of the nsb (unnormalized) posterior.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">d_xi</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">beta</span></em>, <em class="sig-param"><span class="n">K</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractNSBEstimator.d_xi"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>First derivative of xi(beta).</p>
+<p>xi(beta) is the entropy of the system when no data has been observed.
+d_xi is the prior for the nsb estimator</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_beta_MAP</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mk</span></em>, <em class="sig-param"><span class="n">K</span></em>, <em class="sig-param"><span class="n">N</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractNSBEstimator.get_beta_MAP"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Get the maximum a posteriori (MAP) value for beta.</p>
+<p>Provides the location of the peak, around which we integrate.</p>
+<p>beta_MAP is the value for beta for which the posterior of the
+NSB estimator is maximised (or, equivalently, of the logarithm
+thereof, as computed here).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_integration_bounds</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mk</span></em>, <em class="sig-param"><span class="n">K</span></em>, <em class="sig-param"><span class="n">N</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractNSBEstimator.get_integration_bounds"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Find the integration bounds for the estimator.</p>
+<p>Typically it is a delta-like distribution so it is sufficient
+to integrate around this peak. (If not this function is not
+called.)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">log_likelihood_DP_alpha</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a</span></em>, <em class="sig-param"><span class="n">K1</span></em>, <em class="sig-param"><span class="n">N</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractNSBEstimator.log_likelihood_DP_alpha"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Alpha-dependent terms of the log-likelihood of a Dirichlet Process.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">nsb_entropy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mk</span></em>, <em class="sig-param"><span class="n">K</span></em>, <em class="sig-param"><span class="n">N</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractNSBEstimator.nsb_entropy"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate the entropy of a system using the NSB estimator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mk</strong> – multiplicities</p></li>
+<li><p><strong>K</strong> – number of possible symbols/ state space of the system</p></li>
+<li><p><strong>N</strong> – total number of observed symbols</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">rho</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">beta</span></em>, <em class="sig-param"><span class="n">mk</span></em>, <em class="sig-param"><span class="n">K</span></em>, <em class="sig-param"><span class="n">N</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractNSBEstimator.rho"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>rho(beta, data) is the Dirichlet multinomial likelihood.</p>
+<p>rho(beta, data) together with the d_xi(beta) make up
+the posterior for the nsb estimator</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">unnormalized_posterior</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">beta</span></em>, <em class="sig-param"><span class="n">mk</span></em>, <em class="sig-param"><span class="n">K</span></em>, <em class="sig-param"><span class="n">N</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltAbstractNSBEstimator.unnormalized_posterior"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>The (unnormalized) posterior in the nsb estimator.</p>
+<p>Product of the likelihood rho and the prior d_xi;
+the normalizing factor is given by the marginal likelihood</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">idtxl.estimators_Rudelt.</code><code class="sig-name descname">RudeltBBCEstimator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltBBCEstimator"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Bayesian bias criterion (BBC) Estimator using NSB and Plugin estimator</p>
+<p>Calculate the mutual information (MI) of one variable depending on its past
+using nsb and plugin estimator and check if bias criterion is passed.
+See parent class for references.</p>
+<p>implemented in idtxl by Michael Lindner, Göttingen 2021</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>settings<span class="classifier">dict</span></dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>embedding_step_size<span class="classifier">float [optional]</span></dt><dd><p>Step size delta t (in seconds) with which the window is slid through the data
+(default = 0.005).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>normalise<span class="classifier">bool [optional]</span></dt><dd><p>rebase spike times to zero
+(default=True)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>return_averaged_R<span class="classifier">bool [optional]</span></dt><dd><p>If set to True, compute R̂tot as the average over R̂(T ) for T ∈ [T̂D, Tmax ] instead of
+R̂tot = R(T̂D ). If set to True, the setting for number_of_bootstraps_R_tot is ignored and
+set to 0
+(default=True)</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt>
+<code class="sig-name descname">bayesian_bias_criterion</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">R_nsb</span></em>, <em class="sig-param"><span class="n">R_plugin</span></em>, <em class="sig-param"><span class="n">bbc_tolerance</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltBBCEstimator.bayesian_bias_criterion"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Get whether the Bayesian bias criterion (bbc) is passed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>R_nsb</strong> – history dependence computed with NSB estimator</p></li>
+<li><p><strong>R_plugin</strong> – history dependence computed with plugin estimator</p></li>
+<li><p><strong>bbc_tolerance</strong> – tolerance for the Bayesian bias criterion</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">estimate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symbol_array</span></em>, <em class="sig-param"><span class="n">past_symbol_array</span></em>, <em class="sig-param"><span class="n">current_symbol_array</span></em>, <em class="sig-param"><span class="n">bbc_tolerance</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltBBCEstimator.estimate"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Calculate the mutual information (MI) of one variable depending on its past
+using nsb and plugin estimator and check if bias criterion is passed/</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>symbol_array<span class="classifier">1D numpy array</span></dt><dd><p>realisations of symbols based on current and past states.
+(first output of get_realisations_symbol from data_spiketimes object)</p>
+</dd>
+<dt>past_symbol_array<span class="classifier">numpy array</span></dt><dd><p>realisations of symbols based on current and past states.
+(first output of get_realisations_symbol from data_spiketimes object)</p>
+</dd>
+<dt>current_symbol_array<span class="classifier">numpy array</span></dt><dd><p>realisations of symbols based on current and past states.
+(first output of get_realisations_symbol from data_spiketimes object)</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>I (float)</dt><dd><p>MI (AIS)</p>
+</dd>
+<dt>R (float)</dt><dd><p>MI / H_uncond (History dependence)</p>
+</dd>
+<dt>bbc_term (float)</dt><dd><p>bbc tolerance-independent term of the Bayesian bias
+criterion (bbc)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_bbc_term</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">R_nsb</span></em>, <em class="sig-param"><span class="n">R_plugin</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltBBCEstimator.get_bbc_term"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Get the bbc tolerance-independent term of the Bayesian bias
+criterion (bbc).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>R_nsb</strong> – history dependence computed with NSB estimator</p></li>
+<li><p><strong>R_plugin</strong> – history dependence computed with plugin estimator</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">idtxl.estimators_Rudelt.</code><code class="sig-name descname">RudeltNSBEstimatorSymbolsMI</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltNSBEstimatorSymbolsMI"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>History dependence NSB estimator</p>
+<p>Calculate the mutual information (MI) of one variable depending on its past
+using NSB estimator. See parent class for references.</p>
+<p>implemented in idtxl by Michael Lindner, Göttingen 2021</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>settings<span class="classifier">dict</span></dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>embedding_step_size<span class="classifier">float [optional]</span></dt><dd><p>Step size delta t (in seconds) with which the window is slid through the data
+(default = 0.005).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>normalise<span class="classifier">bool [optional]</span></dt><dd><p>rebase spike times to zero
+(default=True)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>return_averaged_R<span class="classifier">bool [optional]</span></dt><dd><p>If set to True, compute R̂tot as the average over R̂(T ) for T ∈ [T̂D, Tmax ] instead of
+R̂tot = R(T̂D ). If set to True, the setting for number_of_bootstraps_R_tot is ignored and
+set to 0
+(default=True)</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt>
+<code class="sig-name descname">estimate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symbol_array</span></em>, <em class="sig-param"><span class="n">past_symbol_array</span></em>, <em class="sig-param"><span class="n">current_symbol_array</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltNSBEstimatorSymbolsMI.estimate"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate mutual information using NSB estimator.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>symbol_array<span class="classifier">1D numpy array</span></dt><dd><p>realisations of symbols based on current and past states.
+(first output of get_realisations_symbol from data_spiketimes object)</p>
+</dd>
+<dt>past_symbol_array<span class="classifier">numpy array</span></dt><dd><p>realisations of symbols based on current and past states.
+(first output of get_realisations_symbol from data_spiketimes object)</p>
+</dd>
+<dt>current_symbol_array<span class="classifier">numpy array</span></dt><dd><p>realisations of symbols based on current and past states.
+(first output of get_realisations_symbol from data_spiketimes object)</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>I (float)</dt><dd><p>MI (AIS)</p>
+</dd>
+<dt>R (float)</dt><dd><p>MI / H_uncond (History dependence)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">nsb_estimator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symbol_counts</span></em>, <em class="sig-param"><span class="n">past_symbol_counts</span></em>, <em class="sig-param"><span class="n">alphabet_size</span></em>, <em class="sig-param"><span class="n">alphabet_size_past</span></em>, <em class="sig-param"><span class="n">H_uncond</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltNSBEstimatorSymbolsMI.nsb_estimator"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate the entropy of a system using the NSB estimator.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">idtxl.estimators_Rudelt.</code><code class="sig-name descname">RudeltPluginEstimatorSymbolsMI</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltPluginEstimatorSymbolsMI"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Plugin History dependence estimator</p>
+<p>Calculate the mutual information (MI) of one variable depending on its past
+using plugin estimator. See parent class for references.</p>
+<p>implemented in idtxl by Michael Lindner, Göttingen 2021</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>settings<span class="classifier">dict</span></dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>embedding_step_size<span class="classifier">float [optional] - Step size delta t (in seconds) with which the window is slid</span></dt><dd><p>through the data (default = 0.005).</p>
+</dd>
+</dl>
+</li>
+<li><p>normalise : bool [optional] - rebase spike times to zero (default=True)</p></li>
+<li><p>return_averaged_R : bool [optional] - rebase spike times to zero (default=True)</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt>
+<code class="sig-name descname">estimate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symbol_array</span></em>, <em class="sig-param"><span class="n">past_symbol_array</span></em>, <em class="sig-param"><span class="n">current_symbol_array</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltPluginEstimatorSymbolsMI.estimate"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate mutual information using plugin estimator.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>symbol_array<span class="classifier">1D numpy array</span></dt><dd><p>realisations of symbols based on current and past states.
+(first output of get_realisations_symbol from data_spiketimes object)</p>
+</dd>
+<dt>past_symbol_array<span class="classifier">numpy array</span></dt><dd><p>realisations of symbols based on current and past states.
+(first output of get_realisations_symbol from data_spiketimes object)</p>
+</dd>
+<dt>current_symbol_array<span class="classifier">numpy array</span></dt><dd><p>realisations of symbols based on current and past states.
+(first output of get_realisations_symbol from data_spiketimes object)</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>I (float)</dt><dd><p>MI (AIS)</p>
+</dd>
+<dt>R (float)</dt><dd><p>MI / H_uncond (History dependence)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">plugin_entropy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mk</span></em>, <em class="sig-param"><span class="n">N</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltPluginEstimatorSymbolsMI.plugin_entropy"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate the entropy of a system using the Plugin estimator.</p>
+<p>(In principle this is the same function as utl.get_shannon_entropy,
+only here it is a function of the multiplicities, not the probabilities.)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mk</strong> – multiplicities</p></li>
+<li><p><strong>N</strong> – total number of observed symbols</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">plugin_estimator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symbol_counts</span></em>, <em class="sig-param"><span class="n">past_symbol_counts</span></em>, <em class="sig-param"><span class="n">alphabet_size</span></em>, <em class="sig-param"><span class="n">alphabet_size_past</span></em>, <em class="sig-param"><span class="n">H_uncond</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltPluginEstimatorSymbolsMI.plugin_estimator"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate the entropy of a system using the BBC estimator.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">idtxl.estimators_Rudelt.</code><code class="sig-name descname">RudeltShufflingEstimator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltShufflingEstimator"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate the history dependence in a spike train using the shuffling estimator.</p>
+<p>See parent class for references.</p>
+<p>implemented in idtxl by Michael Lindner, Göttingen 2021</p>
+<dl class="py method">
+<dt>
+<code class="sig-name descname">estimate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symbol_array</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltShufflingEstimator.estimate"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate the history dependence in a spike train using the shuffling estimator.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>symbol_array<span class="classifier">1D numpy array</span></dt><dd><p>realisations of symbols based on current and past states.
+(first output of get_realisations_symbol from data_spiketimes object)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>I (float)</dt><dd><p>MI (AIS)</p>
+</dd>
+<dt>R (float)</dt><dd><p>MI / H_uncond (History dependence)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_H0_X_past_cond_X</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">marginal_probabilities</span></em>, <em class="sig-param"><span class="n">number_of_bins_d</span></em>, <em class="sig-param"><span class="n">P_X_uncond</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltShufflingEstimator.get_H0_X_past_cond_X"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute H_0(X_past | X), the estimate of the entropy for the past
+symbols given a response, under the assumption that activity in
+the past contributes independently towards the response.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_H0_X_past_cond_X_eq_x</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">marginal_probabilities</span></em>, <em class="sig-param"><span class="n">number_of_bins_d</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltShufflingEstimator.get_H0_X_past_cond_X_eq_x"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute H_0(X_past | X = x), cf get_H0_X_past_cond_X.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_H_X_past_cond_X</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">P_X_uncond</span></em>, <em class="sig-param"><span class="n">P_X_past_cond_X</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltShufflingEstimator.get_H_X_past_cond_X"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute H(X_past | X), the plug-in estimate of the conditional entropy for the past
+symbols, conditioned on the response X,  given their probabilities.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_H_X_past_uncond</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">P_X_past_uncond</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltShufflingEstimator.get_H_X_past_uncond"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute H(X_past), the plug-in estimate of the entropy for the past symbols, given
+their probabilities.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_P_X_past_cond_X</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">past_symbol_counts</span></em>, <em class="sig-param"><span class="n">number_of_symbols</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltShufflingEstimator.get_P_X_past_cond_X"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute P(X_past | X), the probability of the past activity conditioned
+on the response X using the plug-in estimator.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_P_X_past_uncond</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">past_symbol_counts</span></em>, <em class="sig-param"><span class="n">number_of_symbols</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltShufflingEstimator.get_P_X_past_uncond"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute P(X_past), the probability of the past activity using
+the plug-in estimator.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_P_X_uncond</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">number_of_symbols</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltShufflingEstimator.get_P_X_uncond"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute P(X), the probability of the current activity using
+the plug-in estimator.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_marginal_frequencies_of_spikes_in_bins</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symbol_counts</span></em>, <em class="sig-param"><span class="n">number_of_bins_d</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltShufflingEstimator.get_marginal_frequencies_of_spikes_in_bins"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute for each past bin 1…d the sum of spikes found in that bin across all
+observed symbols.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_shuffled_symbol_counts</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symbol_counts</span></em>, <em class="sig-param"><span class="n">past_symbol_counts</span></em>, <em class="sig-param"><span class="n">number_of_bins_d</span></em>, <em class="sig-param"><span class="n">number_of_symbols</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltShufflingEstimator.get_shuffled_symbol_counts"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Simulate new data by, for each past bin 1…d, permutating the activity
+across all observed past_symbols (for a given response X). The marginal
+probability of observing a spike given the response is thus preserved for
+each past bin.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">shuffling_MI</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symbol_counts</span></em>, <em class="sig-param"><span class="n">number_of_bins_d</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_Rudelt.html#RudeltShufflingEstimator.shuffling_MI"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Estimate the mutual information between current and past activity
+in a spike train using the shuffling estimator.</p>
+<p>To obtain the shuffling estimate, compute the plug-in estimate and
+a correction term to reduce its bias.</p>
+<p>For the plug-in estimate:</p>
+<ul class="simple">
+<li><p>Extract the past_symbol_counts from the symbol_counts.</p></li>
+<li><p>I_plugin = H(X_past) - H(X_past | X)</p></li>
+</ul>
+<p>Notation:</p>
+<ul class="simple">
+<li><p>X: current activity, aka response</p></li>
+<li><p>X_past: past activity</p></li>
+<li><p>P_X_uncond: P(X)</p></li>
+<li><p>P_X_past_uncond: P(X_past)</p></li>
+<li><p>P_X_past_cond_X: P(X_past | X)</p></li>
+<li><p>H_X_past_uncond: H(X_past)</p></li>
+<li><p>H_X_past_cond_X: H(X_past | X)</p></li>
+<li><p>I_plugin: plugin estimate of I(X_past; X)</p></li>
+</ul>
+<p>For the correction term:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Simulate additional data under the assumption that activity</dt><dd><p>in the past contributes independently towards the current activity.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Compute the entropy under the assumptions of the model, which</dt><dd><p>due to its simplicity is easy to sample and the estimate unbiased</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Compute the entropy using the plug-in estimate, whose bias is</dt><dd><p>similar to that of the plug-in estimate on the original data</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Compute the correction term as the difference between the</dt><dd><p>unbiased and biased terms</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Notation:</p>
+<ul class="simple">
+<li><p>P0_sh_X_past_cond_X: P_0,sh(X_past | X), equiv. to P(X_past | X)
+on the shuffled data</p></li>
+<li><p>H0_X_past_cond_X: H_0(X_past | X), based on the model of independent
+contributions</p></li>
+<li><p>H0_sh_X_past_cond_X: H_0,sh(X_past | X), based on</p></li>
+<li><p>P0_sh_X_past_cond_X, ie the plug-in estimate</p></li>
+<li><p>I_corr: the correction term to reduce the bias of I_plugin</p></li>
+</ul>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>symbol_counts<span class="classifier">iterable</span></dt><dd><p>the activity of a spike train is embedded into symbols,
+whose occurrences are counted (cf emb.get_symbol_counts)</p>
+</dd>
+<dt>number_of_bins_d<span class="classifier">int</span></dt><dd><p>the number of bins of the embedding</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
 
 
             <div class="clearer"></div>
@@ -573,6 +1697,11 @@ ResultsPID()</p>
 <li><a class="reference internal" href="#active-information-storage-ais">Active Information Storage (AIS)</a></li>
 <li><a class="reference internal" href="#multivariate-partial-information-decomposition-pid">Multivariate Partial Information Decomposition (PID)</a></li>
 <li><a class="reference internal" href="#bivariate-partial-information-decomposition-pid">Bivariate Partial Information Decomposition (PID)</a></li>
+<li><a class="reference internal" href="#history-dependence-estimator-for-neural-spiking-data">History-dependence estimator for neural spiking data</a><ul>
+<li><a class="reference internal" href="#embedding-optimization">Embedding optimization</a></li>
+<li><a class="reference internal" href="#estimators">Estimators</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -619,13 +1748,13 @@ ResultsPID()</p>
         <li class="right" >
           <a href="idtxl_network_inference.html" title="Algorithms for network inference"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Algorithms for the analysis of node dynamics</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.1.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
     </div>
   </body>
 </html>

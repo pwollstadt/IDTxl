@@ -36,6 +36,7 @@ P. Wollstadt, J. T. Lizier, R. Vicente, C. Finn, M. Martinez-Zarzuela, P. Median
 - Leonardo Novelli, Centre for Complex Systems, The University of Sydney, Sydney, Australia
 - [Pedro Mediano](https://www.doc.ic.ac.uk/~pam213/), Computational Neurodynamics Group, Imperial College London, London, United Kingdom
 - Michael Lindner, Campus Institute for Dynamics of Biological Networks, Georg August University, Göttingen, Germany
+- Aaron J. Gutknecht, Campus Institute for Dynamics of Biological Networks, Georg August University, Göttingen, Germany
 
 **How to contribute?** We are happy about any feedback on IDTxl. If you would like to contribute, please open an issue or send a pull request with your feature or improvement. Also have a look at the [developer's section](https://github.com/pwollstadt/IDTxl/wiki#developers-section) in the Wiki for details.
 
@@ -62,3 +63,5 @@ http://www.mis.mpg.de/preprints/2012/preprint2012_25.pdf*
 + PID estimators: *[Bertschinger et al., 2014, Entropy, 16(4)](https://www.mdpi.com/1099-4300/16/4/2161);
 [Makkeh et al., 2017, Entropy, 19(10)](https://www.mdpi.com/1099-4300/19/10/530);
 [Makkeh et al., 2018, Entropy, 20(271)](https://www.mdpi.com/1099-4300/20/4/271)*
++ History-dependence estimator for neural spiking data: *[Rudelt et al., 2021, PLOS Computational Biology, 17(6)](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1008927)*
++ Significant subgraph mining: [*Gutknecht et al., 2021, bioRxiv*](https://doi.org/10.1101/2021.11.03.467050)

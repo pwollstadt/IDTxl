@@ -1,0 +1,1146 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>idtxl.embedding_optimization_ais_Rudelt &#8212; IDTxl 1.4 documentation</title>
+    <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="../../_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">idtxl.embedding_optimization_ais_Rudelt</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for idtxl.embedding_optimization_ais_Rudelt</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; Optimization of embedding parameters of spike times using the history dependence estimators &quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">newton</span>
+<span class="kn">from</span> <span class="nn">sys</span> <span class="kn">import</span> <span class="n">stderr</span>
+<span class="kn">from</span> <span class="nn">idtxl.estimators_Rudelt</span> <span class="kn">import</span> <span class="n">RudeltBBCEstimator</span><span class="p">,</span> <span class="n">RudeltShufflingEstimator</span>
+<span class="kn">import</span> <span class="nn">idtxl.hde_utils</span> <span class="k">as</span> <span class="nn">utl</span>
+<span class="kn">from</span> <span class="nn">idtxl.results</span> <span class="kn">import</span> <span class="n">DotDict</span><span class="p">,</span> <span class="n">ResultsSingleProcessRudelt</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">idtxl.data_spiketime</span> <span class="kn">import</span> <span class="n">Data_spiketime</span>
+
+
+<span class="c1"># noinspection PyAttributeOutsideInit</span>
+<div class="viewcode-block" id="OptimizationRudelt"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.embedding_optimization_ais_Rudelt.OptimizationRudelt">[docs]</a><span class="k">class</span> <span class="nc">OptimizationRudelt</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Optimization of embedding parameters of spike times using the history dependence estimators</span>
+
+<span class="sd">    References:</span>
+
+<span class="sd">        [1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding</span>
+<span class="sd">            optimization reveals long-lasting history dependence in</span>
+<span class="sd">            neural spiking activity, 2021, PLOS Computational Biology, 17(6)</span>
+
+<span class="sd">        [2]: https://github.com/Priesemann-Group/hdestimator</span>
+
+<span class="sd">    implemented in idtxl by Michael Lindner, Göttingen 2021</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        settings : dict</span>
+<span class="sd">            - estimation_method : string</span>
+<span class="sd">                The method to be used to estimate the history dependence &#39;bbc&#39; or &#39;shuffling&#39;.</span>
+<span class="sd">            - embedding_step_size : float</span>
+<span class="sd">                Step size delta t (in seconds) with which the window is slid through the data.</span>
+<span class="sd">                (default: 0.005)</span>
+<span class="sd">            - embedding_number_of_bins_set : list of integer values</span>
+<span class="sd">                Set of values for d, the number of bins in the embedding.</span>
+<span class="sd">                (default: [1, 2, 3, 4, 5])</span>
+<span class="sd">            - embedding_past_range_set : list of floating-point values</span>
+<span class="sd">                Set of values for T, the past range (in seconds) to be used for embeddings.</span>
+<span class="sd">                (default: [0.005, 0.00561, 0.00629, 0.00706, 0.00792, 0.00889,</span>
+<span class="sd">                0.00998, 0.01119, 0.01256, 0.01409, 0.01581, 0.01774, 0.01991,</span>
+<span class="sd">                0.02233, 0.02506, 0.02812, 0.03155, 0.0354, 0.03972, 0.04456,</span>
+<span class="sd">                0.05, 0.0561, 0.06295, 0.07063, 0.07924, 0.08891, 0.09976,</span>
+<span class="sd">                0.11194, 0.12559, 0.14092, 0.15811, 0.17741, 0.19905, 0.22334,</span>
+<span class="sd">                0.25059, 0.28117, 0.31548, 0.35397, 0.39716, 0.44563, 0.5,</span>
+<span class="sd">                0.56101, 0.62946, 0.70627, 0.79245, 0.88914, 0.99763, 1.11936,</span>
+<span class="sd">                1.25594, 1.40919, 1.58114, 1.77407, 1.99054, 2.23342, 2.50594,</span>
+<span class="sd">                2.81171, 3.15479, 3.53973, 3.97164, 4.45625, 5.0])</span>
+<span class="sd">            - embedding_scaling_exponent_set : dict</span>
+<span class="sd">                Set of values for kappa, the scaling exponent for the bins in the embedding.</span>
+<span class="sd">                Should be a python-dictionary with the three entries &#39;number_of_scalings&#39;, &#39;min_first_bin_size&#39; and</span>
+<span class="sd">                &#39;min_step_for_scaling&#39;.</span>
+<span class="sd">                defaults: {&#39;number_of_scalings&#39;: 10, &#39;min_first_bin_size&#39;: 0.005, &#39;min_step_for_scaling&#39;: 0.01})</span>
+<span class="sd">            - bbc_tolerance : float</span>
+<span class="sd">                The tolerance for the Bayesian Bias Criterion. Influences which embeddings are</span>
+<span class="sd">                discarded from the analysis.</span>
+<span class="sd">                (default: 0.05)</span>
+<span class="sd">            - return_averaged_R : bool</span>
+<span class="sd">                Return R_tot as the average over R(T) for T in [T_D, T_max], instead of R_tot = R(T_D).</span>
+<span class="sd">                If set to True, the setting for number_of_bootstraps_R_tot (see below) is ignored and set to 0</span>
+<span class="sd">                and CI bounds are not calculated.</span>
+<span class="sd">                (default: True)</span>
+<span class="sd">            - timescale_minimum_past_range : float</span>
+<span class="sd">                Minimum past range T_0 (in seconds) to take into consideration for the estimation of the</span>
+<span class="sd">                information timescale tau_R.</span>
+<span class="sd">                (default: 0.01)</span>
+<span class="sd">            - number_of_bootstraps_R_max : int</span>
+<span class="sd">                The number of bootstrap re-shuffles that should be used to determine the optimal</span>
+<span class="sd">                embedding. (Bootstrap the estimates of R_max to determine R_tot.)</span>
+<span class="sd">                These are computed during the &#39;history-dependence&#39; task because they are essential</span>
+<span class="sd">                to obtain R_tot.</span>
+<span class="sd">                (default: 250)</span>
+<span class="sd">            - number_of_bootstraps_R_tot : int</span>
+<span class="sd">                The number of bootstrap re-shuffles that should be used to estimate the confidence</span>
+<span class="sd">                interval of the optimal embedding. (Bootstrap the estimates of R_tot = R(T_D) to</span>
+<span class="sd">                obtain a confidence interval for R_tot.).</span>
+<span class="sd">                These are computed during the &#39;confidence-intervals&#39; task.</span>
+<span class="sd">                The setting return_averaged_R (see above) needs to be set to False for this setting</span>
+<span class="sd">                to take effect.</span>
+<span class="sd">                (default: 250)</span>
+<span class="sd">            - number_of_bootstraps_nonessential : int</span>
+<span class="sd">                The number of bootstrap re-shuffles that should be used to estimate the confidence</span>
+<span class="sd">                intervals for embeddings other than the optimal one. (Bootstrap the estimates of</span>
+<span class="sd">                R(T) for all other T.)</span>
+<span class="sd">                (These are not necessary for the main analysis and therefore default to 0.)</span>
+<span class="sd">            - symbol_block_length : int</span>
+<span class="sd">                The number of symbols that should be drawn in each block for bootstrap resampling</span>
+<span class="sd">                If it is set to None (recommended), the length is automatically chosen, based</span>
+<span class="sd">                on heuristics</span>
+<span class="sd">                (default: None)</span>
+<span class="sd">            - bootstrap_CI_use_sd : bool</span>
+<span class="sd">                Most of the time we observed normally-distributed bootstrap replications,</span>
+<span class="sd">                so it is sufficient (and more efficient) to compute confidence intervals</span>
+<span class="sd">                based on the standard deviation</span>
+<span class="sd">                (default: True)</span>
+<span class="sd">            - bootstrap_CI_percentile_lo : float</span>
+<span class="sd">                The lower percentile for the confidence interval.</span>
+<span class="sd">                This has no effect if bootstrap_CI_use_sd is set to True</span>
+<span class="sd">                (default: 2.5)</span>
+<span class="sd">            - bootstrap_CI_percentile_hi : float</span>
+<span class="sd">                The upper percentiles for the confidence interval.</span>
+<span class="sd">                This has no effect if bootstrap_CI_use_sd is set to True</span>
+<span class="sd">                (default: 97.5)</span>
+<span class="sd">            - analyse_auto_MI : bool</span>
+<span class="sd">                perform calculation of auto mutual information of the spike train</span>
+<span class="sd">                (default: True)</span>
+<span class="sd">                If set to True:</span>
+
+<span class="sd">                - auto_MI_bin_size_set : list of floating-point values</span>
+<span class="sd">                    Set of values for the sizes of the bins (in seconds).</span>
+<span class="sd">                    (default: [0.005, 0.01, 0.025, 0.05, 0.25, 0.5])</span>
+<span class="sd">                - auto_MI_max_delay : int</span>
+<span class="sd">                    The maximum delay (in seconds) between the past bin and the response.</span>
+<span class="sd">                    (default: 5)</span>
+
+<span class="sd">            - visualization : bool</span>
+<span class="sd">                create .eps output image showing the optimization values and graphs for</span>
+<span class="sd">                the history dependence and the auto mutual information</span>
+<span class="sd">                (default: False)</span>
+<span class="sd">                if set to True:</span>
+
+<span class="sd">                - output_path : String</span>
+<span class="sd">                    Path where the .eps images should be saved</span>
+<span class="sd">                - output_prefix : String</span>
+<span class="sd">                    Prefix of the output images</span>
+<span class="sd">                    e.g. &lt;output_prefix&gt;_process0.eps</span>
+
+<span class="sd">            - debug: bool</span>
+<span class="sd">                show values while calculating</span>
+<span class="sd">                (default: False)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;embedding_step_size&#39;</span><span class="p">,</span> <span class="mf">0.005</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;embedding_past_range_set&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.005</span><span class="p">,</span> <span class="mf">0.00561</span><span class="p">,</span> <span class="mf">0.00629</span><span class="p">,</span> <span class="mf">0.00706</span><span class="p">,</span> <span class="mf">0.00792</span><span class="p">,</span> <span class="mf">0.00889</span><span class="p">,</span>
+                                                              <span class="mf">0.00998</span><span class="p">,</span> <span class="mf">0.01119</span><span class="p">,</span> <span class="mf">0.01256</span><span class="p">,</span> <span class="mf">0.01409</span><span class="p">,</span> <span class="mf">0.01581</span><span class="p">,</span> <span class="mf">0.01774</span><span class="p">,</span>
+                                                              <span class="mf">0.01991</span><span class="p">,</span> <span class="mf">0.02233</span><span class="p">,</span> <span class="mf">0.02506</span><span class="p">,</span> <span class="mf">0.02812</span><span class="p">,</span> <span class="mf">0.03155</span><span class="p">,</span> <span class="mf">0.0354</span><span class="p">,</span>
+                                                              <span class="mf">0.03972</span><span class="p">,</span> <span class="mf">0.04456</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.0561</span><span class="p">,</span> <span class="mf">0.06295</span><span class="p">,</span> <span class="mf">0.07063</span><span class="p">,</span>
+                                                              <span class="mf">0.07924</span><span class="p">,</span> <span class="mf">0.08891</span><span class="p">,</span> <span class="mf">0.09976</span><span class="p">,</span> <span class="mf">0.11194</span><span class="p">,</span> <span class="mf">0.12559</span><span class="p">,</span> <span class="mf">0.14092</span><span class="p">,</span>
+                                                              <span class="mf">0.15811</span><span class="p">,</span> <span class="mf">0.17741</span><span class="p">,</span> <span class="mf">0.19905</span><span class="p">,</span> <span class="mf">0.22334</span><span class="p">,</span> <span class="mf">0.25059</span><span class="p">,</span> <span class="mf">0.28117</span><span class="p">,</span>
+                                                              <span class="mf">0.31548</span><span class="p">,</span> <span class="mf">0.35397</span><span class="p">,</span> <span class="mf">0.39716</span><span class="p">,</span> <span class="mf">0.44563</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.56101</span><span class="p">,</span> <span class="mf">0.62946</span><span class="p">,</span>
+                                                              <span class="mf">0.70627</span><span class="p">,</span> <span class="mf">0.79245</span><span class="p">,</span> <span class="mf">0.88914</span><span class="p">,</span> <span class="mf">0.99763</span><span class="p">,</span> <span class="mf">1.11936</span><span class="p">,</span> <span class="mf">1.25594</span><span class="p">,</span>
+                                                              <span class="mf">1.40919</span><span class="p">,</span> <span class="mf">1.58114</span><span class="p">,</span> <span class="mf">1.77407</span><span class="p">,</span> <span class="mf">1.99054</span><span class="p">,</span> <span class="mf">2.23342</span><span class="p">,</span> <span class="mf">2.50594</span><span class="p">,</span>
+                                                              <span class="mf">2.81171</span><span class="p">,</span> <span class="mf">3.15479</span><span class="p">,</span> <span class="mf">3.53973</span><span class="p">,</span> <span class="mf">3.97164</span><span class="p">,</span> <span class="mf">4.45625</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;embedding_number_of_bins_set&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;embedding_scaling_exponent_set&#39;</span><span class="p">,</span>
+                                 <span class="p">{</span><span class="s1">&#39;number_of_scalings&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+                                  <span class="s1">&#39;min_first_bin_size&#39;</span><span class="p">:</span> <span class="mf">0.005</span><span class="p">,</span>
+                                  <span class="s1">&#39;min_step_for_scaling&#39;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">})</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;bbc_tolerance&#39;</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;return_averaged_R&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;timescale_minimum_past_range&#39;</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;analyse_auto_MI&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;auto_MI_bin_size_set&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.005</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.025</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;auto_MI_max_delay&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;number_of_bootstraps_R_max&#39;</span><span class="p">,</span> <span class="mi">250</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;number_of_bootstraps_R_tot&#39;</span><span class="p">,</span> <span class="mi">250</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;number_of_bootstraps_nonessential&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;symbol_block_length&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;bootstrap_CI_use_sd&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;bootstrap_CI_percentile_lo&#39;</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;bootstrap_CI_percentile_hi&#39;</span><span class="p">,</span> <span class="mf">97.5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;visualization&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;debug&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_inputs</span><span class="p">()</span>                                 <span class="c1"># ------------------------------------------------------------- TODO CHECK INPUTS</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_embeddings</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_past_range_set&#39;</span><span class="p">],</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_number_of_bins_set&#39;</span><span class="p">],</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_scaling_exponent_set&#39;</span><span class="p">])</span>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_check_settings</span><span class="p">(</span><span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set default for settings dictionary.</span>
+
+<span class="sd">        Check if settings dictionary is None. If None, initialise an empty</span>
+<span class="sd">        dictionary. If not None check if type is dictionary. Function should be</span>
+<span class="sd">        called before setting default values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">settings</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;settings should be a dictionary.&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">settings</span>
+
+<div class="viewcode-block" id="OptimizationRudelt.check_inputs"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.embedding_optimization_ais_Rudelt.OptimizationRudelt.check_inputs">[docs]</a>    <span class="k">def</span> <span class="nf">check_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check input settings for completeness</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">args_float</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;embedding_step_size&#39;</span><span class="p">,</span>
+                      <span class="s1">&#39;timescale_minimum_past_range&#39;</span><span class="p">,</span>
+                      <span class="s1">&#39;bootstrap_CI_percentile_lo&#39;</span><span class="p">,</span>
+                      <span class="s1">&#39;bootstrap_CI_percentile_hi&#39;</span><span class="p">,</span>
+                      <span class="s1">&#39;bbc_tolerance&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">args_float</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">),</span> \
+                <span class="p">(</span><span class="n">key</span> <span class="o">+</span> <span class="s1">&#39; has to be specified (see help)!&#39;</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">float</span><span class="p">)),</span> \
+                <span class="p">(</span><span class="s2">&quot;Error: setting &#39;&quot;</span> <span class="o">+</span> <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot;&#39; needs to an floating point value (see help!!). Aborting.&quot;</span><span class="p">)</span>
+
+        <span class="n">args_int</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;number_of_bootstraps_R_max&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;number_of_bootstraps_R_tot&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;number_of_bootstraps_nonessential&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">args_int</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">),</span> \
+                <span class="p">(</span><span class="n">key</span> <span class="o">+</span> <span class="s1">&#39; has to be specified (see help)!&#39;</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">int</span><span class="p">)),</span> \
+                <span class="p">(</span><span class="s2">&quot;Error: setting &#39;&quot;</span> <span class="o">+</span> <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot;&#39; needs to an integer value (see help!!). Aborting.&quot;</span><span class="p">)</span>
+
+        <span class="n">args_bool</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;return_averaged_R&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;bootstrap_CI_use_sd&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;debug&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">args_bool</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">),</span> \
+                <span class="p">(</span><span class="n">key</span> <span class="o">+</span> <span class="s1">&#39; has to be specified (see help)!&#39;</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">bool</span><span class="p">)),</span> \
+                <span class="p">(</span><span class="s2">&quot;Error: setting &#39;&quot;</span> <span class="o">+</span> <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot;&#39; needs to a boolean expression (see help!!). Aborting.&quot;</span><span class="p">)</span>
+
+        <span class="k">assert</span><span class="p">(</span><span class="s1">&#39;embedding_past_range_set&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">),</span> \
+            <span class="s1">&#39;embedding_past_range_set has to be specified (see help)!&#39;</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_past_range_set&#39;</span><span class="p">],</span> <span class="nb">list</span><span class="p">)),</span> \
+            <span class="s2">&quot;Error: setting &#39;embedding_past_range_set&#39; needs to be a list but is defined as </span><span class="si">{0}</span><span class="s2">. &quot;</span> \
+            <span class="s2">&quot;Aborting.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_past_range_set&#39;</span><span class="p">]))</span>
+
+        <span class="k">assert</span> <span class="p">(</span><span class="s1">&#39;embedding_number_of_bins_set&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">),</span> \
+            <span class="s1">&#39;embedding_number_of_bins_set has to be specified (see help)!&#39;</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_number_of_bins_set&#39;</span><span class="p">],</span> <span class="nb">list</span><span class="p">)),</span> \
+            <span class="s2">&quot;Error: setting &#39;embedding_number_of_bins_set&#39; needs to a list but is defined as </span><span class="si">{0}</span><span class="s2">. &quot;</span> \
+            <span class="s2">&quot;Aborting.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_number_of_bins_set&#39;</span><span class="p">]))</span>
+
+        <span class="k">assert</span> <span class="p">(</span><span class="s1">&#39;embedding_scaling_exponent_set&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">),</span> \
+            <span class="s1">&#39;embedding_scaling_exponent_set has to be specified (see help)!&#39;</span>
+
+        <span class="k">assert</span> <span class="p">(</span><span class="s1">&#39;number_of_scalings&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_scaling_exponent_set&#39;</span><span class="p">]),</span> \
+            <span class="s2">&quot;&#39;number_of_scalings&#39; have to be specified in self.settings[&#39;embedding_scaling_exponent_set&#39;] (see help)!&quot;</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_scaling_exponent_set&#39;</span><span class="p">][</span><span class="s1">&#39;number_of_scalings&#39;</span><span class="p">],</span> <span class="nb">int</span><span class="p">)),</span> \
+            <span class="s2">&quot;Error: setting &#39;number_of_scalings&#39; needs to be an integer value but is defined as </span><span class="si">{0}</span><span class="s2">. &quot;</span> \
+            <span class="s2">&quot;Aborting.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;number_of_scalings&#39;</span><span class="p">]))</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="s1">&#39;min_first_bin_size&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_scaling_exponent_set&#39;</span><span class="p">]),</span> \
+            <span class="s2">&quot;&#39;min_first_bin_size&#39; have to be specified in self.settings[&#39;embedding_scaling_exponent_set&#39;] (see help)!&quot;</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_scaling_exponent_set&#39;</span><span class="p">][</span><span class="s1">&#39;min_first_bin_size&#39;</span><span class="p">],</span> <span class="nb">float</span><span class="p">)),</span> \
+            <span class="s2">&quot;Error: setting &#39;min_first_bin_sizes&#39; needs to be a floating point value but is defined as </span><span class="si">{0}</span><span class="s2">. &quot;</span> \
+            <span class="s2">&quot;Aborting.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;min_first_bin_sizes&#39;</span><span class="p">]))</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="s1">&#39;min_step_for_scaling&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_scaling_exponent_set&#39;</span><span class="p">]),</span> \
+            <span class="s2">&quot;&#39;min_step_for_scaling&#39; have to be specified in self.settings[&#39;embedding_scaling_exponent_set&#39;] (see help)!&quot;</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_scaling_exponent_set&#39;</span><span class="p">][</span><span class="s1">&#39;min_step_for_scaling&#39;</span><span class="p">],</span> <span class="nb">float</span><span class="p">)),</span> \
+            <span class="s2">&quot;Error: setting &#39;min_step_for_scaling&#39; needs to be a floating point value but is defined as </span><span class="si">{0}</span><span class="s2">. &quot;</span> \
+            <span class="s2">&quot;Aborting.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;min_step_for_scaling&#39;</span><span class="p">]))</span>
+
+        <span class="k">assert</span> <span class="p">(</span><span class="s1">&#39;symbol_block_length&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">),</span> \
+            <span class="s1">&#39;symbol_block_length has to be specified (see help)!&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;symbol_block_length&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;symbol_block_length&#39;</span><span class="p">],</span> <span class="nb">int</span><span class="p">)),</span> \
+                <span class="s2">&quot;Error: setting &#39;symbol_block_length&#39; needs to an integer value but is defined as </span><span class="si">{0}</span><span class="s2">. &quot;</span> \
+                <span class="s2">&quot;Aborting.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;symbol_block_length&#39;</span><span class="p">]))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;analyse_auto_MI&#39;</span><span class="p">]:</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;analyse_auto_MI&#39;</span><span class="p">],</span> <span class="nb">bool</span><span class="p">)),</span> \
+                <span class="s2">&quot;Error: setting &#39;analyse_auto_MI&#39; needs to be a boolean expression but is defined as </span><span class="si">{0}</span><span class="s2">. &quot;</span> \
+                <span class="s2">&quot;Aborting.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;analyse_auto_MI&#39;</span><span class="p">]))</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="s1">&#39;auto_MI_bin_size_set&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">),</span> \
+                <span class="s1">&#39;If analyse_auto_MI is set to True, auto_MI_bin_size_set has to be specified (see help)!&#39;</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;auto_MI_bin_size_set&#39;</span><span class="p">],</span> <span class="nb">list</span><span class="p">)),</span> \
+                <span class="s2">&quot;Error: setting &#39;auto_MI_bin_size_set&#39; needs to a list but is defined as </span><span class="si">{0}</span><span class="s2">. &quot;</span> \
+                <span class="s2">&quot;Aborting.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;auto_MI_bin_size_set&#39;</span><span class="p">]))</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="s1">&#39;auto_MI_max_delay&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">),</span> \
+                <span class="s1">&#39;If analyse_auto_MI is set to True, auto_MI_max_delay has to be specified (see help)!&#39;</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;auto_MI_max_delay&#39;</span><span class="p">],</span> <span class="nb">int</span><span class="p">)),</span> \
+                <span class="s2">&quot;Error: setting &#39;auto_MI_max_delay&#39; needs to be an integer value but is defined as </span><span class="si">{0}</span><span class="s2">. &quot;</span> \
+                <span class="s2">&quot;Aborting.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;auto_MI_max_delay&#39;</span><span class="p">]))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;visualization&#39;</span><span class="p">]:</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;visualization&#39;</span><span class="p">],</span> <span class="nb">bool</span><span class="p">)),</span> \
+                <span class="s2">&quot;Error: setting &#39;visualization&#39; needs to be boolean but is defined as </span><span class="si">{0}</span><span class="s2">. &quot;</span> \
+                <span class="s2">&quot;Aborting.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;visualization&#39;</span><span class="p">]))</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="s1">&#39;output_path&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">),</span> \
+                <span class="s1">&#39;If visualization is set to True an output path has to be specified (see help)!&#39;</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="s1">&#39;output_prefix&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">),</span> \
+                <span class="s1">&#39;If visualization is set to True an output prefix has to be specified (see help)!&#39;</span>
+
+        <span class="c1"># Cython implementation uses 64bit unsigned integers for the symbols,</span>
+        <span class="c1"># we allow up to 62 bins (window has 1 bin more..)</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_number_of_bins_set&#39;</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mi">62</span><span class="p">),</span> \
+            <span class="s1">&#39;Error: Max number of bins too large; use less than 63. Aborting.&#39;</span>
+
+        <span class="c1"># If R_tot is computed as an average over Rs, no confidence interval can be estimated</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;return_averaged_R&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;number_of_bootstraps_R_tot&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="OptimizationRudelt.get_embeddings"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.embedding_optimization_ais_Rudelt.OptimizationRudelt.get_embeddings">[docs]</a>    <span class="k">def</span> <span class="nf">get_embeddings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                       <span class="n">embedding_past_range_set</span><span class="p">,</span>
+                       <span class="n">embedding_number_of_bins_set</span><span class="p">,</span>
+                       <span class="n">embedding_scaling_exponent_set</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get all combinations of parameters T, d, k, based on the</span>
+<span class="sd">        sets of selected parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">embeddings</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">past_range_T</span> <span class="ow">in</span> <span class="n">embedding_past_range_set</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">number_of_bins_d</span> <span class="ow">in</span> <span class="n">embedding_number_of_bins_set</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">number_of_bins_d</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">number_of_bins_d</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error: number of bins </span><span class="si">{}</span><span class="s2"> is not a positive integer. Skipping.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">number_of_bins_d</span><span class="p">),</span>
+                          <span class="n">file</span><span class="o">=</span><span class="n">stderr</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="k">continue</span>
+
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">embedding_scaling_exponent_set</span><span class="p">)</span> <span class="o">==</span> <span class="nb">dict</span><span class="p">:</span>
+                    <span class="n">scaling_set_given_T_and_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_set_of_scalings</span><span class="p">(</span><span class="n">past_range_T</span><span class="p">,</span>
+                                                                         <span class="n">number_of_bins_d</span><span class="p">,</span>
+                                                                         <span class="o">**</span><span class="n">embedding_scaling_exponent_set</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">scaling_set_given_T_and_d</span> <span class="o">=</span> <span class="n">embedding_scaling_exponent_set</span>
+
+                <span class="k">for</span> <span class="n">scaling_k</span> <span class="ow">in</span> <span class="n">scaling_set_given_T_and_d</span><span class="p">:</span>
+                    <span class="n">embeddings</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">past_range_T</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">,</span> <span class="n">scaling_k</span><span class="p">)]</span>
+
+        <span class="k">return</span> <span class="n">embeddings</span></div>
+
+<div class="viewcode-block" id="OptimizationRudelt.get_set_of_scalings"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.embedding_optimization_ais_Rudelt.OptimizationRudelt.get_set_of_scalings">[docs]</a>    <span class="k">def</span> <span class="nf">get_set_of_scalings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">past_range_T</span><span class="p">,</span>
+                            <span class="n">number_of_bins_d</span><span class="p">,</span>
+                            <span class="n">number_of_scalings</span><span class="p">,</span>
+                            <span class="n">min_first_bin_size</span><span class="p">,</span>
+                            <span class="n">min_step_for_scaling</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get scaling exponents such that the uniform embedding as well as</span>
+<span class="sd">        the embedding for which the first bin has a length of</span>
+<span class="sd">        min_first_bin_size (in seconds), as well as linearly spaced</span>
+<span class="sd">        scaling factors in between, such that in total</span>
+<span class="sd">        number_of_scalings scalings are obtained.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">min_scaling</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">past_range_T</span> <span class="o">/</span> <span class="n">number_of_bins_d</span> <span class="o">&lt;=</span> <span class="n">min_first_bin_size</span> <span class="ow">or</span> <span class="n">number_of_bins_d</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">max_scaling</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># for the initial guess assume the largest bin dominates, so k is approx. log(T) / d</span>
+
+            <span class="n">max_scaling</span> <span class="o">=</span> <span class="n">newton</span><span class="p">(</span><span class="k">lambda</span> <span class="n">scaling</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_past_range</span><span class="p">(</span><span class="n">number_of_bins_d</span><span class="p">,</span>
+                                                                     <span class="n">min_first_bin_size</span><span class="p">,</span>
+                                                                     <span class="n">scaling</span><span class="p">)</span> <span class="o">-</span> <span class="n">past_range_T</span><span class="p">,</span>
+                                 <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">past_range_T</span> <span class="o">/</span> <span class="n">min_first_bin_size</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">number_of_bins_d</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
+                                 <span class="n">tol</span><span class="o">=</span><span class="mf">1e-04</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+
+        <span class="k">while</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">min_scaling</span><span class="p">,</span> <span class="n">max_scaling</span><span class="p">,</span>
+                          <span class="n">number_of_scalings</span><span class="p">,</span> <span class="n">retstep</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">min_step_for_scaling</span><span class="p">:</span>
+            <span class="n">number_of_scalings</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">min_scaling</span><span class="p">,</span> <span class="n">max_scaling</span><span class="p">,</span> <span class="n">number_of_scalings</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OptimizationRudelt.get_past_range"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.embedding_optimization_ais_Rudelt.OptimizationRudelt.get_past_range">[docs]</a>    <span class="k">def</span> <span class="nf">get_past_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">,</span> <span class="n">first_bin_size</span><span class="p">,</span> <span class="n">scaling_k</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the past range T of the embedding, based on the parameters d, tau_1 and k.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">first_bin_size</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">((</span><span class="n">number_of_bins_d</span> <span class="o">-</span> <span class="n">i</span><span class="p">)</span> <span class="o">*</span> <span class="n">scaling_k</span><span class="p">)</span>
+                       <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">number_of_bins_d</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)])</span></div>
+
+<div class="viewcode-block" id="OptimizationRudelt.get_history_dependence"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.embedding_optimization_ais_Rudelt.OptimizationRudelt.get_history_dependence">[docs]</a>    <span class="k">def</span> <span class="nf">get_history_dependence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Estimate the history dependence for each embedding to all given processes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># load estimators</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;estimation_method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;bbc&#39;</span><span class="p">:</span>
+            <span class="n">estbbc</span> <span class="o">=</span> <span class="n">RudeltBBCEstimator</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;estimation_method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;shuffling&#39;</span><span class="p">:</span>
+            <span class="n">estshu</span> <span class="o">=</span> <span class="n">RudeltShufflingEstimator</span><span class="p">()</span>
+
+        <span class="c1"># get history dependence</span>
+        <span class="n">history_dependence</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;estimation_method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;bbc&#39;</span><span class="p">:</span>
+            <span class="n">bbc_term</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span><span class="p">)))</span>
+
+        <span class="n">embedding_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">embedding</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Embedding: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">embedding</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">embedding</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">embedding</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+
+            <span class="n">symbol_array</span><span class="p">,</span> <span class="n">past_symbol_array</span><span class="p">,</span> <span class="n">current_symbol_array</span><span class="p">,</span> <span class="n">symbol_array_length</span> <span class="o">=</span> \
+                    <span class="n">data</span><span class="o">.</span><span class="n">get_realisations_symbols</span><span class="p">(</span><span class="n">process</span><span class="p">,</span>
+                                                  <span class="n">embedding</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                  <span class="n">embedding</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                                  <span class="n">embedding</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                                                  <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_step_size&#39;</span><span class="p">],</span>
+                                                  <span class="n">output_spike_times</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;estimation_method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;bbc&#39;</span><span class="p">:</span>
+                <span class="n">I_bbc</span><span class="p">,</span> <span class="n">R_bbc</span><span class="p">,</span> <span class="n">bbc_t</span> <span class="o">=</span> \
+                            <span class="n">estbbc</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">past_symbol_array</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">current_symbol_array</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">history_dependence</span><span class="p">[</span><span class="n">embedding_count</span><span class="p">]</span> <span class="o">=</span> <span class="n">R_bbc</span>
+                <span class="n">bbc_term</span><span class="p">[</span><span class="n">embedding_count</span><span class="p">]</span> <span class="o">=</span> <span class="n">bbc_t</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">HD: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">R_bbc</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; BBC: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">bbc_t</span><span class="p">))</span>
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;estimation_method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;shuffling&#39;</span><span class="p">:</span>
+                <span class="n">I_sh</span><span class="p">,</span> <span class="n">R_sh</span> <span class="o">=</span> <span class="n">estshu</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">history_dependence</span><span class="p">[</span><span class="n">embedding_count</span><span class="p">]</span> <span class="o">=</span> <span class="n">R_sh</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">HD: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">R_sh</span><span class="p">))</span>
+
+            <span class="n">embedding_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;estimation_method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;bbc&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">history_dependence</span><span class="p">,</span> <span class="n">bbc_term</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;estimation_method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;shuffling&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">history_dependence</span></div>
+
+<div class="viewcode-block" id="OptimizationRudelt.get_bootstrap_history_dependence"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.embedding_optimization_ais_Rudelt.OptimizationRudelt.get_bootstrap_history_dependence">[docs]</a>    <span class="k">def</span> <span class="nf">get_bootstrap_history_dependence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                         <span class="n">data</span><span class="p">,</span>
+                                         <span class="n">embedding</span><span class="p">,</span>
+                                         <span class="n">number_of_bootstraps</span><span class="p">,</span>
+                                         <span class="n">symbol_block_length</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For a given embedding, return bootstrap replications for R.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">estbbc</span> <span class="o">=</span> <span class="n">RudeltBBCEstimator</span><span class="p">()</span>
+        <span class="n">estshu</span> <span class="o">=</span> <span class="n">RudeltShufflingEstimator</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">symbol_block_length</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">symbol_block_length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">symbol_block_length</span><span class="p">)</span>
+
+        <span class="c1"># compute the bootstrap replications</span>
+        <span class="n">bs_Rs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">number_of_bootstraps</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">rep</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_bootstraps</span><span class="p">):</span>
+            <span class="n">bs_symbol_array</span><span class="p">,</span> <span class="n">bs_past_symbol_array</span><span class="p">,</span> <span class="n">bs_current_symbol_array</span> <span class="o">=</span> \
+                <span class="n">data</span><span class="o">.</span><span class="n">get_bootstrap_realisations_symbols</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span>
+                                                        <span class="n">embedding</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                        <span class="n">embedding</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                                        <span class="n">embedding</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_step_size&#39;</span><span class="p">],</span>
+                                                        <span class="n">symbol_block_length</span><span class="o">=</span><span class="n">symbol_block_length</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;estimation_method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;bbc&#39;</span><span class="p">:</span>
+                <span class="n">I_bbc</span><span class="p">,</span> <span class="n">R_bbc</span><span class="p">,</span> <span class="n">bbc_t</span> <span class="o">=</span> \
+                    <span class="n">estbbc</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">bs_symbol_array</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bs_past_symbol_array</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bs_current_symbol_array</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">bs_Rs</span><span class="p">[</span><span class="n">rep</span><span class="p">]</span> <span class="o">=</span> <span class="n">R_bbc</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">HD: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">R_bbc</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; BBC: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">bbc_t</span><span class="p">))</span>
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;estimation_method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;shuffling&#39;</span><span class="p">:</span>
+                <span class="n">I_sh</span><span class="p">,</span> <span class="n">R_sh</span> <span class="o">=</span> <span class="n">estshu</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">bs_symbol_array</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">bs_Rs</span><span class="p">[</span><span class="n">rep</span><span class="p">]</span> <span class="o">=</span> <span class="n">R_sh</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">HD: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">R_sh</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">bs_Rs</span></div>
+
+<div class="viewcode-block" id="OptimizationRudelt.get_temporal_depth_T_D"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.embedding_optimization_ais_Rudelt.OptimizationRudelt.get_temporal_depth_T_D">[docs]</a>    <span class="k">def</span> <span class="nf">get_temporal_depth_T_D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">get_R_thresh</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the temporal depth T_D, the past range for the</span>
+<span class="sd">        &#39;optimal&#39; embedding parameters.</span>
+
+<span class="sd">        Given the maximal history dependence R at each past range T,</span>
+<span class="sd">        (cf get_embeddings_that_maximise_R), first find the smallest T at</span>
+<span class="sd">        which R is maximised (cf get_max_R_T).  If bootstrap replications</span>
+<span class="sd">        for this R are available, get the smallest T at which this R minus</span>
+<span class="sd">        one standard deviation of the bootstrap estimates is attained.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># load data</span>
+        <span class="n">embedding_maximising_R_at_T</span><span class="p">,</span> <span class="n">max_Rs</span> \
+            <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_embeddings_that_maximise_R</span><span class="p">()</span>
+
+        <span class="n">Ts</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">max_Rs</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
+        <span class="n">Rs</span> <span class="o">=</span> <span class="p">[</span><span class="n">max_Rs</span><span class="p">[</span><span class="n">T</span><span class="p">]</span> <span class="k">for</span> <span class="n">T</span> <span class="ow">in</span> <span class="n">Ts</span><span class="p">]</span>
+
+        <span class="c1"># first get the max history dependence, and if available its bootstrap replications</span>
+        <span class="n">max_R</span><span class="p">,</span> <span class="n">max_R_T</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">get_max_R_T</span><span class="p">(</span><span class="n">max_Rs</span><span class="p">)</span>
+
+        <span class="n">number_of_bins_d</span><span class="p">,</span> <span class="n">scaling_k</span> <span class="o">=</span> <span class="n">embedding_maximising_R_at_T</span><span class="p">[</span><span class="n">max_R_T</span><span class="p">]</span>
+
+        <span class="n">embindex</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span><span class="o">.</span><span class="n">index</span><span class="p">((</span><span class="n">max_R_T</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">,</span> <span class="n">scaling_k</span><span class="p">))</span>
+
+        <span class="n">bs_Rs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bs_history_dependence</span><span class="p">[</span><span class="n">embindex</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bs_Rs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">max_R_sd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">bs_Rs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">max_R_sd</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">R_tot_thresh</span> <span class="o">=</span> <span class="n">max_R</span> <span class="o">-</span> <span class="n">max_R_sd</span>
+
+        <span class="n">T_D</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">Ts</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">R</span><span class="p">,</span> <span class="n">T</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">Rs</span><span class="p">,</span> <span class="n">Ts</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">R</span> <span class="o">&gt;=</span> <span class="n">R_tot_thresh</span><span class="p">:</span>
+                <span class="n">T_D</span> <span class="o">=</span> <span class="n">T</span>
+                <span class="k">break</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">get_R_thresh</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">T_D</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">T_D</span><span class="p">,</span> <span class="n">R_tot_thresh</span></div>
+
+<div class="viewcode-block" id="OptimizationRudelt.get_embeddings_that_maximise_R"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.embedding_optimization_ais_Rudelt.OptimizationRudelt.get_embeddings_that_maximise_R">[docs]</a>    <span class="k">def</span> <span class="nf">get_embeddings_that_maximise_R</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                       <span class="n">bbc_tolerance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                       <span class="n">dependent_var</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">,</span>
+                                       <span class="n">get_as_list</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For each T (or d), get the embedding for which R is maximised.</span>
+
+<span class="sd">        For the bbc estimator, here the bbc_tolerance is applied, ie</span>
+<span class="sd">        get the unbiased embeddings that maximise R.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="n">dependent_var</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">bbc_tolerance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">bbc_tolerance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+        <span class="n">max_Rs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">embeddings_that_maximise_R</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span><span class="p">)):</span>
+            <span class="n">embedding</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">past_range_T</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">embedding</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">number_of_bins_d</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">embedding</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="n">scaling_k</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">embedding</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">history_dependence</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">history_dependence</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;estimation_method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;bbc&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbc_term</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;bbc_tolerance&#39;</span><span class="p">]:</span>                          <span class="c1"># ----------------------- TODO check</span>
+                    <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">dependent_var</span> <span class="o">==</span> <span class="s2">&quot;T&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">past_range_T</span> <span class="ow">in</span> <span class="n">embeddings_that_maximise_R</span> \
+                                <span class="ow">or</span> <span class="n">history_dependence</span> <span class="o">&gt;</span> <span class="n">max_Rs</span><span class="p">[</span><span class="n">past_range_T</span><span class="p">]:</span>
+                    <span class="n">max_Rs</span><span class="p">[</span><span class="n">past_range_T</span><span class="p">]</span> <span class="o">=</span> <span class="n">history_dependence</span>
+                    <span class="n">embeddings_that_maximise_R</span><span class="p">[</span><span class="n">past_range_T</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">number_of_bins_d</span><span class="p">,</span> <span class="n">scaling_k</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">dependent_var</span> <span class="o">==</span> <span class="s2">&quot;d&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">number_of_bins_d</span> <span class="ow">in</span> <span class="n">embeddings_that_maximise_R</span> \
+                                <span class="ow">or</span> <span class="n">history_dependence</span> <span class="o">&gt;</span> <span class="n">max_Rs</span><span class="p">[</span><span class="n">number_of_bins_d</span><span class="p">]:</span>
+                    <span class="n">max_Rs</span><span class="p">[</span><span class="n">number_of_bins_d</span><span class="p">]</span> <span class="o">=</span> <span class="n">history_dependence</span>
+                    <span class="n">embeddings_that_maximise_R</span><span class="p">[</span><span class="n">number_of_bins_d</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">past_range_T</span><span class="p">,</span> <span class="n">scaling_k</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">get_as_list</span><span class="p">:</span>
+            <span class="n">embeddings</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">dependent_var</span> <span class="o">==</span> <span class="s2">&quot;T&quot;</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">past_range_T</span> <span class="ow">in</span> <span class="n">embeddings_that_maximise_R</span><span class="p">:</span>
+                    <span class="n">number_of_bins_d</span><span class="p">,</span> <span class="n">scaling_k</span> <span class="o">=</span> <span class="n">embeddings_that_maximise_R</span><span class="p">[</span><span class="n">past_range_T</span><span class="p">]</span>
+                    <span class="n">embeddings</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">past_range_T</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">,</span> <span class="n">scaling_k</span><span class="p">)]</span>
+            <span class="k">elif</span> <span class="n">dependent_var</span> <span class="o">==</span> <span class="s2">&quot;d&quot;</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">number_of_bins_d</span> <span class="ow">in</span> <span class="n">embeddings_that_maximise_R</span><span class="p">:</span>
+                    <span class="n">past_range_T</span><span class="p">,</span> <span class="n">scaling_k</span> <span class="o">=</span> <span class="n">embeddings_that_maximise_R</span><span class="p">[</span><span class="n">number_of_bins_d</span><span class="p">]</span>
+                    <span class="n">embeddings</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">past_range_T</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">,</span> <span class="n">scaling_k</span><span class="p">)]</span>
+            <span class="k">return</span> <span class="n">embeddings</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">embeddings_that_maximise_R</span><span class="p">,</span> <span class="n">max_Rs</span></div>
+
+<div class="viewcode-block" id="OptimizationRudelt.get_information_timescale_tau_R"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.embedding_optimization_ais_Rudelt.OptimizationRudelt.get_information_timescale_tau_R">[docs]</a>    <span class="k">def</span> <span class="nf">get_information_timescale_tau_R</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the information timescale tau_R, a characteristic</span>
+<span class="sd">        timescale of history dependence similar to an autocorrelation</span>
+<span class="sd">        time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">max_Rs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_Rs</span>
+
+        <span class="n">Ts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">sorted</span><span class="p">([</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">max_Rs</span><span class="o">.</span><span class="n">keys</span><span class="p">()]))</span>
+        <span class="n">Rs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">max_Rs</span><span class="p">[</span><span class="n">T</span><span class="p">]</span> <span class="k">for</span> <span class="n">T</span> <span class="ow">in</span> <span class="n">Ts</span><span class="p">])</span>
+
+        <span class="n">R_tot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_R_tot</span><span class="p">()</span>
+
+        <span class="n">T_0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;timescale_minimum_past_range&quot;</span><span class="p">]</span>
+
+        <span class="c1"># get dRs</span>
+        <span class="n">dRs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">R_prev</span> <span class="o">=</span> <span class="mf">0.</span>
+
+        <span class="c1"># No values higher than R_tot are allowed,</span>
+        <span class="c1"># otherwise the information timescale might be</span>
+        <span class="c1"># misestimated because of spurious contributions</span>
+        <span class="c1"># at large T</span>
+        <span class="k">for</span> <span class="n">R</span><span class="p">,</span> <span class="n">T</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">Rs</span><span class="p">[</span><span class="n">Rs</span> <span class="o">&lt;=</span> <span class="n">R_tot</span><span class="p">],</span> <span class="n">Ts</span><span class="p">[</span><span class="n">Rs</span> <span class="o">&lt;=</span> <span class="n">R_tot</span><span class="p">]):</span>
+
+            <span class="c1"># No negative increments are allowed</span>
+            <span class="n">dRs</span> <span class="o">+=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">R</span> <span class="o">-</span> <span class="n">R_prev</span><span class="p">])]</span>
+
+            <span class="c1"># The increment is taken with respect to the highest previous value of R</span>
+            <span class="k">if</span> <span class="n">R</span> <span class="o">&gt;</span> <span class="n">R_prev</span><span class="p">:</span>
+                <span class="n">R_prev</span> <span class="o">=</span> <span class="n">R</span>
+
+        <span class="n">dRs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">dRs</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">Rs</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">dRs</span><span class="p">)),</span>
+                     <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="n">constant_values</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># compute tau_R</span>
+        <span class="n">Ts_0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">Ts</span><span class="p">)</span>
+        <span class="n">dRs_0</span> <span class="o">=</span> <span class="n">dRs</span><span class="p">[</span><span class="n">Ts_0</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">T_0</span><span class="p">]</span>
+
+        <span class="c1"># Only take into considerations contributions beyond T_0</span>
+        <span class="n">Ts_0</span> <span class="o">=</span> <span class="n">Ts_0</span><span class="p">[</span><span class="n">Ts_0</span> <span class="o">&gt;=</span> <span class="n">T_0</span><span class="p">]</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dRs_0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">norm</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
+            <span class="n">tau</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Ts_0</span> <span class="o">-=</span> <span class="n">Ts_0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">tau</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(((</span><span class="n">Ts_0</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">Ts_0</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dRs_0</span><span class="p">)</span> <span class="o">/</span> <span class="n">norm</span>
+        <span class="k">return</span> <span class="n">tau</span></div>
+
+<div class="viewcode-block" id="OptimizationRudelt.get_R_tot"><a class="viewcode-back" href="../../idtxl.html#idtxl.embedding_optimization_ais_Rudelt.OptimizationRudelt.get_R_tot">[docs]</a>    <span class="k">def</span> <span class="nf">get_R_tot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                  <span class="n">return_averaged_R</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="n">max_Rs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_Rs</span>
+
+        <span class="k">if</span> <span class="n">return_averaged_R</span><span class="p">:</span>
+            <span class="n">T_D</span><span class="p">,</span> <span class="n">R_tot_thresh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_temporal_depth_T_D</span><span class="p">(</span><span class="n">get_R_thresh</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="n">Ts</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">max_Rs</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
+            <span class="n">Rs</span> <span class="o">=</span> <span class="p">[</span><span class="n">max_Rs</span><span class="p">[</span><span class="n">T</span><span class="p">]</span> <span class="k">for</span> <span class="n">T</span> <span class="ow">in</span> <span class="n">Ts</span><span class="p">]</span>
+
+            <span class="n">T_max</span> <span class="o">=</span> <span class="n">T_D</span>
+            <span class="k">for</span> <span class="n">R</span><span class="p">,</span> <span class="n">T</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">Rs</span><span class="p">,</span> <span class="n">Ts</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">T</span> <span class="o">&lt;</span> <span class="n">T_D</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">T_max</span> <span class="o">=</span> <span class="n">T</span>
+                <span class="k">if</span> <span class="n">R</span> <span class="o">&lt;</span> <span class="n">R_tot_thresh</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">([</span><span class="n">R</span> <span class="k">for</span> <span class="n">R</span><span class="p">,</span> <span class="n">T</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">Rs</span><span class="p">,</span> <span class="n">Ts</span><span class="p">)</span> <span class="k">if</span> <span class="n">T_D</span> <span class="o">&lt;=</span> <span class="n">T</span> <span class="o">&lt;</span> <span class="n">T_max</span><span class="p">])</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">temporal_depth_T_D</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_temporal_depth_T_D</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="n">max_Rs</span><span class="p">[</span><span class="n">temporal_depth_T_D</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="OptimizationRudelt.compute_CIs"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.embedding_optimization_ais_Rudelt.OptimizationRudelt.compute_CIs">[docs]</a>    <span class="k">def</span> <span class="nf">compute_CIs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                    <span class="n">data</span><span class="p">,</span>
+                    <span class="n">target_R</span><span class="o">=</span><span class="s1">&#39;R_max&#39;</span><span class="p">,</span>
+                    <span class="n">symbol_block_length</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute bootstrap replications of the history dependence estimate</span>
+<span class="sd">        which can be used to obtain confidence intervals.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data : data_spiketime object</span>
+<span class="sd">                Input data</span>
+<span class="sd">            target_R : String</span>
+<span class="sd">                One of &#39;R_max&#39;, &#39;R_tot&#39; or &#39;nonessential&#39;.</span>
+<span class="sd">                If set to R_max, replications of R are produced for the T at which</span>
+<span class="sd">                R is maximised.</span>
+<span class="sd">                If set to R_tot, replications of R are produced for T = T_D (cf</span>
+<span class="sd">                get_temporal_depth_T_D).</span>
+<span class="sd">                If set to nonessential, replications of R are produced for each T</span>
+<span class="sd">                (one embedding per T, cf get_embeddings_that_maximise_R).  These</span>
+<span class="sd">                are not otherwise used in the analysis and are probably only useful</span>
+<span class="sd">                if the resulting plot is visually inspected, so in most cases it can</span>
+<span class="sd">                be set to zero.</span>
+<span class="sd">            symbol_block_length : int</span>
+<span class="sd">                The number of symbols that should be drawn in each block for bootstrap resampling</span>
+<span class="sd">                If it is set to None (recommended), the length is automatically chosen, based</span>
+<span class="sd">                on heuristics</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="n">target_R</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;nonessential&#39;</span><span class="p">,</span> <span class="s1">&#39;R_max&#39;</span><span class="p">,</span> <span class="s1">&#39;R_tot&#39;</span><span class="p">]</span>
+
+        <span class="n">number_of_bootstraps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;number_of_bootstraps_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target_R</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="n">number_of_bootstraps</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">embedding_maximising_R_at_T</span><span class="p">,</span> <span class="n">max_Rs</span> \
+            <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_embeddings_that_maximise_R</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embedding_maximising_R_at_T</span> <span class="o">=</span> <span class="n">embedding_maximising_R_at_T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_Rs</span> <span class="o">=</span> <span class="n">max_Rs</span>
+
+        <span class="k">if</span> <span class="n">target_R</span> <span class="o">==</span> <span class="s1">&#39;nonessential&#39;</span><span class="p">:</span>
+            <span class="c1"># bootstrap R for unessential Ts (not required for the main analysis)</span>
+            <span class="n">embeddings</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">past_range_T</span> <span class="ow">in</span> <span class="n">embedding_maximising_R_at_T</span><span class="p">:</span>
+                <span class="n">number_of_bins_d</span><span class="p">,</span> <span class="n">scaling_k</span> <span class="o">=</span> <span class="n">embedding_maximising_R_at_T</span><span class="p">[</span><span class="n">past_range_T</span><span class="p">]</span>
+                <span class="n">embeddings</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">past_range_T</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">,</span> <span class="n">scaling_k</span><span class="p">)]</span>
+
+        <span class="k">elif</span> <span class="n">target_R</span> <span class="o">==</span> <span class="s1">&#39;R_max&#39;</span><span class="p">:</span>
+            <span class="c1"># bootstrap R for the max R, to get a good estimate for the standard deviation</span>
+            <span class="c1"># which is used to determine R_tot</span>
+            <span class="n">max_R</span><span class="p">,</span> <span class="n">max_R_T</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">get_max_R_T</span><span class="p">(</span><span class="n">max_Rs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_R</span> <span class="o">=</span> <span class="n">max_R</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_R_T</span> <span class="o">=</span> <span class="n">max_R_T</span>
+            <span class="n">number_of_bins_d</span><span class="p">,</span> <span class="n">scaling_k</span> <span class="o">=</span> <span class="n">embedding_maximising_R_at_T</span><span class="p">[</span><span class="n">max_R_T</span><span class="p">]</span>
+            <span class="n">embeddings</span> <span class="o">=</span> <span class="p">[(</span><span class="n">max_R_T</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">,</span> <span class="n">scaling_k</span><span class="p">)]</span>
+
+        <span class="k">elif</span> <span class="n">target_R</span> <span class="o">==</span> <span class="s1">&#39;R_tot&#39;</span><span class="p">:</span>
+            <span class="n">T_D</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_temporal_depth_T_D</span><span class="p">()</span>
+            <span class="n">number_of_bins_d</span><span class="p">,</span> <span class="n">scaling_k</span> <span class="o">=</span> <span class="n">embedding_maximising_R_at_T</span><span class="p">[</span><span class="n">T_D</span><span class="p">]</span>
+
+            <span class="n">embeddings</span> <span class="o">=</span> <span class="p">[(</span><span class="n">T_D</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">,</span> <span class="n">scaling_k</span><span class="p">)]</span>
+
+        <span class="k">for</span> <span class="n">embedding</span> <span class="ow">in</span> <span class="n">embeddings</span><span class="p">:</span>
+
+            <span class="n">embindex</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">embedding</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;bs_history_dependence&quot;</span><span class="p">):</span>
+                <span class="n">stored_bs_Rs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bs_history_dependence</span><span class="p">[</span><span class="n">embindex</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bs_history_dependence</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+                <span class="n">stored_bs_Rs</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stored_bs_Rs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="n">number_of_stored_bootstraps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">stored_bs_Rs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">number_of_stored_bootstraps</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">number_of_bootstraps</span> <span class="o">&gt;</span> <span class="n">number_of_stored_bootstraps</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">bs_R</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">get_bootstrap_history_dependence</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>
+                                                      <span class="n">embedding</span><span class="p">,</span>
+                                                      <span class="n">number_of_bootstraps</span> <span class="o">-</span> <span class="n">number_of_stored_bootstraps</span><span class="p">,</span>
+                                                      <span class="n">symbol_block_length</span><span class="o">=</span><span class="n">symbol_block_length</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">stored_bs_Rs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">bs_R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">stored_bs_Rs</span><span class="p">,</span> <span class="n">bs_R</span><span class="p">])</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">bs_history_dependence</span><span class="p">[</span><span class="n">embindex</span><span class="p">]</span> <span class="o">=</span> <span class="n">bs_R</span></div>
+
+<div class="viewcode-block" id="OptimizationRudelt.analyse_auto_MI"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.embedding_optimization_ais_Rudelt.OptimizationRudelt.analyse_auto_MI">[docs]</a>    <span class="k">def</span> <span class="nf">analyse_auto_MI</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spike_times</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the auto MI for the spike times.  If it is available from file, load</span>
+<span class="sd">        it, else compute it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">auto_MI_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;delay&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;auto_MI&quot;</span><span class="p">:</span> <span class="p">[]</span>
+        <span class="p">}</span>
+        <span class="n">auto_MI_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">auto_MI_bin_size</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;auto_MI_bin_size_set&#39;</span><span class="p">]:</span>
+            <span class="n">number_of_delays</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;auto_MI_max_delay&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">auto_MI_bin_size</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+            <span class="c1"># perform the MI analysis</span>
+            <span class="n">auto_MI</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_auto_MI</span><span class="p">(</span><span class="n">spike_times</span><span class="p">,</span> <span class="n">auto_MI_bin_size</span><span class="p">,</span> <span class="n">number_of_delays</span><span class="p">)</span>
+
+            <span class="n">auto_MI_data</span><span class="p">[</span><span class="s2">&quot;delay&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">number_of_delays</span><span class="p">]</span>
+
+            <span class="n">auto_MI_dict</span><span class="p">[</span><span class="n">auto_MI_bin_size</span><span class="p">]</span> <span class="o">=</span> <span class="n">auto_MI</span>
+
+        <span class="n">auto_MI_data</span><span class="p">[</span><span class="s1">&#39;auto_MI&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">auto_MI_dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">auto_MI</span> <span class="o">=</span> <span class="n">auto_MI_data</span></div>
+
+<div class="viewcode-block" id="OptimizationRudelt.get_auto_MI"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.embedding_optimization_ais_Rudelt.OptimizationRudelt.get_auto_MI">[docs]</a>    <span class="k">def</span> <span class="nf">get_auto_MI</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spike_times</span><span class="p">,</span> <span class="n">bin_size</span><span class="p">,</span> <span class="n">number_of_delays</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the auto mutual information in the neuron&#39;s activity, a</span>
+<span class="sd">        measure closely related to history dependence.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">binned_neuron_activity</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">get_binned_neuron_activity</span><span class="p">(</span><span class="n">spike_times</span><span class="p">,</span> <span class="n">bin_size</span><span class="p">,</span> <span class="n">relative_to_median_activity</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">p_spike</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">binned_neuron_activity</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">binned_neuron_activity</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">H_spiking</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">get_shannon_entropy</span><span class="p">([</span><span class="n">p_spike</span><span class="p">,</span>
+                                         <span class="mi">1</span> <span class="o">-</span> <span class="n">p_spike</span><span class="p">])</span>
+
+        <span class="n">auto_MIs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">number_of_delays</span><span class="p">)</span>
+
+        <span class="c1"># compute auto MI</span>
+        <span class="k">for</span> <span class="n">delay</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_delays</span><span class="p">):</span>
+
+            <span class="n">symbol_counts</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">number_of_symbols</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">binned_neuron_activity</span><span class="p">)</span> <span class="o">-</span> <span class="n">delay</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">symbols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span> <span class="o">*</span> <span class="n">binned_neuron_activity</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">binned_neuron_activity</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">delay</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_symbols</span><span class="p">)])</span>
+            <span class="n">symbol_counts</span> <span class="o">+=</span> <span class="p">[</span><span class="nb">dict</span><span class="p">([(</span><span class="n">unq_symbol</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">symbols</span> <span class="o">==</span> <span class="n">unq_symbol</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+                                    <span class="k">for</span> <span class="n">unq_symbol</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">symbols</span><span class="p">)])]</span>
+
+            <span class="n">symbol_counts</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">add_up_dicts</span><span class="p">(</span><span class="n">symbol_counts</span><span class="p">)</span>
+            <span class="n">number_of_symbols</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">symbol_counts</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+            <span class="n">H_joint</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">get_shannon_entropy</span><span class="p">([</span><span class="n">number_of_occurrences</span> <span class="o">/</span> <span class="n">number_of_symbols</span>
+                                           <span class="k">for</span> <span class="n">number_of_occurrences</span> <span class="ow">in</span> <span class="n">symbol_counts</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+
+            <span class="c1"># I(X : Y) = H(X) - H(X|Y) = H(X) - (H(X,Y) - H(Y)) = H(X) + H(Y) - H(X,Y)</span>
+            <span class="c1"># auto_MI = 2 * H_spiking - H_joint</span>
+            <span class="n">auto_MIs</span><span class="p">[</span><span class="n">delay</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">H_joint</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">H_spiking</span>  <span class="c1"># normalized auto MI = auto MI / H_spiking</span>
+
+        <span class="k">return</span> <span class="n">auto_MIs</span></div>
+
+<div class="viewcode-block" id="OptimizationRudelt.optimize"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.embedding_optimization_ais_Rudelt.OptimizationRudelt.optimize">[docs]</a>    <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">processes</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Optimize the embedding parameters of spike time data using the Rudelt history dependence estimator.</span>
+
+<span class="sd">        References:</span>
+
+<span class="sd">            [1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding</span>
+<span class="sd">                optimization reveals long-lasting history dependence in</span>
+<span class="sd">                neural spiking activity, 2021, PLOS Computational Biology, 17(6)</span>
+
+<span class="sd">            [2]: https://github.com/Priesemann-Group/hdestimator</span>
+
+<span class="sd">        implemented in idtxl by Michael Lindner, Göttingen 2021</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data : Data_spiketime instance</span>
+<span class="sd">                raw data for analysis</span>
+<span class="sd">            processes : list of int</span>
+<span class="sd">                index of processes;</span>
+<span class="sd">                spike times are optimized all processes specified in the list separately.</span>
+
+<span class="sd">        Returns: # -------------------------------------------------------------------------------------------------------- TODO</span>
+<span class="sd">            ResultsSingleProcessRudelt instance</span>
+<span class="sd">                results of Rudelt optimization, see documentation of</span>
+<span class="sd">                ResultsSingleProcessRudelt()</span>
+<span class="sd">            if visulization in settings was set True (see class OptimizationRudelt):</span>
+<span class="sd">                .eps images are created for each optimized process containing:</span>
+<span class="sd">                    - optimized values for the process</span>
+<span class="sd">                    - graph for the history dependence</span>
+<span class="sd">                    - graph for auto mutual information (if calculated)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># check input data</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">!=</span> <span class="n">Data_spiketime</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input Data nneds to be Data_spiketime object but is defined as: &#39;</span>
+                             <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)))</span>
+
+        <span class="c1"># check input process list</span>
+        <span class="k">if</span> <span class="n">processes</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
+            <span class="n">processes</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">n_processes</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">processes</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">processes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Processes were not specified correctly: &#39;</span>
+                             <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">processes</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+            <span class="kn">import</span> <span class="nn">pprint</span>
+            <span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># open result dict</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">ResultsSingleProcessRudelt</span><span class="p">(</span>
+            <span class="n">processes</span><span class="o">=</span><span class="n">processes</span><span class="p">)</span>
+
+        <span class="c1"># start optimizing given processes</span>
+        <span class="n">process_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">process</span> <span class="ow">in</span> <span class="n">processes</span><span class="p">:</span>
+
+            <span class="c1"># optimize single process</span>
+            <span class="n">single_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimize_single_run</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">process</span><span class="p">)</span>
+
+            <span class="c1"># add results of single process to result object</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">_add_single_result</span><span class="p">(</span>
+                <span class="n">process_count</span><span class="o">=</span><span class="n">process_count</span><span class="p">,</span>
+                <span class="n">process</span><span class="o">=</span><span class="n">process</span><span class="p">,</span>
+                <span class="n">settings</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span>
+                <span class="n">results</span><span class="o">=</span><span class="n">single_result</span><span class="p">)</span>
+
+            <span class="n">process_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;visualization&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;output_path&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
+                     <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_process</span><span class="si">{}</span><span class="s1">.svg&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;output_prefix&#39;</span><span class="p">],</span> <span class="n">process</span><span class="p">))</span>
+                <span class="n">utl</span><span class="o">.</span><span class="n">hde_visualize_results</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">process</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+            <span class="c1"># remove results from single process from self</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_subresults_single_process</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">results</span></div>
+
+<div class="viewcode-block" id="OptimizationRudelt.optimize_single_run"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.embedding_optimization_ais_Rudelt.OptimizationRudelt.optimize_single_run">[docs]</a>    <span class="k">def</span> <span class="nf">optimize_single_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            optimizes a single realisation of spike time data given the process number</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                data : Data_spiketime instance</span>
+<span class="sd">                    raw data for analysis</span>
+<span class="sd">                process : int</span>
+<span class="sd">                    index of process;</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">                DotDict</span>
+<span class="sd">                    with the following keys</span>
+
+<span class="sd">                    Process : int</span>
+<span class="sd">                        Process that was optimized</span>
+<span class="sd">                    estimation_method : String</span>
+<span class="sd">                        Estimation method that was used for optimization</span>
+<span class="sd">                    T_D : float</span>
+<span class="sd">                        Estimated optimal value for the temporal depth TD</span>
+<span class="sd">                    tau_R :</span>
+<span class="sd">                        Information timescale tau_R, a characteristic timescale of history</span>
+<span class="sd">                        dependence similar to an autocorrelation time.</span>
+<span class="sd">                    R_tot : float</span>
+<span class="sd">                        Estimated value for the total history dependence Rtot,</span>
+<span class="sd">                    AIS_tot : float</span>
+<span class="sd">                        Estimated value for the total active information storage</span>
+<span class="sd">                    opt_number_of_bins_d : int</span>
+<span class="sd">                        Number of bins d for the embedding that yields (R̂tot ,T̂D)</span>
+<span class="sd">                    opt_scaling_k : int</span>
+<span class="sd">                        Scaling exponent κ for the embedding that yields (R̂tot , T̂D)</span>
+<span class="sd">                    opt_first_bin_size : int</span>
+<span class="sd">                        Size of the first bin τ1 for the embedding that yields (R̂tot , T̂D ),</span>
+<span class="sd">                    history_dependence : array with floating-point values</span>
+<span class="sd">                        Estimated history dependence for each embedding</span>
+<span class="sd">                    firing_rate : float</span>
+<span class="sd">                        Firing rate of the neuron/ spike train</span>
+<span class="sd">                    recording_length : float</span>
+<span class="sd">                        Length of the recording (in seconds)</span>
+<span class="sd">                    H_spiking : float</span>
+<span class="sd">                        Entropy of the spike times</span>
+
+<span class="sd">            if analyse_auto_MI was set to True additionally:</span>
+<span class="sd">                auto_MI : dict</span>
+<span class="sd">                    numpy array of MI values for each delay</span>
+<span class="sd">                auto_MI_delays : list of int</span>
+<span class="sd">                    list of delays depending on the given auto_MI_bin_sizes and auto_MI_max_delay</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">process</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Process is not specified correctly: &#39;</span>
+                             <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">process</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="o">=</span> <span class="n">process</span>
+
+        <span class="c1"># get history dependence</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">Get History dependence</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;estimation_method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;bbc&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">history_dependence</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbc_term</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">get_history_dependence</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">process</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;estimation_method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;shuffling&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">history_dependence</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">get_history_dependence</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">process</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">Compute CI</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># get bootstrap history dependence (CI)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;R_max&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_CIs</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>
+                         <span class="n">target_R</span><span class="o">=</span><span class="s1">&#39;R_max&#39;</span><span class="p">,</span>
+                         <span class="n">symbol_block_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;symbol_block_length&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;R_tot&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_CIs</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>
+                         <span class="n">target_R</span><span class="o">=</span><span class="s1">&#39;R_tot&#39;</span><span class="p">,</span>
+                         <span class="n">symbol_block_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;symbol_block_length&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;R_nonessential&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_CIs</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>
+                         <span class="n">target_R</span><span class="o">=</span><span class="s1">&#39;nonessential&#39;</span><span class="p">,</span>
+                         <span class="n">symbol_block_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;symbol_block_length&#39;</span><span class="p">])</span>
+
+        <span class="c1"># analyse auto MI</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;analyse_auto_MI&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Analyse auto MI</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">spike_times</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_spike_times_single</span><span class="p">(</span><span class="n">process</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">analyse_auto_MI</span><span class="p">(</span><span class="n">spike_times</span><span class="p">)</span>
+
+
+        <span class="c1"># get output values</span>
+        <span class="n">T_D</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_temporal_depth_T_D</span><span class="p">()</span>
+        <span class="n">tau_R</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_information_timescale_tau_R</span><span class="p">()</span>
+        <span class="n">R_tot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_R_tot</span><span class="p">()</span>
+        <span class="n">opt_number_of_bins_d</span><span class="p">,</span> <span class="n">opt_scaling_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedding_maximising_R_at_T</span><span class="p">[</span><span class="n">T_D</span><span class="p">]</span>
+        <span class="n">max_Rs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_Rs</span>
+        <span class="n">mr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">max_Rs</span><span class="o">.</span><span class="n">items</span><span class="p">()),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">HD_max_R</span> <span class="o">=</span> <span class="n">mr</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">opt_first_bin_size</span> <span class="o">=</span> <span class="n">newton</span><span class="p">(</span><span class="k">lambda</span> <span class="n">first_bin_size</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_past_range</span><span class="p">(</span><span class="n">opt_number_of_bins_d</span><span class="p">,</span>
+                                                              <span class="n">first_bin_size</span><span class="p">,</span>
+                                                              <span class="n">opt_scaling_k</span><span class="p">)</span> <span class="o">-</span> <span class="n">T_D</span><span class="p">,</span>
+                                    <span class="mf">0.005</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-03</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+        <span class="n">firing_rate</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_firingrate</span><span class="p">(</span><span class="n">process</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_step_size&#39;</span><span class="p">])</span>
+        <span class="n">recording_length</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_recording_length</span><span class="p">(</span><span class="n">process</span><span class="p">)</span>
+        <span class="n">H_spiking</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_H_spiking</span><span class="p">(</span><span class="n">process</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_step_size&#39;</span><span class="p">])</span>
+
+        <span class="c1"># get CI bounds</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;return_averaged_R&#39;</span><span class="p">]:</span>
+            <span class="n">embedding</span> <span class="o">=</span> <span class="p">(</span><span class="n">T_D</span><span class="p">,</span>
+                         <span class="n">opt_number_of_bins_d</span><span class="p">,</span>
+                         <span class="n">opt_scaling_k</span><span class="p">)</span>
+            <span class="n">emb_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">embedding</span><span class="p">)</span>
+            <span class="n">R_tot_CI_lo</span><span class="p">,</span> <span class="n">R_tot_CI_hi</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">get_CI_bounds</span><span class="p">(</span><span class="n">R_tot</span><span class="p">,</span>
+                                                         <span class="bp">self</span><span class="o">.</span><span class="n">bs_history_dependence</span><span class="p">[</span><span class="n">emb_ind</span><span class="p">],</span>
+                                                         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;bootstrap_CI_use_sd&#39;</span><span class="p">],</span>
+                                                         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;bootstrap_CI_percentile_lo&#39;</span><span class="p">],</span>
+                                                         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;bootstrap_CI_percentile_hi&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">R_tot_CI_lo</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">R_tot_CI_hi</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">R_tot_CI</span> <span class="o">=</span> <span class="p">[</span><span class="n">R_tot_CI_lo</span><span class="p">,</span> <span class="n">R_tot_CI_hi</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Process: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">process</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;T_D: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">T_D</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;tau_R: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">tau_R</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;R_tot: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">R_tot</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;R_tot_CI: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">R_tot_CI</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;opt_number_of_bins_d: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">opt_number_of_bins_d</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;opt_scaling_k: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">opt_scaling_k</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;opt_first_bin_size: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">opt_first_bin_size</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;firing_rate: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">firing_rate</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;recording_length: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">recording_length</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;H_spiking: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">H_spiking</span><span class="p">))</span>
+
+        <span class="c1"># create output dict</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Process&#39;</span><span class="p">:</span> <span class="n">process</span><span class="p">,</span>
+                   <span class="s1">&#39;estimation_method&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;estimation_method&#39;</span><span class="p">],</span>
+                   <span class="s1">&#39;T_D&#39;</span><span class="p">:</span> <span class="n">T_D</span><span class="p">,</span>
+                   <span class="s1">&#39;tau_R&#39;</span><span class="p">:</span> <span class="n">tau_R</span><span class="p">,</span>
+                   <span class="s1">&#39;R_tot&#39;</span><span class="p">:</span> <span class="n">R_tot</span><span class="p">,</span>
+                   <span class="s1">&#39;R_tot_CI&#39;</span><span class="p">:</span> <span class="n">R_tot_CI</span><span class="p">,</span>
+                   <span class="s1">&#39;AIS_tot&#39;</span><span class="p">:</span> <span class="n">R_tot</span> <span class="o">*</span> <span class="n">H_spiking</span><span class="p">,</span>
+                   <span class="s1">&#39;opt_number_of_bins_d&#39;</span><span class="p">:</span> <span class="n">opt_number_of_bins_d</span><span class="p">,</span>
+                   <span class="s1">&#39;opt_scaling_k&#39;</span><span class="p">:</span> <span class="n">opt_scaling_k</span><span class="p">,</span>
+                   <span class="s1">&#39;opt_first_bin_size&#39;</span><span class="p">:</span> <span class="n">opt_first_bin_size</span><span class="p">,</span>
+                   <span class="s1">&#39;history_dependence&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">history_dependence</span><span class="p">,</span>
+                   <span class="s1">&#39;firing_rate&#39;</span><span class="p">:</span> <span class="n">firing_rate</span><span class="p">,</span>
+                   <span class="s1">&#39;recording_length&#39;</span><span class="p">:</span> <span class="n">recording_length</span><span class="p">,</span>
+                   <span class="s1">&#39;H_spiking&#39;</span><span class="p">:</span> <span class="n">H_spiking</span><span class="p">,</span>
+                   <span class="s1">&#39;max_R&#39;</span><span class="p">:</span> <span class="n">max_Rs</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;analyse_auto_MI&#39;</span><span class="p">]:</span>
+            <span class="n">results</span><span class="p">[</span><span class="s1">&#39;auto_MI&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_MI</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;auto_MI&#39;</span><span class="p">)</span>
+            <span class="n">results</span><span class="p">[</span><span class="s1">&#39;auto_MI_delays&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_MI</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;delay&#39;</span><span class="p">)</span>
+
+        <span class="n">results_d</span> <span class="o">=</span> <span class="n">DotDict</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">results_d</span></div>
+
+<div class="viewcode-block" id="OptimizationRudelt.remove_subresults_single_process"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.embedding_optimization_ais_Rudelt.OptimizationRudelt.remove_subresults_single_process">[docs]</a>    <span class="k">def</span> <span class="nf">remove_subresults_single_process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;delete results from self from single process&quot;&quot;&quot;</span>
+
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">bs_history_dependence</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedding_maximising_R_at_T</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">history_dependence</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_R</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_Rs</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_R_T</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span>
+        <span class="c1"># del self.T_D</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;analyse_auto_MI&#39;</span><span class="p">]:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_MI</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">H_spiking</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;estimation_method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;bbc&#39;</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbc_term</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">idtxl.embedding_optimization_ais_Rudelt</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

@@ -57,8 +57,8 @@ class DotDict(dict):
 class AdjacencyMatrix():
     """Adjacency matrix representing inferred networks."""
     def __init__(self, n_nodes, weight_type):
-        self._edge_matrix = np.zeros((n_nodes, n_nodes), dtype=bool)
-        self._weight_matrix = np.zeros((n_nodes, n_nodes), dtype=weight_type)
+        self.edge_matrix = np.zeros((n_nodes, n_nodes), dtype=bool)
+        self.weight_matrix = np.zeros((n_nodes, n_nodes), dtype=weight_type)
         if np.issubdtype(weight_type, np.integer):
             self._weight_type = np.integer
         elif np.issubdtype(weight_type, np.floating):
@@ -71,10 +71,10 @@ class AdjacencyMatrix():
 
     def n_nodes(self):
         """Return number of nodes."""
-        return self._edge_matrix.shape[0]
+        return self.edge_matrix.shape[0]
 
     def n_edges(self):
-        return self._edge_matrix.sum()
+        return self.edge_matrix.sum()
 
     def add_edge(self, i, j, weight):
         """Add weighted edge (i, j) to adjacency matrix."""
@@ -82,8 +82,8 @@ class AdjacencyMatrix():
             raise TypeError(
                 'Can not add weight of type {0} to adjacency matrix of type '
                 '{1}.'.format(type(weight), self._weight_type))
-        self._edge_matrix[i, j] = True
-        self._weight_matrix[i, j] = weight
+        self.edge_matrix[i, j] = True
+        self.weight_matrix[i, j] = weight
 
     def add_edge_list(self, i_list, j_list, weights):
         """Add multiple weighted edges (i, j) to adjacency matrix."""
@@ -98,8 +98,8 @@ class AdjacencyMatrix():
 
     def print_matrix(self):
         """Print weight and edge matrix."""
-        print(self._edge_matrix)
-        print(self._weight_matrix)
+        print(self.edge_matrix)
+        print(self.weight_matrix)
 
     def get_edge_list(self):
         """Return list of weighted edges.
@@ -112,8 +112,8 @@ class AdjacencyMatrix():
         ind = 0
         for i in range(self.n_nodes()):
             for j in range(self.n_nodes()):
-                if self._edge_matrix[i, j]:
-                    edge_list[ind] = (i, j, self._weight_matrix[i, j])
+                if self.edge_matrix[i, j]:
+                    edge_list[ind] = (i, j, self.weight_matrix[i, j])
                     ind += 1
         return edge_list
 
@@ -554,6 +554,31 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
         else:
             raise KeyError('No entry with network inference measure found for '
                            'current target')
+
+    def get_source_variables(self, fdr=True):
+        """Return list of inferred past source variables for all targets.
+
+        Return a list of dictionaries, where each dictionary holds the selected
+        past source variables for one analysed target. The list may be used as
+        and input to significant subgraph mining in the postprocessing module.
+
+        Args:
+            fdr : bool [optional]
+                return FDR-corrected results (default=True)
+
+        Returns:
+            list of dicts
+                selected past source variables for each target
+        """
+        source_variables = []
+        for target in self.targets_analysed:
+            source_variables.append(
+                {
+                    'target': target,
+                    'selected_vars_sources': self.get_single_target(target=target, fdr=fdr)['selected_vars_sources']
+                }
+            )
+        return source_variables
 
     def get_target_delays(self, target, criterion='max_te', fdr=True):
         """Return list of information-transfer delays for a given target.
@@ -1036,3 +1061,119 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
         """
         v = self.get_single_target(target)['selected_vars_sources']
         return np.unique(np.array([s[0] for s in v]))
+
+
+class ResultsSingleProcessRudelt():
+    """Store results of single process analysis.
+
+    Provides a container for the results Rudelt optimization algorithm. To
+    obtain results for individual processes, call the .get_single_process()
+    method (see docstring for details).
+
+    Note that for convenience all dictionaries in this class can additionally
+    be accessed using dot-notation:
+
+    >>> res_network.settings.estimation_method
+
+    or
+
+    >>> res_network.settings['estimation_method'].
+
+    Attributes:
+        settings : dict
+            settings used for estimation of information theoretic measures
+        data_properties : dict
+            data properties, contains
+                - n_processes : int - total number of processes analysed
+        processes_analysed : list
+            list of analysed processes
+    """
+
+    def __init__(self, processes):
+        self.settings = DotDict({})
+        self.data_properties = DotDict({
+                'n_processes': len(processes)
+        })
+        self.processes_analysed = np.zeros(shape=3, dtype=int)
+        self._single_process = {}
+        for ii in processes:
+            self._single_process[ii] = {}
+
+    @property
+    def processes_analysed(self):
+        """Get index of the current_value."""
+        return self._processes_analysed
+
+    @processes_analysed.setter
+    def processes_analysed(self, processes):
+        self._processes_analysed = processes
+
+    def _add_single_result(self, process_count, process, results, settings):
+        """Add analysis result for a single process."""
+        #self._check_result(process, settings)
+        self.settings.update(DotDict(settings))
+        self._single_process[process] = DotDict(results)
+        self.processes_analysed[process_count] = process #list(self._single_process.keys())
+
+    def get_single_process(self, process):
+        """Return results for a single process.
+
+        Return results for individual processes, contains for each process
+
+        Args:
+            process : int
+                process id
+
+        Returns:
+            dict
+                results for single process. Note that for convenience
+                dictionary entries can either be accessed via keywords
+                (result['selected_vars']) or via dot-notation
+                (result.selected_vars). Contains keys
+
+                Process : int
+                    Process that was optimized
+                estimation_method : String
+                    Estimation method that was used for optimization
+                T_D : float
+                    Estimated optimal value for the temporal depth TD
+                tau_R :
+                    Information timescale tau_R, a characteristic timescale of history
+                    dependence similar to an autocorrelation time.
+                R_tot : float
+                    Estimated value for the total history dependence Rtot,
+                AIS_tot : float
+                    Estimated value for the total active information storage
+                opt_number_of_bins_d : int
+                    Number of bins d for the embedding that yields (R̂tot ,T̂D)
+                opt_scaling_k : int
+                    Scaling exponent κ for the embedding that yields (R̂tot , T̂D)
+                opt_first_bin_size : int
+                    Size of the first bin τ1 for the embedding that yields (R̂tot , T̂D ),
+                history_dependence : array with floating-point values
+                    Estimated history dependence for each embedding
+                firing_rate : float
+                    Firing rate of the neuron/ spike train
+                recording_length : float
+                    Length of the recording (in seconds)
+                H_spiking : float
+                    Entropy of the spike times
+
+                if analyse_auto_MI was set to True additionally:
+                auto_MI : dict
+                    numpy array of MI values for each delay
+                auto_MI_delays : list of int
+                    list of delays depending on the given auto_MI_bin_sizes and auto_MI_max_delay
+
+        """
+        # Return required key from required _single_process dictionary
+        if process not in self.processes_analysed:
+            raise RuntimeError('No results for process {0}.'.format(process))
+
+        try:
+            return self._single_process[process]
+        except AttributeError:
+            raise RuntimeError('No results have been added.')
+        except KeyError:
+            raise RuntimeError(
+                'No results for process {0}.'.format(process))

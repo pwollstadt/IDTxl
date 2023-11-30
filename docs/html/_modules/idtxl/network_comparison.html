@@ -5,13 +5,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>idtxl.network_comparison &#8212; IDTxl 1.0 documentation</title>
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <title>idtxl.network_comparison &#8212; IDTxl 1.4 documentation</title>
     <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
     <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -31,7 +32,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.4 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl.network_comparison</a></li> 
       </ul>
@@ -46,12 +47,12 @@
 <span></span><span class="sd">&quot;&quot;&quot;Perform inference statistics on groups of data.&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">copy</span> <span class="k">as</span> <span class="nn">cp</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="k">import</span> <span class="n">binom</span>
-<span class="kn">from</span> <span class="nn">.estimator</span> <span class="k">import</span> <span class="n">find_estimator</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">stats</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">idtxl_utils</span> <span class="k">as</span> <span class="n">utils</span>
-<span class="kn">from</span> <span class="nn">.network_analysis</span> <span class="k">import</span> <span class="n">NetworkAnalysis</span>
-<span class="kn">from</span> <span class="nn">.results</span> <span class="k">import</span> <span class="n">ResultsNetworkComparison</span><span class="p">,</span> <span class="n">DotDict</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">binom</span>
+<span class="kn">from</span> <span class="nn">.estimator</span> <span class="kn">import</span> <span class="n">find_estimator</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">idtxl_utils</span> <span class="k">as</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">.network_analysis</span> <span class="kn">import</span> <span class="n">NetworkAnalysis</span>
+<span class="kn">from</span> <span class="nn">.results</span> <span class="kn">import</span> <span class="n">ResultsNetworkComparison</span><span class="p">,</span> <span class="n">DotDict</span>
 
 
 <div class="viewcode-block" id="NetworkComparison"><a class="viewcode-back" href="../../idtxl_network_comparison.html#idtxl.network_comparison.NetworkComparison">[docs]</a><span class="k">class</span> <span class="nc">NetworkComparison</span><span class="p">(</span><span class="n">NetworkAnalysis</span><span class="p">):</span>
@@ -84,7 +85,7 @@
 <span class="sd">    variables about the target is used as a test statistic.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
 <div class="viewcode-block" id="NetworkComparison.compare_links_within"><a class="viewcode-back" href="../../idtxl_network_comparison.html#idtxl.network_comparison.NetworkComparison.compare_links_within">[docs]</a>    <span class="k">def</span> <span class="nf">compare_links_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">link_a</span><span class="p">,</span> <span class="n">link_b</span><span class="p">,</span> <span class="n">network</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
@@ -301,7 +302,6 @@
 
         <span class="c1"># Main comparison.</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">-------------------------- (1) create union of networks&#39;</span><span class="p">)</span>
-        <span class="n">network_all</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">network_set_a</span><span class="p">,</span> <span class="n">network_set_b</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_create_union</span><span class="p">(</span><span class="o">*</span><span class="n">network_all</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">-------------------------- (2) calculate differences in TE &#39;</span>
               <span class="s1">&#39;values&#39;</span><span class="p">)</span>
@@ -505,7 +505,7 @@
         <span class="c1"># Compare raw TE values between conditions.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cmi_comp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compare_union_cmi_within</span><span class="p">(</span><span class="n">cmi_a</span><span class="p">,</span> <span class="n">cmi_b</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_calculate_cmi_diff_between</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_calculate_cmi_diff_between</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_set_a</span><span class="p">,</span> <span class="n">data_set_b</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Calculate the difference in CMI between two groups of subjects.</span>
 
 <span class="sd">        Calculate the difference in the conditional mutual information (CMI)</span>
@@ -1056,14 +1056,14 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.4 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl.network_comparison</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.1.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
     </div>
   </body>
 </html>

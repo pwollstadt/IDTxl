@@ -538,6 +538,6 @@ def export_brain_net_viewer(adjacency_matrix, mni_coord, file_name, **kwargs):
     with open('{0}.edge'.format(file_name), 'w') as text_file:
         for i in range(n_nodes):
             for j in range(n_nodes):
-                print('{0}\t'.format(adjacency_matrix._edge_matrix[i, j]),
+                print('{0}\t'.format(adjacency_matrix.edge_matrix[i, j]),
                       file=text_file, end='')
             print('', file=text_file)

@@ -5,13 +5,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>idtxl.visualise_graph &#8212; IDTxl 1.0 documentation</title>
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <title>idtxl.visualise_graph &#8212; IDTxl 1.4 documentation</title>
     <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
     <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -31,7 +32,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.4 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl.visualise_graph</a></li> 
       </ul>
@@ -46,8 +47,8 @@
 <span></span><span class="sd">&quot;&quot;&quot;Plot results of network inference.&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">idtxl_io</span> <span class="k">as</span> <span class="n">io</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">idtxl_exceptions</span> <span class="k">as</span> <span class="n">ex</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">idtxl_io</span> <span class="k">as</span> <span class="n">io</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">idtxl_exceptions</span> <span class="k">as</span> <span class="n">ex</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
@@ -250,41 +251,6 @@
     <span class="k">return</span> <span class="n">cbar</span>
 
 
-<span class="k">def</span> <span class="nf">_plot_adj_matrix</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">,</span> <span class="n">mat_color</span><span class="o">=</span><span class="s1">&#39;gray_r&#39;</span><span class="p">,</span> <span class="n">diverging</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                     <span class="n">cbar_label</span><span class="o">=</span><span class="s1">&#39;delay&#39;</span><span class="p">,</span> <span class="n">cbar_stepsize</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Plot adjacency matrix.&quot;&quot;&quot;</span>
-    <span class="c1"># Plot matrix, set minimum and maximum values to the same value for</span>
-    <span class="c1"># diverging plots to center colormap at 0, i.e., 0 is plotted in white</span>
-    <span class="c1"># https://stackoverflow.com/questions/25500541/</span>
-    <span class="c1"># matplotlib-bwr-colormap-always-centered-on-zero</span>
-    <span class="k">if</span> <span class="n">diverging</span><span class="p">:</span>
-        <span class="n">max_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">))</span>
-        <span class="n">min_val</span> <span class="o">=</span> <span class="o">-</span><span class="n">max_val</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">max_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">)</span>
-        <span class="n">min_val</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">mat_color</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">,</span>
-               <span class="n">vmin</span><span class="o">=</span><span class="n">min_val</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">max_val</span><span class="p">)</span>
-
-    <span class="c1"># Set the colorbar and make colorbar match the image in size using the</span>
-    <span class="c1"># fraction and pad parameters (see https://stackoverflow.com/a/26720422).</span>
-    <span class="k">if</span> <span class="n">cbar_label</span> <span class="o">==</span> <span class="s1">&#39;delay&#39;</span><span class="p">:</span>
-        <span class="n">cbar_label</span> <span class="o">=</span> <span class="s1">&#39;delay [samples]&#39;</span>
-        <span class="n">cbar_ticks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_val</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">cbar_stepsize</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">cbar_ticks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span> <span class="o">+</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">max_val</span><span class="p">,</span>
-                               <span class="n">cbar_stepsize</span><span class="p">)</span>
-    <span class="n">cbar</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">fraction</span><span class="o">=</span><span class="mf">0.046</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.04</span><span class="p">,</span> <span class="n">ticks</span><span class="o">=</span><span class="n">cbar_ticks</span><span class="p">)</span>
-    <span class="n">cbar</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="n">cbar_label</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
-
-    <span class="c1"># Set x- and y-ticks.</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">tick_top</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">cbar</span>
-
-
 <div class="viewcode-block" id="plot_mute_graph"><a class="viewcode-back" href="../../idtxl.html#idtxl.visualise_graph.plot_mute_graph">[docs]</a><span class="k">def</span> <span class="nf">plot_mute_graph</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;Plot MuTE example network.</span>
 
@@ -412,14 +378,14 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.4 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl.visualise_graph</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.1.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
     </div>
   </body>
 </html>

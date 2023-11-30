@@ -320,10 +320,10 @@ class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
         return results
 
     def __eq__(self, other):
-        #return True
-        #return(self.source_set == other.source_set
+        # return True
+        # return(self.source_set == other.source_set
         return self.target == other.target
-        #return self.settings.__dict__ == other.settings.__dict__
+        # return self.settings.__dict__ == other.settings.__dict__
 
     def getit(self):
         print(self.target)

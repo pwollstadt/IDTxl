@@ -1,0 +1,1218 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>idtxl.estimators_Rudelt &#8212; IDTxl 1.4 documentation</title>
+    <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="../../_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">idtxl.estimators_Rudelt</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for idtxl.estimators_Rudelt</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Provide HDE estimators.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">newton</span><span class="p">,</span> <span class="n">minimize</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">sys</span> <span class="kn">import</span> <span class="n">stderr</span>
+<span class="kn">from</span> <span class="nn">idtxl.estimator</span> <span class="kn">import</span> <span class="n">Estimator</span>
+<span class="kn">import</span> <span class="nn">idtxl.hde_utils</span> <span class="k">as</span> <span class="nn">utl</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span>
+<span class="kn">import</span> <span class="nn">mpmath</span> <span class="k">as</span> <span class="nn">mp</span>
+
+<span class="n">FAST_EMBEDDING_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">idtxl.hde_fast_embedding</span> <span class="k">as</span> <span class="nn">fast_emb</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">FAST_EMBEDDING_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Error importing Cython fast embedding module. Continuing with slow Python implementation.</span><span class="se">\n</span><span class="s2"></span>
+<span class="s2">    This may take a long time.</span><span class="se">\n</span><span class="s2"></span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">stderr</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="RudeltAbstractEstimator"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractEstimator">[docs]</a><span class="k">class</span> <span class="nc">RudeltAbstractEstimator</span><span class="p">(</span><span class="n">Estimator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract class for implementation of nsb and plugin estimators from Rudelt.</span>
+
+<span class="sd">    Abstract class for implementation of nsb and plugin estimators, child classes</span>
+<span class="sd">    implement estimators for mutual information (MI) .</span>
+
+<span class="sd">    References:</span>
+
+<span class="sd">        [1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding</span>
+<span class="sd">            optimization reveals long-lasting history dependence in</span>
+<span class="sd">            neural spiking activity, 2021, PLOS Computational Biology, 17(6)</span>
+
+<span class="sd">        [2]: https://github.com/Priesemann-Group/hdestimator</span>
+
+<span class="sd">    implemented in idtxl by Michael Lindner, Göttingen 2021</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        settings : dict</span>
+<span class="sd">            - embedding_step_size : float [optional]</span>
+<span class="sd">                Step size delta t (in seconds) with which the window is slid through the data</span>
+<span class="sd">                (default = 0.005).</span>
+<span class="sd">            - normalise : bool [optional]</span>
+<span class="sd">                rebase spike times to zero</span>
+<span class="sd">                (default=True)</span>
+<span class="sd">            - return_averaged_R : bool [optional]</span>
+<span class="sd">                If set to True, compute R̂tot as the average over R̂(T ) for T ∈ [T̂D, Tmax ] instead of</span>
+<span class="sd">                R̂tot = R(T̂D ). If set to True, the setting for number_of_bootstraps_R_tot is ignored and</span>
+<span class="sd">                set to 0</span>
+<span class="sd">                (default=True)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># check settings</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_settings</span><span class="p">()</span>
+        <span class="c1"># import given settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># Get defaults for estimator settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;normalize&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;embedding_step_size&#39;</span><span class="p">,</span> <span class="mf">0.005</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;return_averaged_R&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># check settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_input_settings</span><span class="p">()</span>
+
+<div class="viewcode-block" id="RudeltAbstractEstimator.is_parallel"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractEstimator.is_parallel">[docs]</a>    <span class="k">def</span> <span class="nf">is_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractEstimator.is_analytic_null_estimator"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractEstimator.is_analytic_null_estimator">[docs]</a>    <span class="k">def</span> <span class="nf">is_analytic_null_estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+    <span class="k">def</span> <span class="nf">_check_settings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set default for settings dictionary.</span>
+
+<span class="sd">        Check if settings dictionary is None. If None, initialise an empty</span>
+<span class="sd">        dictionary. If not None check if type is dictionary. Function should be</span>
+<span class="sd">        called before setting default values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">settings</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;settings should be a dictionary.&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">settings</span>
+
+    <span class="k">def</span> <span class="nf">_check_input_settings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="c1"># check that required settings are defined</span>
+        <span class="n">required_settings</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;normalize&#39;</span><span class="p">,</span>
+                             <span class="s1">&#39;embedding_step_size&#39;</span><span class="p">,</span>
+                             <span class="s1">&#39;return_averaged_R&#39;</span><span class="p">]</span>
+
+        <span class="c1"># check if all settings are defined</span>
+        <span class="k">for</span> <span class="n">required_setting</span> <span class="ow">in</span> <span class="n">required_settings</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">required_setting</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">:</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s2">&quot;Error in settings file: </span><span class="si">{}</span><span class="s2"> is not defined. Aborting.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">required_setting</span><span class="p">))</span>
+
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;normalize&#39;</span><span class="p">],</span> <span class="nb">bool</span><span class="p">)),</span> \
+                                    <span class="s2">&quot;Error: setting &#39;normalize&#39; needs to be boolean but is defined as </span><span class="si">{0}</span><span class="s2">. &quot;</span> \
+                                     <span class="s2">&quot;Aborting.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;normalize&#39;</span><span class="p">]))</span>
+
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;return_averaged_R&#39;</span><span class="p">],</span> <span class="nb">bool</span><span class="p">)),</span>\
+                                    <span class="s2">&quot;Error: setting &#39;return_averaged_R&#39; needs to be boolean but is &quot;</span> \
+                                    <span class="s2">&quot;defined as </span><span class="si">{0}</span><span class="s2">. Aborting.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;normalize&#39;</span><span class="p">]))</span>
+
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_step_size&#39;</span><span class="p">],</span> <span class="nb">float</span><span class="p">)),</span>\
+                                    <span class="s2">&quot;Error: setting &#39;embedding_step_size&#39; &quot;</span> \
+                                    <span class="s2">&quot;needs to be float but is defined &quot;</span> \
+                                    <span class="s2">&quot;as </span><span class="si">{0}</span><span class="s2">. Aborting.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_step_size&#39;</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">_check_estimator_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                <span class="n">symbol_array</span><span class="p">,</span>
+                                <span class="n">past_symbol_array</span><span class="p">,</span>
+                                <span class="n">current_symbol_array</span><span class="p">,</span>
+                                <span class="n">bbc_tolerance</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)),</span> \
+            <span class="s2">&quot;Error: symbol_array needs to be a numpy array but is defines as </span><span class="si">{0}</span><span class="s2">.&quot;</span> \
+            <span class="s2">&quot;Aborting.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">past_symbol_array</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">past_symbol_array</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)),</span> \
+                <span class="s2">&quot;Error: past_symbol_array needs to be a numpy array but is defines as </span><span class="si">{0}</span><span class="s2">.&quot;</span> \
+                <span class="s2">&quot;Aborting.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">past_symbol_array</span><span class="p">))</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">past_symbol_array</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">)),</span> \
+                <span class="s2">&quot;Error: symbol_array and past_symbol_array need to have the same length but have:&quot;</span> \
+                <span class="s2">&quot;len(symbol_array): </span><span class="si">{0}</span><span class="s2"> len(past_symbol_array): </span><span class="si">{1}</span><span class="s2">. &quot;</span> \
+                <span class="s2">&quot;Aborting&quot;</span><span class="o">.</span> <span class="nb">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">past_symbol_array</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">current_symbol_array</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">current_symbol_array</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)),</span> \
+                <span class="s2">&quot;Error: current_symbol_array needs to be a numpy array but is defines as </span><span class="si">{0}</span><span class="s2">.&quot;</span> \
+                <span class="s2">&quot;Aborting.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">current_symbol_array</span><span class="p">))</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">current_symbol_array</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">)),</span> \
+                <span class="s2">&quot;Error: symbol_array and current_symbol_array need to have the same length but have:&quot;</span> \
+                <span class="s2">&quot;len(symbol_array): </span><span class="si">{0}</span><span class="s2"> len(current_symbol_array): </span><span class="si">{1}</span><span class="s2">. &quot;</span> \
+                <span class="s2">&quot;Aborting&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">current_symbol_array</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">bbc_tolerance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">bbc_tolerance</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)),</span> \
+                <span class="s2">&quot;Error: symbol array needs to be a numpy array but is defines as </span><span class="si">{0}</span><span class="s2">.&quot;</span> \
+                <span class="s2">&quot;Aborting.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">current_symbol_array</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_ensure_one_dim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        check if array is 1D</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">),</span> <span class="s2">&quot;Input variable needs to be one dimensional. Aborting&quot;</span>
+
+<div class="viewcode-block" id="RudeltAbstractEstimator.get_past_range"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractEstimator.get_past_range">[docs]</a>    <span class="k">def</span> <span class="nf">get_past_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">,</span> <span class="n">first_bin_size</span><span class="p">,</span> <span class="n">scaling_k</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the past range T of the embedding, based on the parameters d, tau_1 and k.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">first_bin_size</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">((</span><span class="n">number_of_bins_d</span> <span class="o">-</span> <span class="n">i</span><span class="p">)</span> <span class="o">*</span> <span class="n">scaling_k</span><span class="p">)</span>
+                       <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">number_of_bins_d</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)])</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractEstimator.get_window_delimiters"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractEstimator.get_window_delimiters">[docs]</a>    <span class="k">def</span> <span class="nf">get_window_delimiters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">,</span> <span class="n">scaling_k</span><span class="p">,</span> <span class="n">first_bin_size</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get delimiters of the window, used to describe the embedding. The</span>
+<span class="sd">        window includes both the past embedding and the response.</span>
+
+<span class="sd">        The delimiters are times, relative to the first bin, that separate</span>
+<span class="sd">        two consequent bins.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">bin_sizes</span> <span class="o">=</span> <span class="p">[</span><span class="n">first_bin_size</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">((</span><span class="n">number_of_bins_d</span> <span class="o">-</span> <span class="n">i</span><span class="p">)</span> <span class="o">*</span> <span class="n">scaling_k</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">number_of_bins_d</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="n">window_delimiters</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sum</span><span class="p">([</span><span class="n">bin_sizes</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">)])</span>
+                             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">number_of_bins_d</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="n">window_delimiters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">window_delimiters</span><span class="p">[</span><span class="n">number_of_bins_d</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_step_size&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">window_delimiters</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractEstimator.get_median_number_of_spikes_per_bin"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractEstimator.get_median_number_of_spikes_per_bin">[docs]</a>    <span class="k">def</span> <span class="nf">get_median_number_of_spikes_per_bin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_symbols</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given raw symbols (in which the number of spikes per bin are counted,</span>
+<span class="sd">        ie not necessarily binary quantity), get the median number of spikes</span>
+<span class="sd">        for each bin, among all symbols obtained by the embedding.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># number_of_bins here is number_of_bins_d + 1,</span>
+        <span class="c1"># as it here includes not only the bins of the embedding but also the response</span>
+        <span class="n">number_of_bins</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_symbols</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">spike_counts_per_bin</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_bins</span><span class="p">)]</span>
+
+        <span class="k">for</span> <span class="n">raw_symbol</span> <span class="ow">in</span> <span class="n">raw_symbols</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_bins</span><span class="p">):</span>
+                <span class="n">spike_counts_per_bin</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">raw_symbol</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">spike_counts_per_bin</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_bins</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractEstimator.symbol_binary_to_array"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractEstimator.symbol_binary_to_array">[docs]</a>    <span class="k">def</span> <span class="nf">symbol_binary_to_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol_binary</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a binary representation of a symbol (cf symbol_array_to_binary),</span>
+<span class="sd">        convert it back into its array-representation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># assert 2 ** number_of_bins_d &gt; symbol_binary</span>
+
+        <span class="n">spikes_in_window</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">number_of_bins_d</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">):</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">number_of_bins_d</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">i</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">b</span> <span class="o">&lt;=</span> <span class="n">symbol_binary</span><span class="p">:</span>
+                <span class="n">spikes_in_window</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">symbol_binary</span> <span class="o">-=</span> <span class="n">b</span>
+        <span class="k">return</span> <span class="n">spikes_in_window</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractEstimator.symbol_array_to_binary"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractEstimator.symbol_array_to_binary">[docs]</a>    <span class="k">def</span> <span class="nf">symbol_array_to_binary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikes_in_window</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given an array of 1s and 0s, representing spikes and the absence</span>
+<span class="sd">        thereof, read the array as a binary number to obtain a</span>
+<span class="sd">        (base 10) integer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># assert len(spikes_in_window) == number_of_bins_d</span>
+
+        <span class="c1"># TODO check if it makes sense to use len(spikes_in_window)</span>
+        <span class="c1"># directly, to avoid mismatch as well as confusion</span>
+        <span class="c1"># as number_of_bins_d here can also be number_of_bins</span>
+        <span class="c1"># as in get_median_number_of_spikes_per_bin, ie</span>
+        <span class="c1"># including the response</span>
+
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">number_of_bins_d</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">spikes_in_window</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">)])</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractEstimator.get_raw_symbols"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractEstimator.get_raw_symbols">[docs]</a>    <span class="k">def</span> <span class="nf">get_raw_symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                        <span class="n">spike_times</span><span class="p">,</span>
+                        <span class="n">embedding</span><span class="p">,</span>
+                        <span class="n">first_bin_size</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the raw symbols (in which the number of spikes per bin are counted,</span>
+<span class="sd">        ie not necessarily binary quantity), as obtained by applying the</span>
+<span class="sd">        embedding.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">past_range_T</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">,</span> <span class="n">scaling_k</span> <span class="o">=</span> <span class="n">embedding</span>
+
+        <span class="c1"># the window is the embedding plus the response,</span>
+        <span class="c1"># ie the embedding and one additional bin of size embedding_step_size</span>
+        <span class="n">window_delimiters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_window_delimiters</span><span class="p">(</span><span class="n">number_of_bins_d</span><span class="p">,</span>
+                                                       <span class="n">scaling_k</span><span class="p">,</span>
+                                                       <span class="n">first_bin_size</span><span class="p">)</span>
+        <span class="n">window_length</span> <span class="o">=</span> <span class="n">window_delimiters</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">num_spike_times</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">spike_times</span><span class="p">)</span>
+        <span class="n">last_spike_time</span> <span class="o">=</span> <span class="n">spike_times</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">num_symbols</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">last_spike_time</span> <span class="o">-</span> <span class="n">window_length</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_step_size&#39;</span><span class="p">])</span>
+
+        <span class="n">raw_symbols</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">spike_index_lo</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">symbol_num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_symbols</span><span class="p">):</span>
+            <span class="k">while</span> <span class="n">spike_index_lo</span> <span class="o">&lt;</span> <span class="n">num_spike_times</span> <span class="ow">and</span> <span class="n">spike_times</span><span class="p">[</span><span class="n">spike_index_lo</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">time</span><span class="p">:</span>
+                <span class="n">spike_index_lo</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">spike_index_hi</span> <span class="o">=</span> <span class="n">spike_index_lo</span>
+            <span class="k">while</span> <span class="p">(</span><span class="n">spike_index_hi</span> <span class="o">&lt;</span> <span class="n">num_spike_times</span> <span class="ow">and</span>
+                   <span class="n">spike_times</span><span class="p">[</span><span class="n">spike_index_hi</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">time</span> <span class="o">+</span> <span class="n">window_length</span><span class="p">):</span>
+                <span class="n">spike_index_hi</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="n">spikes_in_window</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">number_of_bins_d</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">embedding_bin_index</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">spike_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">spike_index_lo</span><span class="p">,</span> <span class="n">spike_index_hi</span><span class="p">):</span>
+                <span class="k">while</span> <span class="p">(</span><span class="n">spike_times</span><span class="p">[</span><span class="n">spike_index</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">time</span> <span class="o">+</span> <span class="n">window_delimiters</span><span class="p">[</span><span class="n">embedding_bin_index</span><span class="p">]):</span>
+                    <span class="n">embedding_bin_index</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">spikes_in_window</span><span class="p">[</span><span class="n">embedding_bin_index</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="n">raw_symbols</span> <span class="o">+=</span> <span class="p">[</span><span class="n">spikes_in_window</span><span class="p">]</span>
+
+            <span class="n">time</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;embedding_step_size&#39;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">raw_symbols</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractEstimator.get_symbol_counts"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractEstimator.get_symbol_counts">[docs]</a>    <span class="k">def</span> <span class="nf">get_symbol_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol_array</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Count how often symbols occur</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">symbol_counts</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">):</span>
+            <span class="n">symbol_counts</span><span class="p">[</span><span class="n">symbol</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">symbol_array</span> <span class="o">==</span> <span class="n">symbol</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">symbol_counts</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractEstimator.get_multiplicities"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractEstimator.get_multiplicities">[docs]</a>    <span class="k">def</span> <span class="nf">get_multiplicities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol_counts</span><span class="p">,</span> <span class="n">alphabet_size</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the multiplicities of some given symbol counts.</span>
+
+<span class="sd">        To estimate the entropy of a system, it is only important how</span>
+<span class="sd">        often a symbol/ event occurs (the probability that it occurs), not</span>
+<span class="sd">        what it represents. Therefore, computations can be simplified by</span>
+<span class="sd">        summarizing symbols by their frequency, as represented by the</span>
+<span class="sd">        multiplicities.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mk</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(((</span><span class="n">value</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">symbol_counts</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+        <span class="n">number_of_observed_symbols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">([</span><span class="n">value</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">symbol_counts</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+
+        <span class="k">for</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="n">symbol_counts</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">mk</span><span class="p">[</span><span class="n">symbol_counts</span><span class="p">[</span><span class="n">symbol</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># the number of symbols that have not been observed in the data</span>
+        <span class="n">mk</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">alphabet_size</span> <span class="o">-</span> <span class="n">number_of_observed_symbols</span>
+
+        <span class="k">return</span> <span class="n">mk</span></div></div>
+
+
+<div class="viewcode-block" id="RudeltAbstractNSBEstimator"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractNSBEstimator">[docs]</a><span class="k">class</span> <span class="nc">RudeltAbstractNSBEstimator</span><span class="p">(</span><span class="n">RudeltAbstractEstimator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract class for implementation of NSB estimators from Rudelt.</span>
+
+<span class="sd">    Abstract class for implementation of Nemenman-Shafee-Bialek (NSB)</span>
+<span class="sd">    estimators, child classes implement nsb estimators for mutual information</span>
+<span class="sd">    (MI).</span>
+
+<span class="sd">    implemented in idtxl by Michael Lindner, Göttingen 2021</span>
+
+<span class="sd">    References:</span>
+
+<span class="sd">        [1]: L. Rudelt, D. G. Marx, M. Wibral, V. Priesemann: Embedding</span>
+<span class="sd">            optimization reveals long-lasting history dependence in</span>
+<span class="sd">            neural spiking activity, 2021, PLOS Computational Biology, 17(6)</span>
+<span class="sd">        [2]: I. Nemenman, F. Shafee, W. Bialek: Entropy and inference,</span>
+<span class="sd">            revisited. In T.G. Dietterich, S. Becker, and Z. Ghahramani,</span>
+<span class="sd">            editors, Advances in Neural Information Processing Systems 14,</span>
+<span class="sd">            Cambridge, MA, 2002. MIT Press.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        settings : dict</span>
+<span class="sd">            - embedding_step_size : float [optional]</span>
+<span class="sd">                Step size delta t (in seconds) with which the window is slid through the data</span>
+<span class="sd">                (default = 0.005).</span>
+<span class="sd">            - normalise : bool [optional]</span>
+<span class="sd">                rebase spike times to zero</span>
+<span class="sd">                (default=True)</span>
+<span class="sd">            - return_averaged_R : bool [optional]</span>
+<span class="sd">                If set to True, compute R̂tot as the average over R̂(T ) for T ∈ [T̂D, Tmax ] instead of</span>
+<span class="sd">                R̂tot = R(T̂D ). If set to True, the setting for number_of_bootstraps_R_tot is ignored and</span>
+<span class="sd">                set to 0</span>
+<span class="sd">                (default=True)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Set default estimator settings.</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RudeltAbstractNSBEstimator.d_xi"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractNSBEstimator.d_xi">[docs]</a>    <span class="k">def</span> <span class="nf">d_xi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        First derivative of xi(beta).</span>
+
+<span class="sd">        xi(beta) is the entropy of the system when no data has been observed.</span>
+<span class="sd">        d_xi is the prior for the nsb estimator</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">K</span> <span class="o">*</span> <span class="n">mp</span><span class="o">.</span><span class="n">psi</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">K</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">+</span> <span class="mf">1.</span><span class="p">)</span> <span class="o">-</span> <span class="n">mp</span><span class="o">.</span><span class="n">psi</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">beta</span> <span class="o">+</span> <span class="mf">1.</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractNSBEstimator.d2_xi"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractNSBEstimator.d2_xi">[docs]</a>    <span class="k">def</span> <span class="nf">d2_xi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Second derivative of xi(beta) (cf d_xi).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">K</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">mp</span><span class="o">.</span><span class="n">psi</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">K</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">mp</span><span class="o">.</span><span class="n">psi</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">beta</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractNSBEstimator.d3_xi"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractNSBEstimator.d3_xi">[docs]</a>    <span class="k">def</span> <span class="nf">d3_xi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Third derivative of xi(beta) (cf d_xi).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">K</span> <span class="o">**</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">mp</span><span class="o">.</span><span class="n">psi</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">K</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">mp</span><span class="o">.</span><span class="n">psi</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">beta</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractNSBEstimator.rho"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractNSBEstimator.rho">[docs]</a>    <span class="k">def</span> <span class="nf">rho</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        rho(beta, data) is the Dirichlet multinomial likelihood.</span>
+
+<span class="sd">        rho(beta, data) together with the d_xi(beta) make up</span>
+<span class="sd">        the posterior for the nsb estimator</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">([</span><span class="n">mp</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">mp</span><span class="o">.</span><span class="n">rf</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">(</span><span class="n">n</span><span class="p">)),</span> <span class="n">mk</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">mk</span><span class="p">])</span> <span class="o">/</span> <span class="n">mp</span><span class="o">.</span><span class="n">rf</span><span class="p">(</span><span class="n">K</span> <span class="o">*</span> <span class="n">beta</span><span class="p">,</span>
+                                                                                         <span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">(</span><span class="n">N</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractNSBEstimator.unnormalized_posterior"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractNSBEstimator.unnormalized_posterior">[docs]</a>    <span class="k">def</span> <span class="nf">unnormalized_posterior</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The (unnormalized) posterior in the nsb estimator.</span>
+
+<span class="sd">        Product of the likelihood rho and the prior d_xi;</span>
+<span class="sd">        the normalizing factor is given by the marginal likelihood</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rho</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_xi</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractNSBEstimator.d_log_rho"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractNSBEstimator.d_log_rho">[docs]</a>    <span class="k">def</span> <span class="nf">d_log_rho</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        First derivate of the logarithm of the Dirichlet multinomial likelihood.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">K</span> <span class="o">*</span> <span class="p">(</span><span class="n">mp</span><span class="o">.</span><span class="n">psi</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">K</span> <span class="o">*</span> <span class="n">beta</span><span class="p">)</span> <span class="o">-</span> <span class="n">mp</span><span class="o">.</span><span class="n">psi</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">K</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">+</span> <span class="n">N</span><span class="p">))</span> <span class="o">-</span> <span class="n">K</span> <span class="o">*</span> <span class="n">mp</span><span class="o">.</span><span class="n">psi</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span> \
+               <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">mk</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">*</span> <span class="n">mp</span><span class="o">.</span><span class="n">psi</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">beta</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">mk</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractNSBEstimator.d2_log_rho"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractNSBEstimator.d2_log_rho">[docs]</a>    <span class="k">def</span> <span class="nf">d2_log_rho</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Second derivate of the logarithm of the Dirichlet multinomial likelihood.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">K</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">mp</span><span class="o">.</span><span class="n">psi</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">K</span> <span class="o">*</span> <span class="n">beta</span><span class="p">)</span> <span class="o">-</span> <span class="n">mp</span><span class="o">.</span><span class="n">psi</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">K</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">+</span> <span class="n">N</span><span class="p">))</span> <span class="o">-</span> <span class="n">K</span> <span class="o">*</span> <span class="n">mp</span><span class="o">.</span><span class="n">psi</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span> \
+               <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">mk</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">*</span> <span class="n">mp</span><span class="o">.</span><span class="n">psi</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">beta</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">mk</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractNSBEstimator.d_log_rho_xi"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractNSBEstimator.d_log_rho_xi">[docs]</a>    <span class="k">def</span> <span class="nf">d_log_rho_xi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        First derivative of the logarithm of the nsb (unnormalized) posterior.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_log_rho</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">d2_xi</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_xi</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractNSBEstimator.d2_log_rho_xi"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractNSBEstimator.d2_log_rho_xi">[docs]</a>    <span class="k">def</span> <span class="nf">d2_log_rho_xi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Second derivative of the logarithm of the nsb (unnormalized) posterior.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">d2_log_rho</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span> \
+               <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d3_xi</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_xi</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">d2_xi</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_xi</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractNSBEstimator.log_likelihood_DP_alpha"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractNSBEstimator.log_likelihood_DP_alpha">[docs]</a>    <span class="k">def</span> <span class="nf">log_likelihood_DP_alpha</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">K1</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Alpha-dependent terms of the log-likelihood of a Dirichlet Process.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">K1</span> <span class="o">-</span> <span class="mf">1.</span><span class="p">)</span> <span class="o">*</span> <span class="n">mp</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">-</span> <span class="n">mp</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">mp</span><span class="o">.</span><span class="n">rf</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">N</span> <span class="o">-</span> <span class="mf">1.</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractNSBEstimator.get_beta_MAP"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractNSBEstimator.get_beta_MAP">[docs]</a>    <span class="k">def</span> <span class="nf">get_beta_MAP</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the maximum a posteriori (MAP) value for beta.</span>
+
+<span class="sd">        Provides the location of the peak, around which we integrate.</span>
+
+<span class="sd">        beta_MAP is the value for beta for which the posterior of the</span>
+<span class="sd">        NSB estimator is maximised (or, equivalently, of the logarithm</span>
+<span class="sd">        thereof, as computed here).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">K1</span> <span class="o">=</span> <span class="n">K</span> <span class="o">-</span> <span class="n">mk</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_log_rho</span><span class="p">(</span><span class="mi">10</span> <span class="o">**</span> <span class="mi">1</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: No ML parameter was found.&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">stderr</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">beta_MAP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># first guess computed via posterior of Dirichlet process</span>
+                <span class="n">DP_est</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha_ML</span><span class="p">(</span><span class="n">mk</span><span class="p">,</span> <span class="n">K1</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span> <span class="o">/</span> <span class="n">K</span>
+                <span class="n">beta_MAP</span> <span class="o">=</span> <span class="n">newton</span><span class="p">(</span><span class="k">lambda</span> <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d_log_rho_xi</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">)),</span> <span class="n">DP_est</span><span class="p">,</span>
+                                  <span class="k">lambda</span> <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d2_log_rho_xi</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">)),</span>
+                                  <span class="n">tol</span><span class="o">=</span><span class="mf">5e-08</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: No ML parameter was found. (Exception caught.)&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">stderr</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">beta_MAP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">beta_MAP</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractNSBEstimator.alpha_ML"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractNSBEstimator.alpha_ML">[docs]</a>    <span class="k">def</span> <span class="nf">alpha_ML</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K1</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute first guess for the beta_MAP (cf get_beta_MAP) parameter</span>
+<span class="sd">        via the posterior of a Dirichlet process.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mk</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">remove_key</span><span class="p">(</span><span class="n">mk</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># rnsum      = np.array([_logvarrhoi_DP(n, mk[n]) for n in mk]).sum()</span>
+        <span class="n">estlist</span> <span class="o">=</span> <span class="p">[</span><span class="n">N</span> <span class="o">*</span> <span class="p">(</span><span class="n">K1</span> <span class="o">-</span> <span class="mf">1.</span><span class="p">)</span> <span class="o">/</span> <span class="n">r</span> <span class="o">/</span> <span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="n">K1</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">6.</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">)]</span>
+        <span class="n">varrholist</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">estlist</span><span class="p">:</span>
+            <span class="c1"># varrholist[_logvarrho_DP(a, rnsum, K1, N)] = a</span>
+            <span class="n">varrholist</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood_DP_alpha</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">K1</span><span class="p">,</span> <span class="n">N</span><span class="p">)]</span> <span class="o">=</span> <span class="n">a</span>
+        <span class="n">a_est</span> <span class="o">=</span> <span class="n">varrholist</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="n">varrholist</span><span class="o">.</span><span class="n">keys</span><span class="p">())]</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">:</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood_DP_alpha</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">K1</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span>
+                       <span class="n">a_est</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;Nelder-Mead&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractNSBEstimator.get_integration_bounds"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractNSBEstimator.get_integration_bounds">[docs]</a>    <span class="k">def</span> <span class="nf">get_integration_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find the integration bounds for the estimator.</span>
+
+<span class="sd">        Typically it is a delta-like distribution so it is sufficient</span>
+<span class="sd">        to integrate around this peak. (If not this function is not</span>
+<span class="sd">        called.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">beta_MAP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_beta_MAP</span><span class="p">(</span><span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">beta_MAP</span><span class="p">):</span>
+            <span class="n">intbounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">d2_log_rho_xi</span><span class="p">(</span><span class="n">beta_MAP</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+            <span class="n">intbounds</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">([</span><span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">50</span><span class="p">),</span> <span class="n">beta_MAP</span> <span class="o">-</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">std</span><span class="p">])),</span>
+                         <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">beta_MAP</span> <span class="o">+</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">std</span><span class="p">)]</span>
+
+        <span class="k">return</span> <span class="n">intbounds</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractNSBEstimator.H1"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractNSBEstimator.H1">[docs]</a>    <span class="k">def</span> <span class="nf">H1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the first moment (expectation value) of the entropy H.</span>
+
+<span class="sd">        H is the entropy one obtains with a symmetric Dirichlet prior</span>
+<span class="sd">        with concentration parameter beta and a multinomial likelihood.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">N</span> <span class="o">+</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">K</span>
+        <span class="k">return</span> <span class="n">mp</span><span class="o">.</span><span class="n">psi</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">norm</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">mk</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">beta</span><span class="p">)</span> <span class="o">*</span>
+                                             <span class="n">mp</span><span class="o">.</span><span class="n">psi</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">beta</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">mk</span><span class="p">))</span> <span class="o">/</span> <span class="n">norm</span></div>
+
+<div class="viewcode-block" id="RudeltAbstractNSBEstimator.nsb_entropy"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltAbstractNSBEstimator.nsb_entropy">[docs]</a>    <span class="k">def</span> <span class="nf">nsb_entropy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Estimate the entropy of a system using the NSB estimator.</span>
+
+<span class="sd">        :param mk: multiplicities</span>
+<span class="sd">        :param K:  number of possible symbols/ state space of the system</span>
+<span class="sd">        :param N:  total number of observed symbols</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># find the concentration parameter beta</span>
+        <span class="c1"># for which the posterior is maximised</span>
+        <span class="c1"># to integrate around this peak</span>
+        <span class="n">integration_bounds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_integration_bounds</span><span class="p">(</span><span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">integration_bounds</span><span class="p">)):</span>
+            <span class="c1"># if no peak was found, integrate over the whole range</span>
+            <span class="c1"># by reformulating beta into w so that the range goes from 0 to 1</span>
+            <span class="c1"># instead of from 1 to infinity</span>
+
+            <span class="n">integration_bounds</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+            <span class="k">def</span> <span class="nf">unnormalized_posterior_w</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+                <span class="n">sbeta</span> <span class="o">=</span> <span class="n">w</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">w</span><span class="p">)</span>
+                <span class="n">beta</span> <span class="o">=</span> <span class="n">sbeta</span> <span class="o">*</span> <span class="n">sbeta</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unnormalized_posterior</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sbeta</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">w</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">w</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">H1_w</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+                <span class="n">sbeta</span> <span class="o">=</span> <span class="n">w</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">w</span><span class="p">)</span>
+                <span class="n">beta</span> <span class="o">=</span> <span class="n">sbeta</span> <span class="o">*</span> <span class="n">sbeta</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">H1</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+
+            <span class="n">marginal_likelihood</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">quadgl</span><span class="p">(</span><span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">unnormalized_posterior_w</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span>
+                                            <span class="n">integration_bounds</span><span class="p">)</span>
+            <span class="n">H_nsb</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">quadgl</span><span class="p">(</span><span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">H1_w</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="n">unnormalized_posterior_w</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span>
+                              <span class="n">integration_bounds</span><span class="p">)</span> <span class="o">/</span> <span class="n">marginal_likelihood</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># integrate over the possible entropies, weighted such that every entropy is equally likely</span>
+            <span class="c1"># and normalize with the marginal likelihood</span>
+            <span class="n">marginal_likelihood</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">quadgl</span><span class="p">(</span><span class="k">lambda</span> <span class="n">beta</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">unnormalized_posterior</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span>
+                                            <span class="n">integration_bounds</span><span class="p">)</span>
+            <span class="n">H_nsb</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">quadgl</span><span class="p">(</span><span class="k">lambda</span> <span class="n">beta</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">H1</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">unnormalized_posterior</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span>
+                              <span class="n">integration_bounds</span><span class="p">)</span> <span class="o">/</span> <span class="n">marginal_likelihood</span>
+
+        <span class="k">return</span> <span class="n">H_nsb</span></div></div>
+
+
+<div class="viewcode-block" id="RudeltNSBEstimatorSymbolsMI"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltNSBEstimatorSymbolsMI">[docs]</a><span class="k">class</span> <span class="nc">RudeltNSBEstimatorSymbolsMI</span><span class="p">(</span><span class="n">RudeltAbstractNSBEstimator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;History dependence NSB estimator</span>
+
+<span class="sd">    Calculate the mutual information (MI) of one variable depending on its past</span>
+<span class="sd">    using NSB estimator. See parent class for references.</span>
+
+<span class="sd">    implemented in idtxl by Michael Lindner, Göttingen 2021</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        settings : dict</span>
+<span class="sd">            - embedding_step_size : float [optional]</span>
+<span class="sd">                Step size delta t (in seconds) with which the window is slid through the data</span>
+<span class="sd">                (default = 0.005).</span>
+<span class="sd">            - normalise : bool [optional]</span>
+<span class="sd">                rebase spike times to zero</span>
+<span class="sd">                (default=True)</span>
+<span class="sd">            - return_averaged_R : bool [optional]</span>
+<span class="sd">                If set to True, compute R̂tot as the average over R̂(T ) for T ∈ [T̂D, Tmax ] instead of</span>
+<span class="sd">                R̂tot = R(T̂D ). If set to True, the setting for number_of_bootstraps_R_tot is ignored and</span>
+<span class="sd">                set to 0</span>
+<span class="sd">                (default=True)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Set default estimator settings.</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RudeltNSBEstimatorSymbolsMI.nsb_estimator"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltNSBEstimatorSymbolsMI.nsb_estimator">[docs]</a>    <span class="k">def</span> <span class="nf">nsb_estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">symbol_counts</span><span class="p">,</span>
+                      <span class="n">past_symbol_counts</span><span class="p">,</span>
+                      <span class="n">alphabet_size</span><span class="p">,</span>
+                      <span class="n">alphabet_size_past</span><span class="p">,</span>
+                      <span class="n">H_uncond</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Estimate the entropy of a system using the NSB estimator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_multiplicities</span><span class="p">(</span><span class="n">symbol_counts</span><span class="p">,</span> <span class="n">alphabet_size</span><span class="p">)</span>
+        <span class="n">mk_past</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_multiplicities</span><span class="p">(</span><span class="n">past_symbol_counts</span><span class="p">,</span> <span class="n">alphabet_size_past</span><span class="p">)</span>
+
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">mk</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">mk</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+
+        <span class="n">H_nsb_joint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsb_entropy</span><span class="p">(</span><span class="n">mk</span><span class="p">,</span> <span class="n">alphabet_size</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+        <span class="n">H_nsb_past</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsb_entropy</span><span class="p">(</span><span class="n">mk_past</span><span class="p">,</span> <span class="n">alphabet_size_past</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+
+        <span class="n">H_nsb_cond</span> <span class="o">=</span> <span class="n">H_nsb_joint</span> <span class="o">-</span> <span class="n">H_nsb_past</span>
+        <span class="n">I_nsb</span> <span class="o">=</span> <span class="n">H_uncond</span> <span class="o">-</span> <span class="n">H_nsb_cond</span>
+        <span class="n">R_nsb</span> <span class="o">=</span> <span class="n">I_nsb</span> <span class="o">/</span> <span class="n">H_uncond</span>
+
+        <span class="k">return</span> <span class="n">I_nsb</span><span class="p">,</span> <span class="n">R_nsb</span></div>
+
+<div class="viewcode-block" id="RudeltNSBEstimatorSymbolsMI.estimate"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltNSBEstimatorSymbolsMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol_array</span><span class="p">,</span> <span class="n">past_symbol_array</span><span class="p">,</span> <span class="n">current_symbol_array</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Estimate mutual information using NSB estimator.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            symbol_array : 1D numpy array</span>
+<span class="sd">                realisations of symbols based on current and past states.</span>
+<span class="sd">                (first output of get_realisations_symbol from data_spiketimes object)</span>
+<span class="sd">            past_symbol_array : numpy array</span>
+<span class="sd">                realisations of symbols based on current and past states.</span>
+<span class="sd">                (first output of get_realisations_symbol from data_spiketimes object)</span>
+<span class="sd">            current_symbol_array : numpy array</span>
+<span class="sd">                realisations of symbols based on current and past states.</span>
+<span class="sd">                (first output of get_realisations_symbol from data_spiketimes object)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            I (float)</span>
+<span class="sd">                MI (AIS)</span>
+<span class="sd">            R (float)</span>
+<span class="sd">                MI / H_uncond (History dependence)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_estimator_inputs</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">,</span>
+                                     <span class="n">past_symbol_array</span><span class="p">,</span>
+                                     <span class="n">current_symbol_array</span><span class="p">,</span>
+                                     <span class="kc">None</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_one_dim</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_one_dim</span><span class="p">(</span><span class="n">past_symbol_array</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_one_dim</span><span class="p">(</span><span class="n">current_symbol_array</span><span class="p">)</span>
+
+        <span class="n">symbol_counts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symbol_counts</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">)</span>
+
+        <span class="n">current_symbol_counts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symbol_counts</span><span class="p">(</span><span class="n">current_symbol_array</span><span class="p">)</span>
+        <span class="n">H_uncond</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">get_H_spiking</span><span class="p">(</span><span class="n">symbol_counts</span><span class="p">)</span>
+
+        <span class="n">past_symbol_counts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symbol_counts</span><span class="p">(</span><span class="n">past_symbol_array</span><span class="p">)</span>
+
+        <span class="n">number_of_bins_d_join</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">binary_repr</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">))))</span>
+
+        <span class="n">alphabet_size_past</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="nb">int</span><span class="p">(</span><span class="n">number_of_bins_d_join</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># K for past activity</span>
+        <span class="n">alphabet_size</span> <span class="o">=</span> <span class="n">alphabet_size_past</span> <span class="o">*</span> <span class="mi">2</span>  <span class="c1"># K</span>
+
+        <span class="n">I</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsb_estimator</span><span class="p">(</span><span class="n">symbol_counts</span><span class="p">,</span>
+                                  <span class="n">past_symbol_counts</span><span class="p">,</span>
+                                  <span class="n">alphabet_size</span><span class="p">,</span>
+                                  <span class="n">alphabet_size_past</span><span class="p">,</span>
+                                  <span class="n">H_uncond</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">I</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">R</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="RudeltPluginEstimatorSymbolsMI"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltPluginEstimatorSymbolsMI">[docs]</a><span class="k">class</span> <span class="nc">RudeltPluginEstimatorSymbolsMI</span><span class="p">(</span><span class="n">RudeltAbstractEstimator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Plugin History dependence estimator</span>
+
+<span class="sd">    Calculate the mutual information (MI) of one variable depending on its past</span>
+<span class="sd">    using plugin estimator. See parent class for references.</span>
+
+<span class="sd">    implemented in idtxl by Michael Lindner, Göttingen 2021</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        settings : dict</span>
+<span class="sd">            - embedding_step_size : float [optional] - Step size delta t (in seconds) with which the window is slid</span>
+<span class="sd">                            through the data (default = 0.005).</span>
+<span class="sd">            - normalise : bool [optional] - rebase spike times to zero (default=True)</span>
+<span class="sd">            - return_averaged_R : bool [optional] - rebase spike times to zero (default=True)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="RudeltPluginEstimatorSymbolsMI.plugin_entropy"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltPluginEstimatorSymbolsMI.plugin_entropy">[docs]</a>    <span class="k">def</span> <span class="nf">plugin_entropy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Estimate the entropy of a system using the Plugin estimator.</span>
+
+<span class="sd">        (In principle this is the same function as utl.get_shannon_entropy,</span>
+<span class="sd">        only here it is a function of the multiplicities, not the probabilities.)</span>
+
+<span class="sd">        :param mk: multiplicities</span>
+<span class="sd">        :param N:  total number of observed symbols</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mk</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">remove_key</span><span class="p">(</span><span class="n">mk</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">((</span><span class="n">mk</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">/</span> <span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">n</span> <span class="o">/</span> <span class="n">N</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">mk</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="RudeltPluginEstimatorSymbolsMI.plugin_estimator"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltPluginEstimatorSymbolsMI.plugin_estimator">[docs]</a>    <span class="k">def</span> <span class="nf">plugin_estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                         <span class="n">symbol_counts</span><span class="p">,</span>
+                         <span class="n">past_symbol_counts</span><span class="p">,</span>
+                         <span class="n">alphabet_size</span><span class="p">,</span>
+                         <span class="n">alphabet_size_past</span><span class="p">,</span>
+                         <span class="n">H_uncond</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Estimate the entropy of a system using the BBC estimator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_multiplicities</span><span class="p">(</span><span class="n">symbol_counts</span><span class="p">,</span> <span class="n">alphabet_size</span><span class="p">)</span>
+        <span class="n">mk_past</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_multiplicities</span><span class="p">(</span><span class="n">past_symbol_counts</span><span class="p">,</span> <span class="n">alphabet_size_past</span><span class="p">)</span>
+
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">mk</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">mk</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+
+        <span class="n">H_plugin_joint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plugin_entropy</span><span class="p">(</span><span class="n">mk</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+        <span class="n">H_plugin_past</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plugin_entropy</span><span class="p">(</span><span class="n">mk_past</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+
+        <span class="n">H_plugin_cond</span> <span class="o">=</span> <span class="n">H_plugin_joint</span> <span class="o">-</span> <span class="n">H_plugin_past</span>
+        <span class="n">I_plugin</span> <span class="o">=</span> <span class="n">H_uncond</span> <span class="o">-</span> <span class="n">H_plugin_cond</span>
+        <span class="n">R_plugin</span> <span class="o">=</span> <span class="n">I_plugin</span> <span class="o">/</span> <span class="n">H_uncond</span>
+
+        <span class="k">return</span> <span class="n">I_plugin</span><span class="p">,</span> <span class="n">R_plugin</span></div>
+
+<div class="viewcode-block" id="RudeltPluginEstimatorSymbolsMI.estimate"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltPluginEstimatorSymbolsMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol_array</span><span class="p">,</span> <span class="n">past_symbol_array</span><span class="p">,</span> <span class="n">current_symbol_array</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Estimate mutual information using plugin estimator.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            symbol_array : 1D numpy array</span>
+<span class="sd">                realisations of symbols based on current and past states.</span>
+<span class="sd">                (first output of get_realisations_symbol from data_spiketimes object)</span>
+<span class="sd">            past_symbol_array : numpy array</span>
+<span class="sd">                realisations of symbols based on current and past states.</span>
+<span class="sd">                (first output of get_realisations_symbol from data_spiketimes object)</span>
+<span class="sd">            current_symbol_array : numpy array</span>
+<span class="sd">                realisations of symbols based on current and past states.</span>
+<span class="sd">                (first output of get_realisations_symbol from data_spiketimes object)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            I (float)</span>
+<span class="sd">                MI (AIS)</span>
+<span class="sd">            R (float)</span>
+<span class="sd">                MI / H_uncond (History dependence)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_estimator_inputs</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">,</span>
+                                     <span class="n">past_symbol_array</span><span class="p">,</span>
+                                     <span class="n">current_symbol_array</span><span class="p">,</span>
+                                     <span class="kc">None</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_one_dim</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_one_dim</span><span class="p">(</span><span class="n">past_symbol_array</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_one_dim</span><span class="p">(</span><span class="n">current_symbol_array</span><span class="p">)</span>
+
+        <span class="n">symbol_counts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symbol_counts</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">)</span>
+
+        <span class="n">current_symbol_counts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symbol_counts</span><span class="p">(</span><span class="n">current_symbol_array</span><span class="p">)</span>
+        <span class="c1"># H_uncond_orig = utl.get_H_spiking(symbol_counts)</span>
+        <span class="n">H_uncond</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">get_H_spiking</span><span class="p">(</span><span class="n">symbol_counts</span><span class="p">)</span>
+
+        <span class="c1"># past_symbol_counts = utl.get_past_symbol_counts(symbol_counts)</span>
+        <span class="n">past_symbol_counts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symbol_counts</span><span class="p">(</span><span class="n">past_symbol_array</span><span class="p">)</span>
+
+        <span class="c1"># number_of_bins_d_join = np.array(list(np.binary_repr(np.max(past_symbol_array)))).astype(np.int8)</span>
+        <span class="n">number_of_bins_d_join</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">binary_repr</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">))))</span>
+
+        <span class="n">alphabet_size_past</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="nb">int</span><span class="p">(</span><span class="n">number_of_bins_d_join</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># K for past activity</span>
+        <span class="n">alphabet_size</span> <span class="o">=</span> <span class="n">alphabet_size_past</span> <span class="o">*</span> <span class="mi">2</span>  <span class="c1"># K</span>
+
+        <span class="n">I</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plugin_estimator</span><span class="p">(</span><span class="n">symbol_counts</span><span class="p">,</span>
+                                     <span class="n">past_symbol_counts</span><span class="p">,</span>
+                                     <span class="n">alphabet_size</span><span class="p">,</span>
+                                     <span class="n">alphabet_size_past</span><span class="p">,</span>
+                                     <span class="n">H_uncond</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">I</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">R</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="RudeltBBCEstimator"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltBBCEstimator">[docs]</a><span class="k">class</span> <span class="nc">RudeltBBCEstimator</span><span class="p">(</span><span class="n">RudeltAbstractEstimator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bayesian bias criterion (BBC) Estimator using NSB and Plugin estimator</span>
+
+<span class="sd">    Calculate the mutual information (MI) of one variable depending on its past</span>
+<span class="sd">    using nsb and plugin estimator and check if bias criterion is passed.</span>
+<span class="sd">    See parent class for references.</span>
+
+<span class="sd">    implemented in idtxl by Michael Lindner, Göttingen 2021</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        settings : dict</span>
+<span class="sd">            - embedding_step_size : float [optional]</span>
+<span class="sd">                Step size delta t (in seconds) with which the window is slid through the data</span>
+<span class="sd">                (default = 0.005).</span>
+<span class="sd">            - normalise : bool [optional]</span>
+<span class="sd">                rebase spike times to zero</span>
+<span class="sd">                (default=True)</span>
+<span class="sd">            - return_averaged_R : bool [optional]</span>
+<span class="sd">                If set to True, compute R̂tot as the average over R̂(T ) for T ∈ [T̂D, Tmax ] instead of</span>
+<span class="sd">                R̂tot = R(T̂D ). If set to True, the setting for number_of_bootstraps_R_tot is ignored and</span>
+<span class="sd">                set to 0</span>
+<span class="sd">                (default=True)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="RudeltBBCEstimator.bayesian_bias_criterion"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltBBCEstimator.bayesian_bias_criterion">[docs]</a>    <span class="k">def</span> <span class="nf">bayesian_bias_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">R_nsb</span><span class="p">,</span> <span class="n">R_plugin</span><span class="p">,</span> <span class="n">bbc_tolerance</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get whether the Bayesian bias criterion (bbc) is passed.</span>
+
+<span class="sd">        :param R_nsb: history dependence computed with NSB estimator</span>
+<span class="sd">        :param R_plugin: history dependence computed with plugin estimator</span>
+<span class="sd">        :param bbc_tolerance: tolerance for the Bayesian bias criterion</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_bbc_term</span><span class="p">(</span><span class="n">R_nsb</span><span class="p">,</span> <span class="n">R_plugin</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">bbc_tolerance</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="RudeltBBCEstimator.get_bbc_term"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltBBCEstimator.get_bbc_term">[docs]</a>    <span class="k">def</span> <span class="nf">get_bbc_term</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">R_nsb</span><span class="p">,</span> <span class="n">R_plugin</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the bbc tolerance-independent term of the Bayesian bias</span>
+<span class="sd">        criterion (bbc).</span>
+
+<span class="sd">        :param R_nsb: history dependence computed with NSB estimator</span>
+<span class="sd">        :param R_plugin: history dependence computed with plugin estimator</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">R_nsb</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">R_nsb</span> <span class="o">-</span> <span class="n">R_plugin</span><span class="p">)</span> <span class="o">/</span> <span class="n">R_nsb</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span></div>
+
+<div class="viewcode-block" id="RudeltBBCEstimator.estimate"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltBBCEstimator.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol_array</span><span class="p">,</span> <span class="n">past_symbol_array</span><span class="p">,</span> <span class="n">current_symbol_array</span><span class="p">,</span> <span class="n">bbc_tolerance</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the mutual information (MI) of one variable depending on its past</span>
+<span class="sd">        using nsb and plugin estimator and check if bias criterion is passed/</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            symbol_array : 1D numpy array</span>
+<span class="sd">                realisations of symbols based on current and past states.</span>
+<span class="sd">                (first output of get_realisations_symbol from data_spiketimes object)</span>
+<span class="sd">            past_symbol_array : numpy array</span>
+<span class="sd">                realisations of symbols based on current and past states.</span>
+<span class="sd">                (first output of get_realisations_symbol from data_spiketimes object)</span>
+<span class="sd">            current_symbol_array : numpy array</span>
+<span class="sd">                realisations of symbols based on current and past states.</span>
+<span class="sd">                (first output of get_realisations_symbol from data_spiketimes object)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            I (float)</span>
+<span class="sd">                MI (AIS)</span>
+<span class="sd">            R (float)</span>
+<span class="sd">                MI / H_uncond (History dependence)</span>
+<span class="sd">            bbc_term (float)</span>
+<span class="sd">                bbc tolerance-independent term of the Bayesian bias</span>
+<span class="sd">                criterion (bbc)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_estimator_inputs</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">,</span>
+                                     <span class="n">past_symbol_array</span><span class="p">,</span>
+                                     <span class="n">current_symbol_array</span><span class="p">,</span>
+                                     <span class="n">bbc_tolerance</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_one_dim</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_one_dim</span><span class="p">(</span><span class="n">past_symbol_array</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_one_dim</span><span class="p">(</span><span class="n">current_symbol_array</span><span class="p">)</span>
+
+        <span class="n">estnsb</span> <span class="o">=</span> <span class="n">RudeltNSBEstimatorSymbolsMI</span><span class="p">()</span>
+        <span class="n">I_nsb</span><span class="p">,</span> <span class="n">R_nsb</span> <span class="o">=</span> <span class="n">estnsb</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">,</span> <span class="n">past_symbol_array</span><span class="p">,</span> <span class="n">current_symbol_array</span><span class="p">)</span>
+
+        <span class="n">estplugin</span> <span class="o">=</span> <span class="n">RudeltPluginEstimatorSymbolsMI</span><span class="p">()</span>
+        <span class="n">I_plugin</span><span class="p">,</span> <span class="n">R_plugin</span> <span class="o">=</span> <span class="n">estplugin</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">,</span> <span class="n">past_symbol_array</span><span class="p">,</span> <span class="n">current_symbol_array</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">bbc_tolerance</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bayesian_bias_criterion</span><span class="p">(</span><span class="n">R_nsb</span><span class="p">,</span> <span class="n">R_plugin</span><span class="p">,</span> <span class="n">bbc_tolerance</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">I_nsb</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">R_nsb</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">I_nsb</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">R_nsb</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_bbc_term</span><span class="p">(</span><span class="n">R_nsb</span><span class="p">,</span>
+                                                  <span class="n">R_plugin</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="RudeltShufflingEstimator"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltShufflingEstimator">[docs]</a><span class="k">class</span> <span class="nc">RudeltShufflingEstimator</span><span class="p">(</span><span class="n">RudeltAbstractEstimator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Estimate the history dependence in a spike train using the shuffling estimator.</span>
+
+<span class="sd">    See parent class for references.</span>
+
+<span class="sd">    implemented in idtxl by Michael Lindner, Göttingen 2021</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="RudeltShufflingEstimator.get_P_X_uncond"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltShufflingEstimator.get_P_X_uncond">[docs]</a>    <span class="k">def</span> <span class="nf">get_P_X_uncond</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_of_symbols</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute P(X), the probability of the current activity using</span>
+<span class="sd">        the plug-in estimator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">number_of_symbols</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">number_of_symbols</span><span class="p">),</span>
+                <span class="n">number_of_symbols</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">number_of_symbols</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="RudeltShufflingEstimator.get_P_X_past_uncond"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltShufflingEstimator.get_P_X_past_uncond">[docs]</a>    <span class="k">def</span> <span class="nf">get_P_X_past_uncond</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">past_symbol_counts</span><span class="p">,</span> <span class="n">number_of_symbols</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute P(X_past), the probability of the past activity using</span>
+<span class="sd">        the plug-in estimator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">P_X_past_uncond</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">response</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="n">past_symbol_counts</span><span class="p">[</span><span class="n">response</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="n">P_X_past_uncond</span><span class="p">:</span>
+                    <span class="n">P_X_past_uncond</span><span class="p">[</span><span class="n">symbol</span><span class="p">]</span> <span class="o">+=</span> <span class="n">past_symbol_counts</span><span class="p">[</span><span class="n">response</span><span class="p">][</span><span class="n">symbol</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">P_X_past_uncond</span><span class="p">[</span><span class="n">symbol</span><span class="p">]</span> <span class="o">=</span> <span class="n">past_symbol_counts</span><span class="p">[</span><span class="n">response</span><span class="p">][</span><span class="n">symbol</span><span class="p">]</span>
+        <span class="n">number_of_symbols_uncond</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">number_of_symbols</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="n">P_X_past_uncond</span><span class="p">:</span>
+            <span class="n">P_X_past_uncond</span><span class="p">[</span><span class="n">symbol</span><span class="p">]</span> <span class="o">/=</span> <span class="n">number_of_symbols_uncond</span>
+        <span class="k">return</span> <span class="n">P_X_past_uncond</span></div>
+
+<div class="viewcode-block" id="RudeltShufflingEstimator.get_P_X_past_cond_X"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltShufflingEstimator.get_P_X_past_cond_X">[docs]</a>    <span class="k">def</span> <span class="nf">get_P_X_past_cond_X</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">past_symbol_counts</span><span class="p">,</span> <span class="n">number_of_symbols</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute P(X_past | X), the probability of the past activity conditioned</span>
+<span class="sd">        on the response X using the plug-in estimator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">P_X_past_cond_X</span> <span class="o">=</span> <span class="p">[{},</span> <span class="p">{}]</span>
+        <span class="k">for</span> <span class="n">response</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="n">past_symbol_counts</span><span class="p">[</span><span class="n">response</span><span class="p">]:</span>
+                <span class="n">P_X_past_cond_X</span><span class="p">[</span><span class="n">response</span><span class="p">][</span><span class="n">symbol</span><span class="p">]</span> \
+                    <span class="o">=</span> <span class="n">past_symbol_counts</span><span class="p">[</span><span class="n">response</span><span class="p">][</span><span class="n">symbol</span><span class="p">]</span> <span class="o">/</span> <span class="n">number_of_symbols</span><span class="p">[</span><span class="n">response</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">P_X_past_cond_X</span></div>
+
+<div class="viewcode-block" id="RudeltShufflingEstimator.get_H0_X_past_cond_X_eq_x"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltShufflingEstimator.get_H0_X_past_cond_X_eq_x">[docs]</a>    <span class="k">def</span> <span class="nf">get_H0_X_past_cond_X_eq_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marginal_probabilities</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute H_0(X_past | X = x), cf get_H0_X_past_cond_X.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">utl</span><span class="o">.</span><span class="n">get_shannon_entropy</span><span class="p">(</span><span class="n">marginal_probabilities</span><span class="p">)</span> \
+               <span class="o">+</span> <span class="n">utl</span><span class="o">.</span><span class="n">get_shannon_entropy</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">marginal_probabilities</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RudeltShufflingEstimator.get_H0_X_past_cond_X"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltShufflingEstimator.get_H0_X_past_cond_X">[docs]</a>    <span class="k">def</span> <span class="nf">get_H0_X_past_cond_X</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marginal_probabilities</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">,</span> <span class="n">P_X_uncond</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute H_0(X_past | X), the estimate of the entropy for the past</span>
+<span class="sd">        symbols given a response, under the assumption that activity in</span>
+<span class="sd">        the past contributes independently towards the response.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">H0_X_past_cond_X_eq_x</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">response</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+            <span class="n">H0_X_past_cond_X_eq_x</span><span class="p">[</span><span class="n">response</span><span class="p">]</span> \
+                <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_H0_X_past_cond_X_eq_x</span><span class="p">(</span><span class="n">marginal_probabilities</span><span class="p">[</span><span class="n">response</span><span class="p">],</span>
+                                            <span class="n">number_of_bins_d</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span><span class="n">P_X_uncond</span><span class="p">[</span><span class="n">response</span><span class="p">]</span> <span class="o">*</span> <span class="n">H0_X_past_cond_X_eq_x</span><span class="p">[</span><span class="n">response</span><span class="p">]</span> <span class="k">for</span> <span class="n">response</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span></div>
+
+<div class="viewcode-block" id="RudeltShufflingEstimator.get_H_X_past_uncond"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltShufflingEstimator.get_H_X_past_uncond">[docs]</a>    <span class="k">def</span> <span class="nf">get_H_X_past_uncond</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P_X_past_uncond</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute H(X_past), the plug-in estimate of the entropy for the past symbols, given</span>
+<span class="sd">        their probabilities.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">utl</span><span class="o">.</span><span class="n">get_shannon_entropy</span><span class="p">(</span><span class="n">P_X_past_uncond</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="RudeltShufflingEstimator.get_H_X_past_cond_X"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltShufflingEstimator.get_H_X_past_cond_X">[docs]</a>    <span class="k">def</span> <span class="nf">get_H_X_past_cond_X</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P_X_uncond</span><span class="p">,</span> <span class="n">P_X_past_cond_X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute H(X_past | X), the plug-in estimate of the conditional entropy for the past</span>
+<span class="sd">        symbols, conditioned on the response X,  given their probabilities.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">((</span><span class="n">P_X_uncond</span><span class="p">[</span><span class="n">response</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_H_X_past_uncond</span><span class="p">(</span><span class="n">P_X_past_cond_X</span><span class="p">[</span><span class="n">response</span><span class="p">])</span>
+                    <span class="k">for</span> <span class="n">response</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="RudeltShufflingEstimator.get_marginal_frequencies_of_spikes_in_bins"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltShufflingEstimator.get_marginal_frequencies_of_spikes_in_bins">[docs]</a>    <span class="k">def</span> <span class="nf">get_marginal_frequencies_of_spikes_in_bins</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol_counts</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute for each past bin 1...d the sum of spikes found in that bin across all</span>
+<span class="sd">        observed symbols.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">sum</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol_binary_to_array</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">)</span>
+                             <span class="o">*</span> <span class="n">symbol_counts</span><span class="p">[</span><span class="n">symbol</span><span class="p">]</span>
+                             <span class="k">for</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="n">symbol_counts</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RudeltShufflingEstimator.get_shuffled_symbol_counts"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltShufflingEstimator.get_shuffled_symbol_counts">[docs]</a>    <span class="k">def</span> <span class="nf">get_shuffled_symbol_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol_counts</span><span class="p">,</span> <span class="n">past_symbol_counts</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">,</span>
+                                   <span class="n">number_of_symbols</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Simulate new data by, for each past bin 1...d, permutating the activity</span>
+<span class="sd">        across all observed past_symbols (for a given response X). The marginal</span>
+<span class="sd">        probability of observing a spike given the response is thus preserved for</span>
+<span class="sd">        each past bin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">number_of_spikes</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">past_symbol_counts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+        <span class="n">marginal_frequencies</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">get_marginal_frequencies_of_spikes_in_bins</span><span class="p">(</span><span class="n">past_symbol_counts</span><span class="p">[</span><span class="n">response</span><span class="p">],</span>
+                                                                           <span class="n">number_of_bins_d</span><span class="p">)</span>
+                                <span class="k">for</span> <span class="n">response</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+
+        <span class="n">shuffled_past_symbols</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">number_of_symbols</span><span class="p">[</span><span class="n">response</span><span class="p">])</span> <span class="k">for</span> <span class="n">response</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">response</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+                <span class="n">shuffled_past_symbols</span><span class="p">[</span><span class="n">response</span><span class="p">]</span> \
+                    <span class="o">+=</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">number_of_bins_d</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> \
+                       <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">marginal_frequencies</span><span class="p">[</span><span class="n">response</span><span class="p">][</span><span class="n">i</span><span class="p">]),</span>
+                                                          <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">number_of_symbols</span><span class="p">[</span><span class="n">response</span><span class="p">]</span> \
+                                                                   <span class="o">-</span> <span class="n">marginal_frequencies</span><span class="p">[</span><span class="n">response</span><span class="p">][</span><span class="n">i</span><span class="p">]))))</span>
+
+        <span class="k">for</span> <span class="n">response</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+            <span class="n">shuffled_past_symbols</span><span class="p">[</span><span class="n">response</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">shuffled_past_symbols</span><span class="p">[</span><span class="n">response</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="n">shuffled_past_symbol_counts</span> <span class="o">=</span> <span class="p">[</span><span class="n">Counter</span><span class="p">(),</span> <span class="n">Counter</span><span class="p">()]</span>
+
+        <span class="k">for</span> <span class="n">response</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">past_symbol</span> <span class="ow">in</span> <span class="n">shuffled_past_symbols</span><span class="p">[</span><span class="n">response</span><span class="p">]:</span>
+                <span class="n">shuffled_past_symbol_counts</span><span class="p">[</span><span class="n">response</span><span class="p">][</span><span class="n">past_symbol</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">marginal_probabilities</span> <span class="o">=</span> <span class="p">[</span><span class="n">marginal_frequencies</span><span class="p">[</span><span class="n">response</span><span class="p">]</span> <span class="o">/</span> <span class="n">number_of_symbols</span><span class="p">[</span><span class="n">response</span><span class="p">]</span>
+                                  <span class="k">for</span> <span class="n">response</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+
+        <span class="k">return</span> <span class="n">shuffled_past_symbol_counts</span><span class="p">,</span> <span class="n">marginal_probabilities</span></div>
+
+<div class="viewcode-block" id="RudeltShufflingEstimator.shuffling_MI"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltShufflingEstimator.shuffling_MI">[docs]</a>    <span class="k">def</span> <span class="nf">shuffling_MI</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol_counts</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Estimate the mutual information between current and past activity</span>
+<span class="sd">        in a spike train using the shuffling estimator.</span>
+
+<span class="sd">        To obtain the shuffling estimate, compute the plug-in estimate and</span>
+<span class="sd">        a correction term to reduce its bias.</span>
+
+<span class="sd">        For the plug-in estimate:</span>
+
+<span class="sd">        - Extract the past_symbol_counts from the symbol_counts.</span>
+<span class="sd">        - I_plugin = H(X_past) - H(X_past | X)</span>
+
+<span class="sd">        Notation:</span>
+
+<span class="sd">        - X: current activity, aka response</span>
+<span class="sd">        - X_past: past activity</span>
+<span class="sd">        - P_X_uncond: P(X)</span>
+<span class="sd">        - P_X_past_uncond: P(X_past)</span>
+<span class="sd">        - P_X_past_cond_X: P(X_past | X)</span>
+<span class="sd">        - H_X_past_uncond: H(X_past)</span>
+<span class="sd">        - H_X_past_cond_X: H(X_past | X)</span>
+<span class="sd">        - I_plugin: plugin estimate of I(X_past; X)</span>
+
+<span class="sd">        For the correction term:</span>
+
+<span class="sd">        - Simulate additional data under the assumption that activity</span>
+<span class="sd">            in the past contributes independently towards the current activity.</span>
+<span class="sd">        - Compute the entropy under the assumptions of the model, which</span>
+<span class="sd">            due to its simplicity is easy to sample and the estimate unbiased</span>
+<span class="sd">        - Compute the entropy using the plug-in estimate, whose bias is</span>
+<span class="sd">            similar to that of the plug-in estimate on the original data</span>
+<span class="sd">        - Compute the correction term as the difference between the</span>
+<span class="sd">            unbiased and biased terms</span>
+
+<span class="sd">        Notation:</span>
+
+<span class="sd">        - P0_sh_X_past_cond_X: P_0,sh(X_past | X), equiv. to P(X_past | X)</span>
+<span class="sd">          on the shuffled data</span>
+<span class="sd">        - H0_X_past_cond_X: H_0(X_past | X), based on the model of independent</span>
+<span class="sd">          contributions</span>
+<span class="sd">        - H0_sh_X_past_cond_X: H_0,sh(X_past | X), based on</span>
+<span class="sd">        - P0_sh_X_past_cond_X, ie the plug-in estimate</span>
+<span class="sd">        - I_corr: the correction term to reduce the bias of I_plugin</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            symbol_counts : iterable</span>
+<span class="sd">                the activity of a spike train is embedded into symbols,</span>
+<span class="sd">                whose occurrences are counted (cf emb.get_symbol_counts)</span>
+<span class="sd">            number_of_bins_d : int</span>
+<span class="sd">                the number of bins of the embedding</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># plug-in estimate</span>
+        <span class="n">past_symbol_counts</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">get_past_symbol_counts</span><span class="p">(</span><span class="n">symbol_counts</span><span class="p">,</span> <span class="n">merge</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">number_of_symbols</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">past_symbol_counts</span><span class="p">[</span><span class="n">response</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="k">for</span> <span class="n">response</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+
+        <span class="n">P_X_uncond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_P_X_uncond</span><span class="p">(</span><span class="n">number_of_symbols</span><span class="p">)</span>
+        <span class="n">P_X_past_uncond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_P_X_past_uncond</span><span class="p">(</span><span class="n">past_symbol_counts</span><span class="p">,</span> <span class="n">number_of_symbols</span><span class="p">)</span>
+        <span class="n">P_X_past_cond_X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_P_X_past_cond_X</span><span class="p">(</span><span class="n">past_symbol_counts</span><span class="p">,</span> <span class="n">number_of_symbols</span><span class="p">)</span>
+
+        <span class="n">H_X_past_uncond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_H_X_past_uncond</span><span class="p">(</span><span class="n">P_X_past_uncond</span><span class="p">)</span>
+        <span class="n">H_X_past_cond_X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_H_X_past_cond_X</span><span class="p">(</span><span class="n">P_X_uncond</span><span class="p">,</span> <span class="n">P_X_past_cond_X</span><span class="p">)</span>
+
+        <span class="n">I_plugin</span> <span class="o">=</span> <span class="n">H_X_past_uncond</span> <span class="o">-</span> <span class="n">H_X_past_cond_X</span>
+
+        <span class="c1"># correction term</span>
+        <span class="n">shuffled_past_symbol_counts</span><span class="p">,</span> <span class="n">marginal_probabilities</span> \
+            <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_shuffled_symbol_counts</span><span class="p">(</span><span class="n">symbol_counts</span><span class="p">,</span> <span class="n">past_symbol_counts</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">,</span>
+                                         <span class="n">number_of_symbols</span><span class="p">)</span>
+
+        <span class="n">P0_sh_X_past_cond_X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_P_X_past_cond_X</span><span class="p">(</span><span class="n">shuffled_past_symbol_counts</span><span class="p">,</span> <span class="n">number_of_symbols</span><span class="p">)</span>
+
+        <span class="n">H0_X_past_cond_X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_H0_X_past_cond_X</span><span class="p">(</span><span class="n">marginal_probabilities</span><span class="p">,</span> <span class="n">number_of_bins_d</span><span class="p">,</span> <span class="n">P_X_uncond</span><span class="p">)</span>
+        <span class="n">H0_sh_X_past_cond_X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_H_X_past_cond_X</span><span class="p">(</span><span class="n">P_X_uncond</span><span class="p">,</span> <span class="n">P0_sh_X_past_cond_X</span><span class="p">)</span>
+
+        <span class="n">I_corr</span> <span class="o">=</span> <span class="n">H0_X_past_cond_X</span> <span class="o">-</span> <span class="n">H0_sh_X_past_cond_X</span>
+
+        <span class="c1"># shuffling estimate</span>
+        <span class="k">return</span> <span class="n">I_plugin</span> <span class="o">-</span> <span class="n">I_corr</span></div>
+
+<div class="viewcode-block" id="RudeltShufflingEstimator.estimate"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.estimators_Rudelt.RudeltShufflingEstimator.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol_array</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Estimate the history dependence in a spike train using the shuffling estimator.</span>
+
+<span class="sd">         Args:</span>
+<span class="sd">            symbol_array : 1D numpy array</span>
+<span class="sd">                realisations of symbols based on current and past states.</span>
+<span class="sd">                (first output of get_realisations_symbol from data_spiketimes object)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            I (float)</span>
+<span class="sd">                MI (AIS)</span>
+<span class="sd">            R (float)</span>
+<span class="sd">                MI / H_uncond (History dependence)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_estimator_inputs</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">,</span>
+                                     <span class="kc">None</span><span class="p">,</span>
+                                     <span class="kc">None</span><span class="p">,</span>
+                                     <span class="kc">None</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_one_dim</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">)</span>
+
+        <span class="n">symbol_counts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symbol_counts</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">)</span>
+
+        <span class="c1"># number_of_bins_d_join = np.array(list(np.binary_repr(np.max(symbol_array)))).astype(np.int8)</span>
+        <span class="n">number_of_bins_d_join</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">binary_repr</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">symbol_array</span><span class="p">))))</span>
+
+        <span class="n">H_uncond</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">get_H_spiking</span><span class="p">(</span><span class="n">symbol_counts</span><span class="p">)</span>
+
+        <span class="n">I_sh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shuffling_MI</span><span class="p">(</span><span class="n">symbol_counts</span><span class="p">,</span>
+                            <span class="n">number_of_bins_d_join</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">R_sh</span> <span class="o">=</span> <span class="n">I_sh</span> <span class="o">/</span> <span class="n">H_uncond</span>
+
+        <span class="k">return</span> <span class="n">I_sh</span><span class="p">,</span> <span class="n">R_sh</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">idtxl.estimators_Rudelt</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

@@ -24,3 +24,6 @@ Results node dynamics
 .. autoclass:: idtxl.results.ResultsMultivariatePID
     :members:
     :noindex:
+.. autoclass:: idtxl.results.ResultsSingleProcessRudelt
+    :members:
+    :noindex:
