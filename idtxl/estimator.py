@@ -33,7 +33,7 @@ def list_estimators():
             pprint(class_list)
 
 
-def find_estimator(est):
+def _find_estimator(est):
     """Return estimator class.
 
     Return an estimator class. If input is a class, check if it implements
@@ -71,6 +71,39 @@ def find_estimator(est):
     else:
         raise TypeError('Please provide an estimator class or the name of an '
                         'estimator as string.')
+
+
+def get_estimator(est, settings):
+    """Factory method that creates an Estimator instance with the given settings.
+
+    If the MPI flag is set to True, return an MPIEstimator instead.
+
+    Args:
+        est : str | Class
+            name of an estimator class implemented in IDTxl or custom estimator
+            class
+
+    Returns
+        Estimator
+            Instance of the requestet estimator or MPIEstimator
+    """
+
+    # Check if MPI flag is set to True
+    if settings.get('MPI', False):
+        settings_mpi = settings.copy()
+
+        # Remove MPI flag to avoid infinite recursion
+        del settings_mpi['MPI']
+
+        # Import just in time to avoid cyclic import
+        from .estimators_mpi import MPIEstimator
+
+        return MPIEstimator(est, settings_mpi)
+
+    # Otherwise find Estimator and return instance
+    EstimatorClass = _find_estimator(est)
+
+    return EstimatorClass(settings)
 
 
 class Estimator(metaclass=ABCMeta):
@@ -172,16 +205,16 @@ class Estimator(metaclass=ABCMeta):
             raise RuntimeError('Insufficient number of points ({0}) for the '
                                'requested number of nearest neighbours '
                                '(kraskov_k: {1}).'.format(
-                                        n_points, self.settings['kraskov_k']))
+                                   n_points, self.settings['kraskov_k']))
         if (n_points - 1) <= (int(self.settings['kraskov_k']) +
                               int(self.settings['theiler_t'])):
             raise RuntimeError('Insufficient number of points ({0}) for the '
                                'requested number of nearest neighbours '
                                '(kraskov_k: {1}) and Theiler-correction '
                                '(theiler_t: {2}).'.format(
-                                                n_points,
-                                                self.settings['kraskov_k'],
-                                                self.settings['theiler_t']))
+                                   n_points,
+                                   self.settings['kraskov_k'],
+                                   self.settings['theiler_t']))
 
     def _ensure_one_dim_input(self, var):
         """Make sure input arrays have one dimension.
