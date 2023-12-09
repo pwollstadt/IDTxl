@@ -1,0 +1,664 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Postprocessing of inferred networks &#8212; IDTxl 1.4 documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Helper functions" href="idtxl_helper.html" />
+    <link rel="prev" title="Information theoretic estimators" href="idtxl_estimators.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="idtxl_helper.html" title="Helper functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="idtxl_estimators.html" title="Information theoretic estimators"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Postprocessing of inferred networks</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="postprocessing-of-inferred-networks">
+<h1>Postprocessing of inferred networks<a class="headerlink" href="#postprocessing-of-inferred-networks" title="Permalink to this headline">¶</a></h1>
+<section id="significant-subgraph-mining">
+<h2>Significant subgraph mining<a class="headerlink" href="#significant-subgraph-mining" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">idtxl.postprocessing.</code><code class="sig-name descname">SignificantSubgraphMining</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">resultsA</span></em>, <em class="sig-param"><span class="n">resultsB</span></em>, <em class="sig-param"><span class="n">alpha</span></em>, <em class="sig-param"><span class="n">design</span></em>, <em class="sig-param"><span class="n">graph_type</span><span class="o">=</span><span class="default_value">'directed'</span></em>, <em class="sig-param"><span class="n">data_format</span><span class="o">=</span><span class="default_value">'adjacency'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Implementation of significant subgraph mining as described in</p>
+<p>Sugiyama M, Lopez FL, Kasenburg N, Borgwardt KM.  Significant
+subgraph mining with multiple testing correction.
+In:  Proceedings of the 2015 SIAMInternational Conference
+on Data Mining. SIAM; 2015. p. 37–45.</p>
+<p>Llinares-Lopez F, Sugiyama M, Papaxanthos L, Borgwardt K.  Fast and
+memory-efficient significant pattern mining via permutation testing.
+In:Proceedings of the 21th ACM SIGKDD International Conference on
+Knowledge Discovery and Data Mining. ACM; 2015. p. 725–734.</p>
+<p>Gutknecht, Wibral (2021): “Significant Subgraph Mining for Neural Network
+Inference with Multiple Comparisons Correction”. bioRxiv.
+<a class="reference external" href="https://www.biorxiv.org/content/10.1101/2021.11.03.467050v1.full">https://www.biorxiv.org/content/10.1101/2021.11.03.467050v1.full</a></p>
+<dl class="simple">
+<dt>Attributes:</dt><dd><dl class="simple">
+<dt>resultsA<span class="classifier">list</span></dt><dd><p>List of lists of IDTxl results dicts. One list per subject in
+Group A and one results dict per target.</p>
+</dd>
+<dt>resultsB<span class="classifier">list</span></dt><dd><p>List of lists of IDTxl results dicts. One list per subject in
+Group B and one results dict per target</p>
+</dd>
+<dt>coding_list<span class="classifier">list</span></dt><dd><p>List of all target-source-lag triplets in data set. Used to encode
+networks as lists of indices.</p>
+</dd>
+<dt>groupA_networks<span class="classifier">list</span></dt><dd><p>List of lists of indices representing networks of subjects in
+Group A</p>
+</dd>
+<dt>groupB_networks<span class="classifier">list</span></dt><dd><p>List of lists of indices representing networks of subjects in
+Group B</p>
+</dd>
+<dt>graph_type<span class="classifier">string</span></dt><dd><p>can be either “directed” or “undirected” (undirected is only
+possible if data_format is “adjacency”)</p>
+</dd>
+<dt>data_format<span class="classifier">string</span></dt><dd><p>can be either “idtxl” or “adjacency”</p>
+</dd>
+<dt>design<span class="classifier">string</span></dt><dd><p>Sampling design. Either “within” for within-subject designs (the
+same group of subjects is measured under two different conditions)
+or “between” for between-subjects designs (two different groups
+of subjects are measured under the same condition)</p>
+</dd>
+<dt>n_A<span class="classifier">int</span></dt><dd><p>Sample size of group A</p>
+</dd>
+<dt>n_B<span class="classifier">int</span></dt><dd><p>Sample size of group B</p>
+</dd>
+<dt>N<span class="classifier">int</span></dt><dd><p>Total sample size</p>
+</dd>
+<dt>alpha<span class="classifier">float</span></dt><dd><p>Uncorrected significance level</p>
+</dd>
+<dt>min_p_value_table<span class="classifier">list</span></dt><dd><p>List of minimum achievable p-values for all possible numbers of
+total occurrences of a subgraph (0 to N)</p>
+</dd>
+<dt>p_value_table<span class="classifier">numpy array</span></dt><dd><p>Lookup table of p-values for each combination of occurrences in
+Group A and total occurrences between 0 and N</p>
+</dd>
+<dt>min_freq<span class="classifier">int</span></dt><dd><p>Minimum number of occurrences required for testability at
+level alpha</p>
+</dd>
+<dt>link_counts<span class="classifier">list</span></dt><dd><p>List of links counts for each link that occurs at least once
+in the data set (i.e. for each target-source-lag triplet
+in coding_list)</p>
+</dd>
+<dt>union_indices<span class="classifier">list</span></dt><dd><p>List of indices of target-source-lag triplets in coding_list
+occuring at east min_freq times. All other triplets and all their
+supergraphs can be ignored because they are not even testable at
+level alpha</p>
+</dd>
+<dt>frequent_graphs<span class="classifier">list</span></dt><dd><p>List of frequent subgraphs in data set occuring at least min_freq
+times. Initialized empty and filled by calling the
+enumerate_frequent_subgraphs method</p>
+</dd>
+<dt>p_values<span class="classifier">list</span></dt><dd><p>List of p-values for each frequent subgraph. Initialized empty and
+filled by calling the enumerate_frequent_subgraphs method</p>
+</dd>
+<dt>minimum_p_values<span class="classifier">list</span></dt><dd><p>List of minimum p-values for each frequent subgraph. Initialized
+empty and  filled by calling the enumerate_frequent_subgraphs
+method</p>
+</dd>
+<dt>num_testable_graphs<span class="classifier">int</span></dt><dd><p>Number of subgraphs testable at level alpha. Initialized as 0 and
+determined by calling the enumerate_significant_subgraphs method.</p>
+</dd>
+<dt>k_rt<span class="classifier">int</span></dt><dd><p>Tarones correction factor. Initialized as None. Determined by
+calling the enumerate_significant_subgraphs method</p>
+</dd>
+<dt>p_values_corr<span class="classifier">list</span></dt><dd><p>List of corrected p-values. Intialized empty and filled by calling
+the enumerate_significant_subgraphs method</p>
+</dd>
+<dt>significant_graphs<span class="classifier">list</span></dt><dd><p>List of tuples of significant subgraphs in data set and their
+associated corrected p-values. Initialized empty and filled by
+calling the enumerate_significant_subgraphs method</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt>
+<code class="sig-name descname">count_discordants</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">indices</span></em>, <em class="sig-param"><span class="n">where</span><span class="o">=</span><span class="default_value">'original'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.count_discordants"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Counts the discordant pairs for a given subgraph represented as a
+list of indices.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>indices<span class="classifier">list of integers</span></dt><dd><p>indices of all links the subgraph to be counted consists of</p>
+</dd>
+<dt>where<span class="classifier">string</span></dt><dd><p>if “original” then the discordants are counted in the original
+data set. if “perm” the discordants are counted in the permuted
+data set (for WY procedure)</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>tuple of integers</dt><dd><p>number of cases in which the subgraph occurred in condition A
+but not in B, and number of cases in which the subgraph
+occurred in B but not in A</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">count_discordants_wylight</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">indices</span></em>, <em class="sig-param"><span class="n">k</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.count_discordants_wylight"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Counts discordant pairs for subgraph given by list if indices
+in k-th permuted data set.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>indices<span class="classifier">list of integers</span></dt><dd><p>indices of all links of the subgraph</p>
+</dd>
+<dt>k<span class="classifier">integer</span></dt><dd><p>index of permuted data set</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>tuple of integers</dt><dd><p>number of cases in which the subgraph occurred in condition A
+but not in B, and number of cases in which the subgraph
+occurred in B but not in A</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">count_subgraph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">indices</span></em>, <em class="sig-param"><span class="n">where</span><span class="o">=</span><span class="default_value">'original'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.count_subgraph"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Counts the number of occurrences of a subgraph represented by a list of
+indices</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>indices<span class="classifier">list of integers</span></dt><dd><p>indices of all links the subgraph to be counted consists of</p>
+</dd>
+<dt>where<span class="classifier">string</span></dt><dd><p>if “original” then the subgraph is counted in the original
+data set. if “perm” the subgraph is counted in the permuted
+data set (for WY procedure)</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>tuple of integers</dt><dd><p>number of occurrences of subgraph in GroupA and in GroupB</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">count_subgraph_wylight</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">indices</span></em>, <em class="sig-param"><span class="n">k</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.count_subgraph_wylight"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Counts subgraph occurrences in k-th permuted data set</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>indices<span class="classifier">list of integers</span></dt><dd><p>indices of all links of the subgraph</p>
+</dd>
+<dt>k<span class="classifier">integer</span></dt><dd><p>index of permuted data set</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>tuple of integers</dt><dd><p>number of occurrences in group A and number of occurrences
+in group B</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">decode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">indices</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.decode"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Converts a given list of indices (representing a subgraph) into
+a list of corresponding target-source-lag triplets using the mapping
+described in the coding list.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>indices : list of integers</p>
+</dd>
+<dt>Returns:</dt><dd><p>List of 3-tuples</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">decode_adjacency</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">indices</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.decode_adjacency"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Decodes list of indices as adjacency matrix</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">determine_tarone_factor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.determine_tarone_factor"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Determines Tarone’s correction factor in case there are at least two
+testable subgraphs.</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>int</dt><dd><p>Tarone’s correction factor</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">encode</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.encode"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Encodes all subject networks as lists of indices. The ith entry
+describes the occurrence of the ith target-source-lag triplet
+in the coding list (self.coding_list).</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>tuple of lists of integers</dt><dd><p>The first entry of the tuple is a list of integers
+describing the networks of subjects in Group A. The second
+entry is a list of integers for Group B.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">encode_adjacency</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.encode_adjacency"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Encodes all input adjacency matrices as lists of indices</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">enumerate_frequent_graphs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">freq</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.enumerate_frequent_graphs"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Adds all subgraphs occuring at least freq times to self.frequent_graphs
+The process is carried out recursively using the extend() method.
+Individual links of the union network are successively extended to
+build more complex subgraphs. As soon as a subgraph does not occur
+often enough the extension process can be stopped because all
+supergraphs can at best occur with the same frequency. The extend()
+method also saves the minimum and actual p-values of all frequent
+subgraphs.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>freq<span class="classifier">int</span></dt><dd><p>desired minimum frequency</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">enumerate_significant_subgraphs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'Hommel'</span></em>, <em class="sig-param"><span class="n">wy_algorithm</span><span class="o">=</span><span class="default_value">'simple_depth_first'</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">num_perm</span><span class="o">=</span><span class="default_value">10000</span></em>, <em class="sig-param"><span class="n">max_depth</span><span class="o">=</span><span class="default_value">inf</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.enumerate_significant_subgraphs"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>This is the main function carrying out significant subgraph mining
+according to the multiple comparisons correction method (and algorithm
+in the case of Westfall-Young) of choice. It calls the relevant
+methods depending on the input arguments.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>verbose<span class="classifier">bool</span></dt><dd><p>If True, print summary of results</p>
+</dd>
+<dt>method<span class="classifier">string</span></dt><dd><p>Determines method used for multiple comparisons correction. can
+be “Tarone”, “Hommel”, or “Westfall-Young”</p>
+</dd>
+<dt>num_perm<span class="classifier">int</span></dt><dd><p>Number of permutations used for Westfall-Young procedure.</p>
+</dd>
+<dt>wy_algorithm<span class="classifier">string</span></dt><dd><p>algorithm used for Westfall-Young permutation procedure. Can be
+either “simple_depth_fist” (evaluates one permuted data set
+at a time) or “wy_light” for the Westfall-Young light algorithm
+introduced by Llinares-Lopez et al 2015 (distributes
+computations across permutations)</p>
+</dd>
+<dt>max_depth<span class="classifier">integer</span></dt><dd><p>maximum complexity of subgraphs (number of links) up to which
+subgraphs are mined.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>list of tuples</dt><dd><p>The first entry of each tuple is a list of indices representing
+the identified significant subgraph. The second entry is the
+associated (uncorrected) p-value.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">extend</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">to_be_extended</span></em>, <em class="sig-param"><span class="n">freq</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.extend"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Recursively extends the input subgraph checking at each recursion
+step if the current subgraph occurs frequently enough to reach
+significance at level alpha. If this is not the case, it is not
+extended any further. If it is, the extend method is called again.
+Frequent subgraphs are appended to self.frequent_subgraphs.</p>
+<dl>
+<dt>Args:</dt><dd><blockquote>
+<div><dl class="simple">
+<dt>to_be_extended<span class="classifier">list</span></dt><dd><p>list of indices describing the locations of 1s in the union
+network. Each such list represent a particular subgraph.</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="simple">
+<dt>freq<span class="classifier">int</span></dt><dd><p>desired minimum frequency</p>
+</dd>
+<dt>max_depth<span class="classifier">int</span></dt><dd><p>If specified, only subgraphs with at most max_depth links are
+considered. For instance, if max_depth = 1 only individual
+links are tested. The default value is infinity meaning that
+all possible subgraphs are considered.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">extend_mcnemar</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">to_be_extended</span></em>, <em class="sig-param"><span class="n">freq</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.extend_mcnemar"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Same as extend() method but using McNemar’s test for within subject
+designs</p>
+<dl>
+<dt>Args:</dt><dd><blockquote>
+<div><dl class="simple">
+<dt>to_be_extended<span class="classifier">list</span></dt><dd><p>list of indices describing the locations of 1s in the union
+network. Each such list represent a particular subgraph.</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="simple">
+<dt>freq<span class="classifier">int</span></dt><dd><p>desired minimum frequency</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">extend_wy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">to_be_extended</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.extend_wy"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Determines the smallest observed p-value in permuted version of the
+data set by recursively extending the input subgraph. At each
+recursion step the function checks if the current subgraph occurs
+frequently enough (&gt; self.current_min_freq) to obtain a p-value smaller
+than the smallest p-value observed so far (self.current_min_p).
+If this is not the case, it is not extended any further. If it is,
+the actual p-value is calculated. If this p-value happens to be smaller
+than current_min_p, then current_min_p and self.current_min_freq are
+updated, and the extend method is called again. If this p-value happens
+to be larger than current_min_p, the extend method is called again
+immediately.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>list of indices of coding list. Each such list represent
+a particular subgraph.</p>
+</dd>
+<dt>Returns:</dt><dd><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">extend_wy_light</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">to_be_extended</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.extend_wy_light"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Westfall-Young light extension method. Evaluates all permutations
+at the same time for each subgraph. The goal is to determine the
+Westfall-Young corrected level, i.e. the alpha quantile of the
+permutation distribution of the smallest observed p-value among
+subgraphs.  Recursively, evaluates subgraphs and updates
+the current estimate of the Westfall-Young corrected level
+self.wy_level_light.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>indices<span class="classifier">list of integers</span></dt><dd><p>indices of all links of the subgraph</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">extend_wy_light_mcnemar</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">to_be_extended</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.extend_wy_light_mcnemar"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Westfall-Young light extension method for the within-subjects case
+using McNemars test. Recursively, evaluates subgraphs and updates
+the current estimate of the Westfall-Young corrected level
+self.wy_level_light.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>indices<span class="classifier">list of integers</span></dt><dd><p>indices of all links of the subgraph</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">extend_wy_mcnemar</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">to_be_extended</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.extend_wy_mcnemar"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Same as extend_wy but using McNemars test</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>list of indices of coding list. Each such list represent
+a particular subgraph.</p>
+</dd>
+<dt>Returns:</dt><dd><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">generate_coding_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.generate_coding_list"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>If data_format = “idtxl”: Creates list of all target-source-lag
+triplets occuring at least once
+in the data set. This list is used to encode subject networks as
+lists including all indices of the coding list such that the
+corresponding triplet is part of the network.</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>list of 3-tuples</dt><dd><p>each tuple has the form (target index, source index, lags)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>If data_format = “adjacency”: Creates list of all source-target tuples
+occuring at least once in the data set. This list is used to encode
+subject networks as lists including all indices of the coding list
+such that the corresponding tuple is part of the network.</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>list of 2-tuples</dt><dd><p>each tuple has the form (source index, target index)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">generate_min_p_table</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">design</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.generate_min_p_table"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Computes list of minimum p_values depending on the total number of
+occurrences and given the group sample sizes.</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>list</dt><dd><p>minimum p-values for each number of occurrences between 0 and N</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">generate_p_table</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">design</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.generate_p_table"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Computes table of p-values depending on the total number of
+occurrences, the occurrences in Group A, and given the group
+sample sizes.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>design<span class="classifier">string</span></dt><dd><p>sampling design. either “within” or “between”</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>numpy array</dt><dd><p>p-values for each number of occurrences and occurrences in
+Group A between 0 and N</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">westfall_young</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_perm</span><span class="o">=</span><span class="default_value">10000</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.westfall_young"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Determines significant subgraphs using the Westfall-Young Permutation
+procedure for multiple comparisons correction. This algorithm computes
+the permutation distribution of the smallest observed p-value
+permutation-by-permutation.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>num_perm<span class="classifier">int</span></dt><dd><p>Number of permutation used for Westfall-Young procedure.</p>
+</dd>
+<dt>verbose<span class="classifier">bool</span></dt><dd><p>If True, print summary of results</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">westfall_young_light</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_perm</span><span class="o">=</span><span class="default_value">10000</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/postprocessing.html#SignificantSubgraphMining.westfall_young_light"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Determines significant subgraphs using the Westfall-Young light
+algorithm described in</p>
+<p>Llinares-Lopez F, Sugiyama M, Papaxanthos L, Borgwardt K.  Fast and
+memory-efficient significant pattern mining via permutation testing.
+In:Proceedings of the 21th ACM SIGKDD International Conference on
+Knowledge Discovery and Data Mining. ACM; 2015. p. 725–734.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>num_perm<span class="classifier">int</span></dt><dd><p>Number of permutation used for Westfall-Young procedure.</p>
+</dd>
+<dt>verbose<span class="classifier">bool</span></dt><dd><p>If True, print summary of results</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Postprocessing of inferred networks</a><ul>
+<li><a class="reference internal" href="#significant-subgraph-mining">Significant subgraph mining</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="idtxl_estimators.html"
+                        title="previous chapter">Information theoretic estimators</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="idtxl_helper.html"
+                        title="next chapter">Helper functions</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/idtxl_postprocessing.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="idtxl_helper.html" title="Helper functions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="idtxl_estimators.html" title="Information theoretic estimators"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Postprocessing of inferred networks</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

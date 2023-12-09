@@ -166,14 +166,14 @@ def _plot_adj_matrix(adj_matrix, mat_color='gray_r', diverging=False,
     # https://stackoverflow.com/questions/25500541/
     # matplotlib-bwr-colormap-always-centered-on-zero
     if diverging:
-        max_val = np.max(abs(adj_matrix._weight_matrix))
+        max_val = np.max(abs(adj_matrix.weight_matrix))
         min_val = -max_val
     else:
-        max_val = np.max(adj_matrix._weight_matrix)
-        min_val = -np.min(adj_matrix._weight_matrix)
+        max_val = np.max(adj_matrix.weight_matrix)
+        min_val = -np.min(adj_matrix.weight_matrix)
 
     adj_matrix_masked = np.ma.masked_where(
-        np.invert(adj_matrix._edge_matrix), adj_matrix._weight_matrix)
+        np.invert(adj_matrix.edge_matrix), adj_matrix.weight_matrix)
     plt.imshow(adj_matrix_masked, cmap=mat_color,
                interpolation='nearest', vmin=min_val, vmax=max_val)
 

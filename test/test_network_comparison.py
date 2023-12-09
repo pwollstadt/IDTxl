@@ -452,14 +452,14 @@ def test_compare_links_within():
         adj_mat_diff = r.get_adjacency_matrix('diff_abs')
         adj_mat_comp = r.get_adjacency_matrix('comparison')
         adj_mat_pval = r.get_adjacency_matrix('pvalue')
-        assert (adj_mat_diff._weight_matrix[link_a[0], link_a[1]] ==
-                adj_mat_diff._weight_matrix[link_b[0], link_b[1]]), (
+        assert (adj_mat_diff.weight_matrix[link_a[0], link_a[1]] ==
+                adj_mat_diff.weight_matrix[link_b[0], link_b[1]]), (
                     'Absolute differences for link comparison not equal.')
-        assert (adj_mat_comp._weight_matrix[link_a[0], link_a[1]] ==
-                adj_mat_comp._weight_matrix[link_b[0], link_b[1]]), (
+        assert (adj_mat_comp.weight_matrix[link_a[0], link_a[1]] ==
+                adj_mat_comp.weight_matrix[link_b[0], link_b[1]]), (
                     'Comparison results for link comparison not equal.')
-        assert (adj_mat_pval._weight_matrix[link_a[0], link_a[1]] ==
-                adj_mat_pval._weight_matrix[link_b[0], link_b[1]]), (
+        assert (adj_mat_pval.weight_matrix[link_a[0], link_a[1]] ==
+                adj_mat_pval.weight_matrix[link_b[0], link_b[1]]), (
                     'P-value for link comparison not equal.')
         assert (r.targets_analysed == [link_a[1], link_b[1]]).all(), (
                 'Analysed targets are not correct.')

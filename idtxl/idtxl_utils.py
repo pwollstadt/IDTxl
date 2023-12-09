@@ -2,6 +2,7 @@
 import pprint
 import copy as cp
 import numpy as np
+import threading
 
 
 def swap_chars(s, i_1, i_2):
@@ -320,3 +321,24 @@ def conflicting_entries(dict_1, dict_2):
 def calculate_mi(corr):
     """Calculate mutual information from correlation coefficient."""
     return -0.5 * np.log(1 - corr**2)
+
+class timeout(object):
+    """Context manager for a timeout using threading module.
+    args:
+        timeout_duration: float, number of seconds to wait before timeout is triggered
+        exception_message: string, message to put in the exception
+    """
+    def __init__(self, timeout_duration, exception_message='Timeout'):
+        self.timeout_duration = timeout_duration
+        self.exception_message = exception_message
+
+    def __enter__(self):
+        self.timer = threading.Timer(self.timeout_duration, self.timeout_handler)
+        self.timer.start()
+        return self.timer
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.timer.cancel()
+
+    def timeout_handler(self):
+        raise TimeoutError(self.exception_message)

@@ -87,18 +87,18 @@ def _verify_test(c_within, c_between, res):
     # Test values for verification
     # Get true positives.
     adj_mat_binary = res.get_adjacency_matrix('binary')
-    tp = adj_mat_binary._edge_matrix
+    tp = adj_mat_binary.edge_matrix
 
     for comp, comp_type in zip([c_between, c_within], ['between', 'within']):
         adj_mat_union = comp.get_adjacency_matrix('union')
         adj_mat_pval = comp.get_adjacency_matrix('pvlaue')
         adj_mat_diff = comp.get_adjacency_matrix('diff_abs')
-        print(adj_mat_union._weight_matrix)
-        assert (adj_mat_union._edge_matrix[tp]).all(), (
+        print(adj_mat_union.weight_matrix)
+        assert (adj_mat_union.edge_matrix[tp]).all(), (
             'Missing union link in {} network comparison.'.format(comp_type))
-        assert (adj_mat_pval._weight_matrix[tp] < 1).all(), (
+        assert (adj_mat_pval.weight_matrix[tp] < 1).all(), (
             'Wrong p-value in {} network comparison.'.format(comp_type))
-        assert (adj_mat_diff._edge_matrix[tp] > 0).all(), (
+        assert (adj_mat_diff.edge_matrix[tp] > 0).all(), (
             'Missed difference in {} network comparison.'.format(comp_type))
 
 

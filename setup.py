@@ -1,21 +1,20 @@
 from distutils.core import setup
+from pathlib import Path
 
-# http://www.diveintopython3.net/packaging.html
-# https://pypi.python.org/pypi?:action=list_classifiers
-
-with open('README.txt') as file:
-    long_description = file.read()
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
 
 setup(
-    name='idtxl',
-    packages=['idtxl'],
+    name="idtxl",
+    packages=["idtxl"],
     include_package_data=True,
-    version='1.3',
-    description='Information Dynamics Toolkit xl',
-    author='Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral',
-    author_email='p.wollstadt@gmail.com',
-    url='https://github.com/pwollstadt/IDTxl',
+    version="1.5",
+    description="Information Dynamics Toolkit xl",
+    author="Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral",
+    author_email="p.wollstadt@gmail.com",
+    url="https://github.com/pwollstadt/IDTxl",
     long_description=long_description,
+    long_description_content_type="text/markdown",
     classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
@@ -28,5 +27,5 @@ setup(
         "Topic :: Scientific/Engineering :: Physics",
         "Topic :: Scientific/Engineering :: Information Analysis",
         "Topic :: Scientific/Engineering :: Medical Science Apps.",
-    ]
+    ],
 )

@@ -2,7 +2,7 @@
 import copy as cp
 import numpy as np
 from scipy.special import binom
-from .estimator import find_estimator
+from .estimator import get_estimator
 from . import stats
 from . import idtxl_utils as utils
 from .network_analysis import NetworkAnalysis
@@ -942,11 +942,8 @@ class NetworkComparison(NetworkAnalysis):
                            'or "independent".')
 
         # Add CMI estimator to class.
-        try:
-            EstimatorClass = find_estimator(settings['cmi_estimator'])
-        except KeyError:
-            raise KeyError('Please provide an estimator class or name!')
-        self._cmi_estimator = EstimatorClass(settings)
+        assert 'cmi_estimator' in settings, 'Estimator was not specified!'
+        self._cmi_estimator = get_estimator(settings['cmi_estimator'], settings)
 
         if 'local_values' in settings and settings['local_values']:
             raise RuntimeError('Can''t run network comparison on local values.')

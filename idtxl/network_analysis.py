@@ -8,7 +8,7 @@ import ast
 import copy as cp
 import itertools as it
 import numpy as np
-from .estimator import find_estimator
+from .estimator import get_estimator
 from . import idtxl_utils as utils
 from . import idtxl_io as io
 
@@ -202,17 +202,15 @@ class NetworkAnalysis():
         # average estimator. Internally, the average estimator is used for
         # building the non-uniform embedding, etc. The local estimator is used
         # to estimate single-link MI/TE or single-process AIS in the end.
-        try:
-            EstimatorClass = find_estimator(self.settings['cmi_estimator'])
-        except KeyError:
-            raise RuntimeError('Please provide an estimator class or name!')
+        assert 'cmi_estimator' in self.settings, 'Estimator was not specified!'
+
         if self.settings['local_values']:
             self.settings['local_values'] = False
-            self._cmi_estimator = EstimatorClass(self.settings)
+            self._cmi_estimator = get_estimator(self.settings['cmi_estimator'], self.settings)
             self.settings['local_values'] = True
-            self._cmi_estimator_local = EstimatorClass(self.settings)
+            self._cmi_estimator_local = get_estimator(self.settings['cmi_estimator'], self.settings)
         else:
-            self._cmi_estimator = EstimatorClass(self.settings)
+            self._cmi_estimator = get_estimator(self.settings['cmi_estimator'], self.settings)
 
     def _separate_realisations(self, idx_full, idx_single):
         """Separate single index realisations from a set of realisations.
@@ -499,16 +497,16 @@ class NetworkAnalysis():
 
             if self.settings['local_values']:
                 local_values = self._cmi_estimator_local.estimate(
-                    current_value_realisations,
-                    source_realisations,
-                    conditional_realisations)
+                    var1=current_value_realisations,
+                    var2=source_realisations,
+                    conditional=conditional_realisations)
                 links[i] = local_values.reshape(
                     max(replication_ind) + 1, sum(replication_ind == 0)).T
             else:
                 links[i] = self._cmi_estimator.estimate(
-                    current_value_realisations,
-                    source_realisations,
-                    conditional_realisations)
+                    var1=current_value_realisations,
+                    var2=source_realisations,
+                    conditional=conditional_realisations)
 
         return links
 

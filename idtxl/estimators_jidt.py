@@ -473,7 +473,7 @@ class JidtKraskovCMI(JidtKraskov):
         if self.settings['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
         else:
-            return self.calc.computeAverageLocalOfObservations()
+            return float(self.calc.computeAverageLocalOfObservations())
 
 
 class JidtDiscreteCMI(JidtDiscrete):
@@ -626,7 +626,7 @@ class JidtDiscreteCMI(JidtDiscrete):
                 jp.JArray(jp.JInt, 1)(var2.tolist()),
                 jp.JArray(jp.JInt, 1)(conditional.tolist())))
         else:
-            result = self.calc.computeAverageLocalOfObservations()
+            result = float(self.calc.computeAverageLocalOfObservations())
         if return_calc:
             return (result, self.calc)
         else:
@@ -783,7 +783,7 @@ class JidtDiscreteMI(JidtDiscrete):
                 jp.JArray(jp.JInt, 1)(var1.tolist()),
                 jp.JArray(jp.JInt, 1)(var2.tolist())))
         else:
-            result = self.calc.computeAverageLocalOfObservations()
+            result = float(self.calc.computeAverageLocalOfObservations())
         if return_calc:
             return (result, self.calc)
         else:
@@ -907,7 +907,7 @@ class JidtKraskovMI(JidtKraskov):
         if self.settings['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
         else:
-            return self.calc.computeAverageLocalOfObservations()
+            return float(self.calc.computeAverageLocalOfObservations())
 
 
 class JidtKraskovAIS(JidtKraskov):
@@ -998,7 +998,7 @@ class JidtKraskovAIS(JidtKraskov):
         if self.settings['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
         else:
-            return self.calc.computeAverageLocalOfObservations()
+            return float(self.calc.computeAverageLocalOfObservations())
 
 
 class JidtDiscreteAIS(JidtDiscrete):
@@ -1124,7 +1124,7 @@ class JidtDiscreteAIS(JidtDiscrete):
             result = np.array(self.calc.computeLocalFromPreviousObservations(
                                     jp.JArray(jp.JInt, 1)(process.tolist())))
         else:
-            result = self.calc.computeAverageLocalOfObservations()
+            result = float(self.calc.computeAverageLocalOfObservations())
         if return_calc:
             return (result, self.calc)
         else:
@@ -1227,7 +1227,7 @@ class JidtGaussianAIS(JidtGaussian):
         if self.settings['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
         else:
-            return self.calc.computeAverageLocalOfObservations()
+            return float(self.calc.computeAverageLocalOfObservations())
 
 
 class JidtGaussianMI(JidtGaussian):
@@ -1299,7 +1299,7 @@ class JidtGaussianMI(JidtGaussian):
         if self.settings['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
         else:
-            return self.calc.computeAverageLocalOfObservations()
+            return float(self.calc.computeAverageLocalOfObservations())
 
 
 class JidtGaussianCMI(JidtGaussian):
@@ -1385,7 +1385,7 @@ class JidtGaussianCMI(JidtGaussian):
         if self.settings['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
         else:
-            return self.calc.computeAverageLocalOfObservations()
+            return float(self.calc.computeAverageLocalOfObservations())
 
     def get_analytic_distribution(self, var1, var2, conditional=None):
         """Return a JIDT AnalyticNullDistribution object.
@@ -1505,7 +1505,7 @@ class JidtKraskovTE(JidtKraskov):
         if self.settings['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
         else:
-            return self.calc.computeAverageLocalOfObservations()
+            return float(self.calc.computeAverageLocalOfObservations())
 
 
 class JidtDiscreteTE(JidtDiscrete):
@@ -1650,7 +1650,7 @@ class JidtDiscreteTE(JidtDiscrete):
                 jp.JArray(jp.JInt, 1)(source.tolist()),
                 jp.JArray(jp.JInt, 1)(target.tolist())))
         else:
-            result = self.calc.computeAverageLocalOfObservations()
+            result = float(self.calc.computeAverageLocalOfObservations())
         if return_calc:
             return (result, self.calc)
         else:
@@ -1763,7 +1763,7 @@ class JidtGaussianTE(JidtGaussian):
         if self.settings['local_values']:
             return np.array(self.calc.computeLocalOfPreviousObservations())
         else:
-            return self.calc.computeAverageLocalOfObservations()
+            return float(self.calc.computeAverageLocalOfObservations())
 
 
 def common_estimate_surrogates_analytic(estimator, n_perm=200, **data):

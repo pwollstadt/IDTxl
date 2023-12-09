@@ -57,8 +57,8 @@ class DotDict(dict):
 class AdjacencyMatrix():
     """Adjacency matrix representing inferred networks."""
     def __init__(self, n_nodes, weight_type):
-        self._edge_matrix = np.zeros((n_nodes, n_nodes), dtype=bool)
-        self._weight_matrix = np.zeros((n_nodes, n_nodes), dtype=weight_type)
+        self.edge_matrix = np.zeros((n_nodes, n_nodes), dtype=bool)
+        self.weight_matrix = np.zeros((n_nodes, n_nodes), dtype=weight_type)
         if np.issubdtype(weight_type, np.integer):
             self._weight_type = np.integer
         elif np.issubdtype(weight_type, np.floating):
@@ -71,10 +71,10 @@ class AdjacencyMatrix():
 
     def n_nodes(self):
         """Return number of nodes."""
-        return self._edge_matrix.shape[0]
+        return self.edge_matrix.shape[0]
 
     def n_edges(self):
-        return self._edge_matrix.sum()
+        return self.edge_matrix.sum()
 
     def add_edge(self, i, j, weight):
         """Add weighted edge (i, j) to adjacency matrix."""
@@ -82,8 +82,8 @@ class AdjacencyMatrix():
             raise TypeError(
                 'Can not add weight of type {0} to adjacency matrix of type '
                 '{1}.'.format(type(weight), self._weight_type))
-        self._edge_matrix[i, j] = True
-        self._weight_matrix[i, j] = weight
+        self.edge_matrix[i, j] = True
+        self.weight_matrix[i, j] = weight
 
     def add_edge_list(self, i_list, j_list, weights):
         """Add multiple weighted edges (i, j) to adjacency matrix."""
@@ -98,8 +98,8 @@ class AdjacencyMatrix():
 
     def print_matrix(self):
         """Print weight and edge matrix."""
-        print(self._edge_matrix)
-        print(self._weight_matrix)
+        print(self.edge_matrix)
+        print(self.weight_matrix)
 
     def get_edge_list(self):
         """Return list of weighted edges.
@@ -112,8 +112,8 @@ class AdjacencyMatrix():
         ind = 0
         for i in range(self.n_nodes()):
             for j in range(self.n_nodes()):
-                if self._edge_matrix[i, j]:
-                    edge_list[ind] = (i, j, self._weight_matrix[i, j])
+                if self.edge_matrix[i, j]:
+                    edge_list[ind] = (i, j, self.weight_matrix[i, j])
                     ind += 1
         return edge_list
 
@@ -554,6 +554,31 @@ class ResultsNetworkInference(ResultsNetworkAnalysis):
         else:
             raise KeyError('No entry with network inference measure found for '
                            'current target')
+
+    def get_source_variables(self, fdr=True):
+        """Return list of inferred past source variables for all targets.
+
+        Return a list of dictionaries, where each dictionary holds the selected
+        past source variables for one analysed target. The list may be used as
+        and input to significant subgraph mining in the postprocessing module.
+
+        Args:
+            fdr : bool [optional]
+                return FDR-corrected results (default=True)
+
+        Returns:
+            list of dicts
+                selected past source variables for each target
+        """
+        source_variables = []
+        for target in self.targets_analysed:
+            source_variables.append(
+                {
+                    'target': target,
+                    'selected_vars_sources': self.get_single_target(target=target, fdr=fdr)['selected_vars_sources']
+                }
+            )
+        return source_variables
 
     def get_target_delays(self, target, criterion='max_te', fdr=True):
         """Return list of information-transfer delays for a given target.

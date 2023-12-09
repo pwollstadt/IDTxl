@@ -14,8 +14,9 @@ try:
 except:
     FAST_EMBEDDING_AVAILABLE = False
     print("""
-    Error importing Cython fast embedding module. Continuing with slow Python implementation.\n
-    This may take a long time.\n
+    Error importing Cython fast embedding module for HDE estimator.\n
+    When running the HDE estimator, the slow Python implementation for optimizing the HDE embedding will be used,\n
+    this may take a long time. Other estimators are not affected.\n
     """, file=stderr, flush=True)
 
 class Data_spiketime():
