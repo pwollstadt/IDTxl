@@ -4,16 +4,15 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Welcome to IDTxl’s documentation! &#8212; IDTxl 1.4 documentation</title>
-    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <title>Welcome to IDTxl’s documentation! &#8212; IDTxl 1.5 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="The Data Class" href="idtxl_data_class.html" />
@@ -37,7 +36,7 @@
         <li class="right" >
           <a href="idtxl_data_class.html" title="The Data Class"
              accesskey="N">next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">IDTxl 1.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">IDTxl 1.5 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Welcome to IDTxl’s documentation!</a></li> 
       </ul>
     </div>  
@@ -56,7 +55,7 @@ for more information and user tutorials. If you want to report a problem, head
 to the <a class="reference external" href="https://github.com/pwollstadt/IDTxl/issues">issue tracker</a> or have a
 look at the IDTxl <a class="reference external" href="https://groups.google.com/forum/#!forum/idtxl">google discussion group</a>.</p>
 <div class="toctree-wrapper compound">
-<p><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="idtxl_data_class.html">The Data Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="idtxl_network_inference.html">Algorithms for network inference</a><ul>
@@ -86,7 +85,9 @@ look at the IDTxl <a class="reference external" href="https://groups.google.com/
 </li>
 <li class="toctree-l1"><a class="reference internal" href="idtxl_estimators.html">Information theoretic estimators</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="idtxl_estimators.html#jidt-estimators-cpu">JIDT Estimators (CPU)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="idtxl_estimators.html#python-estimators-cpu">Python Estimators (CPU)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="idtxl_estimators.html#opencl-estimators-gpu">OpenCL Estimators (GPU)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="idtxl_estimators.html#mpi-estimators-cpu">MPI Estimators (CPU)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="idtxl_estimators.html#pid-estimators">PID Estimators</a></li>
 </ul>
 </li>
@@ -119,6 +120,8 @@ look at the IDTxl <a class="reference external" href="https://groups.google.com/
 <li class="toctree-l2"><a class="reference internal" href="idtxl.html#module-idtxl.estimators_Rudelt">idtxl.estimators_Rudelt module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="idtxl.html#module-idtxl.estimators_jidt">idtxl.estimators_jidt module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="idtxl.html#module-idtxl.estimators_opencl">idtxl.estimators_opencl module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="idtxl.html#module-idtxl.estimators_mpi">idtxl.estimators_mpi module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="idtxl.html#module-idtxl.estimators_python">idtxl.estimators_python module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="idtxl.html#module-idtxl.estimators_multivariate_pid">idtxl.estimators_multivariate_pid module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="idtxl.html#module-idtxl.estimators_pid">idtxl.estimators_pid module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="idtxl.html#module-idtxl.idtxl_exceptions">idtxl.idtxl_exceptions module</a></li>
@@ -154,8 +157,9 @@ look at the IDTxl <a class="reference external" href="https://groups.google.com/
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="#">Table of Contents</a></h3>
-  <ul>
+  <div>
+    <h3><a href="#">Table of Contents</a></h3>
+    <ul>
 <li><a class="reference internal" href="#">Welcome to IDTxl’s documentation!</a><ul>
 <li><a class="reference internal" href="#package-contents">Package contents</a></li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
@@ -163,9 +167,12 @@ look at the IDTxl <a class="reference external" href="https://groups.google.com/
 </li>
 </ul>
 
-  <h4>Next topic</h4>
-  <p class="topless"><a href="idtxl_data_class.html"
-                        title="next chapter">The Data Class</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="idtxl_data_class.html"
+                          title="next chapter">The Data Class</a></p>
+  </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -177,7 +184,7 @@ look at the IDTxl <a class="reference external" href="https://groups.google.com/
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -199,13 +206,13 @@ look at the IDTxl <a class="reference external" href="https://groups.google.com/
         <li class="right" >
           <a href="idtxl_data_class.html" title="The Data Class"
              >next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">IDTxl 1.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">IDTxl 1.5 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Welcome to IDTxl’s documentation!</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
     </div>
   </body>
 </html>
