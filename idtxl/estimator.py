@@ -7,14 +7,16 @@ from pprint import pprint
 from abc import ABCMeta, abstractmethod
 import numpy as np
 from . import idtxl_exceptions as ex
-
+import sys
 MODULE_EXTENSIONS = ('.py')  # ('.py', '.pyc', '.pyo')
 ESTIMATOR_PREFIX = ('estimators_')
 
 
 def _package_contents():
     # Return list of IDTxl modules containing estimators.
-    file, pathname, description = imp.find_module(__package__)
+    site_packages = next(p for p in sys.path if 'site-packages' in p)
+    # Find module in the array of site_packages directory
+    file, pathname, description = imp.find_module(__package__, [site_packages])
     if file:
         raise ImportError('Not a package: %r', __package__)
     return [os.path.splitext(module)[0]
