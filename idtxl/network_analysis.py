@@ -336,12 +336,12 @@ class NetworkAnalysis():
                 with respect to entries in a data array
         """
         self._append_selected_vars_idx(idx)
-        self._selected_vars_realisations = data.get_realisations(self._current_value, self.selected_vars_full)[0]
+        self._selected_vars_realisations = data.get_realisations(self._current_value, self.selected_vars_full)
 
     def _remove_selected_var(self, data, idx):
         """Remove a single selected variable and its realisations."""
         self.selected_vars_full.pop(self.selected_vars_full.index(idx))
-        self._selected_vars_realisations = data.get_realisations(self._current_value, self.selected_vars_full)[0]
+        self._selected_vars_realisations = data.get_realisations(self._current_value, self.selected_vars_full)
         
         if idx[0] == self.target:
             self.selected_vars_target.pop(
@@ -413,9 +413,9 @@ class NetworkAnalysis():
         # over sources. Permute current value realisations to generate
         # surrogates if requested.
         target_realisations = data.get_realisations(
-            current_value, target_vars)[0]
+            current_value, target_vars)
         current_value_realisations = data.get_realisations(
-            current_value, [current_value])[0]
+            current_value, [current_value])
 
         # Check requested sources.
         if sources == 'all':
@@ -449,7 +449,7 @@ class NetworkAnalysis():
             # realisations for the current link's selected source variables.
             link_vars = [i for i in source_vars if i[0] == s]
             conditional_vars = [i for i in source_vars if i[0] != s]
-            source_realisations, replication_ind = data.get_realisations(
+            source_realisations = data.get_realisations(
                 current_value, link_vars)
 
             # Determine which type of conditioning is requested.
@@ -458,14 +458,14 @@ class NetworkAnalysis():
                     # Use sources' pasts only, returns None if conditional vars
                     # is empty.
                     conditional_realisations = data.get_realisations(
-                            current_value, conditional_vars)[0]
+                            current_value, conditional_vars)
                 else:
                     # Use target's and sources' past, check if conditional vars
                     # is not empty, otherwise np.hstack crashes.
                     if conditional_vars:
                         conditional_realisations = np.hstack((
                             data.get_realisations(
-                                current_value, conditional_vars)[0],
+                                current_value, conditional_vars),
                             target_realisations))
                     else:   # use target's past only
                         conditional_realisations = target_realisations
@@ -484,7 +484,7 @@ class NetworkAnalysis():
                     var2=source_realisations,
                     conditional=conditional_realisations)
                 links[i] = local_values.reshape(
-                    max(replication_ind) + 1, sum(replication_ind == 0)).T
+                    data.n_replications, -1).T
             else:
                 links[i] = self._cmi_estimator.estimate(
                     var1=current_value_realisations,

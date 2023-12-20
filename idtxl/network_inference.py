@@ -105,7 +105,8 @@ class NetworkInference(NetworkAnalysis):
         while candidate_set:
             # Get realisations for all candidates.
             cand_real = data.get_realisations(self.current_value,
-                                              candidate_set)[0]
+                                              candidate_set)
+            
             # Reshape candidates to a 1D-array, where realisations for a single
             # candidate are treated as one chunk.
             cand_real = cand_real.T.reshape(cand_real.size, 1)
@@ -284,14 +285,10 @@ class NetworkInferenceMI(NetworkInference):
                 data.n_samples, self.settings['max_lag_sources']))
 
         self.current_value = (self.target, self.settings['max_lag_sources'])
-        [cv_realisation, repl_idx] = data.get_realisations(
+        cv_realisation = data.get_realisations(
                                              current_value=self.current_value,
                                              idx_list=[self.current_value])
         self._current_value_realisations = cv_realisation
-
-        # Remember which realisations come from which replication. This may be
-        # needed for surrogate creation at a later point.
-        self._replication_index = repl_idx
 
         # Check the permutation type and no. permutations requested by the
         # user. This tests if there is sufficient data to do all tests.
@@ -407,14 +404,10 @@ class NetworkInferenceTE(NetworkInference):
             'lag ({1})'.format(data.n_samples, max_lag))
 
         self.current_value = (self.target, max_lag)
-        [cv_realisation, repl_idx] = data.get_realisations(
+        cv_realisation = data.get_realisations(
                                              current_value=self.current_value,
                                              idx_list=[self.current_value])
         self._current_value_realisations = cv_realisation
-
-        # Remember which realisations come from which replication. This may be
-        # needed for surrogate creation at a later point.
-        self._replication_index = repl_idx
 
         # Check the permutation type and no. permutations requested by the
         # user. This tests if there is sufficient data to do all tests.
@@ -532,7 +525,7 @@ class NetworkInferenceBivariate(NetworkInference):
             while candidate_set:
                 # Get realisations for all candidates.
                 cand_real = data.get_realisations(self.current_value,
-                                                  candidate_set)[0]
+                                                  candidate_set)
                 # Reshape candidates to a 1D-array, where realisations for a
                 # single candidate are treated as one chunk.
                 cand_real = cand_real.T.reshape(cand_real.size, 1)
@@ -585,7 +578,7 @@ class NetworkInferenceBivariate(NetworkInference):
                     success = True
                     candidate_set.pop(np.argmax(temp_te))
                     candidate_realisations = data.get_realisations(
-                        self.current_value, [max_candidate])[0]
+                        self.current_value, [max_candidate])
                     self._append_selected_vars(data, [max_candidate])
                     # Update conditioning set for max. statistics in the next
                     # round.
@@ -671,9 +664,9 @@ class NetworkInferenceBivariate(NetworkInference):
                 for candidate in source_vars:
                     temp_cond = data.get_realisations(
                         self.current_value,
-                        set(source_vars).difference(set([candidate])))[0]
+                        set(source_vars).difference(set([candidate])))
                     temp_cand = data.get_realisations(
-                        self.current_value, [candidate])[0]
+                        self.current_value, [candidate])
 
                     if temp_cond is None:
                         conditional_realisations = conditional_realisations_target
@@ -720,7 +713,7 @@ class NetworkInferenceBivariate(NetworkInference):
                 remaining_candidates = set(source_vars).difference(
                     set([min_candidate]))
                 conditional_realisations_sources = data.get_realisations(
-                        self.current_value, remaining_candidates)[0]
+                        self.current_value, remaining_candidates)
                 if conditional_realisations_target is None:
                     conditional_realisations = conditional_realisations_sources
                 elif conditional_realisations_sources is None:
@@ -948,7 +941,7 @@ class NetworkInferenceMultivariate(NetworkInference):
             remaining_candidates = set(self.selected_vars_full).difference(
                     set([min_candidate]))
             conditional_realisations = data.get_realisations(
-                        self.current_value, remaining_candidates)[0]
+                        self.current_value, remaining_candidates)
             try:
                 [significant, p, surr_table] = stats.min_statistic(
                                               self, data,

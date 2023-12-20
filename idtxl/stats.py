@@ -572,7 +572,7 @@ def max_statistic_sequential(analysis_setup, data):
                 analysis_setup._cmi_estimator.estimate_surrogates_analytic(
                     n_perm=n_permutations,
                     var1=data.get_realisations(analysis_setup.current_value,
-                                               [candidate])[0],
+                                               [candidate]),
                     var2=analysis_setup._current_value_realisations,
                     conditional=conditional_realisations_current))
         else:
@@ -761,9 +761,9 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
         for idx_c, candidate in enumerate(source_vars):
             temp_cond = data.get_realisations(
                 analysis_setup.current_value,
-                set(source_vars).difference(set([candidate])))[0]
+                set(source_vars).difference(set([candidate])))
             temp_cand = data.get_realisations(
-                analysis_setup.current_value, [candidate])[0]
+                analysis_setup.current_value, [candidate])
             # The following may happen if either the requested conditing is
             # 'none' or if the conditiong set that is tested consists only of
             # a single candidate.
@@ -789,7 +789,7 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
                 analysis_setup._cmi_estimator.estimate_surrogates_analytic(
                     n_perm=n_permutations,
                     var1=data.get_realisations(analysis_setup.current_value,
-                                               [candidate])[0],
+                                               [candidate]),
                     var2=analysis_setup._current_value_realisations,
                     conditional=temp_cond))
         else:
@@ -1090,13 +1090,13 @@ def unq_against_surrogates(analysis_setup, data):
     # Get realisations and estimate PID for orginal data
     target_realisations = data.get_realisations(
                                             analysis_setup.current_value,
-                                            [analysis_setup.current_value])[0]
+                                            [analysis_setup.current_value])
     source_1_realisations = data.get_realisations(
                                         analysis_setup.current_value,
-                                        [analysis_setup.sources[0]])[0]
+                                        [analysis_setup.sources[0]])
     source_2_realisations = data.get_realisations(
                                         analysis_setup.current_value,
-                                        [analysis_setup.sources[1]])[0]
+                                        [analysis_setup.sources[1]])
     orig_pid = analysis_setup._pid_estimator.estimate(
                             settings=analysis_setup.settings,
                             s1=source_1_realisations,
@@ -1211,13 +1211,13 @@ def syn_shd_against_surrogates(analysis_setup, data):
     # Get realisations and estimate PID for original data
     target_realisations = data.get_realisations(
                                             analysis_setup.current_value,
-                                            [analysis_setup.current_value])[0]
+                                            [analysis_setup.current_value])
     source_1_realisations = data.get_realisations(
                                         analysis_setup.current_value,
-                                        [analysis_setup.sources[0]])[0]
+                                        [analysis_setup.sources[0]])
     source_2_realisations = data.get_realisations(
                                         analysis_setup.current_value,
-                                        [analysis_setup.sources[1]])[0]
+                                        [analysis_setup.sources[1]])
     orig_pid = analysis_setup._pid_estimator.estimate(
                             settings=analysis_setup.settings,
                             s1=source_1_realisations,
@@ -1333,7 +1333,7 @@ def _create_surrogate_table(analysis_setup, data, idx_test_set, n_perm,
                 analysis_setup._cmi_estimator.estimate_surrogates_analytic(
                     n_perm=n_perm,
                     var1=data.get_realisations(analysis_setup.current_value,
-                                               [candidate])[0],
+                                               [candidate]),
                     var2=current_value_realisations,
                     conditional=conditional))
         else:
@@ -1493,7 +1493,7 @@ def _get_surrogates(data, current_value, idx_list, n_perm, perm_settings):
         for perm in range(n_perm):
             surrogates[i_1:i_2, ] = data.permute_samples(current_value,
                                                          idx_list,
-                                                         perm_settings)[0]
+                                                         perm_settings)
             i_1 = i_2
             i_2 += n_realisations
 
@@ -1502,7 +1502,7 @@ def _get_surrogates(data, current_value, idx_list, n_perm, perm_settings):
                 'Not enough replications for surrogate creation.')
         for perm in range(n_perm):
             surrogates[i_1:i_2, ] = data.permute_replications(current_value,
-                                                              idx_list)[0]
+                                                              idx_list)
             i_1 = i_2
             i_2 += n_realisations
     return surrogates

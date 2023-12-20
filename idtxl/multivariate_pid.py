@@ -265,13 +265,13 @@ class MultivariatePID(SingleProcessAnalysis):
 
         target_realisations = data.get_realisations(
                                             self.current_value,
-                                            [self.current_value])[0]
+                                            [self.current_value])
 
         # CHECK! make sure self.source has the same idx as sources
-        data.get_realisations(self.current_value, [self.sources[0]])[0]
+        data.get_realisations(self.current_value, [self.sources[0]])
         list_sources_var_realisations = [data.get_realisations(
                                                      self.current_value,
-                                                     [self.sources[i]])[0]
+                                                     [self.sources[i]])
                                          for i in range(len(self.sources))]
 
 

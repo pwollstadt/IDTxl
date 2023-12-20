@@ -290,14 +290,10 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             'Not enough samples in data ({0}) to allow for the chosen maximum '
             'lag ({1})'.format(data.n_samples, self.settings['max_lag']))
         self.current_value = (process, self.settings['max_lag'])
-        [cv_realisation, repl_idx] = data.get_realisations(
+        cv_realisation  = data.get_realisations(
                                              current_value=self.current_value,
                                              idx_list=[self.current_value])
         self._current_value_realisations = cv_realisation
-
-        # Remember which realisations come from which replication. This may be
-        # needed for surrogate creation at a later point.
-        self._replication_index = repl_idx
 
         # Check the permutation type and no. permutations requested by the
         # user. This tests if there is sufficient data to do all tests.
@@ -363,7 +359,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         while candidate_set:
             # Get realisations for all candidates.
             cand_real = data.get_realisations(self.current_value,
-                                              candidate_set)[0]
+                                              candidate_set)
             cand_real = cand_real.T.reshape(cand_real.size, 1)
 
             # Calculate the (C)MI for each candidate and the target.
@@ -501,7 +497,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             remaining_candidates = set(self.selected_vars_sources).difference(
                     set([min_candidate]))
             conditional_realisations = data.get_realisations(
-                self.current_value, remaining_candidates)[0]
+                self.current_value, remaining_candidates)
             try:
                 [significant, p, surr_table] = stats.min_statistic(
                                     analysis_setup=self,
@@ -565,7 +561,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
 
             if self.settings['local_values']:
                 replication_ind = data.get_realisations(
-                    self.current_value, self._selected_vars_sources)[1]
+                    self.current_value, self._selected_vars_sources, return_replication_idx=True)[1]
                 try:
                     local_ais = self._cmi_estimator_local.estimate(
                                 var1=self._current_value_realisations,
