@@ -523,7 +523,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             if not significant:
                 # if self.settings['verbose']:
                 #     print(' -- not significant')
-                self._remove_selected_var(min_candidate)
+                self._remove_selected_var(data, min_candidate)
                 if self.settings['write_ckp']:
                     self._write_checkpoint()
             else:

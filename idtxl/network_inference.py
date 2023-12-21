@@ -211,12 +211,12 @@ class NetworkInference(NetworkAnalysis):
             cond_idx = self._lag_to_idx(cond)
             self._append_selected_vars(data, cond_idx)
 
-    def _remove_non_significant(self, s, p, stat):
+    def _remove_non_significant(self, data, s, p, stat):
         # Remove non-significant sources from the candidate set. Loop
         # backwards over the candidates to remove them iteratively.
         for i in range(s.shape[0] - 1, -1, -1):
             if not s[i]:
-                self._remove_selected_var(self.selected_vars_sources[i])
+                self._remove_selected_var(data, self.selected_vars_sources[i])
                 p = np.delete(p, i)
                 stat = np.delete(stat, i)
         return p, stat
@@ -745,7 +745,7 @@ class NetworkInferenceBivariate(NetworkInference):
                 # other sources will be significant as well (b/c they have
                 # higher TE/MI).
                 if not significant:
-                    self._remove_selected_var(min_candidate)
+                    self._remove_selected_var(data, min_candidate)
                     source_vars.pop(np.argmin(temp_te))
                     if len(source_vars) == 0:
                         print('No remaining candidates after pruning.')
@@ -795,7 +795,7 @@ class NetworkInferenceBivariate(NetworkInference):
                 #  everything as not significant:
                 [s, p, stat] = stats.max_statistic_sequential_bivariate(
                     self, data)
-                p, stat = self._remove_non_significant(s, p, stat)
+                p, stat = self._remove_non_significant(data, s, p, stat)
                 self.pvalues_sign_sources = p
                 self.statistic_sign_sources = stat
                 if self.measure == 'te':
@@ -966,7 +966,7 @@ class NetworkInferenceMultivariate(NetworkInference):
             if not significant:
                 # if self.settings['verbose']:
                 #     print(' -- not significant\n')
-                self._remove_selected_var(min_candidate)
+                self._remove_selected_var(data, min_candidate)
                 if len(self.selected_vars_sources) == 0:
                         print('No remaining candidates after pruning.')
                 if self.settings['write_ckp']:
@@ -1015,7 +1015,7 @@ class NetworkInferenceMultivariate(NetworkInference):
                 #  max_stats_sequential, it will catch it and return
                 #  everything as not significant:
                 [s, p, stat] = stats.max_statistic_sequential(self, data)
-                p, stat = self._remove_non_significant(s, p, stat)
+                p, stat = self._remove_non_significant(data, s, p, stat)
                 self.pvalues_sign_sources = p
                 self.statistic_sign_sources = stat
                 # Calculate TE for all links in the network. Calculate local TE
