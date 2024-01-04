@@ -711,8 +711,6 @@ class NetworkComparison(NetworkAnalysis):
         # over sources. Permute current value realisations to generate
         # surrogates if requested.
         current_value = (target, self.union['max_lag'])
-        target_realisations = data.get_realisations(
-            current_value, target_vars)
         current_value_surrogates = stats._get_surrogates(
             data, current_value, [current_value],
             n_perm=self.settings['n_perm_comp'], perm_settings=self.settings)
@@ -735,21 +733,19 @@ class NetworkComparison(NetworkAnalysis):
             if not conditional_vars and not target_vars:
                 conditional_realisations = None
             elif not conditional_vars and target_vars:
-                conditional_realisations = target_realisations
+                conditional_realisations = data.get_realisations(
+            current_value, target_vars)
             elif conditional_vars and not target_vars:
                 conditional_realisations = data.get_realisations(
                     current_value, conditional_vars)
             elif conditional_vars and target_vars:
-                conditional_realisations = np.hstack((
-                    data.get_realisations(current_value, conditional_vars),
-                    target_realisations))
+                conditional_realisations = data.get_realisations(
+                    current_value, conditional_vars + target_vars)
 
             te_surrogates[s] = self._cmi_estimator.estimate_parallel(
-                n_chunks=self.settings['n_perm_comp'],
-                re_use=['var2', 'conditional'],
                 var1=current_value_surrogates,
-                var2=source_realisations,
-                conditional=conditional_realisations)
+                var2=[source_realisations] * self.settings['n_perm_comp'],
+                conditional=[conditional_realisations] * self.settings['n_perm_comp'])
         return te_surrogates
 
     def _create_surrogate_distribution_between(self):
