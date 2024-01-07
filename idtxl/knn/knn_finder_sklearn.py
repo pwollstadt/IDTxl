@@ -12,7 +12,7 @@ class _SklearnTreeKnnFinder(TreeKnnFinder):
             data (np.ndarray): The points to find neighbors for.
             kwargs (dict): Settings for the KnnFinder."""
             
-        super().__init__(**kwargs)
+        super().__init__(data, **kwargs)
 
         self._tree = self._get_tree(data)
 

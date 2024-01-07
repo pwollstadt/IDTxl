@@ -2,16 +2,18 @@ import numpy as np
 
 class KnnFinder:
 
-    def __init__(self, num_threads='USE_ALL', metric='chebyshev'):
+    def __init__(self, data, num_threads='USE_ALL', metric='chebyshev'):
         """Initialise the KnnFinder with settings.
 
         Args:
+            data (np.ndarray): The data to find neighbors in. Shape is (n_points, n_dimensions).
             num_threads (int): The number of threads to use. If -1 or "USE_ALL", use all available threads.
             metric (str): The metric to use for finding neighbors."""
 
         if num_threads == 'USE_ALL':
             num_threads = -1
 
+        self._data = data
         self._num_threads = num_threads
         self._metric = metric
 
@@ -42,6 +44,18 @@ class KnnFinder:
             np.ndarray: Array of lists of indices of the neighbors within the given radius for each point in x.
         """
         raise NotImplementedError
+    
+    def find_all_dists_to_kth_neighbor(self, k: int) -> np.ndarray: 
+        """Find the distance to the kth nearest neighbor for each point in the data.
+        Does not include the point itself.
+
+        Args:
+            k (int): The kth nearest neighbor to find.
+            
+        Returns:
+            np.ndarray: The distance to the kth neighbor for each point in the data.
+        """
+        return self.find_dist_to_kth_neighbor(self._data, k + 1)
 
     def find_dist_to_kth_neighbor(self, x: np.ndarray, k: int) -> np.ndarray:
         """Find the distance to the kth nearest neighbor for each point in x.
@@ -53,6 +67,18 @@ class KnnFinder:
             x (np.ndarray): The points to find the kth nearest neighbor for.
             k (int): The kth nearest neighbor to find."""
         return self.find_neighbors(x, k)[0][:, k - 1]
+    
+    def count_all_neighbors(self, r: float) -> np.ndarray:
+        """Count the number of neighbors strictly within (<) a given radius for each point in the data.
+        Does not include the point itself.
+
+        Args:
+            r (float): The radius to count neighbors within.
+            
+        Returns:
+            np.ndarray: The number of neighbors within the given radius for each point in the data.
+        """
+        return self.count_neighbors(self._data, r) - 1
 
     def count_neighbors_within(self, x: np.ndarray, r: float) -> np.ndarray:
         """Count the number of neighbors strictly within (<) a given radius for each point in x.

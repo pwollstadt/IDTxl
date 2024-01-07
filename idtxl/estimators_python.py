@@ -14,7 +14,7 @@ class PythonKraskovCMI(Estimator):
         """
 
         # Check for currently unsupported settings
-        if 'local_values' in settings or 'theiler_t' in settings or 'algorithm_num' in settings:
+        if settings.get('local_values', False) or settings.get('theiler_t', 0) > 0 or settings.get('algorithm_num', 1) != 1:
             raise ValueError('This estimator currently does not support local_values, theiler_t or algorithm_num arguments.')
 
         self._knn_finder_settings = settings.get('knn_finder_settings', {})
@@ -114,14 +114,14 @@ class PythonKraskovCMI(Estimator):
     def _compute_epsilon(self, data: np.ndarray, k: int):
         """Compute the distance to the kth nearest neighbor for each point in x."""
         knn_finder = self._knn_finder_class(data, **self._knn_finder_settings)
-        return knn_finder.find_dist_to_kth_neighbor(data, k + 1) # +1 because the point itself is included in the data
+        return knn_finder.find_all_dists_to_kth_neighbor(k)
     
     def _compute_n(self, data: np.ndarray, r: np.ndarray):
         """Count the number of neighbors strictly within a given radius r for each point in x.
         Returns the number of neighbors plus one, because the point itself is included in the data.
         """
         knn_finder = self._knn_finder_class(data, **self._knn_finder_settings)
-        return knn_finder.count_neighbors(data, r)
+        return knn_finder.count_all_neighbors(r) + 1
     
     def is_analytic_null_estimator(self):
         return False
