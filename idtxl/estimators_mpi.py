@@ -59,8 +59,8 @@ class MPIEstimator():
             _bcast_shared_data(lazyArray._base_array)
 
         # Chunk data
-        data_chunks = list(self._chunk_data(data))
-        return _estimate(data_chunks)
+        n_chunks = len(data[list(data.keys())[0]])
+        return _estimate(self._chunk_data(data), n_chunks)
     
     def estimate(self, **data):
         return _worker_estimator.estimate(**data)
@@ -69,18 +69,24 @@ class MPIEstimator():
         """
         Iterator chopping data dictionary into n_chunks chunks of size chunksize
         """
-        for chunk in range(len(data[list(data.keys())[0]])):
-            d = {key: var[chunk] for key, var in data.items()}
+        def get_chunk(idx, previous=None):
+            if previous is None:
+                d = {key: var[idx] for key, var in data.items()}
+            else:
+                d = {key: var[idx] for key, var in data.items() if var[idx] is not previous[key]}
+            
 
             # Remove base_array from lazy arrays
             for key, var in d.items():
                 if isinstance(var, LazyArray):
-                    if id(var._base_array) != self._data_id:
+                    if id(var._base_array) != _worker_data_id:
                         d[key] = var[:]
                         warnings.warn('Performance warning: LazyArray was copied to worker.', RuntimeWarning)
                 elif var is not None:
                     warnings.warn('Performance warning: Non-Lazy Array was copied to worker.', RuntimeWarning)
-            yield d
+            
+            return d
+        return get_chunk
 
     def is_parallel(self):
         return True
@@ -165,41 +171,47 @@ def _stop_workers():
 if _rank_world == 0:
     atexit.register(_stop_workers)
 
-def _estimate(vars_list:list[dict]):
-
-    # TEST
-    #vars_list = len(vars_list) * [{'var1': ([1, 2, 3], [], [{'coords': (0,), 'shifts': (22,), 'length': 450}, None, None]), 'var2': [1, 2, 3], 'conditional': None}]
+def _estimate(chunk_gen, n_chunks):
 
     # Set workers to estimation mode
     _comm_world.bcast(tags.ESTIMATE, root=0)
 
-    results = np.empty(len(vars_list), dtype=np.double)
+    results = np.empty(n_chunks, dtype=np.double)
 
     # Initial synchronisation barrier
     _comm_world.Barrier()
 
+    # Cache last lazy arrays
+    previous = [None] * (_size_world - 1)
+
     # Send initial tasks
-    for i in range(min(_size_world - 1, len(vars_list))):
-        _comm_world.send((i, vars_list[i]), dest=i+1)
+    for i in range(min(_size_world - 1, n_chunks)):
+        chunk = chunk_gen(i)
+        previous[i] = chunk
+        _comm_world.send((i, chunk), dest=i+1)
 
     status = MPI.Status()
 
     # Receive results and send new tasks until all tasks are done
-    for i in range(i, len(vars_list)):
+    for i in range(i, n_chunks):
         result_idx, result = _comm_world.recv(status=status)
         worker_rank = status.Get_source()
 
         results[result_idx] = result
 
-        _comm_world.send((i, vars_list[i]), dest=worker_rank)
+        # Send new task
+        chunk = chunk_gen(i, previous=previous[worker_rank-1])
+        previous[worker_rank - 1].update(chunk)
+
+        _comm_world.send((i, chunk), dest=worker_rank)
 
     # Receive remaining results
-    for _ in range(min(_size_world - 1, len(vars_list))):
+    for _ in range(min(_size_world - 1, n_chunks)):
         result_idx, result = _comm_world.recv(status=status)
         worker_rank = status.Get_source()
         results[result_idx] = result
 
-    # Send DONE_TAG to all workers
+    # Send stop signal
     for i in range(1, _size_world):
         _comm_world.send((None, None), dest=i)
 
@@ -227,6 +239,7 @@ def _worker_estimate():
 
     # Wait for first barrier
     _comm_world.Barrier()
+    previous = {}
 
     # Start estimation loop
     while True:
@@ -249,7 +262,12 @@ def _worker_estimate():
                     raise ValueError('LazyArray base array must be shared with worker')
                 var.set_base_array(_worker_data)
 
-                #TODO: CACHE LAST LAZY ARRAYS
+        # Merge data with previous data
+        data.update(previous)
+        previous = data
+
+        idletime += time.perf_counter() - last
+        last = time.perf_counter()
 
         if _worker_estimator.is_parallel():
             result =  _worker_estimator.estimate(n_chunks=1, **data)
