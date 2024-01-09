@@ -1,13 +1,13 @@
 from functools import reduce
 import warnings
 import atexit
+import time
 
 import numpy as np
 
 from idtxl.lazy_array import LazyArray
 
 from idtxl.estimator import get_estimator
-
 try:
     from mpi4py import MPI
 except ImportError:
@@ -44,9 +44,17 @@ class MPIEstimator():
         if MPI is None:
             raise ImportError('mpi4py is not installed')
         
+        self._mpi_batch_size = settings.get('mpi_batch_size', 1)
+        
         _bcast_estimator(est, settings)
 
     def estimate_parallel(self, **data):
+
+        n_tasks = len(data[list(data.keys())[0]])
+        
+        # If fewer tasks than batch_size, run on rank 0 alone
+        if n_tasks < self._mpi_batch_size:
+            return _worker_estimator.estimate_parallel(**data)
         
         # If lazy arrays are used, broadcast base array to all nodes
         lazyArray = None
@@ -59,34 +67,78 @@ class MPIEstimator():
             _bcast_shared_data(lazyArray._base_array)
 
         # Chunk data
-        n_chunks = len(data[list(data.keys())[0]])
-        return _estimate(self._chunk_data(data), n_chunks)
+        n_batches = n_tasks // self._mpi_batch_size + (1 if n_tasks % self._mpi_batch_size > 0 else 0)
+        n_workers = _size_world - 1
+
+        batch_sizes = self.compute_batch_sizes(n_tasks, n_batches, n_workers)
+            
+        return _estimate(self._chunk_data(data, batch_sizes=batch_sizes), n_batches=n_batches)
+    
+    def compute_batch_sizes(self, n_tasks, n_batches, n_workers):
+        """Evenly distribute tasks among workers.
+
+        If n_batches does not divide n_tasks, n_tasks//n_batches+1 batches are created
+        and the last n_workers batches are shortened evenly.
+        """
+
+        # Distribute batches evenly among workers
+        batch_sizes = np.full(n_batches, self._mpi_batch_size, dtype=np.int)
+
+        # Remove excess tasks evenly from all workers
+        excess_tasks = n_batches * self._mpi_batch_size - n_tasks
+
+        # Compute number of batches that will be shortened
+        n_short_batches = min(n_workers, n_batches)
+        excess_tasks_per_shortened_batch = excess_tasks // n_short_batches
+        remaining_excess_tasks = excess_tasks % n_short_batches
+
+        # Shorten batches evenly
+        batch_sizes[-n_short_batches:] -= excess_tasks_per_shortened_batch
+
+        # If there are remaining excess tasks, remove them from the last batches
+        if remaining_excess_tasks:
+            batch_sizes[-remaining_excess_tasks:] -= 1
+
+        return batch_sizes
     
     def estimate(self, **data):
         return _worker_estimator.estimate(**data)
     
-    def _chunk_data(self, data):
-        """
-        Iterator chopping data dictionary into n_chunks chunks of size chunksize
-        """
-        def get_chunk(idx, previous=None):
-            if previous is None:
-                d = {key: var[idx] for key, var in data.items()}
-            else:
-                d = {key: var[idx] for key, var in data.items() if var[idx] is not previous[key]}
-            
+    def _chunk_data(self, data, batch_sizes):
+        def get_batch(batch_idx, previous):
+            """
 
-            # Remove base_array from lazy arrays
-            for key, var in d.items():
-                if isinstance(var, LazyArray):
-                    if id(var._base_array) != _worker_data_id:
-                        d[key] = var[:]
-                        warnings.warn('Performance warning: LazyArray was copied to worker.', RuntimeWarning)
-                elif var is not None:
-                    warnings.warn('Performance warning: Non-Lazy Array was copied to worker.', RuntimeWarning)
+            Careful: previous is modified inplace!
+            """
+            n_tasks = batch_sizes[batch_idx]
             
-            return d
-        return get_chunk
+            if previous is None:
+                previous = {}
+            
+            dicts = [None] * n_tasks
+            offset = batch_sizes[:batch_idx].sum()
+            for i in range(n_tasks):
+                idx = offset + i
+
+                if previous is None:
+                    d = {key: var[idx] for key, var in data.items()}
+                else:
+                    d = {key: var[idx] for key, var in data.items() if var[idx] is not previous.get(key, 'somevalue')}
+
+                # Remove base_array from lazy arrays
+                for key, var in d.items():
+                    if isinstance(var, LazyArray):
+                        if id(var._base_array) != _worker_data_id:
+                            d[key] = var[:]
+                            warnings.warn('Performance warning: LazyArray was copied to worker.', RuntimeWarning)
+                    elif var is not None:
+                        warnings.warn('Performance warning: Non-Lazy Array was copied to worker.', RuntimeWarning)
+                
+                dicts[i] = d
+                previous.update(d) # previous is modified inplace!
+
+            return dicts
+        return get_batch
 
     def is_parallel(self):
         return True
@@ -171,52 +223,53 @@ def _stop_workers():
 if _rank_world == 0:
     atexit.register(_stop_workers)
 
-def _estimate(chunk_gen, n_chunks):
+def _estimate(batch_gen, n_batches):
+    n_workers = _size_world - 1
 
     # Set workers to estimation mode
     _comm_world.bcast(tags.ESTIMATE, root=0)
 
-    results = np.empty(n_chunks, dtype=np.double)
+    results = [None] * n_batches
 
     # Initial synchronisation barrier
     _comm_world.Barrier()
 
     # Cache last lazy arrays
-    previous = [None] * (_size_world - 1)
+    previous = [{} for _ in range(n_workers)]
 
     # Send initial tasks
-    for i in range(min(_size_world - 1, n_chunks)):
-        chunk = chunk_gen(i)
-        previous[i] = chunk
+    for i in range(min(n_workers, n_batches)):
+        chunk = batch_gen(i, previous[i]) # previous is modified as a side effect
         _comm_world.send((i, chunk), dest=i+1)
 
     status = MPI.Status()
 
     # Receive results and send new tasks until all tasks are done
-    for i in range(i, n_chunks):
+    for i in range(i, n_batches):
         result_idx, result = _comm_world.recv(status=status)
         worker_rank = status.Get_source()
 
         results[result_idx] = result
 
         # Send new task
-        chunk = chunk_gen(i, previous=previous[worker_rank-1])
-        previous[worker_rank - 1].update(chunk)
-
+        chunk = batch_gen(i, previous[worker_rank-1]) # previous is modified as a side effect
         _comm_world.send((i, chunk), dest=worker_rank)
 
     # Receive remaining results
-    for _ in range(min(_size_world - 1, n_chunks)):
+    for _ in range(min(n_workers, n_batches)):
         result_idx, result = _comm_world.recv(status=status)
         worker_rank = status.Get_source()
         results[result_idx] = result
 
     # Send stop signal
-    for i in range(1, _size_world):
-        _comm_world.send((None, None), dest=i)
+    for i in range(n_workers):
+        _comm_world.send((None, None), dest=i+1)
 
     # Synchronize all workers
     _comm_world.Barrier()
+
+    # Turn results into array
+    results = np.concatenate(results)
 
     return results
 
@@ -239,43 +292,48 @@ def _worker_estimate():
 
     # Wait for first barrier
     _comm_world.Barrier()
+
     previous = {}
 
     # Start estimation loop
     while True:
-
         # Receive data from rank 0
-        data_idx, data = _comm_world.recv(source=0)
+        batch_idx, batches = _comm_world.recv(source=0)
 
-        # If tag is 0, exit loop
-        if data_idx is None:
+        # If batch is None, exit loop
+        if batch_idx is None:
             break
 
-        # Otherwise, estimate
-        for key, var in data.items():
-            if isinstance(var, LazyArray):
-                if var._base_array is not None:
-                    raise ValueError('LazyArray base array must be None')
-                if _worker_data is None:
-                    raise ValueError('_worker_data must not be None')
-                if var._base_array_id != _worker_data_id:
-                    raise ValueError('LazyArray base array must be shared with worker')
-                var.set_base_array(_worker_data)
+        # Create array for results
+        results = np.ndarray(len(batches), dtype=np.double)
 
-        # Merge data with previous data
-        data.update(previous)
-        previous = data
+        for i, data in enumerate(batches):
 
-        idletime += time.perf_counter() - last
-        last = time.perf_counter()
+            # Otherwise, estimate
+            for var in data.values():
+                if isinstance(var, LazyArray):
+                    if var._base_array is not None:
+                        raise ValueError('LazyArray base array must be None')
+                    if _worker_data is None:
+                        raise ValueError('_worker_data must not be None')
+                    if var._base_array_id != _worker_data_id:
+                        raise ValueError('LazyArray base array must be shared with worker')
+                    var.set_base_array(_worker_data)
 
-        if _worker_estimator.is_parallel():
-            result =  _worker_estimator.estimate(n_chunks=1, **data)
-        else:
-            result =  _worker_estimator.estimate(**data)
+            # Merge data with previous data
+            data.update(previous)
+            previous = data
+
+
+            if _worker_estimator.is_parallel():
+                result =  _worker_estimator.estimate(n_chunks=1, **data)
+            else:
+                result =  _worker_estimator.estimate(**data)
+
+            results[i] = result
 
         # Send result to rank 0
-        _comm_world.send((data_idx, result), dest=0, tag=tags.ESTIMATE)
+        _comm_world.send((batch_idx, results), dest=0, tag=tags.ESTIMATE)
 
     # Synchronize all workers
     _comm_world.Barrier()
