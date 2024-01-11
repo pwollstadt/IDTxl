@@ -73,10 +73,16 @@ class Data():
         np.random.seed(seed)
         self.initial_state = np.random.get_state()
         self.seed = seed
-        self.random_bit_generator = np.random.Philox(seed)
+        self._random_bit_generator = np.random.Philox(seed)
         self.normalise = normalise
         if data is not None:
             self.set_data(data, dim_order)
+
+    def get_rgb_key(self):
+        return tuple(self._random_bit_generator.state['state']['key'])
+    
+    def get_rgb_count(self):
+        return tuple(self._random_bit_generator.state['state']['counter'])
 
     def n_realisations(self, current_value=None):
         """Number of realisations over samples and replications.
@@ -521,11 +527,11 @@ class Data():
         n_samples = self.n_realisations_samples(current_value)
 
         realisations = realisations.reshape(self.n_replications, n_samples, len(idx_list)) # Add replication axis to facilitate permutation.
-        realisations = realisations.shuffled(axis=0, philox_key=self.random_bit_generator.state['state']['key'], philox_counter=self.random_bit_generator.state['state']['counter'])
+        realisations = realisations.shuffled(axis=0, philox_key=self.get_rgb_key(), philox_counter=self.get_rgb_count())
         realisations = realisations.reshape(self.n_replications * n_samples, len(idx_list)) # Flatten out the replications axis again.
 
         # Advance the random bit generator to avoid reusing the same random numbers for the next permutation.
-        self.random_bit_generator.advance(2**64)
+        self._random_bit_generator.advance(2**64)
 
         return realisations
 
@@ -643,8 +649,8 @@ class Data():
         n_samples = self.n_realisations_samples(current_value)
 
         # Extract random bit number generator state
-        philox_key = self.random_bit_generator.state['state']['key']
-        philox_counter = self.random_bit_generator.state['state']['counter']
+        philox_key = self.get_rgb_key()
+        philox_counter = self.get_rgb_count()
 
         if perm_settings['perm_type'] == 'random':
             realisations = realisations.reshape(self.n_replications, n_samples, len(idx_list)) # Add replication axis to facilitate permutation.
@@ -652,7 +658,7 @@ class Data():
             realisations = realisations.reshape(self.n_replications * n_samples, len(idx_list)) # Flatten out the replications axis again.
         elif perm_settings['perm_type'] == 'circular':
             max_shift = perm_settings['max_shift']
-            shift = np.random.Generator(self.random_bit_generator).integers(1, max_shift + 1)
+            shift = np.random.Generator(self._random_bit_generator).integers(1, max_shift + 1)
             realisations = realisations.rolled(shift, axis=0)
         elif perm_settings['perm_type'] == 'block':
             block_size = perm_settings['block_size']
@@ -663,7 +669,7 @@ class Data():
             realisations = realisations.local_shuffled(perm_range, philox_key=philox_key, philox_counter=philox_counter)
 
         # Advance the random bit generator to avoid reusing the same random numbers for the next permutation.
-        self.random_bit_generator.advance(2**64)        
+        self._random_bit_generator.advance(2**64)        
 
         return realisations
 
