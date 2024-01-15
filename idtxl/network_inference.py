@@ -34,6 +34,7 @@ class NetworkInference(NetworkAnalysis):
         self.pvalue_omnibus = None
         self.statistic_sign_sources = None
         self.pvalues_sign_sources = None
+        self._cmi_estimator = None
         super().__init__()
 
     def _check_target(self, target, n_processes):
