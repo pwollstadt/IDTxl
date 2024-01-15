@@ -360,23 +360,17 @@ class ResultsSingleProcessAnalysis(Results):
         # Return required key from required _single_process dictionary, dealing
         # with the FDR at a high level
         if process not in self.processes_analysed:
-            raise RuntimeError("No results for process {0}.".format(process))
+            raise RuntimeError(f"No results for process {process}.")
         if fdr:
             try:
                 return self._single_process_fdr[process]
             except AttributeError:
                 raise RuntimeError(
-                    "No FDR-corrected results have been added. Set"
-                    " "
-                    "fdr=False"
-                    " to see uncorrected results."
+                    f"No FDR-corrected results for process {process}. Set fdr=False for uncorrected results."
                 )
             except KeyError:
                 raise RuntimeError(
-                    "No FDR-corrected results for process {0}. Set"
-                    " "
-                    "fdr=False"
-                    " to see uncorrected results.".format(process)
+                    f"No FDR-corrected results for process {process}. Set fdr=False for uncorrected results."
                 )
         else:
             try:

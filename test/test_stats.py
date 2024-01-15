@@ -201,13 +201,15 @@ def test_ais_fdr():
         res_pruned.get_significant_processes(fdr=True)
 
     # Test function call for single result
-    res_pruned = stats.network_fdr(settings, res_1)
+    res_pruned = stats.ais_fdr(settings, res_1)
     print("successful call on single result dict.")
 
     # Test None result for insufficient no. permutations
-    res_1[0]["settings"]["n_perm_max_seq"] = 2
-    res_pruned = stats.network_fdr(settings, res_1, res_2)
-    assert not res_pruned, "Res. should be None is no. permutations too low."
+    res_1.settings["n_perm_max_seq"] = 2
+    res_2.settings["n_perm_max_seq"] = 2
+    res_pruned = stats.ais_fdr(settings, res_1, res_2)
+    with pytest.raises(RuntimeError):
+        res_pruned.get_significant_processes()
 
 
 def test_find_pvalue():
@@ -352,7 +354,7 @@ def test_analytical_surrogates():
 
 
 if __name__ == "__main__":
-    # test_ais_fdr()
+    test_ais_fdr()
     # test_analytical_surrogates()
     # test_data_type()
     # test_network_fdr()
