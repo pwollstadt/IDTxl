@@ -130,15 +130,15 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
 
         # Check which targets and sources are requested for analysis.
         if targets == "all":
-            targets = [t for t in range(data.n_processes)]
+            targets = list(range(data.n_processes))
         if sources == "all":
             sources = ["all" for t in targets]
-        if (type(sources) is list) and (type(sources[0]) is int):
+        elif isinstance(sources, list) and isinstance(sources[0], int):
             sources = [sources for t in targets]
-        if (type(sources) is list) and (type(sources[0]) is list):
+        elif isinstance(sources, list) and isinstance(sources[0], list):
             pass
         else:
-            ValueError("Sources was not specified correctly: {0}.".format(sources))
+            raise ValueError(f"Sources was not specified correctly: {sources}.")
         assert len(sources) == len(
             targets
         ), "List of targets and list of sources have to have the length"
@@ -155,16 +155,10 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
             n_realisations=data.n_realisations(),
             normalised=data.normalise,
         )
-        for t in range(len(targets)):
+        for t, target in enumerate(targets):
             if settings["verbose"]:
-                print(
-                    "\n####### analysing target with index {0} from list {1}".format(
-                        t, targets
-                    )
-                )
-            res_single = self.analyse_single_target(
-                settings, data, targets[t], sources[t]
-            )
+                print("\n####### analysing target with index {t} from list {targets}")
+            res_single = self.analyse_single_target(settings, data, target, sources[t])
             results.combine_results(res_single)
 
         # Get no. realisations actually used for estimation from single target
@@ -302,14 +296,10 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
         # Clean up and return results.
         if self.settings["verbose"]:
             print(
-                "final source samples: {0}".format(
-                    self._idx_to_lag(self.selected_vars_sources)
-                )
+                f"final source samples: {self._idx_to_lag(self.selected_vars_sources)}"
             )
             print(
-                "final target samples: {0}\n\n".format(
-                    self._idx_to_lag(self.selected_vars_target)
-                )
+                f"final target samples: {self._idx_to_lag(self.selected_vars_target)}\n\n"
             )
         results = ResultsNetworkInference(
             n_nodes=data.n_processes,
