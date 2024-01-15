@@ -71,19 +71,22 @@ def import_fieldtrip(file_name, ft_struct_name, file_version, normalise=True):
     @author: Michael Wibral
     """
     if file_version != "v7.3":
-        raise RuntimeError('At present only m-files in format 7.3 are '
-                           'supported, please consider reopening and resaving '
-                           'your m-file in that version.')
+        raise RuntimeError(
+            "At present only m-files in format 7.3 are "
+            "supported, please consider reopening and resaving "
+            "your m-file in that version."
+        )
         # TODO we could write a fallback option using numpy's loadmat?
 
-    print('Creating Python dictionary from FT data structure: {0}'
-          .format(ft_struct_name))
+    print(
+        "Creating Python dictionary from FT data structure: {0}".format(ft_struct_name)
+    )
     trial_data = _ft_import_trial(file_name, ft_struct_name)
     label = _ft_import_label(file_name, ft_struct_name)
     fsample = _ft_fsample_2_float(file_name, ft_struct_name)
     timestamps = _ft_import_time(file_name, ft_struct_name)
 
-    dat = Data(data=trial_data, dim_order='spr', normalise=normalise)
+    dat = Data(data=trial_data, dim_order="spr", normalise=normalise)
     return dat, label, timestamps, fsample
 
 
@@ -95,18 +98,21 @@ def _ft_import_trial(file_name, ft_struct_name):
     # Get the trial cells that contain the references (pointers) to the data
     # we need. Then get the data from matrices in cells of a 1 x numtrials cell
     # array in the original FieldTrip structure.
-    trial = ft_struct['trial']
+    trial = ft_struct["trial"]
 
     # Get the trial cells that contain the references (pointers) to the data
     # we need. Then get the data from matrices in cells of a 1 x numtrials cell
     # array in the original FieldTrip structure.
-    trial = ft_struct['trial']
+    trial = ft_struct["trial"]
 
     # Allocate memory to hold actual data, read shape of first trial to know
     # the data size.
     trial_data_tmp = np.array(ft_file[trial[0][0]])  # get data from 1st trial
-    print('Found data with first dimension: {0}, and second: {1}'
-          .format(trial_data_tmp.shape[0], trial_data_tmp.shape[1]))
+    print(
+        "Found data with first dimension: {0}, and second: {1}".format(
+            trial_data_tmp.shape[0], trial_data_tmp.shape[1]
+        )
+    )
     geometry = trial_data_tmp.shape + (trial.shape[0],)
     trial_data = np.empty(geometry)
 
@@ -124,10 +130,10 @@ def _ft_import_label(file_name, ft_struct_name):
     # for details of the data handling see comments in _ft_import_trial
     ft_file = h5py.File(file_name)
     ft_struct = ft_file[ft_struct_name]
-    ft_label = ft_struct['label']
+    ft_label = ft_struct["label"]
 
     if VERBOSE:
-        print('Converting FT labels to python list of strings')
+        print("Converting FT labels to python list of strings")
 
     label = []
     for ll in range(0, ft_label.shape[0]):
@@ -149,9 +155,9 @@ def _ft_import_time(file_name, ft_struct_name):
     # for details of the data handling see comments in ft_trial_2_numpyarray
     ft_file = h5py.File(file_name)
     ft_struct = ft_file[ft_struct_name]
-    ft_time = ft_struct['time']
+    ft_time = ft_struct["time"]
     if VERBOSE:
-        print('Converting FT time cell array to numpy array')
+        print("Converting FT time cell array to numpy array")
 
     np_timeaxis_tmp = np.array(ft_file[ft_time[0][0]])
     geometry = np_timeaxis_tmp.shape + (ft_time.shape[0],)
@@ -166,15 +172,14 @@ def _ft_import_time(file_name, ft_struct_name):
 def _ft_fsample_2_float(file_name, ft_struct_name):
     ft_file = h5py.File(file_name)
     ft_struct = ft_file[ft_struct_name]
-    FTfsample = ft_struct['fsample']
+    FTfsample = ft_struct["fsample"]
     fsample = int(FTfsample[0])
     if VERBOSE:
-        print('Converting FT fsample array (1x1) to numpy array (1x1)')
+        print("Converting FT fsample array (1x1) to numpy array (1x1)")
     return fsample
 
 
-def import_matarray(file_name, array_name, file_version, dim_order,
-                    normalise=True):
+def import_matarray(file_name, array_name, file_version, dim_order, normalise=True):
     """Read Matlab hdf5 file into IDTxl.
 
     reads a matlab hdf5 file ("-v7.3' or higher, .mat) with a SINGLE
@@ -220,36 +225,41 @@ def import_matarray(file_name, array_name, file_version, dim_order,
 
     @author: Michael Wibral
     """
-    if file_version == 'v7.3':
+    if file_version == "v7.3":
         mat_file = h5py.File(file_name)
         # Assert that at least one of the keys found at the top level of the
         # HDF file  matches the name of the array we wanted
         if array_name not in mat_file.keys():
-            raise RuntimeError('Array {0} not in mat file or not a variable '
-                               'at the file''s top level.'.format(array_name))
+            raise RuntimeError(
+                "Array {0} not in mat file or not a variable "
+                "at the file"
+                "s top level.".format(array_name)
+            )
 
         # 2. Create an object for the matlab array (from the hdf5 hierachy),
         # the trailing [()] ensures everything is read
         mat_data = np.squeeze(np.asarray(mat_file[array_name][()]))
 
-    elif file_version in ['v4', 'v6', 'v7']:
+    elif file_version in ["v4", "v6", "v7"]:
         try:
             m = loadmat(file_name, squeeze_me=True, variable_names=array_name)
         except NotImplementedError as err:
-            raise RuntimeError('You may have provided an incorrect file '
-                               'version. The mat file was probably saved as '
-                               'version 7.3 (hdf5).')
+            raise RuntimeError(
+                "You may have provided an incorrect file "
+                "version. The mat file was probably saved as "
+                "version 7.3 (hdf5)."
+            )
         mat_data = m[array_name]  # loadmat returns a dict containing variables
     else:
-        raise ValueError('Unkown file version: {0}.'.format(file_version))
+        raise ValueError("Unkown file version: {0}.".format(file_version))
 
     # Create output: IDTxl data object, list of labels, sampling info in unit
     # time steps (sampling rate of 1).
-    print('Creating Data object from matlab array: {0}.'.format(array_name))
+    print("Creating Data object from matlab array: {0}.".format(array_name))
     dat = Data(mat_data, dim_order=dim_order, normalise=normalise)
     label = []
     for n in range(dat.n_processes):
-        label.append('channel_{0:03d}'.format(n))
+        label.append("channel_{0:03d}".format(n))
     fsample = 1
     timestamps = np.arange(dat.n_samples)
     return dat, label, timestamps, fsample

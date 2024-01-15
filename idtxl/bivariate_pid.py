@@ -42,6 +42,10 @@ class BivariatePID(SingleProcessAnalysis):
     """
 
     def __init__(self):
+        self._pid_estimator = None
+        self.sources = None
+        self.target = None
+        self.results = None
         super().__init__()
 
     def analyse_network(self, settings, data, targets, sources):
@@ -102,32 +106,33 @@ class BivariatePID(SingleProcessAnalysis):
                 ResultsPID()
         """
         # Set defaults for PID estimation.
-        settings.setdefault('verbose', True)
-        settings.setdefault('lags_pid', np.array([[1, 1]] * len(targets)))
+        settings.setdefault("verbose", True)
+        settings.setdefault("lags_pid", np.array([[1, 1]] * len(targets)))
 
         # Check inputs.
-        if not len(targets) == len(sources) == len(settings['lags_pid']):
-            raise RuntimeError('Lists of targets, sources, and lags must have'
-                               'the same lengths.')
-        list_of_lags = settings['lags_pid']
+        if not len(targets) == len(sources) == len(settings["lags_pid"]):
+            raise RuntimeError(
+                "Lists of targets, sources, and lags must have" "the same lengths."
+            )
+        list_of_lags = settings["lags_pid"]
 
         # Perform PID estimation for each target individually
         results = ResultsPID(
             n_nodes=data.n_processes,
             n_realisations=data.n_realisations(),
-            normalised=data.normalise)
-        for t in range(len(targets)):
-            if settings['verbose']:
-                print('\n####### analysing target with index {0} from list {1}'
-                      .format(t, targets))
-            settings['lags_pid'] = list_of_lags[t]
-            res_single = self.analyse_single_target(
-                settings, data, targets[t], sources[t])
+            normalised=data.normalise,
+        )
+        for t, target in enumerate(targets):
+            if settings["verbose"]:
+                print(f"\n####### analysing target with index {t} from list {targets}")
+            settings["lags_pid"] = list_of_lags[t]
+            res_single = self.analyse_single_target(settings, data, target, sources[t])
             results.combine_results(res_single)
         # Get no. realisations actually used for estimation from single target
         # analysis.
         results.data_properties.n_realisations = (
-            res_single.data_properties.n_realisations)
+            res_single.data_properties.n_realisations
+        )
         return results
 
     def analyse_single_target(self, settings, data, target, sources):
@@ -191,61 +196,64 @@ class BivariatePID(SingleProcessAnalysis):
         # Estimate PID and significance.
         self._calculate_pid(data)
 
-        # Add analyis info.
+        # Add analysis info.
         results = ResultsPID(
             n_nodes=data.n_processes,
             n_realisations=data.n_realisations(self.current_value),
-            normalised=data.normalise)
+            normalised=data.normalise,
+        )
         results._add_single_result(
-            settings=self.settings,
-            target=self.target,
-            results=self.results)
+            settings=self.settings, target=self.target, results=self.results
+        )
         self._reset()
         return results
 
     def _initialise(self, settings, data, target, sources):
         """Check input, set initial or default values for analysis settings."""
         # Check requested PID estimator.
-        assert 'pid_estimator' in settings, 'Estimator was not specified!'
-        self._pid_estimator = get_estimator(settings['pid_estimator'], settings)
+        assert "pid_estimator" in settings, "Estimator was not specified!"
+        self._pid_estimator = get_estimator(settings["pid_estimator"], settings)
 
         self.settings = settings.copy()
-        self.settings.setdefault('lags_pid', [1, 1])
-        self.settings.setdefault('verbose', True)
+        self.settings.setdefault("lags_pid", [1, 1])
+        self.settings.setdefault("verbose", True)
 
         # Check if provided lags are correct and work with the number of
         # samples in the data.
-        if len(self.settings['lags_pid']) != 2:
-            raise RuntimeError('List of lags must have length 2.')
-        if self.settings['lags_pid'][0] >= data.n_samples:
+        if len(self.settings["lags_pid"]) != 2:
+            raise RuntimeError("List of lags must have length 2.")
+        if self.settings["lags_pid"][0] >= data.n_samples:
             raise RuntimeError(
-                'Lag 1 ({0}) is larger than the number of samples in the data '
-                'set ({1}).'.format(
-                    self.settings['lags_pid'][0], data.n_samples))
-        if self.settings['lags_pid'][1] >= data.n_samples:
+                f"Lag 1 ({self.settings['lags_pid'][0]}) is larger than the number of "
+                f"samples in the data set ({data.n_samples})."
+            )
+        if self.settings["lags_pid"][1] >= data.n_samples:
             raise RuntimeError(
-                'Lag 2 ({0}) is larger than the number of samples in the data '
-                'set ({1}).'.format(
-                    self.settings['lags_pid'][1], data.n_samples))
+                f"Lag 2 ({self.settings['lags_pid'][1]}) is larger than the number of "
+                "samples in the data set ({data.n_samples})."
+            )
 
         # Check if target and sources are provided correctly.
-        if type(target) is not int:
-            raise RuntimeError('Target must be an integer.')
+        if not isinstance(target, int):
+            raise RuntimeError("Target must be an integer.")
         if len(sources) != 2:
-            raise RuntimeError('List of sources must have length 2.')
+            raise RuntimeError("List of sources must have length 2.")
         if target in sources:
-            raise RuntimeError('The target ({0}) should not be in the list '
-                               'of sources ({1}).'.format(target, sources))
+            raise RuntimeError(
+                f"The target ({target}) should not be in the list of sources ({sources})."
+            )
 
-        self.current_value = (target, max(self.settings['lags_pid']))
+        self.current_value = (target, max(self.settings["lags_pid"]))
         self.target = target
         # TODO works for single vars only, change to multivariate?
-        self.sources = self._lag_to_idx([
-                                (sources[0], self.settings['lags_pid'][0]),
-                                (sources[1], self.settings['lags_pid'][1])])
+        self.sources = self._lag_to_idx(
+            [
+                (sources[0], self.settings["lags_pid"][0]),
+                (sources[1], self.settings["lags_pid"][1]),
+            ]
+        )
 
     def _calculate_pid(self, data):
-
         # TODO Discuss how and if the following statistical testing should be
         # included included. Remove dummy results.
         # [orig_pid, sign_1, p_val_1,
@@ -257,32 +265,33 @@ class BivariatePID(SingleProcessAnalysis):
         # p_val_1 = p_val_2 = p_val_shd = p_val_syn = 1.0
 
         target_realisations = data.get_realisations(
-                                            self.current_value,
-                                            [self.current_value])[0]
+            self.current_value, [self.current_value]
+        )[0]
         source_1_realisations = data.get_realisations(
-                                            self.current_value,
-                                            [self.sources[0]])[0]
+            self.current_value, [self.sources[0]]
+        )[0]
         source_2_realisations = data.get_realisations(
-                                            self.current_value,
-                                             [self.sources[1]])[0]
+            self.current_value, [self.sources[1]]
+        )[0]
         orig_pid = self._pid_estimator.estimate(
-                                s1=source_1_realisations,
-                                s2=source_2_realisations,
-                                t=target_realisations)
+            s1=source_1_realisations, s2=source_2_realisations, t=target_realisations
+        )
 
-        if self.settings['verbose']:
-            print('\nunq information s1: {0:.8f}, s2: {1:.8f}'.format(
-                                                           orig_pid['unq_s1'],
-                                                           orig_pid['unq_s2']))
-            print('shd information: {0:.8f}, syn information: {1:.8f}'.format(
-                                                        orig_pid['shd_s1_s2'],
-                                                        orig_pid['syn_s1_s2']))
+        if self.settings["verbose"]:
+            print(
+                f"\nunq information s1: {orig_pid['unq_s1']:.8f}, s2: {orig_pid['unq_s2']:.8f}"
+            )
+            print(
+                f"shd information: {orig_pid['shd_s1_s2']:.8f}, syn information: {orig_pid['syn_s1_s2']:.8f}"
+            )
         self.results = orig_pid
-        self.results['source_1'] = self._idx_to_lag([self.sources[0]])
-        self.results['source_2'] = self._idx_to_lag([self.sources[1]])
-        self.results['selected_vars_sources'] = [
-            self.results['source_1'][0], self.results['source_2'][0]]
-        self.results['current_value'] = self.current_value
+        self.results["source_1"] = self._idx_to_lag([self.sources[0]])
+        self.results["source_2"] = self._idx_to_lag([self.sources[1]])
+        self.results["selected_vars_sources"] = [
+            self.results["source_1"][0],
+            self.results["source_2"][0],
+        ]
+        self.results["current_value"] = self.current_value
         # self.results['unq_s1_sign'] = sign_1
         # self.results['unq_s2_sign'] = sign_2
         # self.results['unq_s1_p_val'] = p_val_1
@@ -293,8 +302,8 @@ class BivariatePID(SingleProcessAnalysis):
         # self.results['shd_p_val'] = p_val_shd
 
         # TODO make mi_against_surrogates in stats more generic, such that
-        # it becomes an arbitrary permutation test where one arguemnt gets
-        # shuffled and then all arguents are passed to the provided estimator
+        # it becomes an arbitrary permutation test where one argument gets
+        # shuffled and then all arguments are passed to the provided estimator
 
     def _reset(self):
         """Reset instance after analysis."""

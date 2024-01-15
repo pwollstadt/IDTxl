@@ -3,14 +3,16 @@ import numpy as np
 import math
 from itertools import chain, combinations
 from . import idtxl_exceptions as ex
+
 try:
     from prettytable import PrettyTable
 except ImportError as err:
     ex.package_missing(
         err,
-        'PrettyTable is not available on this system. Install it from '
-        'https://pypi.org/project/PrettyTable/ to use the Goettinge PID '
-        'estimator.')
+        "PrettyTable is not available on this system. Install it from "
+        "https://pypi.org/project/PrettyTable/ to use the Goettinge PID "
+        "estimator.",
+    )
 
 
 class Lattice:
@@ -21,32 +23,35 @@ class Lattice:
 
     def __init__(self, n):
         self.n = n
-        self.lis = [i for i in range(1, self.n+1)]
+        self.lis = [i for i in range(1, self.n + 1)]
+
     # ^ _init_()
 
     def powerset(self):
-        return chain.from_iterable(combinations(self.lis, r)
-                                   for r in range(1, len(self.lis) + 1))
+        return chain.from_iterable(
+            combinations(self.lis, r) for r in range(1, len(self.lis) + 1)
+        )
+
     # ^ powerset()
 
     def less_than(self, beta, alpha):
         """compare whether an antichain beta is smaller than antichain
         alpha"""
-        return all(any(frozenset(b) <= frozenset(a) for b in beta)
-                   for a in alpha)
+        return all(any(frozenset(b) <= frozenset(a) for b in beta) for a in alpha)
+
     # ^compare()s
 
     def comparable(self, a, b):
         return a < b or a > b
+
     # ^comparable()
 
     def antichain(self):
         """Generates the nodes (antichains) of the lattice"""
         # dummy expensive function might use dit or networkx functions
-        assert self.n < 5, (
-            "antichain(n): number of sources should be less than 5")
+        assert self.n < 5, "antichain(n): number of sources should be less than 5"
         achain = []
-        for r in range(1, math.floor((2**self.n - 1)/2) + 2):
+        for r in range(1, math.floor((2**self.n - 1) / 2) + 2):
             # enumerate the power set of the powerset
             for alpha in combinations(self.powerset(), r):
                 flag = 1
@@ -63,21 +68,27 @@ class Lattice:
             # ^for alpha
         # ^for r
         return achain
+
     # ^antichain()
 
     def children(self, alpha, achain):
         """Enumerates the direct nodes (antichains) ordered by the node
         (antichain) 'alpha'"""
         chl = []
-        downset = [beta for beta in achain if self.less_than(
-            beta, alpha) and beta != alpha]
+        downset = [
+            beta for beta in achain if self.less_than(beta, alpha) and beta != alpha
+        ]
         for beta in downset:
-            if all(not self.less_than(beta, gamma) for gamma in downset if gamma != beta):
+            if all(
+                not self.less_than(beta, gamma) for gamma in downset if gamma != beta
+            ):
                 chl.append(beta)
             # ^if
         # ^for beta
         return chl
+
     # ^children()
+
 
 # ^Lattice()
 
@@ -89,9 +100,10 @@ class Lattice:
 
 
 def powerset(m):
-    lis = [i for i in range(1, m+1)]
-    return chain.from_iterable(combinations(lis, r)
-                               for r in range(1, len(lis) + 1))
+    lis = [i for i in range(1, m + 1)]
+    return chain.from_iterable(combinations(lis, r) for r in range(1, len(lis) + 1))
+
+
 # ^powerset()
 
 
@@ -99,12 +111,14 @@ def marg(pdf, rlz, uset):
     """compute the marginal probability mass
     e.g. p(t,s1,s2)"""
     idxs = [idx - 1 for idx in list(uset)]
-    summ = 0.
+    summ = 0.0
     for k in pdf.keys():
         if all(k[idx] == rlz[idx] for idx in idxs):
             summ += pdf[k]
     # ^for
     return summ
+
+
 # ^marg()
 
 
@@ -116,16 +130,18 @@ def prob(n, pdf, rlz, gamma, target=False):
     summ = 0
     for idxs in pset:
         if target:
-            uset = frozenset((n+1,))
+            uset = frozenset((n + 1,))
         else:
             uset = frozenset(())
         # ^if
         for i in list(idxs):
-            uset |= frozenset(gamma[i-1])
+            uset |= frozenset(gamma[i - 1])
         # ^for i
-        summ += (-1)**(len(idxs) + 1) * marg(pdf, rlz, uset)
+        summ += (-1) ** (len(idxs) + 1) * marg(pdf, rlz, uset)
     # ^for idxs
     return summ
+
+
 # ^prob()
 
 
@@ -134,25 +150,28 @@ def differs(n, pdf, rlz, alpha, chl, target=False):
     For a node 'alpha' and any child gamma of alpha it computes p(gamma) -
     p(alpha) for all gamma"""
     if chl == [] and target:
-        base = prob(n, pdf, rlz, [()], target)/prob(n, pdf, rlz, alpha, target)
+        base = prob(n, pdf, rlz, [()], target) / prob(n, pdf, rlz, alpha, target)
     else:
         base = prob(n, pdf, rlz, alpha, target)
     # ^if bottom
     temp_diffs = [prob(n, pdf, rlz, gamma, target) - base for gamma in chl]
     temp_diffs.sort()
     return [base] + temp_diffs
+
+
 # ^differs()
 
 
 def sgn(num_chld):
     """Recurrsive function that generates the signs (+ or -) for the
-       inclusion-exculison principle"""
+    inclusion-exculison principle"""
     if num_chld == 0:
         return np.array([+1])
     else:
-        return np.concatenate(
-            (sgn(num_chld - 1), -sgn(num_chld - 1)), axis=None)
+        return np.concatenate((sgn(num_chld - 1), -sgn(num_chld - 1)), axis=None)
     # ^if bottom
+
+
 # ^ sgn()
 
 
@@ -169,28 +188,33 @@ def vec(num_chld, diffs):
     if num_chld == 0:
         return np.array([diffs[0]])
     else:
-        temp = vec(num_chld - 1, diffs) + \
-            diffs[num_chld]*np.ones(2**(num_chld - 1))
+        temp = vec(num_chld - 1, diffs) + diffs[num_chld] * np.ones(2 ** (num_chld - 1))
         return np.concatenate((vec(num_chld - 1, diffs), temp), axis=None)
     # ^if bottom
+
+
 # ^vec()
 
 
 def pi_plus(n, pdf, rlz, alpha, chld, achain):
-    """Compute the informative PPID """
+    """Compute the informative PPID"""
     diffs = differs(n, pdf, rlz, alpha, chld[tuple(alpha)], False)
     return np.dot(sgn(len(chld[alpha])), -np.log2(vec(len(chld[alpha]), diffs)))
+
+
 # ^pi_plus()
 
 
 def pi_minus(n, pdf, rlz, alpha, chld, achain):
-    """Compute the misinformative PPID """
+    """Compute the misinformative PPID"""
     diffs = differs(n, pdf, rlz, alpha, chld[alpha], True)
     if chld[alpha] == []:
         return np.dot(sgn(len(chld[alpha])), np.log2(vec(len(chld[alpha]), diffs)))
     else:
         return np.dot(sgn(len(chld[alpha])), -np.log2(vec(len(chld[alpha]), diffs)))
     # ^if bottom
+
+
 # ^pi_minus()
 
 
@@ -221,38 +245,47 @@ def pid(n, pdf_orig, chld, achain, printing=False):
             tuple
                 pointwise decomposition, averaged decomposition
     """
-    assert type(pdf_orig) is dict, (
-        "pid_goettingen.pid(pdf, chld, achain): pdf must be a dictionary")
-    assert type(chld) is dict, (
-        "pid_goettingen.pid(pdf, chld, achain): chld must be a dictionary")
-    assert type(achain) is list, (
-        "pid_goettingen.pid(pdf, chld, achain): pdf must be a list")
+    assert (
+        type(pdf_orig) is dict
+    ), "pid_goettingen.pid(pdf, chld, achain): pdf must be a dictionary"
+    assert (
+        type(chld) is dict
+    ), "pid_goettingen.pid(pdf, chld, achain): chld must be a dictionary"
+    assert (
+        type(achain) is list
+    ), "pid_goettingen.pid(pdf, chld, achain): pdf must be a list"
 
     if __debug__:
-        sum_p = 0.
+        sum_p = 0.0
         for k, v in pdf_orig.items():
-            assert type(k) is tuple, (
-                'pid_goettingen.pid(pdf, chld, achain): pdf keys must be tuples')
+            assert (
+                type(k) is tuple
+            ), "pid_goettingen.pid(pdf, chld, achain): pdf keys must be tuples"
             assert len(k) < 6, (
-                'pid_goettingen.pid(pdf, chld, achain): pdf keys must be tuples'
-                'of length at most 5')
-            assert type(v) is float or (type(v) == int and v == 0), (
-                'pid_goettingen.pid(pdf, chld, achain): pdf values must be floats')
-            assert v > -.1, (
-                'pid_goettingen.pid(pdf, chld, achain): pdf values must be nonnegative')
+                "pid_goettingen.pid(pdf, chld, achain): pdf keys must be tuples"
+                "of length at most 5"
+            )
+            assert type(v) is float or (
+                type(v) == int and v == 0
+            ), "pid_goettingen.pid(pdf, chld, achain): pdf values must be floats"
+            assert (
+                v > -0.1
+            ), "pid_goettingen.pid(pdf, chld, achain): pdf values must be nonnegative"
             sum_p += v
         # ^for
 
-        assert abs(sum_p - 1) < 1.e-7, (
-            'pid_goettingen.pid(pdf, chld, achain): pdf keys must sum up to 1'
-            '(tolerance of precision is 1.e-7)')
+        assert abs(sum_p - 1) < 1.0e-7, (
+            "pid_goettingen.pid(pdf, chld, achain): pdf keys must sum up to 1"
+            "(tolerance of precision is 1.e-7)"
+        )
     # ^if debug
 
-    assert type(printing) is bool, (
-        'pid_goettingen.pid(pdf, chld, achain, printing): printing must be a bool')
+    assert (
+        type(printing) is bool
+    ), "pid_goettingen.pid(pdf, chld, achain, printing): printing must be a bool"
 
     # Remove the impossible realization
-    pdf = {k: v for k, v in pdf_orig.items() if v > 1.e-300}
+    pdf = {k: v for k, v in pdf_orig.items() if v > 1.0e-300}
 
     # Initialize the output where
     # ptw = { rlz -> { alpha -> pi_alpha } }
@@ -275,13 +308,13 @@ def pid(n, pdf_orig, chld, achain, printing=False):
     # ^for
     # compute and store the average of the (+, -, +-) atoms
     for alpha in achain:
-        avgplus = 0.
-        avgminus = 0.
-        avgdiff = 0.
+        avgplus = 0.0
+        avgminus = 0.0
+        avgdiff = 0.0
         for rlz in pdf.keys():
-            avgplus += pdf[rlz]*ptw[rlz][alpha][0]
-            avgminus += pdf[rlz]*ptw[rlz][alpha][1]
-            avgdiff += pdf[rlz]*ptw[rlz][alpha][2]
+            avgplus += pdf[rlz] * ptw[rlz][alpha][0]
+            avgminus += pdf[rlz] * ptw[rlz][alpha][1]
+            avgdiff += pdf[rlz] * ptw[rlz][alpha][2]
             avg[alpha] = (avgplus, avgminus, avgdiff)
         # ^for
     # ^for
@@ -302,15 +335,25 @@ def pid(n, pdf_orig, chld, achain, printing=False):
                     stalpha += "}"
                 # ^for a
                 if count == 0:
-                    table.add_row([str(rlz), stalpha,
-                                   str(ptw[rlz][alpha][0]),
-                                   str(ptw[rlz][alpha][1]),
-                                   str(ptw[rlz][alpha][2])])
+                    table.add_row(
+                        [
+                            str(rlz),
+                            stalpha,
+                            str(ptw[rlz][alpha][0]),
+                            str(ptw[rlz][alpha][1]),
+                            str(ptw[rlz][alpha][2]),
+                        ]
+                    )
                 else:
-                    table.add_row([" ", stalpha,
-                                   str(ptw[rlz][alpha][0]),
-                                   str(ptw[rlz][alpha][1]),
-                                   str(ptw[rlz][alpha][2])])
+                    table.add_row(
+                        [
+                            " ",
+                            stalpha,
+                            str(ptw[rlz][alpha][0]),
+                            str(ptw[rlz][alpha][1]),
+                            str(ptw[rlz][alpha][2]),
+                        ]
+                    )
                 count += 1
             # ^for alpha
             table.add_row(["*", "*", "*", "*", "*"])
@@ -328,19 +371,31 @@ def pid(n, pdf_orig, chld, achain, printing=False):
                 stalpha += "}"
             # ^for a
             if count == 0:
-                table.add_row(["avg", stalpha,
-                               str(avg[alpha][0]),
-                               str(avg[alpha][1]),
-                               str(avg[alpha][2])])
+                table.add_row(
+                    [
+                        "avg",
+                        stalpha,
+                        str(avg[alpha][0]),
+                        str(avg[alpha][1]),
+                        str(avg[alpha][2]),
+                    ]
+                )
             else:
-                table.add_row([" ", stalpha,
-                               str(avg[alpha][0]),
-                               str(avg[alpha][1]),
-                               str(avg[alpha][2])])
+                table.add_row(
+                    [
+                        " ",
+                        stalpha,
+                        str(avg[alpha][0]),
+                        str(avg[alpha][1]),
+                        str(avg[alpha][2]),
+                    ]
+                )
             count += 1
         # ^for alpha
         print(table)
     # ^if printing
 
     return ptw, avg
+
+
 # ^pid()

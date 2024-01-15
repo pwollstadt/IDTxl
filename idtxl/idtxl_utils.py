@@ -14,7 +14,7 @@ def swap_chars(s, i_1, i_2):
     """
     if i_1 > i_2:
         i_1, i_2 = i_2, i_1
-    return ''.join([s[0:i_1], s[i_2], s[i_1+1:i_2], s[i_1], s[i_2+1:]])
+    return "".join([s[0:i_1], s[i_2], s[i_1 + 1 : i_2], s[i_1], s[i_2 + 1 :]])
 
 
 def print_dict(d, indent=4):
@@ -77,7 +77,7 @@ def remove_row(a, i):
             row index to be removed
     """
     b = np.empty((a.shape[0] - 1, a.shape[1]))
-    b[i:, :] = a[i + 1:, :]
+    b[i:, :] = a[i + 1 :, :]
     b[:i, :] = a[:i, :]
     return b.astype(type(a[0][0]))
 
@@ -96,7 +96,7 @@ def remove_column(a, j):
             column index to be removed
     """
     b = np.empty((a.shape[0], a.shape[1] - 1))
-    b[:, j:] = a[:, j+1:]
+    b[:, j:] = a[:, j + 1 :]
     b[:, :j] = a[:, :j]
     return b.astype(type(a[0][0]))
 
@@ -126,7 +126,7 @@ def discretise(a, numBins):
             discretised data
     """
     num_samples = a.shape[0]
-    if (len(a.shape) == 1):
+    if len(a.shape) == 1:
         # It's a unidimensional array
         discretised_values = np.zeros(num_samples, dtype=np.int_)
         theMin = a.min()
@@ -134,7 +134,7 @@ def discretise(a, numBins):
         binInterval = (theMax - theMin) / numBins
         for t in range(num_samples):
             discretised_values[t] = int((a[t] - theMin) / binInterval)
-            if (discretised_values[t] == numBins):
+            if discretised_values[t] == numBins:
                 # This occurs for the maximum value; put it in the largest
                 # bin (base - 1).
                 discretised_values[t] = discretised_values[t] - 1
@@ -150,7 +150,7 @@ def discretise(a, numBins):
         binInterval = (theMax - theMin) / numBins
         for t in range(num_samples):
             discretised_values[t, v] = int((a[t, v] - theMin) / binInterval)
-            if (discretised_values[t, v] == numBins):
+            if discretised_values[t, v] == numBins:
                 # This occurs for the maximum value; put it in the largest bin
                 # (base - 1)
                 discretised_values[t, v] = discretised_values[t, v] - 1
@@ -177,7 +177,7 @@ def discretise_max_ent(a, numBins):
             discretised data
     """
     num_samples = a.shape[0]
-    if (len(a.shape) == 1):
+    if len(a.shape) == 1:
         # It's a unidimensional array
         discretised_values = np.zeros(num_samples, dtype=np.int_)
         cuttoff_values = np.zeros(numBins)
@@ -187,7 +187,7 @@ def discretise_max_ent(a, numBins):
             cuttoff_values[bin] = sorted_copy[compartmentSize]
         for t in range(num_samples):
             for m in range(numBins):
-                if (a[t] <= cuttoff_values[m]):
+                if a[t] <= cuttoff_values[m]:
                     discretised_values[t] = m
                     break
         return discretised_values
@@ -204,7 +204,7 @@ def discretise_max_ent(a, numBins):
             cuttoff_values[bin] = sorted_copy[compartmentSize]
         for t in range(num_samples):
             for m in range(numBins):
-                if (a[t, v] <= cuttoff_values[m]):
+                if a[t, v] <= cuttoff_values[m]:
                     discretised_values[t, v] = m
                     break
     return discretised_values
@@ -232,9 +232,11 @@ def separate_arrays(idx_all, idx_single, a):
         numpy array
             column at single index
     """
-    assert(len(idx_all) == a.shape[1]), ('Length of full index list does '
-                                         'not correspond to array size '
-                                         'along 1st axis.')
+    assert len(idx_all) == a.shape[1], (
+        "Length of full index list does "
+        "not correspond to array size "
+        "along 1st axis."
+    )
     array_idx_single = idx_all.index(idx_single)
     real_single = np.expand_dims(a[:, array_idx_single], axis=1)
     real_remaining = remove_column(a, array_idx_single)
@@ -263,7 +265,7 @@ def combine_discrete_dimensions(a, numBins):
             a univariate array -- one entry now for each sample,
             with all dimensions of the data now combined for that sample
     """
-    if (len(a.shape) == 1):
+    if len(a.shape) == 1:
         # It's already a unidimensional array
         return a
 
@@ -280,8 +282,9 @@ def combine_discrete_dimensions(a, numBins):
             if multiplier <= 0:
                 # Multiplier has overflown
                 raise ArithmeticError(
-                    'Combination of numBins and number of dimensions of a '
-                    'leads to overflow in making unidimensional array')
+                    "Combination of numBins and number of dimensions of a "
+                    "leads to overflow in making unidimensional array"
+                )
         combined_values[t] = int(combined_value)
     return combined_values
 
@@ -312,8 +315,16 @@ def conflicting_entries(dict_1, dict_2):
     intersect_keys = set(d1_keys).intersection(set(d2_keys))
     for k in intersect_keys:
         if np.array(dict_1[k] != dict_2[k]).any():
-            print('Unequal entries for key ''{0}'': dict_1: ''{1}'', dict_2:'
-                  ' ''{2}''.'.format(k, dict_1[k], dict_2[k]))
+            print(
+                "Unequal entries for key "
+                "{0}"
+                ": dict_1: "
+                "{1}"
+                ", dict_2:"
+                " "
+                "{2}"
+                ".".format(k, dict_1[k], dict_2[k])
+            )
             return True
     return False
 
@@ -322,13 +333,15 @@ def calculate_mi(corr):
     """Calculate mutual information from correlation coefficient."""
     return -0.5 * np.log(1 - corr**2)
 
+
 class timeout(object):
     """Context manager for a timeout using threading module.
     args:
         timeout_duration: float, number of seconds to wait before timeout is triggered
         exception_message: string, message to put in the exception
     """
-    def __init__(self, timeout_duration, exception_message='Timeout'):
+
+    def __init__(self, timeout_duration, exception_message="Timeout"):
         self.timeout_duration = timeout_duration
         self.exception_message = exception_message
 
