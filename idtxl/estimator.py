@@ -1,5 +1,4 @@
 """Provide estimator base class for information theoretic measures."""
-import imp
 import os
 import importlib
 import inspect
@@ -14,12 +13,11 @@ ESTIMATOR_PREFIX = "estimators_"
 
 def _package_contents():
     # Return list of IDTxl modules containing estimators.
-    file, pathname, description = imp.find_module(__package__)
-    if file:
-        raise ImportError("Not a package: %r", __package__)
+    pkg_spec = importlib.util.find_spec(__package__)
+    module_path = pkg_spec.submodule_search_locations[0]
     return [
         os.path.splitext(module)[0]
-        for module in os.listdir(pathname)
+        for module in os.listdir(module_path)
         if (module.endswith(MODULE_EXTENSIONS) and module.startswith(ESTIMATOR_PREFIX))
     ]
 
