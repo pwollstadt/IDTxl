@@ -58,20 +58,20 @@ def _dispatch_task(id_, est, settings, data):
 class MPIEstimator(Estimator):
     """MPI Wrapper for arbitrary Estimator implementations
 
-    Make sure to have an "if __name__=='__main__':" guard in your main script to avoid
-    infinite recursion!
+    Make sure to have an "if __name__=='__main__':" guard in your main script
+    to avoid infinite recursion!
 
-    To use MPI, add MPI=True to the Estimator settings dictionary and optionally provide max_workers
+    To use MPI, add MPI=True to the Estimator settings dictionary and
+    optionally provide max_workers
 
     Call using mpiexec:
-    mpiexec -n 1 -usize <max workers + 1> python <python script>
+        >>> mpiexec -n 1 -usize <max workers + 1> python <python script>
 
     or, if MPI does not support spawning new workers (i.e. MPI version < 2)
-    mpiexec -n <max workers + 1> python -m mpi4py.futures <python script>
+        >>> mpiexec -n <max workers + 1> python -m mpi4py.futures <python script>
 
     Call using slurm:
-    srun -n $SLURM_NTASKS --mpi=pmi2 python -m mpi4py.futures <python script>
-
+        >>> srun -n $SLURM_NTASKS --mpi=pmi2 python -m mpi4py.futures <python script>
     """
 
     def __init__(self, est, settings):
@@ -80,9 +80,13 @@ class MPIEstimator(Estimator):
         Immediately creates instances of est on each MPI worker.
 
         Args:
-            est (str | Callable[[dict], Estimator]): Name of of or callable returning an instance of the base Estimator
-            settings (dict): settings for the base Estimator.
-                max_workers (optional): Number of MPI workers. Default: MPI_UNIVERSE_SIZE
+            est : str | Callable[[dict], Estimator]
+                Name of of or callable returning an instance of the base
+                Estimator
+            settings : dict
+                settings for the base Estimator.
+            max_workers : int (optional)
+                Number of MPI workers, default=MPI_UNIVERSE_SIZE
         """
 
         self._est = est
@@ -107,10 +111,7 @@ class MPIEstimator(Estimator):
         _get_worker_estimator(self._id, est, settings)
 
     def __del__(self):
-        """
-        Shut down MPIPoolExecutor upon deletion of MPIEstimator
-        """
-
+        """Shut down MPIPoolExecutor upon deletion of MPIEstimator"""
         self._executor.shutdown()
 
     def _chunk_data(self, data, chunksize, n_chunks):
@@ -129,12 +130,18 @@ class MPIEstimator(Estimator):
 
     def estimate(self, *, n_chunks=1, **data):
         """Distributes the given chunks of a task to Estimators on worker ranks using MPI.
+
         Needs to be called with kwargs only.
+
         Args:
-            n_chunks (int, optional): Number of chunks to split the data into. Defaults to 1.
-            data (dict[str, Sequence]): Dictionary of random variable realizations
+            n_chunks : int  [optional]
+                Number of chunks to split the data into, default=1.
+            data : dict[str, Sequence]
+                Dictionary of random variable realizations
         Returns:
-            numpy array: Estimates of information-theoretic quantities as np.double values
+            numpy array
+                Estimates of information-theoretic quantities as np.double
+                values
         """
 
         assert n_chunks > 0, "Number of chunks must be at least one."
@@ -176,7 +183,9 @@ class MPIEstimator(Estimator):
 
     def estimate_surrogates_analytic(self, **data):
         """Forward analytic estimation to the base Estimator.
-        Analytic estimation is assumed to have shorter runtime and is thus performed on rank 0 alone for now.
+
+        Analytic estimation is assumed to have shorter runtime and is thus
+        performed on rank 0 alone for now.
         """
 
         return _get_worker_estimator(
