@@ -138,7 +138,7 @@ def _generate_dummy_data(data):
         max_value = np.max(data.data)
         d = np.random.randint(max_value, size=data.data.shape)
         data = Data(d, normalise=False)
-    elif issubclass(data.data_type, np.float):
+    elif issubclass(data.data_type, float):
         d = np.random.rand(data.data.shape[0], data.data.shape[1], data.data.shape[2])
         data = Data(d, normalise=True)
     else:

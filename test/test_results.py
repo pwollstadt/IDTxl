@@ -449,9 +449,8 @@ def test_adjacency_matrix():
     a.add_edge(0, 4, np.int64(1))
     a = AdjacencyMatrix(n_nodes, weight_type=float)
     a.add_edge(0, 1, float(1))
-    a.add_edge(0, 2, np.float(1))
-    a.add_edge(0, 3, np.float32(1))
-    a.add_edge(0, 4, np.float64(1))
+    a.add_edge(0, 2, np.float32(1))
+    a.add_edge(0, 3, np.float64(1))
 
     # Test unknown edge type
     with pytest.raises(TypeError):
