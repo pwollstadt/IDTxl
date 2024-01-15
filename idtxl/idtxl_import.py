@@ -92,7 +92,7 @@ def import_fieldtrip(file_name, ft_struct_name, file_version, normalise=True):
 
 def _ft_import_trial(file_name, ft_struct_name):
     """Import FieldTrip trial data into Python."""
-    ft_file = h5py.File(file_name)
+    ft_file = h5py.File(file_name, mode="r+")
     ft_struct = ft_file[ft_struct_name]  # TODO: ft_struct_name = automagic...
 
     # Get the trial cells that contain the references (pointers) to the data
@@ -152,7 +152,7 @@ def _ft_import_label(file_name, ft_struct_name):
 def _ft_import_time(file_name, ft_struct_name):
     """Import FieldTrip time stamps into Python."""
     # for details of the data handling see comments in ft_trial_2_numpyarray
-    ft_file = h5py.File(file_name)
+    ft_file = h5py.File(file_name, mode="r+")
     ft_struct = ft_file[ft_struct_name]
     ft_time = ft_struct["time"]
     if VERBOSE:
@@ -169,7 +169,7 @@ def _ft_import_time(file_name, ft_struct_name):
 
 
 def _ft_fsample_2_float(file_name, ft_struct_name):
-    ft_file = h5py.File(file_name)
+    ft_file = h5py.File(file_name, mode="r+")
     ft_struct = ft_file[ft_struct_name]
     FTfsample = ft_struct["fsample"]
     fsample = int(FTfsample[0])
@@ -225,7 +225,7 @@ def import_matarray(file_name, array_name, file_version, dim_order, normalise=Tr
     @author: Michael Wibral
     """
     if file_version == "v7.3":
-        mat_file = h5py.File(file_name)
+        mat_file = h5py.File(file_name, mode="r+")
         # Assert that at least one of the keys found at the top level of the
         # HDF file  matches the name of the array we wanted
         if array_name not in mat_file.keys():
