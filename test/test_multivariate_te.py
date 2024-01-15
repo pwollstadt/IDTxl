@@ -138,7 +138,7 @@ def test_multivariate_te_init():
         'min_lag_sources': 2,
         'max_lag_target': 5}
     nw = MultivariateTE()
-    with pytest.raises(RuntimeError):
+    with pytest.raises(AssertionError):
         nw.analyse_single_target(
             settings=settings, data=Data(seed=SEED), target=1)
 

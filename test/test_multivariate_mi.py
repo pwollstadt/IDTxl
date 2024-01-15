@@ -164,7 +164,7 @@ def test_multivariate_mi_init():
         'max_lag_sources': 7,
         'min_lag_sources': 2}
     nw = MultivariateMI()
-    with pytest.raises(RuntimeError):
+    with pytest.raises(AssertionError):
         nw.analyse_single_target(
             settings=settings, data=Data(seed=SEED), target=1)
 
