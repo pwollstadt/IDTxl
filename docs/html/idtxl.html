@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>idtxl package &#8212; IDTxl 1.5 documentation</title>
+    <title>idtxl package &#8212; IDTxl 1.5.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -36,7 +36,7 @@
         <li class="right" >
           <a href="idtxl_helper.html" title="Helper functions"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.5.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl package</a></li> 
       </ul>
     </div>  
@@ -159,8 +159,8 @@ determines the order of the stochastic process.
 <dd><p>Generate example data for a 5-process network.</p>
 <p>Generate example data and overwrite the instance’s current data. The
 network is used as an example the paper on the MuTE toolbox (Montalto,
-PLOS ONE, 2014, eq. 14) and was orginially proposed by Baccala &amp;
-Sameshima (2001). The network consists of five autoregressive (AR)
+PLOS ONE, 2014, eq. 14) and was orginally proposed by Baccala &amp;
+Sameshima (2001). The network consists of five auto-regressive (AR)
 processes with model orders 2 and the following (non-linear) couplings:</p>
 <p>0 -&gt; 1, u = 2 (non-linear)
 0 -&gt; 2, u = 3
@@ -191,7 +191,7 @@ new concept in neural structure determination. Biol Cybern 84:
 <dl class="py method">
 <dt class="sig sig-object py" id="idtxl.data.Data.generate_var_data">
 <span class="sig-name descname"><span class="pre">generate_var_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_replications</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient_matrices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[[0.5,</span> <span class="pre">0.],</span> <span class="pre">[0.4,</span> <span class="pre">0.5]]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/data.html#Data.generate_var_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#idtxl.data.Data.generate_var_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate discrete-time VAR (vector autoregressive) time series.</p>
+<dd><p>Generate discrete-time VAR (vector auto-regressive) time series.</p>
 <p>Generate data and overwrite the instance’s current data.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -874,7 +874,7 @@ permuted (default=n/10)</p>
 <dt>numpy array</dt><dd><p>data slice with data permuted over samples with dimensions
 samples x number of replications</p>
 </dd>
-<dt>numpy array</dt><dd><p>index of permutet samples</p>
+<dt>numpy array</dt><dd><p>index of permuted samples</p>
 </dd>
 </dl>
 </dd>
@@ -5037,27 +5037,42 @@ debug=True and return_counts=True</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_mpi.</span></span><span class="sig-name descname"><span class="pre">MPIEstimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">est</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_mpi.html#MPIEstimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#idtxl.estimators_mpi.MPIEstimator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">idtxl.estimator.Estimator</span></code></p>
 <p>MPI Wrapper for arbitrary Estimator implementations</p>
-<p>Make sure to have an “if __name__==’__main__’:” guard in your main script to avoid
-infinite recursion!</p>
-<p>To use MPI, add MPI=True to the Estimator settings dictionary and optionally provide max_workers</p>
-<p>Call using mpiexec:
-mpiexec -n 1 -usize &lt;max workers + 1&gt; python &lt;python script&gt;</p>
-<p>or, if MPI does not support spawning new workers (i.e. MPI version &lt; 2)
-mpiexec -n &lt;max workers + 1&gt; python -m mpi4py.futures &lt;python script&gt;</p>
-<p>Call using slurm:
-srun -n $SLURM_NTASKS –mpi=pmi2 python -m mpi4py.futures &lt;python script&gt;</p>
+<p>Make sure to have an “if __name__==’__main__’:” guard in your main script
+to avoid infinite recursion!</p>
+<p>To use MPI, add MPI=True to the Estimator settings dictionary and
+optionally provide max_workers</p>
+<dl>
+<dt>Call using mpiexec:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mpiexec</span> <span class="o">-</span><span class="n">n</span> <span class="mi">1</span> <span class="o">-</span><span class="n">usize</span> <span class="o">&lt;</span><span class="nb">max</span> <span class="n">workers</span> <span class="o">+</span> <span class="mi">1</span><span class="o">&gt;</span> <span class="n">python</span> <span class="o">&lt;</span><span class="n">python</span> <span class="n">script</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</dd>
+<dt>or, if MPI does not support spawning new workers (i.e. MPI version &lt; 2)</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mpiexec</span> <span class="o">-</span><span class="n">n</span> <span class="o">&lt;</span><span class="nb">max</span> <span class="n">workers</span> <span class="o">+</span> <span class="mi">1</span><span class="o">&gt;</span> <span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">mpi4py</span><span class="o">.</span><span class="n">futures</span> <span class="o">&lt;</span><span class="n">python</span> <span class="n">script</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</dd>
+<dt>Call using slurm:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; srun -n $SLURM_NTASKS --mpi=pmi2 python -m mpi4py.futures &lt;python script&gt;
+</pre></div>
+</div>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="idtxl.estimators_mpi.MPIEstimator.estimate">
 <span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_mpi.html#MPIEstimator.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#idtxl.estimators_mpi.MPIEstimator.estimate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Distributes the given chunks of a task to Estimators on worker ranks using MPI.
-Needs to be called with kwargs only.
-Args:</p>
-<blockquote>
-<div><p>n_chunks (int, optional): Number of chunks to split the data into. Defaults to 1.
-data (dict[str, Sequence]): Dictionary of random variable realizations</p>
-</div></blockquote>
+<dd><p>Distributes the given chunks of a task to Estimators on worker ranks using MPI.</p>
+<p>Needs to be called with kwargs only.</p>
 <dl class="simple">
-<dt>Returns:</dt><dd><p>numpy array: Estimates of information-theoretic quantities as np.double values</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>n_chunks<span class="classifier">int  [optional]</span></dt><dd><p>Number of chunks to split the data into, default=1.</p>
+</dd>
+<dt>data<span class="classifier">dict[str, Sequence]</span></dt><dd><p>Dictionary of random variable realizations</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>numpy array</dt><dd><p>Estimates of information-theoretic quantities as np.double
+values</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -5065,8 +5080,9 @@ data (dict[str, Sequence]): Dictionary of random variable realizations</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="idtxl.estimators_mpi.MPIEstimator.estimate_surrogates_analytic">
 <span class="sig-name descname"><span class="pre">estimate_surrogates_analytic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_mpi.html#MPIEstimator.estimate_surrogates_analytic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#idtxl.estimators_mpi.MPIEstimator.estimate_surrogates_analytic" title="Permalink to this definition">¶</a></dt>
-<dd><p>Forward analytic estimation to the base Estimator.
-Analytic estimation is assumed to have shorter runtime and is thus performed on rank 0 alone for now.</p>
+<dd><p>Forward analytic estimation to the base Estimator.</p>
+<p>Analytic estimation is assumed to have shorter runtime and is thus
+performed on rank 0 alone for now.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -5097,6 +5113,27 @@ chunk is one independent data set.</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.estimators_python.</span></span><span class="sig-name descname"><span class="pre">PythonKraskovCMI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_python.html#PythonKraskovCMI"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#idtxl.estimators_python.PythonKraskovCMI" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">idtxl.estimator.Estimator</span></code></p>
 <p>Estimate conditional mutual information using Kraskov’s first estimator.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>settings<span class="classifier">dict [optional]</span></dt><dd><p>set estimator parameters:</p>
+<ul class="simple">
+<li><p>kraskov_k : int [optional] - no. nearest neighbours for KNN
+search (default=4)</p></li>
+<li><p>base : float - base of returned values (default=np=e)</p></li>
+<li><p>normalise : bool [optional] - z-standardise data (default=False)</p></li>
+<li><p>noise_level : float [optional] - random noise added to the data
+(default=1e-8)</p></li>
+<li><p>rng_seed : int | None [optional] - random seed if noise level &gt; 0</p></li>
+<li><p>num_threads : int | str [optional] - number of threads used for
+estimation (default=’USE_ALL’, note that this uses <em>all</em>
+available threads on the current machine)</p></li>
+<li><p>knn_finder : str [optional] - knn algorithm to use, can be
+‘scipy_kdtree’ (default), ‘sklearn_kdtree’, or ‘sklearn_balltree’</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="idtxl.estimators_python.PythonKraskovCMI.estimate">
 <span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_python.html#PythonKraskovCMI.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#idtxl.estimators_python.PythonKraskovCMI.estimate" title="Permalink to this definition">¶</a></dt>
@@ -7707,7 +7744,7 @@ orders 2 and les and the following (non-linear) couplings:</p>
 <span class="sig-prename descclassname"><span class="pre">idtxl.visualise_graph.</span></span><span class="sig-name descname"><span class="pre">plot_network</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fdr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/visualise_graph.html#plot_network"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#idtxl.visualise_graph.plot_network" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot network of multivariate TE between processes.</p>
 <p>Plot graph of the network of (multivariate) interactions between processes
-(e.g., multivariate TE). The function uses  the networkx class for directed
+(e.g., multivariate TE). The function uses the networkx class for directed
 graphs (DiGraph) internally. Plots a network and adjacency matrix.</p>
 <dl>
 <dt>Args:</dt><dd><dl>
@@ -7717,7 +7754,7 @@ graphs (DiGraph) internally. Plots a network and adjacency matrix.</p>
 <blockquote>
 <div><ul class="simple">
 <li><dl class="simple">
-<dt>‘max_te_lag’: the weights represent the source -&gt; target</dt><dd><p>lag corresponding to the maximum tranfer entropy value
+<dt>‘max_te_lag’: the weights represent the source -&gt; target</dt><dd><p>lag corresponding to the maximum transfer entropy value
 (see documentation for method get_target_delays for details)</p>
 </dd>
 </dl>
@@ -7951,7 +7988,7 @@ computing engines for both GPU and CPU platforms. Written for Python3.4.3+.</p>
         <li class="right" >
           <a href="idtxl_helper.html" title="Helper functions"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.5.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl package</a></li> 
       </ul>
     </div>

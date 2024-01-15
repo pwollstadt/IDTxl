@@ -5,14 +5,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>idtxl.bivariate_mi &#8212; IDTxl 1.4 documentation</title>
-    <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <title>idtxl.bivariate_mi &#8212; IDTxl 1.5.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pyramid.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
     <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -32,7 +31,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.5.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl.bivariate_mi</a></li> 
       </ul>
@@ -109,7 +108,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
-<div class="viewcode-block" id="BivariateMI.analyse_network"><a class="viewcode-back" href="../../idtxl_network_inference.html#idtxl.bivariate_mi.BivariateMI.analyse_network">[docs]</a>    <span class="k">def</span> <span class="nf">analyse_network</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="BivariateMI.analyse_network"><a class="viewcode-back" href="../../idtxl_network_inference.html#idtxl.bivariate_mi.BivariateMI.analyse_network">[docs]</a>    <span class="k">def</span> <span class="nf">analyse_network</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Find bivariate mutual information between all nodes in the network.</span>
 
 <span class="sd">        Estimate bivariate mutual information (MI) between all nodes in the</span>
@@ -168,53 +167,56 @@
 <span class="sd">                analyse_single_target()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Set defaults for network inference.</span>
-        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;fdr_correction&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;verbose&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;fdr_correction&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># Check which targets and sources are requested for analysis.</span>
-        <span class="k">if</span> <span class="n">targets</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
-            <span class="n">targets</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">n_processes</span><span class="p">)]</span>
-        <span class="k">if</span> <span class="n">sources</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
-            <span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;all&#39;</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">]</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sources</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">targets</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+            <span class="n">targets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">n_processes</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">sources</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+            <span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;all&quot;</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sources</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">int</span><span class="p">):</span>
             <span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="n">sources</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">]</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sources</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sources</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">pass</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Sources was not specified correctly: </span><span class="si">{0}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                                                                    <span class="n">sources</span><span class="p">))</span>
-        <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)),</span> <span class="p">(</span>
-            <span class="s1">&#39;List of targets and list of sources have to have the same length&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Sources was not specified correctly: </span><span class="si">{</span><span class="n">sources</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span>
+            <span class="n">targets</span>
+        <span class="p">),</span> <span class="s2">&quot;List of targets and list of sources have to have the same length&quot;</span>
 
         <span class="c1"># Check and set defaults for checkpointing. If requested, initialise</span>
         <span class="c1"># checkpointing.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_checkpointing_defaults</span><span class="p">(</span>
-            <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+            <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">targets</span>
+        <span class="p">)</span>
 
         <span class="c1"># Perform MI estimation for each target individually</span>
-        <span class="n">results</span> <span class="o">=</span> <span class="n">ResultsNetworkInference</span><span class="p">(</span><span class="n">n_nodes</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">n_processes</span><span class="p">,</span>
-                                          <span class="n">n_realisations</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">n_realisations</span><span class="p">(),</span>
-                                          <span class="n">normalised</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">normalise</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)):</span>
-            <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;####### analysing target </span><span class="si">{0}</span><span class="s1"> of </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">targets</span><span class="p">))</span>
-            <span class="n">res_single</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analyse_single_target</span><span class="p">(</span>
-                <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">targets</span><span class="p">[</span><span class="n">t</span><span class="p">],</span> <span class="n">sources</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">ResultsNetworkInference</span><span class="p">(</span>
+            <span class="n">n_nodes</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">n_processes</span><span class="p">,</span>
+            <span class="n">n_realisations</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">n_realisations</span><span class="p">(),</span>
+            <span class="n">normalised</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">normalise</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">targets</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s2">&quot;verbose&quot;</span><span class="p">]:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;####### analysing target </span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">targets</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">res_single</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analyse_single_target</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">sources</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
             <span class="n">results</span><span class="o">.</span><span class="n">combine_results</span><span class="p">(</span><span class="n">res_single</span><span class="p">)</span>
 
         <span class="c1"># Get no. realisations actually used for estimation from single target</span>
         <span class="c1"># analysis.</span>
         <span class="n">results</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_realisations</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">res_single</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_realisations</span><span class="p">)</span>
+            <span class="n">res_single</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_realisations</span>
+        <span class="p">)</span>
 
         <span class="c1"># Perform FDR-correction on the network level. Add FDR-corrected</span>
         <span class="c1"># results as an extra field. Network_fdr/combine_results internally</span>
         <span class="c1"># creates a deep copy of the results.</span>
-        <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;fdr_correction&#39;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s2">&quot;fdr_correction&quot;</span><span class="p">]:</span>
             <span class="n">results</span> <span class="o">=</span> <span class="n">network_fdr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">results</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">results</span></div>
 
-<div class="viewcode-block" id="BivariateMI.analyse_single_target"><a class="viewcode-back" href="../../idtxl_network_inference.html#idtxl.bivariate_mi.BivariateMI.analyse_single_target">[docs]</a>    <span class="k">def</span> <span class="nf">analyse_single_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="BivariateMI.analyse_single_target"><a class="viewcode-back" href="../../idtxl_network_inference.html#idtxl.bivariate_mi.BivariateMI.analyse_single_target">[docs]</a>    <span class="k">def</span> <span class="nf">analyse_single_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Find bivariate mutual information between sources and a target.</span>
 
 <span class="sd">        Find bivariate mutual information (MI) between all potential source</span>
@@ -325,40 +327,42 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_initialise</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
 
         <span class="c1"># Main algorithm.</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">---------------------------- (1) include source candidates&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">---------------------------- (1) include source candidates&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_include_source_candidates</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">---------------------------- (2) prune candidates&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">---------------------------- (2) prune candidates&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prune_candidates</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">---------------------------- (3) final statistics&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">---------------------------- (3) final statistics&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_test_final_conditional</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
         <span class="c1"># Clean up and return results.</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;final source samples: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">)))</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;final target samples: </span><span class="si">{0}</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;verbose&quot;</span><span class="p">]:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;final source samples: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;final target samples: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
         <span class="n">results</span> <span class="o">=</span> <span class="n">ResultsNetworkInference</span><span class="p">(</span>
             <span class="n">n_nodes</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">n_processes</span><span class="p">,</span>
             <span class="n">n_realisations</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">n_realisations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">),</span>
-            <span class="n">normalised</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">normalise</span><span class="p">)</span>
+            <span class="n">normalised</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">normalise</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="n">results</span><span class="o">.</span><span class="n">_add_single_result</span><span class="p">(</span>
             <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
             <span class="n">settings</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span>
             <span class="n">results</span><span class="o">=</span><span class="p">{</span>
-                <span class="s1">&#39;sources_tested&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_set</span><span class="p">,</span>
-                <span class="s1">&#39;current_value&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">,</span>
-                <span class="s1">&#39;selected_vars_sources&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">),</span>
-                <span class="s1">&#39;selected_vars_target&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span><span class="p">),</span>
-                <span class="s1">&#39;selected_sources_pval&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pvalues_sign_sources</span><span class="p">,</span>
-                <span class="s1">&#39;selected_sources_mi&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">statistic_sign_sources</span><span class="p">,</span>
-                <span class="s1">&#39;omnibus_mi&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">statistic_omnibus</span><span class="p">,</span>
-                <span class="s1">&#39;omnibus_pval&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pvalue_omnibus</span><span class="p">,</span>
-                <span class="s1">&#39;omnibus_sign&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sign_omnibus</span><span class="p">,</span>
-                <span class="s1">&#39;mi&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">statistic_single_link</span>
-            <span class="p">})</span>
+                <span class="s2">&quot;sources_tested&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_set</span><span class="p">,</span>
+                <span class="s2">&quot;current_value&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">,</span>
+                <span class="s2">&quot;selected_vars_sources&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">),</span>
+                <span class="s2">&quot;selected_vars_target&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span><span class="p">),</span>
+                <span class="s2">&quot;selected_sources_pval&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pvalues_sign_sources</span><span class="p">,</span>
+                <span class="s2">&quot;selected_sources_mi&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">statistic_sign_sources</span><span class="p">,</span>
+                <span class="s2">&quot;omnibus_mi&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">statistic_omnibus</span><span class="p">,</span>
+                <span class="s2">&quot;omnibus_pval&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pvalue_omnibus</span><span class="p">,</span>
+                <span class="s2">&quot;omnibus_sign&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sign_omnibus</span><span class="p">,</span>
+                <span class="s2">&quot;mi&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">statistic_single_link</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="p">()</span>  <span class="c1"># remove attributes</span>
         <span class="k">return</span> <span class="n">results</span></div></div>
@@ -374,7 +378,7 @@
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -393,14 +397,14 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.5.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl.bivariate_mi</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
     </div>
   </body>
 </html>

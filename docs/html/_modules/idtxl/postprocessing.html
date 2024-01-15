@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>idtxl.postprocessing &#8212; IDTxl 1.5 documentation</title>
+    <title>idtxl.postprocessing &#8212; IDTxl 1.5.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/pyramid.css" />
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
@@ -31,7 +31,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.5.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl.postprocessing</a></li> 
       </ul>
@@ -49,8 +49,7 @@
 
 
 <div class="viewcode-block" id="SignificantSubgraphMining"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining">[docs]</a><span class="k">class</span> <span class="nc">SignificantSubgraphMining</span><span class="p">:</span>
-    <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Implementation of significant subgraph mining as described in</span>
+    <span class="sd">&quot;&quot;&quot;Implementation of significant subgraph mining as described in</span>
 
 <span class="sd">    Sugiyama M, Lopez FL, Kasenburg N, Borgwardt KM.  Significant</span>
 <span class="sd">    subgraph mining with multiple testing correction.</span>
@@ -142,14 +141,17 @@
 <span class="sd">            List of tuples of significant subgraphs in data set and their</span>
 <span class="sd">            associated corrected p-values. Initialized empty and filled by</span>
 <span class="sd">            calling the enumerate_significant_subgraphs method</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resultsA</span><span class="p">,</span>
-                 <span class="n">resultsB</span><span class="p">,</span>
-                 <span class="n">alpha</span><span class="p">,</span>
-                 <span class="n">design</span><span class="p">,</span>
-                 <span class="n">graph_type</span><span class="o">=</span><span class="s2">&quot;directed&quot;</span><span class="p">,</span>
-                 <span class="n">data_format</span><span class="o">=</span><span class="s2">&quot;adjacency&quot;</span><span class="p">):</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">resultsA</span><span class="p">,</span>
+        <span class="n">resultsB</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="p">,</span>
+        <span class="n">design</span><span class="p">,</span>
+        <span class="n">graph_type</span><span class="o">=</span><span class="s2">&quot;directed&quot;</span><span class="p">,</span>
+        <span class="n">data_format</span><span class="o">=</span><span class="s2">&quot;adjacency&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">==</span> <span class="nb">float</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;alpha must be of type float&quot;</span><span class="p">)</span>
 
@@ -180,11 +182,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">p_value_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_p_table</span><span class="p">(</span><span class="n">design</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">min_freq</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">ind</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-                                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_p_value_table</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">alpha</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_freq</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+                <span class="n">ind</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_p_value_table</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">alpha</span>
+            <span class="p">)</span>
         <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Due to the sample size, a significant result at level </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="si">}</span><span class="s2"> is in principle not possible.&quot;</span><span class="p">)</span>
+                <span class="sa">f</span><span class="s2">&quot;Due to the sample size, a significant result at level </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="si">}</span><span class="s2"> is in principle not possible.&quot;</span>
+            <span class="p">)</span>
 
         <span class="c1"># represent graphs as lists of link indices</span>
         <span class="k">if</span> <span class="n">data_format</span> <span class="o">==</span> <span class="s2">&quot;idtxl&quot;</span><span class="p">:</span>
@@ -201,13 +205,17 @@
         <span class="c1"># count total occurrences for each link in the data set</span>
         <span class="n">link_counts</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coding_list</span><span class="p">)):</span>
-            <span class="n">link_counts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">count_subgraph</span><span class="p">([</span><span class="n">i</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span>
-                               <span class="bp">self</span><span class="o">.</span><span class="n">count_subgraph</span><span class="p">([</span><span class="n">i</span><span class="p">])[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">link_counts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">count_subgraph</span><span class="p">([</span><span class="n">i</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">count_subgraph</span><span class="p">([</span><span class="n">i</span><span class="p">])[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">link_counts</span> <span class="o">=</span> <span class="n">link_counts</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">union_indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">link_counts</span><span class="p">))</span> <span class="k">if</span>
-                              <span class="bp">self</span><span class="o">.</span><span class="n">link_counts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_freq</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">union_indices</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">i</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">link_counts</span><span class="p">))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_counts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_freq</span>
+        <span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span>
 
@@ -217,8 +225,7 @@
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">i</span><span class="p">:</span>
                 <span class="n">all_possible_p_values</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">all_possible_p_values</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
-            <span class="nb">list</span><span class="p">(</span><span class="n">all_possible_p_values</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_possible_p_values</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">all_possible_p_values</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">frequent_graphs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">p_values</span> <span class="o">=</span> <span class="p">[]</span>
@@ -229,7 +236,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">significant_subgraphs</span> <span class="o">=</span> <span class="p">[]</span>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.generate_coding_list"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.generate_coding_list">[docs]</a>    <span class="k">def</span> <span class="nf">generate_coding_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        If data_format = &quot;idtxl&quot;: Creates list of all target-source-lag</span>
 <span class="sd">        triplets occuring at least once</span>
 <span class="sd">        in the data set. This list is used to encode subject networks as</span>
@@ -249,20 +256,15 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            list of 2-tuples</span>
 <span class="sd">                each tuple has the form (source index, target index)</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_format</span> <span class="o">==</span> <span class="s2">&quot;idtxl&quot;</span><span class="p">:</span>
-
             <span class="n">tsl_triplet_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">resultsA</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">resultsB</span><span class="p">]:</span>
-
                 <span class="k">for</span> <span class="n">results_dicts_list</span> <span class="ow">in</span> <span class="n">group</span><span class="p">:</span>
-
                     <span class="k">for</span> <span class="n">results_dict</span> <span class="ow">in</span> <span class="n">results_dicts_list</span><span class="p">:</span>
-
                         <span class="n">target</span> <span class="o">=</span> <span class="n">results_dict</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">]</span>
 
                         <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">results_dict</span><span class="p">[</span><span class="s2">&quot;selected_vars_sources&quot;</span><span class="p">]:</span>
-
                             <span class="n">tsl_triplet</span> <span class="o">=</span> <span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">source</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">source</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
                             <span class="n">tsl_triplet_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tsl_triplet</span><span class="p">)</span>
@@ -272,18 +274,20 @@
             <span class="k">return</span> <span class="n">tsl_triplet_list</span>
 
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_format</span> <span class="o">==</span> <span class="s2">&quot;adjacency&quot;</span><span class="p">:</span>
-
             <span class="n">st_tuple_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="s2">&quot;directed&quot;</span><span class="p">:</span>
-
                 <span class="c1"># all possible source-target tuples</span>
                 <span class="n">tuples</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">)]</span>
 
             <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="s2">&quot;undirected&quot;</span><span class="p">:</span>
-
                 <span class="c1"># only ascending source-target tuples</span>
-                <span class="n">tuples</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span><span class="p">]</span>
+                <span class="n">tuples</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span>
+                <span class="p">]</span>
 
             <span class="c1"># for each tuple, check if it occurs in the data set. If so, add</span>
             <span class="c1"># it to st_tuple_set</span>
@@ -295,7 +299,7 @@
             <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">st_tuple_set</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.encode"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Encodes all subject networks as lists of indices. The ith entry</span>
 <span class="sd">        describes the occurrence of the ith target-source-lag triplet</span>
 <span class="sd">        in the coding list (self.coding_list).</span>
@@ -305,23 +309,21 @@
 <span class="sd">                The first entry of the tuple is a list of integers</span>
 <span class="sd">                describing the networks of subjects in Group A. The second</span>
 <span class="sd">                entry is a list of integers for Group B.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">all_networks</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">resultsA</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">resultsB</span><span class="p">]:</span>
-
             <span class="n">group_networks</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">results_dicts_list</span> <span class="ow">in</span> <span class="n">group</span><span class="p">:</span>
-
                 <span class="n">subject_network</span> <span class="o">=</span> <span class="p">[]</span>
 
                 <span class="k">for</span> <span class="n">results_dict</span> <span class="ow">in</span> <span class="n">results_dicts_list</span><span class="p">:</span>
-
                     <span class="n">target</span> <span class="o">=</span> <span class="n">results_dict</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">]</span>
 
                     <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">results_dict</span><span class="p">[</span><span class="s2">&quot;selected_vars_sources&quot;</span><span class="p">]:</span>
-
-                        <span class="n">subject_network</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coding_list</span><span class="o">.</span><span class="n">index</span><span class="p">((</span><span class="n">target</span><span class="p">,</span> <span class="n">source</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">source</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+                        <span class="n">subject_network</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">coding_list</span><span class="o">.</span><span class="n">index</span><span class="p">((</span><span class="n">target</span><span class="p">,</span> <span class="n">source</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">source</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                        <span class="p">)</span>
 
                 <span class="n">group_networks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subject_network</span><span class="p">)</span>
                 <span class="mi">0</span>
@@ -330,7 +332,7 @@
         <span class="k">return</span> <span class="n">all_networks</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">all_networks</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.decode"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.decode">[docs]</a>    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Converts a given list of indices (representing a subgraph) into</span>
 <span class="sd">        a list of corresponding target-source-lag triplets using the mapping</span>
 <span class="sd">        described in the coding list.</span>
@@ -340,7 +342,7 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            List of 3-tuples</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">tsl_triplets</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -350,14 +352,12 @@
         <span class="k">return</span> <span class="n">tsl_triplets</span></div>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.encode_adjacency"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.encode_adjacency">[docs]</a>    <span class="k">def</span> <span class="nf">encode_adjacency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Encodes all input adjacency matrices as lists of indices&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;Encodes all input adjacency matrices as lists of indices&quot;&quot;&quot;</span>
 
         <span class="n">all_networks</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">resultsA</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">resultsB</span><span class="p">]:</span>
-
             <span class="n">group_networks</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">adj</span> <span class="ow">in</span> <span class="n">group</span><span class="p">:</span>
-
                 <span class="n">subject_network</span> <span class="o">=</span> <span class="p">[]</span>
                 <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coding_list</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">adj</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -370,7 +370,7 @@
         <span class="k">return</span> <span class="n">all_networks</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">all_networks</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.decode_adjacency"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.decode_adjacency">[docs]</a>    <span class="k">def</span> <span class="nf">decode_adjacency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Decodes list of indices as adjacency matrix&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;Decodes list of indices as adjacency matrix&quot;&quot;&quot;</span>
 
         <span class="n">adjacency</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">))</span>
 
@@ -381,31 +381,28 @@
         <span class="k">return</span> <span class="n">adjacency</span></div>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.generate_min_p_table"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.generate_min_p_table">[docs]</a>    <span class="k">def</span> <span class="nf">generate_min_p_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">design</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Computes list of minimum p_values depending on the total number of</span>
 <span class="sd">        occurrences and given the group sample sizes.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            list</span>
 <span class="sd">                minimum p-values for each number of occurrences between 0 and N</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">design</span> <span class="o">==</span> <span class="s2">&quot;between&quot;</span><span class="p">:</span>
             <span class="n">min_p_value_table</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
-
                 <span class="n">min_upper_left</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">m</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_B</span><span class="p">])</span>
                 <span class="n">max_upper_left</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">n_A</span><span class="p">,</span> <span class="n">m</span><span class="p">])</span>
 
                 <span class="c1"># consider most extreme cases</span>
 
                 <span class="c1"># First option: put as many occurrences as possible in group A</span>
-                <span class="n">p_value_r</span> <span class="o">=</span> <span class="n">hypergeom</span><span class="o">.</span><span class="n">pmf</span><span class="p">(</span>
-                    <span class="n">max_upper_left</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">m</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_A</span><span class="p">)</span>
+                <span class="n">p_value_r</span> <span class="o">=</span> <span class="n">hypergeom</span><span class="o">.</span><span class="n">pmf</span><span class="p">(</span><span class="n">max_upper_left</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">m</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_A</span><span class="p">)</span>
 
                 <span class="c1"># Second option: put as few occurrences as possible in group A</span>
-                <span class="n">p_value_l</span> <span class="o">=</span> <span class="n">hypergeom</span><span class="o">.</span><span class="n">pmf</span><span class="p">(</span>
-                    <span class="n">min_upper_left</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">m</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_A</span><span class="p">)</span>
+                <span class="n">p_value_l</span> <span class="o">=</span> <span class="n">hypergeom</span><span class="o">.</span><span class="n">pmf</span><span class="p">(</span><span class="n">min_upper_left</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">m</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_A</span><span class="p">)</span>
 
                 <span class="n">min_p_value_table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">p_value_r</span><span class="p">,</span> <span class="n">p_value_l</span><span class="p">]))</span>
 
@@ -414,7 +411,6 @@
         <span class="k">elif</span> <span class="n">design</span> <span class="o">==</span> <span class="s2">&quot;within&quot;</span><span class="p">:</span>
             <span class="n">min_p_value_table</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
-
                 <span class="c1"># consider most extreme cases</span>
 
                 <span class="c1"># First option: put as many discordant pairs as possible in</span>
@@ -435,7 +431,7 @@
             <span class="k">return</span> <span class="n">min_p_value_table</span></div>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.generate_p_table"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.generate_p_table">[docs]</a>    <span class="k">def</span> <span class="nf">generate_p_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">design</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Computes table of p-values depending on the total number of</span>
 <span class="sd">        occurrences, the occurrences in Group A, and given the group</span>
 <span class="sd">        sample sizes.</span>
@@ -448,19 +444,19 @@
 <span class="sd">            numpy array</span>
 <span class="sd">                p-values for each number of occurrences and occurrences in</span>
 <span class="sd">                Group A between 0 and N</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">design</span> <span class="o">==</span> <span class="s2">&quot;between&quot;</span><span class="p">:</span>
-
             <span class="n">p_value_table</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">countA</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">occurrences</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
-
                     <span class="n">p_value_R</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">hypergeom</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span>
-                        <span class="n">countA</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">occurrences</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_A</span><span class="p">)</span>
+                        <span class="n">countA</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">occurrences</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_A</span>
+                    <span class="p">)</span>
 
                     <span class="n">p_value_L</span> <span class="o">=</span> <span class="n">hypergeom</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span>
-                        <span class="n">countA</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">occurrences</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_A</span><span class="p">)</span>
+                        <span class="n">countA</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">occurrences</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_A</span>
+                    <span class="p">)</span>
 
                     <span class="n">p_value</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">p_value_R</span><span class="p">,</span> <span class="n">p_value_L</span><span class="p">])</span>
 
@@ -490,18 +486,21 @@
                 <span class="n">p_value_table</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
                 <span class="k">for</span> <span class="n">occurrences</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
                     <span class="k">for</span> <span class="n">countA</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">occurrences</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
-
                         <span class="n">p_value_R</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">hypergeom</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span>
-                            <span class="n">countA</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">occurrences</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_A</span><span class="p">)</span>
+                            <span class="n">countA</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">occurrences</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_A</span>
+                        <span class="p">)</span>
 
                         <span class="n">p_value_L</span> <span class="o">=</span> <span class="n">hypergeom</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span>
-                            <span class="n">countA</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">occurrences</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_A</span><span class="p">)</span>
+                            <span class="n">countA</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">occurrences</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_A</span>
+                        <span class="p">)</span>
 
                         <span class="n">p_value</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">p_value_R</span><span class="p">,</span> <span class="n">p_value_L</span><span class="p">])</span>
 
                         <span class="n">p_value_table</span><span class="p">[</span><span class="n">countA</span><span class="p">,</span> <span class="n">occurrences</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_value</span>
 
-                        <span class="n">p_value_table</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">n_A</span> <span class="o">-</span> <span class="n">occurrences</span> <span class="o">+</span> <span class="n">countA</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="n">occurrences</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_value</span>
+                        <span class="n">p_value_table</span><span class="p">[</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">n_A</span> <span class="o">-</span> <span class="n">occurrences</span> <span class="o">+</span> <span class="n">countA</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="n">occurrences</span>
+                        <span class="p">]</span> <span class="o">=</span> <span class="n">p_value</span>
 
                 <span class="c1"># Secondly, given k total successes, the p-values corresponding to</span>
                 <span class="c1"># k successes and 0 have to be the same. The same is true for</span>
@@ -510,7 +509,9 @@
                 <span class="k">for</span> <span class="n">occurrences</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
                     <span class="k">for</span> <span class="n">countA</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
                         <span class="k">if</span> <span class="n">countA</span> <span class="o">&lt;</span> <span class="n">occurrences</span> <span class="o">/</span> <span class="mi">2</span><span class="p">:</span>
-                            <span class="n">p_value_table</span><span class="p">[</span><span class="n">countA</span><span class="p">,</span> <span class="n">occurrences</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_value_table</span><span class="p">[</span><span class="n">occurrences</span> <span class="o">-</span> <span class="n">countA</span><span class="p">,</span> <span class="n">occurrences</span><span class="p">]</span>
+                            <span class="n">p_value_table</span><span class="p">[</span><span class="n">countA</span><span class="p">,</span> <span class="n">occurrences</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_value_table</span><span class="p">[</span>
+                                <span class="n">occurrences</span> <span class="o">-</span> <span class="n">countA</span><span class="p">,</span> <span class="n">occurrences</span>
+                            <span class="p">]</span>
 
                 <span class="c1"># Thirdly, if sample sizes are equal then each hypergeometric</span>
                 <span class="c1"># distribution corresponding to a specific total number of</span>
@@ -526,7 +527,6 @@
                 <span class="k">return</span> <span class="n">p_value_table</span>
 
         <span class="k">elif</span> <span class="n">design</span> <span class="o">==</span> <span class="s2">&quot;within&quot;</span><span class="p">:</span>
-
             <span class="c1"># compute p-value table based on Binomial distribution</span>
 
             <span class="n">p_value_table</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
@@ -541,18 +541,18 @@
 
             <span class="k">return</span> <span class="n">p_value_table</span></div>
 
-<span class="c1"># In the following two &quot;count&quot; methods and four &quot;extend&quot; methods are defined.</span>
+    <span class="c1"># In the following two &quot;count&quot; methods and four &quot;extend&quot; methods are defined.</span>
 
-<span class="c1"># There is one extend method for each combination of sampling design</span>
-<span class="c1"># &quot;within&quot; / &quot;between&quot; and correction method &quot;Tarone/Hommel&quot; / &quot;Westfall-Young&quot;</span>
+    <span class="c1"># There is one extend method for each combination of sampling design</span>
+    <span class="c1"># &quot;within&quot; / &quot;between&quot; and correction method &quot;Tarone/Hommel&quot; / &quot;Westfall-Young&quot;</span>
 
-<span class="c1"># Between + Tarone: extend()</span>
-<span class="c1"># Between + WY: extend_wy()</span>
-<span class="c1"># Within + Tarone: extend_mcnemar()</span>
-<span class="c1"># Within + WY: extend _wy_mcnemar()</span>
+    <span class="c1"># Between + Tarone: extend()</span>
+    <span class="c1"># Between + WY: extend_wy()</span>
+    <span class="c1"># Within + Tarone: extend_mcnemar()</span>
+    <span class="c1"># Within + WY: extend _wy_mcnemar()</span>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.count_subgraph"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.count_subgraph">[docs]</a>    <span class="k">def</span> <span class="nf">count_subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s2">&quot;original&quot;</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Counts the number of occurrences of a subgraph represented by a list of</span>
 <span class="sd">        indices</span>
 
@@ -567,7 +567,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            tuple of integers</span>
 <span class="sd">                number of occurrences of subgraph in GroupA and in GroupB</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">where</span> <span class="o">==</span> <span class="s2">&quot;original&quot;</span><span class="p">:</span>
             <span class="n">graphsA</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groupA_networks</span>
@@ -578,24 +578,20 @@
 
         <span class="n">countA</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">graph</span> <span class="ow">in</span> <span class="n">graphsA</span><span class="p">:</span>
-
             <span class="c1"># check if sub_graph occurs in graph</span>
             <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">graph</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">):</span>
-
                 <span class="n">countA</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="n">countB</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">graph</span> <span class="ow">in</span> <span class="n">graphsB</span><span class="p">:</span>
-
             <span class="c1"># check if sub_graph occurs in graph</span>
             <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">graph</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">):</span>
-
                 <span class="n">countB</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="k">return</span> <span class="n">countA</span><span class="p">,</span> <span class="n">countB</span></div>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.count_discordants"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.count_discordants">[docs]</a>    <span class="k">def</span> <span class="nf">count_discordants</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s2">&quot;original&quot;</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Counts the discordant pairs for a given subgraph represented as a</span>
 <span class="sd">        list of indices.</span>
 
@@ -612,11 +608,12 @@
 <span class="sd">                number of cases in which the subgraph occurred in condition A</span>
 <span class="sd">                but not in B, and number of cases in which the subgraph</span>
 <span class="sd">                occurred in B but not in A</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">design</span> <span class="o">==</span> <span class="s2">&quot;between&quot;</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;The count_discordants method can only be used for within-subject designs. Currently the design is set to between subjects.&quot;</span><span class="p">)</span>
+                <span class="s2">&quot;The count_discordants method can only be used for within-subject designs. Currently the design is set to between subjects.&quot;</span>
+            <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">where</span> <span class="o">==</span> <span class="s2">&quot;original&quot;</span><span class="p">:</span>
             <span class="n">graphsA</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groupA_networks</span>
@@ -628,17 +625,20 @@
         <span class="n">discordants_B</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">discordants_A</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
-
-            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">graphsA</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">graphsB</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">graphsA</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
+                <span class="n">i</span> <span class="ow">in</span> <span class="n">graphsB</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span>
+            <span class="p">):</span>
                 <span class="n">discordants_A</span> <span class="o">+=</span> <span class="mi">1</span>
 
-            <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">graphsB</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">graphsA</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">):</span>
+            <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">graphsB</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
+                <span class="n">i</span> <span class="ow">in</span> <span class="n">graphsA</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span>
+            <span class="p">):</span>
                 <span class="n">discordants_B</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="k">return</span> <span class="n">discordants_A</span><span class="p">,</span> <span class="n">discordants_B</span></div>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.extend"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.extend">[docs]</a>    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">to_be_extended</span><span class="p">,</span> <span class="n">freq</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Recursively extends the input subgraph checking at each recursion</span>
 <span class="sd">        step if the current subgraph occurs frequently enough to reach</span>
 <span class="sd">        significance at level alpha. If this is not the case, it is not</span>
@@ -659,7 +659,7 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            None</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># the variable &quot;remaining&quot; contains all union indices larger than the</span>
         <span class="c1"># largest index in to_be_extended. These are the indices considered</span>
@@ -675,7 +675,6 @@
         <span class="c1"># for extension.</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_be_extended</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span><span class="p">:</span>
-
             <span class="k">if</span> <span class="n">to_be_extended</span> <span class="o">!=</span> <span class="p">[]:</span>
                 <span class="n">max_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">to_be_extended</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -689,7 +688,6 @@
             <span class="c1"># successively extend the current subgraph by the indices in</span>
             <span class="c1"># remaining</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">remaining</span><span class="p">:</span>
-
                 <span class="c1"># create extended subgraph. to_be_extended is already in the</span>
                 <span class="c1"># list of frequent subgraphs and should not be altered. Thus,</span>
                 <span class="c1"># only a copy of it should be extended.</span>
@@ -706,7 +704,6 @@
                 <span class="c1"># p-value. Then apply the extend method to the new subgraph</span>
                 <span class="c1"># again.</span>
                 <span class="k">if</span> <span class="n">occurrences</span> <span class="o">&gt;=</span> <span class="n">freq</span><span class="p">:</span>
-
                     <span class="n">minimum_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_p_value_table</span><span class="p">[</span><span class="n">countA</span> <span class="o">+</span> <span class="n">countB</span><span class="p">]</span>
 
                     <span class="bp">self</span><span class="o">.</span><span class="n">minimum_p_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">minimum_p</span><span class="p">)</span>
@@ -720,7 +717,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_freq</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.extend_mcnemar"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.extend_mcnemar">[docs]</a>    <span class="k">def</span> <span class="nf">extend_mcnemar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">to_be_extended</span><span class="p">,</span> <span class="n">freq</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Same as extend() method but using McNemar&#39;s test for within subject</span>
 <span class="sd">        designs</span>
 
@@ -733,10 +730,9 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            None</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_be_extended</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span><span class="p">:</span>
-
             <span class="k">if</span> <span class="n">to_be_extended</span> <span class="o">!=</span> <span class="p">[]:</span>
                 <span class="n">max_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">to_be_extended</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -748,7 +744,6 @@
                     <span class="n">remaining</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
 
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">remaining</span><span class="p">:</span>
-
                 <span class="n">new</span> <span class="o">=</span> <span class="n">to_be_extended</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
                 <span class="n">new</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
 
@@ -757,7 +752,6 @@
                 <span class="n">occurrences</span> <span class="o">=</span> <span class="n">countA</span> <span class="o">+</span> <span class="n">countB</span>
 
                 <span class="k">if</span> <span class="n">occurrences</span> <span class="o">&gt;=</span> <span class="n">freq</span><span class="p">:</span>
-
                     <span class="c1"># count discordant pairs</span>
                     <span class="n">discordants_A</span><span class="p">,</span> <span class="n">discordants_B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">count_discordants</span><span class="p">(</span><span class="n">new</span><span class="p">)</span>
                     <span class="n">discordants</span> <span class="o">=</span> <span class="n">discordants_A</span> <span class="o">+</span> <span class="n">discordants_B</span>
@@ -771,7 +765,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">extend_mcnemar</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_freq</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.extend_wy"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.extend_wy">[docs]</a>    <span class="k">def</span> <span class="nf">extend_wy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">to_be_extended</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Determines the smallest observed p-value in permuted version of the</span>
 <span class="sd">        data set by recursively extending the input subgraph. At each</span>
 <span class="sd">        recursion step the function checks if the current subgraph occurs</span>
@@ -789,9 +783,8 @@
 <span class="sd">            a particular subgraph.</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            None</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_be_extended</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span><span class="p">:</span>
-
             <span class="k">if</span> <span class="n">to_be_extended</span> <span class="o">!=</span> <span class="p">[]:</span>
                 <span class="n">max_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">to_be_extended</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -803,7 +796,6 @@
                     <span class="n">remaining</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
 
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">remaining</span><span class="p">:</span>
-
                 <span class="n">new</span> <span class="o">=</span> <span class="n">to_be_extended</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
                 <span class="n">new</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
 
@@ -812,11 +804,9 @@
                 <span class="n">occurrences</span> <span class="o">=</span> <span class="n">countA</span> <span class="o">+</span> <span class="n">countB</span>
 
                 <span class="k">if</span> <span class="n">occurrences</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_min_freq</span><span class="p">:</span>
-
                     <span class="n">p_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_value_table</span><span class="p">[</span><span class="n">countA</span><span class="p">,</span> <span class="n">occurrences</span><span class="p">]</span>
 
                     <span class="k">if</span> <span class="n">p_value</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_min_p</span><span class="p">:</span>
-
                         <span class="c1"># update current minimum p-value</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">current_min_p</span> <span class="o">=</span> <span class="n">p_value</span>
 
@@ -824,12 +814,15 @@
                         <span class="c1"># smaller than the current minimum observed p-value.</span>
 
                         <span class="bp">self</span><span class="o">.</span><span class="n">current_min_freq</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-                            <span class="n">ind</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_p_value_table</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_min_p</span><span class="p">)</span>
+                            <span class="n">ind</span>
+                            <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_p_value_table</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_min_p</span>
+                        <span class="p">)</span>
 
                     <span class="bp">self</span><span class="o">.</span><span class="n">extend_wy</span><span class="p">(</span><span class="n">new</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.extend_wy_mcnemar"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.extend_wy_mcnemar">[docs]</a>    <span class="k">def</span> <span class="nf">extend_wy_mcnemar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">to_be_extended</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Same as extend_wy but using McNemars test</span>
 
 <span class="sd">        Args:</span>
@@ -838,10 +831,9 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            None</span>
 
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_be_extended</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span><span class="p">:</span>
-
             <span class="k">if</span> <span class="n">to_be_extended</span> <span class="o">!=</span> <span class="p">[]:</span>
                 <span class="n">max_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">to_be_extended</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -853,7 +845,6 @@
                     <span class="n">remaining</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
 
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">remaining</span><span class="p">:</span>
-
                 <span class="n">new</span> <span class="o">=</span> <span class="n">to_be_extended</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
                 <span class="n">new</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
 
@@ -871,15 +862,15 @@
                 <span class="n">occurrences</span> <span class="o">=</span> <span class="n">countA</span> <span class="o">+</span> <span class="n">countB</span>
 
                 <span class="k">if</span> <span class="n">occurrences</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_min_freq</span><span class="p">:</span>
-
                     <span class="c1"># count discordant pairs in permuted data set</span>
-                    <span class="n">discordants_A</span><span class="p">,</span> <span class="n">discordants_B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">count_discordants</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s2">&quot;perm&quot;</span><span class="p">)</span>
+                    <span class="n">discordants_A</span><span class="p">,</span> <span class="n">discordants_B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">count_discordants</span><span class="p">(</span>
+                        <span class="n">new</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s2">&quot;perm&quot;</span>
+                    <span class="p">)</span>
                     <span class="n">discordants</span> <span class="o">=</span> <span class="n">discordants_A</span> <span class="o">+</span> <span class="n">discordants_B</span>
 
                     <span class="n">p_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_value_table</span><span class="p">[</span><span class="n">discordants_A</span><span class="p">,</span> <span class="n">discordants</span><span class="p">]</span>
 
                     <span class="k">if</span> <span class="n">p_value</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_min_p</span><span class="p">:</span>
-
                         <span class="c1"># update current minimum p-value</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">current_min_p</span> <span class="o">=</span> <span class="n">p_value</span>
 
@@ -887,21 +878,26 @@
                         <span class="c1"># smaller than the current minimum observed p-value.</span>
 
                         <span class="bp">self</span><span class="o">.</span><span class="n">current_min_freq</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-                            <span class="n">ind</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_p_value_table</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_min_p</span><span class="p">)</span>
+                            <span class="n">ind</span>
+                            <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_p_value_table</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_min_p</span>
+                        <span class="p">)</span>
 
                     <span class="bp">self</span><span class="o">.</span><span class="n">extend_wy_mcnemar</span><span class="p">(</span><span class="n">new</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.determine_tarone_factor"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.determine_tarone_factor">[docs]</a>    <span class="k">def</span> <span class="nf">determine_tarone_factor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Determines Tarone&#39;s correction factor in case there are at least two</span>
 <span class="sd">        testable subgraphs.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            int</span>
 <span class="sd">                Tarone&#39;s correction factor</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_testable_graphs</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;There are less than two testable subgraphs. No correction required.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s2">&quot;There are less than two testable subgraphs. No correction required.&quot;</span>
+            <span class="p">)</span>
 
         <span class="c1"># Use bisection search to find Tarone&#39;s factor</span>
         <span class="c1"># the goal is to find the smallest integer k such that the ration of</span>
@@ -918,17 +914,23 @@
             <span class="n">iterations</span> <span class="o">+=</span> <span class="mi">1</span>
 
             <span class="k">if</span> <span class="n">iterations</span> <span class="o">==</span> <span class="n">max_iter</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WARNING: Correction factor could not be determined &quot;</span>
-                      <span class="o">+</span> <span class="s2">&quot;after&quot;</span><span class="p">,</span> <span class="n">max_iter</span><span class="p">,</span> <span class="s2">&quot;iterations&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;WARNING: Correction factor could not be determined &quot;</span> <span class="o">+</span> <span class="s2">&quot;after&quot;</span><span class="p">,</span>
+                    <span class="n">max_iter</span><span class="p">,</span>
+                    <span class="s2">&quot;iterations&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
 
-            <span class="n">k_rt</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">up</span> <span class="o">+</span> <span class="n">low</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">k_rt</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">up</span> <span class="o">+</span> <span class="n">low</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
 
             <span class="c1"># if the number of subgraphs testable at level alpha/k_rt is smaller</span>
             <span class="c1"># than k_rt, then the true k_rt must be smaller than or equal to</span>
             <span class="c1"># the current k_rt. So we set the current k_rt as the new upper</span>
             <span class="c1"># bound. Otherwise, the true k_rt must be larger, so we set the</span>
             <span class="c1"># current one as the new lower bound.</span>
-            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">minimum_p_values</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">/</span><span class="n">k_rt</span><span class="p">))</span> <span class="o">-</span> <span class="n">k_rt</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">minimum_p_values</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">/</span> <span class="n">k_rt</span><span class="p">))</span> <span class="o">-</span> <span class="n">k_rt</span>
+                <span class="o">&lt;=</span> <span class="mi">0</span>
+            <span class="p">):</span>
                 <span class="n">up</span> <span class="o">=</span> <span class="n">k_rt</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">low</span> <span class="o">=</span> <span class="n">k_rt</span>
@@ -937,14 +939,18 @@
             <span class="c1"># the tarone criterion m(k) / k &lt;= 1 is fulfilled for current k_rt</span>
             <span class="c1"># but not for the next smaller integer k_rt - 1</span>
             <span class="n">criterion</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">minimum_p_values</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">/</span><span class="n">k_rt</span><span class="p">))</span> <span class="o">-</span> <span class="n">k_rt</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">and</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">minimum_p_values</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">/</span><span class="p">(</span><span class="n">k_rt</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)))</span> <span class="o">-</span> <span class="n">k_rt</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&gt;</span> <span class="mi">0</span>
-                <span class="p">)</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">minimum_p_values</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">/</span> <span class="n">k_rt</span><span class="p">))</span> <span class="o">-</span> <span class="n">k_rt</span>
+                <span class="o">&lt;=</span> <span class="mi">0</span>
+                <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">minimum_p_values</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">/</span> <span class="p">(</span><span class="n">k_rt</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)))</span>
+                <span class="o">-</span> <span class="n">k_rt</span>
+                <span class="o">+</span> <span class="mi">1</span>
+                <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">k_rt</span> <span class="o">=</span> <span class="n">k_rt</span></div>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.enumerate_frequent_graphs"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.enumerate_frequent_graphs">[docs]</a>    <span class="k">def</span> <span class="nf">enumerate_frequent_graphs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds all subgraphs occuring at least freq times to self.frequent_graphs</span>
 <span class="sd">        The process is carried out recursively using the extend() method.</span>
 <span class="sd">        Individual links of the union network are successively extended to</span>
@@ -957,11 +963,12 @@
 <span class="sd">        Args:</span>
 <span class="sd">            freq : int</span>
 <span class="sd">                desired minimum frequency</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># create union network consisting of all individual links occuring</span>
         <span class="c1"># at least freq times</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">union_indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">link_counts</span><span class="p">))</span> <span class="k">if</span>
-                              <span class="bp">self</span><span class="o">.</span><span class="n">link_counts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">freq</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">union_indices</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">link_counts</span><span class="p">))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_counts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">freq</span>
+        <span class="p">]</span>
 
         <span class="c1"># reinitialize set of frequent subgraphs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frequent_graphs</span> <span class="o">=</span> <span class="p">[]</span>
@@ -975,24 +982,24 @@
         <span class="c1"># recursively extend subgraphs starting from individual links in the</span>
         <span class="c1"># union network</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">design</span> <span class="o">==</span> <span class="s2">&quot;between&quot;</span><span class="p">:</span>
-
             <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">([],</span> <span class="n">freq</span><span class="p">)</span>
 
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequent_graphs</span>
 
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">design</span> <span class="o">==</span> <span class="s2">&quot;within&quot;</span><span class="p">:</span>
-
             <span class="bp">self</span><span class="o">.</span><span class="n">extend_mcnemar</span><span class="p">([],</span> <span class="n">freq</span><span class="p">)</span>
 
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequent_graphs</span></div>
 
-<div class="viewcode-block" id="SignificantSubgraphMining.enumerate_significant_subgraphs"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.enumerate_significant_subgraphs">[docs]</a>    <span class="k">def</span> <span class="nf">enumerate_significant_subgraphs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                                        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;Hommel&quot;</span><span class="p">,</span>
-                                        <span class="n">wy_algorithm</span><span class="o">=</span><span class="s2">&quot;simple_depth_first&quot;</span><span class="p">,</span>
-                                        <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                        <span class="n">num_perm</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
-                                        <span class="n">max_depth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<div class="viewcode-block" id="SignificantSubgraphMining.enumerate_significant_subgraphs"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.enumerate_significant_subgraphs">[docs]</a>    <span class="k">def</span> <span class="nf">enumerate_significant_subgraphs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;Hommel&quot;</span><span class="p">,</span>
+        <span class="n">wy_algorithm</span><span class="o">=</span><span class="s2">&quot;simple_depth_first&quot;</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">num_perm</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+        <span class="n">max_depth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This is the main function carrying out significant subgraph mining</span>
 <span class="sd">        according to the multiple comparisons correction method (and algorithm</span>
 <span class="sd">        in the case of Westfall-Young) of choice. It calls the relevant</span>
@@ -1021,19 +1028,22 @@
 <span class="sd">                The first entry of each tuple is a list of indices representing</span>
 <span class="sd">                the identified significant subgraph. The second entry is the</span>
 <span class="sd">                associated (uncorrected) p-value.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span> <span class="o">=</span> <span class="n">max_depth</span>
 
         <span class="k">if</span> <span class="n">method</span> <span class="o">!=</span> <span class="s2">&quot;Hommel&quot;</span> <span class="ow">and</span> <span class="n">method</span> <span class="o">!=</span> <span class="s2">&quot;Tarone&quot;</span> <span class="ow">and</span> <span class="n">method</span> <span class="o">!=</span> <span class="s2">&quot;Westfall-Young&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Method must be </span><span class="se">\&#39;</span><span class="s2">Hommel</span><span class="se">\&#39;</span><span class="s2"> or </span><span class="se">\&#39;</span><span class="s2">Tarone</span><span class="se">\&#39;</span><span class="s2"> or </span><span class="se">\&#39;</span><span class="s2">Westfall-Young</span><span class="se">\&#39;</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Method must be &#39;Hommel&#39; or &#39;Tarone&#39; or &#39;Westfall-Young&#39;&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">verbose</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
-
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Search Space: All possible subgraphs&quot;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Search Space: Subgraphs consisting of up to&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span> <span class="s2">&quot;links&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;Search Space: Subgraphs consisting of up to&quot;</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span>
+                    <span class="s2">&quot;links&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">design</span> <span class="o">==</span> <span class="s2">&quot;between&quot;</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Between-Subjects Design: Using Fishers Exact Test&quot;</span><span class="p">)</span>
@@ -1045,16 +1055,16 @@
         <span class="c1"># if union network is empty, there are no testable subgraphs and hence</span>
         <span class="c1"># no significant subgraphs</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">union_indices</span> <span class="o">==</span> <span class="p">[]:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;There are no alpha-testable subgraphs. No significant differences detectable.&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;There are no alpha-testable subgraphs. No significant differences detectable.&quot;</span>
+            <span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
         <span class="c1"># reinitialize list of significant subgraphs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">significant_subgraphs</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;Westfall-Young&quot;</span><span class="p">:</span>
-
             <span class="k">if</span> <span class="n">wy_algorithm</span> <span class="o">==</span> <span class="s2">&quot;simple_depth_first&quot;</span><span class="p">:</span>
-
                 <span class="bp">self</span><span class="o">.</span><span class="n">westfall_young</span><span class="p">(</span><span class="n">num_perm</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">significant_subgraphs</span>
 
@@ -1067,7 +1077,9 @@
             <span class="c1">#             &quot;implemented for between subjects designs&quot;)</span>
 
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;wy_algorithm has to be either simple_depth_first or wy_light&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                    <span class="s2">&quot;wy_algorithm has to be either simple_depth_first or wy_light&quot;</span>
+                <span class="p">)</span>
 
         <span class="c1"># if method is not Westfall-Young the set of frequent subgraphs has</span>
         <span class="c1"># to be determined (all subgraphs occuring often enough to reach</span>
@@ -1080,8 +1092,7 @@
         <span class="c1"># If there are no testable subgraphs at level alpha, there can be no</span>
         <span class="c1"># significant subgraphs</span>
         <span class="c1"># count alpha testable graphs</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_testable_graphs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">minimum_p_values</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_testable_graphs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">minimum_p_values</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">verbose</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of frequent subgraphs: &quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frequent_graphs</span><span class="p">))</span>
@@ -1089,8 +1100,10 @@
             <span class="nb">print</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_testable_graphs</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;There are no testable subgraphs. No significant &quot;</span> <span class="o">+</span>
-                  <span class="s2">&quot;differences detectable.&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;There are no testable subgraphs. No significant &quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;differences detectable.&quot;</span>
+            <span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_testable_graphs</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -1104,7 +1117,6 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">determine_tarone_factor</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;Hommel&quot;</span><span class="p">:</span>
-
             <span class="n">hommel_level</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">minimum_p_values</span><span class="p">)[</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k_rt</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
             <span class="n">corrected_level</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">hommel_level</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_rt</span><span class="p">)])</span>
 
@@ -1119,23 +1131,23 @@
             <span class="n">run</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_values</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">p</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_rt</span> <span class="ow">or</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="n">hommel_level</span><span class="p">:</span>
-
                     <span class="bp">self</span><span class="o">.</span><span class="n">significant_subgraphs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frequent_graphs</span><span class="p">[</span><span class="n">run</span><span class="p">]),</span>
-                         <span class="bp">self</span><span class="o">.</span><span class="n">p_values</span><span class="p">[</span><span class="n">run</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">/</span> <span class="n">corrected_level</span><span class="p">))</span>
+                        <span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frequent_graphs</span><span class="p">[</span><span class="n">run</span><span class="p">]),</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">p_values</span><span class="p">[</span><span class="n">run</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">/</span> <span class="n">corrected_level</span><span class="p">),</span>
                         <span class="p">)</span>
+                    <span class="p">)</span>
 
                 <span class="n">run</span> <span class="o">+=</span> <span class="mi">1</span>
 
             <span class="k">if</span> <span class="n">verbose</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
-
-                <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">significant_subgraphs</span><span class="p">),</span>
-                      <span class="s2">&quot;significant subgraphs identified.&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">significant_subgraphs</span><span class="p">),</span> <span class="s2">&quot;significant subgraphs identified.&quot;</span>
+                <span class="p">)</span>
 
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">significant_subgraphs</span>
 
         <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;Tarone&quot;</span><span class="p">:</span>
-
             <span class="k">if</span> <span class="n">verbose</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Correction factor:&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_rt</span><span class="p">)</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Corrected level:&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_rt</span><span class="p">)</span>
@@ -1148,22 +1160,20 @@
 
             <span class="c1"># determine significant subgraphs and corresponding p-values</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p_values</span><span class="p">)):</span>
-
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_values_corr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">:</span>
-
                     <span class="bp">self</span><span class="o">.</span><span class="n">significant_subgraphs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                          <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frequent_graphs</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
-                           <span class="bp">self</span><span class="o">.</span><span class="n">p_values</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+                        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frequent_graphs</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_values</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                    <span class="p">)</span>
 
             <span class="k">if</span> <span class="n">verbose</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
-
-                <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">significant_subgraphs</span><span class="p">),</span>
-                      <span class="s2">&quot;significant subgraphs identified.&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">significant_subgraphs</span><span class="p">),</span> <span class="s2">&quot;significant subgraphs identified.&quot;</span>
+                <span class="p">)</span>
 
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">significant_subgraphs</span></div>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.westfall_young"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.westfall_young">[docs]</a>    <span class="k">def</span> <span class="nf">westfall_young</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Determines significant subgraphs using the Westfall-Young Permutation</span>
 <span class="sd">        procedure for multiple comparisons correction. This algorithm computes</span>
 <span class="sd">        the permutation distribution of the smallest observed p-value</span>
@@ -1177,10 +1187,13 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            None</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">verbose</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Determining permutation distribution based on&quot;</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">,</span>
-                  <span class="s2">&quot;permutations...&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;Determining permutation distribution based on&quot;</span><span class="p">,</span>
+                <span class="n">num_perm</span><span class="p">,</span>
+                <span class="s2">&quot;permutations...&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="c1"># INITIALIZATION</span>
 
@@ -1203,7 +1216,7 @@
 
         <span class="c1"># initialize class labels</span>
         <span class="n">group_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
-        <span class="n">group_idx</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">n_B</span><span class="p">:]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">group_idx</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">n_B</span> <span class="p">:]</span> <span class="o">=</span> <span class="mi">1</span>
 
         <span class="n">all_networks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groupA_networks</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">groupB_networks</span>
 
@@ -1222,14 +1235,12 @@
 
         <span class="c1"># find minimum observed p-values for num_perm permutated data sets</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_perm</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
-
             <span class="c1"># create empty network lists</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">perm_groupA_networks</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">perm_groupB_networks</span> <span class="o">=</span> <span class="p">[]</span>
 
             <span class="c1"># generate permuted class labels and add networks to lists</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">design</span> <span class="o">==</span> <span class="s2">&quot;between&quot;</span><span class="p">:</span>
-
                 <span class="n">perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">group_idx</span><span class="p">)</span>
 
                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">perm</span><span class="p">)):</span>
@@ -1276,9 +1287,10 @@
         <span class="c1"># entire real interval (0,alpha) using grid search.</span>
 
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_possible_p_values</span><span class="p">):</span>
-
             <span class="c1"># count fraction of minimum p values below ith entry</span>
-            <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">permutation_min_p_values</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">i</span><span class="p">)</span> <span class="o">/</span> <span class="n">num_perm</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">permutation_min_p_values</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">i</span><span class="p">)</span> <span class="o">/</span> <span class="n">num_perm</span>
+            <span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">:</span>
                 <span class="n">delta</span> <span class="o">=</span> <span class="n">i</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">break</span>
@@ -1296,28 +1308,29 @@
         <span class="c1"># to reach significance at the corrected level:</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">min_freq_wy</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-            <span class="n">ind</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">min_p_value_table</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_corrected_level</span><span class="p">)</span>
+            <span class="n">ind</span>
+            <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_p_value_table</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_corrected_level</span>
+        <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">enumerate_frequent_graphs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_freq_wy</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">significant_subgraphs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p_values</span><span class="p">)):</span>
-
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_corrected_level</span><span class="p">:</span>
-
                 <span class="bp">self</span><span class="o">.</span><span class="n">significant_subgraphs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frequent_graphs</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
-                     <span class="bp">self</span><span class="o">.</span><span class="n">p_values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_corrected_level</span><span class="p">))</span>
+                    <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frequent_graphs</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">p_values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_corrected_level</span><span class="p">),</span>
                     <span class="p">)</span>
+                <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">verbose</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Corrected level:&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_corrected_level</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">significant_subgraphs</span><span class="p">),</span>
-                  <span class="s2">&quot;significant subgraphs identified.&quot;</span><span class="p">)</span></div>
+            <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">significant_subgraphs</span><span class="p">),</span> <span class="s2">&quot;significant subgraphs identified.&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.westfall_young_light"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.westfall_young_light">[docs]</a>    <span class="k">def</span> <span class="nf">westfall_young_light</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Determines significant subgraphs using the Westfall-Young light</span>
 <span class="sd">        algorithm described in</span>
 
@@ -1334,10 +1347,13 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            None</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">verbose</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Determining permutation distribution based on&quot;</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">,</span>
-                  <span class="s2">&quot;permutations...&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;Determining permutation distribution based on&quot;</span><span class="p">,</span>
+                <span class="n">num_perm</span><span class="p">,</span>
+                <span class="s2">&quot;permutations...&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Design:&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">design</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current_min_freq</span> <span class="o">=</span> <span class="mi">0</span>
 
@@ -1354,7 +1370,7 @@
 
         <span class="c1"># vector to be permuted</span>
         <span class="n">group_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
-        <span class="n">group_idx</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">n_B</span><span class="p">:]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">group_idx</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">n_B</span> <span class="p">:]</span> <span class="o">=</span> <span class="mi">1</span>
 
         <span class="n">all_networks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groupA_networks</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">groupB_networks</span>
 
@@ -1366,7 +1382,6 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">design</span> <span class="o">==</span> <span class="s2">&quot;between&quot;</span><span class="p">:</span>
             <span class="c1"># add permutations and store all permuted data sets</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">):</span>
-
                 <span class="c1"># create random permutation of class labels</span>
                 <span class="n">perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">group_idx</span><span class="p">)</span>
 
@@ -1374,7 +1389,6 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">all_permuted_datasets</span><span class="o">.</span><span class="n">append</span><span class="p">([[],</span> <span class="p">[]])</span>
 
                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
-
                     <span class="k">if</span> <span class="n">perm</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">all_permuted_datasets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">all_networks</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
                     <span class="k">else</span><span class="p">:</span>
@@ -1383,7 +1397,6 @@
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">design</span> <span class="o">==</span> <span class="s2">&quot;within&quot;</span><span class="p">:</span>
             <span class="c1"># add permutations and store all permuted data sets</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">):</span>
-
                 <span class="c1"># decide independently for each subject if outcome is flipped</span>
                 <span class="n">perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
 
@@ -1391,14 +1404,21 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">all_permuted_datasets</span><span class="o">.</span><span class="n">append</span><span class="p">([[],</span> <span class="p">[]])</span>
 
                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
-
                     <span class="k">if</span> <span class="n">perm</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">all_permuted_datasets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groupA_networks</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">all_permuted_datasets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groupB_networks</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">all_permuted_datasets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">groupA_networks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                        <span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">all_permuted_datasets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">groupB_networks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                        <span class="p">)</span>
 
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">all_permuted_datasets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groupB_networks</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">all_permuted_datasets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groupA_networks</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">all_permuted_datasets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">groupB_networks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                        <span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">all_permuted_datasets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">groupA_networks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                        <span class="p">)</span>
 
         <span class="c1"># start extension process</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">design</span> <span class="o">==</span> <span class="s2">&quot;between&quot;</span><span class="p">:</span>
@@ -1413,7 +1433,9 @@
         <span class="n">search_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_possible_p_values</span><span class="p">[</span><span class="n">wy_index</span><span class="p">:]</span>
 
         <span class="n">ind</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">while</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">smallest_p_perm</span> <span class="o">&lt;=</span> <span class="n">search_in</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_perm</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">:</span>
+        <span class="k">while</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">smallest_p_perm</span> <span class="o">&lt;=</span> <span class="n">search_in</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_perm</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span>
+        <span class="p">):</span>
             <span class="n">ind</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span> <span class="o">=</span> <span class="n">search_in</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
@@ -1422,27 +1444,29 @@
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WY-level determined...&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">min_freq_wy</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-            <span class="n">ind</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">min_p_value_table</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span><span class="p">)</span>
+            <span class="n">ind</span>
+            <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_p_value_table</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span>
+        <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">enumerate_frequent_graphs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_freq_wy</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">significant_subgraphs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p_values</span><span class="p">)):</span>
-
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span><span class="p">:</span>
-
                 <span class="bp">self</span><span class="o">.</span><span class="n">significant_subgraphs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frequent_graphs</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
-                     <span class="bp">self</span><span class="o">.</span><span class="n">p_values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span><span class="p">)))</span>
+                    <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frequent_graphs</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">p_values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span><span class="p">),</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">verbose</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Corrected level:&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">significant_subgraphs</span><span class="p">),</span>
-                  <span class="s2">&quot;significant subgraphs identified.&quot;</span><span class="p">)</span></div>
+            <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">significant_subgraphs</span><span class="p">),</span> <span class="s2">&quot;significant subgraphs identified.&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.extend_wy_light"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.extend_wy_light">[docs]</a>    <span class="k">def</span> <span class="nf">extend_wy_light</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">to_be_extended</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Westfall-Young light extension method. Evaluates all permutations</span>
+        <span class="sd">&quot;&quot;&quot;Westfall-Young light extension method. Evaluates all permutations</span>
 <span class="sd">        at the same time for each subgraph. The goal is to determine the</span>
 <span class="sd">        Westfall-Young corrected level, i.e. the alpha quantile of the</span>
 <span class="sd">        permutation distribution of the smallest observed p-value among</span>
@@ -1455,10 +1479,9 @@
 <span class="sd">                indices of all links of the subgraph</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            None</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_be_extended</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span><span class="p">:</span>
-
             <span class="k">if</span> <span class="n">to_be_extended</span> <span class="o">!=</span> <span class="p">[]:</span>
                 <span class="n">max_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">to_be_extended</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -1470,7 +1493,6 @@
                     <span class="n">remaining</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
 
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">remaining</span><span class="p">:</span>
-
                 <span class="n">new</span> <span class="o">=</span> <span class="n">to_be_extended</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
                 <span class="n">new</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
 
@@ -1482,39 +1504,49 @@
                 <span class="c1"># only continue if subgraph if testable at current estimate</span>
                 <span class="c1"># of wy_level</span>
                 <span class="k">if</span> <span class="n">min_p</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span><span class="p">:</span>
-
                     <span class="c1"># calculate p-value for all permuted data sets:</span>
                     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_perm</span><span class="p">):</span>
-
                         <span class="n">countA_perm</span><span class="p">,</span> <span class="n">countB_perm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">count_subgraph_wylight</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
                         <span class="n">p_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_value_table</span><span class="p">[</span><span class="n">countA_perm</span><span class="p">,</span> <span class="n">occurrences</span><span class="p">]</span>
 
                         <span class="c1"># update smallest p-value for k-th permuted data set</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">smallest_p_perm</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">p_value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">smallest_p_perm</span><span class="p">[</span><span class="n">k</span><span class="p">]])</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">smallest_p_perm</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+                            <span class="p">[</span><span class="n">p_value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">smallest_p_perm</span><span class="p">[</span><span class="n">k</span><span class="p">]]</span>
+                        <span class="p">)</span>
 
                     <span class="c1"># estimate of FWER</span>
-                    <span class="n">FWER</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">smallest_p_perm</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_perm</span>
+                    <span class="n">FWER</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">smallest_p_perm</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span><span class="p">)</span>
+                        <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_perm</span>
+                    <span class="p">)</span>
 
                     <span class="k">while</span> <span class="n">FWER</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">:</span>
                         <span class="c1"># decrease corrected level while FWER is greater than alpha</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-                            <span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_possible_p_values</span> <span class="k">if</span>
-                            <span class="n">p</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span><span class="p">)</span>
-                        <span class="n">FWER</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">smallest_p_perm</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_perm</span>
+                            <span class="n">p</span>
+                            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_possible_p_values</span>
+                            <span class="k">if</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span>
+                        <span class="p">)</span>
+                        <span class="n">FWER</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">smallest_p_perm</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span><span class="p">)</span>
+                            <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_perm</span>
+                        <span class="p">)</span>
 
                 <span class="c1"># check if subgraph occurs often enough to be testable</span>
                 <span class="c1"># at updated significance level</span>
                 <span class="c1"># Only if this is the case, extend it further</span>
 
                 <span class="bp">self</span><span class="o">.</span><span class="n">current_min_freq</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-                    <span class="n">ind</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">min_p_value_table</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span><span class="p">)</span>
+                    <span class="n">ind</span>
+                    <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_p_value_table</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span>
+                <span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">occurrences</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_min_freq</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">extend_wy_light</span><span class="p">(</span><span class="n">new</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.count_subgraph_wylight"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.count_subgraph_wylight">[docs]</a>    <span class="k">def</span> <span class="nf">count_subgraph_wylight</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Counts subgraph occurrences in k-th permuted data set</span>
 
 <span class="sd">        Args:</span>
@@ -1527,27 +1559,23 @@
 <span class="sd">            tuple of integers</span>
 <span class="sd">                number of occurrences in group A and number of occurrences</span>
 <span class="sd">                in group B</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">countA</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">graph</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_permuted_datasets</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
-
             <span class="c1"># check if sub_graph occurs in graph</span>
             <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">graph</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">):</span>
-
                 <span class="n">countA</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="n">countB</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">graph</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_permuted_datasets</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="mi">1</span><span class="p">]:</span>
-
             <span class="c1"># check if sub_graph occurs in graph</span>
             <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">graph</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">):</span>
-
                 <span class="n">countB</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="k">return</span> <span class="n">countA</span><span class="p">,</span> <span class="n">countB</span></div>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.extend_wy_light_mcnemar"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.extend_wy_light_mcnemar">[docs]</a>    <span class="k">def</span> <span class="nf">extend_wy_light_mcnemar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">to_be_extended</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Westfall-Young light extension method for the within-subjects case</span>
+        <span class="sd">&quot;&quot;&quot;Westfall-Young light extension method for the within-subjects case</span>
 <span class="sd">        using McNemars test. Recursively, evaluates subgraphs and updates</span>
 <span class="sd">        the current estimate of the Westfall-Young corrected level</span>
 <span class="sd">        self.wy_level_light.</span>
@@ -1557,10 +1585,9 @@
 <span class="sd">                indices of all links of the subgraph</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            None</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_be_extended</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span><span class="p">:</span>
-
             <span class="k">if</span> <span class="n">to_be_extended</span> <span class="o">!=</span> <span class="p">[]:</span>
                 <span class="n">max_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">to_be_extended</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -1572,7 +1599,6 @@
                     <span class="n">remaining</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
 
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">remaining</span><span class="p">:</span>
-
                 <span class="n">new</span> <span class="o">=</span> <span class="n">to_be_extended</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
                 <span class="n">new</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
 
@@ -1588,30 +1614,45 @@
                 <span class="c1"># only continue if subgraph if testable at current estimate</span>
                 <span class="c1"># of wy_level</span>
                 <span class="k">if</span> <span class="n">min_p</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span><span class="p">:</span>
-
                     <span class="c1"># calculate p-value for all permuted data sets:</span>
                     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_perm</span><span class="p">):</span>
-
-                        <span class="n">discordants_A_perm</span><span class="p">,</span> <span class="n">discordants_B_perm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">count_discordants_wylight</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+                        <span class="p">(</span>
+                            <span class="n">discordants_A_perm</span><span class="p">,</span>
+                            <span class="n">discordants_B_perm</span><span class="p">,</span>
+                        <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">count_discordants_wylight</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
                         <span class="n">p_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_value_table</span><span class="p">[</span><span class="n">discordants_A_perm</span><span class="p">,</span> <span class="n">discordants</span><span class="p">]</span>
 
                         <span class="c1"># update smallest p-value for k-th permuted data set</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">smallest_p_perm</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">p_value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">smallest_p_perm</span><span class="p">[</span><span class="n">k</span><span class="p">]])</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">smallest_p_perm</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+                            <span class="p">[</span><span class="n">p_value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">smallest_p_perm</span><span class="p">[</span><span class="n">k</span><span class="p">]]</span>
+                        <span class="p">)</span>
 
                     <span class="c1"># estimate of FWER</span>
-                    <span class="n">FWER</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">smallest_p_perm</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_perm</span>
+                    <span class="n">FWER</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">smallest_p_perm</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span><span class="p">)</span>
+                        <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_perm</span>
+                    <span class="p">)</span>
 
                     <span class="k">while</span> <span class="n">FWER</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">:</span>
                         <span class="c1"># decrease corrected level while FWER is greater than alpha</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_possible_p_values</span> <span class="k">if</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span><span class="p">)</span>
-                        <span class="n">FWER</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">smallest_p_perm</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_perm</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+                            <span class="n">p</span>
+                            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_possible_p_values</span>
+                            <span class="k">if</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span>
+                        <span class="p">)</span>
+                        <span class="n">FWER</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">smallest_p_perm</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span><span class="p">)</span>
+                            <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_perm</span>
+                        <span class="p">)</span>
 
                 <span class="c1"># check how many discordant pairs would be needed to obtain</span>
                 <span class="c1"># a p-value significant at the new wy_level</span>
 
                 <span class="bp">self</span><span class="o">.</span><span class="n">current_min_freq</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-                    <span class="n">ind</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">min_p_value_table</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span><span class="p">)</span>
+                    <span class="n">ind</span>
+                    <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_p_value_table</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wy_level_light</span>
+                <span class="p">)</span>
 
                 <span class="c1"># Only if there are enough occurrences to obtain this number</span>
                 <span class="c1"># of discordant pairs extend the graph further</span>
@@ -1619,7 +1660,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">extend_wy_light_mcnemar</span><span class="p">(</span><span class="n">new</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SignificantSubgraphMining.count_discordants_wylight"><a class="viewcode-back" href="../../idtxl_postprocessing.html#idtxl.postprocessing.SignificantSubgraphMining.count_discordants_wylight">[docs]</a>    <span class="k">def</span> <span class="nf">count_discordants_wylight</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Counts discordant pairs for subgraph given by list if indices</span>
 <span class="sd">        in k-th permuted data set.</span>
 
@@ -1635,7 +1676,7 @@
 <span class="sd">                but not in B, and number of cases in which the subgraph</span>
 <span class="sd">                occurred in B but not in A</span>
 
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">graphsA</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_permuted_datasets</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">graphsB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_permuted_datasets</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
@@ -1643,13 +1684,14 @@
         <span class="n">discordants_B</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">discordants_A</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
-
-            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">graphsA</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">graphsB</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">):</span>
-
+            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">graphsA</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
+                <span class="n">i</span> <span class="ow">in</span> <span class="n">graphsB</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span>
+            <span class="p">):</span>
                 <span class="n">discordants_A</span> <span class="o">+=</span> <span class="mi">1</span>
 
-            <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">graphsB</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">graphsA</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">):</span>
-
+            <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">graphsB</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
+                <span class="n">i</span> <span class="ow">in</span> <span class="n">graphsA</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span>
+            <span class="p">):</span>
                 <span class="n">discordants_B</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="k">return</span> <span class="n">discordants_A</span><span class="p">,</span> <span class="n">discordants_B</span></div></div>
@@ -1684,7 +1726,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.5.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl.postprocessing</a></li> 
       </ul>

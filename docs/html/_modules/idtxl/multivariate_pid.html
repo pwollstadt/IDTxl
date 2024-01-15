@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>idtxl.multivariate_pid &#8212; IDTxl 1.5 documentation</title>
+    <title>idtxl.multivariate_pid &#8212; IDTxl 1.5.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/pyramid.css" />
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
@@ -31,7 +31,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.5.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl.multivariate_pid</a></li> 
       </ul>
@@ -149,41 +149,51 @@
 <span class="sd">                ResultsMultivariatePID()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Set defaults for PID estimation.</span>
-        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;lags_pid&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">[</span><span class="mi">0</span><span class="p">]))]]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)))</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;verbose&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
+            <span class="s2">&quot;lags_pid&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">[</span><span class="mi">0</span><span class="p">]))]]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">))</span>
+        <span class="p">)</span>
 
         <span class="c1"># Check inputs.</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags_pid&#39;</span><span class="p">]):</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Lists of targets, sources, and lags must have&#39;</span>
-                               <span class="s1">&#39;the same lengths.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;lags_pid&quot;</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Lists of targets, sources, and lags must have&quot;</span> <span class="s2">&quot;the same lengths.&quot;</span>
+            <span class="p">)</span>
         <span class="k">for</span> <span class="n">lis_1</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">lis_2</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">lis_1</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">lis_2</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Lists in the list sources must have&#39;</span>
-                               <span class="s1">&#39;the same lengths.&#39;</span><span class="p">)</span>
-                <span class="c1">#^ if</span>
-            <span class="c1">#^ for</span>
-        <span class="c1">#^ for</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                        <span class="s2">&quot;Lists in the list sources must have&quot;</span> <span class="s2">&quot;the same lengths.&quot;</span>
+                    <span class="p">)</span>
+                <span class="c1"># ^ if</span>
+            <span class="c1"># ^ for</span>
+        <span class="c1"># ^ for</span>
 
-        <span class="n">list_of_lags</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags_pid&#39;</span><span class="p">]</span>
+        <span class="n">list_of_lags</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="s2">&quot;lags_pid&quot;</span><span class="p">]</span>
 
         <span class="c1"># Perform PID estimation for each target individually</span>
         <span class="n">results</span> <span class="o">=</span> <span class="n">ResultsMultivariatePID</span><span class="p">(</span>
             <span class="n">n_nodes</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">n_processes</span><span class="p">,</span>
             <span class="n">n_realisations</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">n_realisations</span><span class="p">(),</span>
-            <span class="n">normalised</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">normalise</span><span class="p">)</span>
+            <span class="n">normalised</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">normalise</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)):</span>
-            <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">####### analysing target with index </span><span class="si">{0}</span><span class="s1"> from list </span><span class="si">{1}</span><span class="s1">&#39;</span>
-                      <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">targets</span><span class="p">))</span>
-            <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags_pid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">list_of_lags</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s2">&quot;verbose&quot;</span><span class="p">]:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">####### analysing target with index </span><span class="si">{0}</span><span class="s2"> from list </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">t</span><span class="p">,</span> <span class="n">targets</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s2">&quot;lags_pid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">list_of_lags</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
             <span class="n">res_single</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analyse_single_target</span><span class="p">(</span>
-                <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">targets</span><span class="p">[</span><span class="n">t</span><span class="p">],</span> <span class="n">sources</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+                <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">targets</span><span class="p">[</span><span class="n">t</span><span class="p">],</span> <span class="n">sources</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+            <span class="p">)</span>
             <span class="n">results</span><span class="o">.</span><span class="n">combine_results</span><span class="p">(</span><span class="n">res_single</span><span class="p">)</span>
         <span class="c1"># Get no. realisations actually used for estimation from single target</span>
         <span class="c1"># analysis.</span>
         <span class="n">results</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_realisations</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">res_single</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_realisations</span><span class="p">)</span>
+            <span class="n">res_single</span><span class="o">.</span><span class="n">data_properties</span><span class="o">.</span><span class="n">n_realisations</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="n">results</span></div>
 
 <div class="viewcode-block" id="MultivariatePID.analyse_single_target"><a class="viewcode-back" href="../../idtxl_process_analysis.html#idtxl.multivariate_pid.MultivariatePID.analyse_single_target">[docs]</a>    <span class="k">def</span> <span class="nf">analyse_single_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">sources</span><span class="p">):</span>
@@ -248,56 +258,59 @@
         <span class="n">results</span> <span class="o">=</span> <span class="n">ResultsMultivariatePID</span><span class="p">(</span>
             <span class="n">n_nodes</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">n_processes</span><span class="p">,</span>
             <span class="n">n_realisations</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">n_realisations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">),</span>
-            <span class="n">normalised</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">normalise</span><span class="p">)</span>
+            <span class="n">normalised</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">normalise</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="n">results</span><span class="o">.</span><span class="n">_add_single_result</span><span class="p">(</span>
-            <span class="n">settings</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span>
-            <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
-            <span class="n">results</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">)</span>
+            <span class="n">settings</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">results</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">results</span></div>
 
     <span class="k">def</span> <span class="nf">_initialise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">sources</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Check input, set initial or default values for analysis settings.&quot;&quot;&quot;</span>
         <span class="c1"># Check requested PID estimator.</span>
-        <span class="k">assert</span> <span class="s1">&#39;pid_estimator&#39;</span> <span class="ow">in</span> <span class="n">settings</span><span class="p">,</span> <span class="s1">&#39;Estimator was not specified!&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_pid_estimator</span> <span class="o">=</span> <span class="n">get_estimator</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;pid_estimator&#39;</span><span class="p">],</span> <span class="n">settings</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="s2">&quot;pid_estimator&quot;</span> <span class="ow">in</span> <span class="n">settings</span><span class="p">,</span> <span class="s2">&quot;Estimator was not specified!&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pid_estimator</span> <span class="o">=</span> <span class="n">get_estimator</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;pid_estimator&quot;</span><span class="p">],</span> <span class="n">settings</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;lags_pid&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">))])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;lags_pid&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">))])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;verbose&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># Check if provided lags are correct and work with the number of</span>
         <span class="c1"># samples in the data.</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags_pid&#39;</span><span class="p">])</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;List of lags must have length 2 or 3 or 4.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;lags_pid&quot;</span><span class="p">])</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;List of lags must have length 2 or 3 or 4.&quot;</span><span class="p">)</span>
         <span class="c1"># number of lags is equal to number of sources</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags_pid&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;List of lags must have same length as the list sources.&#39;</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags_pid&#39;</span><span class="p">])):</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags_pid&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">data</span><span class="o">.</span><span class="n">n_samples</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;lags_pid&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;List of lags must have same length as the list sources.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;lags_pid&quot;</span><span class="p">])):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;lags_pid&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">data</span><span class="o">.</span><span class="n">n_samples</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="s1">&#39;Lag </span><span class="si">{0}</span><span class="s1"> (</span><span class="si">{1}</span><span class="s1">) is larger than the number of samples in the data &#39;</span>
-                    <span class="s1">&#39;set (</span><span class="si">{2}</span><span class="s1">).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags_pid&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">data</span><span class="o">.</span><span class="n">n_samples</span><span class="p">))</span>
+                    <span class="s2">&quot;Lag </span><span class="si">{0}</span><span class="s2"> (</span><span class="si">{1}</span><span class="s2">) is larger than the number of samples in the data &quot;</span>
+                    <span class="s2">&quot;set (</span><span class="si">{2}</span><span class="s2">).&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;lags_pid&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">data</span><span class="o">.</span><span class="n">n_samples</span><span class="p">)</span>
+                <span class="p">)</span>
 
         <span class="c1"># Check if target and sources are provided correctly.</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">int</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Target must be an integer.&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span>  <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;List of sources must have length 2 or 3 or 4.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Target must be an integer.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;List of sources must have length 2 or 3 or 4.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;The target (</span><span class="si">{0}</span><span class="s1">) should not be in the list &#39;</span>
-                               <span class="s1">&#39;of sources (</span><span class="si">{1}</span><span class="s1">).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">sources</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;The target (</span><span class="si">{0}</span><span class="s2">) should not be in the list &quot;</span>
+                <span class="s2">&quot;of sources (</span><span class="si">{1}</span><span class="s2">).&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">sources</span><span class="p">)</span>
+            <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span> <span class="o">=</span> <span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags_pid&#39;</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span> <span class="o">=</span> <span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;lags_pid&quot;</span><span class="p">]))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">target</span>
         <span class="c1"># TODO works for single vars only, change to multivariate?</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">sources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lag_to_idx</span><span class="p">([</span>
-                                <span class="p">(</span><span class="n">sources</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;lags_pid&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
-                                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">))])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lag_to_idx</span><span class="p">(</span>
+            <span class="p">[(</span><span class="n">sources</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;lags_pid&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">))]</span>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_calculate_pid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-
         <span class="c1"># TODO Discuss how and if the following statistical testing should be</span>
         <span class="c1"># included included. Remove dummy results.</span>
         <span class="c1"># [orig_pid, sign_1, p_val_1,</span>
@@ -309,29 +322,28 @@
         <span class="c1"># p_val_1 = p_val_2 = p_val_shd = p_val_syn = 1.0</span>
 
         <span class="n">target_realisations</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span>
-                                            <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">,</span>
-                                            <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">]</span>
+        <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="c1"># CHECK! make sure self.source has the same idx as sources</span>
         <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="mi">0</span><span class="p">]])[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">list_sources_var_realisations</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span>
-                                                     <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">,</span>
-                                                     <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="n">i</span><span class="p">]])[</span><span class="mi">0</span><span class="p">]</span>
-                                         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">))]</span>
-
+        <span class="n">list_sources_var_realisations</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="n">i</span><span class="p">]])[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">))</span>
+        <span class="p">]</span>
 
         <span class="n">orig_pid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pid_estimator</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span>
-                                <span class="n">s</span><span class="o">=</span><span class="n">list_sources_var_realisations</span><span class="p">,</span>
-                                <span class="n">t</span><span class="o">=</span><span class="n">target_realisations</span><span class="p">)</span>
-
+            <span class="n">s</span><span class="o">=</span><span class="n">list_sources_var_realisations</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="n">target_realisations</span>
+        <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">orig_pid</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">)):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;source_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
-        <span class="c1">#^ for</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;selected_vars_sources&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;source_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">))]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;current_value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;source_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+        <span class="c1"># ^ for</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;selected_vars_sources&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;source_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">))</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;current_value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span>
         <span class="c1"># self.results[&#39;unq_s1_sign&#39;] = sign_1</span>
         <span class="c1"># self.results[&#39;unq_s2_sign&#39;] = sign_2</span>
         <span class="c1"># self.results[&#39;unq_s1_p_val&#39;] = p_val_1</span>
@@ -382,7 +394,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.5.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl.multivariate_pid</a></li> 
       </ul>
