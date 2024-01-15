@@ -172,7 +172,7 @@ class RudeltAbstractEstimator(Estimator):
         Get the past range T of the embedding, based on the parameters d, tau_1 and k.
         """
 
-        return np.sum(
+        return sum(
             [
                 first_bin_size * 10 ** ((number_of_bins_d - i) * scaling_k)
                 for i in range(1, number_of_bins_d + 1)
@@ -443,7 +443,7 @@ class RudeltAbstractNSBEstimator(RudeltAbstractEstimator):
         return (
             K * (mp.psi(0, K * beta) - mp.psi(0, K * beta + N))
             - K * mp.psi(0, beta)
-            + np.sum((mk[n] * mp.psi(0, n + beta) for n in mk))
+            + sum((mk[n] * mp.psi(0, n + beta) for n in mk))
         )
 
     def d2_log_rho(self, beta, mk, K, N):
@@ -454,7 +454,7 @@ class RudeltAbstractNSBEstimator(RudeltAbstractEstimator):
         return (
             K**2 * (mp.psi(1, K * beta) - mp.psi(1, K * beta + N))
             - K * mp.psi(1, beta)
-            + np.sum((mk[n] * mp.psi(1, n + beta) for n in mk))
+            + sum((mk[n] * mp.psi(1, n + beta) for n in mk))
         )
 
     def d_log_rho_xi(self, beta, mk, K, N):
@@ -571,7 +571,7 @@ class RudeltAbstractNSBEstimator(RudeltAbstractEstimator):
         norm = N + beta * K
         return (
             mp.psi(0, norm + 1)
-            - np.sum((mk[n] * (n + beta) * mp.psi(0, n + beta + 1) for n in mk)) / norm
+            - sum((mk[n] * (n + beta) * mp.psi(0, n + beta + 1) for n in mk)) / norm
         )
 
     def nsb_entropy(self, mk, K, N):
