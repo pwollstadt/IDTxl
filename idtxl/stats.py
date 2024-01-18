@@ -288,7 +288,7 @@ def _perform_fdr_corretion(pval, constant, alpha):
     if np.invert(sign).any():
         first_false = np.where(np.invert(sign))[0][0]
         sign[first_false:] = False  # avoids false positives due to equal pvals
-    sign = sign[sort_idx]  # restore original ordering of significance values
+    sign[sort_idx] = sign.copy() # restore original ordering of significance values
     return sign, thresh
 
 
@@ -618,8 +618,8 @@ def max_statistic_sequential(analysis_setup, data):
             break
 
     # Get back original order and return results.
-    significance = significance[selected_vars_order]
-    pvalue = pvalue[selected_vars_order]
+    significance[selected_vars_order] = significance.copy()
+    pvalue[selected_vars_order] = pvalue.copy()
     return significance, pvalue, individual_stat
 
 
