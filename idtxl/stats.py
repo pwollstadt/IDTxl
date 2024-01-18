@@ -163,22 +163,26 @@ def network_fdr(settings=None, *results):
     cands = []
     if correct_by_target:  # whole target
         for target in results_comb.targets_analysed:
-            if results_comb._single_target[target].omnibus_sign:
-                pval = np.append(pval, results_comb._single_target[target].omnibus_pval)
-                target_idx = np.append(target_idx, target)
-                n_perm = np.append(n_perm, results_comb.settings.n_perm_omnibus)
+            next_pval = results_comb._single_target[target].omnibus_pval
+            pval = np.append(
+                pval, next_pval if next_pval is not None else 1)
+            target_idx = np.append(target_idx, target)
+            n_perm = np.append(
+                    n_perm, results_comb.settings.n_perm_omnibus)
     else:  # individual variables
         for target in results_comb.targets_analysed:
-            if results_comb._single_target[target].omnibus_sign:
-                n_sign = results_comb._single_target[target].selected_sources_pval.size
-                pval = np.append(
-                    pval, (results_comb._single_target[target].selected_sources_pval)
-                )
-                target_idx = np.append(target_idx, np.ones(n_sign) * target).astype(int)
-                cands = cands + (
-                    results_comb._single_target[target].selected_vars_sources
-                )
-                n_perm = np.append(n_perm, results_comb.settings.n_perm_max_seq)
+            n_sign = (results_comb._single_target[target].
+                        selected_sources_pval.size)
+            pval = np.append(
+                pval, (results_comb._single_target[target].
+                        selected_sources_pval))
+            target_idx = np.append(target_idx,
+                                    np.ones(n_sign) * target).astype(int)
+            cands = (cands +
+                        (results_comb._single_target[target].
+                        selected_vars_sources))
+            n_perm = np.append(
+                n_perm, results_comb.settings.n_perm_max_seq)
 
     if pval.size == 0:
         print("No links in final results ...")
