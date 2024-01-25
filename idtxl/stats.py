@@ -59,10 +59,10 @@ def ais_fdr(settings=None, *results):
     process_idx = np.arange(0).astype(int)
     n_perm = np.arange(0).astype(int)
     for process in results_comb.processes_analysed:
-        if results_comb._single_process[process].ais_sign:
-            pval = np.append(pval, results_comb._single_process[process].ais_pval)
-            process_idx = np.append(process_idx, process)
-            n_perm = np.append(n_perm, results_comb.settings.n_perm_mi)
+        next_pval = results_comb._single_process[process].ais_pval
+        pval = np.append(pval, next_pval if next_pval is not None else 1)
+        process_idx = np.append(process_idx, process)
+        n_perm = np.append(n_perm, results_comb.settings.n_perm_mi)
 
     if pval.size == 0:
         print("FDR correction: no links in final results ...\n")
