@@ -59,17 +59,17 @@ def ais_fdr(settings=None, *results):
     process_idx = np.arange(0).astype(int)
     n_perm = np.arange(0).astype(int)
     for process in results_comb.processes_analysed:
-        if results_comb._single_process[process].ais_sign:
-            pval = np.append(pval, results_comb._single_process[process].ais_pval)
-            process_idx = np.append(process_idx, process)
-            n_perm = np.append(n_perm, results_comb.settings.n_perm_mi)
+        next_pval = results_comb._single_process[process].ais_pval
+        pval = np.append(pval, next_pval if next_pval is not None else 1)
+        process_idx = np.append(process_idx, process)
+        n_perm = np.append(n_perm, results_comb.settings.n_perm_mi)
 
     if pval.size == 0:
         print("FDR correction: no links in final results ...\n")
         results_comb._add_fdr(fdr=None, alpha=alpha, constant=constant)
         return results_comb
 
-    sign, thresh = _perform_fdr_corretion(pval, constant, alpha)
+    sign, thresh = _perform_fdr_corretion(pval, constant, alpha, len(results_comb.processes_analysed))
 
     # If the number of permutations for calculating p-values for individual
     # variables is too low, return without performing any correction.
@@ -162,23 +162,35 @@ def network_fdr(settings=None, *results):
     n_perm = np.arange(0).astype(int)
     cands = []
     if correct_by_target:  # whole target
+        # The total number of tests is the number of targets
+        n_tests = len(results_comb.targets_analysed)
+
         for target in results_comb.targets_analysed:
-            if results_comb._single_target[target].omnibus_sign:
-                pval = np.append(pval, results_comb._single_target[target].omnibus_pval)
-                target_idx = np.append(target_idx, target)
-                n_perm = np.append(n_perm, results_comb.settings.n_perm_omnibus)
+            next_pval = results_comb._single_target[target].omnibus_pval
+            pval = np.append(
+                pval, next_pval if next_pval is not None else 1)
+            target_idx = np.append(target_idx, target)
+            n_perm = np.append(
+                    n_perm, results_comb.settings.n_perm_omnibus)
     else:  # individual variables
+        # The total number of tests is the number of targets times the number
+        # of source candidates (i.e. source processes * time lags) analyzed for each target
+        n_tests = np.sum(len(target.source_set) for target in results.targets_analysed) \
+                * (settings["max_lag_sources"] - settings["min_lag_sources"] + 1)
+
         for target in results_comb.targets_analysed:
-            if results_comb._single_target[target].omnibus_sign:
-                n_sign = results_comb._single_target[target].selected_sources_pval.size
-                pval = np.append(
-                    pval, (results_comb._single_target[target].selected_sources_pval)
-                )
-                target_idx = np.append(target_idx, np.ones(n_sign) * target).astype(int)
-                cands = cands + (
-                    results_comb._single_target[target].selected_vars_sources
-                )
-                n_perm = np.append(n_perm, results_comb.settings.n_perm_max_seq)
+            n_sign = (results_comb._single_target[target].
+                        selected_sources_pval.size)
+            pval = np.append(
+                pval, [next_pval if next_pval is not None else 1 for next_pval in
+                       results_comb._single_target[target].selected_sources_pval])
+            target_idx = np.append(target_idx,
+                                    np.ones(n_sign) * target).astype(int)
+            cands = (cands +
+                        (results_comb._single_target[target].
+                        selected_vars_sources))
+            n_perm = np.append(
+                n_perm, results_comb.settings.n_perm_max_seq)
 
     if pval.size == 0:
         print("No links in final results ...")
@@ -190,7 +202,7 @@ def network_fdr(settings=None, *results):
         )
         return results_comb
 
-    sign, thresh = _perform_fdr_corretion(pval, constant, alpha)
+    sign, thresh = _perform_fdr_corretion(pval, constant, alpha, n_tests)
 
     # If the number of permutations for calculating p-values for individual
     # variables is too low, return without performing any correction.
@@ -243,7 +255,7 @@ def network_fdr(settings=None, *results):
     return results_comb
 
 
-def _perform_fdr_corretion(pval, constant, alpha):
+def _perform_fdr_corretion(pval, constant, alpha, n_tests):
     """Calculate sequential threshold for FDR-correction.
 
     Calculate sequential thresholds for FDR-correction of p-values. The
@@ -266,38 +278,41 @@ def _perform_fdr_corretion(pval, constant, alpha):
             according to Genovese (2002): 1 will divide alpha by 1, 2 will
             divide alpha by the sum_i(1/i); see the paper for details on the
             assumptions (default=2)
+        n_tests : int
+            total number of tests performed for calculating the FDR-thresholds
 
     Returns:
         array of bools
-            significance of p-values
+            significance of p-values in the order of the input array
         array of floats
-            FDR-thresholds for each p-value
+            FDR-thresholds for each p-value in increasing order
     """
     # Sort all p-values in ascending order.
     sort_idx = np.argsort(pval)
     pval.sort()
 
     # Calculate threshold
-    n = pval.size
     if constant == 2:  # pick the requested constant (see Genovese, p.872)
-        if n < 1000:
-            const = sum(1 / np.arange(1, n + 1))
+        if n_tests < 1000:
+            const = np.sum(1 / np.arange(1, n_tests + 1))
         else:
-            const = np.log(n) + np.e  # aprx. harmonic sum with Euler's number
+            const = np.log(n_tests) + np.e  # aprx. harmonic sum with Euler's number
     elif constant == 1:
         # This is less strict than the other one and corresponds to a
         # Bonoferroni-correction for the first p-value, however, it makes more
         # strict assumptions on the distribution of p-values, while constant 2
         # works for any joint distribution of the p-values.
         const = 1
-    thresh = (np.arange(1, n + 1) / n) * alpha / const
+
+    # Calculate threshold for each p-value.
+    thresh = (np.arange(1, len(pval) + 1) / n_tests) * alpha / const
 
     # Compare data to threshold.
     sign = pval <= thresh
     if np.invert(sign).any():
         first_false = np.where(np.invert(sign))[0][0]
         sign[first_false:] = False  # avoids false positives due to equal pvals
-    sign = sign[sort_idx]  # restore original ordering of significance values
+    sign[sort_idx] = sign.copy() # restore original ordering of significance values
     return sign, thresh
 
 
@@ -687,8 +702,8 @@ def max_statistic_sequential(analysis_setup, data):
             break
 
     # Get back original order and return results.
-    significance = significance[selected_vars_order]
-    pvalue = pvalue[selected_vars_order]
+    significance[selected_vars_order] = significance.copy()
+    pvalue[selected_vars_order] = pvalue.copy()
     return significance, pvalue, individual_stat
 
 
