@@ -270,11 +270,11 @@ def _perform_fdr_corretion(pval, constant, alpha, n_tests):
             p-values to be corrected
         alpha : float
             critical alpha level
-        fdr_constant : int
+        constant : int
             one of two constants used for calculating the FDR-thresholds
             according to Genovese (2002): 1 will divide alpha by 1, 2 will
             divide alpha by the sum_i(1/i); see the paper for details on the
-            assumptions (default=2)
+            assumptions
         n_tests : int
             total number of tests performed for calculating the FDR-thresholds
 
@@ -286,7 +286,7 @@ def _perform_fdr_corretion(pval, constant, alpha, n_tests):
     """
     # Sort all p-values in ascending order.
     sort_idx = np.argsort(pval)
-    pval.sort()
+    pval_sorted = np.sort(pval)
 
     # Calculate threshold
     if constant == 2:  # pick the requested constant (see Genovese, p.872)
@@ -302,10 +302,10 @@ def _perform_fdr_corretion(pval, constant, alpha, n_tests):
         const = 1
 
     # Calculate threshold for each p-value.
-    thresh = (np.arange(1, len(pval) + 1) / n_tests) * alpha / const
+    thresh = (np.arange(1, len(pval_sorted) + 1) / n_tests) * alpha / const
 
     # Compare data to threshold.
-    sign = pval <= thresh
+    sign = pval_sorted <= thresh
     if np.invert(sign).any():
         first_false = np.where(np.invert(sign))[0][0]
         sign[first_false:] = False  # avoids false positives due to equal pvals
