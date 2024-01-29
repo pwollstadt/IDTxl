@@ -197,7 +197,20 @@ def test_network_fdr():
 
 def test_fdr_sorting():
     # Test for correct ordering of p-vals and sign after _perform_fdr_correction
-    pass
+    n_tests = 8
+    pval_sorted = np.arange(n_tests) / 300
+    constant = 2
+    alpha = 0.05
+    sign, _ = stats._perform_fdr_corretion(pval_sorted, constant, alpha, n_tests)
+    assert sign[:3].all()
+
+    permutation = np.random.permutation(n_tests)
+    pval_unsorted = pval_sorted[permutation].copy()
+    sign_unsorted, _ = stats._perform_fdr_corretion(
+        pval_unsorted, constant, alpha, n_tests
+    )
+    assert sign_unsorted.sum() == 3
+    assert np.array_equal(pval_sorted[sign], sorted(pval_unsorted[sign_unsorted]))
 
 
 def test_ais_fdr():
@@ -430,4 +443,4 @@ if __name__ == "__main__":
     # test_omnibus_test()
     # test_max_statistic()
     # test_min_statistic()
-    test_max_statistic_sequential()
+    # test_max_statistic_sequential()
