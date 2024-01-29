@@ -1,16 +1,18 @@
 """Parent class for network inference and network comparison.
 """
-import os.path
-from datetime import datetime
-from shutil import copyfile
-from pprint import pprint
 import ast
 import copy as cp
 import itertools as it
+import os.path
+from datetime import datetime
+from pprint import pprint
+from shutil import copyfile
+
 import numpy as np
-from .estimator import get_estimator
-from . import idtxl_utils as utils
+
 from . import idtxl_io as io
+from . import idtxl_utils as utils
+from .estimator import get_estimator
 
 
 class NetworkAnalysis:
@@ -662,7 +664,7 @@ class NetworkAnalysis:
 
         Args:
             file_path : str
-                path to checkpoint file (excluding extension: *.ckp)
+                path to checkpoint file (excluding extension: .ckp)
         """
 
         # Read checkpoint

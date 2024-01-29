@@ -1,8 +1,10 @@
 """Provide results class for IDTxl network analysis."""
+import copy as cp
 import sys
 import warnings
-import copy as cp
+
 import numpy as np
+
 from . import idtxl_utils as utils
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -1158,38 +1160,39 @@ class ResultsSingleProcessRudelt:
                 (result['selected_vars']) or via dot-notation
                 (result.selected_vars). Contains keys
 
-                Process : int
+                - Process : int
                     Process that was optimized
-                estimation_method : String
+                - estimation_method : String
                     Estimation method that was used for optimization
-                T_D : float
+                - T_D : float
                     Estimated optimal value for the temporal depth TD
-                tau_R :
+                - tau_R :
                     Information timescale tau_R, a characteristic timescale of history
                     dependence similar to an autocorrelation time.
-                R_tot : float
+                - R_tot : float
                     Estimated value for the total history dependence Rtot,
-                AIS_tot : float
+                - AIS_tot : float
                     Estimated value for the total active information storage
-                opt_number_of_bins_d : int
+                - opt_number_of_bins_d : int
                     Number of bins d for the embedding that yields (R̂tot ,T̂D)
-                opt_scaling_k : int
+                - opt_scaling_k : int
                     Scaling exponent κ for the embedding that yields (R̂tot , T̂D)
-                opt_first_bin_size : int
+                - opt_first_bin_size : int
                     Size of the first bin τ1 for the embedding that yields (R̂tot , T̂D ),
-                history_dependence : array with floating-point values
+                - history_dependence : array with floating-point values
                     Estimated history dependence for each embedding
-                firing_rate : float
+                - firing_rate : float
                     Firing rate of the neuron/ spike train
-                recording_length : float
+                - recording_length : float
                     Length of the recording (in seconds)
-                H_spiking : float
+                - H_spiking : float
                     Entropy of the spike times
 
                 if analyse_auto_MI was set to True additionally:
-                auto_MI : dict
+
+                - auto_MI : dict
                     numpy array of MI values for each delay
-                auto_MI_delays : list of int
+                - auto_MI_delays : list of int
                     list of delays depending on the given auto_MI_bin_sizes and auto_MI_max_delay
 
         """

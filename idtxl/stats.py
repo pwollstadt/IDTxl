@@ -513,13 +513,12 @@ def max_statistic_sequential(analysis_setup, data):
     calculation of surrogates for this statistic.
 
     Args:
-
         analysis_setup : MultivariateTE instance
             information on the current analysis, can have an optional attribute
-            'settings', a dictionary with parameters for statistical testing:
+            settings, a dictionary with parameters for statistical testing:
 
             - n_perm_max_seq : int [optional] - number of permutations
-              (default='n_perm_min_stat'|500)
+              (default=n_perm_min_stat|500)
             - alpha_max_seq : float [optional] - critical alpha level
               (default=0.05)
             - permute_in_time : bool [optional] - generate surrogates by
@@ -723,13 +722,12 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
     calculation of surrogates for this statistic.
 
     Args:
-
         analysis_setup : MultivariateTE instance
             information on the current analysis, can have an optional attribute
-            'settings', a dictionary with parameters for statistical testing:
+            settings, a dictionary with parameters for statistical testing:
 
             - n_perm_max_seq : int [optional] - number of permutations
-              (default='n_perm_min_stat'|500)
+              (default=n_perm_min_stat|500)
             - alpha_max_seq : float [optional] - critical alpha level
               (default=0.05)
             - permute_in_time : bool [optional] - generate surrogates by
