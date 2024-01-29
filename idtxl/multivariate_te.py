@@ -135,7 +135,7 @@ class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
             targets = list(range(data.n_processes))
         if sources == "all":
             sources = ["all" for t in targets]
-        elif isinstance(sources is list) and isinstance(sources[0], int):
+        elif isinstance(sources, list) and isinstance(sources[0], int):
             sources = [sources for t in targets]
         elif isinstance(sources, list) and isinstance(sources[0], list):
             pass
@@ -154,12 +154,10 @@ class MultivariateTE(NetworkInferenceTE, NetworkInferenceMultivariate):
             n_realisations=data.n_realisations(),
             normalised=data.normalise,
         )
-        for t in range(len(targets)):
+        for t, target in enumerate(targets):
             if settings["verbose"]:
                 print(f"\n####### analysing target with index {t} from list {targets}")
-            res_single = self.analyse_single_target(
-                settings, data, targets[t], sources[t]
-            )
+            res_single = self.analyse_single_target(settings, data, target, sources[t])
             results.combine_results(res_single)
 
         # Get no. realisations actually used for estimation from single target
