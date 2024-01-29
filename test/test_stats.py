@@ -1,13 +1,15 @@
 """Unit tests for stats module."""
-import pytest
+# pylint: disable=protected-access
 import numpy as np
-from idtxl import stats
-from idtxl.multivariate_te import MultivariateTE
-from idtxl.active_information_storage import ActiveInformationStorage
-from idtxl.estimators_jidt import JidtDiscreteCMI
-from idtxl.data import Data
-from idtxl.results import ResultsNetworkInference, ResultsSingleProcessAnalysis
+import pytest
 from test_estimators_jidt import _get_gauss_data
+
+from idtxl import stats
+from idtxl.active_information_storage import ActiveInformationStorage
+from idtxl.data import Data
+from idtxl.estimators_jidt import JidtDiscreteCMI
+from idtxl.multivariate_te import MultivariateTE
+from idtxl.results import ResultsNetworkInference, ResultsSingleProcessAnalysis
 
 
 def test_omnibus_test():
@@ -53,48 +55,52 @@ def test_max_statistic_sequential():
 
 
 def test_network_fdr():
-    settings = {"n_perm_max_seq": 1000, "n_perm_omnibus": 1000}
+    # Simulate results for a 3-node network, analyzed all-to-all. Set the
+    # omnibus p-value for targets 1 and 2 such that they does not survive
+    # FDR-correction.
+    settings_fdr = {"n_perm_max_seq": 2000, "n_perm_omnibus": 2000}
     target_0 = {
         "selected_vars_sources": [(1, 1), (1, 2), (1, 3), (2, 1), (2, 0)],
-        "selected_vars_full": [
-            (0, 1),
-            (0, 2),
-            (0, 3),
-            (1, 1),
-            (1, 2),
-            (1, 3),
-            (2, 1),
-            (2, 0),
-        ],
+        "selected_vars_target": [(0, 1)],
+        "sources_tested": [1, 2],
         "omnibus_pval": 0.0001,
         "omnibus_sign": True,
         "selected_sources_pval": np.array([0.001, 0.0014, 0.01, 0.045, 0.047]),
         "selected_sources_te": np.array([1.1, 1.0, 0.8, 0.7, 0.63]),
     }
+    target_0["selected_vars_full"] = (
+        target_0["selected_vars_sources"] + target_0["selected_vars_target"]
+    )
     target_1 = {
         "selected_vars_sources": [(1, 2), (2, 1), (2, 2)],
-        "selected_vars_full": [(1, 0), (1, 1), (1, 2), (2, 1), (2, 2)],
+        "selected_vars_target": [(1, 1)],
+        "sources_tested": [0, 2],
         "omnibus_pval": 0.031,
         "omnibus_sign": True,
         "selected_sources_pval": np.array([0.00001, 0.00014, 0.01]),
         "selected_sources_te": np.array([1.8, 1.75, 0.75]),
     }
+    target_1["selected_vars_full"] = (
+        target_1["selected_vars_sources"] + target_1["selected_vars_target"]
+    )
     target_2 = {
         "selected_vars_sources": [],
-        "selected_vars_full": [(2, 0), (2, 1)],
+        "selected_vars_target": [],
+        "selected_vars_full": [],
+        "sources_tested": [0, 1],
         "omnibus_pval": 0.41,
         "omnibus_sign": False,
         "selected_sources_pval": None,
         "selected_sources_te": np.array([]),
     }
     res_1 = ResultsNetworkInference(n_nodes=3, n_realisations=1000, normalised=True)
-    res_1._add_single_result(target=0, settings=settings, results=target_0)
-    res_1._add_single_result(target=1, settings=settings, results=target_1)
+    res_1._add_single_result(target=0, settings=settings_fdr, results=target_0)
+    res_1._add_single_result(target=1, settings=settings_fdr, results=target_1)
     res_2 = ResultsNetworkInference(n_nodes=3, n_realisations=1000, normalised=True)
-    res_2._add_single_result(target=2, settings=settings, results=target_2)
+    res_2._add_single_result(target=2, settings=settings_fdr, results=target_2)
 
     for correct_by_target in [True, False]:
-        settings = {
+        settings_fdr = {
             "cmi_estimator": "JidtKraskovCMI",
             "alpha_fdr": 0.05,
             "max_lag_sources": 3,
@@ -106,35 +112,92 @@ def test_network_fdr():
         data.generate_mute_data(n_samples=100, n_replications=3)
         analysis_setup = MultivariateTE()
         analysis_setup._initialise(
-            settings=settings, data=data, sources=[1, 2], target=0
+            settings=settings_fdr, data=data, sources=[1, 2], target=0
         )
-        res_pruned = stats.network_fdr(settings, res_1, res_2)
-        assert not res_pruned._single_target[
-            2
-        ].selected_vars_sources, "Target 2 has not been pruned from results."
+        res_pruned = stats.network_fdr(settings_fdr, res_1, res_2)
+        if correct_by_target:
+            assert not res_pruned.get_single_target(1, fdr=True)[
+                "omnibus_sign"
+            ], "Target 1 has not been pruned from results."
+            assert not res_pruned.get_single_target(2, fdr=True)[
+                "omnibus_sign"
+            ], "Target 2 has not been pruned from results."
+            assert res_pruned.get_single_target(0, fdr=True)[
+                "omnibus_sign"
+            ], "Target 0 has been wrongly pruned from results."
 
-        for k in res_pruned.targets_analysed:
-            if res_pruned._single_target[k]["selected_sources_pval"] is None:
-                assert not res_pruned._single_target[k]["selected_vars_sources"]
-            else:
+            # Ensure non-sign results were correctly removed after FDR correction.
+            for t in res_pruned.targets_analysed:
+                if not res_pruned.get_single_target(t, fdr=True)["omnibus_sign"]:
+                    assert not res_pruned._single_target_fdr[t]["selected_vars_sources"]
+                    assert (
+                        res_pruned._single_target_fdr[t]["selected_sources_te"] is None
+                    )
+                    assert (
+                        res_pruned._single_target_fdr[t]["selected_sources_pval"]
+                        is None
+                    )
+                    assert res_pruned._single_target_fdr[t]["omnibus_pval"] == 1
+                    assert not res_pruned._single_target_fdr[t]["omnibus_sign"]
+                else:
+                    assert len(
+                        res_pruned._single_target[t]["selected_vars_sources"]
+                    ) == len(
+                        res_pruned._single_target[t]["selected_sources_pval"]
+                    ), "Source list and list of p-values should have the same length."
+                    assert len(
+                        res_pruned._single_target[t]["selected_vars_sources"]
+                    ) == len(
+                        res_pruned._single_target_fdr[t]["selected_vars_sources"]
+                    ), "Corrected and uncorrected source list should have the same length."
+                    assert len(
+                        res_pruned._single_target[t]["selected_vars_target"]
+                    ) == len(
+                        res_pruned._single_target_fdr[t]["selected_vars_target"]
+                    ), "Corrected and uncorrected source list should have the same length."
+        else:
+            for t in [0, 1]:  # ensure correct output for FDR-corrected targets
                 assert len(
-                    res_pruned._single_target[k]["selected_vars_sources"]
-                ) == len(res_pruned._single_target[k]["selected_sources_pval"]), (
-                    "Source list and list of p-values should have " "the same length."
-                )
-
+                    res_pruned.get_single_target(t, fdr=True)["selected_vars_sources"]
+                ) < len(
+                    res_pruned.get_single_target(t, fdr=False)["selected_vars_sources"]
+                ), f"Non-sign sources for target {t} have not been pruned from results."
+                assert len(
+                    res_pruned._single_target_fdr[t]["selected_vars_sources"]
+                ) == len(res_pruned._single_target_fdr[t]["selected_sources_pval"])
+                assert len(
+                    res_pruned._single_target_fdr[t]["selected_vars_sources"]
+                ) == len(res_pruned._single_target_fdr[t]["selected_sources_te"])
     # Test function call for single result
-    res_pruned = stats.network_fdr(settings, res_1)
+    res_pruned = stats.network_fdr(settings_fdr, res_1)
     print("successful call on single result dict.")
 
-    # Test None result for insufficient no. permutations, no FDR-corrected
-    # results (the results class throws an error if no FDR-corrected results
-    # exist).
-    res_1.settings["n_perm_max_seq"] = 2
-    res_2.settings["n_perm_max_seq"] = 2
-    res_pruned = stats.network_fdr(settings, res_1, res_2)
+    # Ensure that no FDR correction is performed if the no. permutations is
+    # insufficient (the results class throws an error if no FDR-corrected
+    # results exist).
+    settings_fdr["correct_by_target"] = True
+    res_1.settings["n_perm_omnibus"] = 2
+    res_2.settings["n_perm_omnibus"] = 2
+    res_pruned = stats.network_fdr(settings_fdr, res_1, res_2)
+    for target in [0, 1, 2]:
+        with pytest.raises(RuntimeError):
+            res_pruned.get_single_target(target, fdr=True)
     with pytest.raises(RuntimeError):
         res_pruned.get_adjacency_matrix("binary", fdr=True)
+    settings_fdr["correct_by_target"] = False
+    res_1.settings["n_perm_max_seq"] = 2
+    res_2.settings["n_perm_max_seq"] = 2
+    res_pruned = stats.network_fdr(settings_fdr, res_1, res_2)
+    for target in [0, 1, 2]:
+        with pytest.raises(RuntimeError):
+            res_pruned.get_single_target(target, fdr=True)
+    with pytest.raises(RuntimeError):
+        res_pruned.get_adjacency_matrix("binary", fdr=True)
+
+
+def test_fdr_sorting():
+    # Test for correct ordering of p-vals and sign after _perform_fdr_correction
+    pass
 
 
 def test_ais_fdr():
@@ -354,10 +417,11 @@ def test_analytical_surrogates():
 
 
 if __name__ == "__main__":
-    test_ais_fdr()
+    # test_ais_fdr()
     # test_analytical_surrogates()
     # test_data_type()
     # test_network_fdr()
+    test_fdr_sorting()
     # test_find_pvalue()
     # test_find_table_max()
     # test_find_table_min()
