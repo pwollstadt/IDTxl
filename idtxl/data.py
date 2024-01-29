@@ -1,5 +1,6 @@
 """Provide data structures for IDTxl analysis."""
 import numpy as np
+
 from . import idtxl_utils as utils
 
 VERBOSE = False
@@ -145,7 +146,7 @@ class Data:
                 must have the same length as number of dimensions in data
         """
         if len(dim_order) > 3:
-            raise RuntimeError("dim_order can not have more than three " "entries")
+            raise RuntimeError("dim_order can not have more than three entries")
         if len(dim_order) != data.ndim:
             raise RuntimeError(
                 f"Data array dimension ({data.ndim}) and length of "
@@ -157,8 +158,8 @@ class Data:
         data_ordered = self._reorder_data(data, dim_order)
         self._set_data_size(data_ordered)
         print(
-            "Adding data with properties: {0} processes, {1} samples, {2} "
-            "replications".format(self.n_processes, self.n_samples, self.n_replications)
+            f"Adding data with properties: {self.n_processes} processes, {self.n_samples} "
+            f"samples, {self.n_replications} replications"
         )
         try:
             delattr(self, "data")
@@ -256,7 +257,7 @@ class Data:
                 samples * no.replications) x number of indices
         """
         if not hasattr(self, "data"):
-            raise AttributeError("No data has been added to this Data() " "instance.")
+            raise AttributeError("No data has been added to this Data() instance.")
         # Return None if index list is empty.
         if not idx_list:
             return None, None
@@ -296,12 +297,11 @@ class Data:
                     realisations[r : r + n_real_time, i] = self.data[
                         idx[0], idx[1] : last_sample, replication
                     ]
-                except IndexError:
+                except IndexError as e:
                     raise IndexError(
-                        "You tried to access variable {0} in a "
-                        "data set with {1} processes and {2} "
-                        "samples.".format(idx, self.n_processes, self.n_samples)
-                    )
+                        f"You tried to access variable {idx} in a data set with {self.n_processes} "
+                        f"processes and {self.n_samples} samples."
+                    ) from e
                 r += n_real_time
 
             assert not np.isnan(
@@ -378,14 +378,11 @@ class Data:
 
         try:
             data_slice = self.data[process, offset_samples:, replication_index]
-        except IndexError:
+        except IndexError as e:
             raise IndexError(
-                "You tried to access process {0} with an offset "
-                "of {1} in a data set of {2} processes and {3} "
-                "samples.".format(
-                    process, offset_samples, self.n_processes, self.n_samples
-                )
-            )
+                "You tried to access process {process} with an offset of {offset_samples} in a data set "
+                "of {self.n_processes} processes and {self.n_samples} samples."
+            ) from e
         assert not np.isnan(
             data_slice
         ).any(), "There are nans in the retrieved data slice."
@@ -706,22 +703,22 @@ class Data:
         elif perm_type == "circular":
             max_shift = perm_settings["max_shift"]
             if not isinstance(max_shift, int) or max_shift < 1:
-                raise TypeError(" " "max_shift" " has to be an int > 0.")
+                raise TypeError("'max_shift' has to be an int > 0.")
             perm = self._circular_shift(n_samples, max_shift)[0]
 
         elif perm_type == "block":
             block_size = perm_settings["block_size"]
             perm_range = perm_settings["perm_range"]
             if not isinstance(block_size, int) or block_size < 1:
-                raise TypeError(" " "block_size" " has to be an int > 0.")
+                raise TypeError("'block_size' has to be an int > 0.")
             if not isinstance(perm_range, int) or perm_range < 1:
-                raise TypeError(" " "perm_range" " has to be an int > 0.")
+                raise TypeError("'perm_range' has to be an int > 0.")
             perm = self._swap_blocks(n_samples, block_size, perm_range)
 
         elif perm_type == "local":
             perm_range = perm_settings["perm_range"]
             if not isinstance(perm_range, int) or perm_range < 1:
-                raise TypeError(" " "perm_range" " has to be an int > 0.")
+                raise TypeError("'perm_range' has to be an int > 0.")
             perm = self._swap_local(n_samples, perm_range)
 
         else:
