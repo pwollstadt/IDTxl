@@ -420,7 +420,7 @@ def test_define_candidates():
         assert (1, 6) in candidates, "Sample missing from candidates: (1, 6)."
         assert (1, 3) in candidates, "Sample missing from candidates: (1, 3)."
         if s["add_conditionals"] is not None:
-            if isinstace(s["add_conditionals"], tuple):
+            if isinstance(s["add_conditionals"], tuple):
                 cond_ind = nw._lag_to_idx([s["add_conditionals"]])
             else:
                 cond_ind = nw._lag_to_idx(s["add_conditionals"])
