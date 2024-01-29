@@ -227,10 +227,9 @@ def network_fdr(settings=None, *results):
     # the results object. Create a copy of the results object to leave the
     # original intact.
     fdr = cp.deepcopy(results_comb._single_target)
-    for s in range(sign.shape[0]):
-        if not sign[s]:
+    for i, t in enumerate(target_idx):
+        if not sign[i]:
             if correct_by_target:
-                t = target_idx[s]
                 fdr[t].selected_vars_full = cp.deepcopy(
                     results_comb._single_target[t].selected_vars_target
                 )
@@ -240,17 +239,15 @@ def network_fdr(settings=None, *results):
                 fdr[t].omnibus_pval = 1
                 fdr[t].omnibus_sign = False
             else:
-                t = target_idx[s]
-                cand = cands[s]
-                cand_ind = fdr[t].selected_vars_sources.index(cand)
-                fdr[t].selected_vars_sources.remove(cand_ind)
+                cand_ind = fdr[t].selected_vars_sources.index(cands[i])
+                fdr[t].selected_vars_sources.remove(cands[i])
                 fdr[t].selected_sources_pval = np.delete(
                     fdr[t].selected_sources_pval, cand_ind
                 )
                 fdr[t].selected_sources_te = np.delete(
                     fdr[t].selected_sources_te, cand_ind
                 )
-                fdr[t].selected_vars_full.pop(fdr[t].selected_vars_full.index(cand))
+                fdr[t].selected_vars_full.remove(cands[i])
     results_comb._add_fdr(fdr, alpha, correct_by_target, constant)
     return results_comb
 
