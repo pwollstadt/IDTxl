@@ -1,8 +1,9 @@
 """Parent class for all network inference."""
 import numpy as np
-from .network_analysis import NetworkAnalysis
-from . import stats
+
 from . import idtxl_exceptions as ex
+from . import stats
+from .network_analysis import NetworkAnalysis
 
 
 class NetworkInference(NetworkAnalysis):
@@ -235,6 +236,7 @@ class NetworkInference(NetworkAnalysis):
     def _remove_non_significant(self, s, p, stat):
         # Remove non-significant sources from the candidate set. Loop
         # backwards over the candidates to remove them iteratively.
+        print(f"removing {np.sum(np.invert(s))} variables after seq. max stats")
         for i in range(s.shape[0] - 1, -1, -1):
             if not s[i]:
                 self._remove_selected_var(self.selected_vars_sources[i])
