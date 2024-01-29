@@ -547,8 +547,7 @@ def max_statistic_sequential(analysis_setup, data):
 
     if analysis_setup.settings["verbose"]:
         print(
-            "sequential maximum statistic, n_perm: {0}, testing {1} selected"
-            " sources".format(n_permutations, len(analysis_setup.selected_vars_sources))
+            f"sequential maximum statistic, n_perm: {n_permutations}, testing {len(analysis_setup.selected_vars_sources)} selected sources"
         )
 
     assert analysis_setup.selected_vars_sources, "No sources to test."
@@ -637,11 +636,9 @@ def max_statistic_sequential(analysis_setup, data):
                 #  we'll terminate the max sequential stats test,
                 #  and declare all not significant
                 print(
-                    "AlgorithmExhaustedError encountered in estimations: {}.".format(
-                        aee.message
-                    )
+                    f"AlgorithmExhaustedError encountered in estimations: {aee.message}. "
+                    "Stopping sequential max stats at candidate with rank 0"
                 )
-                print("Stopping sequential max stats at candidate with rank 0")
                 return (
                     np.zeros(len(analysis_setup.selected_vars_sources)).astype(bool),
                     np.ones(len(analysis_setup.selected_vars_sources)),
@@ -662,11 +659,9 @@ def max_statistic_sequential(analysis_setup, data):
         #  we'll terminate the max sequential stats test,
         #  and declare all not significant
         print(
-            "AlgorithmExhaustedError encountered in estimations: {}.".format(
-                aee.message
-            )
+            f"AlgorithmExhaustedError encountered in estimations: {aee.message}. "
+            "Stopping sequential max stats at candidate with rank 0"
         )
-        print("Stopping sequential max stats at candidate with rank 0")
         # For now we don't need a stack trace:
         # traceback.print_tb(aee.__traceback__)
         # Return (signficance, pvalue, TEs):
@@ -692,10 +687,7 @@ def max_statistic_sequential(analysis_setup, data):
         pvalue[c] = p
         if not s:  # break as soon as a candidate is no longer significant
             if analysis_setup.settings["verbose"]:
-                print(
-                    "\nStopping sequential max stats at candidate with rank "
-                    "{0}.".format(c)
-                )
+                print(f"\nStopping sequential max stats at candidate with rank {c}.")
             break
 
     # Get back original order and return results.
@@ -765,8 +757,7 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
 
     if analysis_setup.settings["verbose"]:
         print(
-            "sequential maximum statistic, n_perm: {0}, testing {1} selected"
-            " sources".format(n_permutations, len(analysis_setup.selected_vars_sources))
+            f"sequential maximum statistic, n_perm: {n_permutations}, testing {len(analysis_setup.selected_vars_sources)} selected sources"
         )
 
     assert analysis_setup.selected_vars_sources, "No sources to test."
@@ -788,11 +779,16 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
     )
     significance = np.zeros(len(analysis_setup.selected_vars_sources)).astype(bool)
     pvalue = np.ones(len(analysis_setup.selected_vars_sources))
-    stat = np.zeros(len(analysis_setup.selected_vars_sources))
+    individual_stat = np.zeros(len(analysis_setup.selected_vars_sources))
     for source in significant_sources:
         # Find selected past variables for current source
         source_vars = [
             s for s in analysis_setup.selected_vars_sources if s[0] == source
+        ]
+        source_vars_idx = [
+            i
+            for i, s in enumerate(analysis_setup.selected_vars_sources)
+            if s[0] == source
         ]
 
         # Determine length of conditioning set and allocate memory.
@@ -825,8 +821,8 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
             temp_cand = data.get_realisations(
                 analysis_setup.current_value, [candidate]
             )[0]
-            # The following may happen if either the requested conditing is
-            # 'none' or if the conditiong set that is tested consists only of
+            # The following may happen if either the requested conditioning is
+            # 'none' or if the conditioning set that is tested consists only of
             # a single candidate.
             if temp_cond is None:
                 conditional_realisations = conditional_realisations_target
@@ -843,58 +839,60 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
             i_1 = i_2
             i_2 += data.n_realisations(analysis_setup.current_value)
 
-        # Generate surrogates for the current candidate.
-        if (
-            analysis_setup._cmi_estimator.is_analytic_null_estimator()
-            and permute_in_time
-        ):
-            # Generate the surrogates analytically
-            surr_table[
-                idx_c, :
-            ] = analysis_setup._cmi_estimator.estimate_surrogates_analytic(
-                n_perm=n_permutations,
-                var1=data.get_realisations(analysis_setup.current_value, [candidate])[
-                    0
-                ],
-                var2=analysis_setup._current_value_realisations,
-                conditional=temp_cond,
-            )
-        else:
-            analysis_setup.settings["analytical_surrogates"] = False
-            surr_candidate_realisations = _get_surrogates(
-                data,
-                analysis_setup.current_value,
-                [candidate],
-                n_permutations,
-                analysis_setup.settings,
-            )
-            try:
-                surr_table[idx_c, :] = analysis_setup._cmi_estimator.estimate_parallel(
-                    n_chunks=n_permutations,
-                    re_use=["var2", "conditional"],
-                    var1=surr_candidate_realisations,
+            # Generate surrogates for the current candidate.
+            if (
+                analysis_setup._cmi_estimator.is_analytic_null_estimator()
+                and permute_in_time
+            ):
+                # Generate the surrogates analytically
+                surr_table[
+                    idx_c, :
+                ] = analysis_setup._cmi_estimator.estimate_surrogates_analytic(
+                    n_perm=n_permutations,
+                    var1=data.get_realisations(
+                        analysis_setup.current_value, [candidate]
+                    )[0],
                     var2=analysis_setup._current_value_realisations,
                     conditional=temp_cond,
                 )
-            except ex.AlgorithmExhaustedError as aee:
-                # The aglorithm cannot continue here, so
-                #  we'll terminate the max sequential stats test,
-                #  and declare all not significant
-                print(
-                    "AlgorithmExhaustedError encountered in estimations: {}.".format(
-                        aee.message
+            else:
+                analysis_setup.settings["analytical_surrogates"] = False
+                surr_candidate_realisations = _get_surrogates(
+                    data,
+                    analysis_setup.current_value,
+                    [candidate],
+                    n_permutations,
+                    analysis_setup.settings,
+                )
+                try:
+                    surr_table[
+                        idx_c, :
+                    ] = analysis_setup._cmi_estimator.estimate_parallel(
+                        n_chunks=n_permutations,
+                        re_use=["var2", "conditional"],
+                        var1=surr_candidate_realisations,
+                        var2=analysis_setup._current_value_realisations,
+                        conditional=temp_cond,
                     )
-                )
-                print("Stopping sequential max stats at candidate with rank 0")
-                return (
-                    np.zeros(len(analysis_setup.selected_vars_sources)).astype(bool),
-                    np.ones(len(analysis_setup.selected_vars_sources)),
-                    np.zeros(len(analysis_setup.selected_vars_sources)),
-                )
+                except ex.AlgorithmExhaustedError as aee:
+                    # The aglorithm cannot continue here, so
+                    #  we'll terminate the max sequential stats test,
+                    #  and declare all not significant
+                    print(
+                        f"AlgorithmExhaustedError encountered in estimations: {aee.message}. "
+                        "Stopping sequential max stats at candidate with rank 0"
+                    )
+                    return (
+                        np.zeros(len(analysis_setup.selected_vars_sources)).astype(
+                            bool
+                        ),
+                        np.ones(len(analysis_setup.selected_vars_sources)),
+                        np.zeros(len(analysis_setup.selected_vars_sources)),
+                    )
 
-        # Calculate original statistic (multivariate/bivariate TE/MI)
+        # Calculate original statistic (bivariate TE/MI)
         try:
-            individual_stat = analysis_setup._cmi_estimator.estimate_parallel(
+            individual_stat_source = analysis_setup._cmi_estimator.estimate_parallel(
                 n_chunks=len(source_vars),
                 re_use=re_use,
                 var1=candidate_realisations,
@@ -906,10 +904,9 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
             #  we'll terminate the max sequential stats test,
             #  and declare all not significant
             print(
-                "AlgorithmExhaustedError encountered in "
-                "estimations: {}.".format(aee.message)
+                f"AlgorithmExhaustedError encountered in estimations: {aee.message}. "
+                "Stopping sequential max stats at candidate with rank 0"
             )
-            print("Stopping sequential max stats at candidate with rank 0")
             # For now we don't need a stack trace:
             # traceback.print_tb(aee.__traceback__)
             # Return (signficance, pvalue, TEs):
@@ -919,38 +916,40 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
                 np.zeros(len(analysis_setup.selected_vars_sources)),
             )
 
-        selected_vars_order = utils.argsort_descending(individual_stat)
-        individual_stat_sorted = utils.sort_descending(individual_stat)
+        selected_vars_order = utils.argsort_descending(individual_stat_source)
+        individual_stat_source_sorted = utils.sort_descending(individual_stat_source)
         max_distribution = _sort_table_max(surr_table)
+        significance_source = np.zeros(individual_stat_source.shape[0], dtype=bool)
+        pvalue_source = np.ones(individual_stat_source.shape[0])
 
         # Compare each original value with the distribution of the same rank,
         # starting with the highest value.
-        for c in range(individual_stat.shape[0]):
-            [s, p] = _find_pvalue(
-                individual_stat_sorted[c],
+        for c in range(individual_stat_source.shape[0]):
+            s, p = _find_pvalue(
+                individual_stat_source_sorted[c],
                 max_distribution[c,],
                 alpha,
                 tail="one_bigger",
             )
-            # Write results into an array with the same order as the set of
-            # selected sources from all process. Find the currently tested
-            # variable and its index in the list of all selected variables.
-            current_var = source_vars[selected_vars_order[c]]
-            for ind, v in enumerate(analysis_setup.selected_vars_sources):
-                if v == current_var:
-                    break
-            significance[ind] = s
-            pvalue[ind] = p
-            stat[ind] = individual_stat_sorted[c]
+            significance_source[c] = s
+            pvalue_source[c] = p
+
             if not s:  # break as soon as a candidate is no longer significant
                 if analysis_setup.settings["verbose"]:
                     print(
-                        "\nStopping sequential max stats at candidate with "
-                        "rank {0}.".format(c)
+                        f"\nStopping sequential max stats at candidate with rank {c}."
                     )
                 break
 
-    return significance, pvalue, stat
+        # Get back original order of variables within the current source. Write
+        # re-ordered results into global results array at the respective
+        # variable locations.
+        significance_source[selected_vars_order] = significance_source.copy()
+        pvalue_source[selected_vars_order] = pvalue_source.copy()
+        significance[source_vars_idx] = significance_source
+        pvalue[source_vars_idx] = pvalue_source
+        individual_stat[source_vars_idx] = individual_stat_source
+    return significance, pvalue, individual_stat
 
 
 def min_statistic(
@@ -1069,38 +1068,9 @@ def mi_against_surrogates(analysis_setup, data):
     permute_in_time = _check_permute_in_time(analysis_setup, data, n_perm)
     if analysis_setup.settings["verbose"]:
         print(
-            "mi permutation test against surrogates, n_perm: {0}".format(
-                analysis_setup.settings["n_perm_mi"]
-            )
+            f"mi permutation test against surrogates, n_perm: {analysis_setup.settings['n_perm_mi']}"
         )
-    """
-    surr_realisations = np.empty(
-                        (data.n_realisations(analysis_setup.current_value) *
-                         (n_perm + 1), 1))
-    i_1 = 0
-    i_2 = data.n_realisations(analysis_setup.current_value)
-    # The first chunk holds the original data
-    surr_realisations[i_1:i_2, ] = analysis_setup._current_value_realisations
-    # Create surrogate data by shuffling the realisations of the current value.
-    for perm in range(n_perm):
-        i_1 = i_2
-        i_2 += data.n_realisations(analysis_setup.current_value)
-        # Check the permutation type for the current candidate.
-        if permute_over_replications:
-            surr_temp = data.permute_data(analysis_setup.current_value,
-                                          [analysis_setup.current_value])[0]
-        else:
-            [real, repl_idx] = data.get_realisations(
-                                            analysis_setup.current_value,
-                                            [analysis_setup.current_value])
-            surr_temp = _permute_realisations(real, repl_idx, perm_range)
-        # Add current shuffled realisation to the array of all realisations for
-        # parallel MI estimation.
-        # surr_realisations[i_1:i_2, ] = surr_temp
-        [real, repl_idx] = data.get_realisations(
-                                            analysis_setup.current_value,
-                                            [analysis_setup.current_value])
-        """
+
     if analysis_setup._cmi_estimator.is_analytic_null_estimator() and permute_in_time:
         # Generate the surrogates analytically
         analysis_setup.settings["analytical_surrogates"] = True
@@ -1524,7 +1494,7 @@ def _find_pvalue(statistic, distribution, alpha, tail):
     assert distribution.ndim == 1, "Test distribution must be 1D."
     check_n_perm(distribution.shape[0], alpha)
 
-    if tail == "one_bigger" or tail == "one":
+    if tail in ["one_bigger", "one"]:
         pvalue = sum(distribution >= statistic) / distribution.shape[0]
     elif tail == "one_smaller":
         pvalue = sum(distribution <= statistic) / distribution.shape[0]
@@ -1535,20 +1505,7 @@ def _find_pvalue(statistic, distribution, alpha, tail):
         alpha = alpha / 2
     else:
         raise ValueError(
-            (
-                "Unkown value for "
-                "tail"
-                ", should be "
-                "one"
-                ", "
-                "one_bigger"
-                ","
-                " "
-                "one_smaller"
-                ", or "
-                "two"
-                "): {0}.".format(tail)
-            )
+            f"Unkown value for tail: {tail}, should be one, one_bigger, one_smaller, or two"
         )
 
     # If the statistic is larger than all values in the test distribution, set
