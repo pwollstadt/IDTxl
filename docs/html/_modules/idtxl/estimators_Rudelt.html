@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>idtxl.estimators_Rudelt &#8212; IDTxl 1.5.1 documentation</title>
+    <title>idtxl.estimators_Rudelt &#8212; IDTxl 1.6.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/pyramid.css" />
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
@@ -31,7 +31,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.5.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.6.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl.estimators_Rudelt</a></li> 
       </ul>
@@ -46,14 +46,16 @@
 <span></span><span class="sd">&quot;&quot;&quot;Provide HDE estimators.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">newton</span><span class="p">,</span> <span class="n">minimize</span>
 <span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">from</span> <span class="nn">sys</span> <span class="kn">import</span> <span class="n">stderr</span>
-<span class="kn">from</span> <span class="nn">idtxl.estimator</span> <span class="kn">import</span> <span class="n">Estimator</span>
-<span class="kn">import</span> <span class="nn">idtxl.hde_utils</span> <span class="k">as</span> <span class="nn">utl</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span>
+<span class="kn">from</span> <span class="nn">sys</span> <span class="kn">import</span> <span class="n">stderr</span>
+
 <span class="kn">import</span> <span class="nn">mpmath</span> <span class="k">as</span> <span class="nn">mp</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize</span><span class="p">,</span> <span class="n">newton</span>
+
+<span class="kn">import</span> <span class="nn">idtxl.hde_utils</span> <span class="k">as</span> <span class="nn">utl</span>
+<span class="kn">from</span> <span class="nn">idtxl.estimator</span> <span class="kn">import</span> <span class="n">Estimator</span>
 
 <span class="n">FAST_EMBEDDING_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="k">try</span><span class="p">:</span>
@@ -62,9 +64,9 @@
     <span class="n">FAST_EMBEDDING_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="nb">print</span><span class="p">(</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Error importing Cython fast embedding module for HDE estimator.\n</span>
-<span class="sd">    When running the HDE estimator, the slow Python implementation for optimizing the HDE embedding will be used,\n</span>
-<span class="sd">    this may take a long time. Other estimators are not affected.\n</span>
+<span class="sd">    Error importing Cython fast embedding module for HDE estimator.</span>
+<span class="sd">    When running the HDE estimator, the slow Python implementation for optimizing the HDE embedding will be used,</span>
+<span class="sd">    this may take a long time. Other estimators are not affected.</span>
 <span class="sd">    &quot;&quot;&quot;</span><span class="p">,</span>
         <span class="n">file</span><span class="o">=</span><span class="n">stderr</span><span class="p">,</span>
         <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -1350,7 +1352,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.5.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.6.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl.estimators_Rudelt</a></li> 
       </ul>

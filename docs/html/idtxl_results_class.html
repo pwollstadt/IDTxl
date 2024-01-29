@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>The Results Class &#8212; IDTxl 1.5.1 documentation</title>
+    <title>The Results Class &#8212; IDTxl 1.6.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -40,7 +40,7 @@
         <li class="right" >
           <a href="idtxl_network_comparison.html" title="Network comparison"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.5.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.6.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">The Results Class</a></li> 
       </ul>
     </div>  
@@ -705,44 +705,87 @@ be accessed using dot-notation:</p>
 dictionary entries can either be accessed via keywords
 (result[‘selected_vars’]) or via dot-notation
 (result.selected_vars). Contains keys</p>
-<dl class="simple">
+<ul class="simple">
+<li><dl class="simple">
 <dt>Process<span class="classifier">int</span></dt><dd><p>Process that was optimized</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>estimation_method<span class="classifier">String</span></dt><dd><p>Estimation method that was used for optimization</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>T_D<span class="classifier">float</span></dt><dd><p>Estimated optimal value for the temporal depth TD</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>tau_R :</dt><dd><p>Information timescale tau_R, a characteristic timescale of history
 dependence similar to an autocorrelation time.</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>R_tot<span class="classifier">float</span></dt><dd><p>Estimated value for the total history dependence Rtot,</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>AIS_tot<span class="classifier">float</span></dt><dd><p>Estimated value for the total active information storage</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>opt_number_of_bins_d<span class="classifier">int</span></dt><dd><p>Number of bins d for the embedding that yields (R̂tot ,T̂D)</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>opt_scaling_k<span class="classifier">int</span></dt><dd><p>Scaling exponent κ for the embedding that yields (R̂tot , T̂D)</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>opt_first_bin_size<span class="classifier">int</span></dt><dd><p>Size of the first bin τ1 for the embedding that yields (R̂tot , T̂D ),</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>history_dependence<span class="classifier">array with floating-point values</span></dt><dd><p>Estimated history dependence for each embedding</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>firing_rate<span class="classifier">float</span></dt><dd><p>Firing rate of the neuron/ spike train</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>recording_length<span class="classifier">float</span></dt><dd><p>Length of the recording (in seconds)</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>H_spiking<span class="classifier">float</span></dt><dd><p>Entropy of the spike times</p>
 </dd>
 </dl>
-<p>if analyse_auto_MI was set to True additionally:
-auto_MI : dict</p>
-<blockquote>
-<div><p>numpy array of MI values for each delay</p>
-</div></blockquote>
-<dl class="simple">
+</li>
+</ul>
+<p>if analyse_auto_MI was set to True additionally:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>auto_MI<span class="classifier">dict</span></dt><dd><p>numpy array of MI values for each delay</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>auto_MI_delays<span class="classifier">list of int</span></dt><dd><p>list of delays depending on the given auto_MI_bin_sizes and auto_MI_max_delay</p>
 </dd>
 </dl>
+</li>
+</ul>
 </dd>
 </dl>
 </dd>
@@ -825,7 +868,7 @@ auto_MI : dict</p>
         <li class="right" >
           <a href="idtxl_network_comparison.html" title="Network comparison"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.5.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.6.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">The Results Class</a></li> 
       </ul>
     </div>
