@@ -171,16 +171,13 @@ class Results:
         # Check if new result process is part of the network
         if process > (self.data_properties.n_nodes - 1):
             raise RuntimeError(
-                "Can not add single result - process {0} is not"
-                " in no. nodes in the data ({1}).".format(
-                    process, self.data_properties.n_nodes
-                )
+                f"Can not add single result - process {process} is not"
+                f" in no. nodes in the data ({self.data_properties.n_nodes})."
             )
         # Don't add duplicate processes
         if self._is_duplicate_process(process):
             raise RuntimeError(
-                "Can not add single result - results for target"
-                " or process {0} already exist.".format(process)
+                f"Can not add single result - results for target or process {process} already exist."
             )
         # Don't add results with conflicting settings
         if utils.conflicting_entries(self.settings, settings):
@@ -192,8 +189,7 @@ class Results:
         # Test if process is already present in object
         if process in self._processes_analysed:
             return True
-        else:
-            return False
+        return False
 
     def combine_results(self, *results):
         """Combine multiple (partial) results objects.
@@ -226,15 +222,14 @@ class Results:
             processes = r._processes_analysed
             if utils.conflicting_entries(self.settings, r.settings):
                 raise RuntimeError(
-                    "Can not combine results - analysis " "settings are not equal."
+                    "Can not combine results - analysis settings are not equal."
                 )
             for p in processes:
                 # Remove potential partial FDR-corrected results. These are no
                 # longer valid for the combined network.
                 if self._is_duplicate_process(p):
                     raise RuntimeError(
-                        "Can not combine results - results for "
-                        "process {0} already exist.".format(p)
+                        f"Can not combine results - results for process {p} already exist."
                     )
                 try:
                     del r.fdr_corrected
@@ -247,11 +242,10 @@ class Results:
                 except AttributeError:
                     try:
                         results_to_add = r._single_process[p]
-                    except AttributeError:
+                    except AttributeError as e:
                         raise AttributeError(
-                            "Did not find any method attributes to combine "
-                            "(.single_proces or ._single_target)."
-                        )
+                            "Did not find any method attributes to combine (.single_process or ._single_target)."
+                        ) from e
                 self._add_single_result(p, results_to_add, r.settings)
 
 
@@ -366,21 +360,21 @@ class ResultsSingleProcessAnalysis(Results):
         if fdr:
             try:
                 return self._single_process_fdr[process]
-            except AttributeError:
+            except AttributeError as e:
                 raise RuntimeError(
                     f"No FDR-corrected results for process {process}. Set fdr=False for uncorrected results."
-                )
-            except KeyError:
+                ) from e
+            except KeyError as e:
                 raise RuntimeError(
                     f"No FDR-corrected results for process {process}. Set fdr=False for uncorrected results."
-                )
+                ) from e
         else:
             try:
                 return self._single_process[process]
-            except AttributeError:
-                raise RuntimeError("No results have been added.")
-            except KeyError:
-                raise RuntimeError("No results for process {0}.".format(process))
+            except AttributeError as e:
+                raise RuntimeError("No results have been added.") from e
+            except KeyError as e:
+                raise RuntimeError(f"No results for process {process}.") from e
 
     def get_significant_processes(self, fdr=True):
         """Return statistically-significant processes.
