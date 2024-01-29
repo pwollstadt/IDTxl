@@ -196,7 +196,7 @@ def network_fdr(settings=None, *results):
             cands = cands + (results_comb._single_target[target].selected_vars_sources)
             n_perm = np.append(n_perm, results_comb.settings.n_perm_max_seq)
 
-    if pval.size == 0:
+    if pval.size == 0 or (n_perm == None).all():  # n_perm is None for empty networks, i.e., no omnibus test was run
         print("No links in final results ...")
         results_comb._add_fdr(
             fdr=None,
@@ -210,7 +210,7 @@ def network_fdr(settings=None, *results):
 
     # If the number of permutations for calculating p-values for individual
     # variables is too low, return without performing any correction.
-    if (1 / min(n_perm)) > thresh[0]:
+    if (1 / min(i for i in n_perm if i is not None)) > thresh[0]:
         print(
             "WARNING: Number of permutations ('n_perm_max_seq') for at least one target is too low to allow for "
             f"FDR correction (FDR-threshold: {thresh[0]:.4f}, min. theoretically possible p-value: {1 / min(n_perm)})."
