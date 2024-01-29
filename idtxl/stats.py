@@ -1,8 +1,11 @@
 """Provide statistics functions."""
+# pylint: disable=protected-access
 import copy as cp
+
 import numpy as np
-from . import idtxl_utils as utils
+
 from . import idtxl_exceptions as ex
+from . import idtxl_utils as utils
 
 
 def ais_fdr(settings=None, *results):
@@ -69,18 +72,16 @@ def ais_fdr(settings=None, *results):
         results_comb._add_fdr(fdr=None, alpha=alpha, constant=constant)
         return results_comb
 
-    sign, thresh = _perform_fdr_corretion(pval, constant, alpha, len(results_comb.processes_analysed))
+    sign, thresh = _perform_fdr_corretion(
+        pval, constant, alpha, len(results_comb.processes_analysed)
+    )
 
     # If the number of permutations for calculating p-values for individual
     # variables is too low, return without performing any correction.
     if (1 / min(n_perm)) > thresh[0]:
         print(
-            "WARNING: Number of permutations ("
-            "n_perm_max_seq"
-            ") for at "
-            "least one target is too low to allow for FDR correction "
-            "(FDR-threshold: {0:.4f}, min. theoretically possible p-value: "
-            "{1}).".format(thresh[0], 1 / min(n_perm))
+            "WARNING: Number of permutations ('n_perm_max_seq') for at least one target is too low to allow for "
+            f"FDR correction (FDR-threshold: {thresh[0]:.4f}, min. theoretically possible p-value: {1 / min(n_perm)})."
         )
         results_comb._add_fdr(fdr=None, alpha=alpha, constant=constant)
         return results_comb
@@ -167,30 +168,33 @@ def network_fdr(settings=None, *results):
 
         for target in results_comb.targets_analysed:
             next_pval = results_comb._single_target[target].omnibus_pval
-            pval = np.append(
-                pval, next_pval if next_pval is not None else 1)
+            pval = np.append(pval, next_pval if next_pval is not None else 1)
             target_idx = np.append(target_idx, target)
-            n_perm = np.append(
-                    n_perm, results_comb.settings.n_perm_omnibus)
+            n_perm = np.append(n_perm, results_comb.settings.n_perm_omnibus)
     else:  # individual variables
         # The total number of tests is the number of targets times the number
         # of source candidates (i.e. source processes * time lags) analyzed for each target
-        n_tests = np.sum(len(target.source_set) for target in results.targets_analysed) \
-                * (settings["max_lag_sources"] - settings["min_lag_sources"] + 1)
+        n_tests = np.sum(
+            len(results_comb._single_target[target].sources_tested)
+            for target in results_comb.targets_analysed
+        ) * (settings["max_lag_sources"] - settings["min_lag_sources"] + 1)
 
         for target in results_comb.targets_analysed:
-            n_sign = (results_comb._single_target[target].
-                        selected_sources_pval.size)
+            if results_comb._single_target[target].selected_sources_pval is None:
+                continue
+            n_sign = results_comb._single_target[target].selected_sources_pval.size
             pval = np.append(
-                pval, [next_pval if next_pval is not None else 1 for next_pval in
-                       results_comb._single_target[target].selected_sources_pval])
-            target_idx = np.append(target_idx,
-                                    np.ones(n_sign) * target).astype(int)
-            cands = (cands +
-                        (results_comb._single_target[target].
-                        selected_vars_sources))
-            n_perm = np.append(
-                n_perm, results_comb.settings.n_perm_max_seq)
+                pval,
+                [
+                    next_pval if next_pval is not None else 1
+                    for next_pval in results_comb._single_target[
+                        target
+                    ].selected_sources_pval
+                ],
+            )
+            target_idx = np.append(target_idx, np.ones(n_sign) * target).astype(int)
+            cands = cands + (results_comb._single_target[target].selected_vars_sources)
+            n_perm = np.append(n_perm, results_comb.settings.n_perm_max_seq)
 
     if pval.size == 0:
         print("No links in final results ...")
@@ -208,12 +212,8 @@ def network_fdr(settings=None, *results):
     # variables is too low, return without performing any correction.
     if (1 / min(n_perm)) > thresh[0]:
         print(
-            "WARNING: Number of permutations ("
-            "n_perm_max_seq"
-            ") for at "
-            "least one target is too low to allow for FDR correction "
-            "(FDR-threshold: {0:.4f}, min. theoretically possible p-value: "
-            "{1}).".format(thresh[0], 1 / min(n_perm))
+            "WARNING: Number of permutations ('n_perm_max_seq') for at least one target is too low to allow for "
+            f"FDR correction (FDR-threshold: {thresh[0]:.4f}, min. theoretically possible p-value: {1 / min(n_perm)})."
         )
         results_comb._add_fdr(
             fdr=None,
@@ -243,7 +243,7 @@ def network_fdr(settings=None, *results):
                 t = target_idx[s]
                 cand = cands[s]
                 cand_ind = fdr[t].selected_vars_sources.index(cand)
-                fdr[t].selected_vars_sources.pop(cand_ind)
+                fdr[t].selected_vars_sources.remove(cand_ind)
                 fdr[t].selected_sources_pval = np.delete(
                     fdr[t].selected_sources_pval, cand_ind
                 )
@@ -312,7 +312,7 @@ def _perform_fdr_corretion(pval, constant, alpha, n_tests):
     if np.invert(sign).any():
         first_false = np.where(np.invert(sign))[0][0]
         sign[first_false:] = False  # avoids false positives due to equal pvals
-    sign[sort_idx] = sign.copy() # restore original ordering of significance values
+    sign[sort_idx] = sign.copy()  # restore original ordering of significance values
     return sign, thresh
 
 
@@ -347,7 +347,7 @@ def omnibus_test(analysis_setup, data):
         float
             the test's p-value
         float
-            the estimated test statisic, i.e., the information transfer from
+            the estimated test statistic, i.e., the information transfer from
             all sources into the target
 
     Raises:
