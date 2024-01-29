@@ -13,7 +13,10 @@ then type in
 
 try:
     import idtxl.hde_fast_embedding as fast_emb
+
     print("\nFast embedding tools are available.")
 except:
-    print("Error importing Cython fast embedding module. \n Please try the following command in a linux "
-          "terminal in the IDTxl/idtxl folder: \n>> python3 setup_hde_fast_embedding.py build_ext --inplace")
+    print(
+        "Error importing Cython fast embedding module. \n Please try the following command in a linux "
+        "terminal in the IDTxl/idtxl folder: \n>> python3 setup_hde_fast_embedding.py build_ext --inplace"
+    )
