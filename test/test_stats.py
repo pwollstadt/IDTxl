@@ -25,6 +25,7 @@ def test_min_statistic():
 
 
 def test_max_statistic_sequential():
+    np.random.seed(0)
     data = Data()
     data.generate_mute_data(104, 10)
     settings = {
@@ -38,20 +39,82 @@ def test_max_statistic_sequential():
         "max_lag_target": 5,
     }
     setup = MultivariateTE()
-    setup._initialise(settings, data, sources=[0, 1], target=2)
-    setup.current_value = (0, 4)
-    setup.selected_vars_sources = [(1, 1), (1, 2)]
-    setup.selected_vars_full = [(0, 1), (1, 1), (1, 2)]
-    setup._selected_vars_realisations = np.random.rand(
-        data.n_realisations(setup.current_value), len(setup.selected_vars_full)
-    )
-    setup._current_value_realisations = np.random.rand(
-        data.n_realisations(setup.current_value), 1
+    setup._initialise(settings, data, sources=[0, 2], target=1)
+    setup.current_value = (1, 4)
+    setup.selected_vars_target = [(1, 1)]
+    setup.selected_vars_sources = [(0, 1), (2, 1)]
+    setup.selected_vars_full = setup.selected_vars_target + setup.selected_vars_sources
+
+    setup._current_value_realisations = data.get_realisations(
+        setup.current_value, [setup.current_value]
+    )[0]
+
+    setup._selected_vars_realisations = np.hstack(
+        (
+            data.get_realisations(  # use actual realisation for target var and first source var
+                setup.current_value,
+                [setup.selected_vars_target[0], setup.selected_vars_sources[0]],
+            )[
+                0
+            ],
+            np.random.rand(
+                data.n_realisations(setup.current_value), 1
+            ),  # use random data as realizations for second source var
+        )
     )
     [sign, p, te] = stats.max_statistic_sequential(analysis_setup=setup, data=data)
+    print(p)
+    print(sign)
+    print(te)
+    assert len(p) == len(te)
+    assert len(p) == len(sign)
+    assert len(p) == len(setup.selected_vars_sources)
+
+    setup = MultivariateTE()
+    setup._initialise(settings, data, sources=[0, 1, 4], target=3)
+    setup.current_value = (3, 4)
+    setup.selected_vars_target = [(1, 1)]
+    setup.selected_vars_sources = [(0, 1), (0, 2), (1, 1), (4, 1)]
+    setup.selected_vars_full = setup.selected_vars_target + setup.selected_vars_sources
+    setup._current_value_realisations = data.get_realisations(
+        setup.current_value, [setup.current_value]
+    )[0]
+    setup._selected_vars_realisations = data.get_realisations(
+        setup.current_value, setup.selected_vars_full
+    )[0]
+
     [sign, p, te] = stats.max_statistic_sequential_bivariate(
         analysis_setup=setup, data=data
     )
+    assert len(p) == len(te)
+    assert len(p) == len(sign)
+    assert len(p) == len(setup.selected_vars_sources)
+    print(p)
+    print(setup.selected_vars_sources)
+    print(sign)
+    print(te, "\n\n")
+
+    for t in [0, 4]:
+        np.random.seed(0)
+        data.generate_mute_data(104, 10)
+        data._data[t, :, :] = np.random.rand(104, 10)
+        setup._current_value_realisations = data.get_realisations(
+            setup.current_value, [setup.current_value]
+        )[0]
+        setup._selected_vars_realisations = data.get_realisations(
+            setup.current_value, setup.selected_vars_full
+        )[0]
+        [sign, p, te] = stats.max_statistic_sequential_bivariate(
+            analysis_setup=setup, data=data
+        )
+        for i, var in enumerate(setup.selected_vars_sources):
+            if var[0] == t:
+                assert not sign[
+                    i
+                ], "Seq. max. stats returned sign result for random data"
+                assert (
+                    p[i] > setup.settings["alpha_max_seq"]
+                ), f"{p[i]} not smaller than critical alpha {setup.settings['alpha_max_seq']}"
 
 
 def test_network_fdr():
@@ -407,7 +470,9 @@ def test_analytical_surrogates():
     expected_mi, source1, source2, target = _get_gauss_data(covariance=0.4)
     settings = {"discretise_method": "equal", "n_discrete_bins": 5}
     est = JidtDiscreteCMI(settings)
-    source_dis, target_dis = est._discretise_vars(var1=source1, var2=target)
+    source_dis, target_dis = est._discretise_vars(  # pylint: disable=W0632
+        var1=source1, var2=target
+    )
     data = Data(np.hstack((source_dis, target_dis)), dim_order="sp", normalise=False)
     settings = {
         "cmi_estimator": "JidtDiscreteCMI",
@@ -434,7 +499,7 @@ if __name__ == "__main__":
     # test_analytical_surrogates()
     # test_data_type()
     # test_network_fdr()
-    test_fdr_sorting()
+    # test_fdr_sorting()
     # test_find_pvalue()
     # test_find_table_max()
     # test_find_table_min()
@@ -443,4 +508,4 @@ if __name__ == "__main__":
     # test_omnibus_test()
     # test_max_statistic()
     # test_min_statistic()
-    # test_max_statistic_sequential()
+    test_max_statistic_sequential()
