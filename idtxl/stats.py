@@ -174,7 +174,7 @@ def network_fdr(settings=None, *results):
     else:  # individual variables
         # The total number of tests is the number of targets times the number
         # of source candidates (i.e. source processes * time lags) analyzed for each target
-        n_tests = np.sum(
+        n_tests = sum(
             len(results_comb._single_target[target].sources_tested)
             for target in results_comb.targets_analysed
         ) * (settings["max_lag_sources"] - settings["min_lag_sources"] + 1)
