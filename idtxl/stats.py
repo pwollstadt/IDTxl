@@ -907,6 +907,11 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
                 np.zeros(len(analysis_setup.selected_vars_sources)),
             )
 
+        # Assign estimated TE/MI values to output structure. These are returned
+        # regardless of whether they are significant.
+        for s, stat in zip(source_vars, individual_stat_source):
+            individual_stat[analysis_setup.selected_vars_sources.index(s)] = stat
+
         # Compare each original value with the distribution of the same rank,
         # starting with the highest value.
         individual_stat_source_sorted = utils.sort_descending(individual_stat_source)
@@ -934,7 +939,6 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
             )
             significance[source_var_idx] = s
             pvalue[source_var_idx] = p
-            individual_stat[source_var_idx] = individual_stat_source_sorted[c]
 
     return significance, pvalue, individual_stat
 
