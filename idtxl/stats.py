@@ -3,6 +3,7 @@
 import copy as cp
 
 import numpy as np
+from statsmodels.stats.multitest import fdrcorrection
 
 from . import idtxl_exceptions as ex
 from . import idtxl_utils as utils
@@ -72,16 +73,16 @@ def ais_fdr(settings=None, *results):
         results_comb._add_fdr(fdr=None, alpha=alpha, constant=constant)
         return results_comb
 
-    sign, thresh = _perform_fdr_corretion(
+    sign, min_thresh = _perform_fdr_correction(
         pval, constant, alpha, len(results_comb.processes_analysed)
     )
 
     # If the number of permutations for calculating p-values for individual
     # variables is too low, return without performing any correction.
-    if (1 / min(n_perm)) > thresh[0]:
+    if (1 / min(n_perm)) > min_thresh:
         print(
             "WARNING: Number of permutations ('n_perm_max_seq') for at least one target is too low to allow for "
-            f"FDR correction (FDR-threshold: {thresh[0]:.4f}, min. theoretically possible p-value: {1 / min(n_perm)})."
+            f"FDR correction (FDR-threshold: {min_thresh:.4f}, min. theoretically possible p-value: {1 / min(n_perm)})."
         )
         results_comb._add_fdr(fdr=None, alpha=alpha, constant=constant)
         return results_comb
@@ -208,14 +209,14 @@ def network_fdr(settings=None, *results):
         )
         return results_comb
 
-    sign, thresh = _perform_fdr_corretion(pval, constant, alpha, n_tests)
+    sign, min_thresh = _perform_fdr_correction(pval, constant, alpha, n_tests)
 
     # If the number of permutations for calculating p-values for individual
     # variables is too low, return without performing any correction.
-    if (1 / min(i for i in n_perm if i is not None)) > thresh[0]:
+    if (1 / min(i for i in n_perm if i is not None)) > min_thresh:
         print(
             "WARNING: Number of permutations ('n_perm_max_seq') for at least one target is too low to allow for "
-            f"FDR correction (FDR-threshold: {thresh[0]:.4f}, min. theoretically possible p-value: {1 / min(n_perm)})."
+            f"FDR correction (FDR-threshold: {min_thresh:.4f}, min. theoretically possible p-value: {1 / min(n_perm)})."
         )
         results_comb._add_fdr(
             fdr=None,
@@ -254,12 +255,15 @@ def network_fdr(settings=None, *results):
     return results_comb
 
 
-def _perform_fdr_corretion(pval, constant, alpha, n_tests):
+def _perform_fdr_correction(pval, constant, alpha, n_tests):
     """Calculate sequential threshold for FDR-correction.
 
     Calculate sequential thresholds for FDR-correction of p-values. The
     constant defines how the threshold is calculated. See Genovese (2002) for
     details.
+
+    Internally uses the statsmodels implementation of the Benjamini-Hochberg
+    and Benjamini-Yekutieli procedures for FDR-correction.
 
     References:
 
@@ -283,36 +287,21 @@ def _perform_fdr_corretion(pval, constant, alpha, n_tests):
     Returns:
         array of bools
             significance of p-values in the order of the input array
-        array of floats
-            FDR-thresholds for each p-value in increasing order
+        float
+            smallest threshold for significance
     """
-    # Sort all p-values in ascending order.
-    sort_idx = np.argsort(pval)
-    pval_sorted = np.sort(pval)
+    
+    # Convert constant to statsmodels "method" parameter
+    method = "indep" if constant == 1 else "negcorr"
+    sign, _ = fdrcorrection(pval, alpha=alpha, method=method)
 
-    # Calculate threshold
-    if constant == 2:  # pick the requested constant (see Genovese, p.872)
-        if n_tests < 1000:
-            const = np.sum(1 / np.arange(1, n_tests + 1))
-        else:
-            const = np.log(n_tests) + np.e  # aprx. harmonic sum with Euler's number
-    elif constant == 1:
-        # This is less strict than the other one and corresponds to a
-        # Bonoferroni-correction for the first p-value, however, it makes more
-        # strict assumptions on the distribution of p-values, while constant 2
-        # works for any joint distribution of the p-values.
-        const = 1
+    # Compute smallest threshold to check for sufficiency of permutations
+    if constant == 1:
+        min_thresh = alpha / n_tests
+    else:
+        min_thresh = alpha / (n_tests * np.sum(1 / np.arange(1, n_tests + 1)))
 
-    # Calculate threshold for each p-value.
-    thresh = (np.arange(1, len(pval_sorted) + 1) / n_tests) * alpha / const
-
-    # Compare data to threshold.
-    sign = pval_sorted <= thresh
-    if np.invert(sign).any():
-        first_false = np.where(np.invert(sign))[0][0]
-        sign[first_false:] = False  # avoids false positives due to equal pvals
-    sign[sort_idx] = sign.copy()  # restore original ordering of significance values
-    return sign, thresh
+    return sign, min_thresh
 
 
 def omnibus_test(analysis_setup, data):
