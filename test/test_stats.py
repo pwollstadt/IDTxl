@@ -1,5 +1,7 @@
 """Unit tests for stats module."""
 # pylint: disable=protected-access
+import copy as cp
+
 import numpy as np
 import pytest
 from test_estimators_jidt import _get_gauss_data
@@ -49,6 +51,104 @@ def test_max_statistic_sequential():
         setup.current_value, [setup.current_value]
     )[0]
 
+    setup._selected_vars_realisations = data.get_realisations(  # use actual realisation for target var and first source var
+        setup.current_value,
+        [setup.selected_vars_target[0]] + setup.selected_vars_sources,
+    )[
+        0
+    ]
+    setup_permuted = cp.deepcopy(setup)
+    setup_permuted._selected_vars_realisations = np.hstack(
+        (
+            data.get_realisations(  # use actual realisation for target var and first source var
+                setup.current_value,
+                [setup.selected_vars_target[0], setup.selected_vars_sources[0]],
+            )[
+                0
+            ],
+            np.random.rand(
+                data.n_realisations(setup.current_value), 1
+            ),  # use random data as realizations for second source var
+        )
+    )
+    for s, expected in zip([setup, setup_permuted], [[True, True], [True, False]]):
+        [sign, p, te] = stats.max_statistic_sequential(analysis_setup=s, data=data)
+        print(p)
+        print(sign)
+        print(te)
+        assert len(p) == len(te)
+        assert len(p) == len(sign)
+        assert len(p) == len(setup.selected_vars_sources)
+        assert np.array_equal(sign, expected), "Incorrect sources inferred"
+
+    setup = MultivariateTE()
+    setup._initialise(settings, data, sources=[0, 1, 4], target=3)
+    setup.current_value = (3, 4)
+    setup.selected_vars_target = [(1, 1)]
+    setup.selected_vars_sources = [(0, 1), (0, 2), (1, 1), (4, 1)]
+    setup.selected_vars_full = setup.selected_vars_target + setup.selected_vars_sources
+    setup._current_value_realisations = data.get_realisations(
+        setup.current_value, [setup.current_value]
+    )[0]
+    setup._selected_vars_realisations = data.get_realisations(
+        setup.current_value, setup.selected_vars_full
+    )[0]
+
+    [sign, p, te] = stats.max_statistic_sequential(analysis_setup=setup, data=data)
+    assert len(p) == len(te)
+    assert len(p) == len(sign)
+    assert len(p) == len(setup.selected_vars_sources)
+    print(p)
+    print(setup.selected_vars_sources)
+    print(sign)
+    print(te, "\n\n")
+
+    for permuted_var in [0, 4]:
+        np.random.seed(0)
+        data.generate_mute_data(104, 10)
+        data._data[permuted_var, :, :] = np.ones((104, 10))
+        setup._current_value_realisations = data.get_realisations(
+            setup.current_value, [setup.current_value]
+        )[0]
+        setup._selected_vars_realisations = data.get_realisations(
+            setup.current_value, setup.selected_vars_full
+        )[0]
+        [sign, p, te] = stats.max_statistic_sequential(analysis_setup=setup, data=data)
+        for i, var in enumerate(setup.selected_vars_sources):
+            if var[0] == permuted_var:
+                assert not sign[
+                    i
+                ], "Seq. max. stats returned sign result for random data"
+                assert (
+                    p[i] > setup.settings["alpha_max_seq"]
+                ), f"{p[i]} not smaller than critical alpha {setup.settings['alpha_max_seq']}"
+
+
+def test_max_statistic_sequential_bivariate():
+    np.random.seed(0)
+    data = Data()
+    data.generate_mute_data(104, 10)
+    settings = {
+        "cmi_estimator": "JidtKraskovCMI",
+        "n_perm_max_stat": 21,
+        "n_perm_min_stat": 21,
+        "n_perm_omnibus": 21,
+        "n_perm_max_seq": 21,
+        "max_lag_sources": 5,
+        "min_lag_sources": 1,
+        "max_lag_target": 5,
+    }
+    setup = MultivariateTE()
+    setup._initialise(settings, data, sources=[0, 2], target=1)
+    setup.current_value = (1, 4)
+    setup.selected_vars_target = [(1, 1)]
+    setup.selected_vars_sources = [(0, 1), (2, 1)]
+    setup.selected_vars_full = setup.selected_vars_target + setup.selected_vars_sources
+
+    setup._current_value_realisations = data.get_realisations(
+        setup.current_value, [setup.current_value]
+    )[0]
+
     setup._selected_vars_realisations = np.hstack(
         (
             data.get_realisations(  # use actual realisation for target var and first source var
@@ -62,7 +162,9 @@ def test_max_statistic_sequential():
             ),  # use random data as realizations for second source var
         )
     )
-    [sign, p, te] = stats.max_statistic_sequential(analysis_setup=setup, data=data)
+    [sign, p, te] = stats.max_statistic_sequential_bivariate(
+        analysis_setup=setup, data=data
+    )
     print(p)
     print(sign)
     print(te)
@@ -508,4 +610,5 @@ if __name__ == "__main__":
     # test_omnibus_test()
     # test_max_statistic()
     # test_min_statistic()
+    test_max_statistic_sequential_bivariate()
     test_max_statistic_sequential()
