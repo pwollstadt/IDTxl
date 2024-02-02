@@ -290,7 +290,7 @@ def _perform_fdr_correction(pval, constant, alpha, n_tests):
         float
             smallest threshold for significance
     """
-    
+
     # Convert constant to statsmodels "method" parameter
     method = "indep" if constant == 1 else "negcorr"
     sign, _ = fdrcorrection(pval, alpha=alpha, method=method)
@@ -910,7 +910,9 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
         # Compare each original value with the distribution of the same rank,
         # starting with the highest value.
         individual_stat_source_sorted = utils.sort_descending(individual_stat_source)
-        source_vars_sorted = [source_vars[i] for i in utils.argsort_descending(individual_stat_source)]
+        source_vars_sorted = [
+            source_vars[i] for i in utils.argsort_descending(individual_stat_source)
+        ]
         max_distribution = _sort_table_max(surr_table)
         for c in range(individual_stat_source.shape[0]):
             s, p = _find_pvalue(

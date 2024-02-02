@@ -242,7 +242,7 @@ def test_network_fdr():
         "sources_tested": [0, 2],
         "omnibus_pval": 0.031,
         "omnibus_sign": True,
-        "selected_sources_pval": np.array([0.00001, 0.00014, 0.01]),
+        "selected_sources_pval": np.array([0.00001, 0.00014, 0.049]),
         "selected_sources_te": np.array([1.8, 1.75, 0.75]),
     }
     target_1["selected_vars_full"] = (
@@ -366,12 +366,12 @@ def test_fdr_sorting():
     pval_sorted = np.arange(n_tests) / 300
     constant = 2
     alpha = 0.05
-    sign, _ = stats._perform_fdr_corretion(pval_sorted, constant, alpha, n_tests)
+    sign, _ = stats._perform_fdr_correction(pval_sorted, constant, alpha, n_tests)
     assert sign[:3].all()
 
     permutation = np.random.permutation(n_tests)
     pval_unsorted = pval_sorted[permutation].copy()
-    sign_unsorted, _ = stats._perform_fdr_corretion(
+    sign_unsorted, _ = stats._perform_fdr_correction(
         pval_unsorted, constant, alpha, n_tests
     )
     assert sign_unsorted.sum() == 3
@@ -600,7 +600,7 @@ if __name__ == "__main__":
     # test_ais_fdr()
     # test_analytical_surrogates()
     # test_data_type()
-    # test_network_fdr()
+    test_network_fdr()
     # test_fdr_sorting()
     # test_find_pvalue()
     # test_find_table_max()
@@ -610,5 +610,5 @@ if __name__ == "__main__":
     # test_omnibus_test()
     # test_max_statistic()
     # test_min_statistic()
-    test_max_statistic_sequential_bivariate()
-    test_max_statistic_sequential()
+    # test_max_statistic_sequential_bivariate()
+    # test_max_statistic_sequential()
