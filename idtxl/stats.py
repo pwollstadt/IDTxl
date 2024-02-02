@@ -196,7 +196,9 @@ def network_fdr(settings=None, *results):
             cands = cands + (results_comb._single_target[target].selected_vars_sources)
             n_perm = np.append(n_perm, results_comb.settings.n_perm_max_seq)
 
-    if pval.size == 0 or (n_perm == None).all():  # n_perm is None for empty networks, i.e., no omnibus test was run
+    if (
+        pval.size == 0 or (n_perm == None).all()
+    ):  # n_perm is None for empty networks, i.e., no omnibus test was run
         print("No links in final results ...")
         results_comb._add_fdr(
             fdr=None,
@@ -752,13 +754,12 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
     alpha = analysis_setup.settings["alpha_max_seq"]
     _check_permute_in_time(analysis_setup, data, n_permutations)
     permute_in_time = analysis_setup.settings["permute_in_time"]
+    assert analysis_setup.selected_vars_sources, "No sources to test."
 
     if analysis_setup.settings["verbose"]:
         print(
             f"sequential maximum statistic, n_perm: {n_permutations}, testing {len(analysis_setup.selected_vars_sources)} selected sources"
         )
-
-    assert analysis_setup.selected_vars_sources, "No sources to test."
 
     # Check if target variables were selected to distinguish between TE and MI
     # analysis.
@@ -783,20 +784,18 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
         source_vars = [
             s for s in analysis_setup.selected_vars_sources if s[0] == source
         ]
-        source_vars_idx = [
-            i
-            for i, s in enumerate(analysis_setup.selected_vars_sources)
-            if s[0] == source
-        ]
 
         # Determine length of conditioning set and allocate memory.
-        idx_conditional = source_vars.copy()
         if conditional_realisations_target is not None:
-            idx_conditional += analysis_setup.selected_vars_target
+            size_conditioning_set = len(source_vars) + len(
+                analysis_setup.selected_vars_target
+            )
+        else:
+            size_conditioning_set = len(source_vars)
         conditional_realisations = np.empty(
             (
                 data.n_realisations(analysis_setup.current_value) * len(source_vars),
-                len(idx_conditional) - 1,
+                size_conditioning_set - 1,
             )
         ).astype(data.data_type)
         candidate_realisations = np.empty(
@@ -812,28 +811,33 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
         surr_table = np.zeros((len(source_vars), n_permutations))
         # Collect data for each candidate and the corresponding conditioning set.
         for idx_c, candidate in enumerate(source_vars):
-            temp_cond = data.get_realisations(
+            realizations_remaining_source_vars = data.get_realisations(
                 analysis_setup.current_value,
                 set(source_vars).difference(set([candidate])),
             )[0]
-            temp_cand = data.get_realisations(
+            realizations_current_candidate = data.get_realisations(
                 analysis_setup.current_value, [candidate]
             )[0]
             # The following may happen if either the requested conditioning is
             # 'none' or if the conditioning set that is tested consists only of
             # a single candidate.
-            if temp_cond is None:
+            if realizations_remaining_source_vars is None:
                 conditional_realisations = conditional_realisations_target
                 re_use = ["var2", "conditional"]
             else:
                 re_use = ["var2"]
                 if conditional_realisations_target is None:
-                    conditional_realisations[i_1:i_2,] = temp_cond
+                    conditional_realisations[
+                        i_1:i_2,
+                    ] = realizations_remaining_source_vars
                 else:
                     conditional_realisations[i_1:i_2,] = np.hstack(
-                        (temp_cond, conditional_realisations_target)
+                        (
+                            realizations_remaining_source_vars,
+                            conditional_realisations_target,
+                        )
                     )
-            candidate_realisations[i_1:i_2,] = temp_cand
+            candidate_realisations[i_1:i_2,] = realizations_current_candidate
             i_1 = i_2
             i_2 += data.n_realisations(analysis_setup.current_value)
 
@@ -851,7 +855,7 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
                         analysis_setup.current_value, [candidate]
                     )[0],
                     var2=analysis_setup._current_value_realisations,
-                    conditional=temp_cond,
+                    conditional=realizations_remaining_source_vars,
                 )
             else:
                 analysis_setup.settings["analytical_surrogates"] = False
@@ -870,7 +874,7 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
                         re_use=["var2", "conditional"],
                         var1=surr_candidate_realisations,
                         var2=analysis_setup._current_value_realisations,
-                        conditional=temp_cond,
+                        conditional=realizations_remaining_source_vars,
                     )
                 except ex.AlgorithmExhaustedError as aee:
                     # The aglorithm cannot continue here, so
@@ -898,7 +902,7 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
                 conditional=conditional_realisations,
             )
         except ex.AlgorithmExhaustedError as aee:
-            # The aglorithm cannot continue here, so
+            # The algorithm cannot continue here, so
             #  we'll terminate the max sequential stats test,
             #  and declare all not significant
             print(
@@ -907,21 +911,18 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
             )
             # For now we don't need a stack trace:
             # traceback.print_tb(aee.__traceback__)
-            # Return (signficance, pvalue, TEs):
+            # Return (significance, pvalue, TEs):
             return (
                 np.zeros(len(analysis_setup.selected_vars_sources)).astype(bool),
                 np.ones(len(analysis_setup.selected_vars_sources)),
                 np.zeros(len(analysis_setup.selected_vars_sources)),
             )
 
-        selected_vars_order = utils.argsort_descending(individual_stat_source)
-        individual_stat_source_sorted = utils.sort_descending(individual_stat_source)
-        max_distribution = _sort_table_max(surr_table)
-        significance_source = np.zeros(individual_stat_source.shape[0], dtype=bool)
-        pvalue_source = np.ones(individual_stat_source.shape[0])
-
         # Compare each original value with the distribution of the same rank,
         # starting with the highest value.
+        individual_stat_source_sorted = utils.sort_descending(individual_stat_source)
+        source_vars_sorted = [source_vars[i] for i in utils.argsort_descending(individual_stat_source)]
+        max_distribution = _sort_table_max(surr_table)
         for c in range(individual_stat_source.shape[0]):
             s, p = _find_pvalue(
                 individual_stat_source_sorted[c],
@@ -929,24 +930,21 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
                 alpha,
                 tail="one_bigger",
             )
-            significance_source[c] = s
-            pvalue_source[c] = p
-
             if not s:  # break as soon as a candidate is no longer significant
                 if analysis_setup.settings["verbose"]:
                     print(
                         f"\nStopping sequential max stats at candidate with rank {c}."
                     )
                 break
+            # Ensure results are written in the original order of selected
+            # source variables
+            source_var_idx = analysis_setup.selected_vars_sources.index(
+                source_vars_sorted[c]
+            )
+            significance[source_var_idx] = s
+            pvalue[source_var_idx] = p
+            individual_stat[source_var_idx] = individual_stat_source_sorted[c]
 
-        # Get back original order of variables within the current source. Write
-        # re-ordered results into global results array at the respective
-        # variable locations.
-        significance_source[selected_vars_order] = significance_source.copy()
-        pvalue_source[selected_vars_order] = pvalue_source.copy()
-        significance[source_vars_idx] = significance_source
-        pvalue[source_vars_idx] = pvalue_source
-        individual_stat[source_vars_idx] = individual_stat_source
     return significance, pvalue, individual_stat
 
 
@@ -1462,7 +1460,7 @@ def _sort_table_min(table):
 def _sort_table_max(table):
     """Sort each column in a table in descending order."""
     table_sorted = np.empty(table.shape)
-    for permutation in range(0, table.shape[1]):
+    for permutation in range(table.shape[1]):
         table_sorted[:, permutation] = utils.sort_descending(table[:, permutation])
     return table_sorted
 
