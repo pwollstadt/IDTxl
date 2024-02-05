@@ -575,9 +575,9 @@ def max_statistic_sequential(analysis_setup, data):
             candidate_realisations_current,
         ] = analysis_setup._separate_realisations(idx_conditional, candidate)
 
-        # The following may happen if either the requested conditing is 'none'
-        # or if the conditiong set that is tested consists only of a single
-        # candidate.
+        # The following may happen if either the requested conditioning is
+        # 'none' or if the conditioning set that is tested consists only of a
+        # single candidate.
         if conditional_realisations_current is None:
             conditional_realisations = None
             re_use = ["var2", "conditional"]
@@ -1496,7 +1496,7 @@ def _find_pvalue(statistic, distribution, alpha, tail):
         alpha = alpha / 2
     else:
         raise ValueError(
-            f"Unkown value for tail: {tail}, should be one, one_bigger, one_smaller, or two"
+            f"Unknown value for tail: {tail}, should be one, one_bigger, one_smaller, or two"
         )
 
     # If the statistic is larger than all values in the test distribution, set
