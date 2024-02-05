@@ -13,6 +13,8 @@ from idtxl.estimators_jidt import JidtDiscreteCMI
 from idtxl.multivariate_te import MultivariateTE
 from idtxl.results import ResultsNetworkInference, ResultsSingleProcessAnalysis
 
+SEED = 0
+
 
 def test_omnibus_test():
     print("Write test for omnibus test.")
@@ -27,9 +29,9 @@ def test_min_statistic():
 
 
 def test_max_statistic_sequential():
-    np.random.seed(0)
-    data = Data()
-    data.generate_mute_data(104, 10)
+    np.random.seed(SEED)
+    data = Data(seed=SEED)
+    data.generate_mute_data(1000, 1)
     settings = {
         "cmi_estimator": "JidtKraskovCMI",
         "n_perm_max_stat": 21,
@@ -41,10 +43,10 @@ def test_max_statistic_sequential():
         "max_lag_target": 5,
     }
     setup = MultivariateTE()
-    setup._initialise(settings, data, sources=[0, 2], target=1)
-    setup.current_value = (1, 4)
-    setup.selected_vars_target = [(1, 1)]
-    setup.selected_vars_sources = [(0, 1), (2, 1)]
+    setup._initialise(settings, data, sources=[0, 1], target=3)
+    setup.current_value = (3, 4)
+    setup.selected_vars_target = [(3, 1)]
+    setup.selected_vars_sources = [(0, 1), (0, 2), (1, 1)]
     setup.selected_vars_full = setup.selected_vars_target + setup.selected_vars_sources
 
     setup._current_value_realisations = data.get_realisations(
@@ -58,28 +60,39 @@ def test_max_statistic_sequential():
         0
     ]
     setup_permuted = cp.deepcopy(setup)
+    data_permuted = cp.deepcopy(data)
+    # data_permuted._data[1, :, :] = np.random.rand(1, 1000, 1)
+    # data_permuted._data[1, :, :] = np.ones((1, 1000, 1))
     setup_permuted._selected_vars_realisations = np.hstack(
         (
             data.get_realisations(  # use actual realisation for target var and first source var
                 setup.current_value,
-                [setup.selected_vars_target[0], setup.selected_vars_sources[0]],
+                [setup.selected_vars_target[0]] + list(setup.selected_vars_sources[:2]),
             )[
                 0
             ],
-            np.random.rand(
-                data.n_realisations(setup.current_value), 1
-            ),  # use random data as realizations for second source var
+            # data_permuted._data[
+            #     1, : data.n_realisations(setup.current_value), :
+            # ],  # use random data as realizations for second source var
+            # np.ones((data.n_realisations(setup.current_value), 1)),
+            np.random.rand(data.n_realisations(setup.current_value), 1),
         )
     )
-    for s, expected in zip([setup, setup_permuted], [[True, True], [True, False]]):
-        [sign, p, te] = stats.max_statistic_sequential(analysis_setup=s, data=data)
+    for s, d, expected in zip(
+        [setup, setup_permuted],
+        [data, data_permuted],
+        [[True, True, True], [True, True, False]],
+    ):
+        [sign, p, te] = stats.max_statistic_sequential(analysis_setup=s, data=d)
+        print(te)
         print(p)
         print(sign)
-        print(te)
         assert len(p) == len(te)
         assert len(p) == len(sign)
         assert len(p) == len(setup.selected_vars_sources)
-        assert np.array_equal(sign, expected), "Incorrect sources inferred"
+        assert np.array_equal(
+            sign, expected
+        ), f"Incorrect sources inferred, expected: {expected}"
 
     setup = MultivariateTE()
     setup._initialise(settings, data, sources=[0, 1, 4], target=3)
@@ -125,9 +138,9 @@ def test_max_statistic_sequential():
 
 
 def test_max_statistic_sequential_bivariate():
-    np.random.seed(0)
-    data = Data()
-    data.generate_mute_data(104, 10)
+    np.random.seed(SEED)
+    data = Data(seed=SEED)
+    data.generate_mute_data(1000, 1)
     settings = {
         "cmi_estimator": "JidtKraskovCMI",
         "n_perm_max_stat": 21,
@@ -139,38 +152,38 @@ def test_max_statistic_sequential_bivariate():
         "max_lag_target": 5,
     }
     setup = MultivariateTE()
-    setup._initialise(settings, data, sources=[0, 2], target=1)
-    setup.current_value = (1, 4)
-    setup.selected_vars_target = [(1, 1)]
-    setup.selected_vars_sources = [(0, 1), (2, 1)]
+    setup._initialise(settings, data, sources=[0, 1], target=3)
+    setup.current_value = (3, 4)
+    setup.selected_vars_target = [(3, 1)]
+    setup.selected_vars_sources = [(0, 1), (0, 2), (1, 1)]
     setup.selected_vars_full = setup.selected_vars_target + setup.selected_vars_sources
-
     setup._current_value_realisations = data.get_realisations(
         setup.current_value, [setup.current_value]
     )[0]
+    setup._selected_vars_realisations = data.get_realisations(
+        setup.current_value, setup.selected_vars_full
+    )[0]
 
-    setup._selected_vars_realisations = np.hstack(
-        (
-            data.get_realisations(  # use actual realisation for target var and first source var
-                setup.current_value,
-                [setup.selected_vars_target[0], setup.selected_vars_sources[0]],
-            )[
-                0
-            ],
-            np.random.rand(
-                data.n_realisations(setup.current_value), 1
-            ),  # use random data as realizations for second source var
+    # Bivariate sequential max stats collects source variable realizations from
+    # data object for running the test.
+    data_permuted = cp.deepcopy(data)
+    data_permuted._data[1, :, :] = np.random.randn(1, 1000, 1)
+
+    for d, expected in zip(
+        [data, data_permuted], [[True, True, True], [True, True, False]]
+    ):
+        [sign, p, te] = stats.max_statistic_sequential_bivariate(
+            analysis_setup=setup, data=d
         )
-    )
-    [sign, p, te] = stats.max_statistic_sequential_bivariate(
-        analysis_setup=setup, data=data
-    )
-    print(p)
-    print(sign)
-    print(te)
-    assert len(p) == len(te)
-    assert len(p) == len(sign)
-    assert len(p) == len(setup.selected_vars_sources)
+        print(te)
+        print(p)
+        print(sign)
+        assert len(p) == len(te)
+        assert len(p) == len(sign)
+        assert len(p) == len(setup.selected_vars_sources)
+        assert np.array_equal(
+            sign, expected
+        ), f"Incorrect sources inferred, expected: {expected}"
 
     setup = MultivariateTE()
     setup._initialise(settings, data, sources=[0, 1, 4], target=3)
@@ -600,7 +613,7 @@ if __name__ == "__main__":
     # test_ais_fdr()
     # test_analytical_surrogates()
     # test_data_type()
-    test_network_fdr()
+    # test_network_fdr()
     # test_fdr_sorting()
     # test_find_pvalue()
     # test_find_table_max()
@@ -611,4 +624,4 @@ if __name__ == "__main__":
     # test_max_statistic()
     # test_min_statistic()
     # test_max_statistic_sequential_bivariate()
-    # test_max_statistic_sequential()
+    test_max_statistic_sequential()
