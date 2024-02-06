@@ -46,11 +46,11 @@ float maxMetricPoints(
 
 /*
  * KNN
- * Note: for strides in memory (e.g. going from var to var, or dim to dim 
- * use signallength_padded, for checking whether all requested work has been 
+ * Note: for strides in memory (e.g. going from var to var, or dim to dim
+ * use signallength_padded, for checking whether all requested work has been
  * done use signallength_orig
 * tid indexes all points once for which we seek the neighbours
-* ichunk and chunklength determine in which piece of the data 
+* ichunk and chunklength determine in which piece of the data
 * neighbours are being searched for a given reference point (tid)
  */
 
@@ -67,7 +67,7 @@ __kernel void kernelKNNshared(
     __local float* kdistances)
 {
 	const unsigned int tid = get_global_id(0)+get_global_id(1)*get_global_size(0); //Global identifier - this takes the 2D memory (vars(dims))*(chunks(samples)) and maps it to a 1-D location
-	const unsigned int ichunk = tid / chunklength; //Chunk index, this should not be bigger than 
+	const unsigned int ichunk = tid / chunklength; //Chunk index, this should not be bigger than
 
 	if (tid<signallength_orig) // Do not start another chunk when the things that should be originally computed have been done (was: tid<signallength_padded)
 	{
@@ -97,7 +97,6 @@ __kernel void kernelKNNshared(
 			    }
 		    }
 	    }
-
 	    barrier(CLK_LOCAL_MEM_FENCE);
 
 	    //Copy to global memory

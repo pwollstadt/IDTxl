@@ -1,0 +1,248 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>idtxl.estimators_python &#8212; IDTxl 1.6.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pyramid.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="../../_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.6.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">idtxl.estimators_python</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for idtxl.estimators_python</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">digamma</span>
+
+<span class="kn">from</span> <span class="nn">idtxl.estimator</span> <span class="kn">import</span> <span class="n">Estimator</span>
+<span class="kn">from</span> <span class="nn">idtxl.knn.knn_finder_factory</span> <span class="kn">import</span> <span class="n">get_knn_finder</span>
+
+
+<div class="viewcode-block" id="PythonKraskovCMI"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_python.PythonKraskovCMI">[docs]</a><span class="k">class</span> <span class="nc">PythonKraskovCMI</span><span class="p">(</span><span class="n">Estimator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Estimate conditional mutual information using Kraskov&#39;s first estimator.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        settings : dict [optional]</span>
+<span class="sd">            set estimator parameters:</span>
+
+<span class="sd">            - kraskov_k : int [optional] - no. nearest neighbours for KNN</span>
+<span class="sd">              search (default=4)</span>
+<span class="sd">            - base : float - base of returned values (default=np=e)</span>
+<span class="sd">            - normalise : bool [optional] - z-standardise data (default=False)</span>
+<span class="sd">            - noise_level : float [optional] - random noise added to the data</span>
+<span class="sd">              (default=1e-8)</span>
+<span class="sd">            - rng_seed : int | None [optional] - random seed if noise level &gt; 0</span>
+<span class="sd">            - num_threads : int | str [optional] - number of threads used for</span>
+<span class="sd">              estimation (default=&#39;USE_ALL&#39;, note that this uses *all*</span>
+<span class="sd">              available threads on the current machine)</span>
+<span class="sd">            - knn_finder : str [optional] - knn algorithm to use, can be</span>
+<span class="sd">              &#39;scipy_kdtree&#39; (default), &#39;sklearn_kdtree&#39;, or &#39;sklearn_balltree&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialise estimator with settings.&quot;&quot;&quot;</span>
+
+        <span class="c1"># Check for currently unsupported settings</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="s2">&quot;local_values&quot;</span> <span class="ow">in</span> <span class="n">settings</span>
+            <span class="ow">or</span> <span class="s2">&quot;theiler_t&quot;</span> <span class="ow">in</span> <span class="n">settings</span>
+            <span class="ow">or</span> <span class="s2">&quot;algorithm_num&quot;</span> <span class="ow">in</span> <span class="n">settings</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;This estimator currently does not support local_values, theiler_t or algorithm_num arguments.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_knn_finder_settings</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;knn_finder_settings&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kraskov_k</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;kraskov_k&quot;</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_base</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;base&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">e</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_normalise</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;normalise&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Set number of threads</span>
+        <span class="n">num_threads</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;num_threads&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">num_threads</span> <span class="o">==</span> <span class="s2">&quot;USE_ALL&quot;</span><span class="p">:</span>
+            <span class="n">num_threads</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_knn_finder_settings</span><span class="p">[</span><span class="s2">&quot;num_threads&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_threads</span>
+
+        <span class="c1"># Init rng for added gaussian noise</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_noise_level</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;noise_level&quot;</span><span class="p">,</span> <span class="mf">1e-8</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_noise_level</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">rng_seed</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;rng_seed&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">rng_seed</span><span class="p">)</span>
+
+        <span class="c1"># Get KNN finder class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_knn_finder_name</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;knn_finder&quot;</span><span class="p">,</span> <span class="s2">&quot;scipy_kdtree&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_knn_finder_class</span> <span class="o">=</span> <span class="n">get_knn_finder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_knn_finder_name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PythonKraskovCMI.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_python.PythonKraskovCMI.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">var2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">conditional</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Estimate conditional mutual information between var1 and var2, given</span>
+<span class="sd">        conditional.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">conditional</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">conditional</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">var1</span><span class="p">),</span> <span class="mi">0</span><span class="p">))</span>
+
+        <span class="c1"># Check the input data</span>
+        <span class="n">var1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_two_dim_input</span><span class="p">(</span><span class="n">var1</span><span class="p">)</span>
+        <span class="n">var2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_two_dim_input</span><span class="p">(</span><span class="n">var2</span><span class="p">)</span>
+        <span class="n">conditional</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_two_dim_input</span><span class="p">(</span><span class="n">conditional</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">var2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">conditional</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Unequal number of observations (var1: </span><span class="si">{</span><span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">, var2: </span><span class="si">{</span><span class="n">var2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">, conditional: </span><span class="si">{</span><span class="n">conditional</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+        <span class="c1"># Check if number of points is sufficient for estimation.</span>
+        <span class="k">if</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kraskov_k</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Not enough observations for Kraskov estimator (need at least </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_kraskov_k</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">).&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Normalise data</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalise</span><span class="p">:</span>
+            <span class="n">var1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalise_data</span><span class="p">(</span><span class="n">var1</span><span class="p">)</span>
+            <span class="n">var2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalise_data</span><span class="p">(</span><span class="n">var2</span><span class="p">)</span>
+            <span class="n">conditional</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalise_data</span><span class="p">(</span><span class="n">conditional</span><span class="p">)</span>
+
+        <span class="c1"># Add noise to avoid duplicate points</span>
+        <span class="c1"># Do not add noise inplace, because it would change the input data</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_noise_level</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">var1</span> <span class="o">=</span> <span class="n">var1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_noise_level</span><span class="p">,</span> <span class="n">var1</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">var2</span> <span class="o">=</span> <span class="n">var2</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_noise_level</span><span class="p">,</span> <span class="n">var2</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">conditional</span> <span class="o">=</span> <span class="n">conditional</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_noise_level</span><span class="p">,</span> <span class="n">conditional</span><span class="o">.</span><span class="n">shape</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Compute distances to kth nearest neighbors in the joint space</span>
+        <span class="n">epsilon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_epsilon</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="n">conditional</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kraskov_k</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Count neighbors in the conditional space</span>
+        <span class="k">if</span> <span class="n">conditional</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">n_c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_n</span><span class="p">(</span><span class="n">conditional</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">)</span>
+            <span class="n">mean_digamma_nc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">digamma</span><span class="p">(</span><span class="n">n_c</span><span class="p">))</span>
+            <span class="k">del</span> <span class="n">n_c</span>
+
+        <span class="n">n_c_var1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_n</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">var1</span><span class="p">,</span> <span class="n">conditional</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">epsilon</span><span class="p">)</span>
+        <span class="n">mean_digamma_nc_var1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">digamma</span><span class="p">(</span><span class="n">n_c_var1</span><span class="p">))</span>
+        <span class="k">del</span> <span class="n">n_c_var1</span>
+
+        <span class="n">n_c_var2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_n</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">var2</span><span class="p">,</span> <span class="n">conditional</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">epsilon</span><span class="p">)</span>
+        <span class="n">mean_digamma_nc_var2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">digamma</span><span class="p">(</span><span class="n">n_c_var2</span><span class="p">))</span>
+        <span class="k">del</span> <span class="n">n_c_var2</span>
+
+        <span class="k">if</span> <span class="n">conditional</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Compute CMI</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="n">digamma</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kraskov_k</span><span class="p">)</span>
+                <span class="o">+</span> <span class="n">mean_digamma_nc</span>
+                <span class="o">-</span> <span class="n">mean_digamma_nc_var1</span>
+                <span class="o">-</span> <span class="n">mean_digamma_nc_var2</span>
+            <span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Compute MI</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="n">digamma</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kraskov_k</span><span class="p">)</span>
+                <span class="o">+</span> <span class="n">digamma</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">var1</span><span class="p">))</span>
+                <span class="o">-</span> <span class="n">mean_digamma_nc_var1</span>
+                <span class="o">-</span> <span class="n">mean_digamma_nc_var2</span>
+            <span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_normalise_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Standardise data to zero mean and unit variance.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">data</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_compute_epsilon</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute the distance to the kth nearest neighbor for each point in x.&quot;&quot;&quot;</span>
+        <span class="n">knn_finder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knn_finder_class</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_knn_finder_settings</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">knn_finder</span><span class="o">.</span><span class="n">find_dist_to_kth_neighbor</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="p">)</span>  <span class="c1"># +1 because the point itself is included in the data</span>
+
+    <span class="k">def</span> <span class="nf">_compute_n</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">r</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Count the number of neighbors strictly within a given radius r for each point in x.</span>
+<span class="sd">        Returns the number of neighbors plus one, because the point itself is included in the data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">knn_finder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knn_finder_class</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_knn_finder_settings</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">knn_finder</span><span class="o">.</span><span class="n">count_neighbors</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PythonKraskovCMI.is_analytic_null_estimator"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_python.PythonKraskovCMI.is_analytic_null_estimator">[docs]</a>    <span class="k">def</span> <span class="nf">is_analytic_null_estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="PythonKraskovCMI.is_parallel"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_python.PythonKraskovCMI.is_parallel">[docs]</a>    <span class="k">def</span> <span class="nf">is_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.6.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">idtxl.estimators_python</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
+    </div>
+  </body>
+</html>

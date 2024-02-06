@@ -4,8 +4,7 @@ from scipy.stats import binom
 
 
 class SignificantSubgraphMining:
-    '''
-    Implementation of significant subgraph mining as described in
+    """Implementation of significant subgraph mining as described in
 
     Sugiyama M, Lopez FL, Kasenburg N, Borgwardt KM.  Significant
     subgraph mining with multiple testing correction.
@@ -97,14 +96,17 @@ class SignificantSubgraphMining:
             List of tuples of significant subgraphs in data set and their
             associated corrected p-values. Initialized empty and filled by
             calling the enumerate_significant_subgraphs method
-    '''
-    def __init__(self, resultsA,
-                 resultsB,
-                 alpha,
-                 design,
-                 graph_type="directed",
-                 data_format="adjacency"):
+    """
 
+    def __init__(
+        self,
+        resultsA,
+        resultsB,
+        alpha,
+        design,
+        graph_type="directed",
+        data_format="adjacency",
+    ):
         if not type(alpha) == float and not type(alpha) == int:
             raise TypeError("alpha must be of type float")
 
@@ -135,11 +137,13 @@ class SignificantSubgraphMining:
         self.p_value_table = self.generate_p_table(design)
 
         try:
-            self.min_freq = next(ind for ind in range(self.N + 1)
-                                 if self.min_p_value_table[ind] <= alpha)
+            self.min_freq = next(
+                ind for ind in range(self.N + 1) if self.min_p_value_table[ind] <= alpha
+            )
         except StopIteration:
             raise RuntimeError(
-                f"Due to the sample size, a significant result at level {self.alpha} is in principle not possible.")
+                f"Due to the sample size, a significant result at level {self.alpha} is in principle not possible."
+            )
 
         # represent graphs as lists of link indices
         if data_format == "idtxl":
@@ -156,13 +160,17 @@ class SignificantSubgraphMining:
         # count total occurrences for each link in the data set
         link_counts = []
         for i in range(len(self.coding_list)):
-            link_counts.append(self.count_subgraph([i])[0] +
-                               self.count_subgraph([i])[1])
+            link_counts.append(
+                self.count_subgraph([i])[0] + self.count_subgraph([i])[1]
+            )
 
         self.link_counts = link_counts
 
-        self.union_indices = [i for i in range(len(self.link_counts)) if
-                              self.link_counts[i] >= self.min_freq]
+        self.union_indices = [
+            i
+            for i in range(len(self.link_counts))
+            if self.link_counts[i] >= self.min_freq
+        ]
 
         self.max_depth = np.infty
 
@@ -172,8 +180,7 @@ class SignificantSubgraphMining:
             for j in i:
                 all_possible_p_values.add(j)
 
-        self.all_possible_p_values = sorted(
-            list(all_possible_p_values), reverse=True)
+        self.all_possible_p_values = sorted(list(all_possible_p_values), reverse=True)
 
         self.frequent_graphs = []
         self.p_values = []
@@ -184,7 +191,7 @@ class SignificantSubgraphMining:
         self.significant_subgraphs = []
 
     def generate_coding_list(self):
-        '''
+        """
         If data_format = "idtxl": Creates list of all target-source-lag
         triplets occuring at least once
         in the data set. This list is used to encode subject networks as
@@ -204,20 +211,15 @@ class SignificantSubgraphMining:
         Returns:
             list of 2-tuples
                 each tuple has the form (source index, target index)
-        '''
+        """
         if self.data_format == "idtxl":
-
             tsl_triplet_set = set()
             for group in [self.resultsA, self.resultsB]:
-
                 for results_dicts_list in group:
-
                     for results_dict in results_dicts_list:
-
                         target = results_dict["target"]
 
                         for source in results_dict["selected_vars_sources"]:
-
                             tsl_triplet = (target, source[0], source[1])
 
                             tsl_triplet_set.add(tsl_triplet)
@@ -227,18 +229,20 @@ class SignificantSubgraphMining:
             return tsl_triplet_list
 
         elif self.data_format == "adjacency":
-
             st_tuple_set = set()
 
             if self.graph_type == "directed":
-
                 # all possible source-target tuples
                 tuples = [(i, j) for i in range(self.nodes) for j in range(self.nodes)]
 
             elif self.graph_type == "undirected":
-
                 # only ascending source-target tuples
-                tuples = [(i, j) for i in range(self.nodes) for j in range(self.nodes) if i < j]
+                tuples = [
+                    (i, j)
+                    for i in range(self.nodes)
+                    for j in range(self.nodes)
+                    if i < j
+                ]
 
             # for each tuple, check if it occurs in the data set. If so, add
             # it to st_tuple_set
@@ -250,7 +254,7 @@ class SignificantSubgraphMining:
             return list(st_tuple_set)
 
     def encode(self):
-        '''
+        """
         Encodes all subject networks as lists of indices. The ith entry
         describes the occurrence of the ith target-source-lag triplet
         in the coding list (self.coding_list).
@@ -260,23 +264,21 @@ class SignificantSubgraphMining:
                 The first entry of the tuple is a list of integers
                 describing the networks of subjects in Group A. The second
                 entry is a list of integers for Group B.
-        '''
+        """
 
         all_networks = []
         for group in [self.resultsA, self.resultsB]:
-
             group_networks = []
             for results_dicts_list in group:
-
                 subject_network = []
 
                 for results_dict in results_dicts_list:
-
                     target = results_dict["target"]
 
                     for source in results_dict["selected_vars_sources"]:
-
-                        subject_network.append(self.coding_list.index((target, source[0], source[1])))
+                        subject_network.append(
+                            self.coding_list.index((target, source[0], source[1]))
+                        )
 
                 group_networks.append(subject_network)
                 0
@@ -285,7 +287,7 @@ class SignificantSubgraphMining:
         return all_networks[0], all_networks[1]
 
     def decode(self, indices):
-        '''
+        """
         Converts a given list of indices (representing a subgraph) into
         a list of corresponding target-source-lag triplets using the mapping
         described in the coding list.
@@ -295,7 +297,7 @@ class SignificantSubgraphMining:
 
         Returns:
             List of 3-tuples
-        '''
+        """
 
         tsl_triplets = []
 
@@ -305,14 +307,12 @@ class SignificantSubgraphMining:
         return tsl_triplets
 
     def encode_adjacency(self):
-        '''Encodes all input adjacency matrices as lists of indices'''
+        """Encodes all input adjacency matrices as lists of indices"""
 
         all_networks = []
         for group in [self.resultsA, self.resultsB]:
-
             group_networks = []
             for adj in group:
-
                 subject_network = []
                 for t in self.coding_list:
                     if adj[t[0], t[1]] == 1:
@@ -325,7 +325,7 @@ class SignificantSubgraphMining:
         return all_networks[0], all_networks[1]
 
     def decode_adjacency(self, indices):
-        '''Decodes list of indices as adjacency matrix'''
+        """Decodes list of indices as adjacency matrix"""
 
         adjacency = np.zeros((self.nodes, self.nodes))
 
@@ -336,31 +336,28 @@ class SignificantSubgraphMining:
         return adjacency
 
     def generate_min_p_table(self, design):
-        '''
+        """
         Computes list of minimum p_values depending on the total number of
         occurrences and given the group sample sizes.
 
         Returns:
             list
                 minimum p-values for each number of occurrences between 0 and N
-        '''
+        """
 
         if design == "between":
             min_p_value_table = []
             for m in range(self.N + 1):
-
                 min_upper_left = np.max([0, m - self.n_B])
                 max_upper_left = np.min([self.n_A, m])
 
                 # consider most extreme cases
 
                 # First option: put as many occurrences as possible in group A
-                p_value_r = hypergeom.pmf(
-                    max_upper_left, M = self.N, n = m, N = self.n_A)
+                p_value_r = hypergeom.pmf(max_upper_left, M=self.N, n=m, N=self.n_A)
 
                 # Second option: put as few occurrences as possible in group A
-                p_value_l = hypergeom.pmf(
-                    min_upper_left, M = self.N, n = m, N = self.n_A)
+                p_value_l = hypergeom.pmf(min_upper_left, M=self.N, n=m, N=self.n_A)
 
                 min_p_value_table.append(2 * np.min([p_value_r, p_value_l]))
 
@@ -369,7 +366,6 @@ class SignificantSubgraphMining:
         elif design == "within":
             min_p_value_table = []
             for d in range(self.N + 1):
-
                 # consider most extreme cases
 
                 # First option: put as many discordant pairs as possible in
@@ -390,7 +386,7 @@ class SignificantSubgraphMining:
             return min_p_value_table
 
     def generate_p_table(self, design):
-        '''
+        """
         Computes table of p-values depending on the total number of
         occurrences, the occurrences in Group A, and given the group
         sample sizes.
@@ -403,19 +399,19 @@ class SignificantSubgraphMining:
             numpy array
                 p-values for each number of occurrences and occurrences in
                 Group A between 0 and N
-        '''
+        """
 
         if design == "between":
-
             p_value_table = np.zeros((self.N + 1, self.N + 1))
             for countA in range(self.N + 1):
                 for occurrences in range(self.N + 1):
-
                     p_value_R = 1 - hypergeom.cdf(
-                        countA - 1, M = self.N, n = occurrences, N = self.n_A)
+                        countA - 1, M=self.N, n=occurrences, N=self.n_A
+                    )
 
                     p_value_L = hypergeom.cdf(
-                        countA, M = self.N, n = occurrences, N = self.n_A)
+                        countA, M=self.N, n=occurrences, N=self.n_A
+                    )
 
                     p_value = 2 * np.min([p_value_R, p_value_L])
 
@@ -445,18 +441,21 @@ class SignificantSubgraphMining:
                 p_value_table = np.zeros((self.N + 1, self.N + 1))
                 for occurrences in range(int(self.N / 2) + 1):
                     for countA in range(occurrences + 1):
-
                         p_value_R = 1 - hypergeom.cdf(
-                            countA - 1, M=self.N, n=occurrences, N=self.n_A)
+                            countA - 1, M=self.N, n=occurrences, N=self.n_A
+                        )
 
                         p_value_L = hypergeom.cdf(
-                            countA, M=self.N, n=occurrences, N=self.n_A)
+                            countA, M=self.N, n=occurrences, N=self.n_A
+                        )
 
                         p_value = 2 * np.min([p_value_R, p_value_L])
 
                         p_value_table[countA, occurrences] = p_value
 
-                        p_value_table[self.n_A - occurrences + countA, self.N - occurrences] = p_value
+                        p_value_table[
+                            self.n_A - occurrences + countA, self.N - occurrences
+                        ] = p_value
 
                 # Secondly, given k total successes, the p-values corresponding to
                 # k successes and 0 have to be the same. The same is true for
@@ -465,7 +464,9 @@ class SignificantSubgraphMining:
                 for occurrences in range(self.N + 1):
                     for countA in range(self.N + 1):
                         if countA < occurrences / 2:
-                            p_value_table[countA, occurrences] = p_value_table[occurrences - countA, occurrences]
+                            p_value_table[countA, occurrences] = p_value_table[
+                                occurrences - countA, occurrences
+                            ]
 
                 # Thirdly, if sample sizes are equal then each hypergeometric
                 # distribution corresponding to a specific total number of
@@ -481,7 +482,6 @@ class SignificantSubgraphMining:
                 return p_value_table
 
         elif design == "within":
-
             # compute p-value table based on Binomial distribution
 
             p_value_table = np.zeros((self.N + 1, self.N + 1))
@@ -496,18 +496,18 @@ class SignificantSubgraphMining:
 
             return p_value_table
 
-# In the following two "count" methods and four "extend" methods are defined.
+    # In the following two "count" methods and four "extend" methods are defined.
 
-# There is one extend method for each combination of sampling design
-# "within" / "between" and correction method "Tarone/Hommel" / "Westfall-Young"
+    # There is one extend method for each combination of sampling design
+    # "within" / "between" and correction method "Tarone/Hommel" / "Westfall-Young"
 
-# Between + Tarone: extend()
-# Between + WY: extend_wy()
-# Within + Tarone: extend_mcnemar()
-# Within + WY: extend _wy_mcnemar()
+    # Between + Tarone: extend()
+    # Between + WY: extend_wy()
+    # Within + Tarone: extend_mcnemar()
+    # Within + WY: extend _wy_mcnemar()
 
     def count_subgraph(self, indices, where="original"):
-        '''
+        """
         Counts the number of occurrences of a subgraph represented by a list of
         indices
 
@@ -522,7 +522,7 @@ class SignificantSubgraphMining:
         Returns:
             tuple of integers
                 number of occurrences of subgraph in GroupA and in GroupB
-        '''
+        """
 
         if where == "original":
             graphsA = self.groupA_networks
@@ -533,24 +533,20 @@ class SignificantSubgraphMining:
 
         countA = 0
         for graph in graphsA:
-
             # check if sub_graph occurs in graph
             if all(i in graph for i in indices):
-
                 countA += 1
 
         countB = 0
         for graph in graphsB:
-
             # check if sub_graph occurs in graph
             if all(i in graph for i in indices):
-
                 countB += 1
 
         return countA, countB
 
     def count_discordants(self, indices, where="original"):
-        '''
+        """
         Counts the discordant pairs for a given subgraph represented as a
         list of indices.
 
@@ -567,11 +563,12 @@ class SignificantSubgraphMining:
                 number of cases in which the subgraph occurred in condition A
                 but not in B, and number of cases in which the subgraph
                 occurred in B but not in A
-        '''
+        """
 
         if self.design == "between":
             raise RuntimeError(
-                "The count_discordants method can only be used for within-subject designs. Currently the design is set to between subjects.")
+                "The count_discordants method can only be used for within-subject designs. Currently the design is set to between subjects."
+            )
 
         if where == "original":
             graphsA = self.groupA_networks
@@ -583,17 +580,20 @@ class SignificantSubgraphMining:
         discordants_B = 0
         discordants_A = 0
         for ind in range(self.N):
-
-            if all(i in graphsA[ind] for i in indices) and not all(i in graphsB[ind] for i in indices):
+            if all(i in graphsA[ind] for i in indices) and not all(
+                i in graphsB[ind] for i in indices
+            ):
                 discordants_A += 1
 
-            elif all(i in graphsB[ind] for i in indices) and not all(i in graphsA[ind] for i in indices):
+            elif all(i in graphsB[ind] for i in indices) and not all(
+                i in graphsA[ind] for i in indices
+            ):
                 discordants_B += 1
 
         return discordants_A, discordants_B
 
     def extend(self, to_be_extended, freq):
-        '''
+        """
         Recursively extends the input subgraph checking at each recursion
         step if the current subgraph occurs frequently enough to reach
         significance at level alpha. If this is not the case, it is not
@@ -614,7 +614,7 @@ class SignificantSubgraphMining:
 
         Returns:
             None
-        '''
+        """
 
         # the variable "remaining" contains all union indices larger than the
         # largest index in to_be_extended. These are the indices considered
@@ -630,7 +630,6 @@ class SignificantSubgraphMining:
         # for extension.
 
         if len(to_be_extended) < self.max_depth:
-
             if to_be_extended != []:
                 max_index = np.max(to_be_extended)
             else:
@@ -644,7 +643,6 @@ class SignificantSubgraphMining:
             # successively extend the current subgraph by the indices in
             # remaining
             for i in remaining:
-
                 # create extended subgraph. to_be_extended is already in the
                 # list of frequent subgraphs and should not be altered. Thus,
                 # only a copy of it should be extended.
@@ -661,7 +659,6 @@ class SignificantSubgraphMining:
                 # p-value. Then apply the extend method to the new subgraph
                 # again.
                 if occurrences >= freq:
-
                     minimum_p = self.min_p_value_table[countA + countB]
 
                     self.minimum_p_values.append(minimum_p)
@@ -675,7 +672,7 @@ class SignificantSubgraphMining:
                     self.extend(new, self.min_freq)
 
     def extend_mcnemar(self, to_be_extended, freq):
-        '''
+        """
         Same as extend() method but using McNemar's test for within subject
         designs
 
@@ -688,10 +685,9 @@ class SignificantSubgraphMining:
 
         Returns:
             None
-        '''
+        """
 
         if len(to_be_extended) < self.max_depth:
-
             if to_be_extended != []:
                 max_index = np.max(to_be_extended)
             else:
@@ -703,7 +699,6 @@ class SignificantSubgraphMining:
                     remaining.append(i)
 
             for i in remaining:
-
                 new = to_be_extended.copy()
                 new.append(i)
 
@@ -712,7 +707,6 @@ class SignificantSubgraphMining:
                 occurrences = countA + countB
 
                 if occurrences >= freq:
-
                     # count discordant pairs
                     discordants_A, discordants_B = self.count_discordants(new)
                     discordants = discordants_A + discordants_B
@@ -726,7 +720,7 @@ class SignificantSubgraphMining:
                     self.extend_mcnemar(new, self.min_freq)
 
     def extend_wy(self, to_be_extended):
-        '''
+        """
         Determines the smallest observed p-value in permuted version of the
         data set by recursively extending the input subgraph. At each
         recursion step the function checks if the current subgraph occurs
@@ -744,9 +738,8 @@ class SignificantSubgraphMining:
             a particular subgraph.
         Returns:
             None
-        '''
+        """
         if len(to_be_extended) < self.max_depth:
-
             if to_be_extended != []:
                 max_index = np.max(to_be_extended)
             else:
@@ -758,7 +751,6 @@ class SignificantSubgraphMining:
                     remaining.append(i)
 
             for i in remaining:
-
                 new = to_be_extended.copy()
                 new.append(i)
 
@@ -767,11 +759,9 @@ class SignificantSubgraphMining:
                 occurrences = countA + countB
 
                 if occurrences >= self.current_min_freq:
-
                     p_value = self.p_value_table[countA, occurrences]
 
                     if p_value < self.current_min_p:
-
                         # update current minimum p-value
                         self.current_min_p = p_value
 
@@ -779,12 +769,15 @@ class SignificantSubgraphMining:
                         # smaller than the current minimum observed p-value.
 
                         self.current_min_freq = next(
-                            ind for ind in range(self.N + 1) if self.min_p_value_table[ind] <= self.current_min_p)
+                            ind
+                            for ind in range(self.N + 1)
+                            if self.min_p_value_table[ind] <= self.current_min_p
+                        )
 
                     self.extend_wy(new)
 
     def extend_wy_mcnemar(self, to_be_extended):
-        '''
+        """
         Same as extend_wy but using McNemars test
 
         Args:
@@ -793,10 +786,9 @@ class SignificantSubgraphMining:
         Returns:
             None
 
-        '''
+        """
 
         if len(to_be_extended) < self.max_depth:
-
             if to_be_extended != []:
                 max_index = np.max(to_be_extended)
             else:
@@ -808,7 +800,6 @@ class SignificantSubgraphMining:
                     remaining.append(i)
 
             for i in remaining:
-
                 new = to_be_extended.copy()
                 new.append(i)
 
@@ -826,15 +817,15 @@ class SignificantSubgraphMining:
                 occurrences = countA + countB
 
                 if occurrences >= self.current_min_freq:
-
                     # count discordant pairs in permuted data set
-                    discordants_A, discordants_B = self.count_discordants(new, where="perm")
+                    discordants_A, discordants_B = self.count_discordants(
+                        new, where="perm"
+                    )
                     discordants = discordants_A + discordants_B
 
                     p_value = self.p_value_table[discordants_A, discordants]
 
                     if p_value < self.current_min_p:
-
                         # update current minimum p-value
                         self.current_min_p = p_value
 
@@ -842,21 +833,26 @@ class SignificantSubgraphMining:
                         # smaller than the current minimum observed p-value.
 
                         self.current_min_freq = next(
-                            ind for ind in range(self.N + 1) if self.min_p_value_table[ind] <= self.current_min_p)
+                            ind
+                            for ind in range(self.N + 1)
+                            if self.min_p_value_table[ind] <= self.current_min_p
+                        )
 
                     self.extend_wy_mcnemar(new)
 
     def determine_tarone_factor(self):
-        '''
+        """
         Determines Tarone's correction factor in case there are at least two
         testable subgraphs.
 
         Returns:
             int
                 Tarone's correction factor
-        '''
+        """
         if self.num_testable_graphs < 2:
-            raise Exception("There are less than two testable subgraphs. No correction required.")
+            raise Exception(
+                "There are less than two testable subgraphs. No correction required."
+            )
 
         # Use bisection search to find Tarone's factor
         # the goal is to find the smallest integer k such that the ration of
@@ -873,17 +869,23 @@ class SignificantSubgraphMining:
             iterations += 1
 
             if iterations == max_iter:
-                print("WARNING: Correction factor could not be determined "
-                      + "after", max_iter, "iterations")
+                print(
+                    "WARNING: Correction factor could not be determined " + "after",
+                    max_iter,
+                    "iterations",
+                )
 
-            k_rt = int((up + low)/2)
+            k_rt = int((up + low) / 2)
 
             # if the number of subgraphs testable at level alpha/k_rt is smaller
             # than k_rt, then the true k_rt must be smaller than or equal to
             # the current k_rt. So we set the current k_rt as the new upper
             # bound. Otherwise, the true k_rt must be larger, so we set the
             # current one as the new lower bound.
-            if np.sum(np.array(self.minimum_p_values) <= (self.alpha/k_rt)) - k_rt <= 0:
+            if (
+                np.sum(np.array(self.minimum_p_values) <= (self.alpha / k_rt)) - k_rt
+                <= 0
+            ):
                 up = k_rt
             else:
                 low = k_rt
@@ -892,14 +894,18 @@ class SignificantSubgraphMining:
             # the tarone criterion m(k) / k <= 1 is fulfilled for current k_rt
             # but not for the next smaller integer k_rt - 1
             criterion = (
-                np.sum(np.array(self.minimum_p_values) <= (self.alpha/k_rt)) - k_rt <= 0 and
-                np.sum(np.array(self.minimum_p_values) <= (self.alpha/(k_rt - 1))) - k_rt + 1 > 0
-                )
+                np.sum(np.array(self.minimum_p_values) <= (self.alpha / k_rt)) - k_rt
+                <= 0
+                and np.sum(np.array(self.minimum_p_values) <= (self.alpha / (k_rt - 1)))
+                - k_rt
+                + 1
+                > 0
+            )
 
         self.k_rt = k_rt
 
     def enumerate_frequent_graphs(self, freq):
-        '''
+        """
         Adds all subgraphs occuring at least freq times to self.frequent_graphs
         The process is carried out recursively using the extend() method.
         Individual links of the union network are successively extended to
@@ -912,11 +918,12 @@ class SignificantSubgraphMining:
         Args:
             freq : int
                 desired minimum frequency
-        '''
+        """
         # create union network consisting of all individual links occuring
         # at least freq times
-        self.union_indices = [i for i in range(len(self.link_counts)) if
-                              self.link_counts[i] >= freq]
+        self.union_indices = [
+            i for i in range(len(self.link_counts)) if self.link_counts[i] >= freq
+        ]
 
         # reinitialize set of frequent subgraphs
         self.frequent_graphs = []
@@ -930,24 +937,24 @@ class SignificantSubgraphMining:
         # recursively extend subgraphs starting from individual links in the
         # union network
         if self.design == "between":
-
             self.extend([], freq)
 
             return self.frequent_graphs
 
         elif self.design == "within":
-
             self.extend_mcnemar([], freq)
 
             return self.frequent_graphs
 
-    def enumerate_significant_subgraphs(self,
-                                        method="Hommel",
-                                        wy_algorithm="simple_depth_first",
-                                        verbose=True,
-                                        num_perm=10000,
-                                        max_depth=np.infty):
-        '''
+    def enumerate_significant_subgraphs(
+        self,
+        method="Hommel",
+        wy_algorithm="simple_depth_first",
+        verbose=True,
+        num_perm=10000,
+        max_depth=np.infty,
+    ):
+        """
         This is the main function carrying out significant subgraph mining
         according to the multiple comparisons correction method (and algorithm
         in the case of Westfall-Young) of choice. It calls the relevant
@@ -976,19 +983,22 @@ class SignificantSubgraphMining:
                 The first entry of each tuple is a list of indices representing
                 the identified significant subgraph. The second entry is the
                 associated (uncorrected) p-value.
-        '''
+        """
 
         self.max_depth = max_depth
 
         if method != "Hommel" and method != "Tarone" and method != "Westfall-Young":
-            raise Exception("Method must be \'Hommel\' or \'Tarone\' or \'Westfall-Young\'")
+            raise Exception("Method must be 'Hommel' or 'Tarone' or 'Westfall-Young'")
 
         if verbose is True:
-
             if self.max_depth == np.infty:
                 print("Search Space: All possible subgraphs")
             else:
-                print("Search Space: Subgraphs consisting of up to", self.max_depth, "links")
+                print(
+                    "Search Space: Subgraphs consisting of up to",
+                    self.max_depth,
+                    "links",
+                )
 
             if self.design == "between":
                 print("Between-Subjects Design: Using Fishers Exact Test")
@@ -1000,16 +1010,16 @@ class SignificantSubgraphMining:
         # if union network is empty, there are no testable subgraphs and hence
         # no significant subgraphs
         if self.union_indices == []:
-            print("There are no alpha-testable subgraphs. No significant differences detectable.")
+            print(
+                "There are no alpha-testable subgraphs. No significant differences detectable."
+            )
             return None
 
         # reinitialize list of significant subgraphs
         self.significant_subgraphs = []
 
         if method == "Westfall-Young":
-
             if wy_algorithm == "simple_depth_first":
-
                 self.westfall_young(num_perm, verbose)
                 return self.significant_subgraphs
 
@@ -1022,7 +1032,9 @@ class SignificantSubgraphMining:
             #             "implemented for between subjects designs")
 
             else:
-                raise Exception("wy_algorithm has to be either simple_depth_first or wy_light")
+                raise Exception(
+                    "wy_algorithm has to be either simple_depth_first or wy_light"
+                )
 
         # if method is not Westfall-Young the set of frequent subgraphs has
         # to be determined (all subgraphs occuring often enough to reach
@@ -1035,8 +1047,7 @@ class SignificantSubgraphMining:
         # If there are no testable subgraphs at level alpha, there can be no
         # significant subgraphs
         # count alpha testable graphs
-        self.num_testable_graphs = np.sum(
-            np.array(self.minimum_p_values) <= self.alpha)
+        self.num_testable_graphs = np.sum(np.array(self.minimum_p_values) <= self.alpha)
 
         if verbose is True:
             print("Number of frequent subgraphs: ", len(self.frequent_graphs))
@@ -1044,8 +1055,10 @@ class SignificantSubgraphMining:
             print()
 
         if self.num_testable_graphs == 0:
-            print("There are no testable subgraphs. No significant " +
-                  "differences detectable.")
+            print(
+                "There are no testable subgraphs. No significant "
+                + "differences detectable."
+            )
             return None
 
         elif self.num_testable_graphs == 1:
@@ -1059,7 +1072,6 @@ class SignificantSubgraphMining:
             self.determine_tarone_factor()
 
         if method == "Hommel":
-
             hommel_level = sorted(self.minimum_p_values)[int(self.k_rt - 1)]
             corrected_level = np.max([hommel_level, (self.alpha / self.k_rt)])
 
@@ -1074,23 +1086,23 @@ class SignificantSubgraphMining:
             run = 0
             for p in self.p_values:
                 if p <= self.alpha / self.k_rt or p < hommel_level:
-
                     self.significant_subgraphs.append(
-                        (self.decode(self.frequent_graphs[run]),
-                         self.p_values[run] * (self.alpha / corrected_level))
+                        (
+                            self.decode(self.frequent_graphs[run]),
+                            self.p_values[run] * (self.alpha / corrected_level),
                         )
+                    )
 
                 run += 1
 
             if verbose is True:
-
-                print(len(self.significant_subgraphs),
-                      "significant subgraphs identified.")
+                print(
+                    len(self.significant_subgraphs), "significant subgraphs identified."
+                )
 
             return self.significant_subgraphs
 
         elif method == "Tarone":
-
             if verbose is True:
                 print("Correction factor:", self.k_rt)
                 print("Corrected level:", self.alpha / self.k_rt)
@@ -1103,22 +1115,20 @@ class SignificantSubgraphMining:
 
             # determine significant subgraphs and corresponding p-values
             for i in range(len(self.p_values)):
-
                 if self.p_values_corr[i] <= self.alpha:
-
                     self.significant_subgraphs.append(
-                          (self.decode(self.frequent_graphs[i]),
-                           self.p_values[i]))
+                        (self.decode(self.frequent_graphs[i]), self.p_values[i])
+                    )
 
             if verbose is True:
-
-                print(len(self.significant_subgraphs),
-                      "significant subgraphs identified.")
+                print(
+                    len(self.significant_subgraphs), "significant subgraphs identified."
+                )
 
             return self.significant_subgraphs
 
     def westfall_young(self, num_perm=10000, verbose=True):
-        '''
+        """
         Determines significant subgraphs using the Westfall-Young Permutation
         procedure for multiple comparisons correction. This algorithm computes
         the permutation distribution of the smallest observed p-value
@@ -1132,10 +1142,13 @@ class SignificantSubgraphMining:
 
         Returns:
             None
-        '''
+        """
         if verbose is True:
-            print("Determining permutation distribution based on", num_perm,
-                  "permutations...")
+            print(
+                "Determining permutation distribution based on",
+                num_perm,
+                "permutations...",
+            )
 
         # INITIALIZATION
 
@@ -1158,7 +1171,7 @@ class SignificantSubgraphMining:
 
         # initialize class labels
         group_idx = np.zeros(self.N)
-        group_idx[self.n_B:] = 1
+        group_idx[self.n_B :] = 1
 
         all_networks = self.groupA_networks + self.groupB_networks
 
@@ -1177,14 +1190,12 @@ class SignificantSubgraphMining:
 
         # find minimum observed p-values for num_perm permutated data sets
         for i in range(num_perm - 1):
-
             # create empty network lists
             self.perm_groupA_networks = []
             self.perm_groupB_networks = []
 
             # generate permuted class labels and add networks to lists
             if self.design == "between":
-
                 perm = np.random.permutation(group_idx)
 
                 for i in range(len(perm)):
@@ -1231,9 +1242,10 @@ class SignificantSubgraphMining:
         # entire real interval (0,alpha) using grid search.
 
         for i in sorted(self.all_possible_p_values):
-
             # count fraction of minimum p values below ith entry
-            if (np.sum(np.array(self.permutation_min_p_values) <= i) / num_perm) <= self.alpha:
+            if (
+                np.sum(np.array(self.permutation_min_p_values) <= i) / num_perm
+            ) <= self.alpha:
                 delta = i
             else:
                 break
@@ -1251,28 +1263,29 @@ class SignificantSubgraphMining:
         # to reach significance at the corrected level:
 
         self.min_freq_wy = next(
-            ind for ind in range(self.N + 1) if
-            self.min_p_value_table[ind] <= self.wy_corrected_level)
+            ind
+            for ind in range(self.N + 1)
+            if self.min_p_value_table[ind] <= self.wy_corrected_level
+        )
 
         self.enumerate_frequent_graphs(self.min_freq_wy)
 
         self.significant_subgraphs = []
         for i in range(len(self.p_values)):
-
             if self.p_values[i] <= self.wy_corrected_level:
-
                 self.significant_subgraphs.append(
-                    (self.decode(self.frequent_graphs[i]),
-                     self.p_values[i] * (self.alpha / self.wy_corrected_level))
+                    (
+                        self.decode(self.frequent_graphs[i]),
+                        self.p_values[i] * (self.alpha / self.wy_corrected_level),
                     )
+                )
 
         if verbose is True:
             print("Corrected level:", self.wy_corrected_level)
-            print(len(self.significant_subgraphs),
-                  "significant subgraphs identified.")
+            print(len(self.significant_subgraphs), "significant subgraphs identified.")
 
     def westfall_young_light(self, num_perm=10000, verbose=True):
-        '''
+        """
         Determines significant subgraphs using the Westfall-Young light
         algorithm described in
 
@@ -1289,10 +1302,13 @@ class SignificantSubgraphMining:
 
         Returns:
             None
-        '''
+        """
         if verbose is True:
-            print("Determining permutation distribution based on", num_perm,
-                  "permutations...")
+            print(
+                "Determining permutation distribution based on",
+                num_perm,
+                "permutations...",
+            )
             print("Design:", self.design)
         self.current_min_freq = 0
 
@@ -1309,7 +1325,7 @@ class SignificantSubgraphMining:
 
         # vector to be permuted
         group_idx = np.zeros(self.N)
-        group_idx[self.n_B:] = 1
+        group_idx[self.n_B :] = 1
 
         all_networks = self.groupA_networks + self.groupB_networks
 
@@ -1321,7 +1337,6 @@ class SignificantSubgraphMining:
         if self.design == "between":
             # add permutations and store all permuted data sets
             for i in range(1, num_perm):
-
                 # create random permutation of class labels
                 perm = np.random.permutation(group_idx)
 
@@ -1329,7 +1344,6 @@ class SignificantSubgraphMining:
                 self.all_permuted_datasets.append([[], []])
 
                 for i in range(self.N):
-
                     if perm[i] == 0:
                         self.all_permuted_datasets[-1][0].append(all_networks[i])
                     else:
@@ -1338,7 +1352,6 @@ class SignificantSubgraphMining:
         elif self.design == "within":
             # add permutations and store all permuted data sets
             for i in range(1, num_perm):
-
                 # decide independently for each subject if outcome is flipped
                 perm = np.random.choice([1, 0], size=self.N)
 
@@ -1346,14 +1359,21 @@ class SignificantSubgraphMining:
                 self.all_permuted_datasets.append([[], []])
 
                 for i in range(self.N):
-
                     if perm[i] == 0:
-                        self.all_permuted_datasets[-1][0].append(self.groupA_networks[i])
-                        self.all_permuted_datasets[-1][1].append(self.groupB_networks[i])
+                        self.all_permuted_datasets[-1][0].append(
+                            self.groupA_networks[i]
+                        )
+                        self.all_permuted_datasets[-1][1].append(
+                            self.groupB_networks[i]
+                        )
 
                     else:
-                        self.all_permuted_datasets[-1][0].append(self.groupB_networks[i])
-                        self.all_permuted_datasets[-1][1].append(self.groupA_networks[i])
+                        self.all_permuted_datasets[-1][0].append(
+                            self.groupB_networks[i]
+                        )
+                        self.all_permuted_datasets[-1][1].append(
+                            self.groupA_networks[i]
+                        )
 
         # start extension process
         if self.design == "between":
@@ -1368,7 +1388,9 @@ class SignificantSubgraphMining:
         search_in = self.all_possible_p_values[wy_index:]
 
         ind = 0
-        while np.sum(self.smallest_p_perm <= search_in[ind]) / self.num_perm > self.alpha:
+        while (
+            np.sum(self.smallest_p_perm <= search_in[ind]) / self.num_perm > self.alpha
+        ):
             ind += 1
 
         self.wy_level_light = search_in[ind]
@@ -1377,27 +1399,29 @@ class SignificantSubgraphMining:
             print("WY-level determined...")
 
         self.min_freq_wy = next(
-            ind for ind in range(self.N + 1) if
-            self.min_p_value_table[ind] <= self.wy_level_light)
+            ind
+            for ind in range(self.N + 1)
+            if self.min_p_value_table[ind] <= self.wy_level_light
+        )
 
         self.enumerate_frequent_graphs(self.min_freq_wy)
 
         self.significant_subgraphs = []
         for i in range(len(self.p_values)):
-
             if self.p_values[i] <= self.wy_level_light:
-
                 self.significant_subgraphs.append(
-                    (self.decode(self.frequent_graphs[i]),
-                     self.p_values[i] * (self.alpha / self.wy_level_light)))
+                    (
+                        self.decode(self.frequent_graphs[i]),
+                        self.p_values[i] * (self.alpha / self.wy_level_light),
+                    )
+                )
 
         if verbose is True:
             print("Corrected level:", self.wy_level_light)
-            print(len(self.significant_subgraphs),
-                  "significant subgraphs identified.")
+            print(len(self.significant_subgraphs), "significant subgraphs identified.")
 
     def extend_wy_light(self, to_be_extended):
-        '''Westfall-Young light extension method. Evaluates all permutations
+        """Westfall-Young light extension method. Evaluates all permutations
         at the same time for each subgraph. The goal is to determine the
         Westfall-Young corrected level, i.e. the alpha quantile of the
         permutation distribution of the smallest observed p-value among
@@ -1410,10 +1434,9 @@ class SignificantSubgraphMining:
                 indices of all links of the subgraph
         Returns:
             None
-        '''
+        """
 
         if len(to_be_extended) < self.max_depth:
-
             if to_be_extended != []:
                 max_index = np.max(to_be_extended)
             else:
@@ -1425,7 +1448,6 @@ class SignificantSubgraphMining:
                     remaining.append(i)
 
             for i in remaining:
-
                 new = to_be_extended.copy()
                 new.append(i)
 
@@ -1437,39 +1459,49 @@ class SignificantSubgraphMining:
                 # only continue if subgraph if testable at current estimate
                 # of wy_level
                 if min_p <= self.wy_level_light:
-
                     # calculate p-value for all permuted data sets:
                     for k in range(self.num_perm):
-
                         countA_perm, countB_perm = self.count_subgraph_wylight(new, k)
                         p_value = self.p_value_table[countA_perm, occurrences]
 
                         # update smallest p-value for k-th permuted data set
-                        self.smallest_p_perm[k] = min([p_value, self.smallest_p_perm[k]])
+                        self.smallest_p_perm[k] = min(
+                            [p_value, self.smallest_p_perm[k]]
+                        )
 
                     # estimate of FWER
-                    FWER = np.sum(self.smallest_p_perm <= self.wy_level_light) / self.num_perm
+                    FWER = (
+                        np.sum(self.smallest_p_perm <= self.wy_level_light)
+                        / self.num_perm
+                    )
 
                     while FWER > self.alpha:
                         # decrease corrected level while FWER is greater than alpha
                         self.wy_level_light = next(
-                            p for p in self.all_possible_p_values if
-                            p < self.wy_level_light)
-                        FWER = np.sum(self.smallest_p_perm <= self.wy_level_light) / self.num_perm
+                            p
+                            for p in self.all_possible_p_values
+                            if p < self.wy_level_light
+                        )
+                        FWER = (
+                            np.sum(self.smallest_p_perm <= self.wy_level_light)
+                            / self.num_perm
+                        )
 
                 # check if subgraph occurs often enough to be testable
                 # at updated significance level
                 # Only if this is the case, extend it further
 
                 self.current_min_freq = next(
-                    ind for ind in range(self.N + 1) if
-                    self.min_p_value_table[ind] <= self.wy_level_light)
+                    ind
+                    for ind in range(self.N + 1)
+                    if self.min_p_value_table[ind] <= self.wy_level_light
+                )
 
                 if occurrences >= self.current_min_freq:
                     self.extend_wy_light(new)
 
     def count_subgraph_wylight(self, indices, k):
-        '''
+        """
         Counts subgraph occurrences in k-th permuted data set
 
         Args:
@@ -1482,27 +1514,23 @@ class SignificantSubgraphMining:
             tuple of integers
                 number of occurrences in group A and number of occurrences
                 in group B
-        '''
+        """
         countA = 0
         for graph in self.all_permuted_datasets[k][0]:
-
             # check if sub_graph occurs in graph
             if all(i in graph for i in indices):
-
                 countA += 1
 
         countB = 0
         for graph in self.all_permuted_datasets[k][1]:
-
             # check if sub_graph occurs in graph
             if all(i in graph for i in indices):
-
                 countB += 1
 
         return countA, countB
 
     def extend_wy_light_mcnemar(self, to_be_extended):
-        '''Westfall-Young light extension method for the within-subjects case
+        """Westfall-Young light extension method for the within-subjects case
         using McNemars test. Recursively, evaluates subgraphs and updates
         the current estimate of the Westfall-Young corrected level
         self.wy_level_light.
@@ -1512,10 +1540,9 @@ class SignificantSubgraphMining:
                 indices of all links of the subgraph
         Returns:
             None
-        '''
+        """
 
         if len(to_be_extended) < self.max_depth:
-
             if to_be_extended != []:
                 max_index = np.max(to_be_extended)
             else:
@@ -1527,7 +1554,6 @@ class SignificantSubgraphMining:
                     remaining.append(i)
 
             for i in remaining:
-
                 new = to_be_extended.copy()
                 new.append(i)
 
@@ -1543,30 +1569,45 @@ class SignificantSubgraphMining:
                 # only continue if subgraph if testable at current estimate
                 # of wy_level
                 if min_p <= self.wy_level_light:
-
                     # calculate p-value for all permuted data sets:
                     for k in range(self.num_perm):
-
-                        discordants_A_perm, discordants_B_perm = self.count_discordants_wylight(new, k)
+                        (
+                            discordants_A_perm,
+                            discordants_B_perm,
+                        ) = self.count_discordants_wylight(new, k)
                         p_value = self.p_value_table[discordants_A_perm, discordants]
 
                         # update smallest p-value for k-th permuted data set
-                        self.smallest_p_perm[k] = min([p_value, self.smallest_p_perm[k]])
+                        self.smallest_p_perm[k] = min(
+                            [p_value, self.smallest_p_perm[k]]
+                        )
 
                     # estimate of FWER
-                    FWER = np.sum(self.smallest_p_perm <= self.wy_level_light) / self.num_perm
+                    FWER = (
+                        np.sum(self.smallest_p_perm <= self.wy_level_light)
+                        / self.num_perm
+                    )
 
                     while FWER > self.alpha:
                         # decrease corrected level while FWER is greater than alpha
-                        self.wy_level_light = next(p for p in self.all_possible_p_values if p < self.wy_level_light)
-                        FWER = np.sum(self.smallest_p_perm <= self.wy_level_light) / self.num_perm
+                        self.wy_level_light = next(
+                            p
+                            for p in self.all_possible_p_values
+                            if p < self.wy_level_light
+                        )
+                        FWER = (
+                            np.sum(self.smallest_p_perm <= self.wy_level_light)
+                            / self.num_perm
+                        )
 
                 # check how many discordant pairs would be needed to obtain
                 # a p-value significant at the new wy_level
 
                 self.current_min_freq = next(
-                    ind for ind in range(self.N + 1) if
-                    self.min_p_value_table[ind] <= self.wy_level_light)
+                    ind
+                    for ind in range(self.N + 1)
+                    if self.min_p_value_table[ind] <= self.wy_level_light
+                )
 
                 # Only if there are enough occurrences to obtain this number
                 # of discordant pairs extend the graph further
@@ -1574,7 +1615,7 @@ class SignificantSubgraphMining:
                     self.extend_wy_light_mcnemar(new)
 
     def count_discordants_wylight(self, indices, k):
-        '''
+        """
         Counts discordant pairs for subgraph given by list if indices
         in k-th permuted data set.
 
@@ -1590,7 +1631,7 @@ class SignificantSubgraphMining:
                 but not in B, and number of cases in which the subgraph
                 occurred in B but not in A
 
-        '''
+        """
 
         graphsA = self.all_permuted_datasets[k][0]
         graphsB = self.all_permuted_datasets[k][1]
@@ -1598,13 +1639,14 @@ class SignificantSubgraphMining:
         discordants_B = 0
         discordants_A = 0
         for ind in range(self.N):
-
-            if all(i in graphsA[ind] for i in indices) and not all(i in graphsB[ind] for i in indices):
-
+            if all(i in graphsA[ind] for i in indices) and not all(
+                i in graphsB[ind] for i in indices
+            ):
                 discordants_A += 1
 
-            elif all(i in graphsB[ind] for i in indices) and not all(i in graphsA[ind] for i in indices):
-
+            elif all(i in graphsB[ind] for i in indices) and not all(
+                i in graphsA[ind] for i in indices
+            ):
                 discordants_B += 1
 
         return discordants_A, discordants_B

@@ -69,12 +69,15 @@ class Data():
             initial state of the seed for shuffled permutations
     """
 
-    def __init__(self, data=None, dim_order='psr', normalise=True, seed=None):
+    def __init__(self, data=None, dim_order="psr", normalise=True, seed=None):
         np.random.seed(seed)
         self.initial_state = np.random.get_state()
         self.seed = seed
         self._random_bit_generator = np.random.Philox(seed)
         self.normalise = normalise
+        self.n_processes = 0
+        self.n_samples = 0
+        self.n_replications = 0
         if data is not None:
             self.set_data(data, dim_order)
 
@@ -95,8 +98,7 @@ class Data():
                 samples to the embedding); if no current_value is provided, the
                 number of all samples is used
         """
-        return (self.n_realisations_samples(current_value) *
-                self.n_realisations_repl())
+        return self.n_realisations_samples(current_value) * self.n_realisations_repl()
 
     def n_realisations_samples(self, current_value=None):
         """Number of realisations over samples.
@@ -110,13 +112,12 @@ class Data():
         """
         if current_value is None:
             return self.n_samples
-        else:
-            if current_value[1] >= self.n_samples:
-                raise RuntimeError('The sample index of the current value '
-                                   '({0}) is larger than the number of samples'
-                                   ' in the data set ({1}).'.format(
-                                              current_value, self.n_samples))
-            return self.n_samples - current_value[1]
+        if current_value[1] >= self.n_samples:
+            raise RuntimeError(
+                f"The sample index of the current value ({current_value}) is larger than the"
+                f" number of samples in the data set ({self.n_samples})."
+            )
+        return self.n_samples - current_value[1]
 
     def n_realisations_repl(self):
         """Number of realisations over replications."""
@@ -129,16 +130,17 @@ class Data():
 
     @data.setter
     def data(self, d):
-        if hasattr(self, 'data'):
-            raise AttributeError('You can not assign a value to this attribute'
-                                 ' directly, use the set_data method instead.')
-        else:
-            self._data = d
+        if hasattr(self, "data"):
+            raise AttributeError(
+                "You can not assign a value to this attribute"
+                " directly, use the set_data method instead."
+            )
+        self._data = d
 
     @data.deleter
     def data(self):
-        print('overwriting existing data')
-        del(self._data)
+        print("overwriting existing data")
+        del self._data
 
     def set_data(self, data, dim_order):
         """Overwrite data in an existing Data object.
@@ -152,22 +154,23 @@ class Data():
                 must have the same length as number of dimensions in data
         """
         if len(dim_order) > 3:
-            raise RuntimeError('dim_order can not have more than three '
-                               'entries')
+            raise RuntimeError("dim_order can not have more than three entries")
         if len(dim_order) != data.ndim:
-            raise RuntimeError('Data array dimension ({0}) and length of '
-                               'dim_order ({1}) are not equal.'.format(
-                                           data.ndim, len(dim_order)))
+            raise RuntimeError(
+                f"Data array dimension ({data.ndim}) and length of "
+                f"dim_order ({len(dim_order)}) are not equal."
+            )
 
         # Bring data into the order processes x samples x replications and set
         # set data.
         data_ordered = self._reorder_data(data, dim_order)
         self._set_data_size(data_ordered)
-        print('Adding data with properties: {0} processes, {1} samples, {2} '
-              'replications'.format(self.n_processes, self.n_samples,
-                                    self.n_replications))
+        print(
+            f"Adding data with properties: {self.n_processes} processes, {self.n_samples} "
+            f"samples, {self.n_replications} replications"
+        )
         try:
-            delattr(self, 'data')
+            delattr(self, "data")
         except AttributeError:
             pass
         if self.normalise:
@@ -181,29 +184,30 @@ class Data():
         d_standardised = np.empty(d.shape)
         for process in range(self.n_processes):
             s = utils.standardise(
-                            d[process, :, :].reshape(1, self.n_realisations()),
-                            dimension=1)
-            d_standardised[process, :, :] = s.reshape(self.n_samples,
-                                                      self.n_replications)
+                d[process, :, :].reshape(1, self.n_realisations()), dimension=1
+            )
+            d_standardised[process, :, :] = s.reshape(
+                self.n_samples, self.n_replications
+            )
         return d_standardised
 
     def _reorder_data(self, data, dim_order):
         """Reorder data dimensions to processes x samples x replications."""
         # add singletons for missing dimensions
-        missing_dims = 'psr'
+        missing_dims = "psr"
         for dim in dim_order:
-            missing_dims = missing_dims.replace(dim, '')
+            missing_dims = missing_dims.replace(dim, "")
         for dim in missing_dims:
             data = np.expand_dims(data, data.ndim)
             dim_order += dim
 
         # reorder array dims if necessary
-        if dim_order[0] != 'p':
-            ind_p = dim_order.index('p')
+        if dim_order[0] != "p":
+            ind_p = dim_order.index("p")
             data = data.swapaxes(0, ind_p)
             dim_order = utils.swap_chars(dim_order, 0, ind_p)
-        if dim_order[1] != 's':
-            data = data.swapaxes(1, dim_order.index('s'))
+        if dim_order[1] != "s":
+            data = data.swapaxes(1, dim_order.index("s"))
         return data
 
     def _set_data_size(self, data):
@@ -263,19 +267,17 @@ class Data():
                 samples * no.replications) x number of indices. Only returned
                 if return_replication_idx is true.
         """
-        if not hasattr(self, 'data'):
-            raise AttributeError('No data has been added to this Data() '
-                                 'instance.')
+        if not hasattr(self, "data"):
+            raise AttributeError("No data has been added to this Data() instance.")
         # Return None if index list is empty.
         if not idx_list:
             return (None, None) if return_replication_idx else None
         # Check if requested indices are smaller than the current_value.
         if not all(np.array([x[1] for x in idx_list]) <= current_value[1]):
-            print('Index list: {0}\ncurrent value: {1}'.format(idx_list,
-                                                               current_value))
-            raise RuntimeError('All indices for which data is retrieved must '
-                               ' be smaller than the current value.')
-                
+            print(f"Index list: {idx_list}\ncurrent value: {current_value}")
+            raise RuntimeError(
+                "All indices for which data is retrieved must be smaller than the current value."
+            )
         assert shuffle == False, 'Shuffling is not implemented yet'
 
         n_real_time = self.n_realisations_samples(current_value)
@@ -293,7 +295,7 @@ class Data():
         """Return data slice for a single process.
 
         Return data slice for process. Optionally, an offset can be provided
-        such that data are returnded from sample 'offset_samples' onwards.
+        such that data are returned from sample 'offset_samples' onwards.
         Also, data
         can be shuffled over replications to create surrogate data for
         statistical testing. For shuffling, data blocks are permuted over
@@ -333,10 +335,12 @@ class Data():
                 list of replications indices
         """
         # Check if requested indices are smaller than the current_value.
-        if not offset_samples <= self.n_samples:
-            print('Offset {0} must be smaller than number of samples in the '
-                  ' data ({1})'.format(offset_samples, self.n_samples))
-            raise RuntimeError('Offset must be smaller than no. samples.')
+        if offset_samples > self.n_samples:
+            print(
+                "Offset {0} must be smaller than number of samples in the "
+                " data ({1})".format(offset_samples, self.n_samples)
+            )
+            raise RuntimeError("Offset must be smaller than no. samples.")
 
         # Shuffle the replication order if requested. This creates surrogate
         # data by permuting replications while keeping the order of samples
@@ -348,14 +352,14 @@ class Data():
 
         try:
             data_slice = self.data[process, offset_samples:, replication_index]
-        except IndexError:
-            raise IndexError('You tried to access process {0} with an offset '
-                             'of {1} in a data set of {2} processes and {3} '
-                             'samples.'.format(process, offset_samples,
-                                               self.n_processes,
-                                               self.n_samples))
-        assert(not np.isnan(data_slice).any()), ('There are nans in the '
-                                                 'retrieved data slice.')
+        except IndexError as e:
+            raise IndexError(
+                "You tried to access process {process} with an offset of {offset_samples} in a data set "
+                "of {self.n_processes} processes and {self.n_samples} samples."
+            ) from e
+        assert not np.isnan(
+            data_slice
+        ).any(), "There are nans in the retrieved data slice."
         return data_slice.T, replication_index
 
     def slice_permute_replications(self, process):
@@ -457,7 +461,7 @@ class Data():
                 data slice with data permuted over samples with dimensions
                 samples x number of replications
             numpy array
-                index of permutet samples
+                index of permuted samples
 
         Note:
             This permutation scheme is the fall-back option if the number of
@@ -466,8 +470,7 @@ class Data():
         """
         data_slice = self._get_data_slice(process, shuffle=True)[0]
         data_slice_perm = np.empty(data_slice.shape).astype(self.data_type)
-        perm = self._get_permutation_samples(data_slice.shape[0],
-                                             perm_settings)
+        perm = self._get_permutation_samples(data_slice.shape[0], perm_settings)
         for r in range(self.n_replications):
             data_slice_perm[:, r] = data_slice[perm, r]
         return data_slice_perm, perm
@@ -678,8 +681,8 @@ class Data():
 
         Generate example data and overwrite the instance's current data. The
         network is used as an example the paper on the MuTE toolbox (Montalto,
-        PLOS ONE, 2014, eq. 14) and was orginially proposed by Baccala &
-        Sameshima (2001). The network consists of five autoregressive (AR)
+        PLOS ONE, 2014, eq. 14) and was orginally proposed by Baccala &
+        Sameshima (2001). The network consists of five auto-regressive (AR)
         processes with model orders 2 and the following (non-linear) couplings:
 
         0 -> 1, u = 2 (non-linear)
@@ -705,39 +708,42 @@ class Data():
                 number of replications
         """
         n_processes = 5
-        n_samples = n_samples
-        n_replications = n_replications
 
-        x = np.zeros((n_processes, n_samples + 3,
-                      n_replications))
-        x[:, 0:3, :] = np.random.normal(size=(n_processes, 3,
-                                              n_replications))
+        x = np.zeros((n_processes, n_samples + 3, n_replications))
+        x[:, 0:3, :] = np.random.normal(size=(n_processes, 3, n_replications))
         term_1 = 0.95 * np.sqrt(2)
         term_2 = 0.25 * np.sqrt(2)
         term_3 = -0.25 * np.sqrt(2)
         for r in range(n_replications):
             for n in range(3, n_samples + 3):
-                x[0, n, r] = (term_1 * x[0, n - 1, r] -
-                              0.9025 * x[0, n - 2, r] + np.random.normal())
+                x[0, n, r] = (
+                    term_1 * x[0, n - 1, r]
+                    - 0.9025 * x[0, n - 2, r]
+                    + np.random.normal()
+                )
                 x[1, n, r] = 0.5 * x[0, n - 2, r] ** 2 + np.random.normal()
                 x[2, n, r] = -0.4 * x[0, n - 3, r] + np.random.normal()
-                x[3, n, r] = (-0.5 * x[0, n - 2, r] ** 2 +
-                              term_2 * x[3, n - 1, r] +
-                              term_2 * x[4, n - 1, r] +
-                              np.random.normal())
-                x[4, n, r] = (term_3 * x[3, n - 1, r] +
-                              term_2 * x[4, n - 1, r] +
-                              np.random.normal())
-        self.set_data(x[:, 3:, :], 'psr')
+                x[3, n, r] = (
+                    -0.5 * x[0, n - 2, r] ** 2
+                    + term_2 * x[3, n - 1, r]
+                    + term_2 * x[4, n - 1, r]
+                    + np.random.normal()
+                )
+                x[4, n, r] = (
+                    term_3 * x[3, n - 1, r]
+                    + term_2 * x[4, n - 1, r]
+                    + np.random.normal()
+                )
+        self.set_data(x[:, 3:, :], "psr")
 
     def generate_var_data(
         self,
         n_samples=1000,
         n_replications=10,
         coefficient_matrices=np.array([[[0.5, 0], [0.4, 0.5]]]),
-        noise_std=0.1
+        noise_std=0.1,
     ):
-        """Generate discrete-time VAR (vector autoregressive) time series.
+        """Generate discrete-time VAR (vector auto-regressive) time series.
 
         Generate data and overwrite the instance's current data.
 
@@ -763,39 +769,33 @@ class Data():
 
         # Check stability of the VAR process, which is a sufficient condition
         # for stationarity.
-        var_reduced_form = np.zeros((
-            n_processes * order,
-            n_processes * order
-        ))
+        var_reduced_form = np.zeros((n_processes * order, n_processes * order))
         var_reduced_form[0:n_processes, :] = np.reshape(
             np.transpose(coefficient_matrices, (1, 0, 2)),
-            [n_processes, n_processes * order]
-            )
-        var_reduced_form[n_processes:, 0:n_processes * (order - 1)] = np.eye(
+            [n_processes, n_processes * order],
+        )
+        var_reduced_form[n_processes:, 0 : n_processes * (order - 1)] = np.eye(
             n_processes * (order - 1)
         )
         # Condition for stability: the absolute values of all the eigenvalues
-        # of the reduced-form coefficeint matrix are smaller than 1. A stable
+        # of the reduced-form coefficient matrix are smaller than 1. A stable
         # VAR process is also stationary.
         is_stable = max(np.abs(np.linalg.eigvals(var_reduced_form))) < 1
         if not is_stable:
-            RuntimeError('VAR process is not stable and may be nonstationary.')
+            raise RuntimeError("VAR process is not stable and may be nonstationary.")
 
         # Initialise time series matrix. The 3 dimensions represent
         # (processes, samples, replications). Only the last n_samples will be
         # kept, in order to discard transient effects.
-        x = np.zeros((
-            n_processes,
-            order + samples_transient + n_samples,
-            n_replications
-        ))
+        x = np.zeros(
+            (n_processes, order + samples_transient + n_samples, n_replications)
+        )
 
         # Generate (different) initial conditions for each replication:
         # Uniformly sample from the [0,1] interval and tile as many times as
         # the VAR process order along the second dimension.
         x[:, 0:order, :] = np.tile(
-            np.random.rand(n_processes, 1, n_replications),
-            (1, order, 1)
+            np.random.rand(n_processes, 1, n_replications), (1, order, 1)
         )
 
         # Compute time series
@@ -804,24 +804,22 @@ class Data():
                 for i_delay in range(1, order + 1):
                     x[:, i_sample, i_repl] += np.dot(
                         coefficient_matrices[i_delay - 1, :, :],
-                        x[:, i_sample - i_delay, i_repl]
+                        x[:, i_sample - i_delay, i_repl],
                     )
                 # Add uncorrelated Gaussian noise vector
                 x[:, i_sample, i_repl] += np.random.normal(
-                    0,  # mean
-                    noise_std,
-                    x[:, i_sample, i_repl].shape
+                    0, noise_std, x[:, i_sample, i_repl].shape  # mean
                 )
 
         # Discard transient effects (only take end of time series)
-        self.set_data(x[:, -(n_samples + 1):-1, :], 'psr')
+        self.set_data(x[:, -(n_samples + 1) : -1, :], "psr")
 
     def generate_logistic_maps_data(
         self,
         n_samples=1000,
         n_replications=10,
         coefficient_matrices=np.array([[[0.5, 0], [0.4, 0.5]]]),
-        noise_std=0.1
+        noise_std=0.1,
     ):
         """Generate discrete-time coupled-logistic-maps time series.
 
@@ -856,18 +854,15 @@ class Data():
         # Initialise time series matrix. The 3 dimensions represent
         # (processes, samples, replications). Only the last n_samples will be
         # kept, in order to discard transient effects.
-        x = np.zeros((
-            n_processes,
-            order + samples_transient + n_samples,
-            n_replications
-        ))
+        x = np.zeros(
+            (n_processes, order + samples_transient + n_samples, n_replications)
+        )
 
         # Generate (different) initial conditions for each replication:
         # Uniformly sample from the [0,1] interval and tile as many times as
         # the stochastic process order along the second dimension.
         x[:, 0:order, :] = np.tile(
-            np.random.rand(n_processes, 1, n_replications),
-            (1, order, 1)
+            np.random.rand(n_processes, 1, n_replications), (1, order, 1)
         )
 
         # Compute time series
@@ -876,18 +871,16 @@ class Data():
                 for i_delay in range(1, order + 1):
                     x[:, i_sample, i_repl] += np.dot(
                         coefficient_matrices[i_delay - 1, :, :],
-                        x[:, i_sample - i_delay, i_repl]
+                        x[:, i_sample - i_delay, i_repl],
                     )
                 # Compute activation function
                 x[:, i_sample, i_repl] = f(x[:, i_sample, i_repl])
                 # Add uncorrelated Gaussian noise vector
                 x[:, i_sample, i_repl] += np.random.normal(
-                    0,  # mean
-                    noise_std,
-                    x[:, i_sample, i_repl].shape
+                    0, noise_std, x[:, i_sample, i_repl].shape  # mean
                 )
                 # ensure values are in the [0, 1] range
                 x[:, i_sample, i_repl] = x[:, i_sample, i_repl] % 1
 
         # Discard transient effects (only take end of time series)
-        self.set_data(x[:, -(n_samples + 1):-1, :], 'psr')
+        self.set_data(x[:, -(n_samples + 1) : -1, :], "psr")

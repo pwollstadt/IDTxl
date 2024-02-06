@@ -3,21 +3,25 @@ import numpy as np
 import matplotlib.pyplot as plt
 from . import idtxl_io as io
 from . import idtxl_exceptions as ex
+
 try:
     import networkx as nx
 except ImportError as err:
     ex.package_missing(
         err,
-        ('networkx is not available on this system. Install it from '
-         'https://pypi.python.org/pypi/networkx/2.0 to export and plot IDTxl '
-         'results in this format.'))
+        (
+            "networkx is not available on this system. Install it from "
+            "https://pypi.python.org/pypi/networkx/2.0 to export and plot IDTxl "
+            "results in this format."
+        ),
+    )
 
 
 def plot_network(results, weights, fdr=True):
     """Plot network of multivariate TE between processes.
 
     Plot graph of the network of (multivariate) interactions between processes
-    (e.g., multivariate TE). The function uses  the networkx class for directed
+    (e.g., multivariate TE). The function uses the networkx class for directed
     graphs (DiGraph) internally. Plots a network and adjacency matrix.
 
     Args:
@@ -27,7 +31,7 @@ def plot_network(results, weights, fdr=True):
             for single network inference, it can either be
 
                 - 'max_te_lag': the weights represent the source -> target
-                   lag corresponding to the maximum tranfer entropy value
+                   lag corresponding to the maximum transfer entropy value
                    (see documentation for method get_target_delays for details)
                 - 'max_p_lag': the weights represent the source -> target
                    lag corresponding to the maximum p-value
@@ -66,14 +70,13 @@ def plot_network(results, weights, fdr=True):
     ax1 = plt.subplot(121)  # plot graph
     _plot_graph(graph, ax1, weights)
     plt.subplot(122)  # plot adjacency matrix
-    _plot_adj_matrix(
-        results.get_adjacency_matrix(weights, fdr),
-        cbar_label=weights)
+    _plot_adj_matrix(results.get_adjacency_matrix(weights, fdr), cbar_label=weights)
     return graph, fig
 
 
-def plot_selected_vars(results, target, sign_sources=True,
-                       display_edge_labels=False, fdr=True):
+def plot_selected_vars(
+    results, target, sign_sources=True, display_edge_labels=False, fdr=True
+):
     """Plot network of a target process and single variables.
 
     Plot graph of the network of (multivariate) interactions between source
@@ -103,14 +106,12 @@ def plot_selected_vars(results, target, sign_sources=True,
     # Replace time index of current value to be consistent with lag-notation
     # in plot.
     current_value = (results._single_target[target].current_value[0], 0)
-    max_lag = max(results.settings.max_lag_sources,
-                  results.settings.max_lag_target)
+    max_lag = max(results.settings.max_lag_sources, results.settings.max_lag_target)
 
     # Adjust color and position of nodes (variables).
     pos = nx.spring_layout(graph)
-    color = ['lavender' for c in range(graph.number_of_nodes())]
-    for (ind, n) in enumerate(graph.nodes):
-
+    color = ["lavender" for c in range(graph.number_of_nodes())]
+    for ind, n in enumerate(graph.nodes):
         # Adjust posistions of nodes.
         if n == current_value:
             pos[n] = np.array([max_lag, 0])
@@ -123,83 +124,90 @@ def plot_selected_vars(results, target, sign_sources=True,
 
         # Adjust color of nodes.
         if n in results._single_target[target].selected_vars_sources:
-            color[ind] = 'cadetblue'
+            color[ind] = "cadetblue"
         elif n in results._single_target[target].selected_vars_target:
-            color[ind] = 'tomato'
+            color[ind] = "tomato"
         elif n == current_value:
-            color[ind] = 'red'
+            color[ind] = "red"
 
     fig = plt.figure()
-    nx.draw(graph, pos=pos, with_labels=True, font_weight='bold',
-            node_size=900, alpha=0.7, node_shape='s', node_color=color)
+    nx.draw(
+        graph,
+        pos=pos,
+        with_labels=True,
+        font_weight="bold",
+        node_size=900,
+        alpha=0.7,
+        node_shape="s",
+        node_color=color,
+    )
     # Optionally display edge labels showing the TE value
     if display_edge_labels:
-        edge_labels = nx.get_edge_attributes(graph, 'te')
+        edge_labels = nx.get_edge_attributes(graph, "te")
         # Change format to only display 2 decimals
         for key, value in edge_labels.items():
-            edge_labels[key] = '{0:.2g}'.format(value)
-        nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels,
-                                     font_size=10)  # font_weight='bold'
+            edge_labels[key] = "{0:.2g}".format(value)
+        nx.draw_networkx_edge_labels(
+            graph, pos, edge_labels=edge_labels, font_size=10
+        )  # font_weight='bold'
 
-    plt.plot([-0.5, max_lag + 0.5], [0.5, 0.5],
-             linestyle='--', linewidth=1, color='0.5')
+    plt.plot(
+        [-0.5, max_lag + 0.5], [0.5, 0.5], linestyle="--", linewidth=1, color="0.5"
+    )
     return graph, fig
 
 
 def _plot_graph(graph, axis, weights=None, display_edge_labels=True):
     """Plot graph using networkx."""
     pos = nx.circular_layout(graph)
-    nx.draw_circular(graph, with_labels=True, node_size=600, alpha=1.0,
-                     ax=axis, node_color='Gainsboro', font_size=14,
-                     font_weight='bold')
+    nx.draw_circular(
+        graph,
+        with_labels=True,
+        node_size=600,
+        alpha=1.0,
+        ax=axis,
+        node_color="Gainsboro",
+        font_size=14,
+        font_weight="bold",
+    )
     if display_edge_labels:
         edge_labels = nx.get_edge_attributes(graph, weights)
-        nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels,
-                                     font_size=13)  # font_weight='bold'
+        nx.draw_networkx_edge_labels(
+            graph, pos, edge_labels=edge_labels, font_size=13
+        )  # font_weight='bold'
 
 
-def _plot_adj_matrix(adj_matrix, mat_color='gray_r', diverging=False,
-                     cbar_label='', cbar_stepsize=1):
+def _plot_adj_matrix(
+    adj_matrix, mat_color="gray_r", diverging=False, cbar_label="delay", cbar_stepsize=1
+):
     """Plot adjacency matrix."""
     # Plot matrix, set minimum and maximum values to the same value for
     # diverging plots to center colormap at 0, i.e., 0 is plotted in white
     # https://stackoverflow.com/questions/25500541/
     # matplotlib-bwr-colormap-always-centered-on-zero
     if diverging:
-        max_val = np.max(abs(adj_matrix.weight_matrix))
+        max_val = np.max(abs(adj_matrix))
         min_val = -max_val
     else:
-        max_val = np.max(adj_matrix.weight_matrix)
-        min_val = -np.min(adj_matrix.weight_matrix)
-
-    adj_matrix_masked = np.ma.masked_where(
-        np.invert(adj_matrix.edge_matrix), adj_matrix.weight_matrix)
-    plt.imshow(adj_matrix_masked, cmap=mat_color,
-               interpolation='nearest', vmin=min_val, vmax=max_val)
+        max_val = np.max(adj_matrix)
+        min_val = -np.min(adj_matrix)
+    plt.imshow(
+        adj_matrix, cmap=mat_color, interpolation="nearest", vmin=min_val, vmax=max_val
+    )
 
     # Set the colorbar and make colorbar match the image in size using the
     # fraction and pad parameters (see https://stackoverflow.com/a/26720422).
-    cbar_ticks = np.arange(0, max_val + 1, cbar_stepsize)
-    if cbar_label == 'max_te_lag':
-        cbar_label = 'delay [samples]'
-    elif cbar_label == 'max_p_lag':
-        cbar_label = 'max p-value lag [samples]'
-    elif cbar_label == 'vars_count':
-        cbar_label = '# of selected vars'
-    elif cbar_label == 'binary':
-        cbar_label = 'Binary adjacency matrix'
-    elif cbar_label == 'p-value':
-        # cbar_ticks = np.arange(0, 1.001, 0.1)
-        cbar_ticks = np.arange(0, max_val * 1.01, max_val / 5)
+    if cbar_label == "delay":
+        cbar_label = "delay [samples]"
+        cbar_ticks = np.arange(0, max_val + 1, cbar_stepsize)
     else:
-        cbar_ticks = np.arange(min_val, max_val + 0.01 * max_val,
-                               cbar_stepsize)
+        cbar_ticks = np.arange(min_val, max_val + 0.01 * max_val, cbar_stepsize)
     cbar = plt.colorbar(fraction=0.046, pad=0.04, ticks=cbar_ticks)
     cbar.set_label(cbar_label, rotation=90)
 
     # Set x- and y-ticks.
-    plt.xticks(np.arange(adj_matrix.n_nodes()))
-    plt.yticks(np.arange(adj_matrix.n_nodes()))
+    plt.xticks(np.arange(adj_matrix.shape[1]))
+    plt.yticks(np.arange(adj_matrix.shape[0]))
     ax = plt.gca()
     ax.xaxis.tick_top()
     return cbar
@@ -226,8 +234,9 @@ def plot_mute_graph():
     graph = nx.DiGraph()
     graph.add_nodes_from(np.arange(5))
     # graph.add_edges_from([(0, 1), (0, 2), (0, 3), (3, 4), (4, 3)])
-    graph.add_weighted_edges_from([(0, 1, 2), (0, 2, 3), (0, 3, 2), (3, 4, 1),
-                                   (4, 3, 1)], weight='delay')
+    graph.add_weighted_edges_from(
+        [(0, 1, 2), (0, 2, 3), (0, 3, 2), (3, 4, 1), (4, 3, 1)], weight="delay"
+    )
     pos = {
         0: np.array([1, 1]),
         1: np.array([0, 2]),
@@ -236,11 +245,19 @@ def plot_mute_graph():
         4: np.array([3, 1]),
     }
     fig = plt.figure()
-    nx.draw(graph, pos=pos, with_labels=True, node_size=900, alpha=1.0,
-            node_color='cadetblue', font_weight='bold',
-            edge_color=['r', 'k', 'r', 'k', 'k'], hold=True)
+    nx.draw(
+        graph,
+        pos=pos,
+        with_labels=True,
+        node_size=900,
+        alpha=1.0,
+        node_color="cadetblue",
+        font_weight="bold",
+        edge_color=["r", "k", "r", "k", "k"],
+        hold=True,
+    )
     nx.draw_networkx_edge_labels(graph, pos=pos)
-    plt.text(2, 0.1, 'non-linear interaction in red')
+    plt.text(2, 0.1, "non-linear interaction in red")
     # see here for an example on how to plot edge labels:
     # http://stackoverflow.com/questions/10104700/how-to-set-networkx-edge-labels-offset-to-avoid-label-overlap
     return fig
@@ -267,37 +284,44 @@ def plot_network_comparison(results):
             figure handle, Figure object from the matplotlib package
     """
     # Get union graph.
-    adj_matrix = results.get_adjacency_matrix(weights='union')
-    graph_union = io.export_networkx_graph(adj_matrix, weights='union')
+    adj_matrix = results.get_adjacency_matrix(weights="union")
+    graph_union = io.export_networkx_graph(adj_matrix, weights="union")
 
     fig = plt.figure(figsize=(10, 15))
     ax1 = plt.subplot(231)  # plot union graph
     _plot_graph(graph_union, ax1)
     ax = plt.subplot(232)  # plot union graph adjacency matrix
-    _plot_adj_matrix(results.get_adjacency_matrix('union'), mat_color='PuBu',
-                     cbar_label='link in union', cbar_stepsize=1)
-    ax.set_title('union network A and B', y=1.1)
+    _plot_adj_matrix(
+        results.get_adjacency_matrix("union"),
+        mat_color="PuBu",
+        cbar_label="link in union",
+        cbar_stepsize=1,
+    )
+    ax.set_title("union network A and B", y=1.1)
 
     ax = plt.subplot(234)  # plot comparison adjacency matrix
-    if results.settings.tail_comp == 'two':
-        cbar_label = 'A != B'
-    elif results.settings.tail_comp == 'one':
-        cbar_label = 'A > B'
-    adj_matrix_comparison = results.get_adjacency_matrix('comparison')
-    _plot_adj_matrix(adj_matrix_comparison,
-                     mat_color='OrRd', cbar_label=cbar_label, cbar_stepsize=1)
-    ax.set_title('Comparison {0}'.format(cbar_label), y=1.1)
+    if results.settings.tail_comp == "two":
+        cbar_label = "A != B"
+    elif results.settings.tail_comp == "one":
+        cbar_label = "A > B"
+    adj_matrix_comparison = results.get_adjacency_matrix("comparison")
+    _plot_adj_matrix(
+        adj_matrix_comparison, mat_color="OrRd", cbar_label=cbar_label, cbar_stepsize=1
+    )
+    ax.set_title("Comparison {0}".format(cbar_label), y=1.1)
 
     ax = plt.subplot(235)  # plot abs. differences adjacency matrix
-    adj_matrix_diff = results.get_adjacency_matrix('diff_abs')
-    _plot_adj_matrix(adj_matrix_diff,
-                     mat_color='BuGn', cbar_label='norm. CMI diff [a.u.]',
-                     cbar_stepsize=0.1)
-    ax.set_title('CMI diff abs (A - B)', y=1.1)
+    adj_matrix_diff = results.get_adjacency_matrix("diff_abs")
+    _plot_adj_matrix(
+        adj_matrix_diff,
+        mat_color="BuGn",
+        cbar_label="norm. CMI diff [a.u.]",
+        cbar_stepsize=0.1,
+    )
+    ax.set_title("CMI diff abs (A - B)", y=1.1)
 
     ax = plt.subplot(236)  # plot p-value adjacency matrix
-    adj_matrix_pval = results.get_adjacency_matrix('pvalue')
-    _plot_adj_matrix(adj_matrix_pval, mat_color='Greys',
-                     cbar_label='p-value')
-    ax.set_title('p-value [%]', y=1.1)
+    adj_matrix_pval = results.get_adjacency_matrix("pvalue")
+    _plot_adj_matrix(adj_matrix_pval, mat_color="Greys", cbar_label="p-value")
+    ax.set_title("p-value [%]", y=1.1)
     return graph_union, fig

@@ -541,7 +541,7 @@ def test_discrete_ais():
     mi_d = ais_estimator.estimate(proc1)
 
     ais_estimator = JidtGaussianAIS(settings=settings)
-    mi_g = ais_estimator.estimate(proc1.astype(np.float))
+    mi_g = ais_estimator.estimate(proc1.astype(float))
     _compare_result(np.mean(mi_d), np.mean(mi_g), 'JidtDiscreteAIS',
                     'JidtGaussianAIS', 'AIS (AR process)', tol=0.07)
 
@@ -550,7 +550,7 @@ def test_discrete_ais():
     mi_d = ais_estimator.estimate(proc2)
 
     ais_estimator = JidtGaussianAIS(settings=settings)
-    mi_g = ais_estimator.estimate(proc2.astype(np.float))
+    mi_g = ais_estimator.estimate(proc2.astype(float))
     _compare_result(np.mean(mi_d), np.mean(mi_g), 'JidtDiscreteAIS',
                     'JidtGaussianAIS', 'AIS (AR process, no mem.)', tol=0.05)
     _assert_result(mi_d, 0, 'JidtDiscreteAIS', 'MI (no memory)')

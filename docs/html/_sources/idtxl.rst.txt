@@ -101,6 +101,25 @@ idtxl.estimators_opencl module
     :undoc-members:
     :show-inheritance:
 
+
+idtxl.estimators_mpi module
+------------------------------
+
+.. automodule:: idtxl.estimators_mpi
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+idtxl.estimators_python module
+------------------------------
+
+.. automodule:: idtxl.estimators_python
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 idtxl.estimators_multivariate_pid module
 ----------------------------------------
 

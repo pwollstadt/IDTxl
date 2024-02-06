@@ -1,0 +1,280 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>idtxl.estimators_mpi &#8212; IDTxl 1.6.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pyramid.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="../../_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.6.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">idtxl.estimators_mpi</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for idtxl.estimators_mpi</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">.estimator</span> <span class="kn">import</span> <span class="n">Estimator</span>
+<span class="kn">from</span> <span class="nn">.estimator</span> <span class="kn">import</span> <span class="n">get_estimator</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">idtxl_exceptions</span> <span class="k">as</span> <span class="n">ex</span>
+<span class="kn">from</span> <span class="nn">.idtxl_utils</span> <span class="kn">import</span> <span class="n">timeout</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">from</span> <span class="nn">uuid</span> <span class="kn">import</span> <span class="n">uuid4</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">mpi4py.futures</span> <span class="kn">import</span> <span class="n">MPIPoolExecutor</span>
+<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+    <span class="n">ex</span><span class="o">.</span><span class="n">package_missing</span><span class="p">(</span>
+        <span class="n">err</span><span class="p">,</span>
+        <span class="s2">&quot;MPI is not available on this system. Install it&quot;</span>
+        <span class="s2">&quot;from https://pypi.org/project/mpi4py/ to use&quot;</span>
+        <span class="s2">&quot;MPI parallelization.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<span class="n">_worker_estimators</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="sd">&quot;&quot;&quot;Estimator instances on worker ranks</span>
+
+<span class="sd">Used so that Estimators do not have to be created new for each task given to them.</span>
+<span class="sd">Estimators are indexed by the ID of the corresponding MPIEstimator instance on the MPI main rank.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">_get_worker_estimator</span><span class="p">(</span><span class="n">id_</span><span class="p">,</span> <span class="n">est</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return Estimator instance on worker rank.</span>
+<span class="sd">    If no Estimator for the given MPIEstimator id exists, create a new one</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Create new estimator if necessary</span>
+    <span class="k">if</span> <span class="n">id_</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_worker_estimators</span><span class="p">:</span>
+        <span class="c1"># There is currently no good way to delete Estimators from _worker_estimators</span>
+        <span class="c1"># caches when the corresponding MPIEstimator ceases to exist.</span>
+        <span class="c1"># To avoid memory leaks, we currently allow only a single cached estimator that is replaced for new MPIEstimators.</span>
+        <span class="n">_worker_estimators</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+        <span class="n">_worker_estimators</span><span class="p">[</span><span class="n">id_</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_estimator</span><span class="p">(</span><span class="n">est</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_worker_estimators</span><span class="p">[</span><span class="n">id_</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_dispatch_task</span><span class="p">(</span><span class="n">id_</span><span class="p">,</span> <span class="n">est</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Estimates a single chunk of data on an MPI worker rank.</span>
+<span class="sd">    Calls the estimate function of the base Estimator</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">estimator</span> <span class="o">=</span> <span class="n">_get_worker_estimator</span><span class="p">(</span><span class="n">id_</span><span class="p">,</span> <span class="n">est</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">estimator</span><span class="o">.</span><span class="n">is_parallel</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">estimator</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">n_chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">estimator</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="MPIEstimator"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_mpi.MPIEstimator">[docs]</a><span class="k">class</span> <span class="nc">MPIEstimator</span><span class="p">(</span><span class="n">Estimator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;MPI Wrapper for arbitrary Estimator implementations</span>
+
+<span class="sd">    Make sure to have an &quot;if __name__==&#39;__main__&#39;:&quot; guard in your main script</span>
+<span class="sd">    to avoid infinite recursion!</span>
+
+<span class="sd">    To use MPI, add MPI=True to the Estimator settings dictionary and</span>
+<span class="sd">    optionally provide max_workers</span>
+
+<span class="sd">    Call using mpiexec:</span>
+<span class="sd">        &gt;&gt;&gt; mpiexec -n 1 -usize &lt;max workers + 1&gt; python &lt;python script&gt;</span>
+
+<span class="sd">    or, if MPI does not support spawning new workers (i.e. MPI version &lt; 2)</span>
+<span class="sd">        &gt;&gt;&gt; mpiexec -n &lt;max workers + 1&gt; python -m mpi4py.futures &lt;python script&gt;</span>
+
+<span class="sd">    Call using slurm:</span>
+<span class="sd">        &gt;&gt;&gt; srun -n $SLURM_NTASKS --mpi=pmi2 python -m mpi4py.futures &lt;python script&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">est</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates new MPIEstimator instance</span>
+
+<span class="sd">        Immediately creates instances of est on each MPI worker.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            est : str | Callable[[dict], Estimator]</span>
+<span class="sd">                Name of of or callable returning an instance of the base</span>
+<span class="sd">                Estimator</span>
+<span class="sd">            settings : dict</span>
+<span class="sd">                settings for the base Estimator.</span>
+<span class="sd">            max_workers : int (optional)</span>
+<span class="sd">                Number of MPI workers, default=MPI_UNIVERSE_SIZE</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_est</span> <span class="o">=</span> <span class="n">est</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># Create unique id for this instance to access cached estimators</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_id</span> <span class="o">=</span> <span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">int</span>
+
+        <span class="c1"># Create the MPIPoolExecutor and initialize Estimators on worker ranks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_executor</span> <span class="o">=</span> <span class="n">MPIPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_workers&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+
+        <span class="c1"># Boot up the executor with timeout</span>
+        <span class="k">with</span> <span class="n">timeout</span><span class="p">(</span>
+            <span class="n">timeout_duration</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mpi_bootup_timeout&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+            <span class="n">exception_message</span><span class="o">=</span><span class="s2">&quot;Bootup of MPI workers timed out.</span><span class="se">\n\</span>
+<span class="s2">                Make sure the script was started in an MPI enrivonment using mpiexec, mpirun, srun (SLURM) or equivalent.</span><span class="se">\n\</span>
+<span class="s2">                If necessary, increase the timeout in the settings dictionary using the key mpi_bootup_timeout.&quot;</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_executor</span><span class="o">.</span><span class="n">bootup</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Create Estimator for rank 0.</span>
+        <span class="n">_get_worker_estimator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_id</span><span class="p">,</span> <span class="n">est</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Shut down MPIPoolExecutor upon deletion of MPIEstimator&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_executor</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_chunk_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">chunksize</span><span class="p">,</span> <span class="n">n_chunks</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Iterator chopping data dictionary into n_chunks chunks of size chunksize</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_chunks</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="p">{</span>
+                <span class="n">var</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="kc">None</span>
+                    <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+                    <span class="k">else</span> <span class="n">data</span><span class="p">[</span><span class="n">var</span><span class="p">][</span><span class="n">i</span> <span class="o">*</span> <span class="n">chunksize</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">chunksize</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">data</span>
+            <span class="p">}</span>
+
+<div class="viewcode-block" id="MPIEstimator.estimate"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_mpi.MPIEstimator.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">n_chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Distributes the given chunks of a task to Estimators on worker ranks using MPI.</span>
+
+<span class="sd">        Needs to be called with kwargs only.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n_chunks : int  [optional]</span>
+<span class="sd">                Number of chunks to split the data into, default=1.</span>
+<span class="sd">            data : dict[str, Sequence]</span>
+<span class="sd">                Dictionary of random variable realizations</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy array</span>
+<span class="sd">                Estimates of information-theoretic quantities as np.double</span>
+<span class="sd">                values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="n">n_chunks</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Number of chunks must be at least one.&quot;</span>
+
+        <span class="n">samplesize</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">())))</span>
+
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="n">var</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">var</span><span class="p">)</span> <span class="o">==</span> <span class="n">samplesize</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="p">),</span> <span class="s2">&quot;All variables must have the same number of realizations.&quot;</span>
+
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">samplesize</span> <span class="o">%</span> <span class="n">n_chunks</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="p">),</span> <span class="s2">&quot;Number of realizations must be divisible by number of chunks!&quot;</span>
+
+        <span class="c1"># Split the data into chunks</span>
+        <span class="n">chunksize</span> <span class="o">=</span> <span class="n">samplesize</span> <span class="o">//</span> <span class="n">n_chunks</span>
+
+        <span class="n">chunked_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">chunksize</span><span class="p">,</span> <span class="n">n_chunks</span><span class="p">)</span>
+
+        <span class="n">result_generator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_executor</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+            <span class="n">_dispatch_task</span><span class="p">,</span>
+            <span class="n">itertools</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_id</span><span class="p">),</span>
+            <span class="n">itertools</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_est</span><span class="p">),</span>
+            <span class="n">itertools</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">),</span>
+            <span class="n">chunked_data</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">fromiter</span><span class="p">(</span><span class="n">result_generator</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MPIEstimator.is_parallel"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_mpi.MPIEstimator.is_parallel">[docs]</a>    <span class="k">def</span> <span class="nf">is_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="MPIEstimator.is_analytic_null_estimator"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_mpi.MPIEstimator.is_analytic_null_estimator">[docs]</a>    <span class="k">def</span> <span class="nf">is_analytic_null_estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test if the base Estimator is an analytic null estimator.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">_get_worker_estimator</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_est</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">is_analytic_null_estimator</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MPIEstimator.estimate_surrogates_analytic"><a class="viewcode-back" href="../../idtxl_estimators.html#idtxl.estimators_mpi.MPIEstimator.estimate_surrogates_analytic">[docs]</a>    <span class="k">def</span> <span class="nf">estimate_surrogates_analytic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Forward analytic estimation to the base Estimator.</span>
+
+<span class="sd">        Analytic estimation is assumed to have shorter runtime and is thus</span>
+<span class="sd">        performed on rank 0 alone for now.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">_get_worker_estimator</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_est</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">estimate_surrogates_analytic</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.6.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">idtxl.estimators_mpi</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
+    </div>
+  </body>
+</html>

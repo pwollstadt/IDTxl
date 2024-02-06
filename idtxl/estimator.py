@@ -1,5 +1,4 @@
 """Provide estimator base class for information theoretic measures."""
-import imp
 import os
 import importlib
 import inspect
@@ -8,26 +7,26 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 from . import idtxl_exceptions as ex
 
-MODULE_EXTENSIONS = ('.py')  # ('.py', '.pyc', '.pyo')
-ESTIMATOR_PREFIX = ('estimators_')
+MODULE_EXTENSIONS = ".py"  # ('.py', '.pyc', '.pyo')
+ESTIMATOR_PREFIX = "estimators_"
 
 
 def _package_contents():
     # Return list of IDTxl modules containing estimators.
-    file, pathname, description = imp.find_module(__package__)
-    if file:
-        raise ImportError('Not a package: %r', __package__)
-    return [os.path.splitext(module)[0]
-            for module in os.listdir(pathname)
-            if (module.endswith(MODULE_EXTENSIONS) and
-                module.startswith(ESTIMATOR_PREFIX))]
+    pkg_spec = importlib.util.find_spec(__package__)
+    module_path = pkg_spec.submodule_search_locations[0]
+    return [
+        os.path.splitext(module)[0]
+        for module in os.listdir(module_path)
+        if (module.endswith(MODULE_EXTENSIONS) and module.startswith(ESTIMATOR_PREFIX))
+    ]
 
 
 def list_estimators():
     """List all estimators available in IDTxl."""
     module_list = _package_contents()
     for m in module_list:
-        module = importlib.import_module('.' + m, __package__)
+        module = importlib.import_module("." + m, __package__)
         class_list = inspect.getmembers(module, inspect.isclass)
         if class_list:
             pprint(class_list)
@@ -54,23 +53,26 @@ def _find_estimator(est):
         # Test if provided class implements the Estimator class. This
         # constraint may be relaxed in the future.
         if not np.issubclass_(est, Estimator):
-            raise RuntimeError('Provided class should implement abstract class'
-                               ' Estimator.')
+            raise RuntimeError(
+                "Provided class should implement abstract class" " Estimator."
+            )
         return est
     elif type(est) is str:
         module_list = _package_contents()
         estimator = None
         for m in module_list:
             try:
-                module = importlib.import_module('.' + m, __package__)
+                module = importlib.import_module("." + m, __package__)
                 return getattr(module, est)
             except AttributeError:
                 pass
         if not estimator:
-            raise RuntimeError('Estimator {0} not found.'.format(est))
+            raise RuntimeError("Estimator {0} not found.".format(est))
     else:
-        raise TypeError('Please provide an estimator class or the name of an '
-                        'estimator as string.')
+        raise TypeError(
+            "Please provide an estimator class or the name of an "
+            "estimator as string."
+        )
 
 
 def get_estimator(est, settings):
@@ -89,11 +91,11 @@ def get_estimator(est, settings):
     """
 
     # Check if MPI flag is set to True
-    if settings.get('MPI', False):
+    if settings.get("MPI", False):
         settings_mpi = settings.copy()
 
         # Remove MPI flag to avoid infinite recursion
-        del settings_mpi['MPI']
+        del settings_mpi["MPI"]
 
         # Import just in time to avoid cyclic import
         from .estimators_mpi import MPIEstimator
@@ -127,6 +129,7 @@ class Estimator(metaclass=ABCMeta):
     """
 
     def __init__(self, settings=None):
+        self.settings = settings
         pass
 
     @abstractmethod
@@ -195,26 +198,29 @@ class Estimator(metaclass=ABCMeta):
         if settings is None:
             return {}
         elif type(settings) is not dict:
-            raise TypeError('settings should be a dictionary.')
+            raise TypeError("settings should be a dictionary.")
         else:
             return settings
 
     def _check_number_of_points(self, n_points):
         """Sanity check for number of points going into the estimator."""
-        if (n_points - 1) <= int(self.settings['kraskov_k']):
-            raise RuntimeError('Insufficient number of points ({0}) for the '
-                               'requested number of nearest neighbours '
-                               '(kraskov_k: {1}).'.format(
-                                   n_points, self.settings['kraskov_k']))
-        if (n_points - 1) <= (int(self.settings['kraskov_k']) +
-                              int(self.settings['theiler_t'])):
-            raise RuntimeError('Insufficient number of points ({0}) for the '
-                               'requested number of nearest neighbours '
-                               '(kraskov_k: {1}) and Theiler-correction '
-                               '(theiler_t: {2}).'.format(
-                                   n_points,
-                                   self.settings['kraskov_k'],
-                                   self.settings['theiler_t']))
+        if (n_points - 1) <= int(self.settings["kraskov_k"]):
+            raise RuntimeError(
+                "Insufficient number of points ({0}) for the "
+                "requested number of nearest neighbours "
+                "(kraskov_k: {1}).".format(n_points, self.settings["kraskov_k"])
+            )
+        if (n_points - 1) <= (
+            int(self.settings["kraskov_k"]) + int(self.settings["theiler_t"])
+        ):
+            raise RuntimeError(
+                "Insufficient number of points ({0}) for the "
+                "requested number of nearest neighbours "
+                "(kraskov_k: {1}) and Theiler-correction "
+                "(theiler_t: {2}).".format(
+                    n_points, self.settings["kraskov_k"], self.settings["theiler_t"]
+                )
+            )
 
     def _ensure_one_dim_input(self, var):
         """Make sure input arrays have one dimension.
@@ -231,10 +237,9 @@ class Estimator(metaclass=ABCMeta):
             if var.shape[1] == 1:
                 var = np.squeeze(var)
             else:
-                raise TypeError('2D input arrays must have shape[1] == 1.')
+                raise TypeError("2D input arrays must have shape[1] == 1.")
         elif len(var.shape) > 2:
-            raise TypeError('Input arrays must be 1D or 2D with shape[1] == '
-                            '1.')
+            raise TypeError("Input arrays must be 1D or 2D with shape[1] == " "1.")
         return var
 
     def _ensure_two_dim_input(self, var):
@@ -250,7 +255,7 @@ class Estimator(metaclass=ABCMeta):
         if len(var.shape) == 1:
             var = np.expand_dims(var, axis=1)
         elif len(var.shape) > 2:
-            raise TypeError('Input arrays must be 1D or 2D')
+            raise TypeError("Input arrays must be 1D or 2D")
         return var
 
     def estimate_parallel(self, **data):

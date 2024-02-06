@@ -350,7 +350,6 @@ class JidtGaussian(JidtEstimator):
 
     def estimate_surrogates_analytic(self, n_perm=200, **data):
         """Estimate the surrogate distribution analytically.
-
         This method must be implemented because this class'
         is_analytic_null_estimator() method returns true
 
@@ -1316,7 +1315,6 @@ class JidtGaussianCMI(JidtGaussian):
     information between var1 and var2.
 
     See parent class for references. Results are returned in nats.
-
 
     Args:
         settings : dict [optional]

@@ -10,7 +10,13 @@ from idtxl.lazy_array import LazyArray
 from idtxl.estimator import get_estimator
 try:
     from mpi4py import MPI
-except ImportError:
+except ImportError as err:
+    ex.package_missing(
+        err,
+        "MPI is not available on this system. Install it"
+        "from https://pypi.org/project/mpi4py/ to use"
+        "MPI parallelization.",
+    )
     MPI = None
 
 class tags:

@@ -2,7 +2,10 @@ import numpy as np
 
 from idtxl.knn.knn_finder import KnnFinder
 
+
 class TreeKnnFinder(KnnFinder):
+    def __init__(self, num_threads="USE_ALL", metric="chebyshev", leaf_size=40):
+        """Initialise the KnnFinder with settings.
 
     def __init__(self, data: np.ndarray, num_threads: str='USE_ALL', metric: str='chebyshev', leaf_size: int=40):
         """Initialise the KnnFinder with settings.

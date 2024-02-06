@@ -376,7 +376,7 @@ def test_data_type():
     d_float = np.random.randn(3, 50)
     data.set_data(d_float, dim_order='ps')
     assert data.data_type is np.float64, 'Data type did not change.'
-    assert issubclass(type(data.data[0, 0, 0]), np.float), (
+    assert issubclass(type(data.data[0, 0, 0]), float), (
         'Data type is not a float.')
 
     # Check if data returned by the object have the correct type.

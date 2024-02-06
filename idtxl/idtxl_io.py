@@ -14,14 +14,18 @@ import itertools as it
 from scipy.io import loadmat
 from .data import Data
 from . import idtxl_exceptions as ex
+
 try:
     import networkx as nx
 except ImportError as err:
     ex.package_missing(
         err,
-        ('networkx is not available on this system. Install it from '
-         'https://pypi.python.org/pypi/networkx/2.0 to export and plot IDTxl '
-         'results in this format.'))
+        (
+            "networkx is not available on this system. Install it from "
+            "https://pypi.python.org/pypi/networkx/2.0 to export and plot IDTxl "
+            "results in this format."
+        ),
+    )
 
 DEBUG = False
 
@@ -41,7 +45,7 @@ def save_json(d, file_path):
     basic Python data types first.
     """
     data_json = _remove_numpy(d)
-    with open(file_path, 'w') as outfile:
+    with open(file_path, "w") as outfile:
         json.dump(obj=data_json, fp=outfile, sort_keys=True)
 
 
@@ -75,7 +79,7 @@ def _remove_numpy(data):
     data_json = cp.copy(data)
     for k in data_json.keys():
         if DEBUG:
-            print('{0}, type: {1}'.format(data_json[k], type(data_json[k])))
+            print("{0}, type: {1}".format(data_json[k], type(data_json[k])))
         if type(data_json[k]) is np.ndarray:
             data_json[k] = data_json[k].tolist()
     return data_json
@@ -140,13 +144,13 @@ def save_pickle(obj, name):
         pickle.HIGHEST_PROTOCOL is a binary format, which may be inconvenient,
         but is good for performance. Protocol 0 is a text format.
     """
-    with open(name, 'wb') as f:
+    with open(name, "wb") as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
 
 def load_pickle(name):
     """Load objects that have been saved using Python's pickle module."""
-    with open(name, 'rb') as f:
+    with open(name, "rb") as f:
         return pickle.load(f)
 
 
@@ -187,19 +191,22 @@ def import_fieldtrip(file_name, ft_struct_name, file_version, normalise=True):
             sampling rate, corresponding to the 'fsample' field
     """
     if file_version != "v7.3":
-        raise RuntimeError('At present only m-files in format 7.3 are '
-                           'supported, please consider reopening and resaving '
-                           'your m-file in that version.')
+        raise RuntimeError(
+            "At present only m-files in format 7.3 are "
+            "supported, please consider reopening and resaving "
+            "your m-file in that version."
+        )
         # TODO we could write a fallback option using numpy's loadmat?
 
-    print('Creating Python dictionary from FT data structure: {0}'
-          .format(ft_struct_name))
+    print(
+        "Creating Python dictionary from FT data structure: {0}".format(ft_struct_name)
+    )
     trial_data = _ft_import_trial(file_name, ft_struct_name)
     label = _ft_import_label(file_name, ft_struct_name)
     fsample = _ft_fsample_2_float(file_name, ft_struct_name)
     timestamps = _ft_import_time(file_name, ft_struct_name)
 
-    data = Data(data=trial_data, dim_order='spr', normalise=normalise)
+    data = Data(data=trial_data, dim_order="spr", normalise=normalise)
     return data, label, timestamps, fsample
 
 
@@ -211,18 +218,21 @@ def _ft_import_trial(file_name, ft_struct_name):
     # Get the trial cells that contain the references (pointers) to the data
     # we need. Then get the data from matrices in cells of a 1 x numtrials cell
     # array in the original FieldTrip structure.
-    trial = ft_struct['trial']
+    trial = ft_struct["trial"]
 
     # Get the trial cells that contain the references (pointers) to the data
     # we need. Then get the data from matrices in cells of a 1 x numtrials cell
     # array in the original FieldTrip structure.
-    trial = ft_struct['trial']
+    trial = ft_struct["trial"]
 
     # Allocate memory to hold actual data, read shape of first trial to know
     # the data size.
     trial_data_tmp = np.array(ft_file[trial[0][0]])  # get data from 1st trial
-    print('Found data with first dimension: {0}, and second: {1}'
-          .format(trial_data_tmp.shape[0], trial_data_tmp.shape[1]))
+    print(
+        "Found data with first dimension: {0}, and second: {1}".format(
+            trial_data_tmp.shape[0], trial_data_tmp.shape[1]
+        )
+    )
     geometry = trial_data_tmp.shape + (trial.shape[0],)
     trial_data = np.empty(geometry)
 
@@ -240,10 +250,10 @@ def _ft_import_label(file_name, ft_struct_name):
     # for details of the data handling see comments in _ft_import_trial
     ft_file = h5py.File(file_name)
     ft_struct = ft_file[ft_struct_name]
-    ft_label = ft_struct['label']
+    ft_label = ft_struct["label"]
 
     if DEBUG:
-        print('Converting FT labels to python list of strings')
+        print("Converting FT labels to python list of strings")
 
     label = []
     for ll in range(0, ft_label.shape[0]):
@@ -265,9 +275,9 @@ def _ft_import_time(file_name, ft_struct_name):
     # for details of the data handling see comments in ft_trial_2_numpyarray
     ft_file = h5py.File(file_name)
     ft_struct = ft_file[ft_struct_name]
-    ft_time = ft_struct['time']
+    ft_time = ft_struct["time"]
     if DEBUG:
-        print('Converting FT time cell array to numpy array')
+        print("Converting FT time cell array to numpy array")
 
     np_timeaxis_tmp = np.array(ft_file[ft_time[0][0]])
     geometry = np_timeaxis_tmp.shape + (ft_time.shape[0],)
@@ -282,15 +292,14 @@ def _ft_import_time(file_name, ft_struct_name):
 def _ft_fsample_2_float(file_name, ft_struct_name):
     ft_file = h5py.File(file_name)
     ft_struct = ft_file[ft_struct_name]
-    FTfsample = ft_struct['fsample']
+    FTfsample = ft_struct["fsample"]
     fsample = int(FTfsample[0])
     if DEBUG:
-        print('Converting FT fsample array (1x1) to numpy array (1x1)')
+        print("Converting FT fsample array (1x1) to numpy array (1x1)")
     return fsample
 
 
-def import_matarray(file_name, array_name, file_version, dim_order,
-                    normalise=True):
+def import_matarray(file_name, array_name, file_version, dim_order, normalise=True):
     """Read Matlab hdf5 file into IDTxl.
 
     reads a matlab hdf5 file ("-v7.3' or higher, .mat) or non-hdf5 files with a
@@ -324,32 +333,37 @@ def import_matarray(file_name, array_name, file_version, dim_order,
             instance of IDTxl Data object, containing data from the 'trial'
             field
     """
-    if file_version == 'v7.3':
+    if file_version == "v7.3":
         mat_file = h5py.File(file_name)
         # Assert that at least one of the keys found at the top level of the
         # HDF file  matches the name of the array we wanted
         if array_name not in mat_file.keys():
-            raise RuntimeError('Array {0} not in mat file or not a variable '
-                               'at the file''s top level.'.format(array_name))
+            raise RuntimeError(
+                "Array {0} not in mat file or not a variable "
+                "at the file"
+                "s top level.".format(array_name)
+            )
 
         # 2. Create an object for the matlab array (from the hdf5 hierachy),
         # the trailing [()] ensures everything is read
         mat_data = np.squeeze(np.asarray(mat_file[array_name][()]))
 
-    elif file_version in ['v4', 'v6', 'v7']:
+    elif file_version in ["v4", "v6", "v7"]:
         try:
             m = loadmat(file_name, squeeze_me=True, variable_names=array_name)
         except NotImplementedError:
-            raise RuntimeError('You may have provided an incorrect file '
-                               'version. The mat file was probably saved as '
-                               'version 7.3 (hdf5).')
+            raise RuntimeError(
+                "You may have provided an incorrect file "
+                "version. The mat file was probably saved as "
+                "version 7.3 (hdf5)."
+            )
         mat_data = m[array_name]  # loadmat returns a dict containing variables
     else:
-        raise ValueError('Unkown file version: {0}.'.format(file_version))
+        raise ValueError("Unkown file version: {0}.".format(file_version))
 
     # Create output: IDTxl data object, list of labels, sampling info in unit
     # time steps (sampling rate of 1).
-    print('Creating Data object from matlab array: {0}.'.format(array_name))
+    print("Creating Data object from matlab array: {0}.".format(array_name))
     data = Data(mat_data, dim_order=dim_order, normalise=normalise)
     return data
 
@@ -413,39 +427,45 @@ def export_networkx_source_graph(results, target, sign_sources=True, fdr=True):
     # Replace time index of current value to be consistent with lag-notation
     # in exported graph. Remember the current value's index to later define the
     # proper candidate set.
-    current_value = (results.get_single_target(
-        target=target, fdr=fdr)['current_value'][0], 0)
-    idx_current_value = results.get_single_target(
-        target=target, fdr=fdr)['current_value'][1]
+    current_value = (
+        results.get_single_target(target=target, fdr=fdr)["current_value"][0],
+        0,
+    )
+    idx_current_value = results.get_single_target(target=target, fdr=fdr)[
+        "current_value"
+    ][1]
     # Add the target as a node and add omnibus p-value as an attribute
     # of the target node
-    graph.add_node(current_value,
-                   omnibus_te=results.get_single_target(
-                                target=target, fdr=fdr)['omnibus_te'],
-                   omnibus_sign=results.get_single_target(
-                                target=target, fdr=fdr)['omnibus_te'])
+    graph.add_node(
+        current_value,
+        omnibus_te=results.get_single_target(target=target, fdr=fdr)["omnibus_te"],
+        omnibus_sign=results.get_single_target(target=target, fdr=fdr)["omnibus_te"],
+    )
     # Get selected source variables
-    selected_vars_sources = results.get_single_target(
-        target=target, fdr=fdr)['selected_vars_sources']
+    selected_vars_sources = results.get_single_target(target=target, fdr=fdr)[
+        "selected_vars_sources"
+    ]
     # Get selected target variables
-    selected_vars_target = results.get_single_target(
-        target=target, fdr=fdr)['selected_vars_target']
+    selected_vars_target = results.get_single_target(target=target, fdr=fdr)[
+        "selected_vars_target"
+    ]
 
     if sign_sources:  # Add only significant past variables as nodes.
         graph.add_nodes_from(selected_vars_sources)
         graph.add_nodes_from(selected_vars_target)
-    else:   # Add all tested past variables as nodes.
+    else:  # Add all tested past variables as nodes.
         # Get all sample indices using the current value's actual index.
         samples_tested = np.arange(
             idx_current_value - results.settings.min_lag_sources,
             idx_current_value - results.settings.max_lag_sources,
-            -results.settings.tau_sources)
+            -results.settings.tau_sources,
+        )
         # Get source indices
-        sources_tested = results.get_single_target(
-            target=target, fdr=fdr)['sources_tested']
+        sources_tested = results.get_single_target(target=target, fdr=fdr)[
+            "sources_tested"
+        ]
         # Create tuples from source and sample indices
-        tested_vars_sources = [i for i in it.product(
-            sources_tested, samples_tested)]
+        tested_vars_sources = [i for i in it.product(sources_tested, samples_tested)]
         graph.add_nodes_from(tested_vars_sources)
 
     # Add edges from selected target variables to the target.
@@ -453,16 +473,21 @@ def export_networkx_source_graph(results, target, sign_sources=True, fdr=True):
         graph.add_edge(v, current_value)
 
     # Get TE and p-values fro selected source variables
-    selected_sources_te = results.get_single_target(
-        target=target, fdr=fdr)['selected_sources_te']
-    selected_sources_pval = results.get_single_target(
-        target=target, fdr=fdr)['selected_sources_pval']
+    selected_sources_te = results.get_single_target(target=target, fdr=fdr)[
+        "selected_sources_te"
+    ]
+    selected_sources_pval = results.get_single_target(target=target, fdr=fdr)[
+        "selected_sources_pval"
+    ]
     # Add edges from selected source variables to the target.
     # Also add TE and p-value as edge attributes
-    for (ind, v) in enumerate(selected_vars_sources):
-        graph.add_edge(v, current_value,
-                       te=selected_sources_te[ind],
-                       pval=selected_sources_pval[ind])
+    for ind, v in enumerate(selected_vars_sources):
+        graph.add_edge(
+            v,
+            current_value,
+            te=selected_sources_te[ind],
+            pval=selected_sources_pval[ind],
+        )
     return graph
 
 
@@ -507,37 +532,38 @@ def export_brain_net_viewer(adjacency_matrix, mni_coord, file_name, **kwargs):
     # node labels is a list of '-' (no labels).
     n_nodes = adjacency_matrix.n_nodes()
     n_edges = adjacency_matrix.n_edges()
-    labels = kwargs.get('labels', ['-' for i in range(n_nodes)])
-    node_color = kwargs.get('node_color', np.ones(n_nodes))
-    node_size = kwargs.get('node_size', np.ones(n_nodes))
+    labels = kwargs.get("labels", ["-" for i in range(n_nodes)])
+    node_color = kwargs.get("node_color", np.ones(n_nodes))
+    node_size = kwargs.get("node_size", np.ones(n_nodes))
     if n_edges == 0:
-        Warning('No edges in results file. Nothing to plot.')
-    assert mni_coord.shape[0] == n_nodes and mni_coord.shape[1] == 3, (
-        'MNI coordinates must have shape [n_nodes, 3].')
-    assert len(labels) == n_nodes, (
-        'Labels must have same length as no. nodes.')
-    assert len(node_color) == n_nodes, (
-        'Node colors must have same length as no. nodes.')
-    assert len(node_size) == n_nodes, (
-        'Node size must have same length as no. nodes.')
+        Warning("No edges in results file. Nothing to plot.")
+    assert (
+        mni_coord.shape[0] == n_nodes and mni_coord.shape[1] == 3
+    ), "MNI coordinates must have shape [n_nodes, 3]."
+    assert len(labels) == n_nodes, "Labels must have same length as no. nodes."
+    assert len(node_color) == n_nodes, "Node colors must have same length as no. nodes."
+    assert len(node_size) == n_nodes, "Node size must have same length as no. nodes."
 
     # Check, if there are blanks in the labels and delete them, otherwise
     # BrainNet viewer chrashes
     labels_stripped = [l.replace(" ", "") for l in labels]
 
     # Write node file.
-    with open('{0}.node'.format(file_name), 'w') as text_file:
+    with open("{0}.node".format(file_name), "w") as text_file:
         for n in range(n_nodes):
-            print('{0}\t{1}\t{2}\t'.format(*mni_coord[n, :]),
-                  file=text_file, end='')
-            print('{0}\t{1}\t'.format(node_color[n], node_size[n]),
-                  file=text_file, end='')
-            print('{0}'.format(labels_stripped[n]), file=text_file)
+            print("{0}\t{1}\t{2}\t".format(*mni_coord[n, :]), file=text_file, end="")
+            print(
+                "{0}\t{1}\t".format(node_color[n], node_size[n]), file=text_file, end=""
+            )
+            print("{0}".format(labels_stripped[n]), file=text_file)
 
     # Write edge file.
-    with open('{0}.edge'.format(file_name), 'w') as text_file:
+    with open("{0}.edge".format(file_name), "w") as text_file:
         for i in range(n_nodes):
             for j in range(n_nodes):
-                print('{0}\t'.format(adjacency_matrix.edge_matrix[i, j]),
-                      file=text_file, end='')
-            print('', file=text_file)
+                print(
+                    "{0}\t".format(adjacency_matrix.edge_matrix[i, j]),
+                    file=text_file,
+                    end="",
+                )
+            print("", file=text_file)

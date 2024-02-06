@@ -40,6 +40,16 @@ class NetworkComparison(NetworkAnalysis):
     """
 
     def __init__(self):
+        self._cmi_estimator = None
+        self.settings = None
+        self.cmi_surr = None
+        self.cmi_diff = None
+        self.union = None
+        self.cmi_comp = None
+        self.cmi_set_a = None
+        self.cmi_set_b = None
+        self.significance = None
+        self.pvalue = None
         super().__init__()
 
     def compare_links_within(self, settings, link_a, link_b, network, data):
@@ -92,9 +102,9 @@ class NetworkComparison(NetworkAnalysis):
         self._check_n_replications(data, data)
         self._create_union(network)
         if not self._link_exists(link_a):
-            raise RuntimeError('Link A is not part of the network.')
+            raise RuntimeError("Link A is not part of the network.")
         if not self._link_exists(link_b):
-            raise RuntimeError('Link B is not part of the network.')
+            raise RuntimeError("Link B is not part of the network.")
 
         # Calculate the test statistic as the difference of information
         # transfer between link A and link B.
@@ -106,20 +116,25 @@ class NetworkComparison(NetworkAnalysis):
         # estimates of shuffled data. Determine significance of test statistic
         # against surrogate distribution.
         surrogates_a = self._get_surrogates_target(
-            data, target=link_a[1], sources=link_a[0])
+            data, target=link_a[1], sources=link_a[0]
+        )
         surrogates_b = self._get_surrogates_target(
-            data, target=link_b[1], sources=link_b[0])
+            data, target=link_b[1], sources=link_b[0]
+        )
         self.cmi_surr = surrogates_a[0] - surrogates_b[0]
-        [sig, pvalue] = stats._find_pvalue(statistic=self.cmi_diff,
-                                           distribution=self.cmi_surr,
-                                           alpha=self.settings['alpha_comp'],
-                                           tail=self.settings['tail_comp'])
+        _, pvalue = stats._find_pvalue(
+            statistic=self.cmi_diff,
+            distribution=self.cmi_surr,
+            alpha=self.settings["alpha_comp"],
+            tail=self.settings["tail_comp"],
+        )
 
         # Create results object.
         results = ResultsNetworkComparison(
             n_nodes=data.n_processes,
             n_realisations=data.n_realisations(self.current_value),
-            normalised=data.normalise)
+            normalised=data.normalise,
+        )
         # Return both the absolute difference and the direction of the
         # effect. Returning just the difference and evalutating the sign
         # does not give the direction of the effect if one or both values
@@ -129,12 +144,15 @@ class NetworkComparison(NetworkAnalysis):
             settings=self.settings,
             union_network=self.union,
             results={
-                'cmi_diff_abs': {link_a[1]: np.abs(self.cmi_diff),
-                                 link_b[1]: np.abs(self.cmi_diff)},
-                'a>b': {link_a[1]: [te_a > te_b], link_b[1]: [te_a > te_b]},
-                'pval': {link_a[1]: [pvalue], link_b[1]: [pvalue]},
-                'cmi_surr': self.cmi_surr,
-            })
+                "cmi_diff_abs": {
+                    link_a[1]: np.abs(self.cmi_diff),
+                    link_b[1]: np.abs(self.cmi_diff),
+                },
+                "a>b": {link_a[1]: [te_a > te_b], link_b[1]: [te_a > te_b]},
+                "pval": {link_a[1]: [pvalue], link_b[1]: [pvalue]},
+                "cmi_surr": self.cmi_surr,
+            },
+        )
         self._reset()  # remove attributes
         return results
 
@@ -187,21 +205,21 @@ class NetworkComparison(NetworkAnalysis):
         self._check_equal_realisations(data_a, data_b)
 
         # Main comparison.
-        print('\n-------------------------- (1) create union of networks')
+        print("\n-------------------------- (1) create union of networks")
         self._create_union(network_a, network_b)
-        print('\n-------------------------- (2) calculate differences in TE '
-              'values')
+        print("\n-------------------------- (2) calculate differences in TE " "values")
         self._calculate_cmi_diff_within(data_a, data_b)
-        print('\n-------------------------- (3) create surrogate distribution')
+        print("\n-------------------------- (3) create surrogate distribution")
         self._create_surrogate_distribution_within(data_a, data_b)
-        print('\n-------------------------- (4) determine p-value')
+        print("\n-------------------------- (4) determine p-value")
         self._p_value_union()
 
         self._union_indices_to_lags()
         results = ResultsNetworkComparison(
             n_nodes=data_a.n_processes,
             n_realisations=data_a.n_realisations(self.current_value),
-            normalised=data_a.normalise)
+            normalised=data_a.normalise,
+        )
         # Return both the absolute difference and the direction of the
         # effect. Returning just the difference and evalutating the sign
         # does not give the direction of the effect if one or both values
@@ -210,16 +228,18 @@ class NetworkComparison(NetworkAnalysis):
             settings=self.settings,
             union_network=self.union,
             results={
-                'cmi_diff_abs': self._get_abs_diff(self.cmi_diff),
-                'a>b': self.cmi_comp,
-                'pval': self.pvalue,
-                'cmi_surr': self.cmi_surr,
-            })
+                "cmi_diff_abs": self._get_abs_diff(self.cmi_diff),
+                "a>b": self.cmi_comp,
+                "pval": self.pvalue,
+                "cmi_surr": self.cmi_surr,
+            },
+        )
         self._reset()  # remove attributes
         return results
 
-    def compare_between(self, settings, network_set_a, network_set_b,
-                        data_set_a, data_set_b):
+    def compare_between(
+        self, settings, network_set_a, network_set_b, data_set_a, data_set_b
+    ):
         """Compare networks inferred under two conditions between subjects.
 
         Compare two sets of networks inferred from two sets of data recorded
@@ -255,21 +275,22 @@ class NetworkComparison(NetworkAnalysis):
         network_all = np.hstack((network_set_a, network_set_b))
 
         # Main comparison.
-        print('\n-------------------------- (1) create union of networks')
+        print("\n-------------------------- (1) create union of networks")
+        network_all = np.hstack((network_set_a, network_set_b))
         self._create_union(*network_all)
-        print('\n-------------------------- (2) calculate differences in TE '
-              'values')
+        print("\n-------------------------- (2) calculate differences in TE " "values")
         self._calculate_cmi_diff_between(data_set_a, data_set_b)
-        print('\n-------------------------- (3) create surrogate distribution')
+        print("\n-------------------------- (3) create surrogate distribution")
         self._create_surrogate_distribution_between()
-        print('\n-------------------------- (4) determine p-value')
+        print("\n-------------------------- (4) determine p-value")
         self._p_value_union()
 
         self._union_indices_to_lags()
         results = ResultsNetworkComparison(
             n_nodes=data_all[0].n_processes,
             n_realisations=data_all[0].n_realisations(self.current_value),
-            normalised=data_all[0].normalise)
+            normalised=data_all[0].normalise,
+        )
         # Return both the absolute difference and the direction of the
         # effect. Returning just the difference and evalutating the sign
         # does not give the direction of the effect if one or both values
@@ -278,15 +299,16 @@ class NetworkComparison(NetworkAnalysis):
             settings=self.settings,
             union_network=self.union,
             results={
-                'cmi_diff_abs': self._get_abs_diff(self.cmi_diff),
-                'a>b': self.cmi_comp,
-                'pval': self.pvalue,
-                'cmi_surr': self.cmi_surr,
-            })
+                "cmi_diff_abs": self._get_abs_diff(self.cmi_diff),
+                "a>b": self.cmi_comp,
+                "pval": self.pvalue,
+                "cmi_surr": self.cmi_surr,
+            },
+        )
         self._reset()  # remove attributes
         return results
 
-    def calculate_link_te(self, data, target, sources='all'):
+    def calculate_link_te(self, data, target, sources="all"):
         """Calculate the information transfer for whole links into a target.
 
         Calculate the information transfer for whole links as the joint
@@ -314,69 +336,76 @@ class NetworkComparison(NetworkAnalysis):
         """
         # Get lists of source and target variables. Return empty array if there
         # is no significant source variable for requested target.
-        source_vars = self.union._single_target[target]['selected_vars_sources']
-        target_vars = self.union._single_target[target]['selected_vars_target']
+        source_vars = self.union._single_target[target]["selected_vars_sources"]
+        target_vars = self.union._single_target[target]["selected_vars_target"]
         if not source_vars:
             return np.array([])
-        current_value = (target, self.union['max_lag'])
+        current_value = (target, self.union["max_lag"])
         return self._calculate_single_link(
-            data, current_value, source_vars, target_vars, sources=sources)
+            data, current_value, source_vars, target_vars, sources=sources
+        )
 
     def _check_n_replications(self, data_a, data_b):
         """Check if no. replications is sufficient request no. permutations."""
-        assert data_a.n_replications == data_b.n_replications, (
-                            'Unequal no. replications in the two data sets.')
+        assert (
+            data_a.n_replications == data_b.n_replications
+        ), "Unequal no. replications in the two data sets."
         n_replications = data_a.n_replications
-        if self.settings['stats_type'] == 'dependent':
-            if 2**n_replications < self.settings['n_perm_comp']:
-                raise RuntimeError('The number of replications {0} in the data'
-                                   ' is not sufficient to allow for the '
-                                   'requested no. permutations {1}'.format(
-                                            n_replications,
-                                            self.settings['n_perm_comp']))
-        elif self.settings['stats_type'] == 'independent':
-            if (binom(2*n_replications, n_replications) <
-                    self.settings['n_perm_comp']):
-                raise RuntimeError('The number of replications {0} in the data'
-                                   ' is not sufficient to allow for the '
-                                   'requested no. permutations {1}'.format(
-                                                n_replications,
-                                                self.settings['n_perm_comp']))
+        if self.settings["stats_type"] == "dependent":
+            if 2**n_replications < self.settings["n_perm_comp"]:
+                raise RuntimeError(
+                    "The number of replications {0} in the data"
+                    " is not sufficient to allow for the "
+                    "requested no. permutations {1}".format(
+                        n_replications, self.settings["n_perm_comp"]
+                    )
+                )
+        elif self.settings["stats_type"] == "independent":
+            if binom(2 * n_replications, n_replications) < self.settings["n_perm_comp"]:
+                raise RuntimeError(
+                    "The number of replications {0} in the data"
+                    " is not sufficient to allow for the "
+                    "requested no. permutations {1}".format(
+                        n_replications, self.settings["n_perm_comp"]
+                    )
+                )
         else:
-            raise RuntimeError('Unknown ''stats_type''!')
+            raise RuntimeError("Unknown " "stats_type" "!")
 
     def _check_n_subjects(self, data_set_a, data_set_b):
         """Check if no. subjects is sufficient request no. permutations."""
-        if self.settings['stats_type'] == 'dependent':
-            assert len(data_set_a) == len(data_set_b), (
-                    'The number of data sets is not equal between conditions.')
+        if self.settings["stats_type"] == "dependent":
+            assert len(data_set_a) == len(
+                data_set_b
+            ), "The number of data sets is not equal between conditions."
             n_data_sets = len(data_set_a)
-            if 2**n_data_sets < self.settings['n_perm_comp']:
-                raise RuntimeError('The number of data sets per condition {0} '
-                                   'is not sufficient to enable the '
-                                   'requested no. permutations {1}'.format(
-                                                n_data_sets,
-                                                self.settings['n_perm_comp']))
-        elif self.settings['stats_type'] == 'independent':
+            if 2**n_data_sets < self.settings["n_perm_comp"]:
+                raise RuntimeError(
+                    "The number of data sets per condition {0} "
+                    "is not sufficient to enable the "
+                    "requested no. permutations {1}".format(
+                        n_data_sets, self.settings["n_perm_comp"]
+                    )
+                )
+        elif self.settings["stats_type"] == "independent":
             max_len = max(len(data_set_a), len(data_set_b))
             total_len = len(data_set_a) + len(data_set_b)
-            if binom(total_len, max_len) < self.settings['n_perm_comp']:
-                raise RuntimeError('The total number of data sets {0} is not '
-                                   'sufficient to enable the requested no. '
-                                   'permutations {1}'.format(
-                                                total_len,
-                                                self.settings['n_perm_comp']))
+            if binom(total_len, max_len) < self.settings["n_perm_comp"]:
+                raise RuntimeError(
+                    "The total number of data sets {0} is not "
+                    "sufficient to enable the requested no. "
+                    "permutations {1}".format(total_len, self.settings["n_perm_comp"])
+                )
         else:
-            raise RuntimeError('Unknown ''stats_type''!')
-        self.settings['n_subjects'] = [len(data_set_a), len(data_set_b)]
+            raise RuntimeError("Unknown " "stats_type" "!")
+        self.settings["n_subjects"] = [len(data_set_a), len(data_set_b)]
 
     def _check_equal_realisations(self, *data_sets):
         """Check if all data sets have an equal no. realisations."""
         n_realisations = data_sets[0].n_realisations()
         for d in data_sets:
             if d.n_realisations() != n_realisations:
-                raise RuntimeError('Unequal no. realisations between data '
-                                   'sets.')
+                raise RuntimeError("Unequal no. realisations between data " "sets.")
 
     def _create_union(self, *networks):
         """Create the union from a set of individual networks."""
@@ -389,24 +418,27 @@ class NetworkComparison(NetworkAnalysis):
         # Get the maximum lags from the networks, we need this to get
         # realisations of variables later on.
         self.union = DotDict({})
-        self.union['targets_analysed'] = targets_union
-        self.union['max_lag'] = (
-            networks[0]._single_target[targets_union[0]].current_value[1])
+        self.union["targets_analysed"] = targets_union
+        self.union["max_lag"] = (
+            networks[0]._single_target[targets_union[0]].current_value[1]
+        )
 
         # Get the union of sources for each target in the union network.
         self.union._single_target = DotDict({})
         for t in targets_union:
             self.union._single_target[t] = DotDict({})
-            self.union._single_target[t]['selected_vars_sources'] = []
-            self.union._single_target[t]['selected_vars_target'] = []
+            self.union._single_target[t]["selected_vars_sources"] = []
+            self.union._single_target[t]["selected_vars_target"] = []
             for nw in networks:
                 # Check if the max_lag is the same for each network going into
                 # the comparison.
                 try:
                     lag = nw._single_target[t].current_value[1]
-                    if self.union['max_lag'] != lag:
-                        raise ValueError('Networks seem to have been analyzed '
-                                         'using different lags.')
+                    if self.union["max_lag"] != lag:
+                        raise ValueError(
+                            "Networks seem to have been analyzed "
+                            "using different lags."
+                        )
                 except KeyError:
                     pass
 
@@ -417,26 +449,33 @@ class NetworkComparison(NetworkAnalysis):
                 try:
                     cond_src = self._lag_to_idx(
                         nw._single_target[t].selected_vars_sources,
-                        self.union['max_lag'])
+                        self.union["max_lag"],
+                    )
                 except KeyError:
                     cond_src = []
                 try:
                     cond_tgt = self._lag_to_idx(
-                        nw._single_target[t]['selected_vars_target'],
-                        self.union['max_lag'])
+                        nw._single_target[t]["selected_vars_target"],
+                        self.union["max_lag"],
+                    )
                 except KeyError:
                     cond_tgt = []
 
                 # Add conditional if it isn't already in the union network.
                 for c in cond_src:
-                    if c not in self.union._single_target[t]['selected_vars_sources']:
-                        self.union._single_target[t]['selected_vars_sources'].append(c)
+                    if c not in self.union._single_target[t]["selected_vars_sources"]:
+                        self.union._single_target[t]["selected_vars_sources"].append(c)
                 for c in cond_tgt:
-                    if c not in self.union._single_target[t]['selected_vars_target']:
-                        self.union._single_target[t]['selected_vars_target'].append(c)
+                    if c not in self.union._single_target[t]["selected_vars_target"]:
+                        self.union._single_target[t]["selected_vars_target"].append(c)
             self.union._single_target[t].sources = np.unique(
-                np.array([s[0] for s in (
-                    self.union._single_target[t]['selected_vars_sources'])]))
+                np.array(
+                    [
+                        s[0]
+                        for s in (self.union._single_target[t]["selected_vars_sources"])
+                    ]
+                )
+            )
 
     def _calculate_cmi_diff_within(self, data_a, data_b):
         """Calculate the difference in CMI between conditions within a subject.
@@ -466,6 +505,12 @@ class NetworkComparison(NetworkAnalysis):
         for each source > target combination in the union network between data
         sets recorded from subjects measured under one of two experimental
         conditions. Compare the absolute mean TE values between the two groups.
+
+        Args:
+            data_set_a : Data instance
+                raw data recorded in condition A
+            data_set_a : Data instance
+                raw data recorded in condition B
 
         Returns:
             numpy array
@@ -506,20 +551,24 @@ class NetworkComparison(NetworkAnalysis):
             # Permute data obejcts between conditions a and b before
             # calculating the CMI.
             cmi_set_all = np.array(cmi_set_a + cmi_set_b)
-            new_partition_a = np.random.choice(range(len(cmi_set_all)),
-                                               size=len(cmi_set_a),
-                                               replace=False)
-            new_partition_b = np.array(list(set(range(0, len(cmi_set_all))) -
-                                            set(new_partition_a)))
+            new_partition_a = np.random.choice(
+                range(len(cmi_set_all)), size=len(cmi_set_a), replace=False
+            )
+            new_partition_b = np.array(
+                list(set(range(0, len(cmi_set_all))) - set(new_partition_a))
+            )
             cmi_set_a_perm = cmi_set_all[new_partition_a]
             cmi_set_b_perm = cmi_set_all[new_partition_b]
 
-            return self._calculate_diff(self._calculate_mean(cmi_set_a_perm),
-                                        self._calculate_mean(cmi_set_b_perm))
+            return self._calculate_diff(
+                self._calculate_mean(cmi_set_a_perm),
+                self._calculate_mean(cmi_set_b_perm),
+            )
 
         else:
-            return self._calculate_diff(self._calculate_mean(cmi_set_a),
-                                        self._calculate_mean(cmi_set_b))
+            return self._calculate_diff(
+                self._calculate_mean(cmi_set_a), self._calculate_mean(cmi_set_b)
+            )
 
     def _calculate_cmi_all_links(self, data, permuted=False):
         """Calculate CMI for each source>target combi in the union network."""
@@ -528,7 +577,7 @@ class NetworkComparison(NetworkAnalysis):
             cmi_temp = []
 
             # if there are no sources for the current target, continue to next
-            if not self.union._single_target[t]['selected_vars_sources']:
+            if not self.union._single_target[t]["selected_vars_sources"]:
                 cmi[t] = np.array(cmi_temp)
                 continue
 
@@ -575,42 +624,48 @@ class NetworkComparison(NetworkAnalysis):
             cmi_temp_a = []
             cmi_temp_b = []
             # If there are no sources for current target, continue  to the next
-            if not self.union._single_target[t]['selected_vars_sources']:
+            if not self.union._single_target[t]["selected_vars_sources"]:
                 cmi_a[t] = np.array(cmi_temp_a)
                 cmi_b[t] = np.array(cmi_temp_b)
                 continue
 
             # Get full conditioning set for current target.
             idx_cond_full = (
-                self.union._single_target[t]['selected_vars_target'] +
-                self.union._single_target[t]['selected_vars_sources'])
+                self.union._single_target[t]["selected_vars_target"]
+                + self.union._single_target[t]["selected_vars_sources"]
+            )
             # Get realisations, where realisations are permuted/swapped
             # replication-wise between two data sets (e.g., from different
             # conditions)
-            [cond_full_perm_a,
-             cur_val_perm_a,
-             cond_full_perm_b,
-             cur_val_perm_b] = self._get_permuted_replications(
-                 data_a, data_b, t)
+            [
+                cond_full_perm_a,
+                cur_val_perm_a,
+                cond_full_perm_b,
+                cur_val_perm_b,
+            ] = self._get_permuted_replications(data_a, data_b, t)
             # Calculate CMI from each source to current target t from permuted
             # data
-            n_sources = len(
-                self.union._single_target[t]['selected_vars_sources'])
+            n_sources = len(self.union._single_target[t]["selected_vars_sources"])
             cmi_temp_a = np.zeros(n_sources)
             cmi_temp_b = np.zeros(n_sources)
-            for (i, idx_source) in enumerate(
-                        self.union._single_target[t]['selected_vars_sources']):
+            for i, idx_source in enumerate(
+                self.union._single_target[t]["selected_vars_sources"]
+            ):
                 # Get realisations of current source from the set of all
                 # surrogate conditionals and calculate the CMI. Do this for
                 # both conditions.
                 [temp_cond_real_a, source_real_a] = utils.separate_arrays(
-                    idx_cond_full, idx_source, cond_full_perm_a)
+                    idx_cond_full, idx_source, cond_full_perm_a
+                )
                 cmi_temp_a[i] = self._cmi_estimator.estimate(
-                    cur_val_perm_a, source_real_a, temp_cond_real_a)
+                    cur_val_perm_a, source_real_a, temp_cond_real_a
+                )
                 [temp_cond_real_b, source_real_b] = utils.separate_arrays(
-                    idx_cond_full, idx_source, cond_full_perm_b)
+                    idx_cond_full, idx_source, cond_full_perm_b
+                )
                 cmi_temp_b[i] = self._cmi_estimator.estimate(
-                    cur_val_perm_b, source_real_b, temp_cond_real_b)
+                    cur_val_perm_b, source_real_b, temp_cond_real_b
+                )
 
             cmi_a[t] = cmi_temp_a
             cmi_b[t] = cmi_temp_b
@@ -620,7 +675,7 @@ class NetworkComparison(NetworkAnalysis):
     def _calculate_mean(self, cmi_set):
         """Calculate the mean CMI over multiple data sets for all targets."""
         if type(cmi_set) is dict:
-            raise TypeError('Input needs to be 1-D array-like of dicts.')
+            raise TypeError("Input needs to be 1-D array-like of dicts.")
         # The output is a dictionary with targets as keys. The entry for each
         # target is a list of mean values for each source. The order of sources
         # corresponds to the list of sources in
@@ -632,7 +687,7 @@ class NetworkComparison(NetworkAnalysis):
             cmi_mean[t] = np.zeros(n_sources)
             for i_source in range(n_sources):
                 temp = np.zeros(n_datasets)
-                for (i_data, c) in enumerate(cmi_set):
+                for i_data, c in enumerate(cmi_set):
                     temp[i_data] = c[t][i_source]
                 cmi_mean[t][i_source] = np.mean(temp)
         return cmi_mean
@@ -691,18 +746,21 @@ class NetworkComparison(NetworkAnalysis):
         for t in self.union.targets_analysed:
             surrogates_a = self._get_surrogates_target(data_a, t)
             surrogates_b = self._get_surrogates_target(data_b, t)
-            self.cmi_surr[t] = np.zeros((  # save surrogates as 2D-array
-                len(self.union._single_target[t].sources),
-                self.settings['n_perm_comp']))
-            for (i, s) in enumerate(self.union._single_target[t].sources):
+            self.cmi_surr[t] = np.zeros(
+                (  # save surrogates as 2D-array
+                    len(self.union._single_target[t].sources),
+                    self.settings["n_perm_comp"],
+                )
+            )
+            for i, s in enumerate(self.union._single_target[t].sources):
                 self.cmi_surr[t][i, :] = surrogates_a[s] - surrogates_b[s]
 
-    def _get_surrogates_target(self, data, target, sources='all'):
+    def _get_surrogates_target(self, data, target, sources="all"):
         # Get lists of source and target variables, and the list of significant
         # sources for current target
-        source_vars = self.union._single_target[target]['selected_vars_sources']
-        target_vars = self.union._single_target[target]['selected_vars_target']
-        if sources == 'all':
+        source_vars = self.union._single_target[target]["selected_vars_sources"]
+        target_vars = self.union._single_target[target]["selected_vars_target"]
+        if sources == "all":
             sources = np.unique(np.array([s[0] for s in source_vars]))
         else:
             sources = np.array([sources])
@@ -712,13 +770,16 @@ class NetworkComparison(NetworkAnalysis):
         # surrogates if requested.
         current_value = (target, self.union['max_lag'])
         current_value_surrogates = stats._get_surrogates(
-            data, current_value, [current_value],
-            n_perm=self.settings['n_perm_comp'], perm_settings=self.settings)
+            data,
+            current_value,
+            [current_value],
+            n_perm=self.settings["n_perm_comp"],
+            perm_settings=self.settings,
+        )
 
         # Calculate TE for each link, i.e., for a single source and the target
         te_surrogates = {}
         for s in sources:
-
             # Separate selected source variables in variables belonging to the
             # current link and variables belonging to the conditioning set
             link_vars = [i for i in source_vars if i[0] == s]
@@ -781,11 +842,11 @@ class NetworkComparison(NetworkAnalysis):
         self.cmi_surr = {}
         for t in self.union.targets_analysed:
             n_sources = len(self.union._single_target[t].sources)
-            self.cmi_surr[t] = np.zeros(
-                (n_sources, self.settings['n_perm_comp']))
-        for p in range(self.settings['n_perm_comp']):
+            self.cmi_surr[t] = np.zeros((n_sources, self.settings["n_perm_comp"]))
+        for p in range(self.settings["n_perm_comp"]):
             surrogate = self._calculate_diff_of_mean(
-                self.cmi_set_a, self.cmi_set_b, permute=True)
+                self.cmi_set_a, self.cmi_set_b, permute=True
+            )
             for t in self.union.targets_analysed:
                 self.cmi_surr[t][:, p] = surrogate[t]
 
@@ -804,8 +865,9 @@ class NetworkComparison(NetworkAnalysis):
                 [sig, p] = stats._find_pvalue(
                     statistic=self.cmi_diff[t][i],
                     distribution=self.cmi_surr[t][i, :],
-                    alpha=self.settings['alpha_comp'],
-                    tail=self.settings['tail_comp'])
+                    alpha=self.settings["alpha_comp"],
+                    tail=self.settings["tail_comp"],
+                )
                 self.significance[t][i] = sig
                 self.pvalue[t][i] = p
 
@@ -813,14 +875,14 @@ class NetworkComparison(NetworkAnalysis):
         """Clean up bevor returning."""
         # convert time indices to lags for selected variables
         for t in self.union.targets_analysed:
-            self.union._single_target[t]['selected_vars_sources'] = (
-                self._idx_to_lag(
-                    self.union._single_target[t]['selected_vars_sources'],
-                    self.union['max_lag']))
-            self.union._single_target[t]['selected_vars_target'] = (
-                self._idx_to_lag(
-                    self.union._single_target[t]['selected_vars_target'],
-                    self.union['max_lag']))
+            self.union._single_target[t]["selected_vars_sources"] = self._idx_to_lag(
+                self.union._single_target[t]["selected_vars_sources"],
+                self.union["max_lag"],
+            )
+            self.union._single_target[t]["selected_vars_target"] = self._idx_to_lag(
+                self.union._single_target[t]["selected_vars_target"],
+                self.union["max_lag"],
+            )
 
     def _get_permuted_replications(self, data_a, data_b, target):
         """Return realisations with replications permuted betw. two data sets.
@@ -847,10 +909,11 @@ class NetworkComparison(NetworkAnalysis):
         """
         # Get indices of current value and full conditioning set in the
         # union network.
-        current_val = (target, self.union['max_lag'])
+        current_val = (target, self.union["max_lag"])
         idx_cond_full = (
-            self.union._single_target[target]['selected_vars_target'] +
-            self.union._single_target[target]['selected_vars_sources'])
+            self.union._single_target[target]["selected_vars_target"]
+            + self.union._single_target[target]["selected_vars_sources"]
+        )
 
         # Get realisations of the current value and the full conditioning set.
         assert data_a.n_replications == data_b.n_replications, (
@@ -874,15 +937,14 @@ class NetworkComparison(NetworkAnalysis):
 
         # Swap or permute realisations of the conditioning set depending on the
         # stats type.
-        if self.settings['stats_type'] == 'dependent':
-            swap = np.repeat(np.random.randint(2, size=n_repl).astype(bool),
-                             n_per_repl)
+        if self.settings["stats_type"] == "dependent":
+            swap = np.repeat(np.random.randint(2, size=n_repl).astype(bool), n_per_repl)
             cond_a_perm[swap, :] = cond_b_real[swap, :]
             cond_b_perm[swap, :] = cond_a_real[swap, :]
             cur_val_a_perm[swap, :] = cur_val_b_real[swap, :]
             cur_val_b_perm[swap, :] = cur_val_a_real[swap, :]
 
-        elif self.settings['stats_type'] == 'independent':
+        elif self.settings["stats_type"] == "independent":
             # Pool replications from both data sets and draw two samples of
             # size n_repl.
             resample_a = np.random.choice(2 * n_repl, n_repl, replace=False)
@@ -892,16 +954,13 @@ class NetworkComparison(NetworkAnalysis):
             i_0 = 0
             i_1 = n_per_repl
             for r in resample_a:
-                if r >= n_repl:     # take realisation from cond B
+                if r >= n_repl:  # take realisation from cond B
                     r_perm = r - n_repl
-                    cond_a_perm[i_0:i_1, ] = cond_b_real[repl_idx_b ==
-                                                         r_perm, :]
-                    cur_val_a_perm[i_0:i_1, ] = cur_val_b_real[repl_idx_b ==
-                                                               r_perm, :]
-                else:               # take realisation from cond A otherwise
-                    cond_a_perm[i_0:i_1, ] = cond_a_real[repl_idx_a == r, :]
-                    cur_val_a_perm[i_0:i_1, ] = cur_val_a_real[repl_idx_a == r,
-                                                               :]
+                    cond_a_perm[i_0:i_1,] = cond_b_real[repl_idx_b == r_perm, :]
+                    cur_val_a_perm[i_0:i_1,] = cur_val_b_real[repl_idx_b == r_perm, :]
+                else:  # take realisation from cond A otherwise
+                    cond_a_perm[i_0:i_1,] = cond_a_real[repl_idx_a == r, :]
+                    cur_val_a_perm[i_0:i_1,] = cur_val_a_real[repl_idx_a == r, :]
                 i_0 = i_1
                 i_1 = i_0 + n_per_repl
 
@@ -909,50 +968,48 @@ class NetworkComparison(NetworkAnalysis):
             i_0 = 0
             i_1 = n_per_repl
             for r in resample_b:
-                if r >= n_repl:     # take realisation from cond B
+                if r >= n_repl:  # take realisation from cond B
                     r_perm = r - n_repl
-                    cond_b_perm[i_0:i_1, ] = cond_b_real[repl_idx_b ==
-                                                         r_perm, :]
-                    cur_val_b_perm[i_0:i_1, ] = cur_val_b_real[repl_idx_b ==
-                                                               r_perm, :]
-                else:               # take realisation from cond A otherwise
-                    cond_b_perm[i_0:i_1, ] = cond_a_real[repl_idx_a == r, :]
-                    cur_val_b_perm[i_0:i_1, ] = cur_val_a_real[repl_idx_a == r,
-                                                               :]
+                    cond_b_perm[i_0:i_1,] = cond_b_real[repl_idx_b == r_perm, :]
+                    cur_val_b_perm[i_0:i_1,] = cur_val_b_real[repl_idx_b == r_perm, :]
+                else:  # take realisation from cond A otherwise
+                    cond_b_perm[i_0:i_1,] = cond_a_real[repl_idx_a == r, :]
+                    cur_val_b_perm[i_0:i_1,] = cur_val_a_real[repl_idx_a == r, :]
                 i_0 = i_1
                 i_1 = i_0 + n_per_repl
         else:
-            raise ValueError('Unkown "stats_type": {0}, should be "dependent" '
-                             'or "independent".'.format(
-                                                self.settings['stats_type']))
+            raise ValueError(
+                'Unkown "stats_type": {0}, should be "dependent" '
+                'or "independent".'.format(self.settings["stats_type"])
+            )
         return cond_a_perm, cur_val_a_perm, cond_b_perm, cur_val_b_perm
 
     def _initialise(self, settings):
         """Check input and set analysis settings to initial values."""
         # Check if the type of comparison was specified.
         try:
-            settings['stats_type']
+            settings["stats_type"]
         except KeyError:
-            raise KeyError('You have to provide a "stats_type": "dependent" '
-                           'or "independent".')
+            raise KeyError(
+                'You have to provide a "stats_type": "dependent" ' 'or "independent".'
+            )
 
         # Add CMI estimator to class.
-        assert 'cmi_estimator' in settings, 'Estimator was not specified!'
-        self._cmi_estimator = get_estimator(settings['cmi_estimator'], settings)
+        assert "cmi_estimator" in settings, "Estimator was not specified!"
+        self._cmi_estimator = get_estimator(settings["cmi_estimator"], settings)
 
-        if 'local_values' in settings and settings['local_values']:
-            raise RuntimeError('Can''t run network comparison on local values.')
+        if "local_values" in settings and settings["local_values"]:
+            raise RuntimeError("Can" "t run network comparison on local values.")
 
         # Set defaults for statistical tests.
         self.settings = settings.copy()
-        self.settings['local_values'] = False
-        self.settings.setdefault('verbose', True)
-        self.settings.setdefault('n_perm_comp', 500)
-        self.settings.setdefault('alpha_comp', 0.05)
-        self.settings.setdefault('tail_comp', 'two')
-        self.settings.setdefault('permute_in_time', False)
-        stats.check_n_perm(self.settings['n_perm_comp'],
-                           self.settings['alpha_comp'])
+        self.settings["local_values"] = False
+        self.settings.setdefault("verbose", True)
+        self.settings.setdefault("n_perm_comp", 500)
+        self.settings.setdefault("alpha_comp", 0.05)
+        self.settings.setdefault("tail_comp", "two")
+        self.settings.setdefault("permute_in_time", False)
+        stats.check_n_perm(self.settings["n_perm_comp"], self.settings["alpha_comp"])
 
     def _reset(self):
         """Reset instance after analysis."""

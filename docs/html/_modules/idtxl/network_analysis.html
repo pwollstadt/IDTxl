@@ -5,14 +5,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>idtxl.network_analysis &#8212; IDTxl 1.4 documentation</title>
-    <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <title>idtxl.network_analysis &#8212; IDTxl 1.6.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pyramid.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
     <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -32,7 +31,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.6.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl.network_analysis</a></li> 
       </ul>
@@ -46,26 +45,29 @@
   <h1>Source code for idtxl.network_analysis</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Parent class for network inference and network comparison.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">import</span> <span class="nn">os.path</span>
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
-<span class="kn">from</span> <span class="nn">shutil</span> <span class="kn">import</span> <span class="n">copyfile</span>
-<span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pprint</span>
 <span class="kn">import</span> <span class="nn">ast</span>
 <span class="kn">import</span> <span class="nn">copy</span> <span class="k">as</span> <span class="nn">cp</span>
 <span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">it</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pprint</span>
+<span class="kn">from</span> <span class="nn">shutil</span> <span class="kn">import</span> <span class="n">copyfile</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">.estimator</span> <span class="kn">import</span> <span class="n">find_estimator</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">idtxl_utils</span> <span class="k">as</span> <span class="n">utils</span>
+
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">idtxl_io</span> <span class="k">as</span> <span class="n">io</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">idtxl_utils</span> <span class="k">as</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">.estimator</span> <span class="kn">import</span> <span class="n">get_estimator</span>
 
 
-<div class="viewcode-block" id="NetworkAnalysis"><a class="viewcode-back" href="../../idtxl.html#idtxl.network_analysis.NetworkAnalysis">[docs]</a><span class="k">class</span> <span class="nc">NetworkAnalysis</span><span class="p">():</span>
+<div class="viewcode-block" id="NetworkAnalysis"><a class="viewcode-back" href="../../idtxl.html#idtxl.network_analysis.NetworkAnalysis">[docs]</a><span class="k">class</span> <span class="nc">NetworkAnalysis</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Provide an analysis setup for network inference or comparison.</span>
 
 <span class="sd">    The class provides routines to check user input and set defaults.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span> <span class="o">=</span> <span class="p">[]</span>
@@ -83,17 +85,21 @@
     <span class="nd">@current_value</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">current_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">idx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">tuple</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">((</span><span class="s1">&#39;The current value should be a tuple (index &#39;</span> <span class="o">+</span>
-                             <span class="s1">&#39;process, index sample).&#39;</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="s2">&quot;The current value should be a tuple (index &quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;process, index sample).&quot;</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_current_value</span> <span class="o">=</span> <span class="n">idx</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_current_value_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get realisations of the current_value.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__current_value_realisations</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Attribute has not been set yet.&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Attribute has not been set yet.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__current_value_realisations</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">tuple</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;something went wrong&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;something went wrong&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__current_value_realisations</span>
 
     <span class="nd">@_current_value_realisations</span><span class="o">.</span><span class="n">setter</span>
@@ -108,42 +114,45 @@
     <span class="k">def</span> <span class="nf">selected_vars_full</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;List of indices of the full conditional set.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_full</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Attribute has not been set yet.&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Attribute has not been set yet.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_full</span>
 
     <span class="nd">@selected_vars_full</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">selected_vars_full</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx_list</span><span class="p">):</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">idx_list</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">idx_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">tuple</span><span class="p">)):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">((</span><span class="s1">&#39;Expected a list of tuples (index process, &#39;</span> <span class="o">+</span>
-                             <span class="s1">&#39;index sample).&#39;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">idx_list</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">idx_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="p">(</span><span class="s2">&quot;Expected a list of tuples (index process, &quot;</span> <span class="o">+</span> <span class="s2">&quot;index sample).&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_full</span> <span class="o">=</span> <span class="n">idx_list</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">selected_vars_target</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;List of indices of target samples in the conditional set.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Attribute has not been set yet.&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Attribute has not been set yet.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_target</span>
 
     <span class="nd">@selected_vars_target</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">selected_vars_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx_list</span><span class="p">):</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">idx_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">idx_list</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">((</span><span class="s1">&#39;Expected a list of tuples (index process, &#39;</span> <span class="o">+</span>
-                             <span class="s1">&#39;index sample).&#39;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">idx_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">idx_list</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="p">(</span><span class="s2">&quot;Expected a list of tuples (index process, &quot;</span> <span class="o">+</span> <span class="s2">&quot;index sample).&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_target</span> <span class="o">=</span> <span class="n">idx_list</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">selected_vars_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;List of indices of source samples in the conditional set.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_sources</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Attribute has not been set yet.&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Attribute has not been set yet.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_sources</span>
 
     <span class="nd">@selected_vars_sources</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">selected_vars_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx_list</span><span class="p">):</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">idx_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">idx_list</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">((</span><span class="s1">&#39;Expected a list of tuples (index process, &#39;</span> <span class="o">+</span>
-                             <span class="s1">&#39;index sample).&#39;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">idx_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">idx_list</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="p">(</span><span class="s2">&quot;Expected a list of tuples (index process, &quot;</span> <span class="o">+</span> <span class="s2">&quot;index sample).&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_sources</span> <span class="o">=</span> <span class="n">idx_list</span>
 
     <span class="nd">@property</span>
@@ -169,8 +178,9 @@
         <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span><span class="p">):</span>
             <span class="n">indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_target_realisations</span> <span class="o">=</span> <span class="p">(</span>
-                                <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span><span class="p">[:,</span> <span class="n">indices</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_target_realisations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span><span class="p">[</span>
+            <span class="p">:,</span> <span class="n">indices</span>
+        <span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__selected_vars_target_realisations</span>
 
     <span class="nd">@_selected_vars_target_realisations</span><span class="o">.</span><span class="n">setter</span>
@@ -187,10 +197,11 @@
 <span class="sd">            Use temporary variables to speed things up.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-        <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="p">):</span>
             <span class="n">indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_sources_realisations</span> <span class="o">=</span> <span class="p">(</span>
-                                <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span><span class="p">[:,</span> <span class="n">indices</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_sources_realisations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span><span class="p">[</span>
+            <span class="p">:,</span> <span class="n">indices</span>
+        <span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__selected_vars_sources_realisations</span>
 
     <span class="nd">@_selected_vars_sources_realisations</span><span class="o">.</span><span class="n">setter</span>
@@ -208,7 +219,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span> <span class="o">=</span> <span class="n">realisations</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span>
-                            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span><span class="p">,</span> <span class="n">realisations</span><span class="p">))</span>
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span><span class="p">,</span> <span class="n">realisations</span><span class="p">)</span>
+            <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_idx_to_lag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx_list</span><span class="p">,</span> <span class="n">current_value_sample</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Change sample indices to lags for each sample in the list.&quot;&quot;&quot;</span>
@@ -216,13 +228,12 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">current_value_sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
             <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Current value not set.&#39;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Current value not set.&quot;</span><span class="p">)</span>
 
         <span class="n">lag_list</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">idx_list</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">idx_list</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">current_value_sample</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;Sample time index larger than current &#39;</span>
-                                 <span class="s1">&#39;value.&#39;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;Sample time index larger than current &quot;</span> <span class="s2">&quot;value.&quot;</span><span class="p">)</span>
             <span class="n">lag_list</span><span class="p">[</span><span class="n">idx_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">c</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">current_value_sample</span> <span class="o">-</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">lag_list</span>
 
@@ -232,12 +243,12 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">current_value_sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
             <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Current value not set.&#39;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Current value not set.&quot;</span><span class="p">)</span>
 
         <span class="n">idx_list</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">lag_list</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">lag_list</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">current_value_sample</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;Sample lag larger than current value.&#39;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;Sample lag larger than current value.&quot;</span><span class="p">)</span>
             <span class="n">idx_list</span><span class="p">[</span><span class="n">lag_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">c</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">current_value_sample</span> <span class="o">-</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">idx_list</span>
 
@@ -248,17 +259,21 @@
         <span class="c1"># average estimator. Internally, the average estimator is used for</span>
         <span class="c1"># building the non-uniform embedding, etc. The local estimator is used</span>
         <span class="c1"># to estimate single-link MI/TE or single-process AIS in the end.</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">EstimatorClass</span> <span class="o">=</span> <span class="n">find_estimator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;cmi_estimator&#39;</span><span class="p">])</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Please provide an estimator class or name!&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator</span> <span class="o">=</span> <span class="n">EstimatorClass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator_local</span> <span class="o">=</span> <span class="n">EstimatorClass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="s2">&quot;cmi_estimator&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="s2">&quot;Estimator was not specified!&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;local_values&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;local_values&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator</span> <span class="o">=</span> <span class="n">get_estimator</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;cmi_estimator&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;local_values&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator_local</span> <span class="o">=</span> <span class="n">get_estimator</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;cmi_estimator&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator</span> <span class="o">=</span> <span class="n">EstimatorClass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator</span> <span class="o">=</span> <span class="n">get_estimator</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;cmi_estimator&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span>
+            <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_separate_realisations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx_full</span><span class="p">,</span> <span class="n">idx_single</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Separate single index realisations from a set of realisations.</span>
@@ -290,13 +305,13 @@
         <span class="c1"># variables).</span>
         <span class="n">array_col_single</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx_single</span><span class="p">)</span>
         <span class="n">array_col_remain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">idx_remaining</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-        <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">idx_remaining</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">idx_remaining</span><span class="p">):</span>
             <span class="n">array_col_remain</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
 
         <span class="c1"># Get realisations of the single and remaining variables.</span>
         <span class="n">real_single</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span><span class="p">[:,</span> <span class="n">array_col_single</span><span class="p">],</span>
-                        <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span><span class="p">[:,</span> <span class="n">array_col_single</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx_full</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="c1"># If no realiastions remain, set variable to None instead of and</span>
             <span class="c1"># empty array so the JIDT estimator doesn&#39;t break</span>
@@ -351,8 +366,8 @@
 
     <span class="k">def</span> <span class="nf">_remove_forced_conditionals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidate_set</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Remove enforced conditioning variables from candidate set.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;add_conditionals&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;add_conditionals&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;add_conditionals&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;add_conditionals&quot;</span><span class="p">]</span>
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">cond</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">tuple</span><span class="p">:</span>  <span class="c1"># easily add single variable</span>
                 <span class="n">cond</span> <span class="o">=</span> <span class="p">[</span><span class="n">cond</span><span class="p">]</span>
             <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">cond</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>  <span class="c1"># add conditioning variables per target</span>
@@ -397,27 +412,32 @@
 <span class="sd">                realisations of the selected variables</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">==</span> <span class="n">realisations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span>
-            <span class="s1">&#39;Dimensionality of realisations array (</span><span class="si">{0}</span><span class="s1">) and length of index &#39;</span>
-            <span class="s1">&#39;list (</span><span class="si">{1}</span><span class="s1">) do not match.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">realisations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">)))</span>
+            <span class="s2">&quot;Dimensionality of realisations array (</span><span class="si">{0}</span><span class="s2">) and length of index &quot;</span>
+            <span class="s2">&quot;list (</span><span class="si">{1}</span><span class="s2">) do not match.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">realisations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_append_selected_vars_idx</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_append_selected_vars_realisations</span><span class="p">(</span><span class="n">realisations</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_remove_selected_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Remove a single selected variable and its realisations.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">remove_column</span><span class="p">(</span>
-                                         <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span><span class="p">,</span>
-                                         <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_selected_vars_realisations</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span>
-                                        <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_target</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span>
-                                        <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_sources</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">_calculate_single_link</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">current_value</span><span class="p">,</span> <span class="n">source_vars</span><span class="p">,</span> <span class="n">target_vars</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                    <span class="n">sources</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">conditioning</span><span class="o">=</span><span class="s1">&#39;full&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">,</span>
+        <span class="n">current_value</span><span class="p">,</span>
+        <span class="n">source_vars</span><span class="p">,</span>
+        <span class="n">target_vars</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">sources</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
+        <span class="n">conditioning</span><span class="o">=</span><span class="s2">&quot;full&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Calculate dependency measure for all links into a target.</span>
 
 <span class="sd">        Calculate dependency measure for all links into a target. A single link</span>
@@ -477,93 +497,104 @@
         <span class="c1"># Get realisations of target variables and the current value, constant</span>
         <span class="c1"># over sources. Permute current value realisations to generate</span>
         <span class="c1"># surrogates if requested.</span>
-        <span class="n">target_realisations</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span>
-            <span class="n">current_value</span><span class="p">,</span> <span class="n">target_vars</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">target_realisations</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span><span class="n">current_value</span><span class="p">,</span> <span class="n">target_vars</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">current_value_realisations</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span>
-            <span class="n">current_value</span><span class="p">,</span> <span class="p">[</span><span class="n">current_value</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">current_value</span><span class="p">,</span> <span class="p">[</span><span class="n">current_value</span><span class="p">]</span>
+        <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="c1"># Check requested sources.</span>
-        <span class="k">if</span> <span class="n">sources</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">sources</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
             <span class="n">sources</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">source_vars</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>  <span class="c1"># handle integer inputs</span>
                 <span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="n">sources</span><span class="p">]</span>
             <span class="n">sources</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">sources</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">n_processes</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)):</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;At least one source (</span><span class="si">{0}</span><span class="s1">) is not in no. &#39;</span>
-                                   <span class="s1">&#39;nodes in the data (</span><span class="si">{1}</span><span class="s1">).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                                       <span class="n">sources</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">n_processes</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s2">&quot;At least one source (</span><span class="si">{0}</span><span class="s2">) is not in no. &quot;</span>
+                    <span class="s2">&quot;nodes in the data (</span><span class="si">{1}</span><span class="s2">).&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">n_processes</span><span class="p">)</span>
+                <span class="p">)</span>
 
         <span class="c1"># Allocate memory: either a multidimensional array if local values are</span>
         <span class="c1"># required, or a 1D-array for averaged values for each link.</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;local_values&quot;</span><span class="p">]:</span>
             <span class="c1"># Collect local values in a [sources x samples x replications]</span>
             <span class="c1"># matrix.</span>
-            <span class="n">links</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span>
-                <span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">),</span>
-                <span class="n">data</span><span class="o">.</span><span class="n">n_realisations_samples</span><span class="p">(</span><span class="n">current_value</span><span class="p">),</span>
-                <span class="n">data</span><span class="o">.</span><span class="n">n_replications</span><span class="p">))</span>
+            <span class="n">links</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">),</span>
+                    <span class="n">data</span><span class="o">.</span><span class="n">n_realisations_samples</span><span class="p">(</span><span class="n">current_value</span><span class="p">),</span>
+                    <span class="n">data</span><span class="o">.</span><span class="n">n_replications</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">links</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">))</span>
 
         <span class="c1"># Loop over individual sources.</span>
-        <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sources</span><span class="p">):</span>
-
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sources</span><span class="p">):</span>
             <span class="c1"># Separate source variables in variables belonging to the current</span>
             <span class="c1"># link and variables belonging to the conditioning set. Get</span>
             <span class="c1"># realisations for the current link&#39;s selected source variables.</span>
             <span class="n">link_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">source_vars</span> <span class="k">if</span> <span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">s</span><span class="p">]</span>
             <span class="n">conditional_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">source_vars</span> <span class="k">if</span> <span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">s</span><span class="p">]</span>
             <span class="n">source_realisations</span><span class="p">,</span> <span class="n">replication_ind</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span>
-                <span class="n">current_value</span><span class="p">,</span> <span class="n">link_vars</span><span class="p">)</span>
+                <span class="n">current_value</span><span class="p">,</span> <span class="n">link_vars</span>
+            <span class="p">)</span>
 
             <span class="c1"># Determine which type of conditioning is requested.</span>
-            <span class="k">if</span> <span class="n">conditioning</span> <span class="o">==</span> <span class="s1">&#39;full&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">conditioning</span> <span class="o">==</span> <span class="s2">&quot;full&quot;</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">target_realisations</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="c1"># Use sources&#39; pasts only, returns None if conditional vars</span>
                     <span class="c1"># is empty.</span>
                     <span class="n">conditional_realisations</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span>
-                            <span class="n">current_value</span><span class="p">,</span> <span class="n">conditional_vars</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">current_value</span><span class="p">,</span> <span class="n">conditional_vars</span>
+                    <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="c1"># Use target&#39;s and sources&#39; past, check if conditional vars</span>
                     <span class="c1"># is not empty, otherwise np.hstack crashes.</span>
                     <span class="k">if</span> <span class="n">conditional_vars</span><span class="p">:</span>
-                        <span class="n">conditional_realisations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span>
-                            <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span>
-                                <span class="n">current_value</span><span class="p">,</span> <span class="n">conditional_vars</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
-                            <span class="n">target_realisations</span><span class="p">))</span>
-                    <span class="k">else</span><span class="p">:</span>   <span class="c1"># use target&#39;s past only</span>
+                        <span class="n">conditional_realisations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span>
+                            <span class="p">(</span>
+                                <span class="n">data</span><span class="o">.</span><span class="n">get_realisations</span><span class="p">(</span><span class="n">current_value</span><span class="p">,</span> <span class="n">conditional_vars</span><span class="p">)[</span>
+                                    <span class="mi">0</span>
+                                <span class="p">],</span>
+                                <span class="n">target_realisations</span><span class="p">,</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>  <span class="c1"># use target&#39;s past only</span>
                         <span class="n">conditional_realisations</span> <span class="o">=</span> <span class="n">target_realisations</span>
 
-            <span class="k">elif</span> <span class="n">conditioning</span> <span class="o">==</span> <span class="s1">&#39;target&#39;</span><span class="p">:</span>  <span class="c1"># use target&#39;s past only (biv. TE)</span>
+            <span class="k">elif</span> <span class="n">conditioning</span> <span class="o">==</span> <span class="s2">&quot;target&quot;</span><span class="p">:</span>  <span class="c1"># use target&#39;s past only (biv. TE)</span>
                 <span class="n">conditional_realisations</span> <span class="o">=</span> <span class="n">target_realisations</span>
-            <span class="k">elif</span> <span class="n">conditioning</span> <span class="o">==</span> <span class="s1">&#39;none&#39;</span><span class="p">:</span>  <span class="c1"># no conditioning (bivariate MI)</span>
+            <span class="k">elif</span> <span class="n">conditioning</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>  <span class="c1"># no conditioning (bivariate MI)</span>
                 <span class="n">conditional_realisations</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unknown conditioning: </span><span class="si">{0}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">conditioning</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Unknown conditioning: </span><span class="si">{0}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">conditioning</span><span class="p">))</span>
 
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;local_values&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;local_values&quot;</span><span class="p">]:</span>
                 <span class="n">local_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator_local</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span>
-                    <span class="n">current_value_realisations</span><span class="p">,</span>
-                    <span class="n">source_realisations</span><span class="p">,</span>
-                    <span class="n">conditional_realisations</span><span class="p">)</span>
+                    <span class="n">var1</span><span class="o">=</span><span class="n">current_value_realisations</span><span class="p">,</span>
+                    <span class="n">var2</span><span class="o">=</span><span class="n">source_realisations</span><span class="p">,</span>
+                    <span class="n">conditional</span><span class="o">=</span><span class="n">conditional_realisations</span><span class="p">,</span>
+                <span class="p">)</span>
                 <span class="n">links</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">local_values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
-                    <span class="nb">max</span><span class="p">(</span><span class="n">replication_ind</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">replication_ind</span> <span class="o">==</span> <span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+                    <span class="nb">max</span><span class="p">(</span><span class="n">replication_ind</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">replication_ind</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">T</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">links</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmi_estimator</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span>
-                    <span class="n">current_value_realisations</span><span class="p">,</span>
-                    <span class="n">source_realisations</span><span class="p">,</span>
-                    <span class="n">conditional_realisations</span><span class="p">)</span>
+                    <span class="n">var1</span><span class="o">=</span><span class="n">current_value_realisations</span><span class="p">,</span>
+                    <span class="n">var2</span><span class="o">=</span><span class="n">source_realisations</span><span class="p">,</span>
+                    <span class="n">conditional</span><span class="o">=</span><span class="n">conditional_realisations</span><span class="p">,</span>
+                <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">links</span>
 
     <span class="k">def</span> <span class="nf">_set_checkpointing_defaults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Set defaults for writing analysis checkpoints.&quot;&quot;&quot;</span>
-        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;write_ckp&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;write_ckp&#39;</span><span class="p">]:</span>
-            <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;filename_ckp&#39;</span><span class="p">,</span> <span class="s1">&#39;./idtxl_checkpoint&#39;</span><span class="p">)</span>
-            <span class="n">filename_ckp</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">.ckp&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;filename_ckp&#39;</span><span class="p">])</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;write_ckp&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s2">&quot;write_ckp&quot;</span><span class="p">]:</span>
+            <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;filename_ckp&quot;</span><span class="p">,</span> <span class="s2">&quot;./idtxl_checkpoint&quot;</span><span class="p">)</span>
+            <span class="n">filename_ckp</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">.ckp&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;filename_ckp&quot;</span><span class="p">])</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filename_ckp</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_initialise_checkpoint</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">settings</span>
@@ -583,27 +614,32 @@
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
             <span class="n">targets</span> <span class="o">=</span> <span class="p">[</span><span class="n">targets</span><span class="p">]</span>
         <span class="c1"># Write data to disk.</span>
-        <span class="n">io</span><span class="o">.</span><span class="n">save_pickle</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>
-                       <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">.dat&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;filename_ckp&#39;</span><span class="p">]))</span>
+        <span class="n">io</span><span class="o">.</span><span class="n">save_pickle</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">.dat&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;filename_ckp&quot;</span><span class="p">]))</span>
         <span class="c1"># Write settings to disk.</span>
-        <span class="n">io</span><span class="o">.</span><span class="n">save_json</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span>
-                     <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">.json&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;filename_ckp&#39;</span><span class="p">]))</span>
+        <span class="n">io</span><span class="o">.</span><span class="n">save_json</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">.json&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;filename_ckp&quot;</span><span class="p">]))</span>
 
         <span class="c1"># Initialise checkpoint file for later updates.</span>
-        <span class="n">filename_ckp</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">.ckp&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;filename_ckp&#39;</span><span class="p">])</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename_ckp</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">text_file</span><span class="p">:</span>
-            <span class="n">text_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;IDTxl checkpoint file.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">filename_ckp</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">.ckp&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;filename_ckp&quot;</span><span class="p">])</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename_ckp</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">text_file</span><span class="p">:</span>
+            <span class="n">text_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;IDTxl checkpoint file.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
-            <span class="n">text_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;{:%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">timestamp</span><span class="p">))</span>
-            <span class="n">text_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Raw data path: </span><span class="si">{}</span><span class="s1">.dat</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;filename_ckp&#39;</span><span class="p">])))</span>
-            <span class="n">text_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Settings path: </span><span class="si">{}</span><span class="s1">.json</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;filename_ckp&#39;</span><span class="p">])))</span>
-            <span class="n">text_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Targets to be analyzed: </span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">targets</span><span class="p">))</span>
-            <span class="n">text_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Sources to be analyzed: </span><span class="si">{}</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sources</span><span class="p">))</span>
+            <span class="n">text_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;{:%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">timestamp</span><span class="p">))</span>
             <span class="n">text_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
-                <span class="s1">&#39;Selected variables (target: [sources]: [selected variables]):&#39;</span>
-                <span class="s1">&#39;</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+                <span class="s2">&quot;Raw data path: </span><span class="si">{}</span><span class="s2">.dat</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;filename_ckp&quot;</span><span class="p">])</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">text_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="s2">&quot;Settings path: </span><span class="si">{}</span><span class="s2">.json</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;filename_ckp&quot;</span><span class="p">])</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">text_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Targets to be analyzed: </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">targets</span><span class="p">))</span>
+            <span class="n">text_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Sources to be analyzed: </span><span class="si">{}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sources</span><span class="p">))</span>
+            <span class="n">text_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="s2">&quot;Selected variables (target: [sources]: [selected variables]):&quot;</span>
+                <span class="s2">&quot;</span><span class="se">\n</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_write_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Write checkpoint to disk.</span>
@@ -616,18 +652,20 @@
 <span class="sd">        version (*.ckp.old) of the checkpoint file to ensure a recoverable</span>
 <span class="sd">        state even if writing of the current checkpoint fails.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">filename_ckp</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">.ckp&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;filename_ckp&#39;</span><span class="p">])</span>
+        <span class="n">filename_ckp</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">.ckp&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">&quot;filename_ckp&quot;</span><span class="p">])</span>
 
         <span class="c1"># Check if a checkpoint file already exists. If yes,</span>
         <span class="c1">#   1. make a copy using the same file name plus the .old extension</span>
         <span class="c1">#      (overwriting the last *.ckp.old file);</span>
         <span class="c1">#   2. update current checkpoint file.</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filename_ckp</span><span class="p">):</span>
-            <span class="n">copyfile</span><span class="p">(</span><span class="n">filename_ckp</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.old&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename_ckp</span><span class="p">))</span>
+            <span class="n">copyfile</span><span class="p">(</span><span class="n">filename_ckp</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.old&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename_ckp</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_checkpoint</span><span class="p">(</span><span class="n">filename_ckp</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Could not find checkpoint file for updating. &#39;</span>
-                               <span class="s1">&#39;Initialise checkpoint first.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Could not find checkpoint file for updating. &quot;</span>
+                <span class="s2">&quot;Initialise checkpoint first.&quot;</span>
+            <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_update_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename_ckp</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Update existing checkpoint file.</span>
@@ -645,20 +683,25 @@
         <span class="c1"># Write time stamp and info</span>
         <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
         <span class="c1"># Convert absolute indices to lags with respect to the current value.</span>
-        <span class="n">selected_variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="p">,</span>
-                                              <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">selected_variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_idx_to_lag</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected_vars_full</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
         <span class="c1"># Read file as list of lines and replace first and last line. Write</span>
         <span class="c1"># modified file back to disk.</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename_ckp</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename_ckp</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
-        <span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;{:%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">timestamp</span><span class="p">)</span>
+        <span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;{:%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">timestamp</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">:</span>
-            <span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">: </span><span class="si">{1}</span><span class="s1">: </span><span class="si">{2}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_set</span><span class="p">,</span> <span class="n">selected_variables</span><span class="p">)</span>
+            <span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">: </span><span class="si">{1}</span><span class="s2">: </span><span class="si">{2}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_set</span><span class="p">,</span> <span class="n">selected_variables</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">: </span><span class="si">{1}</span><span class="s1">: </span><span class="si">{2}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_set</span><span class="p">,</span> <span class="n">selected_variables</span><span class="p">))</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename_ckp</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">: </span><span class="si">{1}</span><span class="s2">: </span><span class="si">{2}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_set</span><span class="p">,</span> <span class="n">selected_variables</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename_ckp</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
 
 <div class="viewcode-block" id="NetworkAnalysis.resume_checkpoint"><a class="viewcode-back" href="../../idtxl.html#idtxl.network_analysis.NetworkAnalysis.resume_checkpoint">[docs]</a>    <span class="k">def</span> <span class="nf">resume_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">):</span>
@@ -666,11 +709,11 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            file_path : str</span>
-<span class="sd">                path to checkpoint file (excluding extension: *.ckp)</span>
+<span class="sd">                path to checkpoint file (excluding extension: .ckp)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Read checkpoint</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.ckp&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_path</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.ckp&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_path</span><span class="p">),</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
         <span class="n">timestamp</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">data_path</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">15</span><span class="p">:]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
@@ -678,34 +721,37 @@
         <span class="c1"># Load settings and data</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">load_pickle</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
         <span class="n">settings</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="n">settings_path</span><span class="p">)</span>
-        <span class="n">verbose</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">verbose</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;verbose&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Resuming analysis from file </span><span class="si">{}</span><span class="s1">.ckp, saved </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="n">file_path</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;Resuming analysis from file </span><span class="si">{}</span><span class="s2">.ckp, saved </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">file_path</span><span class="p">,</span> <span class="n">timestamp</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
         <span class="c1"># Read targets and sources.</span>
-        <span class="n">targets</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-        <span class="n">sources</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
         <span class="c1"># Read selected variables</span>
         <span class="c1"># Format: target - sources analyzed - selected variables</span>
         <span class="n">selected_variables</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># vars as lags wrt. the current value</span>
         <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)):</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">l</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)]</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">l</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)]</span>
             <span class="c1"># ast.literal_eval(result[2]): IndexError: list index out of range</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">selected_variables</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
             <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No variables previously selected.&#39;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No variables previously selected.&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Selected variables per target:&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Selected variables per target:&quot;</span><span class="p">)</span>
             <span class="n">pprint</span><span class="p">(</span><span class="n">selected_variables</span><span class="p">)</span>
 
         <span class="c1"># Add already selected candidates as conditionals to be added to the</span>
         <span class="c1"># settings dict. Note that the time stamp in the selected variables</span>
         <span class="c1"># list is a lag wrt. the current value. This format is also expected by</span>
         <span class="c1"># the method that manually adds conditionals.</span>
-        <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;add_conditionals&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">selected_variables</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s2">&quot;add_conditionals&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">selected_variables</span>
 
         <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">sources</span></div></div>
 </pre></div>
@@ -720,7 +766,7 @@
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -739,14 +785,14 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.6.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl.network_analysis</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
     </div>
   </body>
 </html>
