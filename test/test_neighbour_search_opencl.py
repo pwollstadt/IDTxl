@@ -20,9 +20,11 @@ settings = {'theiler_t': 0,
             'return_counts': True,
             'verbose': True}
 
-EST_MI = OpenCLKraskovMI(settings)
-EST_CMI = OpenCLKraskovCMI(settings)
-
+try:
+    EST_MI = OpenCLKraskovMI(settings)
+    EST_CMI = OpenCLKraskovCMI(settings)
+except Exception as e:
+    pytest.skip('Could not initialize OpenCL estimators: ' + str(e))
 
 def test_knn_one_dim():
     """Test kNN search in 1D."""
@@ -452,15 +454,4 @@ def test_two_large_chunks_two_dim():
 
 
 if __name__ == '__main__':
-    test_three_large_chunks()
-    test_two_large_chunks_two_dim()
-    test_random_data()
-    test_knn_one_dim()
-    test_knn_two_dim()
-    test_two_chunks_odd_dim()
-    test_two_chunks_two_dim()
-    test_two_chunks()
-    test_three_chunks()
-    test_one_dim_longer_sequence()
-    test_two_dim_longer_sequence()
-    test_multiple_runs_two_dim()
+    pytest.main([__file__])

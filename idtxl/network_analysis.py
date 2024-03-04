@@ -172,52 +172,6 @@ class NetworkAnalysis:
                 self.settings["cmi_estimator"], self.settings
             )
 
-    def _separate_realisations(self, idx_full, idx_single):
-        """Separate single index realisations from a set of realisations.
-
-        Return the realisations of a single index and the realisations of the
-        remaining set of indices. The function takes realisations from the
-        array in self._selected_vars_realisations. This allows to reuse the
-        collected realisations when pruning the conditional set after
-        candidates have been included.
-
-        Args:
-            idx_full : list of tuples
-                indices indicating the full set
-            idx_single : tuple
-                index to be removed
-
-        Returns:
-            numpy array
-                realisations of the set without the single index
-            numpy array
-                realisations of the variable at the single index
-        """
-        # Get indices of the remaining variables.
-        idx_remaining = cp.copy(idx_full)
-        idx_remaining.pop(idx_remaining.index(idx_single))
-
-        # Find the indices of the columns with the realisations of the
-        # requested variables (the single one to be removed and the remaining
-        # variables).
-        array_col_single = self.selected_vars_full.index(idx_single)
-        array_col_remain = np.zeros(len(idx_remaining)).astype(int)
-        for i, idx in enumerate(idx_remaining):
-            array_col_remain[i] = self.selected_vars_full.index(idx)
-
-        # Get realisations of the single and remaining variables.
-        real_single = np.expand_dims(
-            self._selected_vars_realisations[:, array_col_single], axis=1
-        )
-        if len(idx_full) == 1:
-            # If no realiastions remain, set variable to None instead of and
-            # empty array so the JIDT estimator doesn't break
-            real_remain = None
-        else:
-            real_remain = self._selected_vars_realisations[:, array_col_remain]
-
-        return real_remain, real_single
-
     def _define_candidates(self, processes, samples):
         """Build a list of candidate indices.
 
@@ -464,6 +418,8 @@ class NetworkAnalysis:
         settings.setdefault("write_ckp", False)
         if settings["write_ckp"]:
             settings.setdefault("filename_ckp", "./idtxl_checkpoint")
+            # expand path to absolute path
+            abspath = os.path.abspath(settings["filename_ckp"])
             filename_ckp = "{0}.ckp".format(settings["filename_ckp"])
             if not os.path.isfile(filename_ckp):
                 self._initialise_checkpoint(settings, data, sources, target)

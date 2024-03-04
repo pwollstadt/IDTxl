@@ -205,9 +205,22 @@ class LazyArray():
     def size(self):
         return self._array.size
     
+    @property
+    @eager
+    def dtype(self):
+        return self._array.dtype
+    
     @eager
     def __len__(self):
         return len(self._array)
+    
+    @eager
+    def min(self, *args, **kwargs):
+        return self._array.min(*args, **kwargs)
+    
+    @eager
+    def max(self, *args, **kwargs):
+        return self._array.max(*args, **kwargs)
     
 
     ##### IDTxl operations #####
