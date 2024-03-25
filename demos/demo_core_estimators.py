@@ -1,22 +1,24 @@
 """Demonstrate the usage of IDTxl's core estimators."""
+
 import numpy as np
-from idtxl.estimators_python import PythonKraskovCMI
+
 from idtxl.estimators_jidt import (
     JidtDiscreteAIS,
     JidtDiscreteCMI,
     JidtDiscreteMI,
     JidtDiscreteTE,
-    JidtKraskovAIS,
-    JidtKraskovCMI,
-    JidtKraskovMI,
-    JidtKraskovTE,
     JidtGaussianAIS,
     JidtGaussianCMI,
     JidtGaussianMI,
     JidtGaussianTE,
+    JidtKraskovAIS,
+    JidtKraskovCMI,
+    JidtKraskovMI,
+    JidtKraskovTE,
 )
-from idtxl.estimators_opencl import OpenCLKraskovMI, OpenCLKraskovCMI
+from idtxl.estimators_opencl import OpenCLKraskovCMI, OpenCLKraskovMI
 from idtxl.estimators_pid import SydneyPID, TartuPID
+from idtxl.estimators_python import PythonKraskovCMI
 from idtxl.idtxl_utils import calculate_mi
 
 # Generate Gaussian test data

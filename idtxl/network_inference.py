@@ -1,4 +1,5 @@
 """Parent class for all network inference."""
+
 import numpy as np
 
 from . import idtxl_exceptions as ex
@@ -1080,7 +1081,7 @@ class NetworkInferenceMultivariate(NetworkInference):
                 self.current_value, remaining_candidates
             )[0]
             try:
-                [significant, p, surr_table] = stats.min_statistic(
+                significant, p, surr_table = stats.min_statistic(
                     self,
                     data,
                     self.selected_vars_sources,
@@ -1131,9 +1132,7 @@ class NetworkInferenceMultivariate(NetworkInference):
         else:
             if self.settings["verbose"]:
                 print(
-                    "selected variables: {0}".format(
-                        self._idx_to_lag(self.selected_vars_full)
-                    )
+                    f"selected variables: {self._idx_to_lag(self.selected_vars_full)}"
                 )
             try:
                 [s, p, stat] = stats.omnibus_test(self, data)
@@ -1141,8 +1140,8 @@ class NetworkInferenceMultivariate(NetworkInference):
                 # The algorithm cannot continue here, so
                 #  we'll set the results to zero
                 print(
-                    "AlgorithmExhaustedError encountered in estimations: {}. "
-                    "Halting current estimation set.".format(aee.message)
+                    "AlgorithmExhaustedError encountered in estimations: "
+                    f"{aee.message}. Halting current estimation set."
                 )
                 # For now we don't need a stack trace:
                 # traceback.print_tb(aee.__traceback__)
