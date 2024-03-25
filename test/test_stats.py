@@ -1,4 +1,5 @@
 """Unit tests for stats module."""
+
 # pylint: disable=protected-access
 import copy as cp
 
@@ -151,6 +152,8 @@ def test_max_statistic_sequential_bivariate():
         "min_lag_sources": 1,
         "max_lag_target": 5,
     }
+
+    # Test bivariate TE
     setup = MultivariateTE()
     setup._initialise(settings, data, sources=[0, 1], target=3)
     setup.current_value = (3, 4)
@@ -185,6 +188,7 @@ def test_max_statistic_sequential_bivariate():
             sign, expected
         ), f"Incorrect sources inferred, expected: {expected}"
 
+    # Ensure no false positives on random data.
     setup = MultivariateTE()
     setup._initialise(settings, data, sources=[0, 1, 4], target=3)
     setup.current_value = (3, 4)
@@ -230,6 +234,58 @@ def test_max_statistic_sequential_bivariate():
                 assert (
                     p[i] > setup.settings["alpha_max_seq"]
                 ), f"{p[i]} not smaller than critical alpha {setup.settings['alpha_max_seq']}"
+
+
+def test_max_statistic_sequential_bivariate_mi():
+    # Test bivariate sequential max stats when analyzing MI results. Here, the
+    # conditioning set is different than for TE estimation.
+    np.random.seed(SEED)
+    data = Data(seed=SEED)
+    data.generate_mute_data(1000, 1)
+    settings = {
+        "cmi_estimator": "JidtKraskovCMI",
+        "n_perm_max_stat": 21,
+        "n_perm_min_stat": 21,
+        "n_perm_omnibus": 21,
+        "n_perm_max_seq": 21,
+        "max_lag_sources": 5,
+        "min_lag_sources": 1,
+        "max_lag_target": 5,
+    }
+    # Test bivariate MI
+    setup = MultivariateTE()
+    setup._initialise(settings, data, sources=[0, 1], target=3)
+    setup.current_value = (3, 4)
+    setup.selected_vars_target = []
+    setup.selected_vars_sources = [(0, 1), (0, 2), (3, 1)]
+    setup.selected_vars_full = setup.selected_vars_target + setup.selected_vars_sources
+    setup._current_value_realisations = data.get_realisations(
+        setup.current_value, [setup.current_value]
+    )[0]
+    setup._selected_vars_realisations = data.get_realisations(
+        setup.current_value, setup.selected_vars_full
+    )[0]
+
+    # Bivariate sequential max stats collects source variable realizations from
+    # data object for running the test.
+    data_permuted = cp.deepcopy(data)
+    data_permuted._data[3, :, :] = np.random.randn(1, 1000, 1)
+
+    for d, expected in zip(
+        [data, data_permuted], [[True, True, True], [True, True, False]]
+    ):
+        [sign, p, te] = stats.max_statistic_sequential_bivariate(
+            analysis_setup=setup, data=d
+        )
+        print(te)
+        print(p)
+        print(sign)
+        assert len(p) == len(te)
+        assert len(p) == len(sign)
+        assert len(p) == len(setup.selected_vars_sources)
+        assert np.array_equal(
+            sign, expected
+        ), f"Incorrect sources inferred, expected: {expected}"
 
 
 def test_network_fdr():
@@ -623,5 +679,6 @@ if __name__ == "__main__":
     # test_omnibus_test()
     # test_max_statistic()
     # test_min_statistic()
-    # test_max_statistic_sequential_bivariate()
-    test_max_statistic_sequential()
+    test_max_statistic_sequential_bivariate_mi()
+    test_max_statistic_sequential_bivariate()
+    # test_max_statistic_sequential()
