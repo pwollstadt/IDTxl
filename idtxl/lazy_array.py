@@ -48,13 +48,13 @@ class LazyArray():
     
     def __init__(self, base_array=None):
         self.set_base_array(base_array)
+        self._base_array_id = id(base_array) if base_array is not None else None
         self._op_queue = []
         self._op_args_queue = []
         self._op_kwargs_queue = []
 
     def set_base_array(self, base_array):
         self._base_array = base_array
-        self._base_array_id = id(base_array) if base_array is not None else None
         self._array = None
         self._op_idx = 0
 

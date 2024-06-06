@@ -50,6 +50,12 @@ class MPIEstimator():
         if MPI is None:
             raise ImportError('mpi4py is not installed')
         
+        # Check that at least two ranks are available
+        if _size_world < 2:
+            raise ValueError('MPIEstimator requires at least two MPI ranks. Make sure to run your script with mpirun -n <n_ranks> python <script.py>')
+        elif _size_world == 2:
+            warnings.warn('Only two ranks available. MPI reserves one main rank, thus no speedup is expected.', RuntimeWarning)
+        
         self._mpi_batch_size = settings.get('mpi_batch_size', 1)
         
         _bcast_estimator(est, settings)
@@ -57,20 +63,27 @@ class MPIEstimator():
     def estimate_parallel(self, **data):
 
         n_tasks = len(data[list(data.keys())[0]])
+
+        # Ensure that all variables have the same number of chunks
+        if not all(len(var) == n_tasks for var in data.values()):
+            raise ValueError('All variables must have the same number of chunks')
         
         # If only one task, estimate on rank 0
         if n_tasks == 1:
             return _worker_estimator.estimate_parallel(**data)
         
-        # If lazy arrays are used, broadcast base array to all nodes
-        lazyArray = None
-        for var in data.values():
-            if isinstance(var[0], LazyArray):
-                lazyArray = var[0]
-                break
+        # If lazy arrays are used, make sure they all have the same base array.
+        lazyArrays = [var for vars in data.values() for var in vars if isinstance(var, LazyArray)]
 
-        if lazyArray is not None and lazyArray._base_array_id != _worker_data_id:
-            _bcast_shared_data(lazyArray._base_array)
+        if lazyArrays:
+            base_array_id = lazyArrays[0]._base_array_id
+
+            if not all(var._base_array_id == base_array_id for var in lazyArrays):
+                raise ValueError('LazyArrays must have the same base array')
+
+        # Broadcast shared data to all workers if necessary
+        if lazyArrays and base_array_id != _worker_data_id:
+            _bcast_shared_data(lazyArrays[0]._base_array)
 
         n_workers = _size_world - 1
 
@@ -215,7 +228,7 @@ def _stop_workers():
     if _rank_world == 0:
         _comm_world.bcast(tags.DONE, root=0)
 
-if _rank_world == 0:
+if MPI is not None and _rank_world == 0:
     atexit.register(_stop_workers)
 
 def _estimate(batch_gen, n_batches):
@@ -305,14 +318,12 @@ def _worker_estimate():
         for i, data in enumerate(batches):
 
             # Otherwise, estimate
-            for var in data.values():
+            for varname, var in data.items():
                 if isinstance(var, LazyArray):
-                    if var._base_array is not None:
-                        raise ValueError('LazyArray base array must be None')
                     if _worker_data is None:
                         raise ValueError('_worker_data must not be None')
                     if var._base_array_id != _worker_data_id:
-                        raise ValueError('LazyArray base array must be shared with worker')
+                        raise ValueError(f'LazyArray base array for vareiable {varname} must be shared with worker')
                     var.set_base_array(_worker_data)
 
             # Merge data with previous data
