@@ -367,19 +367,14 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             print(f"testing candidate set: {self._idx_to_lag(candidate_set)}")
         while candidate_set:
             # Get realisations for all candidates.
-            cand_real = data.get_realisations(self.current_value,
-                                              candidate_set)
-            cand_real = cand_real.T.reshape(cand_real.size, 1)
-
+            cand_real = [data.get_realisations(self.current_value, candidate) for candidate in candidate_set]
+            
             # Calculate the (C)MI for each candidate and the target.
             try:
                 temp_te = self._cmi_estimator.estimate_parallel(
-                    n_chunks=len(candidate_set),
-                    re_use=["var2", "conditional"],
-                    var1=cand_real,
-                    var2=self._current_value_realisations,
-                    conditional=self._selected_vars_realisations,
-                )
+                                var1=cand_real,
+                                var2=[self._current_value_realisations] * len(candidate_set),
+                                conditional=[self._selected_vars_realisations] * len(candidate_set))
             except ex.AlgorithmExhaustedError as aee:
                 # The algorithm cannot continue here, so
                 #  we'll terminate the search for more candidates,
@@ -469,47 +464,18 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 print("no sources selected, nothing to prune ...")
         while self.selected_vars_sources:
             # Find the candidate with the minimum TE into the target.
-            cond_dim = len(self.selected_vars_sources) - 1
-            candidate_realisations = np.empty(
-                (
-                    data.n_realisations(self.current_value)
-                    * len(self.selected_vars_sources),
-                    1,
-                )
-            ).astype(data.data_type)
-            conditional_realisations = np.empty(
-                (
-                    data.n_realisations(self.current_value)
-                    * len(self.selected_vars_sources),
-                    cond_dim,
-                )
-            ).astype(data.data_type)
-            i_1 = 0
-            i_2 = data.n_realisations(self.current_value)
-            for candidate in self.selected_vars_sources:
-                # Separate the candidate realisations and all other
-                # realisations to test the candidate's individual contribution.
-                [temp_cond, temp_cand] = self._separate_realisations(
-                    self.selected_vars_sources, candidate
-                )
-                if temp_cond is None:
-                    conditional_realisations = None
-                    re_use = ["var2", "conditional"]
-                else:
-                    conditional_realisations[i_1:i_2,] = temp_cond
-                    re_use = ["var2"]
-                candidate_realisations[i_1:i_2,] = temp_cand
-                i_1 = i_2
-                i_2 += data.n_realisations(self.current_value)
+            
+            # Separate the candidate realisations and all other
+            # realisations to test the candidate's individual contribution.
+            candidate_realisations = [data.get_realisations(self.current_value, [candidate]) for candidate in self.selected_vars_sources]
+            conditional_realisations = [data.get_realisations(self.current_value, [other for other in self.selected_vars_sources if other != candidate])
+                                        for candidate in self.selected_vars_sources]
 
             try:
                 temp_te = self._cmi_estimator.estimate_parallel(
-                    n_chunks=len(self.selected_vars_sources),
-                    re_use=re_use,
-                    var1=candidate_realisations,
-                    var2=self._current_value_realisations,
-                    conditional=conditional_realisations,
-                )
+                                    var1=candidate_realisations,
+                                    var2=[self._current_value_realisations] * len(self.selected_vars_sources),
+                                    conditional=conditional_realisations)
             except ex.AlgorithmExhaustedError as aee:
                 # The algorithm cannot continue here, so we'll terminate the
                 # pruning check, assuming that we need not prune any more

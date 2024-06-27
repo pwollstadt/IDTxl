@@ -119,51 +119,6 @@ class NetworkAnalysis:
     def _selected_vars_realisations(self, realisations):
         self.__selected_vars_realisations = realisations
 
-    @property
-    def _selected_vars_target_realisations(self):
-        """Get realisations of the target samples in the conditional.
-
-        Note:
-            Each time this property is called, realisations are actually
-            extracted from the array of all realisations, which may be slow!
-            Use temporary variables to speed things up.
-        """
-        if self.selected_vars_target is None:
-            return None
-        indices = np.zeros(len(self.selected_vars_target)).astype(int)
-        for i, idx in enumerate(self.selected_vars_target):
-            indices[i] = self.selected_vars_full.index(idx)
-        self._selected_vars_target_realisations = self._selected_vars_realisations[
-            :, indices
-        ]
-        return self.__selected_vars_target_realisations
-
-    @_selected_vars_target_realisations.setter
-    def _selected_vars_target_realisations(self, realisations):
-        self.__selected_vars_target_realisations = realisations
-
-    @property
-    def _selected_vars_sources_realisations(self):
-        """Get realisations of the source samples in the conditional.
-
-        Note:
-            Each time this property is called, realisations are actually
-            extracted from the array of all realisations, which may be slow!
-            Use temporary variables to speed things up.
-        """
-        indices = np.zeros(len(self.selected_vars_sources)).astype(int)
-        for i, idx in enumerate(self.selected_vars_sources):
-            indices[i] = self.selected_vars_full.index(idx)
-        self._selected_vars_sources_realisations = self._selected_vars_realisations[
-            :, indices
-        ]
-        return self.__selected_vars_sources_realisations
-
-    @_selected_vars_sources_realisations.setter
-    def _selected_vars_sources_realisations(self, realisations):
-        self.__selected_vars_sources_realisations = realisations
-
-
     def _idx_to_lag(self, idx_list, current_value_sample=None):
         """Change sample indices to lags for each sample in the list."""
         if current_value_sample is None:
@@ -433,8 +388,6 @@ class NetworkAnalysis:
         # Get realisations of target variables and the current value, constant
         # over sources. Permute current value realisations to generate
         # surrogates if requested.
-        target_realisations = data.get_realisations(
-            current_value, target_vars)
         current_value_realisations = data.get_realisations(
             current_value, [current_value])
 
@@ -477,26 +430,14 @@ class NetworkAnalysis:
                 current_value, link_vars)
 
             # Determine which type of conditioning is requested.
-            if conditioning == "full":
-                if target_realisations is None:
-                    # Use sources' pasts only, returns None if conditional vars
-                    # is empty.
-                    conditional_realisations = data.get_realisations(
-                            current_value, conditional_vars)
-                else:
-                    # Use target's and sources' past, check if conditional vars
-                    # is not empty, otherwise np.hstack crashes.
-                    if conditional_vars:
-                        conditional_realisations = np.hstack((
-                            data.get_realisations(
-                                current_value, conditional_vars),
-                            target_realisations))
-                    else:   # use target's past only
-                        conditional_realisations = target_realisations
+            if conditioning == 'full':
+                vars = (conditional_vars if conditional_vars else []) + \
+                          (target_vars if target_vars else [])
+                conditional_realisations = data.get_realisations(current_value, vars)
 
-            elif conditioning == "target":  # use target's past only (biv. TE)
-                conditional_realisations = target_realisations
-            elif conditioning == "none":  # no conditioning (bivariate MI)
+            elif conditioning == 'target':  # use target's past only (biv. TE)
+                conditional_realisations = data.get_realisations(current_value, target_vars)
+            elif conditioning == 'none':  # no conditioning (bivariate MI)
                 conditional_realisations = None
             else:
                 raise RuntimeError("Unknown conditioning: {0}.".format(conditioning))
