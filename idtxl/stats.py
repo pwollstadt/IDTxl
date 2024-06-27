@@ -598,9 +598,8 @@ def max_statistic_sequential(analysis_setup, data):
             surr_table[idx_c, :] = (
                 analysis_setup._cmi_estimator.estimate_surrogates_analytic(
                     n_perm=n_permutations,
-                    var1=data.get_realisations(
-                        analysis_setup.current_value, [candidate]
-                    )[0],
+                    var1=data.get_realisations(analysis_setup.current_value,
+                                               [candidate]),
                     var2=analysis_setup._current_value_realisations,
                     conditional=conditional_realisations_current,
                 )
@@ -837,67 +836,66 @@ def max_statistic_sequential_bivariate(analysis_setup, data):
         surr_table = np.zeros((len(source_vars), n_permutations))
         # Collect data for each candidate and the corresponding conditioning set.
         for idx_c, candidate in enumerate(source_vars):
-
-            conditional_realisations_current, re_use = _get_current_cond_set(
-                source_vars, candidate
-            )
-            if conditional_realisations is not None:
-                conditional_realisations[i_1:i_2,] = conditional_realisations_current
-            candidate_realisations[i_1:i_2,] = data.get_realisations(
-                analysis_setup.current_value, [candidate]
-            )[0]
+            temp_cond = data.get_realisations(
+                analysis_setup.current_value,
+                set(source_vars).difference(set([candidate])))
+            temp_cand = data.get_realisations(
+                analysis_setup.current_value, [candidate])
+            # The following may happen if either the requested conditing is
+            # 'none' or if the conditiong set that is tested consists only of
+            # a single candidate.
+            if temp_cond is None:
+                conditional_realisations = conditional_realisations_target
+                re_use = ['var2', 'conditional']
+            else:
+                re_use = ['var2']
+                if conditional_realisations_target is None:
+                    conditional_realisations[i_1:i_2, ] = temp_cond
+                else:
+                    conditional_realisations[i_1:i_2, ] = np.hstack((
+                        temp_cond, conditional_realisations_target))
+            candidate_realisations[i_1:i_2, ] = temp_cand
             i_1 = i_2
             i_2 += data.n_realisations(analysis_setup.current_value)
 
-            # Generate surrogates for the current candidate.
-            if (
-                analysis_setup._cmi_estimator.is_analytic_null_estimator()
-                and permute_in_time
-            ):
-                # Generate the surrogates analytically
+        # Generate surrogates for the current candidate.
+        if (analysis_setup._cmi_estimator.is_analytic_null_estimator() and
+                permute_in_time):
+            # Generate the surrogates analytically
+            surr_table[idx_c, :] = (
+                analysis_setup._cmi_estimator.estimate_surrogates_analytic(
+                    n_perm=n_permutations,
+                    var1=data.get_realisations(analysis_setup.current_value,
+                                               [candidate]),
+                    var2=analysis_setup._current_value_realisations,
+                    conditional=temp_cond))
+        else:
+            analysis_setup.settings['analytical_surrogates'] = False
+            surr_candidate_realisations = _get_surrogates(
+                                                data,
+                                                analysis_setup.current_value,
+                                                [candidate],
+                                                n_permutations,
+                                                analysis_setup.settings)
+            try:
                 surr_table[idx_c, :] = (
-                    analysis_setup._cmi_estimator.estimate_surrogates_analytic(
-                        n_perm=n_permutations,
-                        var1=data.get_realisations(
-                            analysis_setup.current_value, [candidate]
-                        )[0],
+                    analysis_setup._cmi_estimator.estimate_parallel(
+                        n_chunks=n_permutations,
+                        re_use=['var2', 'conditional'],
+                        var1=surr_candidate_realisations,
                         var2=analysis_setup._current_value_realisations,
-                        conditional=conditional_realisations_current,
-                    )
-                )
-            else:
-                analysis_setup.settings["analytical_surrogates"] = False
-                surr_candidate_realisations = _get_surrogates(
-                    data,
-                    analysis_setup.current_value,
-                    [candidate],
-                    n_permutations,
-                    analysis_setup.settings,
-                )
-                try:
-                    surr_table[idx_c, :] = (
-                        analysis_setup._cmi_estimator.estimate_parallel(
-                            n_chunks=n_permutations,
-                            re_use=["var2", "conditional"],
-                            var1=surr_candidate_realisations,
-                            var2=analysis_setup._current_value_realisations,
-                            conditional=conditional_realisations_current,
-                        )
-                    )
-                except ex.AlgorithmExhaustedError as aee:
-                    # The algorithm cannot continue here, so we'll terminate the max sequential
-                    # stats test, and declare all not significant
-                    print(
-                        f"AlgorithmExhaustedError encountered in estimations: {aee.message}. "
-                        "Stopping sequential max stats at candidate with rank 0."
-                    )
-                    return (
-                        np.zeros(len(analysis_setup.selected_vars_sources)).astype(
-                            bool
-                        ),
-                        np.ones(len(analysis_setup.selected_vars_sources)),
-                        np.zeros(len(analysis_setup.selected_vars_sources)),
-                    )
+                        conditional=temp_cond))
+            except ex.AlgorithmExhaustedError as aee:
+                # The aglorithm cannot continue here, so
+                #  we'll terminate the max sequential stats test,
+                #  and declare all not significant
+                print('AlgorithmExhaustedError encountered in estimations: {}.'.format(
+                    aee.message))
+                print('Stopping sequential max stats at candidate with rank 0')
+                return \
+                    (np.zeros(len(analysis_setup.selected_vars_sources)).astype(bool),
+                     np.ones(len(analysis_setup.selected_vars_sources)),
+                     np.zeros(len(analysis_setup.selected_vars_sources)))
 
         # Calculate original statistic (bivariate TE/MI)
         try:
@@ -1160,14 +1158,14 @@ def unq_against_surrogates(analysis_setup, data):
 
     # Get realisations and estimate PID for orginal data
     target_realisations = data.get_realisations(
-        analysis_setup.current_value, [analysis_setup.current_value]
-    )[0]
+                                            analysis_setup.current_value,
+                                            [analysis_setup.current_value])
     source_1_realisations = data.get_realisations(
-        analysis_setup.current_value, [analysis_setup.sources[0]]
-    )[0]
+                                        analysis_setup.current_value,
+                                        [analysis_setup.sources[0]])
     source_2_realisations = data.get_realisations(
-        analysis_setup.current_value, [analysis_setup.sources[1]]
-    )[0]
+                                        analysis_setup.current_value,
+                                        [analysis_setup.sources[1]])
     orig_pid = analysis_setup._pid_estimator.estimate(
         settings=analysis_setup.settings,
         s1=source_1_realisations,
@@ -1291,14 +1289,14 @@ def syn_shd_against_surrogates(analysis_setup, data):
 
     # Get realisations and estimate PID for original data
     target_realisations = data.get_realisations(
-        analysis_setup.current_value, [analysis_setup.current_value]
-    )[0]
+                                            analysis_setup.current_value,
+                                            [analysis_setup.current_value])
     source_1_realisations = data.get_realisations(
-        analysis_setup.current_value, [analysis_setup.sources[0]]
-    )[0]
+                                        analysis_setup.current_value,
+                                        [analysis_setup.sources[0]])
     source_2_realisations = data.get_realisations(
-        analysis_setup.current_value, [analysis_setup.sources[1]]
-    )[0]
+                                        analysis_setup.current_value,
+                                        [analysis_setup.sources[1]])
     orig_pid = analysis_setup._pid_estimator.estimate(
         settings=analysis_setup.settings,
         s1=source_1_realisations,
@@ -1425,9 +1423,8 @@ def _create_surrogate_table(
             surr_table[idx_c, :] = (
                 analysis_setup._cmi_estimator.estimate_surrogates_analytic(
                     n_perm=n_perm,
-                    var1=data.get_realisations(
-                        analysis_setup.current_value, [candidate]
-                    )[0],
+                    var1=data.get_realisations(analysis_setup.current_value,
+                                               [candidate]),
                     var2=current_value_realisations,
                     conditional=conditional,
                 )
@@ -1588,9 +1585,9 @@ def _get_surrogates(data, current_value, idx_list, n_perm, perm_settings):
     # permute samples
     if permute_in_time:
         for perm in range(n_perm):
-            surrogates[i_1:i_2,] = data.permute_samples(
-                current_value, idx_list, perm_settings
-            )[0]
+            surrogates[i_1:i_2, ] = data.permute_samples(current_value,
+                                                         idx_list,
+                                                         perm_settings)
             i_1 = i_2
             i_2 += n_realisations
 
@@ -1599,7 +1596,8 @@ def _get_surrogates(data, current_value, idx_list, n_perm, perm_settings):
             data, n_perm
         ), "Not enough replications for surrogate creation."
         for perm in range(n_perm):
-            surrogates[i_1:i_2,] = data.permute_replications(current_value, idx_list)[0]
+            surrogates[i_1:i_2, ] = data.permute_replications(current_value,
+                                                              idx_list)
             i_1 = i_2
             i_2 += n_realisations
     return surrogates

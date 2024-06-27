@@ -29,13 +29,13 @@ def test_calculate_single_link():
     # Test single link estimation for a single and multiple sources for
     # cases: no target vars, source vars/no source vars (tests if the
     # conditioning set is built correctly for conditioning='full').
-    source_realisations = data.get_realisations(current_value, [(0, 0)])[0]
+    source_realisations = data.get_realisations(current_value, [(0, 0)])
     current_value_realisations = data.get_realisations(
-        current_value, [current_value])[0]
+        current_value, [current_value])
     expected_mi = n._cmi_estimator.estimate(
         current_value_realisations, source_realisations)
     # cond. on second source
-    cond_realisations = data.get_realisations(current_value, [(1, 0)])[0]
+    cond_realisations = data.get_realisations(current_value, [(1, 0)])
     expected_mi_cond1 = n._cmi_estimator.estimate(
         current_value_realisations, source_realisations, cond_realisations)
 
@@ -66,13 +66,13 @@ def test_calculate_single_link():
         # cases: target vars/no target vars, source vars (tests if the
         # conditioning set is built correctly for conditioning='full').
         cond_realisations = np.hstack((  # cond. on second source and target
-            data.get_realisations(current_value, [(1, 0)])[0],
-            data.get_realisations(current_value, [(2, 0)])[0]
+            data.get_realisations(current_value, [(1, 0)]),
+            data.get_realisations(current_value, [(2, 0)])
             ))
         expected_mi_cond2 = n._cmi_estimator.estimate(
             current_value_realisations, source_realisations, cond_realisations)
         # cond. on target
-        cond_realisations = data.get_realisations(current_value, [(2, 0)])[0]
+        cond_realisations = data.get_realisations(current_value, [(2, 0)])
         expected_mi_cond3 = n._cmi_estimator.estimate(
             current_value_realisations, source_realisations, cond_realisations)
 

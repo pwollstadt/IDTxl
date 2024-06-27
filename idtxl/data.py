@@ -216,7 +216,7 @@ class Data:
         """return the current state of the random seed"""
         return np.random.get_state()
 
-    def get_realisations(self, current_value, idx_list, shuffle=False):
+    def get_realisations(self, current_value, idx_list, shuffle=False, return_replication_idx=False):
         """Return realisations for a list of indices.
 
         Return realisations for indices in list. Optionally, realisations can
@@ -247,6 +247,8 @@ class Data:
                 samples for a process are returned
             shuffle: bool
                 if true permute blocks of replications over trials
+            return_replication_idx: bool
+                additionally return the replication index of each sample
 
         Returns:
             numpy array
@@ -254,13 +256,14 @@ class Data:
                 number of indices
             numpy array
                 replication index for each realisation with dimensions (no.
-                samples * no.replications) x number of indices
+                samples * no.replications) x number of indices. Only returned
+                if return_replication_idx is true.
         """
         if not hasattr(self, "data"):
             raise AttributeError("No data has been added to this Data() instance.")
         # Return None if index list is empty.
         if not idx_list:
-            return None, None
+            return (None, None) if return_replication_idx else None
         # Check if requested indices are smaller than the current_value.
         if not all(np.array([x[1] for x in idx_list]) <= current_value[1]):
             print(f"Index list: {idx_list}\ncurrent value: {current_value}")
@@ -309,13 +312,16 @@ class Data:
             ).any(), "There are nans in the retrieved realisations."
             i += 1
 
-        # For each realisation keep the index of the replication it came from.
-        replications_index = np.repeat(replications_order, n_real_time)
-        assert (
-            replications_index.shape[0] == realisations.shape[0]
-        ), "There seems to be a problem with the replications index."
+        if return_replication_idx:
+            # For each realisation keep the index of the replication it came from.
+            replications_index = np.repeat(replications_order, n_real_time)
+            assert(replications_index.shape[0] == realisations.shape[0]), (
+                'There seems to be a problem with the replications index.')
 
-        return realisations, replications_index
+            return realisations, replications_index
+        
+        return realisations
+        
 
     def _get_data_slice(self, process, offset_samples=0, shuffle=False):
         """Return data slice for a single process.
@@ -501,7 +507,7 @@ class Data:
             data_slice_perm[:, r] = data_slice[perm, r]
         return data_slice_perm, perm
 
-    def permute_replications(self, current_value, idx_list):
+    def permute_replications(self, current_value, idx_list, return_replication_idx=False):
         """Return realisations with permuted replications (time stays intact).
 
         Create surrogate data by permuting realisations over replications while
@@ -530,21 +536,25 @@ class Data:
                 index of the current_value in the data
             idx_list : list of tuples
                 indices of variables
+            return_replication_idx: bool
+                additionally return the replication index of each sample
+
 
         Returns:
             numpy array
                 permuted realisations with dimensions replications x number of
                 indices
             numpy array
-                replication index for each realisation
+                replication index for each realisation. Only returned
+                if return_replication_idx is true.
 
         Raises:
             TypeError if idx_realisations is not a list
         """
-        if not isinstance(idx_list, list):
-            raise TypeError("idx needs to be a list of tuples.")
-        return self.get_realisations(current_value, idx_list, shuffle=True)
-
+        if type(idx_list) is not list:
+            raise TypeError('idx needs to be a list of tuples.')
+        return self.get_realisations(current_value, idx_list, shuffle=True, return_replication_idx=return_replication_idx)
+        
     def permute_samples(self, current_value, idx_list, perm_settings):
         """Return realisations with permuted samples (repl. stays intact).
 
@@ -645,8 +655,6 @@ class Data:
             numpy array
                 permuted realisations with dimensions replications x number of
                 indices
-            numpy array
-                sample index for each realisation
 
         Raises:
             TypeError if idx_realisations is not a list
@@ -657,18 +665,18 @@ class Data:
             replications is too small to generate the requested number of
             permutations.
         """
-        [realisations, replication_idx] = self.get_realisations(current_value, idx_list)
-        n_samples = sum(replication_idx == 0)
+        realisations = self.get_realisations(current_value, idx_list)
+
+        n_samples = self.n_realisations_samples(current_value)
         perm = self._get_permutation_samples(n_samples, perm_settings)
         # Apply the permutation to data from each replication.
         realisations_perm = np.empty(realisations.shape).astype(self.data_type)
         perm_idx = np.empty(realisations_perm.shape[0])
-        for r in range(max(replication_idx) + 1):
-            mask = replication_idx == r
-            data_temp = realisations[mask, :]
-            realisations_perm[mask, :] = data_temp[perm, :]
-            perm_idx[mask] = perm
-        return realisations_perm, perm_idx
+        for r in range(self.n_replications):
+            data_temp = realisations[r*n_samples:(r+1)*n_samples, :]
+            realisations_perm[r*n_samples:(r+1)*n_samples, :] = data_temp[perm, :]
+            perm_idx[r*n_samples:(r+1)*n_samples] = perm
+        return realisations_perm
 
     def _get_permutation_samples(self, n_samples, perm_settings):
         """Generate permutation of n samples.

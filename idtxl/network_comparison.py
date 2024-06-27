@@ -768,8 +768,9 @@ class NetworkComparison(NetworkAnalysis):
         # Get realisations of target variables and the current value, constant
         # over sources. Permute current value realisations to generate
         # surrogates if requested.
-        current_value = (target, self.union["max_lag"])
-        target_realisations = data.get_realisations(current_value, target_vars)[0]
+        current_value = (target, self.union['max_lag'])
+        target_realisations = data.get_realisations(
+            current_value, target_vars)
         current_value_surrogates = stats._get_surrogates(
             data,
             current_value,
@@ -786,7 +787,8 @@ class NetworkComparison(NetworkAnalysis):
             link_vars = [i for i in source_vars if i[0] == s]
             conditional_vars = [i for i in source_vars if i[0] != s]
             # Get realisations for the current link's source variables
-            source_realisations = data.get_realisations(current_value, link_vars)[0]
+            source_realisations = data.get_realisations(
+                current_value, link_vars)
             # Get realisations for the conditioning set, consisting of
             # remaining source variables and target realisations. Handle empty
             # sets: these may occur if network comparison is carried out for
@@ -797,15 +799,11 @@ class NetworkComparison(NetworkAnalysis):
                 conditional_realisations = target_realisations
             elif conditional_vars and not target_vars:
                 conditional_realisations = data.get_realisations(
-                    current_value, conditional_vars
-                )[0]
+                    current_value, conditional_vars)
             elif conditional_vars and target_vars:
-                conditional_realisations = np.hstack(
-                    (
-                        data.get_realisations(current_value, conditional_vars)[0],
-                        target_realisations,
-                    )
-                )
+                conditional_realisations = np.hstack((
+                    data.get_realisations(current_value, conditional_vars),
+                    target_realisations))
 
             te_surrogates[s] = self._cmi_estimator.estimate_parallel(
                 n_chunks=self.settings["n_perm_comp"],
@@ -923,17 +921,14 @@ class NetworkComparison(NetworkAnalysis):
         )
 
         # Get realisations of the current value and the full conditioning set.
-        assert (
-            data_a.n_replications == data_b.n_replications
-        ), "Unequal no. replications in the two data sets."
-        [cur_val_a_real, repl_idx_a] = data_a.get_realisations(
-            current_val, [current_val]
-        )
-        [cur_val_b_real, repl_idx_b] = data_b.get_realisations(
-            current_val, [current_val]
-        )
-        cond_a_real = data_a.get_realisations(current_val, idx_cond_full)[0]
-        cond_b_real = data_b.get_realisations(current_val, idx_cond_full)[0]
+        assert data_a.n_replications == data_b.n_replications, (
+                            'Unequal no. replications in the two data sets.')
+        [cur_val_a_real, repl_idx_a] = data_a.get_realisations(current_val,
+                                                               [current_val], return_permutation_idx=True)
+        [cur_val_b_real, repl_idx_b] = data_b.get_realisations(current_val,
+                                                               [current_val], return_permutation_idx=True)
+        cond_a_real = data_a.get_realisations(current_val, idx_cond_full)
+        cond_b_real = data_b.get_realisations(current_val, idx_cond_full)
 
         # Get no. replications and no. samples per replication.
         n_repl = max(repl_idx_a) + 1
