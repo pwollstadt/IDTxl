@@ -163,19 +163,6 @@ class NetworkAnalysis:
     def _selected_vars_sources_realisations(self, realisations):
         self.__selected_vars_sources_realisations = realisations
 
-    def _append_selected_vars_realisations(self, realisations):
-        """Append realisations of conditionals to existing realisations.
-
-        Returns:
-            realisations: numpy array with dimensions replications x number
-                of indices.
-        """
-        if self._selected_vars_realisations is None or realisations.size == 0:
-            self._selected_vars_realisations = realisations
-        else:
-            self._selected_vars_realisations = np.hstack(
-                (self._selected_vars_realisations, realisations)
-            )
 
     def _idx_to_lag(self, idx_list, current_value_sample=None):
         """Change sample indices to lags for each sample in the list."""
@@ -355,30 +342,24 @@ class NetworkAnalysis:
             else:
                 self.selected_vars_sources.append(i)
 
-    def _append_selected_vars(self, idx, realisations):
+    def _append_selected_vars(self, data, idx):
         """Append indices and realisation of selected variables.
 
         Args:
+            data : Data instance
             idx : list of tuples
                 indices of selected variables, where each entry is a tuple
                 (idx process, idx sample), where indices are absolute values
                 with respect to entries in a data array
-            realisations : numpy array
-                realisations of the selected variables
         """
-        assert len(idx) == realisations.shape[1], (
-            "Dimensionality of realisations array ({0}) and length of index "
-            "list ({1}) do not match.".format(realisations.shape[1], len(idx))
-        )
         self._append_selected_vars_idx(idx)
-        self._append_selected_vars_realisations(realisations)
+        self._selected_vars_realisations = data.get_realisations(self._current_value, self.selected_vars_full)[0]
 
-    def _remove_selected_var(self, idx):
+    def _remove_selected_var(self, data, idx):
         """Remove a single selected variable and its realisations."""
-        self._selected_vars_realisations = utils.remove_column(
-            self._selected_vars_realisations, self.selected_vars_full.index(idx)
-        )
         self.selected_vars_full.pop(self.selected_vars_full.index(idx))
+        self._selected_vars_realisations = data.get_realisations(self._current_value, self.selected_vars_full)[0]
+        
         if idx[0] == self.target:
             self.selected_vars_target.pop(self.selected_vars_target.index(idx))
         else:

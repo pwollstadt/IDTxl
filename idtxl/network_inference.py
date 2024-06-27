@@ -175,11 +175,8 @@ class NetworkInference(NetworkAnalysis):
                 #     print(' -- significant')
                 success = True
                 candidate_set.pop(np.argmax(temp_te))
-                self._append_selected_vars(
-                    [max_candidate],
-                    data.get_realisations(self.current_value, [max_candidate])[0],
-                )
-                if self.settings["write_ckp"]:
+                self._append_selected_vars(data, [max_candidate])
+                if self.settings['write_ckp']:
                     self._write_checkpoint()
             else:
                 if self.settings["verbose"]:
@@ -211,13 +208,10 @@ class NetworkInference(NetworkAnalysis):
             # Get realisations and indices of source variables with lag 0. Note
             # that _define_candidates returns tuples with absolute indices and
             # not lags.
-            if cond == "faes":
-                cond = self._build_variable_list(
-                    self.source_set, [self.current_value[1]]
-                )
-                self._append_selected_vars(
-                    cond, data.get_realisations(self.current_value, cond)[0]
-                )
+            if cond == 'faes':
+                cond = self._build_variable_list(self.source_set,
+                                                 [self.current_value[1]])
+                self._append_selected_vars(data, cond)
         else:
             # If specific variables for conditioning were provided, convert
             # lags to absolute sample indices and add variables.
@@ -230,9 +224,7 @@ class NetworkInference(NetworkAnalysis):
                     return  # no additional variables for the current target
             print(f"Adding the following variables to the conditioning set: {cond}.")
             cond_idx = self._lag_to_idx(cond)
-            self._append_selected_vars(
-                cond_idx, data.get_realisations(self.current_value, cond_idx)[0]
-            )
+            self._append_selected_vars(data, cond_idx)
 
     def _remove_non_significant(self, s, p, stat):
         # Remove non-significant sources from the candidate set. Loop
@@ -531,8 +523,7 @@ class NetworkInferenceTE(NetworkInference):
                 "adding target sample with lag 1."
             )
             idx = (self.current_value[0], self.current_value[1] - 1)
-            realisations = data.get_realisations(self.current_value, [idx])[0]
-            self._append_selected_vars([idx], realisations)
+            self._append_selected_vars(data, [idx])
 
     def _reset(self):
         """Reset instance after analysis."""
@@ -672,9 +663,8 @@ class NetworkInferenceBivariate(NetworkInference):
                     success = True
                     candidate_set.pop(np.argmax(temp_te))
                     candidate_realisations = data.get_realisations(
-                        self.current_value, [max_candidate]
-                    )[0]
-                    self._append_selected_vars([max_candidate], candidate_realisations)
+                        self.current_value, [max_candidate])[0]
+                    self._append_selected_vars(data, [max_candidate])
                     # Update conditioning set for max. statistics in the next
                     # round.
                     if conditional_realisations is None:

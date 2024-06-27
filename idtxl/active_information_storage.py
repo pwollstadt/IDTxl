@@ -439,11 +439,8 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 # Remove candidate from candidate set and add it to the
                 # selected variables (used as the conditioning set).
                 candidate_set.pop(np.argmax(temp_te))
-                self._append_selected_vars(
-                    [max_candidate],
-                    data.get_realisations(self.current_value, [max_candidate])[0],
-                )
-                if self.settings["write_ckp"]:
+                self._append_selected_vars(data, [max_candidate])
+                if self.settings['write_ckp']:
                     self._write_checkpoint()
             else:
                 if self.settings["verbose"]:
@@ -653,9 +650,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             cond = [cond]
         print("Adding the following variables to the conditioning set: {cond}.")
         cond_idx = self._lag_to_idx(cond)
-        self._append_selected_vars(
-            cond_idx, data.get_realisations(self.current_value, cond_idx)[0]
-        )
+        self._append_selected_vars(data, cond_idx)
 
     def _reset(self):
         """Reset instance after analysis."""
