@@ -125,9 +125,10 @@ def test_permute_replications():
                 normalise=False)
     current_value = (0, n - 1)
     l = [(0, 1), (0, 3), (0, 7)]
-    [perm, perm_idx] = data.permute_replications(current_value=current_value,
+    perm = data.permute_replications(current_value=current_value,
                                                  idx_list=l)
-    assert (np.all(perm[:, 0] == perm_idx)), 'Permutation did not work.'
+    assert (np.all(perm[:, [0]] == perm)), 'Samples have been swapped within \
+                                            replication.'
 
     # Assert that samples have been swapped within the permutation range for
     # the first replication.
