@@ -1,13 +1,13 @@
 from functools import reduce
 import warnings
 import atexit
-import time
 
 import numpy as np
 
 from idtxl.lazy_array import LazyArray
-
 from idtxl.estimator import get_estimator
+from idtxl import idtxl_exceptions as ex
+
 try:
     from mpi4py import MPI
 except ImportError:
@@ -136,7 +136,7 @@ class MPIEstimator():
         """Test if the base Estimator is an analytic null estimator.
 
         """
-        return False
+        return _worker_estimator.is_analytic_null_estimator()
 
     def estimate_surrogates_analytic(self, **data):
         """Forward analytic estimation to the base Estimator.
@@ -144,7 +144,7 @@ class MPIEstimator():
         Analytic estimation is assumed to have shorter runtime and is thus
         performed on rank 0 alone for now.
         """
-        return False
+        return _worker_estimator.estimate_surrogates_analytic(**data)
         
 _worker_estimator = None
 

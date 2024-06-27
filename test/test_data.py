@@ -102,10 +102,9 @@ def test_get_realisations():
     n_realisations = 2
     data = np.arange(10).reshape(n_realisations, 5)
     d = Data(data, 'rs', normalise=False)
-    current_value = (0, 1)
-    realisations, ind = d.get_realisations(current_value, [(0, 0)], return_replication_idx=True)
-    for r in range(n_realisations):
-        assert (data[r, :-1] == np.squeeze(realisations[ind == r])).all()
+    current_value = (0, 1)    
+    realisations = d.get_realisations(current_value, [(0, 0)])
+    assert np.array_equal(realisations, np.array([[0],[1], [2], [3], [5], [6], [7], [8]]))
 
     # Test retrieval of realisations of the current value.
     n = 7
@@ -237,50 +236,50 @@ def test_permute_samples():
 
     # Test TypeError if settings are no integers
     perm_settings['perm_range'] = np.inf
-    with pytest.raises(TypeError):
+    with pytest.raises(AssertionError):
         data.permute_samples(current_value=current_value,
                              idx_list=l,
                              perm_settings=perm_settings)
     perm_settings['perm_range'] = 'foo'
-    with pytest.raises(TypeError):
+    with pytest.raises(AssertionError):
         data.permute_samples(current_value=current_value,
                              idx_list=l,
                              perm_settings=perm_settings)
     perm_settings['perm_type'] = 'block'
     perm_settings['block_size'] = 3
-    with pytest.raises(TypeError):
+    with pytest.raises(AssertionError):
         data.permute_samples(current_value=current_value,
                              idx_list=l,
                              perm_settings=perm_settings)
     perm_settings['block_size'] = 3.5
-    with pytest.raises(TypeError):
+    with pytest.raises(AssertionError):
         data.permute_samples(current_value=current_value,
                              idx_list=l,
                              perm_settings=perm_settings)
     perm_settings['block_size'] = -1
-    with pytest.raises(TypeError):
+    with pytest.raises(AssertionError):
         data.permute_samples(current_value=current_value,
                              idx_list=l,
                              perm_settings=perm_settings)
     perm_settings['perm_range'] = -1
-    with pytest.raises(TypeError):
+    with pytest.raises(AssertionError):
         data.permute_samples(current_value=current_value,
                              idx_list=l,
                              perm_settings=perm_settings)
     perm_settings['perm_type'] = 'circular'
     perm_settings['max_shift'] = 3.5
-    with pytest.raises(TypeError):
+    with pytest.raises(AssertionError):
         data.permute_samples(current_value=current_value,
                              idx_list=l,
                              perm_settings=perm_settings)
     perm_settings['max_shift'] = -1
-    with pytest.raises(TypeError):
+    with pytest.raises(AssertionError):
         data.permute_samples(current_value=current_value,
                              idx_list=l,
                              perm_settings=perm_settings)
     perm_settings['perm_type'] = 'local'
     perm_settings['max_shift'] = -1
-    with pytest.raises(TypeError):
+    with pytest.raises(AssertionError):
         data.permute_samples(current_value=current_value,
                              idx_list=l,
                              perm_settings=perm_settings)
@@ -309,56 +308,6 @@ def test_get_data_slice():
     d = Data(np.arange(n), 's', normalise=False)
     [s, i] = d._get_data_slice(process=0, offset_samples=offset, shuffle=False)
     assert s.shape[0] == (n - offset), 'Offset not handled correctly.'
-
-
-def test_swap_blocks():
-    """Test block-wise swapping of samples."""
-    d = Data()
-    d.generate_mute_data()
-
-    # block_size divides the length of the data to be permuted, swap_range
-    # leads to 2 remaining blocks
-    n = 50
-    block_size = 5
-    swap_range = 4
-    perm = d._swap_blocks(n, block_size, swap_range)
-    assert perm.shape[0] == n, 'Incorrect length of permuted indices.'
-
-    # block_size leads to one block of length 1, swap_range divides the no.
-    # blocks
-    n = 50
-    block_size = 7
-    swap_range = 4
-    perm = d._swap_blocks(n, block_size, swap_range)
-    assert perm.shape[0] == n, 'Incorrect length of permuted indices.'
-    n_blocks = np.ceil(n/7).astype(int)
-    assert n_blocks == 8, 'No. blocks is incorrect.'
-    assert sum(perm == n_blocks - 1) == 1, ('No. remaining samples in the last'
-                                            ' block is incorrect.')
-
-    # no remaining samples or blocks
-    n = 30
-    block_size = 5
-    swap_range = 3
-    perm = d._swap_blocks(n, block_size, swap_range)
-    assert perm.shape[0] == n, 'Incorrect length of permuted indices.'
-
-
-def test_circular_shift():
-    """Test circular shifting of samples."""
-    d = Data()
-    d.generate_mute_data()
-    n = 20
-    max_shift = 10
-    [perm, shift] = d._circular_shift(n, max_shift)
-    assert perm[0] == (n - shift), 'First index after circular shift is wrong!'
-    assert shift <= max_shift, 'Actual shift exceeded max_shift.'
-    assert perm.shape[0] == n, 'Incorrect length of permuted indices.'
-
-
-def test_swap_local():
-    pass
-
 
 def test_data_type():
     """Test if data class always returns the correct data type."""
@@ -389,9 +338,6 @@ def test_data_type():
     assert issubclass(type(sl[0, 0]), np.integer), (
         'Data slice type is not an int.')
     settings = {'perm_type': 'random'}
-    sl_perm = data.slice_permute_samples(0, settings)[0]
-    assert issubclass(type(sl_perm[0, 0]), np.integer), (
-        'Permuted data slice type is not an int.')
     samples = data.permute_samples((0, 5), [(1, 1), (1, 3)], settings)
     assert issubclass(type(samples[0, 0]), np.integer), (
         'Permuted samples type is not an int.')

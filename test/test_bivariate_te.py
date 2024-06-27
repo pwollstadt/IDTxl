@@ -292,7 +292,6 @@ def test_bivariate_te_one_realisation_per_replication():
     assert not nw.selected_vars_full
     assert not nw.selected_vars_sources
     assert not nw.selected_vars_target
-    assert (nw._replication_index == np.arange(n_repl)).all()
     assert nw._current_value == (
         target,
         max(settings["max_lag_sources"], settings["max_lag_target"]),

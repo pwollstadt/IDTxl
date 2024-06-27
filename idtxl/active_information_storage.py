@@ -367,7 +367,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             print(f"testing candidate set: {self._idx_to_lag(candidate_set)}")
         while candidate_set:
             # Get realisations for all candidates.
-            cand_real = [data.get_realisations(self.current_value, candidate) for candidate in candidate_set]
+            cand_real = [data.get_realisations(self.current_value, [candidate]) for candidate in candidate_set]
             
             # Calculate the (C)MI for each candidate and the target.
             try:
@@ -563,8 +563,6 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 ais = ais[0]
 
             if self.settings["local_values"]:
-                replication_ind = data.get_realisations(
-                    self.current_value, self._selected_vars_sources, return_replication_idx=True)[1]
                 try:
                     local_ais = self._cmi_estimator_local.estimate(
                         var1=self._current_value_realisations,
@@ -586,12 +584,12 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                     # Return local AIS values of all zeros:
                     #  (length gleaned from line below)
                     local_ais = np.zeros(
-                        (max(replication_ind) + 1) * sum(replication_ind == 0)
+                        data.n_realisations(self.current_value)
                     )
 
                 # Reshape local AIS to a [replications x samples] matrix.
                 self.ais = local_ais.reshape(
-                    max(replication_ind) + 1, sum(replication_ind == 0)
+                    data.n_realisations_repl(), data.n_realisations_samples(self.current_value)
                 )
             else:
                 self.ais = ais

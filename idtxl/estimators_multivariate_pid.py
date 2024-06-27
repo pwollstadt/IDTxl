@@ -13,6 +13,7 @@ from . import lattices as lt
 from . import pid_goettingen
 from .estimator import Estimator
 from .estimators_pid import _join_variables
+from .lazy_array import LazyArray
 
 # TODO add support for multivariate estimation for Tartu and Sydney estimator
 
@@ -124,10 +125,10 @@ def _get_pdf_dict(s, t):
 def _check_input(s, t, settings):
     """Check input to PID estimators."""
     # Check if inputs are numpy arrays.
-    if type(t) != np.ndarray:
+    if type(t) != np.ndarray and type(t) != LazyArray:
         raise TypeError("Input t must be a numpy array.")
     for i in range(len(s)):
-        if type(s[i]) != np.ndarray:
+        if type(s[i]) != np.ndarray and type(s[i]) != LazyArray:
             raise TypeError("All inputs s{0} must be numpy arrays.".format(i + 1))
 
     # In general, IDTxl expects 2D inputs because JIDT/JPYPE only accepts those

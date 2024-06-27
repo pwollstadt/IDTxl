@@ -281,7 +281,6 @@ class MultivariatePID(SingleProcessAnalysis):
                                             [self.current_value])
 
         # CHECK! make sure self.source has the same idx as sources
-        data.get_realisations(self.current_value, [self.sources[0]])
         list_sources_var_realisations = [data.get_realisations(
                                                      self.current_value,
                                                      [self.sources[i]])

@@ -226,7 +226,7 @@ class Data():
         """return the current state of the random seed"""
         return np.random.get_state()
 
-    def get_realisations(self, current_value, idx_list, shuffle=False, return_replication_idx=False):
+    def get_realisations(self, current_value, idx_list, shuffle=False):
         """Return realisations for a list of indices.
 
         Return realisations for indices in list. Optionally, realisations can
@@ -257,8 +257,6 @@ class Data():
                 samples for a process are returned
             shuffle: bool
                 if true permute blocks of replications over trials
-            return_replication_idx: bool
-                additionally return the replication index of each sample
 
         Returns:
             numpy array
@@ -273,7 +271,7 @@ class Data():
             raise AttributeError("No data has been added to this Data() instance.")
         # Return None if index list is empty.
         if not idx_list:
-            return (None, None) if return_replication_idx else None
+            return None
         # Check if requested indices are smaller than the current_value.
         if not all(np.array([x[1] for x in idx_list]) <= current_value[1]):
             print('Index list: {0}\ncurrent value: {1}'.format(idx_list,
@@ -664,15 +662,20 @@ class Data():
             realisations = realisations.reshape(self.n_replications * n_samples, len(idx_list)) # Flatten out the replications axis again.
         elif perm_settings['perm_type'] == 'circular':
             max_shift = perm_settings['max_shift']
+            assert isinstance(max_shift, int) and max_shift > 0, 'max_shift must be an integer larger than 0'
             shift = np.random.Generator(self._random_bit_generator).integers(1, max_shift + 1)
             realisations = realisations.rolled(shift, axis=0)
         elif perm_settings['perm_type'] == 'block':
             block_size = perm_settings['block_size']
             perm_range = perm_settings['perm_range']
+            assert isinstance(perm_range, int) and perm_range > 1, 'perm_range must be an integer larger than 1'
             realisations = realisations.block_shuffled(block_size, perm_range, philox_key=philox_key, philox_counter=philox_counter)
         elif perm_settings['perm_type'] == 'local':
             perm_range = perm_settings['perm_range']
+            assert isinstance(perm_range, int) and perm_range > 1, 'perm_range must be an integer larger than 1'
             realisations = realisations.local_shuffled(perm_range, philox_key=philox_key, philox_counter=philox_counter)
+        else:
+            raise ValueError(f"Unknown permutation type: {perm_settings['perm_type']}")
 
         # Advance the random bit generator to avoid reusing the same random numbers for the next permutation.
         self._random_bit_generator.advance(2**64)        

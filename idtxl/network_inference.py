@@ -584,7 +584,7 @@ class NetworkInferenceBivariate(NetworkInference):
 
             while candidate_set:
                 # Get realisations for all candidates.
-                cand_real = [data.get_realisations(self.current_value, candidate) for candidate in candidate_set]
+                cand_real = [data.get_realisations(self.current_value, [candidate]) for candidate in candidate_set]
 
                 # Calculate the (C)MI for each candidate and the target.
                 try:

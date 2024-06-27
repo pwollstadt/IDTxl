@@ -1,7 +1,10 @@
 # pylint: disable=protected-access,invalid-name
 """Provide unit tests for IDTxl checkpointing."""
 import os
+
 import numpy as np
+import pytest
+
 from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
 from idtxl.multivariate_mi import MultivariateMI
@@ -20,16 +23,19 @@ DELAY = 1
 
 
 def _clear_ckp(filename):
-    # Delete created checkpoint from disk.
-    os.remove(f"{filename}.ckp")
-    try:
-        os.remove(f"{filename}.ckp.old")
-    except FileNotFoundError:
-        # If algorithm ran for only one iteration, no old checkpoint exists.
-        print(f"No file {filename}.ckp.old")
-    os.remove(f"{filename}.dat")
-    os.remove(f"{filename}.json")
+    # Delete created checkpoint from disk if it exists.
 
+    if os.path.isfile(f"{filename}.ckp"):
+        os.remove(f"{filename}.ckp")
+
+    if os.path.isfile(f"{filename}.ckp.old"):
+        os.remove(f"{filename}.ckp.old")
+
+    if os.path.isfile(f"{filename}.dat"):
+        os.remove(f"{filename}.dat")
+
+    if os.path.isfile(f"{filename}.json"):
+        os.remove(f"{filename}.json")
 
 def test_checkpoint_defaults():
     """Test if checkpointing defaults are set and used correctly."""
@@ -50,7 +56,7 @@ def test_checkpoint_defaults():
     targets = [3]
     network_analysis = MultivariateTE()
     network_analysis._set_checkpointing_defaults(settings, data, sources, targets)
-    ckp_file = os.path.join(os.path.dirname(__file__), "idtxl_checkpoint")
+    ckp_file = "./idtxl_checkpoint"
     assert os.path.isfile(f"{ckp_file}.ckp"), "Did not write default checkpoint file"
     assert os.path.isfile(f"{ckp_file}.dat"), "Did not write default checkpoint data"
     assert os.path.isfile(
@@ -79,6 +85,8 @@ def test_checkpoint_resume():
 
     # Initialise analysis object and define settings
     filename_ckp = os.path.join(os.path.dirname(__file__), "data", "my_checkpoint")
+    _clear_ckp(filename_ckp)
+
     network_analysis = MultivariateTE()
     settings = {
         "cmi_estimator": "JidtGaussianCMI",
@@ -1761,21 +1769,4 @@ def test_JidtDiscreteCMI_BMI_checkpoint():
 
 
 if __name__ == "__main__":
-    test_checkpoint_defaults()
-    test_checkpoint_copy()
-    test_checkpoint_resume()
-
-    # test_JidtKraskovCMI_MMI_checkpoint()
-    # test_JidtKraskovCMI_MTE_checkpoint()
-    # test_JidtKraskovCMI_BMI_checkpoint()
-    # test_JidtKraskovCMI_BTE_checkpoint()
-
-    test_JidtDiscreteCMI_MMI_checkpoint()
-    test_JidtDiscreteCMI_MTE_checkpoint()
-    test_JidtDiscreteCMI_BMI_checkpoint()
-    test_JidtDiscreteCMI_BTE_checkpoint()
-
-    test_JidtGaussianCMI_MMI_checkpoint()
-    test_JidtGaussianCMI_MTE_checkpoint()
-    test_JidtGaussianCMI_BMI_checkpoint()
-    test_JidtGaussianCMI_BTE_checkpoint()
+    pytest.main([__file__])

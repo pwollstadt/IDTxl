@@ -135,7 +135,7 @@ def test_network_analysis():
 
     # Run Goettingen estimator
     pid = MultivariatePID()
-    settings = {"pid_estimator": "SxPID", "tail": "two", "lags_pid": [[0, 0], [0, 0]]}
+    settings = {"pid_estimator": "SxPID", "tail": "two", "lags_pid": [[0, 0], [0, 0]], "verbose": False}
     est_goettingen = pid.analyse_network(
         settings=settings, data=data, targets=[0, 2], sources=[[1, 2], [0, 1]]
     )
@@ -182,6 +182,7 @@ def test_network_analysis():
         "pid_estimator": "SxPID",
         "tail": "two",
         "lags_pid": [[0, 0, 0], [0, 0, 0]],
+        "verbose": False,
     }
     est_goettingen = pid.analyse_network(
         settings=tri_settings,
@@ -217,6 +218,7 @@ def test_network_analysis():
         "pid_estimator": "SxPID",
         "tail": "two",
         "lags_pid": [[0, 0, 0, 0], [0, 0, 0, 0]],
+        "verbose": False,
     }
     est_goettingen = pid.analyse_network(
         settings=quad_settings,
