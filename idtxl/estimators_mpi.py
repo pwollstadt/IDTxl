@@ -52,8 +52,8 @@ class MPIEstimator():
 
         n_tasks = len(data[list(data.keys())[0]])
         
-        # If fewer tasks than batch_size, run on rank 0 alone
-        if n_tasks < self._mpi_batch_size:
+        # If only one task, estimate on rank 0
+        if n_tasks == 1:
             return _worker_estimator.estimate_parallel(**data)
         
         # If lazy arrays are used, broadcast base array to all nodes
@@ -66,38 +66,30 @@ class MPIEstimator():
         if lazyArray is not None and lazyArray._base_array_id != _worker_data_id:
             _bcast_shared_data(lazyArray._base_array)
 
-        # Chunk data
-        n_batches = n_tasks // self._mpi_batch_size + (1 if n_tasks % self._mpi_batch_size > 0 else 0)
         n_workers = _size_world - 1
 
-        batch_sizes = self.compute_batch_sizes(n_tasks, n_batches, n_workers)
+        # Chunk data
+        batch_sizes = self.compute_batch_sizes(n_tasks, self._mpi_batch_size, n_workers)
             
-        return _estimate(self._chunk_data(data, batch_sizes=batch_sizes), n_batches=n_batches)
+        return _estimate(self._chunk_data(data, batch_sizes=batch_sizes), n_batches=len(batch_sizes))
     
-    def compute_batch_sizes(self, n_tasks, n_batches, n_workers):
-        """Evenly distribute tasks among workers.
+    def compute_batch_sizes(self, n_tasks, max_batch_size, n_workers):
 
-        If n_batches does not divide n_tasks, n_tasks//n_batches+1 batches are created
-        and the last n_workers batches are shortened evenly.
-        """
+        n_full_batches = n_tasks // (max_batch_size * n_workers) * n_workers
+        remaining_tasks = n_tasks - n_full_batches * max_batch_size
 
-        # Distribute batches evenly among workers
-        batch_sizes = np.full(n_batches, self._mpi_batch_size, dtype=np.int)
+        n_partial_batches = min(n_workers, remaining_tasks)
 
-        # Remove excess tasks evenly from all workers
-        excess_tasks = n_batches * self._mpi_batch_size - n_tasks
+        batch_sizes = np.empty(n_full_batches + n_partial_batches, dtype=np.int32)
 
-        # Compute number of batches that will be shortened
-        n_short_batches = min(n_workers, n_batches)
-        excess_tasks_per_shortened_batch = excess_tasks // n_short_batches
-        remaining_excess_tasks = excess_tasks % n_short_batches
+        batch_sizes[:n_full_batches] = max_batch_size
 
-        # Shorten batches evenly
-        batch_sizes[-n_short_batches:] -= excess_tasks_per_shortened_batch
+        if n_partial_batches:
+            size_partial_batches = remaining_tasks // n_partial_batches
+            batch_sizes[n_full_batches:] = size_partial_batches
+            batch_sizes[n_full_batches:n_full_batches + remaining_tasks % n_partial_batches] += 1
 
-        # If there are remaining excess tasks, remove them from the last batches
-        if remaining_excess_tasks:
-            batch_sizes[-remaining_excess_tasks:] -= 1
+        assert batch_sizes.sum() == n_tasks
 
         return batch_sizes
     
