@@ -104,9 +104,6 @@ class MPIEstimator():
             """
             n_tasks = batch_sizes[batch_idx]
             
-            if previous is None:
-                previous = {}
-            
             dicts = [None] * n_tasks
             offset = batch_sizes[:batch_idx].sum()
             for i in range(n_tasks):
@@ -239,7 +236,7 @@ def _estimate(batch_gen, n_batches):
     status = MPI.Status()
 
     # Receive results and send new tasks until all tasks are done
-    for i in range(i, n_batches):
+    for i in range(min(n_workers, n_batches), n_batches):
         result_idx, result = _comm_world.recv(status=status)
         worker_rank = status.Get_source()
 
@@ -315,8 +312,8 @@ def _worker_estimate():
                     var.set_base_array(_worker_data)
 
             # Merge data with previous data
-            data.update(previous)
-            previous = data
+            previous.update(data)
+            data = previous
 
 
             if _worker_estimator.is_parallel():
