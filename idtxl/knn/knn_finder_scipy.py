@@ -6,7 +6,7 @@ from idtxl.knn.tree_knn_finder import TreeKnnFinder
 
 class ScipyKDTreeKnnFinder(TreeKnnFinder):
     def __init__(self, data: np.ndarray, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(data, **kwargs)
 
         if self._metric == "chebyshev":
             self._p = np.inf
