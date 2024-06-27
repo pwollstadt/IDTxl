@@ -296,13 +296,28 @@ def _perform_fdr_correction(pval, constant, alpha, n_tests):
     method = "indep" if constant == 1 else "negcorr"
     sign, _ = fdrcorrection(pval, alpha=alpha, method=method)
 
-    # Compute smallest threshold to check for sufficiency of permutations
-    if constant == 1:
-        min_thresh = alpha / n_tests
-    else:
-        min_thresh = alpha / (n_tests * np.sum(1 / np.arange(1, n_tests + 1)))
+    # Calculate threshold
+    n = pval.size
+    if constant == 2:  # pick the requested constant (see Genovese, p.872)
+        if n < 1000:
+            const = sum(1 / np.arange(1, n + 1))
+        else:
+            const = np.log(n) + np.e  # aprx. harmonic sum with Euler's number
+    elif constant == 1:
+        # This is less strict than the other one and corresponds to a
+        # Bonoferroni-correction for the first p-value, however, it makes more
+        # strict assumptions on the distribution of p-values, while constant 2
+        # works for any joint distribution of the p-values.
+        const = 1
+    thresh = (np.arange(1, n + 1) / n) * alpha / const
 
-    return sign, min_thresh
+    # Compare data to threshold.
+    sign = pval <= thresh
+    if np.invert(sign).any():
+        first_false = np.where(np.invert(sign))[0][0]
+        sign[first_false:] = False  # avoids false positives due to equal pvals
+    sign[sort_idx] = sign.copy() # restore original ordering of significance values
+    return sign, thresh
 
 
 def omnibus_test(analysis_setup, data):
