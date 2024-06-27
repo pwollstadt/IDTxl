@@ -170,9 +170,11 @@ def network_fdr(settings=None, *results):
 
         for target in results_comb.targets_analysed:
             next_pval = results_comb._single_target[target].omnibus_pval
-            pval = np.append(pval, next_pval if next_pval is not None else 1)
+            pval = np.append(
+                pval, next_pval if next_pval is not None else 1)
             target_idx = np.append(target_idx, target)
-            n_perm = np.append(n_perm, results_comb.settings.n_perm_omnibus)
+            n_perm = np.append(
+                    n_perm, results_comb.settings.n_perm_omnibus)
     else:  # individual variables
         # The total number of tests is the number of targets times the number
         # of source candidates (i.e. source processes * time lags) analyzed for each target
@@ -182,21 +184,18 @@ def network_fdr(settings=None, *results):
         ) * (settings["max_lag_sources"] - settings["min_lag_sources"] + 1)
 
         for target in results_comb.targets_analysed:
-            if results_comb._single_target[target].selected_sources_pval is None:
-                continue
-            n_sign = results_comb._single_target[target].selected_sources_pval.size
+            n_sign = (results_comb._single_target[target].
+                        selected_sources_pval.size)
             pval = np.append(
-                pval,
-                [
-                    next_pval if next_pval is not None else 1
-                    for next_pval in results_comb._single_target[
-                        target
-                    ].selected_sources_pval
-                ],
-            )
-            target_idx = np.append(target_idx, np.ones(n_sign) * target).astype(int)
-            cands = cands + (results_comb._single_target[target].selected_vars_sources)
-            n_perm = np.append(n_perm, results_comb.settings.n_perm_max_seq)
+                pval, (results_comb._single_target[target].
+                        selected_sources_pval))
+            target_idx = np.append(target_idx,
+                                    np.ones(n_sign) * target).astype(int)
+            cands = (cands +
+                        (results_comb._single_target[target].
+                        selected_vars_sources))
+            n_perm = np.append(
+                n_perm, results_comb.settings.n_perm_max_seq)
 
     if (
         pval.size == 0 or (n_perm == None).all()
