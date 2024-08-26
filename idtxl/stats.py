@@ -1,6 +1,7 @@
 """Provide statistics functions."""
 import copy as cp
 import numpy as np
+from scipy.special import factorial
 from . import idtxl_utils as utils
 from . import idtxl_exceptions as ex
 
@@ -1554,7 +1555,7 @@ def _sufficient_replications(data, n_perm):
     Test if the number of replications is high enough to allow for the required
     number of permutations.
     """
-    if np.math.factorial(data.n_replications) > n_perm:
+    if factorial(data.n_replications) > n_perm:
         return True
     else:
         return False
