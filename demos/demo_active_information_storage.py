@@ -8,8 +8,7 @@ data.generate_mute_data(n_samples=1000, n_replications=5)
 
 # b) Initialise analysis object and define settings
 network_analysis = ActiveInformationStorage()
-settings = {'cmi_estimator':  'JidtGaussianCMI',
-            'max_lag': 5}
+settings = {"cmi_estimator": "JidtGaussianCMI", "max_lag": 5}
 
 # c) Run analysis
 results = network_analysis.analyse_network(settings=settings, data=data)

@@ -1,8 +1,10 @@
 """Parent class for all network inference."""
+
 import numpy as np
-from .network_analysis import NetworkAnalysis
-from . import stats
+
 from . import idtxl_exceptions as ex
+from . import stats
+from .network_analysis import NetworkAnalysis
 
 
 class NetworkInference(NetworkAnalysis):
@@ -235,6 +237,7 @@ class NetworkInference(NetworkAnalysis):
     def _remove_non_significant(self, s, p, stat):
         # Remove non-significant sources from the candidate set. Loop
         # backwards over the candidates to remove them iteratively.
+        print(f"removing {np.sum(np.invert(s))} variables after seq. max stats")
         for i in range(s.shape[0] - 1, -1, -1):
             if not s[i]:
                 self._remove_selected_var(self.selected_vars_sources[i])
@@ -1078,7 +1081,7 @@ class NetworkInferenceMultivariate(NetworkInference):
                 self.current_value, remaining_candidates
             )[0]
             try:
-                [significant, p, surr_table] = stats.min_statistic(
+                significant, p, surr_table = stats.min_statistic(
                     self,
                     data,
                     self.selected_vars_sources,
@@ -1129,9 +1132,7 @@ class NetworkInferenceMultivariate(NetworkInference):
         else:
             if self.settings["verbose"]:
                 print(
-                    "selected variables: {0}".format(
-                        self._idx_to_lag(self.selected_vars_full)
-                    )
+                    f"selected variables: {self._idx_to_lag(self.selected_vars_full)}"
                 )
             try:
                 [s, p, stat] = stats.omnibus_test(self, data)
@@ -1139,8 +1140,8 @@ class NetworkInferenceMultivariate(NetworkInference):
                 # The algorithm cannot continue here, so
                 #  we'll set the results to zero
                 print(
-                    "AlgorithmExhaustedError encountered in estimations: {}. "
-                    "Halting current estimation set.".format(aee.message)
+                    "AlgorithmExhaustedError encountered in estimations: "
+                    f"{aee.message}. Halting current estimation set."
                 )
                 # For now we don't need a stack trace:
                 # traceback.print_tb(aee.__traceback__)

@@ -1,10 +1,12 @@
 """Provide spiketime data structures for IDTxl analysis."""
 
-import numpy as np
-from sys import stderr
-from scipy.optimize import newton
-import idtxl.hde_utils as utl
 import os
+from sys import stderr
+
+import numpy as np
+from scipy.optimize import newton
+
+import idtxl.hde_utils as utl
 
 VERBOSE = False
 
@@ -15,9 +17,9 @@ except:
     FAST_EMBEDDING_AVAILABLE = False
     print(
         """
-    Error importing Cython fast embedding module for HDE estimator.\n
-    When running the HDE estimator, the slow Python implementation for optimizing the HDE embedding will be used,\n
-    this may take a long time. Other estimators are not affected.\n
+    Error importing Cython fast embedding module for HDE estimator.
+    When running the HDE estimator, the slow Python implementation for optimizing the HDE embedding will be used,
+    this may take a long time. Other estimators are not affected.
     """,
         file=stderr,
         flush=True,

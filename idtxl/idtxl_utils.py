@@ -1,8 +1,9 @@
 """Provide IDTxl utility functions."""
-import pprint
 import copy as cp
-import numpy as np
+import pprint
 import threading
+
+import numpy as np
 
 
 def swap_chars(s, i_1, i_2):
@@ -316,14 +317,7 @@ def conflicting_entries(dict_1, dict_2):
     for k in intersect_keys:
         if np.array(dict_1[k] != dict_2[k]).any():
             print(
-                "Unequal entries for key "
-                "{0}"
-                ": dict_1: "
-                "{1}"
-                ", dict_2:"
-                " "
-                "{2}"
-                ".".format(k, dict_1[k], dict_2[k])
+                f"Unequal entries for key {k}: dict_1: {dict_1[k]}, dict_2: {dict_2[k]}"
             )
             return True
     return False
@@ -336,9 +330,12 @@ def calculate_mi(corr):
 
 class timeout(object):
     """Context manager for a timeout using threading module.
-    args:
-        timeout_duration: float, number of seconds to wait before timeout is triggered
-        exception_message: string, message to put in the exception
+
+    Args:
+        timeout_duration: float
+            number of seconds to wait before timeout is triggered
+        exception_message : string
+            message to put in the exception
     """
 
     def __init__(self, timeout_duration, exception_message="Timeout"):

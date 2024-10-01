@@ -7,9 +7,9 @@ greedy approach with maximum statistics to generate a non-uniform embedding
 Note:
     Written for Python 3.4+
 """
-from .network_inference import NetworkInferenceTE, NetworkInferenceBivariate
-from .stats import network_fdr
+from .network_inference import NetworkInferenceBivariate, NetworkInferenceTE
 from .results import ResultsNetworkInference
+from .stats import network_fdr
 
 
 class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
@@ -157,7 +157,7 @@ class BivariateTE(NetworkInferenceTE, NetworkInferenceBivariate):
         )
         for t, target in enumerate(targets):
             if settings["verbose"]:
-                print("\n####### analysing target with index {t} from list {targets}")
+                print(f"\n####### analysing target with index {t} from list {targets}")
             res_single = self.analyse_single_target(settings, data, target, sources[t])
             results.combine_results(res_single)
 

@@ -1,21 +1,23 @@
 """Test IDTxl results class."""
+import copy as cp
+import itertools as it
 import os
 import pickle
-import pytest
 from tempfile import TemporaryFile
-import itertools as it
-import copy as cp
+
 import numpy as np
-from idtxl.results import AdjacencyMatrix
-from idtxl.multivariate_te import MultivariateTE
-from idtxl.bivariate_te import BivariateTE
-from idtxl.multivariate_mi import MultivariateMI
+import pytest
+from test_estimators_jidt import jpype_missing
+
 from idtxl.bivariate_mi import BivariateMI
-from idtxl.network_comparison import NetworkComparison
+from idtxl.bivariate_te import BivariateTE
 from idtxl.data import Data
 from idtxl.estimators_jidt import JidtDiscreteCMI
-from test_estimators_jidt import jpype_missing
 from idtxl.idtxl_utils import calculate_mi
+from idtxl.multivariate_mi import MultivariateMI
+from idtxl.multivariate_te import MultivariateTE
+from idtxl.network_comparison import NetworkComparison
+from idtxl.results import AdjacencyMatrix
 
 # Use common settings dict that can be used for each test
 settings = {
@@ -457,8 +459,8 @@ def test_adjacency_matrix():
 
 
 if __name__ == "__main__":
-    test_adjacency_matrix()
     test_console_output()
+    test_adjacency_matrix()
     test_results_network_inference()
     test_results_network_comparison()
     test_pickle_results()

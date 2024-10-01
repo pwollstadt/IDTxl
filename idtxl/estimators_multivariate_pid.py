@@ -8,6 +8,7 @@ decomposition as proposed in
   http://arxiv.org/abs/2002.03356
 """
 import numpy as np
+
 from . import lattices as lt
 from . import pid_goettingen
 from .estimator import Estimator
@@ -47,7 +48,7 @@ class SxPID(Estimator):
     def __init__(self, settings):
         # get estimation parameters
         self.settings = settings.copy()
-        self.settings.setdefault('verbose', False)
+        self.settings.setdefault("verbose", False)
 
     def is_parallel():
         return False
@@ -56,7 +57,8 @@ class SxPID(Estimator):
         return False
 
     def estimate(self, s, t):
-        """
+        """Estimate SxPID from list of sources and a target
+
         Args:
             s : list of numpy arrays
                 1D arrays containing realizations of a discrete random variable
@@ -64,16 +66,12 @@ class SxPID(Estimator):
                 1D array containing realizations of a discrete random variable
 
         Returns:
-            dict of dict
-                {
-                 'ptw' -> { realization -> {alpha -> [float, float, float]} }
+            dict
+                SxPID results, with entries
+                    - 'ptw' -> { realization -> {alpha -> [float, float, float]}}: pointwise decomposition
+                    - 'avg' -> {alpha -> [float, float, float]}: average decomposition
 
-                 'avg' -> {alpha -> [float, float, float]}
-                }
-            where the list of floats is ordered
-            [informative, misinformative, informative - misinformative]
-            ptw stands for pointwise decomposition
-            avg stands for average decomposition
+                the list of floats is ordered [informative, misinformative, informative - misinformative]
         """
         s, t, self.settings = _check_input(s, t, self.settings)
         pdf = _get_pdf_dict(s, t)
@@ -90,19 +88,20 @@ class SxPID(Estimator):
             pdf_orig=pdf,
             chld=lattices[num_source_vars][0],
             achain=lattices[num_source_vars][1],
-            printing=self.settings['verbose'])
+            printing=self.settings["verbose"],
+        )
 
         # TODO AskM: Trivariate: does it make sense to name the alphas
         #    for example shared_syn_s1_s2__syn_s1_s3 ?
         results = {
-            'ptw': retval_ptw,
-            'avg': retval_avg,
+            "ptw": retval_ptw,
+            "avg": retval_avg,
         }
         return results
 
 
 def _get_pdf_dict(s, t):
-    """"Write probability mass function estimated via counting to a dict."""
+    """ "Write probability mass function estimated via counting to a dict."""
     # Create dictionary with probability mass function
     counts = dict()
     n_samples = s[0].shape[0]
@@ -126,10 +125,10 @@ def _check_input(s, t, settings):
     """Check input to PID estimators."""
     # Check if inputs are numpy arrays.
     if type(t) != np.ndarray:
-        raise TypeError('Input t must be a numpy array.')
+        raise TypeError("Input t must be a numpy array.")
     for i in range(len(s)):
         if type(s[i]) != np.ndarray:
-            raise TypeError('All inputs s{0} must be numpy arrays.'.format(i+1))
+            raise TypeError("All inputs s{0} must be numpy arrays.".format(i + 1))
 
     # In general, IDTxl expects 2D inputs because JIDT/JPYPE only accepts those
     # and we have a multivariate approach, i.e., a vector is a special case of
@@ -146,33 +145,37 @@ def _check_input(s, t, settings):
                 for col in range(1, s[i].shape[1]):
                     alph_col = len(np.unique(s[i][:, col]))
                     si_joint, alph_new = _join_variables(
-                        si_joint, s[i][:, col], alph_new, alph_col)
-                settings['alph_s'+str(i+1)] = alph_new
+                        si_joint, s[i][:, col], alph_new, alph_col
+                    )
+                settings["alph_s" + str(i + 1)] = alph_new
             else:
-                raise ValueError('Input source {0} s{0} has to be a 1D or 2D '
-                                 'numpy array.'.format(i+1))
+                raise ValueError(
+                    "Input source {0} s{0} has to be a 1D or 2D "
+                    "numpy array.".format(i + 1)
+                )
 
     if t.ndim != 1:
         if t.shape[1] == 1:
             t = np.squeeze(t)
         else:  # For now we only allow 1D-targets
-            raise ValueError('Input target t has to be a vector '
-                             '(t.shape[1]=1).')
+            raise ValueError("Input target t has to be a vector " "(t.shape[1]=1).")
 
     # Check types of remaining inputs.
     if type(settings) != dict:
-        raise TypeError('The settings argument should be a dictionary.')
+        raise TypeError("The settings argument should be a dictionary.")
     for i in range(len(s)):
         if not issubclass(s[i].dtype.type, np.integer):
-            raise TypeError('Input s{0} (source {0}) must be an integer numpy '
-                            'array.'.format(i+1))
+            raise TypeError(
+                "Input s{0} (source {0}) must be an integer numpy "
+                "array.".format(i + 1)
+            )
     # ^ for
     if not issubclass(t.dtype.type, np.integer):
-        raise TypeError('Input t (target) must be an integer numpy array.')
+        raise TypeError("Input t (target) must be an integer numpy array.")
 
     # Check if variables have equal length.
     for i in range(len(s)):
         if len(t) != len(s[i]):
-            raise ValueError('Number of samples s and t must be equal')
+            raise ValueError("Number of samples s and t must be equal")
 
     return s, t, settings

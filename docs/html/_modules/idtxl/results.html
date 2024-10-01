@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>idtxl.results &#8212; IDTxl 1.5.1 documentation</title>
+    <title>idtxl.results &#8212; IDTxl 1.6.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/pyramid.css" />
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
@@ -31,7 +31,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.5.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.6.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl.results</a></li> 
       </ul>
@@ -44,10 +44,12 @@
             
   <h1>Source code for idtxl.results</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Provide results class for IDTxl network analysis.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">copy</span> <span class="k">as</span> <span class="nn">cp</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">import</span> <span class="nn">copy</span> <span class="k">as</span> <span class="nn">cp</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">idtxl_utils</span> <span class="k">as</span> <span class="n">utils</span>
 
 <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">FutureWarning</span><span class="p">)</span>
@@ -1203,38 +1205,39 @@
 <span class="sd">                (result[&#39;selected_vars&#39;]) or via dot-notation</span>
 <span class="sd">                (result.selected_vars). Contains keys</span>
 
-<span class="sd">                Process : int</span>
+<span class="sd">                - Process : int</span>
 <span class="sd">                    Process that was optimized</span>
-<span class="sd">                estimation_method : String</span>
+<span class="sd">                - estimation_method : String</span>
 <span class="sd">                    Estimation method that was used for optimization</span>
-<span class="sd">                T_D : float</span>
+<span class="sd">                - T_D : float</span>
 <span class="sd">                    Estimated optimal value for the temporal depth TD</span>
-<span class="sd">                tau_R :</span>
+<span class="sd">                - tau_R :</span>
 <span class="sd">                    Information timescale tau_R, a characteristic timescale of history</span>
 <span class="sd">                    dependence similar to an autocorrelation time.</span>
-<span class="sd">                R_tot : float</span>
+<span class="sd">                - R_tot : float</span>
 <span class="sd">                    Estimated value for the total history dependence Rtot,</span>
-<span class="sd">                AIS_tot : float</span>
+<span class="sd">                - AIS_tot : float</span>
 <span class="sd">                    Estimated value for the total active information storage</span>
-<span class="sd">                opt_number_of_bins_d : int</span>
+<span class="sd">                - opt_number_of_bins_d : int</span>
 <span class="sd">                    Number of bins d for the embedding that yields (R̂tot ,T̂D)</span>
-<span class="sd">                opt_scaling_k : int</span>
+<span class="sd">                - opt_scaling_k : int</span>
 <span class="sd">                    Scaling exponent κ for the embedding that yields (R̂tot , T̂D)</span>
-<span class="sd">                opt_first_bin_size : int</span>
+<span class="sd">                - opt_first_bin_size : int</span>
 <span class="sd">                    Size of the first bin τ1 for the embedding that yields (R̂tot , T̂D ),</span>
-<span class="sd">                history_dependence : array with floating-point values</span>
+<span class="sd">                - history_dependence : array with floating-point values</span>
 <span class="sd">                    Estimated history dependence for each embedding</span>
-<span class="sd">                firing_rate : float</span>
+<span class="sd">                - firing_rate : float</span>
 <span class="sd">                    Firing rate of the neuron/ spike train</span>
-<span class="sd">                recording_length : float</span>
+<span class="sd">                - recording_length : float</span>
 <span class="sd">                    Length of the recording (in seconds)</span>
-<span class="sd">                H_spiking : float</span>
+<span class="sd">                - H_spiking : float</span>
 <span class="sd">                    Entropy of the spike times</span>
 
 <span class="sd">                if analyse_auto_MI was set to True additionally:</span>
-<span class="sd">                auto_MI : dict</span>
+
+<span class="sd">                - auto_MI : dict</span>
 <span class="sd">                    numpy array of MI values for each delay</span>
-<span class="sd">                auto_MI_delays : list of int</span>
+<span class="sd">                - auto_MI_delays : list of int</span>
 <span class="sd">                    list of delays depending on the given auto_MI_bin_sizes and auto_MI_max_delay</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1279,7 +1282,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.5.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IDTxl 1.6.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl.results</a></li> 
       </ul>

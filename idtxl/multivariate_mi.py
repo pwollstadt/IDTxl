@@ -7,9 +7,9 @@ greedy approach with maximum statistics to generate a non-uniform embedding
 Note:
     Written for Python 3.4+
 """
-from .stats import network_fdr
 from .network_inference import NetworkInferenceMI, NetworkInferenceMultivariate
 from .results import ResultsNetworkInference
+from .stats import network_fdr
 
 
 class MultivariateMI(NetworkInferenceMI, NetworkInferenceMultivariate):
@@ -129,20 +129,18 @@ class MultivariateMI(NetworkInferenceMI, NetworkInferenceMultivariate):
 
         # Check which targets and sources are requested for analysis.
         if targets == "all":
-            targets = [t for t in range(data.n_processes)]
+            targets = list(range(data.n_processes))
         if sources == "all":
             sources = ["all" for t in targets]
-        if (type(sources) is list) and (type(sources[0]) is int):
+        elif isinstance(sources, list) and isinstance(sources[0], int):
             sources = [sources for t in targets]
-        if (type(sources) is list) and (type(sources[0]) is list):
+        elif isinstance(sources, list) and isinstance(sources[0], list):
             pass
         else:
-            ValueError("Sources was not specified correctly: {0}.".format(sources))
-        assert len(sources) == len(targets), (
-            "List of targets and list of "
-            "sources have to have the same "
-            "same length"
-        )
+            raise ValueError(f"Sources was not specified correctly: {sources}.")
+        assert len(sources) == len(
+            targets
+        ), "List of targets and list of sources have to have the same length"
 
         # Check and set defaults for checkpointing.
         settings = self._set_checkpointing_defaults(settings, data, sources, targets)

@@ -1,11 +1,12 @@
 """Provide estimator base class for information theoretic measures."""
-import os
+
 import importlib
 import inspect
-from pprint import pprint
+import os
 from abc import ABCMeta, abstractmethod
+from pprint import pprint
+
 import numpy as np
-from . import idtxl_exceptions as ex
 
 MODULE_EXTENSIONS = ".py"  # ('.py', '.pyc', '.pyo')
 ESTIMATOR_PREFIX = "estimators_"
@@ -54,10 +55,10 @@ def _find_estimator(est):
         # constraint may be relaxed in the future.
         if not np.issubclass_(est, Estimator):
             raise RuntimeError(
-                "Provided class should implement abstract class" " Estimator."
+                "Provided class should implement abstract class Estimator."
             )
         return est
-    elif type(est) is str:
+    if isinstance(est, str):
         module_list = _package_contents()
         estimator = None
         for m in module_list:
@@ -67,11 +68,10 @@ def _find_estimator(est):
             except AttributeError:
                 pass
         if not estimator:
-            raise RuntimeError("Estimator {0} not found.".format(est))
+            raise RuntimeError(f"Estimator {est} not found.")
     else:
         raise TypeError(
-            "Please provide an estimator class or the name of an "
-            "estimator as string."
+            "Please provide an estimator class or the name of an estimator as string."
         )
 
 
@@ -197,7 +197,7 @@ class Estimator(metaclass=ABCMeta):
         """
         if settings is None:
             return {}
-        elif type(settings) is not dict:
+        elif not isinstance(settings, dict):
             raise TypeError("settings should be a dictionary.")
         else:
             return settings
@@ -206,20 +206,15 @@ class Estimator(metaclass=ABCMeta):
         """Sanity check for number of points going into the estimator."""
         if (n_points - 1) <= int(self.settings["kraskov_k"]):
             raise RuntimeError(
-                "Insufficient number of points ({0}) for the "
-                "requested number of nearest neighbours "
-                "(kraskov_k: {1}).".format(n_points, self.settings["kraskov_k"])
+                f"Insufficient number of points ({n_points}) for the requested number of nearest neighbours "
+                f"(kraskov_k: {self.settings['kraskov_k']})."
             )
         if (n_points - 1) <= (
             int(self.settings["kraskov_k"]) + int(self.settings["theiler_t"])
         ):
             raise RuntimeError(
-                "Insufficient number of points ({0}) for the "
-                "requested number of nearest neighbours "
-                "(kraskov_k: {1}) and Theiler-correction "
-                "(theiler_t: {2}).".format(
-                    n_points, self.settings["kraskov_k"], self.settings["theiler_t"]
-                )
+                f"Insufficient number of points ({n_points}) for the requested number of nearest neighbours (kraskov_k:"
+                f" {self.settings['kraskov_k']}) and Theiler-correction (theiler_t: {self.settings['theiler_t']})."
             )
 
     def _ensure_one_dim_input(self, var):
@@ -239,7 +234,7 @@ class Estimator(metaclass=ABCMeta):
             else:
                 raise TypeError("2D input arrays must have shape[1] == 1.")
         elif len(var.shape) > 2:
-            raise TypeError("Input arrays must be 1D or 2D with shape[1] == " "1.")
+            raise TypeError("Input arrays must be 1D or 2D with shape[1] == 1.")
         return var
 
     def _ensure_two_dim_input(self, var):
@@ -334,20 +329,14 @@ class Estimator(metaclass=ABCMeta):
                     n_samples_total.append(data[v].shape[0])
             assert (
                 np.array(n_samples_total) == n_samples_total[0]
-            ).all(), "No. realisations should be the same for all variables: " "{0}".format(
-                n_samples_total
-            )
+            ).all(), f"No. realisations should be the same for all variables: {n_samples_total}"
             n_samples_total = n_samples_total[0]
             assert (
                 n_samples_total is not None
             ), "All variables provided for estimation are empty."
             assert n_samples_total % n_chunks == 0, (
-                "No. chunks ({0}) does not match data length ({1}). Remainder:"
-                " {2}.".format(
-                    n_chunks,
-                    data[slice_vars[0]].shape[0],
-                    data[slice_vars[0]].shape[0] % n_chunks,
-                )
+                f"No. chunks ({n_chunks}) does not match data length ({data[slice_vars[0]].shape[0]}). "
+                f"Remainder: {data[slice_vars[0]].shape[0] % n_chunks}."
             )
 
             # Cut data into chunks and call estimator serially on each chunk.
@@ -357,12 +346,9 @@ class Estimator(metaclass=ABCMeta):
             results = np.empty((n_chunks))
             for i in range(n_chunks):
                 chunk_data = {}
-                # Slice data into single chunks
-                for (
-                    v
-                ) in (
-                    slice_vars
-                ):  # NOTE: I am consciously not creating a deep copy here to save memory
+                # Slice data into single chunks. NOTE: I am consciously not
+                # creating a deep copy here to save memory
+                for v in slice_vars:
                     if data[v] is not None:
                         chunk_data[v] = data[v][idx_1:idx_2, :]
                     else:
@@ -370,12 +356,9 @@ class Estimator(metaclass=ABCMeta):
                 # Collect data that is reused over chunks.
                 for v in re_use:
                     if data[v] is not None:
-                        assert data[v].shape[0] == chunk_size, (
-                            "No. samples in variable {0} ({1}) is not equal "
-                            "to chunk size ({2}).".format(
-                                v, data[v].shape[0], chunk_size
-                            )
-                        )
+                        assert (
+                            data[v].shape[0] == chunk_size
+                        ), f"No. samples in variable {v} ({data[v].shape[0]}) is not equal to chunk size ({chunk_size})."
                     chunk_data[v] = data[v]
                 results[i] = self.estimate(**chunk_data)
                 idx_1 = idx_2

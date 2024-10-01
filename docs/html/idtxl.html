@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>idtxl package &#8212; IDTxl 1.5.1 documentation</title>
+    <title>idtxl package &#8212; IDTxl 1.6.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -36,7 +36,7 @@
         <li class="right" >
           <a href="idtxl_helper.html" title="Helper functions"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.5.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.6.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl package</a></li> 
       </ul>
     </div>  
@@ -5212,7 +5212,8 @@ Information Decomposition estimator. <a class="reference external" href="https:/
 <dl class="py method">
 <dt class="sig sig-object py" id="idtxl.estimators_multivariate_pid.SxPID.estimate">
 <span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/estimators_multivariate_pid.html#SxPID.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#idtxl.estimators_multivariate_pid.SxPID.estimate" title="Permalink to this definition">¶</a></dt>
-<dd><dl>
+<dd><p>Estimate SxPID from list of sources and a target</p>
+<dl>
 <dt>Args:</dt><dd><dl class="simple">
 <dt>s<span class="classifier">list of numpy arrays</span></dt><dd><p>1D arrays containing realizations of a discrete random variable</p>
 </dd>
@@ -5221,18 +5222,16 @@ Information Decomposition estimator. <a class="reference external" href="https:/
 </dl>
 </dd>
 <dt>Returns:</dt><dd><dl>
-<dt>dict of dict</dt><dd><dl>
-<dt>{</dt><dd><p>‘ptw’ -&gt; { realization -&gt; {alpha -&gt; [float, float, float]} }</p>
-<p>‘avg’ -&gt; {alpha -&gt; [float, float, float]}</p>
+<dt>dict</dt><dd><dl class="simple">
+<dt>SxPID results, with entries</dt><dd><ul class="simple">
+<li><p>‘ptw’ -&gt; { realization -&gt; {alpha -&gt; [float, float, float]}}: pointwise decomposition</p></li>
+<li><p>‘avg’ -&gt; {alpha -&gt; [float, float, float]}: average decomposition</p></li>
+</ul>
 </dd>
 </dl>
-<p>}</p>
+<p>the list of floats is ordered [informative, misinformative, informative - misinformative]</p>
 </dd>
 </dl>
-<p>where the list of floats is ordered
-[informative, misinformative, informative - misinformative]
-ptw stands for pointwise decomposition
-avg stands for average decomposition</p>
 </dd>
 </dl>
 </dd></dl>
@@ -5971,12 +5970,16 @@ must be contained in idx_all</p>
 <dt class="sig sig-object py" id="idtxl.idtxl_utils.timeout">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">idtxl.idtxl_utils.</span></span><span class="sig-name descname"><span class="pre">timeout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout_duration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exception_message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Timeout'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/idtxl_utils.html#timeout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#idtxl.idtxl_utils.timeout" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Context manager for a timeout using threading module.
-args:</p>
-<blockquote>
-<div><p>timeout_duration: float, number of seconds to wait before timeout is triggered
-exception_message: string, message to put in the exception</p>
-</div></blockquote>
+<p>Context manager for a timeout using threading module.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>timeout_duration: float</dt><dd><p>number of seconds to wait before timeout is triggered</p>
+</dd>
+<dt>exception_message<span class="classifier">string</span></dt><dd><p>message to put in the exception</p>
+</dd>
+</dl>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="idtxl.idtxl_utils.timeout.timeout_handler">
 <span class="sig-name descname"><span class="pre">timeout_handler</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/idtxl/idtxl_utils.html#timeout.timeout_handler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#idtxl.idtxl_utils.timeout.timeout_handler" title="Permalink to this definition">¶</a></dt>
@@ -6006,7 +6009,7 @@ exception_message: string, message to put in the exception</p>
 <dd><p>Resume analysis from a checkpoint saved to disk.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
-<dt>file_path<span class="classifier">str</span></dt><dd><p>path to checkpoint file (excluding extension: <a href="#id1"><span class="problematic" id="id2">*</span></a>.ckp)</p>
+<dt>file_path<span class="classifier">str</span></dt><dd><p>path to checkpoint file (excluding extension: .ckp)</p>
 </dd>
 </dl>
 </dd>
@@ -7177,44 +7180,87 @@ be accessed using dot-notation:</p>
 dictionary entries can either be accessed via keywords
 (result[‘selected_vars’]) or via dot-notation
 (result.selected_vars). Contains keys</p>
-<dl class="simple">
+<ul class="simple">
+<li><dl class="simple">
 <dt>Process<span class="classifier">int</span></dt><dd><p>Process that was optimized</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>estimation_method<span class="classifier">String</span></dt><dd><p>Estimation method that was used for optimization</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>T_D<span class="classifier">float</span></dt><dd><p>Estimated optimal value for the temporal depth TD</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>tau_R :</dt><dd><p>Information timescale tau_R, a characteristic timescale of history
 dependence similar to an autocorrelation time.</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>R_tot<span class="classifier">float</span></dt><dd><p>Estimated value for the total history dependence Rtot,</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>AIS_tot<span class="classifier">float</span></dt><dd><p>Estimated value for the total active information storage</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>opt_number_of_bins_d<span class="classifier">int</span></dt><dd><p>Number of bins d for the embedding that yields (R̂tot ,T̂D)</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>opt_scaling_k<span class="classifier">int</span></dt><dd><p>Scaling exponent κ for the embedding that yields (R̂tot , T̂D)</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>opt_first_bin_size<span class="classifier">int</span></dt><dd><p>Size of the first bin τ1 for the embedding that yields (R̂tot , T̂D ),</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>history_dependence<span class="classifier">array with floating-point values</span></dt><dd><p>Estimated history dependence for each embedding</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>firing_rate<span class="classifier">float</span></dt><dd><p>Firing rate of the neuron/ spike train</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>recording_length<span class="classifier">float</span></dt><dd><p>Length of the recording (in seconds)</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>H_spiking<span class="classifier">float</span></dt><dd><p>Entropy of the spike times</p>
 </dd>
 </dl>
-<p>if analyse_auto_MI was set to True additionally:
-auto_MI : dict</p>
-<blockquote>
-<div><p>numpy array of MI values for each delay</p>
-</div></blockquote>
-<dl class="simple">
+</li>
+</ul>
+<p>if analyse_auto_MI was set to True additionally:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>auto_MI<span class="classifier">dict</span></dt><dd><p>numpy array of MI values for each delay</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>auto_MI_delays<span class="classifier">list of int</span></dt><dd><p>list of delays depending on the given auto_MI_bin_sizes and auto_MI_max_delay</p>
 </dd>
 </dl>
+</li>
+</ul>
 </dd>
 </dl>
 </dd>
@@ -7360,14 +7406,13 @@ from other relevant sources).</p>
 <p>This function will re-use the surrogate table created in the last min-stats
 round if that table is in the analysis_setup. This saves the complete
 calculation of surrogates for this statistic.</p>
-<p>Args:</p>
-<blockquote>
-<div><dl class="simple">
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
 <dt>analysis_setup<span class="classifier">MultivariateTE instance</span></dt><dd><p>information on the current analysis, can have an optional attribute
-‘settings’, a dictionary with parameters for statistical testing:</p>
+settings, a dictionary with parameters for statistical testing:</p>
 <ul class="simple">
 <li><p>n_perm_max_seq : int [optional] - number of permutations
-(default=’n_perm_min_stat’<a href="#id3"><span class="problematic" id="id4">|</span></a>500)</p></li>
+(default=n_perm_min_stat|500)</p></li>
 <li><p>alpha_max_seq : float [optional] - critical alpha level
 (default=0.05)</p></li>
 <li><p>permute_in_time : bool [optional] - generate surrogates by
@@ -7378,8 +7423,7 @@ shuffling samples in time instead of shuffling whole replications
 <dt>data<span class="classifier">Data instance</span></dt><dd><p>raw data</p>
 </dd>
 </dl>
-</div></blockquote>
-<dl class="simple">
+</dd>
 <dt>Returns:</dt><dd><dl class="simple">
 <dt>numpy array, bool</dt><dd><p>statistical significance of each source</p>
 </dd>
@@ -7416,14 +7460,13 @@ from other relevant sources).</p>
 <p>This function will re-use the surrogate table created in the last min-stats
 round if that table is in the analysis_setup. This saves the complete
 calculation of surrogates for this statistic.</p>
-<p>Args:</p>
-<blockquote>
-<div><dl class="simple">
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
 <dt>analysis_setup<span class="classifier">MultivariateTE instance</span></dt><dd><p>information on the current analysis, can have an optional attribute
-‘settings’, a dictionary with parameters for statistical testing:</p>
+settings, a dictionary with parameters for statistical testing:</p>
 <ul class="simple">
 <li><p>n_perm_max_seq : int [optional] - number of permutations
-(default=’n_perm_min_stat’<a href="#id5"><span class="problematic" id="id6">|</span></a>500)</p></li>
+(default=n_perm_min_stat|500)</p></li>
 <li><p>alpha_max_seq : float [optional] - critical alpha level
 (default=0.05)</p></li>
 <li><p>permute_in_time : bool [optional] - generate surrogates by
@@ -7434,8 +7477,7 @@ shuffling samples in time instead of shuffling whole replications
 <dt>data<span class="classifier">Data instance</span></dt><dd><p>raw data</p>
 </dd>
 </dl>
-</div></blockquote>
-<dl class="simple">
+</dd>
 <dt>Returns:</dt><dd><dl class="simple">
 <dt>numpy array, bool</dt><dd><p>statistical significance of each source</p>
 </dd>
@@ -7618,7 +7660,7 @@ shuffling samples in time instead of shuffling whole replications
 </dd>
 <dt>float</dt><dd><p>the test’s p-value</p>
 </dd>
-<dt>float</dt><dd><p>the estimated test statisic, i.e., the information transfer from
+<dt>float</dt><dd><p>the estimated test statistic, i.e., the information transfer from
 all sources into the target</p>
 </dd>
 </dl>
@@ -7988,7 +8030,7 @@ computing engines for both GPU and CPU platforms. Written for Python3.4.3+.</p>
         <li class="right" >
           <a href="idtxl_helper.html" title="Helper functions"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.5.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IDTxl 1.6.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">idtxl package</a></li> 
       </ul>
     </div>
