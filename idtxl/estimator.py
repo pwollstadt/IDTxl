@@ -253,7 +253,7 @@ class Estimator(metaclass=ABCMeta):
             raise TypeError("Input arrays must be 1D or 2D")
         return var
 
-    def estimate_parallel(self, n_chunks=1, re_use=None, **data):
+    def estimate_parallel(self, **data):
         """Estimate measure for multiple data sets (chunks).
 
         Test if the estimator used provides parallel capabilities; if so,
@@ -264,14 +264,10 @@ class Estimator(metaclass=ABCMeta):
         e.g., 2 for mutual information and 3 for a conditional mutual
         information.
 
-        Each entry in data should be a numpy array with realisations, where the
-        first axis is assumed to represent realisations over samples and
-        replications and chunks, while the second axis represents the variable
-        dimension ([(samples * replications) * chunks x variable dimension]).
-
-        Each entry in data should be a numpy array with realisations, where the
-        first axis is assumed to represent realisations (over chunks), while
-        the second axis is the variable dimension.
+        Each entry in data should be a list of numpy array with realisations, where the
+        the list entries represent chunks, axis 0 of the arrays represent realisations 
+        over samples, while the axis 1 represents the variable
+        dimension ([chunks x samples x variable dimension]).
 
         Each numpy array with realisations can hold either the realisations for
         multiple chunks or can hold the realisation for a single chunk, which
@@ -281,12 +277,6 @@ class Estimator(metaclass=ABCMeta):
         data for re-use.
 
         Args:
-            self : Estimator class instance
-                estimator
-            n_chunks : int [optional]
-                number of data chunks (default=1)
-            re_use : list of keys [optional}
-                realisatins to be re-used (default=None)
             data: numpy arrays
                 realisations of random variables
 
@@ -298,70 +288,24 @@ class Estimator(metaclass=ABCMeta):
             ex.AlgorithmExhaustedError
                 Raised from self.estimate() when calculation cannot be made
         """
-        assert n_chunks > 0, "n_chunks must be positive."
-        if re_use is None:
-            re_use = []
 
+        # Check the number of chunks
+        lengths = [len(v) for v in data.values()]
+        n_chunks = lengths[0]
+        assert all(l == n_chunks for l in lengths), 'All variables must have the same number of chunks.'
+        
         # If the estimator supports parallel estimation, pass the variables
         # and number of chunks on to the estimator.
         if self.is_parallel():
-            for k in re_use:  # multiply data for re-use
-                if data[k] is not None:
-                    data[k] = np.tile(data[k], (n_chunks, 1))
+            n_chunks = len(data[list(data.keys())[0]])
+            # Concatenate all chunks into a single array for each variable
+            data = {k: np.concatenate(v, axis=0) for k, v in data.items()}
             return self.estimate(n_chunks=n_chunks, **data)
 
         # If estimator does not support parallel estimation, loop over chunks
-        # and estimate iteratively for individual chunks.
-        else:
-            # Find arrays that have to be cut up into chunks because they are
-            # not re-used.
-            slice_vars = list(set(data.keys()).difference(set(re_use)))
-            if not slice_vars:
-                # If there is nothing to slice, we only have one chunk and can
-                # return the estimate directly.
-                return [self.estimate(**data)]
+        results = np.empty(n_chunks)
+        for chunk in range(n_chunks):
+            chunk_data = {k: v[chunk] if v is not None else None for k, v in data.items()}
+            results[chunk] = self.estimate(**chunk_data)
 
-            # Find the number of samples, check that all data to be sliced into
-            # chunks has the same number of samples.
-            n_samples_total = []
-            for v in slice_vars:
-                if data[v] is not None:
-                    n_samples_total.append(data[v].shape[0])
-            assert (
-                np.array(n_samples_total) == n_samples_total[0]
-            ).all(), f"No. realisations should be the same for all variables: {n_samples_total}"
-            n_samples_total = n_samples_total[0]
-            assert (
-                n_samples_total is not None
-            ), "All variables provided for estimation are empty."
-            assert n_samples_total % n_chunks == 0, (
-                f"No. chunks ({n_chunks}) does not match data length ({data[slice_vars[0]].shape[0]}). "
-                f"Remainder: {data[slice_vars[0]].shape[0] % n_chunks}."
-            )
-
-            # Cut data into chunks and call estimator serially on each chunk.
-            chunk_size = int(n_samples_total / n_chunks)
-            idx_1 = 0
-            idx_2 = chunk_size
-            results = np.empty((n_chunks))
-            for i in range(n_chunks):
-                chunk_data = {}
-                # Slice data into single chunks. NOTE: I am consciously not
-                # creating a deep copy here to save memory
-                for v in slice_vars:
-                    if data[v] is not None:
-                        chunk_data[v] = data[v][idx_1:idx_2, :]
-                    else:
-                        chunk_data[v] = data[v]
-                # Collect data that is reused over chunks.
-                for v in re_use:
-                    if data[v] is not None:
-                        assert (
-                            data[v].shape[0] == chunk_size
-                        ), f"No. samples in variable {v} ({data[v].shape[0]}) is not equal to chunk size ({chunk_size})."
-                    chunk_data[v] = data[v]
-                results[i] = self.estimate(**chunk_data)
-                idx_1 = idx_2
-                idx_2 += chunk_size
-
-            return results
+        return results

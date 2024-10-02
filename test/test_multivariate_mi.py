@@ -263,7 +263,6 @@ def test_multivariate_mi_one_realisation_per_replication():
     assert (not nw_0.selected_vars_full)
     assert (not nw_0.selected_vars_sources)
     assert (not nw_0.selected_vars_target)
-    assert ((nw_0._replication_index == np.arange(n_repl)).all())
     assert (nw_0._current_value == (target, settings['max_lag_sources']))
     assert (nw_0._current_value_realisations[:, 0] ==
             data.data[target, -1, :]).all()

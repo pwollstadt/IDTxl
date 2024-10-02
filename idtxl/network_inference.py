@@ -111,20 +111,14 @@ class NetworkInference(NetworkAnalysis):
             print(f"candidate set: {self._idx_to_lag(candidate_set)}")
         while candidate_set:
             # Get realisations for all candidates.
-            cand_real = data.get_realisations(self.current_value, candidate_set)[0]
-            # Reshape candidates to a 1D-array, where realisations for a single
-            # candidate are treated as one chunk.
-            cand_real = cand_real.T.reshape(cand_real.size, 1)
+            cand_real = [data.get_realisations(self.current_value, [candidate_idx]) for candidate_idx in candidate_set]
 
             # Calculate the (C)MI for each candidate and the target.
             try:
                 temp_te = self._cmi_estimator.estimate_parallel(
-                    n_chunks=len(candidate_set),
-                    re_use=["var2", "conditional"],
-                    var1=cand_real,
-                    var2=self._current_value_realisations,
-                    conditional=self._selected_vars_realisations,
-                )
+                                var1=cand_real,
+                                var2=[self._current_value_realisations] * len(candidate_set),
+                                conditional=[self._selected_vars_realisations] * len(candidate_set))
             except ex.AlgorithmExhaustedError as aee:
                 # The algorithm cannot continue here, so
                 #  we'll terminate the search for more candidates,
@@ -175,11 +169,8 @@ class NetworkInference(NetworkAnalysis):
                 #     print(' -- significant')
                 success = True
                 candidate_set.pop(np.argmax(temp_te))
-                self._append_selected_vars(
-                    [max_candidate],
-                    data.get_realisations(self.current_value, [max_candidate])[0],
-                )
-                if self.settings["write_ckp"]:
+                self._append_selected_vars(data, [max_candidate])
+                if self.settings['write_ckp']:
                     self._write_checkpoint()
             else:
                 if self.settings["verbose"]:
@@ -211,13 +202,10 @@ class NetworkInference(NetworkAnalysis):
             # Get realisations and indices of source variables with lag 0. Note
             # that _define_candidates returns tuples with absolute indices and
             # not lags.
-            if cond == "faes":
-                cond = self._build_variable_list(
-                    self.source_set, [self.current_value[1]]
-                )
-                self._append_selected_vars(
-                    cond, data.get_realisations(self.current_value, cond)[0]
-                )
+            if cond == 'faes':
+                cond = self._build_variable_list(self.source_set,
+                                                 [self.current_value[1]])
+                self._append_selected_vars(data, cond)
         else:
             # If specific variables for conditioning were provided, convert
             # lags to absolute sample indices and add variables.
@@ -230,17 +218,15 @@ class NetworkInference(NetworkAnalysis):
                     return  # no additional variables for the current target
             print(f"Adding the following variables to the conditioning set: {cond}.")
             cond_idx = self._lag_to_idx(cond)
-            self._append_selected_vars(
-                cond_idx, data.get_realisations(self.current_value, cond_idx)[0]
-            )
+            self._append_selected_vars(data, cond_idx)
 
-    def _remove_non_significant(self, s, p, stat):
+    def _remove_non_significant(self, data, s, p, stat):
         # Remove non-significant sources from the candidate set. Loop
         # backwards over the candidates to remove them iteratively.
         print(f"removing {np.sum(np.invert(s))} variables after seq. max stats")
         for i in range(s.shape[0] - 1, -1, -1):
             if not s[i]:
-                self._remove_selected_var(self.selected_vars_sources[i])
+                self._remove_selected_var(data, self.selected_vars_sources[i])
                 p = np.delete(p, i)
                 stat = np.delete(stat, i)
         return p, stat
@@ -324,15 +310,11 @@ class NetworkInferenceMI(NetworkInference):
             f"lag ({self.settings['max_lag_sources']})"
         )
 
-        self.current_value = (self.target, self.settings["max_lag_sources"])
-        [cv_realisation, repl_idx] = data.get_realisations(
-            current_value=self.current_value, idx_list=[self.current_value]
-        )
+        self.current_value = (self.target, self.settings['max_lag_sources'])
+        cv_realisation = data.get_realisations(
+                                             current_value=self.current_value,
+                                             idx_list=[self.current_value])
         self._current_value_realisations = cv_realisation
-
-        # Remember which realisations come from which replication. This may be
-        # needed for surrogate creation at a later point.
-        self._replication_index = repl_idx
 
         # Check the permutation type and no. permutations requested by the
         # user. This tests if there is sufficient data to do all tests.
@@ -473,14 +455,10 @@ class NetworkInferenceTE(NetworkInference):
         )
 
         self.current_value = (self.target, max_lag)
-        [cv_realisation, repl_idx] = data.get_realisations(
-            current_value=self.current_value, idx_list=[self.current_value]
-        )
+        cv_realisation = data.get_realisations(
+                                             current_value=self.current_value,
+                                             idx_list=[self.current_value])
         self._current_value_realisations = cv_realisation
-
-        # Remember which realisations come from which replication. This may be
-        # needed for surrogate creation at a later point.
-        self._replication_index = repl_idx
 
         # Check the permutation type and no. permutations requested by the
         # user. This tests if there is sufficient data to do all tests.
@@ -531,8 +509,7 @@ class NetworkInferenceTE(NetworkInference):
                 "adding target sample with lag 1."
             )
             idx = (self.current_value[0], self.current_value[1] - 1)
-            realisations = data.get_realisations(self.current_value, [idx])[0]
-            self._append_selected_vars([idx], realisations)
+            self._append_selected_vars(data, [idx])
 
     def _reset(self):
         """Reset instance after analysis."""
@@ -582,7 +559,8 @@ class NetworkInferenceBivariate(NetworkInference):
         if len(self._selected_vars_target) == 0:
             conditional_realisations_target = None
         else:
-            conditional_realisations_target = self._selected_vars_target_realisations
+            conditional_realisations_target = data.get_realisations(
+                self.current_value, self._selected_vars_target)
 
         # Iterate over all potential sources in the analysis. This way, the
         # conditioning uses past variables from the current source only
@@ -606,20 +584,14 @@ class NetworkInferenceBivariate(NetworkInference):
 
             while candidate_set:
                 # Get realisations for all candidates.
-                cand_real = data.get_realisations(self.current_value, candidate_set)[0]
-                # Reshape candidates to a 1D-array, where realisations for a
-                # single candidate are treated as one chunk.
-                cand_real = cand_real.T.reshape(cand_real.size, 1)
+                cand_real = [data.get_realisations(self.current_value, [candidate]) for candidate in candidate_set]
 
                 # Calculate the (C)MI for each candidate and the target.
                 try:
                     temp_te = self._cmi_estimator.estimate_parallel(
-                        n_chunks=len(candidate_set),
-                        re_use=["var2", "conditional"],
-                        var1=cand_real,
-                        var2=self._current_value_realisations,
-                        conditional=conditional_realisations,
-                    )
+                                var1=cand_real,
+                                var2=[self._current_value_realisations] * len(candidate_set),
+                                conditional=[conditional_realisations] * len(candidate_set))
                 except ex.AlgorithmExhaustedError as aee:
                     # The algorithm cannot continue here, so
                     #  we'll terminate the search for more candidates,
@@ -672,9 +644,8 @@ class NetworkInferenceBivariate(NetworkInference):
                     success = True
                     candidate_set.pop(np.argmax(temp_te))
                     candidate_realisations = data.get_realisations(
-                        self.current_value, [max_candidate]
-                    )[0]
-                    self._append_selected_vars([max_candidate], candidate_realisations)
+                        self.current_value, [max_candidate])
+                    self._append_selected_vars(data, [max_candidate])
                     # Update conditioning set for max. statistics in the next
                     # round.
                     if conditional_realisations is None:
@@ -709,15 +680,6 @@ class NetworkInferenceBivariate(NetworkInference):
             if not self.selected_vars_sources:
                 print("no sources selected, nothing to prune ...")
 
-        # Check if target variables were selected to distinguish between TE
-        # and MI analysis.
-        if len(self._selected_vars_target) == 0:
-            conditional_realisations_target = None
-            cond_target_dim = 0
-        else:
-            conditional_realisations_target = self._selected_vars_target_realisations
-            cond_target_dim = conditional_realisations_target.shape[1]
-
         # Prune all selected sources separately. This way, the conditioning
         # uses past variables from the current source only (opposed to past
         # variables from all sources as in multivariate network inference).
@@ -744,52 +706,16 @@ class NetworkInferenceBivariate(NetworkInference):
                 # Allocate memory, collect realisations, and calculate TE/MI
                 # in parallel for all selected variables in the current
                 # process.
-                temp_te = np.empty(len(source_vars))
-                cond_dim = cond_target_dim + len(source_vars) - 1
-                candidate_realisations = np.empty(
-                    (data.n_realisations(self.current_value) * len(source_vars), 1)
-                ).astype(data.data_type)
-                conditional_realisations = np.empty(
-                    (
-                        data.n_realisations(self.current_value) * len(source_vars),
-                        cond_dim,
-                    )
-                ).astype(data.data_type)
-
-                i_1 = 0
-                i_2 = data.n_realisations(self.current_value)
-                for candidate in source_vars:
-                    temp_cond = data.get_realisations(
-                        self.current_value,
-                        set(source_vars).difference(set([candidate])),
-                    )[0]
-                    temp_cand = data.get_realisations(self.current_value, [candidate])[
-                        0
-                    ]
-
-                    if temp_cond is None:
-                        conditional_realisations = conditional_realisations_target
-                        re_use = ["var2", "conditional"]
-                    else:
-                        re_use = ["var2"]
-                        if conditional_realisations_target is None:
-                            conditional_realisations[i_1:i_2,] = temp_cond
-                        else:
-                            conditional_realisations[i_1:i_2,] = np.hstack(
-                                (temp_cond, conditional_realisations_target)
-                            )
-                    candidate_realisations[i_1:i_2,] = temp_cand
-                    i_1 = i_2
-                    i_2 += data.n_realisations(self.current_value)
+                candidate_realisations = [data.get_realisations(self.current_value, [candidate]) for candidate in source_vars]
+                conditional_realisations = [data.get_realisations(self.current_value, 
+                                            [other for other in source_vars if other != candidate] + self._selected_vars_target)
+                                            for candidate in source_vars]
 
                 try:
                     temp_te = self._cmi_estimator.estimate_parallel(
-                        n_chunks=len(source_vars),
-                        re_use=re_use,
-                        var1=candidate_realisations,
-                        var2=self._current_value_realisations,
-                        conditional=conditional_realisations,
-                    )
+                                    var1=candidate_realisations,
+                                    var2=[self._current_value_realisations] * len(source_vars),
+                                    conditional=conditional_realisations)
                 except ex.AlgorithmExhaustedError as aee:
                     # The algorithm cannot continue here, so
                     #  we'll terminate the pruning check,
@@ -807,29 +733,13 @@ class NetworkInferenceBivariate(NetworkInference):
                 # for minimum statistics by removing the minimum candidate.
                 te_min_candidate = min(temp_te)
                 min_candidate = source_vars[np.argmin(temp_te)]
-                if self.settings["verbose"]:
-                    print(
-                        "testing candidate: {0} ".format(
-                            self._idx_to_lag([min_candidate])[0]
-                        ),
-                        end="",
-                    )
+                if self.settings['verbose']:
+                    print('testing candidate: {0} '.format(
+                        self._idx_to_lag([min_candidate])[0]), end='')
+                    
+                conditional_realisations = data.get_realisations(
+                    self.current_value, [other for other in source_vars if other != min_candidate] + self._selected_vars_target)
 
-                remaining_candidates = set(source_vars).difference(set([min_candidate]))
-                conditional_realisations_sources = data.get_realisations(
-                    self.current_value, remaining_candidates
-                )[0]
-                if conditional_realisations_target is None:
-                    conditional_realisations = conditional_realisations_sources
-                elif conditional_realisations_sources is None:
-                    conditional_realisations = conditional_realisations_target
-                else:
-                    conditional_realisations = np.hstack(
-                        (
-                            conditional_realisations_target,
-                            conditional_realisations_sources,
-                        )
-                    )
                 try:
                     [significant, p, surr_table] = stats.min_statistic(
                         self,
@@ -856,7 +766,7 @@ class NetworkInferenceBivariate(NetworkInference):
                 # other sources will be significant as well (b/c they have
                 # higher TE/MI).
                 if not significant:
-                    self._remove_selected_var(min_candidate)
+                    self._remove_selected_var(data, min_candidate)
                     source_vars.pop(np.argmin(temp_te))
                     if len(source_vars) == 0:
                         print("No remaining candidates after pruning.")
@@ -909,8 +819,9 @@ class NetworkInferenceBivariate(NetworkInference):
                 # If there is an ex.AlgorithmExhaustedError exception inside
                 #  max_stats_sequential, it will catch it and return
                 #  everything as not significant:
-                [s, p, stat] = stats.max_statistic_sequential_bivariate(self, data)
-                p, stat = self._remove_non_significant(s, p, stat)
+                [s, p, stat] = stats.max_statistic_sequential_bivariate(
+                    self, data)
+                p, stat = self._remove_non_significant(data, s, p, stat)
                 self.pvalues_sign_sources = p
                 self.statistic_sign_sources = stat
                 if self.measure == "te":
@@ -1004,50 +915,15 @@ class NetworkInferenceMultivariate(NetworkInference):
             return
         while self.selected_vars_sources:
             # Find the candidate with the minimum TE into the target.
-            temp_te = np.empty(len(self.selected_vars_sources))
-            cond_dim = len(self.selected_vars_full) - 1
-            candidate_realisations = np.empty(
-                (
-                    data.n_realisations(self.current_value)
-                    * len(self.selected_vars_sources),
-                    1,
-                )
-            ).astype(data.data_type)
-            conditional_realisations = np.empty(
-                (
-                    data.n_realisations(self.current_value)
-                    * len(self.selected_vars_sources),
-                    cond_dim,
-                )
-            ).astype(data.data_type)
 
-            # calculate TE simultaneously for all candidates
-            i_1 = 0
-            i_2 = data.n_realisations(self.current_value)
-            for candidate in self.selected_vars_sources:
-                # Separate the candidate realisations and all other
-                # realisations to test the candidate's individual contribution.
-                [temp_cond, temp_cand] = self._separate_realisations(
-                    self.selected_vars_full, candidate
-                )
-                if temp_cond is None:
-                    conditional_realisations = None
-                    re_use = ["var2", "conditional"]
-                else:
-                    conditional_realisations[i_1:i_2,] = temp_cond
-                    re_use = ["var2"]
-                candidate_realisations[i_1:i_2,] = temp_cand
-                i_1 = i_2
-                i_2 += data.n_realisations(self.current_value)
+            candidate_realisations = [data.get_realisations(self.current_value, [candidate]) for candidate in self.selected_vars_sources]
+            conditional_realisations = [data.get_realisations(self.current_value, [other for other in self.selected_vars_full if other != candidate]) for candidate in self.selected_vars_sources]
 
             try:
                 temp_te = self._cmi_estimator.estimate_parallel(
-                    n_chunks=len(self.selected_vars_sources),
-                    re_use=re_use,
-                    var1=candidate_realisations,
-                    var2=self._current_value_realisations,
-                    conditional=conditional_realisations,
-                )
+                                var1=candidate_realisations,
+                                var2=[self._current_value_realisations] * len(self.selected_vars_sources),
+                                conditional=conditional_realisations)
             except ex.AlgorithmExhaustedError as aee:
                 # The algorithm cannot continue here, so
                 #  we'll terminate the pruning check,
@@ -1074,12 +950,9 @@ class NetworkInferenceMultivariate(NetworkInference):
                     end="",
                 )
 
-            remaining_candidates = set(self.selected_vars_full).difference(
-                set([min_candidate])
-            )
+            remaining_candidates = [other for other in self.selected_vars_full if other != min_candidate]
             conditional_realisations = data.get_realisations(
-                self.current_value, remaining_candidates
-            )[0]
+                        self.current_value, remaining_candidates)
             try:
                 significant, p, surr_table = stats.min_statistic(
                     self,
@@ -1107,7 +980,7 @@ class NetworkInferenceMultivariate(NetworkInference):
             if not significant:
                 # if self.settings['verbose']:
                 #     print(' -- not significant\n')
-                self._remove_selected_var(min_candidate)
+                self._remove_selected_var(data, min_candidate)
                 if len(self.selected_vars_sources) == 0:
                     print("No remaining candidates after pruning.")
                 if self.settings["write_ckp"]:
@@ -1158,7 +1031,7 @@ class NetworkInferenceMultivariate(NetworkInference):
                 #  max_stats_sequential, it will catch it and return
                 #  everything as not significant:
                 [s, p, stat] = stats.max_statistic_sequential(self, data)
-                p, stat = self._remove_non_significant(s, p, stat)
+                p, stat = self._remove_non_significant(data, s, p, stat)
                 self.pvalues_sign_sources = p
                 self.statistic_sign_sources = stat
                 # Calculate TE for all links in the network. Calculate local TE

@@ -768,8 +768,7 @@ class NetworkComparison(NetworkAnalysis):
         # Get realisations of target variables and the current value, constant
         # over sources. Permute current value realisations to generate
         # surrogates if requested.
-        current_value = (target, self.union["max_lag"])
-        target_realisations = data.get_realisations(current_value, target_vars)[0]
+        current_value = (target, self.union['max_lag'])
         current_value_surrogates = stats._get_surrogates(
             data,
             current_value,
@@ -786,7 +785,8 @@ class NetworkComparison(NetworkAnalysis):
             link_vars = [i for i in source_vars if i[0] == s]
             conditional_vars = [i for i in source_vars if i[0] != s]
             # Get realisations for the current link's source variables
-            source_realisations = data.get_realisations(current_value, link_vars)[0]
+            source_realisations = data.get_realisations(
+                current_value, link_vars)
             # Get realisations for the conditioning set, consisting of
             # remaining source variables and target realisations. Handle empty
             # sets: these may occur if network comparison is carried out for
@@ -794,26 +794,19 @@ class NetworkComparison(NetworkAnalysis):
             if not conditional_vars and not target_vars:
                 conditional_realisations = None
             elif not conditional_vars and target_vars:
-                conditional_realisations = target_realisations
+                conditional_realisations = data.get_realisations(
+            current_value, target_vars)
             elif conditional_vars and not target_vars:
                 conditional_realisations = data.get_realisations(
-                    current_value, conditional_vars
-                )[0]
+                    current_value, conditional_vars)
             elif conditional_vars and target_vars:
-                conditional_realisations = np.hstack(
-                    (
-                        data.get_realisations(current_value, conditional_vars)[0],
-                        target_realisations,
-                    )
-                )
+                conditional_realisations = data.get_realisations(
+                    current_value, conditional_vars + target_vars)
 
             te_surrogates[s] = self._cmi_estimator.estimate_parallel(
-                n_chunks=self.settings["n_perm_comp"],
-                re_use=["var2", "conditional"],
                 var1=current_value_surrogates,
-                var2=source_realisations,
-                conditional=conditional_realisations,
-            )
+                var2=[source_realisations] * self.settings['n_perm_comp'],
+                conditional=[conditional_realisations] * self.settings['n_perm_comp'])
         return te_surrogates
 
     def _create_surrogate_distribution_between(self):
@@ -923,27 +916,24 @@ class NetworkComparison(NetworkAnalysis):
         )
 
         # Get realisations of the current value and the full conditioning set.
-        assert (
-            data_a.n_replications == data_b.n_replications
-        ), "Unequal no. replications in the two data sets."
-        [cur_val_a_real, repl_idx_a] = data_a.get_realisations(
-            current_val, [current_val]
-        )
-        [cur_val_b_real, repl_idx_b] = data_b.get_realisations(
-            current_val, [current_val]
-        )
-        cond_a_real = data_a.get_realisations(current_val, idx_cond_full)[0]
-        cond_b_real = data_b.get_realisations(current_val, idx_cond_full)[0]
+        assert data_a.n_replications == data_b.n_replications, (
+                            'Unequal no. replications in the two data sets.')
+        cur_val_a_real = data_a.get_realisations(current_val, [current_val])
+        cur_val_b_real = data_b.get_realisations(current_val, [current_val])
+        cond_a_real = data_a.get_realisations(current_val, idx_cond_full)
+        cond_b_real = data_b.get_realisations(current_val, idx_cond_full)
 
         # Get no. replications and no. samples per replication.
-        n_repl = max(repl_idx_a) + 1
-        n_per_repl = sum(repl_idx_a == 0)
+        n_repl = data_a.n_replications
+        n_per_repl = data_a.n_realisations_samples(current_val)
 
         # Make copies such that arrays in the caller scope are not overwritten.
-        cond_a_perm = cp.copy(cond_a_real)
-        cond_b_perm = cp.copy(cond_b_real)
-        cur_val_a_perm = cp.copy(cur_val_a_real)
-        cur_val_b_perm = cp.copy(cur_val_b_real)
+        # Also converts LazyArrays to regular numpy arrays by slicing, as LazyArrays
+        # do not support exchange of data between different LazyArrays.
+        cond_a_perm = cp.copy(cond_a_real)[:]
+        cond_b_perm = cp.copy(cond_b_real)[:]
+        cur_val_a_perm = cp.copy(cur_val_a_real)[:]
+        cur_val_b_perm = cp.copy(cur_val_b_real)[:]
 
         # Swap or permute realisations of the conditioning set depending on the
         # stats type.
@@ -966,11 +956,11 @@ class NetworkComparison(NetworkAnalysis):
             for r in resample_a:
                 if r >= n_repl:  # take realisation from cond B
                     r_perm = r - n_repl
-                    cond_a_perm[i_0:i_1,] = cond_b_real[repl_idx_b == r_perm, :]
-                    cur_val_a_perm[i_0:i_1,] = cur_val_b_real[repl_idx_b == r_perm, :]
+                    cond_a_perm[i_0:i_1,] = cond_b_real[r_perm*n_per_repl:(r_perm+1)*n_per_repl, :]
+                    cur_val_a_perm[i_0:i_1,] = cur_val_b_real[r_perm*n_per_repl:(r_perm+1)*n_per_repl, :]
                 else:  # take realisation from cond A otherwise
-                    cond_a_perm[i_0:i_1,] = cond_a_real[repl_idx_a == r, :]
-                    cur_val_a_perm[i_0:i_1,] = cur_val_a_real[repl_idx_a == r, :]
+                    cond_a_perm[i_0:i_1,] = cond_a_real[r*n_per_repl:(r+1)*n_per_repl, :]
+                    cur_val_a_perm[i_0:i_1,] = cur_val_a_real[r*n_per_repl:(r+1)*n_per_repl, :]
                 i_0 = i_1
                 i_1 = i_0 + n_per_repl
 
@@ -980,11 +970,11 @@ class NetworkComparison(NetworkAnalysis):
             for r in resample_b:
                 if r >= n_repl:  # take realisation from cond B
                     r_perm = r - n_repl
-                    cond_b_perm[i_0:i_1,] = cond_b_real[repl_idx_b == r_perm, :]
-                    cur_val_b_perm[i_0:i_1,] = cur_val_b_real[repl_idx_b == r_perm, :]
+                    cond_b_perm[i_0:i_1,] = cond_b_real[r_perm*n_per_repl:(r_perm+1)*n_per_repl, :]
+                    cur_val_b_perm[i_0:i_1,] = cur_val_b_real[r_perm*n_per_repl:(r_perm+1)*n_per_repl, :]
                 else:  # take realisation from cond A otherwise
-                    cond_b_perm[i_0:i_1,] = cond_a_real[repl_idx_a == r, :]
-                    cur_val_b_perm[i_0:i_1,] = cur_val_a_real[repl_idx_a == r, :]
+                    cond_b_perm[i_0:i_1,] = cond_a_real[r*n_per_repl:(r+1)*n_per_repl, :]
+                    cur_val_b_perm[i_0:i_1,] = cur_val_a_real[r*n_per_repl:(r+1)*n_per_repl, :]
                 i_0 = i_1
                 i_1 = i_0 + n_per_repl
         else:

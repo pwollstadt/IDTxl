@@ -2,11 +2,11 @@
 import numpy as np
 
 from . import idtxl_utils as utils
+from idtxl.lazy_array import LazyArray
 
 VERBOSE = False
 
-
-class Data:
+class Data():
     """Store data for information dynamics estimation.
 
     Data takes a 1- to 3-dimensional array representing realisations of random
@@ -72,12 +72,20 @@ class Data:
     def __init__(self, data=None, dim_order="psr", normalise=True, seed=None):
         np.random.seed(seed)
         self.initial_state = np.random.get_state()
+        self.seed = seed
+        self._random_bit_generator = np.random.Philox(seed)
         self.normalise = normalise
         self.n_processes = 0
         self.n_samples = 0
         self.n_replications = 0
         if data is not None:
             self.set_data(data, dim_order)
+
+    def get_rgb_key(self):
+        return tuple(self._random_bit_generator.state['state']['key'])
+    
+    def get_rgb_count(self):
+        return tuple(self._random_bit_generator.state['state']['counter'])
 
     def n_realisations(self, current_value=None):
         """Number of realisations over samples and replications.
@@ -254,68 +262,32 @@ class Data:
                 number of indices
             numpy array
                 replication index for each realisation with dimensions (no.
-                samples * no.replications) x number of indices
+                samples * no.replications) x number of indices. Only returned
+                if return_replication_idx is true.
         """
         if not hasattr(self, "data"):
             raise AttributeError("No data has been added to this Data() instance.")
         # Return None if index list is empty.
         if not idx_list:
-            return None, None
+            return None
         # Check if requested indices are smaller than the current_value.
         if not all(np.array([x[1] for x in idx_list]) <= current_value[1]):
             print(f"Index list: {idx_list}\ncurrent value: {current_value}")
             raise RuntimeError(
                 "All indices for which data is retrieved must be smaller than the current value."
             )
+        assert shuffle == False, 'Shuffling is not implemented yet'
 
-        # Allocate memory.
         n_real_time = self.n_realisations_samples(current_value)
         n_real_repl = self.n_realisations_repl()
-        realisations = np.empty((n_real_time * n_real_repl, len(idx_list))).astype(
-            self.data_type
-        )
+        
+        la = LazyArray(self.data)
 
-        # Shuffle the replication order if requested. This creates surrogate
-        # data by permuting replications while keeping the order of samples
-        # intact.
-        if shuffle:
-            replications_order = np.random.permutation(self.n_replications)
-        else:
-            replications_order = np.arange(self.n_replications)
+        la = la.shifted(coords=tuple(idx[0] for idx in idx_list), shifts=tuple(idx[1] for idx in idx_list), length=n_real_time)
+        la = la.swapaxes(0, 2)
+        la = la.reshape(n_real_repl * n_real_time, len(idx_list))
 
-        # Retrieve data.
-        i = 0
-        for idx in idx_list:
-            r = 0
-            # get the last sample as negative value, i.e., no. samples from the
-            # end of the array
-            last_sample = idx[1] - current_value[1]  # indexing is much faster
-            if last_sample == 0:  # than looping over time!
-                last_sample = None
-            for replication in replications_order:
-                try:
-                    realisations[r : r + n_real_time, i] = self.data[
-                        idx[0], idx[1] : last_sample, replication
-                    ]
-                except IndexError as e:
-                    raise IndexError(
-                        f"You tried to access variable {idx} in a data set with {self.n_processes} "
-                        f"processes and {self.n_samples} samples."
-                    ) from e
-                r += n_real_time
-
-            assert not np.isnan(
-                realisations[:, i]
-            ).any(), "There are nans in the retrieved realisations."
-            i += 1
-
-        # For each realisation keep the index of the replication it came from.
-        replications_index = np.repeat(replications_order, n_real_time)
-        assert (
-            replications_index.shape[0] == realisations.shape[0]
-        ), "There seems to be a problem with the replications index."
-
-        return realisations, replications_index
+        return la
 
     def _get_data_slice(self, process, offset_samples=0, shuffle=False):
         """Return data slice for a single process.
@@ -501,7 +473,7 @@ class Data:
             data_slice_perm[:, r] = data_slice[perm, r]
         return data_slice_perm, perm
 
-    def permute_replications(self, current_value, idx_list):
+    def permute_replications(self, current_value, idx_list, return_replication_idx=False):
         """Return realisations with permuted replications (time stays intact).
 
         Create surrogate data by permuting realisations over replications while
@@ -530,20 +502,39 @@ class Data:
                 index of the current_value in the data
             idx_list : list of tuples
                 indices of variables
+            return_replication_idx: bool
+                additionally return the replication index of each sample
+
 
         Returns:
             numpy array
                 permuted realisations with dimensions replications x number of
                 indices
             numpy array
-                replication index for each realisation
+                replication index for each realisation. Only returned
+                if return_replication_idx is true.
 
         Raises:
             TypeError if idx_realisations is not a list
         """
-        if not isinstance(idx_list, list):
-            raise TypeError("idx needs to be a list of tuples.")
-        return self.get_realisations(current_value, idx_list, shuffle=True)
+        if type(idx_list) is not list:
+            raise TypeError('idx needs to be a list of tuples.')
+        
+        if return_replication_idx:
+            raise NotImplementedError('return_replication_idx is not implemented yet')
+                
+        realisations = self.get_realisations(current_value,
+                                                                idx_list)
+        n_samples = self.n_realisations_samples(current_value)
+
+        realisations = realisations.reshape(self.n_replications, n_samples, len(idx_list)) # Add replication axis to facilitate permutation.
+        realisations = realisations.shuffled(axis=0, philox_key=self.get_rgb_key(), philox_counter=self.get_rgb_count())
+        realisations = realisations.reshape(self.n_replications * n_samples, len(idx_list)) # Flatten out the replications axis again.
+
+        # Advance the random bit generator to avoid reusing the same random numbers for the next permutation.
+        self._random_bit_generator.advance(2**64)
+
+        return realisations
 
     def permute_samples(self, current_value, idx_list, perm_settings):
         """Return realisations with permuted samples (repl. stays intact).
@@ -645,8 +636,6 @@ class Data:
             numpy array
                 permuted realisations with dimensions replications x number of
                 indices
-            numpy array
-                sample index for each realisation
 
         Raises:
             TypeError if idx_realisations is not a list
@@ -657,194 +646,38 @@ class Data:
             replications is too small to generate the requested number of
             permutations.
         """
-        [realisations, replication_idx] = self.get_realisations(current_value, idx_list)
-        n_samples = sum(replication_idx == 0)
-        perm = self._get_permutation_samples(n_samples, perm_settings)
-        # Apply the permutation to data from each replication.
-        realisations_perm = np.empty(realisations.shape).astype(self.data_type)
-        perm_idx = np.empty(realisations_perm.shape[0])
-        for r in range(max(replication_idx) + 1):
-            mask = replication_idx == r
-            data_temp = realisations[mask, :]
-            realisations_perm[mask, :] = data_temp[perm, :]
-            perm_idx[mask] = perm
-        return realisations_perm, perm_idx
+        realisations = self.get_realisations(current_value, idx_list)
+        n_samples = self.n_realisations_samples(current_value)
 
-    def _get_permutation_samples(self, n_samples, perm_settings):
-        """Generate permutation of n samples.
+        # Extract random bit number generator state
+        philox_key = self.get_rgb_key()
+        philox_counter = self.get_rgb_count()
 
-        Generate a permutation of n samples under various, possible
-        restrictions. Permuting samples is the fall-back option for surrogate
-        creation if the number of replications is too small to allow for a
-        sufficient number of permutations for the generation of surrogate data.
-        For a detailed descriptions of permutation strategies see the
-        documentation of permute_samples().
-
-        Args:
-            n_samples : int
-                length of the permutation
-            perm_settings : dict
-                settings specifying the allowed permutations, see documentation
-                of permute_samples()
-
-        Returns:
-            numpy array
-                realisations permuted over time
-            numpy Array
-                permuted indices of samples
-        """
-        perm_type = perm_settings["perm_type"]
-
-        # Get the permutation 'mask' for one replication (the same mask is then
-        # applied to each replication).
-        if perm_type == "random":
-            perm = np.random.permutation(n_samples)
-
-        elif perm_type == "circular":
-            max_shift = perm_settings["max_shift"]
-            if not isinstance(max_shift, int) or max_shift < 1:
-                raise TypeError("'max_shift' has to be an int > 0.")
-            perm = self._circular_shift(n_samples, max_shift)[0]
-
-        elif perm_type == "block":
-            block_size = perm_settings["block_size"]
-            perm_range = perm_settings["perm_range"]
-            if not isinstance(block_size, int) or block_size < 1:
-                raise TypeError("'block_size' has to be an int > 0.")
-            if not isinstance(perm_range, int) or perm_range < 1:
-                raise TypeError("'perm_range' has to be an int > 0.")
-            perm = self._swap_blocks(n_samples, block_size, perm_range)
-
-        elif perm_type == "local":
-            perm_range = perm_settings["perm_range"]
-            if not isinstance(perm_range, int) or perm_range < 1:
-                raise TypeError("'perm_range' has to be an int > 0.")
-            perm = self._swap_local(n_samples, perm_range)
-
+        if perm_settings['perm_type'] == 'random':
+            realisations = realisations.reshape(self.n_replications, n_samples, len(idx_list)) # Add replication axis to facilitate permutation.
+            realisations = realisations.shuffled(axis=1, philox_key=philox_key, philox_counter=philox_counter)
+            realisations = realisations.reshape(self.n_replications * n_samples, len(idx_list)) # Flatten out the replications axis again.
+        elif perm_settings['perm_type'] == 'circular':
+            max_shift = perm_settings['max_shift']
+            assert isinstance(max_shift, int) and max_shift > 0, 'max_shift must be an integer larger than 0'
+            shift = np.random.Generator(self._random_bit_generator).integers(1, max_shift + 1)
+            realisations = realisations.rolled(shift, axis=0)
+        elif perm_settings['perm_type'] == 'block':
+            block_size = perm_settings['block_size']
+            perm_range = perm_settings['perm_range']
+            assert isinstance(perm_range, int) and perm_range > 1, 'perm_range must be an integer larger than 1'
+            realisations = realisations.block_shuffled(block_size, perm_range, philox_key=philox_key, philox_counter=philox_counter)
+        elif perm_settings['perm_type'] == 'local':
+            perm_range = perm_settings['perm_range']
+            assert isinstance(perm_range, int) and perm_range > 1, 'perm_range must be an integer larger than 1'
+            realisations = realisations.local_shuffled(perm_range, philox_key=philox_key, philox_counter=philox_counter)
         else:
-            raise ValueError(f"Unknown permutation type ({perm_type}).")
-        return perm
+            raise ValueError(f"Unknown permutation type: {perm_settings['perm_type']}")
 
-    def _swap_local(self, n, perm_range):
-        """Permute n samples within blocks of length 'perm_range'.
+        # Advance the random bit generator to avoid reusing the same random numbers for the next permutation.
+        self._random_bit_generator.advance(2**64)        
 
-        Args:
-            n : int
-                number of samples
-            perm_range : int
-                range over which realisations are permuted
-
-        Returns:
-            numpy array
-                permuted indices with length n
-        """
-        assert perm_range > 1, (
-            "Permutation range has to be larger than 1",
-            "otherwise there is nothing to permute.",
-        )
-        assert n >= perm_range, (
-            f"Not enough realisations per replication ({n}) to allow for the requested "
-            f"'perm_range' of {perm_range}."
-        )
-
-        if perm_range == n:  # permute all n samples randomly
-            perm = np.random.permutation(n)
-        else:  # build a permutation that permutes only within the perm_range
-            perm = np.empty(n, dtype=int)
-            remainder = n % perm_range
-            i = 0
-            for p in range(n // perm_range):
-                perm[i : i + perm_range] = np.random.permutation(perm_range) + i
-                i += perm_range
-            if remainder > 0:
-                perm[-remainder:] = np.random.permutation(remainder) + i
-        return perm
-
-    def _swap_blocks(self, n, block_size, perm_range):
-        """Permute blocks of samples in a time series within a given range.
-
-        Permute n samples by swapping blocks of samples within a given range.
-
-        Args:
-            n : int
-                number of samples
-            block_size : int
-                number of samples in a block
-            perm_range : int
-                range over which blocks can be swapped
-
-        Returns:
-            numpy array
-                permuted indices with length n
-        """
-        n_blocks = np.ceil(n / block_size).astype(int)
-        rem_samples = n % block_size
-        rem_blocks = n_blocks % perm_range
-        if rem_samples == 0:
-            rem_samples = block_size
-
-        # First permute block(!) indices.
-        if perm_range == n_blocks:  # permute all blocks randomly
-            perm_blocks = np.random.permutation(n_blocks)
-        else:  # build a permutation that permutes only within the perm_range
-            perm_blocks = np.empty(n_blocks, dtype=int)
-
-            i = 0
-            for p in range(n_blocks // perm_range):
-                perm_blocks[i : i + perm_range] = np.random.permutation(perm_range) + i
-                i += perm_range
-            if rem_blocks > 0:
-                perm_blocks[-rem_blocks:] = np.random.permutation(rem_blocks) + i
-
-        # Get the block index for each sample index, take into account that the
-        # last block may have fewer samples if n_samples % block_size isn't 0.
-        idx_blocks = np.hstack(
-            (
-                np.repeat(np.arange(n_blocks - 1), block_size),
-                np.repeat(n_blocks - 1, rem_samples),
-            )
-        )
-
-        # Permute samples indices according to permuted block indices.
-        perm = np.zeros(n).astype(int)  # allocate memory
-        idx_orig = np.arange(n)  # original order of sample indices
-        i_0 = 0
-        for b in perm_blocks:  # loop over permuted blocks
-            idx = idx_blocks == b  # indices of samples in curr. permuted block
-            i_1 = i_0 + sum(idx)
-            perm[i_0:i_1] = idx_orig[idx]  # append samples to permutation
-            i_0 = i_1
-
-        return perm
-
-    def _circular_shift(self, n, max_shift):
-        """Permute samples through shifting by a random number of samples.
-
-        A time series is shifted circularly by a random number of samples. A
-        circular shift of m means, that the last m samples are included at the
-        beginning of the time series and all other sample indices are increased
-        by mn steps. max_shift is an upper limit for m.
-
-        Args:
-            n : int
-                number of samples
-            max_shift: int
-                maximum possible shift (default=n)
-
-        Returns:
-            numpy array
-                permuted indices with length n
-            int
-                no. samples by which the time series was shifted
-        """
-        assert max_shift <= n, (
-            f"Max_shift ({max_shift}) has to be equal to or smaller than the number of samples in the "
-            f"time series ({n})."
-        )
-        shift = np.random.randint(low=1, high=max_shift + 1)
-        if VERBOSE:
-            print(f"replications are shifted by {shift} samples")
-        return np.hstack((np.arange(n - shift, n), np.arange(n - shift))), shift
+        return realisations
 
     def generate_mute_data(self, n_samples=1000, n_replications=10):
         """Generate example data for a 5-process network.

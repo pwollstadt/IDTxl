@@ -3,7 +3,7 @@ Test the MPI parallelization.
 
 To run these tests, use:
 
-mpirun -n 8 python -m mpi4py.futures -m pytest --with-mpi test/test_mpi.py
+mpirun -n 4 python test/test_mpi.py
 """
 import os
 import time
@@ -12,8 +12,9 @@ import pytest
 import numpy as np
 
 from idtxl.estimator import get_estimator
-from idtxl.estimators_jidt import JidtKraskov
-from idtxl.estimators_mpi import MPIEstimator, _get_worker_estimator
+from idtxl.estimators_jidt import JidtKraskovCMI
+from idtxl.estimators_mpi import MPIEstimator
+import idtxl.estimators_mpi as estimators_mpi
 from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
 
@@ -30,8 +31,13 @@ N_PERM = (
 )
 N_SAMPLES = 1000
 SEED = 0
-MAX_WORKERS = 4
+MAX_WORKERS = 2
 
+# Decorator to skip tests if MPI is not available
+def skip_if_not_mpi(func):
+    if MPI.COMM_WORLD.Get_size() < 2:
+        return pytest.mark.skip(reason="MPI not available")(func)
+    return func
 
 def test_mpi_estimator_creation():
     """Check whether a JIDT Kraskov estimator with MPI is correctly initialized"""
@@ -48,11 +54,10 @@ def test_mpi_estimator_creation():
 
     assert isinstance(estimator, MPIEstimator), "MPIEstimator has wrong class!"
     assert isinstance(
-        _get_worker_estimator(estimator._id, None, None), JidtKraskov
+        estimators_mpi._worker_estimator, JidtKraskovCMI
     ), "MPIEstimator wraps the wrong estimator!"
 
-
-@pytest.mark.mpi
+@skip_if_not_mpi
 def test_mpi_installation():
     comm = MPI.COMM_WORLD
     size = comm.Get_size()
@@ -63,142 +68,134 @@ def test_mpi_installation():
         size >= MAX_WORKERS + 1
     ), f"Insufficient MPI workers for testing. Please have at least {MAX_WORKERS + 1} threads available."
 
+@skip_if_not_mpi
+def test_mpi_estimation():
+    """Test whether the MPI parallelization works correctly"""
 
-def _wait_and_get_rank(arg):
-    time.sleep(3)
-    return MPI.COMM_WORLD.Get_rank()
+    # Create random data
+    data_array = np.random.rand(2, N_SAMPLES)
 
+    # Create Data object
+    data = Data(data_array, dim_order="ps")
 
-@pytest.mark.mpi
-@pytest.mark.xfail
-def test_mpi_ranks():
-    """
-    Test whether the number of workers is restricted to max_workers, even if more threads are available.
-    Currently, this does not work, which is most likely a bug in mpi4py.
-    """
-    settings = {
-        "cmi_estimator": "JidtKraskovCMI",
-        "max_lag_sources": 5,
-        "min_lag_sources": 1,
-        "MPI": True,
-        "max_workers": MAX_WORKERS,
-    }
+    # Create estimator
+    jidtEstimator = JidtKraskovCMI()
+    mpiEstimator = MPIEstimator("JidtKraskovCMI", dict(max_workers=MAX_WORKERS))
 
-    estimator = get_estimator(settings["cmi_estimator"], settings)
+    # Estimate TE on main rank
+    jidt_te = jidtEstimator.estimate(var1=data_array[0], var2=data_array[1])
+    mpi_te = mpiEstimator.estimate(var1=data_array[0], var2=data_array[1])
 
-    ranks = list(estimator._executor.map(_wait_and_get_rank, range(2 * MAX_WORKERS)))
-    print(ranks)
+    # Estimate TE on workers and check if performance warning is raised
+    with pytest.warns(RuntimeWarning, match="Performance warning:.*"):
+        mpi_te_workers = mpiEstimator.estimate_parallel(var1=[data_array[0]] * MAX_WORKERS, var2=[data_array[1]] * MAX_WORKERS)
 
-    assert np.array_equal(
-        np.unique(ranks), np.arange(1, MAX_WORKERS + 1)
-    ), "The actual number of worker ranks is not equal to MAX_RANKS."
+    # Check whether the results are the same
+    assert np.array_equal(jidt_te, mpi_te), "MPI parallelization does not work correctly!"
+    assert np.array_equal(jidt_te, mpi_te_workers[0]), "MPI parallelization does not work correctly!"
+    assert all(np.array_equal(mpi_te, mpi_te_) for mpi_te_ in mpi_te_workers), "MPI parallelization does not work correctly!"
 
+@skip_if_not_mpi
+def test_lazy_array_estimation():
+    """Test whether the MPI parallelization works correctly with lazy arrays"""
 
-@pytest.mark.mpi
-def test_mpi_JidtGaussianCMI_MTE():
-    """Compute Multivariate transfer entropy for test data with and without MPI and compare results"""
+    # Create random data
+    data_array = np.random.rand(2, N_SAMPLES)
 
-    # a) Generate test data
-    data = Data()
-    data.generate_mute_data(n_samples=1000, n_replications=5)
+    # Create Data object
+    data = Data(data_array, dim_order="ps")
+    var1 = data.get_realisations((0, 1), [(0, 1)])
+    var2 = data.get_realisations((0, 1), [(1, 1)])
 
-    # b) Initialise analysis object with and without MPI
-    network_analysis1 = MultivariateTE()
-    settings1 = {
-        "cmi_estimator": "JidtGaussianCMI",
-        "max_lag_sources": 5,
-        "min_lag_sources": 1,
-        "MPI": True,
-        "max_workers": MAX_WORKERS,
-    }
-    network_analysis2 = MultivariateTE()
-    settings2 = {
-        "cmi_estimator": "JidtGaussianCMI",
-        "max_lag_sources": 5,
-        "min_lag_sources": 1,
-    }
+    # Create estimator
+    jidtEstimator = JidtKraskovCMI()
+    mpiEstimator = MPIEstimator("JidtKraskovCMI", dict(max_workers=MAX_WORKERS))
 
-    # c) Run analysis
-    print("Running MTE analysis with MPI")
-    results1 = network_analysis1.analyse_network(settings=settings1, data=data)
-    print("Running MTE analysis without MPI")
-    results2 = network_analysis2.analyse_network(settings=settings2, data=data)
+    # Estimate TE on main rank
+    jidt_te = jidtEstimator.estimate(var1=var1, var2=var2)
+    mpi_te = mpiEstimator.estimate(var1=var1, var2=var2)
 
-    # d) Compare results
-    adj_matrix1 = results1.get_adjacency_matrix(weights="binary", fdr=False)
-    adj_matrix2 = results2.get_adjacency_matrix(weights="binary", fdr=False)
+    # Estimate TE on workers
+    mpi_te_workers = mpiEstimator.estimate_parallel(var1=[var1] * MAX_WORKERS, var2=[var2] * MAX_WORKERS)
 
-    result1 = adj_matrix1.get_edge_list()
-    result2 = adj_matrix2.get_edge_list()
+    # Check whether the results are the same
+    assert np.array_equal(jidt_te, mpi_te), "MPI parallelization does not work correctly!"
+    assert np.array_equal(jidt_te, mpi_te_workers[0]), "MPI parallelization does not work correctly!"
+    assert all(np.array_equal(mpi_te, mpi_te_) for mpi_te_ in mpi_te_workers), "MPI parallelization does not work correctly!"
 
-    print(f"{result1=}")
-    print(f"{result2=}")
+@skip_if_not_mpi
+def test_lazy_array_base_array_error():
 
-    assert np.array_equal(result1, result2), "Results with and without MPI differ!"
+    # Create random data
+    data_array = np.random.rand(2, N_SAMPLES)
 
+    # Create Data object
+    data = Data(data_array, dim_order="ps")
+    var1 = data.get_realisations((0, 1), [(0, 1)])
+    var2 = data.get_realisations((0, 1), [(1, 1)])
 
-def _clear_ckp(filename):
-    # Delete created checkpoint from disk.
-    os.remove(f"{filename}.ckp")
-    try:
-        os.remove(f"{filename}.ckp.old")
-    except FileNotFoundError:
-        # If algorithm ran for only one iteration, no old checkpoint exists.
-        print(f"No file {filename}.ckp.old")
-    os.remove(f"{filename}.dat")
-    os.remove(f"{filename}.json")
+    # Create estimator
+    mpiEstimator = MPIEstimator("JidtKraskovCMI", dict(max_workers=MAX_WORKERS))
 
+    # Create second Data object with different base array
+    data = Data(np.array(data_array), dim_order="ps")
+    var1_other_base_array = data.get_realisations((0, 1), [(0, 1)])
 
-@pytest.mark.mpi
-def test_mpi_checkpoint_resume():
-    """Test resuming from manually generated checkpoint."""
-    # Generate test data
-    data = Data(seed=SEED)
-    data.generate_mute_data(n_samples=N_SAMPLES, n_replications=1)
+    # Estimate TE on worker ranks with different base array for var1 and var2
+    with pytest.raises(ValueError, match="LazyArrays must have the same base array"):
+        _ = mpiEstimator.estimate_parallel(var1=[var1_other_base_array] * MAX_WORKERS, var2=[var2] * MAX_WORKERS)
 
-    # Initialise analysis object and define settings
-    filename_ckp = os.path.join(os.path.dirname(__file__), "data", "my_checkpoint")
-    network_analysis = MultivariateTE()
-    settings = {
-        "cmi_estimator": "JidtGaussianCMI",
-        "max_lag_sources": 3,
-        "min_lag_sources": 2,
-        "write_ckp": True,
-        "filename_ckp": filename_ckp,
-        "MPI": True,
-        "max_workers": MAX_WORKERS,
-    }
+    # Estimate TE on worker ranks with different base array for chunks of var1
+    with pytest.raises(ValueError, match="LazyArrays must have the same base array"):
+        _ = mpiEstimator.estimate_parallel(var1=[var1, var1_other_base_array], var2=[var2, var2])
 
-    # Manually create checkpoint files for two targets.
-    # Note that variables are added as absolute time indices and not lags wrt.
-    # the current value. Internally, IDTxl operates with abolute indices, but
-    # in all results and console outputs, variables are described by their lags
-    # wrt. to the current value.
-    sources = [0, 1, 2]
-    targets = [3, 4]
-    add_vars = [[(0, 1), (0, 2), (3, 1)], [(0, 1), (0, 2), (1, 3), (4, 2)]]
-    network_analysis._set_checkpointing_defaults(settings, data, sources, targets)
-    for i in range(len(targets)):
-        network_analysis._initialise(settings, data, sources, targets[i])
-        network_analysis.selected_vars_full = add_vars[i]
-        network_analysis._update_checkpoint("{}.ckp".format(filename_ckp))
+@skip_if_not_mpi
+def test_error_unequal_number_of_chunks():
 
-    # Resume analysis.
-    network_analysis_res = MultivariateTE()
-    data, settings, targets, sources = network_analysis_res.resume_checkpoint(
-        filename_ckp
-    )
+    # Create random data
+    data_array = np.random.rand(2, N_SAMPLES)
 
-    # Test if variables were added correctly
-    for i in range(len(targets)):
-        network_analysis_res._initialise(settings, data, sources, targets[i])
-        assert (
-            network_analysis_res.selected_vars_full == add_vars[i]
-        ), "Variables were not added correctly for target {0}.".format(targets[i])
+    # Create Data object
+    data = Data(data_array, dim_order="ps")
+    var1 = data.get_realisations((0, 1), [(0, 1)])
+    var2 = data.get_realisations((0, 1), [(1, 1)])
 
-    # Test if analysis runs from resumed checkpoint.
-    network_analysis_res.analyse_network(
-        settings=settings, data=data, targets=targets, sources=sources
-    )
+    # Create estimator
+    mpiEstimator = MPIEstimator("JidtKraskovCMI", dict(max_workers=MAX_WORKERS))
 
-    _clear_ckp(filename_ckp)
+    # Estimate TE on worker ranks with different base array for var1 and var2
+    with pytest.raises(ValueError, match="All variables must have the same number of chunks"):
+        _ = mpiEstimator.estimate_parallel(var1=[var1] * 4, var2=[var2] * 5)
+
+@skip_if_not_mpi
+def test_caching():
+
+    # Create random data
+    data_array = np.random.rand(2, N_SAMPLES)
+
+    # Create Data object
+    data = Data(data_array, dim_order="ps")
+    var1 = data.get_realisations((0, 1), [(0, 1)])
+    var2 = data.get_realisations((0, 1), [(1, 1)])
+    cond = data.get_realisations((0, 1), [(0, 1)])
+        
+    # Create estimator
+    mpiEstimator = MPIEstimator("JidtKraskovCMI", dict(max_workers=MAX_WORKERS, noise_level=0))
+
+    # Estimate TE on workers
+    mpi_te_workers = mpiEstimator.estimate_parallel(var1=[var1] * 4 + [var2] * 4, var2=[var2] * 8, conditional=[cond, None] * 4)
+    
+    # Compare equal results
+    assert mpi_te_workers[0] == mpi_te_workers[2]
+    assert mpi_te_workers[1] == mpi_te_workers[3]
+    assert mpi_te_workers[4] == mpi_te_workers[6]
+    assert mpi_te_workers[5] == mpi_te_workers[7]
+
+    # Run again
+    mpi_te_workers2 = mpiEstimator.estimate_parallel(var1=[var2] * 4 + [var1] * 4, var2=[var2] * 8, conditional=[None, cond] * 4)
+    
+    # Compare equal results
+    assert np.array_equal(mpi_te_workers, mpi_te_workers2[::-1])
+
+if __name__ == "__main__":
+    pytest.main([__file__])

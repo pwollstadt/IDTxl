@@ -5,11 +5,11 @@ def get_knn_finder(name: str) -> type[KnnFinder]:
     """Find a KnnFinder Subclass by name and import only the required modules.
 
     Args:
-        name : str
-            The name of the KnnFinder to return.
-    """
-
-    if name == "scipy_kdtree":
+        name (str): The name of the KnnFinder to return."""
+    if name == 'numba_brute':
+        from .knn_finder_numba import NumbaBruteForceKNNFinder
+        return NumbaBruteForceKNNFinder
+    if name == 'scipy_kdtree':
         from .knn_finder_scipy import ScipyKDTreeKnnFinder
 
         return ScipyKDTreeKnnFinder
