@@ -653,29 +653,32 @@ class Data():
         philox_key = self.get_rgb_key()
         philox_counter = self.get_rgb_count()
 
+        realisations = realisations.reshape(self.n_replications, n_samples, len(idx_list)) # Add replication axis to facilitate permutation.
+
         if perm_settings['perm_type'] == 'random':
-            realisations = realisations.reshape(self.n_replications, n_samples, len(idx_list)) # Add replication axis to facilitate permutation.
             realisations = realisations.shuffled(axis=1, philox_key=philox_key, philox_counter=philox_counter)
-            realisations = realisations.reshape(self.n_replications * n_samples, len(idx_list)) # Flatten out the replications axis again.
         elif perm_settings['perm_type'] == 'circular':
             max_shift = perm_settings['max_shift']
             assert isinstance(max_shift, int) and max_shift > 0, 'max_shift must be an integer larger than 0'
             shift = np.random.Generator(self._random_bit_generator).integers(1, max_shift + 1)
-            realisations = realisations.rolled(shift, axis=0)
+            realisations = realisations.rolled(shift, axis=1)
         elif perm_settings['perm_type'] == 'block':
             block_size = perm_settings['block_size']
             perm_range = perm_settings['perm_range']
             assert isinstance(perm_range, int) and perm_range > 1, 'perm_range must be an integer larger than 1'
-            realisations = realisations.block_shuffled(block_size, perm_range, philox_key=philox_key, philox_counter=philox_counter)
+            realisations = realisations.block_shuffled(axis=1, block_size=block_size, perm_range=perm_range, philox_key=philox_key, philox_counter=philox_counter)
         elif perm_settings['perm_type'] == 'local':
             perm_range = perm_settings['perm_range']
             assert isinstance(perm_range, int) and perm_range > 1, 'perm_range must be an integer larger than 1'
-            realisations = realisations.local_shuffled(perm_range, philox_key=philox_key, philox_counter=philox_counter)
+            realisations = realisations.local_shuffled(axis=1, perm_range=perm_range, philox_key=philox_key, philox_counter=philox_counter)
         else:
             raise ValueError(f"Unknown permutation type: {perm_settings['perm_type']}")
+        
+        realisations = realisations.reshape(self.n_replications * n_samples, len(idx_list)) # Flatten out the replications axis again.
+
 
         # Advance the random bit generator to avoid reusing the same random numbers for the next permutation.
-        self._random_bit_generator.advance(2**64)        
+        self._random_bit_generator.advance(2**64)
 
         return realisations
 

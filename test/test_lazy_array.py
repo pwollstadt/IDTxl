@@ -291,8 +291,8 @@ def test_lazy_array_block_shuffled():
 
     lazy_array = LazyArray(base_array)
     # Check that the same shuffled array is returned when using the same key and counter
-    lazy_array1 = lazy_array.block_shuffled(block_size=5, perm_range=5, philox_key=42, philox_counter=42)
-    lazy_array2 = lazy_array.block_shuffled(block_size=5, perm_range=5, philox_key=42, philox_counter=42)
+    lazy_array1 = lazy_array.block_shuffled(axis=0, block_size=5, perm_range=5, philox_key=42, philox_counter=42)
+    lazy_array2 = lazy_array.block_shuffled(axis=0, block_size=5, perm_range=5, philox_key=42, philox_counter=42)
 
     assert np.all(lazy_array1 == lazy_array2), "Shuffled LazyArray has wrong evaluated array!"
 
@@ -300,14 +300,14 @@ def test_lazy_array_block_shuffled():
     base_array = np.array([[1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6]])
 
     lazy_array = LazyArray(base_array)
-    lazy_array = lazy_array.block_shuffled(block_size=3, perm_range=3, philox_key=42, philox_counter=42)
+    lazy_array = lazy_array.block_shuffled(axis=0, block_size=3, perm_range=3, philox_key=42, philox_counter=42)
 
     assert np.all(lazy_array[0] == lazy_array[1]), "Shuffled LazyArray has wrong evaluated array!"
 
     # Check if blocks work correctly
     base_array = np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6])
     lazy_array = LazyArray(base_array)
-    lazy_array = lazy_array.block_shuffled(block_size=2, perm_range=2, philox_key=42, philox_counter=42)
+    lazy_array = lazy_array.block_shuffled(axis=0, block_size=2, perm_range=2, philox_key=42, philox_counter=42)
     assert np.all(lazy_array[0:12:2] == lazy_array[1:12:2]), "Shuffled LazyArray has wrong evaluated array!"
 
     # check perm_range
@@ -322,8 +322,8 @@ def test_lazy_array_local_shuffled():
     base_array = rng.random(size=(25, 100))
 
     lazy_array = LazyArray(base_array)
-    lazy_array1 = lazy_array.local_shuffled(perm_range=5, philox_key=42, philox_counter=42)
-    lazy_array2 = lazy_array.local_shuffled(perm_range=5, philox_key=42, philox_counter=42)
+    lazy_array1 = lazy_array.local_shuffled(axis=0, perm_range=5, philox_key=42, philox_counter=42)
+    lazy_array2 = lazy_array.local_shuffled(axis=0, perm_range=5, philox_key=42, philox_counter=42)
 
     assert np.all(lazy_array1 == lazy_array2), "Shuffled LazyArray has wrong evaluated array!"
 
@@ -331,7 +331,7 @@ def test_lazy_array_local_shuffled():
     base_array = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9], [1, 2, 3, 4, 5, 6, 7, 8, 9]]).T
     
     lazy_array = LazyArray(base_array)
-    lazy_array = lazy_array.local_shuffled(perm_range=3, philox_key=42, philox_counter=42)
+    lazy_array = lazy_array.local_shuffled(axis=0, perm_range=3, philox_key=42, philox_counter=42)
 
     assert np.all(lazy_array[:, 0] == lazy_array[:, 1]), "Shuffled LazyArray has wrong evaluated array!"
 

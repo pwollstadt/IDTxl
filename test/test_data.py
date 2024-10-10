@@ -284,6 +284,56 @@ def test_permute_samples():
                              idx_list=l,
                              perm_settings=perm_settings)
 
+def test_permute_large_array():
+    """Assert correct shuffling of a large array with multiple replication and processess"""
+    n = 30
+    p = 20
+    r = 10
+    rng = np.random.default_rng(42)
+    data_array = rng.integers(0, 10, size=(p, n, r))
+    data = Data(data_array, 'psr', normalise=False, seed=42)
+
+    current_value = (0, 10)
+    idx_list = [(1, 1), (2, 7), (4, 3), (9, 7)]
+
+    # Get unshuffled data
+    rlz_unshuffled = data.get_realisations(current_value, idx_list)
+    rlz_unshuffled_reshaped = rlz_unshuffled.reshape(r, n-current_value[1], len(idx_list))[:]
+
+    # Permute replications
+    rlz_perm = data.permute_replications(current_value=current_value, idx_list=idx_list)
+    rlz_perm = rlz_perm.reshape(r, n-current_value[1], len(idx_list))
+    assert _is_permutation(rlz_unshuffled_reshaped, rlz_perm, axis=0), 'Replications are not permuted correctly.'
+
+    # Permute samples
+    perm_settings = {'perm_type': 'random'}
+    rlz_perm = data.permute_samples(current_value=current_value, idx_list=idx_list, perm_settings=perm_settings)
+    rlz_perm = rlz_perm.reshape(r, n-current_value[1], len(idx_list))
+    assert _is_permutation(rlz_unshuffled_reshaped, rlz_perm, axis=1), 'Samples are not permuted correctly.'
+
+    # Permute blocks
+    perm_settings = {'perm_type': 'block', 'block_size': 3, 'perm_range': 2}
+    rlz_perm = data.permute_samples(current_value=current_value, idx_list=idx_list, perm_settings=perm_settings)
+    rlz_perm = rlz_perm.reshape(r, n-current_value[1], len(idx_list))[:]
+    assert _is_permutation(rlz_unshuffled_reshaped, rlz_perm, axis=1), 'Blocks are not permuted correctly.'
+
+    # Permute local
+    perm_settings = {'perm_type': 'local', 'perm_range': 3}
+    rlz_perm = data.permute_samples(current_value=current_value, idx_list=idx_list, perm_settings=perm_settings)
+    rlz_perm = rlz_perm.reshape(r, n-current_value[1], len(idx_list))[:]
+    assert _is_permutation(rlz_unshuffled_reshaped, rlz_perm, axis=1), 'Local shuffling is not permuted correctly.'
+
+def _is_permutation(a, b, axis=0):
+    """Check if two arrays are permutations of each other."""
+
+    if a.shape != b.shape:
+        return False
+    
+    # Ensure arrays are not identical
+    if np.all(a == b):
+        return False
+
+    return np.all(np.sort(a, axis=axis) == np.sort(b, axis=axis))
 
 def test_get_data_slice():
     n = 10
@@ -382,15 +432,13 @@ def test_setting_random_seed():
 
 
 if __name__ == '__main__':
-    test_permute_samples()
-    test_data_type()
-    test_swap_blocks()
-    test_circular_shift()
-    test_swap_local()
-    test_get_data_slice()
-    test_get_realisations()
-    test_data_normalisation()
-    test_set_data()
-    test_permute_replications()
     test_data_properties()
+    test_set_data()
+    test_data_normalisation()
+    test_get_realisations()
+    test_permute_replications()
+    test_permute_samples()
+    test_permute_large_array()
+    test_get_data_slice()
+    test_data_type()
     test_setting_random_seed()

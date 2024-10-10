@@ -239,8 +239,11 @@ class LazyArray():
         """
         if length is None:
             length = self._array.shape[1] - np.max(shifts)
-        
-        self._array = np.stack([self._array[coord, shift:length+shift] for coord, shift in zip(coords, shifts)])
+
+        if len(coords) == 1:
+            self._array = self._array[coords[0], shifts[0]:length+shifts[0]][np.newaxis, :]
+        else:
+            self._array = np.stack([self._array[coord, shift:length+shift] for coord, shift in zip(coords, shifts)])
 
     @lazy
     def rolled(self, shift, axis):
@@ -262,7 +265,7 @@ class LazyArray():
         rng.shuffle(self._array, axis=axis)
 
     @lazy
-    def block_shuffled(self, block_size, perm_range, philox_key, philox_counter):
+    def block_shuffled(self, axis, block_size, perm_range, philox_key, philox_counter):
         """
         Permute blocks of samples in a time series within a given range.
 
@@ -279,6 +282,8 @@ class LazyArray():
                 permuted indices with length n
         """
 
+        self._array = np.swapaxes(self._array, 0, axis)
+
         rbg = np.random.Philox(key=philox_key, counter=philox_counter)
         rng = np.random.Generator(rbg)
 
@@ -289,14 +294,17 @@ class LazyArray():
             rng.shuffle(range_block, axis=0)
 
         self._array = np.concatenate([block for blocks in range_blocks for block in blocks], axis=0)
+        self._array = np.swapaxes(self._array, 0, axis)
 
     @lazy
-    def local_shuffled(self, perm_range, philox_key, philox_counter):
+    def local_shuffled(self, axis, perm_range, philox_key, philox_counter):
         """
         Shuffles the array along the given axis in blocks of size block_size.
         """
         rbg = np.random.Philox(key=philox_key, counter=philox_counter)
         rng = np.random.Generator(rbg)
+
+        self._array = np.swapaxes(self._array, 0, axis)
 
         blocks = batched(self._array, perm_range)
 
@@ -304,6 +312,7 @@ class LazyArray():
             rng.shuffle(block, axis=0)
 
         self._array = np.concatenate(blocks, axis=0)
+        self._array = np.swapaxes(self._array, 0, axis)
     
 def batched(array_like, batch_size):
     """
