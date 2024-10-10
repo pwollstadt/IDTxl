@@ -82,7 +82,7 @@ def test_get_realisations():
     data.generate_mute_data()
     idx_list = [(0, 4), (0, 6)]
     current_value = (0, 3)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(IndexError):
         data.get_realisations(current_value, idx_list)
 
     # Test retrieved data for one/two replications in time (i.e., the current

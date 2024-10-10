@@ -297,6 +297,11 @@ def test_add_conditional_manually():
     data.generate_mute_data()
 
     # Add a conditional with a lag bigger than the max_lag requested above
+    settings['add_conditionals'] = (1, 6)
+    with pytest.raises(IndexError):
+        nw._initialise(settings, data, sources=[1, 2], target=0)
+
+    # Add a conditional for a variable that does not exist
     settings['add_conditionals'] = (8, 0)
     with pytest.raises(IndexError):
         nw._initialise(settings, data, sources=[1, 2], target=0)

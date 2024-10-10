@@ -270,10 +270,15 @@ class Data():
         # Return None if index list is empty.
         if not idx_list:
             return None
+        
+        # Check if all variable indices are within the data.
+        if not all([0 <= idx[0] < self.n_processes for idx in idx_list]):
+            raise IndexError("All indices must be within the range of the data.")
+
         # Check if requested indices are smaller than the current_value.
         if not all(np.array([x[1] for x in idx_list]) <= current_value[1]):
             print(f"Index list: {idx_list}\ncurrent value: {current_value}")
-            raise RuntimeError(
+            raise IndexError(
                 "All indices for which data is retrieved must be smaller than the current value."
             )
         assert shuffle == False, 'Shuffling is not implemented yet'
