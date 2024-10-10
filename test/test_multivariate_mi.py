@@ -30,7 +30,9 @@ def test_gauss_data():
         'n_perm_max_seq': 21,
         'n_perm_omnibus': 21,
         'max_lag_sources': 2,
-        'min_lag_sources': 1}
+        'min_lag_sources': 1,
+        'noise_level': 0
+        }
     nw = MultivariateMI()
     results = nw.analyse_single_target(
         settings, data, target=2, sources=[0, 1])
@@ -43,7 +45,7 @@ def test_gauss_data():
     assert sources[0] == 0, 'Wrong inferred source: {0}.'.format(sources[0])
     # Compare BivarateMI() estimate to JIDT estimate. Mimick realisations used
     # internally by the algorithm.
-    est = JidtKraskovMI({'lag_mi': 0, 'normalise': False})
+    est = JidtKraskovMI({'lag_mi': 0, 'normalise': False, 'noise_level': 0})
     jidt_mi = est.estimate(var1=source[1:-1], var2=target[2:])
     print('Estimated MI: {0:0.6f}, estimated MI using JIDT core estimator: '
           '{1:0.6f} (expected: {2:0.6f}).'.format(mi, jidt_mi, expected_mi))
@@ -136,7 +138,9 @@ def test_zero_lag():
         'n_perm_omnibus': 21,
         'tau_sources': 0,  # this is not required, but shouldn't throw an error if provided
         'max_lag_sources': 0,
-        'min_lag_sources': 0}
+        'min_lag_sources': 0,
+        'noise_level': 0
+        }
     nw = MultivariateMI()
     results = nw.analyse_single_target(
         settings, data, target=1, sources='all')
@@ -162,7 +166,9 @@ def test_multivariate_mi_init():
         'n_perm_max_stat': 21,
         'n_perm_omnibus': 30,
         'max_lag_sources': 7,
-        'min_lag_sources': 2}
+        'min_lag_sources': 2,
+        'noise_level': 0
+        }
     nw = MultivariateMI()
     with pytest.raises(AssertionError):
         nw.analyse_single_target(
@@ -248,7 +254,9 @@ def test_multivariate_mi_one_realisation_per_replication():
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 21,
         'max_lag_sources': 5,
-        'min_lag_sources': 4}
+        'min_lag_sources': 4,
+        'noise_level': 0
+        }
     target = 0
     data = Data(normalise=False, seed=SEED)
     n_repl = 10
@@ -274,7 +282,8 @@ def test_faes_method():
     settings = {'cmi_estimator': 'JidtKraskovCMI',
                 'add_conditionals': 'faes',
                 'max_lag_sources': 5,
-                'min_lag_sources': 3}
+                'min_lag_sources': 3,
+                'noise_level': 0}
     nw_1 = MultivariateMI()
     data = Data(seed=SEED)
     data.generate_mute_data()
@@ -291,7 +300,8 @@ def test_add_conditional_manually():
     """Enforce the conditioning on additional variables."""
     settings = {'cmi_estimator': 'JidtKraskovCMI',
                 'max_lag_sources': 5,
-                'min_lag_sources': 3}
+                'min_lag_sources': 3,
+                'noise_level': 0}
     nw = MultivariateMI()
     data = Data(seed=SEED)
     data.generate_mute_data()
@@ -407,7 +417,8 @@ def test_analyse_network():
         'n_perm_max_seq': 21,
         'n_perm_omnibus': 21,
         'max_lag_sources': 5,
-        'min_lag_sources': 4}
+        'min_lag_sources': 4,
+        'noise_level': 0}
     nw_0 = MultivariateMI()
 
     # Test all to all analysis

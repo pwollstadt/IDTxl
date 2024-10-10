@@ -40,6 +40,7 @@ def test_gauss_data():
         "max_lag_sources": 1,
         "min_lag_sources": 1,
         "max_lag_target": 1,
+        "noise_level": 0,
     }
     nw = BivariateTE()
     results = nw.analyse_single_target(settings, data, target=2, sources=[0, 1])
@@ -56,6 +57,7 @@ def test_gauss_data():
             "history_source": 1,
             "source_target_delay": 1,
             "normalise": False,
+            "noise_level": 0,
         }
     )
     jidt_cmi = est.estimate(source=source, target=target)
@@ -90,6 +92,7 @@ def test_return_local_values():
         "max_lag_sources": max_lag,
         "min_lag_sources": max_lag,
         "max_lag_target": max_lag,
+        "noise_level": 0,
     }
     target = 2
     te = BivariateTE()
@@ -166,6 +169,7 @@ def test_bivariate_te_init():
         "max_lag_sources": 7,
         "min_lag_sources": 2,
         "max_lag_target": 5,
+        "noise_level": 0,
     }
     nw = BivariateTE()
     with pytest.raises(AssertionError):
@@ -277,6 +281,7 @@ def test_bivariate_te_one_realisation_per_replication():
         "max_lag_target": 5,
         "max_lag_sources": 5,
         "min_lag_sources": 4,
+        "noise_level": 0,
     }
     target = 0
     data = Data(normalise=False)
@@ -308,6 +313,7 @@ def test_faes_method():
         "max_lag_sources": 5,
         "min_lag_sources": 3,
         "max_lag_target": 7,
+        "noise_level": 0,
     }
     nw_1 = BivariateTE()
     data = Data(seed=SEED)
@@ -328,6 +334,7 @@ def test_add_conditional_manually():
         "max_lag_sources": 5,
         "min_lag_sources": 3,
         "max_lag_target": 7,
+        "noise_level": 0,
     }
     nw = BivariateTE()
     data = Data(seed=SEED)
@@ -445,6 +452,7 @@ def test_analyse_network():
         "max_lag_sources": 5,
         "min_lag_sources": 4,
         "max_lag_target": 5,
+        "noise_level": 0,
     }
     nw = BivariateTE()
 
@@ -587,6 +595,7 @@ def test_compare_bivariate_and_multivariate_te():
         "max_lag_sources": 1,
         "min_lag_sources": 1,
         "max_lag_target": 1,
+        "noise_level": 0,
     }
     nw_bivar = BivariateTE()
     results = nw_bivar.analyse_single_target(settings, data, target=2, sources=[0, 1])

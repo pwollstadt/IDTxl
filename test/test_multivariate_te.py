@@ -34,6 +34,7 @@ def test_gauss_data():
         "n_perm_omnibus": 21,
         "max_lag_sources": 2,
         "min_lag_sources": 1,
+        'noise_level': 0
     }
     nw = MultivariateTE()
     results = nw.analyse_single_target(settings, data, target=2, sources=[0, 1])
@@ -51,6 +52,7 @@ def test_gauss_data():
             "history_source": 1,
             "source_target_delay": 1,
             "normalise": False,
+            "noise_level": 0,
         }
     )
     jidt_cmi = est.estimate(source=source, target=target)

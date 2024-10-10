@@ -42,6 +42,7 @@ def test_max_statistic_sequential():
         "max_lag_sources": 5,
         "min_lag_sources": 1,
         "max_lag_target": 5,
+        "noise_level": 0
     }
     setup = MultivariateTE()
     setup._initialise(settings, data, sources=[0, 1], target=3)
@@ -151,6 +152,7 @@ def test_max_statistic_sequential_bivariate():
         "max_lag_sources": 5,
         "min_lag_sources": 1,
         "max_lag_target": 5,
+        "noise_level": 0
     }
 
     # Test bivariate TE
@@ -251,6 +253,7 @@ def test_max_statistic_sequential_bivariate_mi():
         "max_lag_sources": 5,
         "min_lag_sources": 1,
         "max_lag_target": 5,
+        "noise_level": 0
     }
     # Test bivariate MI
     setup = MultivariateTE()
@@ -340,6 +343,7 @@ def test_network_fdr():
             "max_lag_sources": 3,
             "min_lag_sources": 1,
             "max_lag_target": 3,
+            "noise_level": 0,
             "correct_by_target": correct_by_target,
         }
         data = Data()
@@ -470,7 +474,7 @@ def test_ais_fdr():
     )
     res_2._add_single_result(process=2, settings=settings, results=process_2)
 
-    settings = {"cmi_estimator": "JidtKraskovCMI", "alpha_fdr": 0.05, "max_lag": 3}
+    settings = {"cmi_estimator": "JidtKraskovCMI", "alpha_fdr": 0.05, "max_lag": 3, "noise_level": 0}
     data = Data()
     data.generate_mute_data(n_samples=100, n_replications=3)
     analysis_setup = ActiveInformationStorage()

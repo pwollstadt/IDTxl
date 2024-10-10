@@ -20,7 +20,7 @@ def test_calculate_single_link():
     data = Data(np.hstack((source, source_uncorr, target)), dim_order='sp')
 
     n = NetworkAnalysis()
-    n._cmi_estimator = JidtKraskovCMI(settings={})
+    n._cmi_estimator = JidtKraskovCMI(settings={'noise_level': 0})
     n.settings = {
         'local_values': False
     }

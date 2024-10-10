@@ -162,7 +162,7 @@ def test_cmi_no_cond_correlated_gaussians():
 
     mi_ocl = mi_ocl[0]
     # Run JIDT estimator.
-    jidt_est = JidtKraskovCMI(settings={})
+    jidt_est = JidtKraskovCMI(settings={'noise_level':0})
     mi_jidt = jidt_est.estimate(source, target)
 
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
@@ -193,7 +193,7 @@ def test_cmi_correlated_gaussians():
 
     mi_ocl = mi_ocl[0]
     # Run JIDT estimator.
-    jidt_est = JidtKraskovCMI(settings={})
+    jidt_est = JidtKraskovCMI(settings={'noise_level':0})
     mi_jidt = jidt_est.estimate(source, target, source_uncorr)
 
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
@@ -226,7 +226,7 @@ def test_mi_correlated_gaussians_two_chunks():
                                                             n_chunks=n_chunks)
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovMI(settings={})
+    jidt_est = JidtKraskovMI(settings={'noise_level':0})
     mi_jidt = jidt_est.estimate(source[0:int(n_points/2), :],
                                 target[0:int(n_points/2), :])
 
@@ -265,7 +265,7 @@ def test_mi_uncorrelated_gaussians():
     mi_ocl = mi_ocl[0]
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovMI(settings={})
+    jidt_est = JidtKraskovMI(settings={'noise_level':0})
     mi_jidt = jidt_est.estimate(var1, var2)
 
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
@@ -299,7 +299,7 @@ def test_cmi_uncorrelated_gaussians():
     mi_ocl = mi_ocl[0]
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovCMI(settings={})
+    jidt_est = JidtKraskovCMI(settings={'noise_level':0})
     mi_jidt = jidt_est.estimate(var1, var2, var3)
 
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
@@ -332,7 +332,7 @@ def test_mi_uncorrelated_gaussians_three_dims():
     mi_ocl = mi_ocl[0]
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovMI(settings={})
+    jidt_est = JidtKraskovMI(settings={'noise_level':0})
     mi_jidt = jidt_est.estimate(var1, var2)
 
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
@@ -366,7 +366,7 @@ def test_cmi_uncorrelated_gaussians_three_dims():
     mi_ocl = mi_ocl[0]
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovCMI(settings={})
+    jidt_est = JidtKraskovCMI(settings={'noise_level':0})
     mi_jidt = jidt_est.estimate(var1, var2)
 
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
@@ -418,7 +418,7 @@ def test_cmi_uncorrelated_gaussians_unequal_dims():
     mi_ocl = mi_ocl[0]
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovCMI(settings={})
+    jidt_est = JidtKraskovCMI(settings={'noise_level':0})
     mi_jidt = jidt_est.estimate(var1, var2)
 
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '

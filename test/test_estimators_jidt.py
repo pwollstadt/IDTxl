@@ -123,7 +123,7 @@ def test_mi_gauss_data():
     expected_mi, source1, source2, target = _get_gauss_data(seed=SEED)
 
     # Test Kraskov
-    mi_estimator = JidtKraskovMI(settings={})
+    mi_estimator = JidtKraskovMI(settings={"noise_level": 0,})
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
     _assert_result(mi_cor, expected_mi, 'JidtKraskovMI', 'CMI (no cond.)')
@@ -160,7 +160,7 @@ def test_cmi_gauss_data_no_cond():
     expected_mi, source1, source2, target = _get_gauss_data(seed=SEED)
 
     # Test Kraskov
-    mi_estimator = JidtKraskovCMI(settings={})
+    mi_estimator = JidtKraskovCMI(settings={"noise_level": 0})
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
     _assert_result(mi_cor, expected_mi, 'JidtKraskovCMI', 'CMI (no cond.)')
@@ -197,7 +197,7 @@ def test_cmi_gauss_data():
     expected_mi, source1, source2, target = _get_gauss_data(seed=SEED)
 
     # Test Kraskov
-    mi_estimator = JidtKraskovCMI(settings={})
+    mi_estimator = JidtKraskovCMI(settings={"noise_level": 0,})
     mi_cor = mi_estimator.estimate(source1, target)
     mi_uncor = mi_estimator.estimate(source2, target)
     _assert_result(mi_cor, expected_mi, 'JidtKraskovCMI', 'CMI (corr.)')
@@ -238,7 +238,8 @@ def test_te_gauss_data():
     target = target[:-1]
     settings = {'discretise_method': 'equal',
                 'n_discrete_bins': 4,
-                'history_target': 1}
+                'history_target': 1,
+                'noise_level': 0,}
     # Test Kraskov
     mi_estimator = JidtKraskovTE(settings=settings)
     mi_cor = mi_estimator.estimate(source1, target)
@@ -277,7 +278,8 @@ def test_ais_gauss_data():
 
     settings = {'discretise_method': 'equal',
                 'n_discrete_bins': 4,
-                'history': 2}
+                'history': 2,
+                "noise_level": 0,}
 
     # Test Kraskov
     mi_estimator = JidtKraskovAIS(settings=settings)
@@ -316,7 +318,7 @@ def test_one_two_dim_input_kraskov():
     ar_src_two = np.expand_dims(ar_src_one, axis=1)
 
     # MI
-    mi_estimator = JidtKraskovMI(settings={})
+    mi_estimator = JidtKraskovMI(settings={"noise_level": 0})
     mi_cor_one = mi_estimator.estimate(src_one, target_one)
     _assert_result(mi_cor_one, expected_mi, 'JidtKraskovMI', 'MI')
     mi_cor_two = mi_estimator.estimate(src_two, target_two)
@@ -324,7 +326,7 @@ def test_one_two_dim_input_kraskov():
     _compare_result(mi_cor_one, mi_cor_two,
                     'JidtKraskovMI one dim', 'JidtKraskovMI two dim', 'MI')
     # CMI
-    cmi_estimator = JidtKraskovCMI(settings={})
+    cmi_estimator = JidtKraskovCMI(settings={"noise_level": 0})
     mi_cor_one = cmi_estimator.estimate(src_one, target_one)
     _assert_result(mi_cor_one, expected_mi, 'JidtKraskovCMI', 'CMI')
     mi_cor_two = cmi_estimator.estimate(src_two, target_two)
@@ -332,7 +334,7 @@ def test_one_two_dim_input_kraskov():
     _compare_result(mi_cor_one, mi_cor_two,
                     'JidtKraskovMI one dim', 'JidtKraskovMI two dim', 'CMI')
     # TE
-    te_estimator = JidtKraskovTE(settings={'history_target': 1})
+    te_estimator = JidtKraskovTE(settings={'history_target': 1, "noise_level": 0})
     mi_cor_one = te_estimator.estimate(src_one[1:], target_one[:-1])
     _assert_result(mi_cor_one, expected_mi, 'JidtKraskovTE', 'TE')
     mi_cor_two = te_estimator.estimate(src_one[1:], target_one[:-1])
@@ -340,7 +342,7 @@ def test_one_two_dim_input_kraskov():
     _compare_result(mi_cor_one, mi_cor_two,
                     'JidtKraskovMI one dim', 'JidtKraskovMI two dim', 'TE')
     # AIS
-    ais_estimator = JidtKraskovAIS(settings={'history': 2})
+    ais_estimator = JidtKraskovAIS(settings={'history': 2, "noise_level": 0})
     mi_cor_one = ais_estimator.estimate(ar_src_one)
     mi_cor_two = ais_estimator.estimate(ar_src_two)
     _compare_result(mi_cor_one, mi_cor_two,
@@ -448,6 +450,7 @@ def test_local_values():
                 'n_discrete_bins': 4,
                 'history_target': 1,
                 'history': 2,
+                'noise_level': 0,
                 'local_values': True}
 
     # MI - Discrete
@@ -668,7 +671,8 @@ def test_lagged_mi():
         'history': 1,
         'history_target': 1,
         'lag_mi': 1,
-        'source_target_delay': 1}
+        'source_target_delay': 1,
+        'noise_level': 0}
 
     est_te_k = JidtKraskovTE(settings)
     te_k = est_te_k.estimate(source, target)
@@ -698,7 +702,8 @@ def test_insufficient_no_points():
         'history': 1,
         'history_target': 1,
         'lag_mi': 1,
-        'source_target_delay': 1}
+        'source_target_delay': 1,
+        'noise_level': 0}
 
     # Test first settings combination with k==N
     est = JidtKraskovTE(settings)

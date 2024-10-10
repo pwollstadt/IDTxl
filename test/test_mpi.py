@@ -37,6 +37,7 @@ def test_mpi_estimator_creation():
         "min_lag_sources": 1,
         "MPI": True,
         "max_workers": MAX_WORKERS,
+        "noise_level":0
     }
 
     estimator = get_estimator(settings["cmi_estimator"], settings)
@@ -70,8 +71,8 @@ def test_mpi_estimation():
     data = Data(data_array, dim_order="ps")
 
     # Create estimator
-    jidtEstimator = JidtKraskovCMI()
-    mpiEstimator = MPIEstimator("JidtKraskovCMI", dict(max_workers=MAX_WORKERS))
+    jidtEstimator = JidtKraskovCMI(settings={"noise_level": 0})
+    mpiEstimator = MPIEstimator("JidtKraskovCMI", dict(max_workers=MAX_WORKERS, noise_level=0))
 
     # Estimate TE on main rank
     jidt_te = jidtEstimator.estimate(var1=data_array[0], var2=data_array[1])
@@ -99,8 +100,8 @@ def test_lazy_array_estimation():
     var2 = data.get_realisations((0, 1), [(1, 1)])
 
     # Create estimator
-    jidtEstimator = JidtKraskovCMI()
-    mpiEstimator = MPIEstimator("JidtKraskovCMI", dict(max_workers=MAX_WORKERS))
+    jidtEstimator = JidtKraskovCMI(settings={"noise_level": 0})
+    mpiEstimator = MPIEstimator("JidtKraskovCMI", dict(max_workers=MAX_WORKERS, noise_level=0))
 
     # Estimate TE on main rank
     jidt_te = jidtEstimator.estimate(var1=var1, var2=var2)
@@ -126,7 +127,7 @@ def test_lazy_array_base_array_error():
     var2 = data.get_realisations((0, 1), [(1, 1)])
 
     # Create estimator
-    mpiEstimator = MPIEstimator("JidtKraskovCMI", dict(max_workers=MAX_WORKERS))
+    mpiEstimator = MPIEstimator("JidtKraskovCMI", dict(max_workers=MAX_WORKERS, noise_level=0))
 
     # Create second Data object with different base array
     data = Data(np.array(data_array), dim_order="ps")
@@ -152,7 +153,7 @@ def test_error_unequal_number_of_chunks():
     var2 = data.get_realisations((0, 1), [(1, 1)])
 
     # Create estimator
-    mpiEstimator = MPIEstimator("JidtKraskovCMI", dict(max_workers=MAX_WORKERS))
+    mpiEstimator = MPIEstimator("JidtKraskovCMI", dict(max_workers=MAX_WORKERS, noise_level=0))
 
     # Estimate TE on worker ranks with different base array for var1 and var2
     with pytest.raises(ValueError, match="All variables must have the same number of chunks"):

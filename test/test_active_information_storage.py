@@ -26,6 +26,7 @@ def test_return_local_values():
         "n_perm_mi": 21,
         "max_lag": max_lag,
         "tau": 1,
+        "noise_level": 0,
     }
     data = Data(seed=SEED)
     data.generate_mute_data(100, 3)
@@ -189,6 +190,7 @@ def test_compare_jidt_open_cl_estimator():
         "n_perm_mi": 21,
         "max_lag": 5,
         "tau": 1,
+        "noise_level": 0,
     }
     processes = [2, 3]
     network_analysis = ActiveInformationStorage()
@@ -242,7 +244,7 @@ def test_discrete_input():
         process[n] = self_coupling * process[n - 1] + np.random.normal()
 
     # Discretise data
-    settings = {"discretise_method": "equal", "n_discrete_bins": 5}
+    settings = {"discretise_method": "equal", "n_discrete_bins": 5, "noise_level": 0}
     est = JidtDiscreteCMI(settings)
     process_dis, temp = est._discretise_vars(var1=process, var2=process)
     data = Data(process_dis, dim_order="s", normalise=False)
@@ -254,6 +256,7 @@ def test_discrete_input():
         "n_perm_min_stat": 21,
         "n_perm_mi": 21,
         "max_lag": 2,
+        "noise_level": 0,
     }
     nw = ActiveInformationStorage()
     nw.analyse_single_process(settings=settings, data=data, process=0)
