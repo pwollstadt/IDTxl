@@ -318,7 +318,6 @@ def test_faes_method():
 
 
 @jpype_missing
-@pytest.xfail
 def test_add_conditional_manually():
     """Enforce the conditioning on additional variables."""
     settings = {
