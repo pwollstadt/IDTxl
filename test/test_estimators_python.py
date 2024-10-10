@@ -114,11 +114,6 @@ def test_cmi_gaussian(Sigma):
     print(f'Python CMI (numba_brute): {cmi_python} (took {itoc - itic} seconds)')
     assert np.isclose(cmi_jidt, cmi_python, rtol=1e-4)
 
-_Sigmas_2var = np.array([
-    # Test one: No corr. between S and T
-    [[1, 0],
-     [0, 1]],
-
 _Sigmas_2var = np.array(
     [
         # Test one: No corr. between S and T
