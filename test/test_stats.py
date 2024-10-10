@@ -147,7 +147,7 @@ def test_max_statistic_sequential_bivariate():
         "n_perm_max_stat": 21,
         "n_perm_min_stat": 21,
         "n_perm_omnibus": 21,
-        "n_perm_max_seq": 21,
+        "n_perm_max_seq": 100,
         "max_lag_sources": 5,
         "min_lag_sources": 1,
         "max_lag_target": 5,
@@ -170,7 +170,7 @@ def test_max_statistic_sequential_bivariate():
     # Bivariate sequential max stats collects source variable realizations from
     # data object for running the test.
     data_permuted = cp.deepcopy(data)
-    #data_permuted._data[1, :, :] = np.random.randn(1, 1000, 1)
+    data_permuted._data[1, :, :] = np.random.randn(1, 1000, 1)
 
     for d, expected in zip(
         [data, data_permuted], [[True, True, True], [True, True, False]]
@@ -247,7 +247,7 @@ def test_max_statistic_sequential_bivariate_mi():
         "n_perm_max_stat": 21,
         "n_perm_min_stat": 21,
         "n_perm_omnibus": 21,
-        "n_perm_max_seq": 21,
+        "n_perm_max_seq": 100,
         "max_lag_sources": 5,
         "min_lag_sources": 1,
         "max_lag_target": 5,
@@ -261,10 +261,10 @@ def test_max_statistic_sequential_bivariate_mi():
     setup.selected_vars_full = setup.selected_vars_target + setup.selected_vars_sources
     setup._current_value_realisations = data.get_realisations(
         setup.current_value, [setup.current_value]
-    )[0]
+    )
     setup._selected_vars_realisations = data.get_realisations(
         setup.current_value, setup.selected_vars_full
-    )[0]
+    )
 
     # Bivariate sequential max stats collects source variable realizations from
     # data object for running the test.
@@ -611,7 +611,7 @@ def test_data_type():
         data=data, scale=1, n_perm=20, perm_settings=settings
     )
     assert issubclass(
-        type(surr[0][0, 0, 0]), np.integer
+        type(surr[0, 0, 0]), np.integer
     ), "Realisations type is not an int."
 
     d_float = np.random.randn(3, 50)
@@ -625,7 +625,7 @@ def test_data_type():
         n_perm=20,
         perm_settings=settings,
     )
-    assert issubclass(type(surr[0, 0]), float), "Realisations type is not a float."
+    assert issubclass(type(surr[0][0, 0]), float), "Realisations type is not a float."
     surr = stats._generate_spectral_surrogates(
         data=data, scale=1, n_perm=20, perm_settings=settings
     )

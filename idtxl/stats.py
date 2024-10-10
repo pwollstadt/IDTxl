@@ -1514,11 +1514,11 @@ def _generate_spectral_surrogates(data, scale, n_perm, perm_settings):
     # replications needs to be sufficient); else permute samples over time.
     if permute_in_time:
         for perm in range(n_perm):
-            surrogates[:, :, perm] = data.slice_permute_samples(scale, perm_settings)[0]
+            surrogates[:, :, perm] = data.permute_samples((scale, 0), [(scale, 0)], perm_settings)[:]
     else:
         assert _sufficient_replications(data, n_perm)
         for perm in range(n_perm):
-            surrogates[:, :, perm] = data.slice_permute_replications(scale)[0]
+            surrogates[:, :, perm] = data.permute_replications((scale, 0), [(scale,0)])[:]
     return surrogates
 
 
