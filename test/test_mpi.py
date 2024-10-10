@@ -18,13 +18,7 @@ import idtxl.estimators_mpi as estimators_mpi
 from idtxl.multivariate_te import MultivariateTE
 from idtxl.data import Data
 
-# Skip test module if opencl is missing
-pytest.importorskip("mpi4py")
-
-from mpi4py import (  # pylint: disable=import-error,wrong-import-position,wrong-import-order
-    MPI,
-)
-
+from testutils import mpi_missing
 
 N_PERM = (
     21  # this no. permutations is usually sufficient to find links in the MUTE data
@@ -33,12 +27,7 @@ N_SAMPLES = 1000
 SEED = 0
 MAX_WORKERS = 2
 
-# Decorator to skip tests if MPI is not available
-def skip_if_not_mpi(func):
-    if MPI.COMM_WORLD.Get_size() < 2:
-        return pytest.mark.skip(reason="MPI not available")(func)
-    return func
-
+@mpi_missing
 def test_mpi_estimator_creation():
     """Check whether a JIDT Kraskov estimator with MPI is correctly initialized"""
 
@@ -57,8 +46,10 @@ def test_mpi_estimator_creation():
         estimators_mpi._worker_estimator, JidtKraskovCMI
     ), "MPIEstimator wraps the wrong estimator!"
 
-@skip_if_not_mpi
+@mpi_missing
 def test_mpi_installation():
+    from mpi4py import MPI
+
     comm = MPI.COMM_WORLD
     size = comm.Get_size()
     rank = comm.Get_rank()
@@ -68,7 +59,7 @@ def test_mpi_installation():
         size >= MAX_WORKERS + 1
     ), f"Insufficient MPI workers for testing. Please have at least {MAX_WORKERS + 1} threads available."
 
-@skip_if_not_mpi
+@mpi_missing
 def test_mpi_estimation():
     """Test whether the MPI parallelization works correctly"""
 
@@ -95,7 +86,7 @@ def test_mpi_estimation():
     assert np.array_equal(jidt_te, mpi_te_workers[0]), "MPI parallelization does not work correctly!"
     assert all(np.array_equal(mpi_te, mpi_te_) for mpi_te_ in mpi_te_workers), "MPI parallelization does not work correctly!"
 
-@skip_if_not_mpi
+@mpi_missing
 def test_lazy_array_estimation():
     """Test whether the MPI parallelization works correctly with lazy arrays"""
 
@@ -123,7 +114,7 @@ def test_lazy_array_estimation():
     assert np.array_equal(jidt_te, mpi_te_workers[0]), "MPI parallelization does not work correctly!"
     assert all(np.array_equal(mpi_te, mpi_te_) for mpi_te_ in mpi_te_workers), "MPI parallelization does not work correctly!"
 
-@skip_if_not_mpi
+@mpi_missing
 def test_lazy_array_base_array_error():
 
     # Create random data
@@ -149,7 +140,7 @@ def test_lazy_array_base_array_error():
     with pytest.raises(ValueError, match="LazyArrays must have the same base array"):
         _ = mpiEstimator.estimate_parallel(var1=[var1, var1_other_base_array], var2=[var2, var2])
 
-@skip_if_not_mpi
+@mpi_missing
 def test_error_unequal_number_of_chunks():
 
     # Create random data
@@ -167,7 +158,7 @@ def test_error_unequal_number_of_chunks():
     with pytest.raises(ValueError, match="All variables must have the same number of chunks"):
         _ = mpiEstimator.estimate_parallel(var1=[var1] * 4, var2=[var2] * 5)
 
-@skip_if_not_mpi
+@mpi_missing
 def test_caching():
 
     # Create random data

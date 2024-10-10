@@ -11,12 +11,6 @@ from idtxl import idtxl_exceptions as ex
 try:
     from mpi4py import MPI
 except ImportError as err:
-    ex.package_missing(
-        err,
-        "MPI is not available on this system. Install it"
-        "from https://pypi.org/project/mpi4py/ to use"
-        "MPI parallelization.",
-    )
     MPI = None
 
 class tags:
@@ -48,7 +42,12 @@ class MPIEstimator():
     def __init__(self, est, settings=None):
 
         if MPI is None:
-            raise ImportError('mpi4py is not installed')
+            ex.package_missing(
+                err,
+                "MPI is not available on this system. Install it"
+                "from https://pypi.org/project/mpi4py/ to use"
+                "MPI parallelization.",
+            )
         
         # Check that at least two ranks are available
         if _size_world < 2:
