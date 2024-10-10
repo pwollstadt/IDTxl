@@ -76,9 +76,9 @@ class MPIEstimator():
         lazyArrays = [var for vars in data.values() for var in vars if isinstance(var, LazyArray)]
 
         if lazyArrays:
-            base_array_id = lazyArrays[0]._base_array_id
+            base_array_id = lazyArrays[0]._original_base_array_id
 
-            if not all(var._base_array_id == base_array_id for var in lazyArrays):
+            if not all(var._original_base_array_id == base_array_id for var in lazyArrays):
                 raise ValueError('LazyArrays must have the same base array')
 
         # Broadcast shared data to all workers if necessary
@@ -322,7 +322,7 @@ def _worker_estimate():
                 if isinstance(var, LazyArray):
                     if _worker_data is None:
                         raise ValueError('_worker_data must not be None')
-                    if var._base_array_id != _worker_data_id:
+                    if var._original_base_array_id != _worker_data_id:
                         raise ValueError(f'LazyArray base array for vareiable {varname} must be shared with worker')
                     var.set_base_array(_worker_data)
 

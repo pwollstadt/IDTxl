@@ -13,7 +13,7 @@ def test_lazy_array_init():
     lazy_array = LazyArray(base_array)
 
     assert lazy_array._base_array is base_array, "LazyArray has wrong base array!"
-    assert lazy_array._base_array_id == id(base_array), "LazyArray has wrong base array id!"
+    assert lazy_array._original_base_array_id == id(base_array), "LazyArray has wrong base array id!"
     assert lazy_array._op_queue == [], "LazyArray has wrong operation queue!"
     assert lazy_array._op_args_queue == [], "LazyArray has wrong operation arguments queue!"
     assert lazy_array._op_kwargs_queue == [], "LazyArray has wrong operation keyword arguments queue!"
@@ -35,7 +35,7 @@ def test_lazy_array_set_base_array():
     compare_array = new_base_array[0:2].T
 
     assert lazy_array._base_array is new_base_array, "LazyArray has wrong base array!"
-    assert lazy_array._base_array_id == id(new_base_array), "LazyArray has wrong base array id!"
+    assert lazy_array._original_base_array_id == id(base_array), "LazyArray should retain its old base_id!"
     assert lazy_array._op_queue == ["sliced", "transpose"], "LazyArray has wrong operation queue!"
     assert lazy_array._op_args_queue == [(0, 2), ()], "LazyArray has wrong operation arguments queue!"
     assert lazy_array._op_kwargs_queue == [{}, {}], "LazyArray has wrong operation keyword arguments queue!"
@@ -58,7 +58,7 @@ def test_lazy_array_copy():
     assert lazy_array._op_queue == lazy_array_copy._op_queue, "LazyArray copy has wrong operation queue!"
     assert lazy_array._op_args_queue == lazy_array_copy._op_args_queue, "LazyArray copy has wrong operation arguments queue!"
     assert lazy_array._op_kwargs_queue == lazy_array_copy._op_kwargs_queue, "LazyArray copy has wrong operation keyword arguments queue!"
-    assert lazy_array._base_array_id == lazy_array_copy._base_array_id, "LazyArray copy has wrong base array id!"
+    assert lazy_array._original_base_array_id == lazy_array_copy._original_base_array_id, "LazyArray copy has wrong base array id!"
 
     # Test copying of LazyArray with operations
     rng = np.random.default_rng(42)
@@ -70,7 +70,7 @@ def test_lazy_array_copy():
 
     lazy_array_copy = copy.copy(lazy_array)
 
-    assert lazy_array._base_array_id == lazy_array_copy._base_array_id, "LazyArray copy has wrong base array id!"
+    assert lazy_array._original_base_array_id == lazy_array_copy._original_base_array_id, "LazyArray copy has wrong base array id!"
     assert lazy_array._base_array is lazy_array_copy._base_array, "LazyArray copy has wrong base array!"
     assert lazy_array._array is None and lazy_array_copy._array is None, "LazyArray copy must not have evaluated array!"
 
@@ -145,7 +145,7 @@ def test_lazy_array_pickling():
     unpickled_lazy_array = pickle.loads(pickled_lazy_array)
 
     assert unpickled_lazy_array._base_array is None, "Unpickled LazyArray has wrong base array!"
-    assert unpickled_lazy_array._base_array_id == id(base_array), "Unpickled LazyArray has wrong base array id!"
+    assert unpickled_lazy_array._original_base_array_id == id(base_array), "Unpickled LazyArray has wrong base array id!"
     assert unpickled_lazy_array._array is None, "Unpickled LazyArray should not have evaluated array!"
     assert unpickled_lazy_array._op_idx == 0, "Unpickled LazyArray has wrong operation index!"
 

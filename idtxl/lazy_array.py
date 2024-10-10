@@ -47,8 +47,8 @@ class LazyArray():
     """
     
     def __init__(self, base_array=None):
+        self._original_base_array_id = None
         self.set_base_array(base_array)
-        self._base_array_id = id(base_array) if base_array is not None else None
         self._op_queue = []
         self._op_args_queue = []
         self._op_kwargs_queue = []
@@ -57,6 +57,9 @@ class LazyArray():
         self._base_array = base_array
         self._array = None
         self._op_idx = 0
+
+        if self._original_base_array_id is None and base_array is not None:
+            self._original_base_array_id = id(base_array)
 
     def __getattr__(self, name):
 
@@ -132,10 +135,10 @@ class LazyArray():
         self._op_idx = len(self._op_queue)
 
     def __getstate__(self):
-        return self._op_queue, self._op_args_queue, self._op_kwargs_queue, self._base_array_id
+        return self._op_queue, self._op_args_queue, self._op_kwargs_queue, self._original_base_array_id
     
     def __setstate__(self, state):
-        self._op_queue, self._op_args_queue, self._op_kwargs_queue, self._base_array_id = state
+        self._op_queue, self._op_args_queue, self._op_kwargs_queue, self._original_base_array_id = state
         self._base_array = None
         self._array = None
         self._op_idx = 0
