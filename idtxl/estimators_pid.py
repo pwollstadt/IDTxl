@@ -9,6 +9,7 @@ Unique Information. Entropy, 16(4), 2161–2183. http://doi.org/10.3390/e1604216
 import numpy as np
 from . import synergy_tartu
 from .estimator import Estimator
+from .lazy_array import LazyArray
 
 # TODO add support for multivariate estimation for Tartu and Sydney estimator
 
@@ -576,9 +577,12 @@ def _get_pdf_dict(s1, s2, t):
 
 def _check_input(s1, s2, t, settings):
     """Check input to PID estimators."""
-    # Check if inputs are numpy arrays.
-    if type(s1) != np.ndarray or type(s2) != np.ndarray or type(t) != np.ndarray:
-        raise TypeError("All inputs, s1, s2, t, must be numpy arrays.")
+    # Check if inputs are numpy arrays or idtxl LazyArrays 
+    if not isinstance(s1, (np.ndarray, LazyArray)) or \
+       not isinstance(s2, (np.ndarray, LazyArray)) or \
+       not isinstance(t, (np.ndarray, LazyArray)):
+        raise TypeError("All inputs, s1, s2, t, must be numpy arrays or LazyArrays.")
+        
 
     # In general, IDTxl expects 2D inputs because JIDT/JPYPE only accepts those
     # and we have a multivariate approach, i.e., a vector is a special case of
