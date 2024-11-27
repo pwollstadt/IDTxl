@@ -42,6 +42,7 @@ def test_max_statistic_sequential():
         "max_lag_sources": 5,
         "min_lag_sources": 1,
         "max_lag_target": 5,
+        "noise_level": 0
     }
     setup = MultivariateTE()
     setup._initialise(settings, data, sources=[0, 1], target=3)
@@ -52,48 +53,48 @@ def test_max_statistic_sequential():
 
     setup._current_value_realisations = data.get_realisations(
         setup.current_value, [setup.current_value]
-    )[0]
+    )[:]
 
     setup._selected_vars_realisations = data.get_realisations(  # use actual realisation for target var and first source var
         setup.current_value,
         [setup.selected_vars_target[0]] + setup.selected_vars_sources,
-    )[
-        0
-    ]
+    )[:]
+
     setup_permuted = cp.deepcopy(setup)
-    data_permuted = cp.deepcopy(data)
-    # data_permuted._data[1, :, :] = np.random.rand(1, 1000, 1)
-    # data_permuted._data[1, :, :] = np.ones((1, 1000, 1))
-    setup_permuted._selected_vars_realisations = np.hstack(
-        (
-            data.get_realisations(  # use actual realisation for target var and first source var
-                setup.current_value,
-                [setup.selected_vars_target[0]] + list(setup.selected_vars_sources[:2]),
-            )[
-                0
-            ],
-            # data_permuted._data[
-            #     1, : data.n_realisations(setup.current_value), :
-            # ],  # use random data as realizations for second source var
-            # np.ones((data.n_realisations(setup.current_value), 1)),
-            np.random.rand(data.n_realisations(setup.current_value), 1),
-        )
-    )
-    for s, d, expected in zip(
-        [setup, setup_permuted],
-        [data, data_permuted],
-        [[True, True, True], [True, True, False]],
-    ):
-        [sign, p, te] = stats.max_statistic_sequential(analysis_setup=s, data=d)
-        print(te)
-        print(p)
-        print(sign)
-        assert len(p) == len(te)
-        assert len(p) == len(sign)
-        assert len(p) == len(setup.selected_vars_sources)
-        assert np.array_equal(
-            sign, expected
-        ), f"Incorrect sources inferred, expected: {expected}"
+
+    [sign, p, te] = stats.max_statistic_sequential(analysis_setup=setup, data=data)
+    print(te)
+    print(p)
+    print(sign)
+    assert len(p) == len(te)
+    assert len(p) == len(sign)
+    assert len(p) == len(setup.selected_vars_sources)
+    assert np.array_equal(
+        sign, [True, True, True]
+    ), f"Incorrect sources inferred, expected: [True, True, True]"
+
+
+    data._data[1, :, :] = np.random.rand(1, 1000, 1)
+
+    setup._selected_vars_realisations = data.get_realisations(  # use actual realisation for target var and first source var
+        setup.current_value,
+        [setup.selected_vars_target[0]] + setup.selected_vars_sources,
+    )[:]
+
+    [sign, p, te] = stats.max_statistic_sequential(analysis_setup=setup_permuted, data=data)
+    print(te)
+    print(p)
+    print(sign)
+    assert len(p) == len(te)
+    assert len(p) == len(sign)
+    assert len(p) == len(setup.selected_vars_sources)
+    assert np.array_equal(
+        sign, [True, True, False]
+    ), f"Incorrect sources inferred, expected: [True, True, False]"
+    
+    np.random.seed(SEED)
+    data = Data(seed=SEED)
+    data.generate_mute_data(1000, 1)
 
     setup = MultivariateTE()
     setup._initialise(settings, data, sources=[0, 1, 4], target=3)
@@ -103,10 +104,10 @@ def test_max_statistic_sequential():
     setup.selected_vars_full = setup.selected_vars_target + setup.selected_vars_sources
     setup._current_value_realisations = data.get_realisations(
         setup.current_value, [setup.current_value]
-    )[0]
+    )
     setup._selected_vars_realisations = data.get_realisations(
         setup.current_value, setup.selected_vars_full
-    )[0]
+    )
 
     [sign, p, te] = stats.max_statistic_sequential(analysis_setup=setup, data=data)
     assert len(p) == len(te)
@@ -123,10 +124,10 @@ def test_max_statistic_sequential():
         data._data[permuted_var, :, :] = np.ones((104, 10))
         setup._current_value_realisations = data.get_realisations(
             setup.current_value, [setup.current_value]
-        )[0]
+        )
         setup._selected_vars_realisations = data.get_realisations(
             setup.current_value, setup.selected_vars_full
-        )[0]
+        )
         [sign, p, te] = stats.max_statistic_sequential(analysis_setup=setup, data=data)
         for i, var in enumerate(setup.selected_vars_sources):
             if var[0] == permuted_var:
@@ -147,10 +148,11 @@ def test_max_statistic_sequential_bivariate():
         "n_perm_max_stat": 21,
         "n_perm_min_stat": 21,
         "n_perm_omnibus": 21,
-        "n_perm_max_seq": 21,
+        "n_perm_max_seq": 100,
         "max_lag_sources": 5,
         "min_lag_sources": 1,
         "max_lag_target": 5,
+        "noise_level": 0
     }
 
     # Test bivariate TE
@@ -162,10 +164,10 @@ def test_max_statistic_sequential_bivariate():
     setup.selected_vars_full = setup.selected_vars_target + setup.selected_vars_sources
     setup._current_value_realisations = data.get_realisations(
         setup.current_value, [setup.current_value]
-    )[0]
+    )
     setup._selected_vars_realisations = data.get_realisations(
         setup.current_value, setup.selected_vars_full
-    )[0]
+    )
 
     # Bivariate sequential max stats collects source variable realizations from
     # data object for running the test.
@@ -197,10 +199,10 @@ def test_max_statistic_sequential_bivariate():
     setup.selected_vars_full = setup.selected_vars_target + setup.selected_vars_sources
     setup._current_value_realisations = data.get_realisations(
         setup.current_value, [setup.current_value]
-    )[0]
+    )
     setup._selected_vars_realisations = data.get_realisations(
         setup.current_value, setup.selected_vars_full
-    )[0]
+    )
 
     [sign, p, te] = stats.max_statistic_sequential_bivariate(
         analysis_setup=setup, data=data
@@ -219,10 +221,10 @@ def test_max_statistic_sequential_bivariate():
         data._data[t, :, :] = np.random.rand(104, 10)
         setup._current_value_realisations = data.get_realisations(
             setup.current_value, [setup.current_value]
-        )[0]
+        )
         setup._selected_vars_realisations = data.get_realisations(
             setup.current_value, setup.selected_vars_full
-        )[0]
+        )
         [sign, p, te] = stats.max_statistic_sequential_bivariate(
             analysis_setup=setup, data=data
         )
@@ -247,10 +249,11 @@ def test_max_statistic_sequential_bivariate_mi():
         "n_perm_max_stat": 21,
         "n_perm_min_stat": 21,
         "n_perm_omnibus": 21,
-        "n_perm_max_seq": 21,
+        "n_perm_max_seq": 100,
         "max_lag_sources": 5,
         "min_lag_sources": 1,
         "max_lag_target": 5,
+        "noise_level": 0
     }
     # Test bivariate MI
     setup = MultivariateTE()
@@ -261,10 +264,10 @@ def test_max_statistic_sequential_bivariate_mi():
     setup.selected_vars_full = setup.selected_vars_target + setup.selected_vars_sources
     setup._current_value_realisations = data.get_realisations(
         setup.current_value, [setup.current_value]
-    )[0]
+    )
     setup._selected_vars_realisations = data.get_realisations(
         setup.current_value, setup.selected_vars_full
-    )[0]
+    )
 
     # Bivariate sequential max stats collects source variable realizations from
     # data object for running the test.
@@ -340,6 +343,7 @@ def test_network_fdr():
             "max_lag_sources": 3,
             "min_lag_sources": 1,
             "max_lag_target": 3,
+            "noise_level": 0,
             "correct_by_target": correct_by_target,
         }
         data = Data()
@@ -470,7 +474,7 @@ def test_ais_fdr():
     )
     res_2._add_single_result(process=2, settings=settings, results=process_2)
 
-    settings = {"cmi_estimator": "JidtKraskovCMI", "alpha_fdr": 0.05, "max_lag": 3}
+    settings = {"cmi_estimator": "JidtKraskovCMI", "alpha_fdr": 0.05, "max_lag": 3, "noise_level": 0}
     data = Data()
     data.generate_mute_data(n_samples=100, n_replications=3)
     analysis_setup = ActiveInformationStorage()
@@ -606,7 +610,7 @@ def test_data_type():
         n_perm=20,
         perm_settings=settings,
     )
-    assert issubclass(type(surr[0, 0]), np.integer), "Realisations type is not an int."
+    assert issubclass(type(surr[0][0,0]), np.integer), "Realisations type is not an int."
     surr = stats._generate_spectral_surrogates(
         data=data, scale=1, n_perm=20, perm_settings=settings
     )
@@ -625,7 +629,7 @@ def test_data_type():
         n_perm=20,
         perm_settings=settings,
     )
-    assert issubclass(type(surr[0, 0]), float), "Realisations type is not a float."
+    assert issubclass(type(surr[0][0, 0]), float), "Realisations type is not a float."
     surr = stats._generate_spectral_surrogates(
         data=data, scale=1, n_perm=20, perm_settings=settings
     )

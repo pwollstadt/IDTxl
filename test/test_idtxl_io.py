@@ -35,7 +35,8 @@ comp_settings = {
         'n_perm_comp': 50,
         'tail': 'two',
         'permute_in_time': True,
-        'perm_type': 'random'
+        'perm_type': 'random',
+        'noise_level':0
         }
 comp = NetworkComparison()
 res_within = comp.compare_within(
@@ -288,7 +289,9 @@ def test_save_json():
         'n_perm_max_seq': 21,
         'n_perm_omnibus': 21,
         'max_lag_sources': 2,
-        'min_lag_sources': 1}
+        'min_lag_sources': 1,
+        'noise_level':0
+        }
     target = 1
     sources = [0]
     nw = MultivariateTE()

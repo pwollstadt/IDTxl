@@ -27,3 +27,6 @@ computing engines for both GPU and CPU platforms. Written for Python3.4.3+.
 # from .multivariate_te import MultivariateTE
 
 # TODO add everything that should be callable by the user?
+
+# Import mpi to have correct access point for MPI workers
+import idtxl.estimators_mpi

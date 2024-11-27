@@ -38,6 +38,7 @@ def test_gauss_data():
         "n_perm_omnibus": 21,
         "max_lag_sources": 1,
         "min_lag_sources": 1,
+        "noise_level": 0
     }
     nw = BivariateMI()
     results = nw.analyse_single_target(settings, data, target=2, sources=[0, 1])
@@ -48,7 +49,7 @@ def test_gauss_data():
     assert len(sources) == 1, "Wrong no. inferred sources: {0}.".format(len(sources))
     assert sources[0] == 0, "Wrong inferred source: {0}.".format(sources[0])
     # Compare BivarateMI() estimate to JIDT estimate.
-    est = JidtKraskovMI({"lag_mi": 1, "normalise": False})
+    est = JidtKraskovMI({"lag_mi": 1, "normalise": False, "noise_level": 0})
     jidt_mi = est.estimate(var1=source, var2=target)
     print(
         "Estimated MI: {0:0.6f}, estimated MI using JIDT core estimator: "
@@ -81,6 +82,7 @@ def test_return_local_values():
         "max_lag_sources": max_lag,
         "min_lag_sources": max_lag,
         "max_lag_target": max_lag,
+        "noise_level": 0,
     }
     target = 1
     mi = BivariateMI()
@@ -161,10 +163,11 @@ def test_zero_lag():
         "tau_sources": 0,  # this is not required, but shouldn't throw an error if provided
         "max_lag_sources": 0,
         "min_lag_sources": 0,
+        "noise_level": 0,
     }
     nw = BivariateMI()
     results = nw.analyse_single_target(settings, data, target=1, sources="all")
-    mi_estimator = JidtKraskovMI(settings={"normalise": False})
+    mi_estimator = JidtKraskovMI(settings={"normalise": False, "noise_level": 0})
     jidt_mi = mi_estimator.estimate(source, target)
     omnibus_mi = results.get_single_target(1, fdr=False).omnibus_mi
     print(
@@ -194,6 +197,7 @@ def test_bivariate_mi_init():
         "n_perm_max_seq": 30,
         "max_lag_sources": 7,
         "min_lag_sources": 2,
+        "noise_level": 0,
     }
     nw = BivariateMI()
     with pytest.raises(AssertionError):
@@ -293,7 +297,6 @@ def test_bivariate_mi_one_realisation_per_replication():
     assert not nw.selected_vars_full
     assert not nw.selected_vars_sources
     assert not nw.selected_vars_target
-    assert (nw._replication_index == np.arange(n_repl)).all()
     assert nw._current_value == (target, settings["max_lag_sources"])
     assert (nw._current_value_realisations[:, 0] == data.data[target, -1, :]).all()
 
@@ -441,6 +444,7 @@ def test_analyse_network():
         "n_perm_omnibus": 30,
         "max_lag_sources": 5,
         "min_lag_sources": 4,
+        "noise_level": 0,
     }
     nw = BivariateMI()
 

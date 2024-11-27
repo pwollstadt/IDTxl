@@ -265,14 +265,14 @@ class BivariatePID(SingleProcessAnalysis):
         # p_val_1 = p_val_2 = p_val_shd = p_val_syn = 1.0
 
         target_realisations = data.get_realisations(
-            self.current_value, [self.current_value]
-        )[0]
+                                            self.current_value,
+                                            [self.current_value])
         source_1_realisations = data.get_realisations(
-            self.current_value, [self.sources[0]]
-        )[0]
+                                            self.current_value,
+                                            [self.sources[0]])
         source_2_realisations = data.get_realisations(
-            self.current_value, [self.sources[1]]
-        )[0]
+                                            self.current_value,
+                                             [self.sources[1]])
         orig_pid = self._pid_estimator.estimate(
             s1=source_1_realisations, s2=source_2_realisations, t=target_realisations
         )

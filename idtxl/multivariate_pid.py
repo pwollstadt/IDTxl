@@ -277,15 +277,14 @@ class MultivariatePID(SingleProcessAnalysis):
         # p_val_1 = p_val_2 = p_val_shd = p_val_syn = 1.0
 
         target_realisations = data.get_realisations(
-            self.current_value, [self.current_value]
-        )[0]
+                                            self.current_value,
+                                            [self.current_value])
 
         # CHECK! make sure self.source has the same idx as sources
-        data.get_realisations(self.current_value, [self.sources[0]])[0]
-        list_sources_var_realisations = [
-            data.get_realisations(self.current_value, [self.sources[i]])[0]
-            for i in range(len(self.sources))
-        ]
+        list_sources_var_realisations = [data.get_realisations(
+                                                     self.current_value,
+                                                     [self.sources[i]])
+                                         for i in range(len(self.sources))]
 
         orig_pid = self._pid_estimator.estimate(
             s=list_sources_var_realisations, t=target_realisations

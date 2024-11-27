@@ -9,22 +9,11 @@ import numpy as np
 from idtxl.estimators_opencl import OpenCLKraskovMI, OpenCLKraskovCMI
 from idtxl.estimators_jidt import JidtKraskovMI, JidtKraskovCMI
 from test_estimators_jidt import _get_gauss_data
-
-# Skip test module if opencl is missing
-pytest.importorskip('pyopencl')
-
-package_missing = False
-try:
-    import jpype
-except ImportError as err:
-    package_missing = True
-jpype_missing = pytest.mark.skipif(
-    package_missing,
-    reason="Jpype is missing, JIDT estimators are not available")
+from testutils import opencl_missing, jpype_missing
 
 SEED = 0
 
-
+@opencl_missing
 def test_debug_setting():
     """Test setting of debugging options."""
     settings = {'debug': False, 'return_counts': True}
@@ -45,7 +34,7 @@ def test_debug_setting():
         'Requesting debugging output from CMI estimator did not return the '
         'correct no. values.')
 
-
+@opencl_missing
 def test_amd_data_padding():
     """Test padding necessary for AMD devices."""
     expected_mi, source, source_uncorr, target = _get_gauss_data(seed=SEED)
@@ -100,7 +89,7 @@ def test_amd_data_padding():
     mi = est_mi.estimate(source, target)
     cmi = est_cmi.estimate(source, target)
 
-
+@opencl_missing
 def test_user_input():
 
     est_mi = OpenCLKraskovMI()
@@ -131,7 +120,7 @@ def test_user_input():
                          conditional=np.random.randn(N, 1),
                          n_chunks=7)
 
-
+@opencl_missing
 @jpype_missing
 def test_mi_correlated_gaussians():
     """Test estimators on correlated Gaussian data."""
@@ -160,7 +149,7 @@ def test_mi_correlated_gaussians():
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.05).')
 
-
+@opencl_missing
 @jpype_missing
 def test_cmi_no_cond_correlated_gaussians():
     """Test estimators on correlated Gaussian data without conditional."""
@@ -173,7 +162,7 @@ def test_cmi_no_cond_correlated_gaussians():
 
     mi_ocl = mi_ocl[0]
     # Run JIDT estimator.
-    jidt_est = JidtKraskovCMI(settings={})
+    jidt_est = JidtKraskovCMI(settings={'noise_level':0})
     mi_jidt = jidt_est.estimate(source, target)
 
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
@@ -189,7 +178,7 @@ def test_cmi_no_cond_correlated_gaussians():
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.05).')
 
-
+@opencl_missing
 @jpype_missing
 def test_cmi_correlated_gaussians():
     """Test estimators on correlated Gaussian data with conditional."""
@@ -204,7 +193,7 @@ def test_cmi_correlated_gaussians():
 
     mi_ocl = mi_ocl[0]
     # Run JIDT estimator.
-    jidt_est = JidtKraskovCMI(settings={})
+    jidt_est = JidtKraskovCMI(settings={'noise_level':0})
     mi_jidt = jidt_est.estimate(source, target, source_uncorr)
 
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
@@ -220,7 +209,7 @@ def test_cmi_correlated_gaussians():
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.05).')
 
-
+@opencl_missing
 @jpype_missing
 def test_mi_correlated_gaussians_two_chunks():
     """Test estimators on two chunks of correlated Gaussian data."""
@@ -237,7 +226,7 @@ def test_mi_correlated_gaussians_two_chunks():
                                                             n_chunks=n_chunks)
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovMI(settings={})
+    jidt_est = JidtKraskovMI(settings={'noise_level':0})
     mi_jidt = jidt_est.estimate(source[0:int(n_points/2), :],
                                 target[0:int(n_points/2), :])
 
@@ -260,7 +249,7 @@ def test_mi_correlated_gaussians_two_chunks():
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.05).')
 
-
+@opencl_missing
 @jpype_missing
 def test_mi_uncorrelated_gaussians():
     """Test MI estimator on uncorrelated Gaussian data."""
@@ -276,7 +265,7 @@ def test_mi_uncorrelated_gaussians():
     mi_ocl = mi_ocl[0]
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovMI(settings={})
+    jidt_est = JidtKraskovMI(settings={'noise_level':0})
     mi_jidt = jidt_est.estimate(var1, var2)
 
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
@@ -292,7 +281,7 @@ def test_mi_uncorrelated_gaussians():
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.05).')
 
-
+@opencl_missing
 @jpype_missing
 def test_cmi_uncorrelated_gaussians():
     """Test CMI estimator on uncorrelated Gaussian data."""
@@ -310,7 +299,7 @@ def test_cmi_uncorrelated_gaussians():
     mi_ocl = mi_ocl[0]
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovCMI(settings={})
+    jidt_est = JidtKraskovCMI(settings={'noise_level':0})
     mi_jidt = jidt_est.estimate(var1, var2, var3)
 
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
@@ -326,7 +315,7 @@ def test_cmi_uncorrelated_gaussians():
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.05).')
 
-
+@opencl_missing
 @jpype_missing
 def test_mi_uncorrelated_gaussians_three_dims():
     """Test MI estimator on uncorrelated 3D Gaussian data."""
@@ -343,7 +332,7 @@ def test_mi_uncorrelated_gaussians_three_dims():
     mi_ocl = mi_ocl[0]
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovMI(settings={})
+    jidt_est = JidtKraskovMI(settings={'noise_level':0})
     mi_jidt = jidt_est.estimate(var1, var2)
 
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
@@ -359,7 +348,7 @@ def test_mi_uncorrelated_gaussians_three_dims():
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.05).')
 
-
+@opencl_missing
 @jpype_missing
 def test_cmi_uncorrelated_gaussians_three_dims():
     """Test CMI estimator on uncorrelated 3D Gaussian data."""
@@ -377,7 +366,7 @@ def test_cmi_uncorrelated_gaussians_three_dims():
     mi_ocl = mi_ocl[0]
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovCMI(settings={})
+    jidt_est = JidtKraskovCMI(settings={'noise_level':0})
     mi_jidt = jidt_est.estimate(var1, var2)
 
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
@@ -412,7 +401,7 @@ def test_cmi_uncorrelated_gaussians_three_dims():
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.05).')
 
-
+@opencl_missing
 @jpype_missing
 def test_cmi_uncorrelated_gaussians_unequal_dims():
     """Test CMI estimator on uncorrelated Gaussian data with unequal dims."""
@@ -429,7 +418,7 @@ def test_cmi_uncorrelated_gaussians_unequal_dims():
     mi_ocl = mi_ocl[0]
 
     # Run JIDT estimator.
-    jidt_est = JidtKraskovCMI(settings={})
+    jidt_est = JidtKraskovCMI(settings={'noise_level':0})
     mi_jidt = jidt_est.estimate(var1, var2)
 
     print('JIDT MI result: {0:.4f} nats; OpenCL MI result: {1:.4f} nats; '
@@ -464,7 +453,7 @@ def test_cmi_uncorrelated_gaussians_unequal_dims():
                         'MI estimation for uncorrelated Gaussians using the '
                         'OpenCL estimator failed (error larger 0.05).')
 
-
+@opencl_missing
 def test_local_values():
     """Test estimation of local MI and CMI using OpenCL estimators."""
     # Get data
@@ -513,7 +502,7 @@ def test_local_values():
     assert np.isclose(cmi_ch1, cmi[0], atol=0.05)
     assert np.isclose(cmi_ch2, cmi[1], atol=0.05)
 
-
+@opencl_missing
 def test_insufficient_no_points():
     """Test if estimation aborts for too few data points."""
     expected_mi, source1, source2, target = _get_gauss_data(n=4, seed=SEED)
@@ -540,7 +529,7 @@ def test_insufficient_no_points():
     est = OpenCLKraskovCMI(settings)
     with pytest.raises(RuntimeError): est.estimate(source1, target, target)
 
-
+@opencl_missing
 @jpype_missing
 def test_multi_gpu():
     """Test use of multiple GPUs."""

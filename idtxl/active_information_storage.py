@@ -294,19 +294,14 @@ class ActiveInformationStorage(SingleProcessAnalysis):
         self.process = process
 
         # Check provided search depths for source and target
-        assert data.n_samples >= self.settings["max_lag"] + 1, (
-            f"Not enough samples in data ({data.n_samples}) to allow for the chosen maximum lag "
-            f"({self.settings['max_lag']})"
-        )
-        self.current_value = (process, self.settings["max_lag"])
-        [cv_realisation, repl_idx] = data.get_realisations(
-            current_value=self.current_value, idx_list=[self.current_value]
-        )
+        assert(data.n_samples >= self.settings['max_lag'] + 1), (
+            'Not enough samples in data ({0}) to allow for the chosen maximum '
+            'lag ({1})'.format(data.n_samples, self.settings['max_lag']))
+        self.current_value = (process, self.settings['max_lag'])
+        cv_realisation  = data.get_realisations(
+                                             current_value=self.current_value,
+                                             idx_list=[self.current_value])
         self._current_value_realisations = cv_realisation
-
-        # Remember which realisations come from which replication. This may be
-        # needed for surrogate creation at a later point.
-        self._replication_index = repl_idx
 
         # Check the permutation type and no. permutations requested by the
         # user. This tests if there is sufficient data to do all tests.
@@ -372,18 +367,14 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             print(f"testing candidate set: {self._idx_to_lag(candidate_set)}")
         while candidate_set:
             # Get realisations for all candidates.
-            cand_real = data.get_realisations(self.current_value, candidate_set)[0]
-            cand_real = cand_real.T.reshape(cand_real.size, 1)
-
+            cand_real = [data.get_realisations(self.current_value, [candidate]) for candidate in candidate_set]
+            
             # Calculate the (C)MI for each candidate and the target.
             try:
                 temp_te = self._cmi_estimator.estimate_parallel(
-                    n_chunks=len(candidate_set),
-                    re_use=["var2", "conditional"],
-                    var1=cand_real,
-                    var2=self._current_value_realisations,
-                    conditional=self._selected_vars_realisations,
-                )
+                                var1=cand_real,
+                                var2=[self._current_value_realisations] * len(candidate_set),
+                                conditional=[self._selected_vars_realisations] * len(candidate_set))
             except ex.AlgorithmExhaustedError as aee:
                 # The algorithm cannot continue here, so
                 #  we'll terminate the search for more candidates,
@@ -439,11 +430,8 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 # Remove candidate from candidate set and add it to the
                 # selected variables (used as the conditioning set).
                 candidate_set.pop(np.argmax(temp_te))
-                self._append_selected_vars(
-                    [max_candidate],
-                    data.get_realisations(self.current_value, [max_candidate])[0],
-                )
-                if self.settings["write_ckp"]:
+                self._append_selected_vars(data, [max_candidate])
+                if self.settings['write_ckp']:
                     self._write_checkpoint()
             else:
                 if self.settings["verbose"]:
@@ -476,47 +464,18 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 print("no sources selected, nothing to prune ...")
         while self.selected_vars_sources:
             # Find the candidate with the minimum TE into the target.
-            cond_dim = len(self.selected_vars_sources) - 1
-            candidate_realisations = np.empty(
-                (
-                    data.n_realisations(self.current_value)
-                    * len(self.selected_vars_sources),
-                    1,
-                )
-            ).astype(data.data_type)
-            conditional_realisations = np.empty(
-                (
-                    data.n_realisations(self.current_value)
-                    * len(self.selected_vars_sources),
-                    cond_dim,
-                )
-            ).astype(data.data_type)
-            i_1 = 0
-            i_2 = data.n_realisations(self.current_value)
-            for candidate in self.selected_vars_sources:
-                # Separate the candidate realisations and all other
-                # realisations to test the candidate's individual contribution.
-                [temp_cond, temp_cand] = self._separate_realisations(
-                    self.selected_vars_sources, candidate
-                )
-                if temp_cond is None:
-                    conditional_realisations = None
-                    re_use = ["var2", "conditional"]
-                else:
-                    conditional_realisations[i_1:i_2,] = temp_cond
-                    re_use = ["var2"]
-                candidate_realisations[i_1:i_2,] = temp_cand
-                i_1 = i_2
-                i_2 += data.n_realisations(self.current_value)
+            
+            # Separate the candidate realisations and all other
+            # realisations to test the candidate's individual contribution.
+            candidate_realisations = [data.get_realisations(self.current_value, [candidate]) for candidate in self.selected_vars_sources]
+            conditional_realisations = [data.get_realisations(self.current_value, [other for other in self.selected_vars_sources if other != candidate])
+                                        for candidate in self.selected_vars_sources]
 
             try:
                 temp_te = self._cmi_estimator.estimate_parallel(
-                    n_chunks=len(self.selected_vars_sources),
-                    re_use=re_use,
-                    var1=candidate_realisations,
-                    var2=self._current_value_realisations,
-                    conditional=conditional_realisations,
-                )
+                                    var1=candidate_realisations,
+                                    var2=[self._current_value_realisations] * len(self.selected_vars_sources),
+                                    conditional=conditional_realisations)
             except ex.AlgorithmExhaustedError as aee:
                 # The algorithm cannot continue here, so we'll terminate the
                 # pruning check, assuming that we need not prune any more
@@ -537,8 +496,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 set([min_candidate])
             )
             conditional_realisations = data.get_realisations(
-                self.current_value, remaining_candidates
-            )[0]
+                self.current_value, remaining_candidates)
             try:
                 [significant, p, surr_table] = stats.min_statistic(
                     analysis_setup=self,
@@ -565,8 +523,8 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             if not significant:
                 # if self.settings['verbose']:
                 #     print(' -- not significant')
-                self._remove_selected_var(min_candidate)
-                if self.settings["write_ckp"]:
+                self._remove_selected_var(data, min_candidate)
+                if self.settings['write_ckp']:
                     self._write_checkpoint()
             else:
                 if self.settings["verbose"]:
@@ -605,9 +563,6 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                 ais = ais[0]
 
             if self.settings["local_values"]:
-                replication_ind = data.get_realisations(
-                    self.current_value, self._selected_vars_sources
-                )[1]
                 try:
                     local_ais = self._cmi_estimator_local.estimate(
                         var1=self._current_value_realisations,
@@ -629,12 +584,12 @@ class ActiveInformationStorage(SingleProcessAnalysis):
                     # Return local AIS values of all zeros:
                     #  (length gleaned from line below)
                     local_ais = np.zeros(
-                        (max(replication_ind) + 1) * sum(replication_ind == 0)
+                        data.n_realisations(self.current_value)
                     )
 
                 # Reshape local AIS to a [replications x samples] matrix.
                 self.ais = local_ais.reshape(
-                    max(replication_ind) + 1, sum(replication_ind == 0)
+                    data.n_realisations_repl(), data.n_realisations_samples(self.current_value)
                 )
             else:
                 self.ais = ais
@@ -653,9 +608,7 @@ class ActiveInformationStorage(SingleProcessAnalysis):
             cond = [cond]
         print("Adding the following variables to the conditioning set: {cond}.")
         cond_idx = self._lag_to_idx(cond)
-        self._append_selected_vars(
-            cond_idx, data.get_realisations(self.current_value, cond_idx)[0]
-        )
+        self._append_selected_vars(data, cond_idx)
 
     def _reset(self):
         """Reset instance after analysis."""
