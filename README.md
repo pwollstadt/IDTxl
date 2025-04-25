@@ -24,9 +24,6 @@ To **get started** have a look at the [wiki](https://github.com/pwollstadt/IDTxl
 ## How to cite
 P. Wollstadt, J. T. Lizier, R. Vicente, C. Finn, M. Martinez-Zarzuela, P. Mediano, L. Novelli, M. Wibral (2018). _IDTxl: The Information Dynamics Toolkit xl: a Python package for the efficient analysis of multivariate information dynamics in networks._ Journal of Open Source Software, 4(34), 1081. [https://doi.org/10.21105/joss.01081](https://doi.org/10.21105/joss.01081).
 
-## How to cite
-Wollstadt, Lizier, Vicente, Finn, Martinez Zarzeula, Lindner, Martinez Mediano, Novelli, Wibral, 2017. "IDTxl - The Information Dynamics Toolkit xl: a Python package for the efficient analysis of multivariate information dynamics in networks", GitHub Repository: https://github.com/pwollstadt/IDTxl.
-
 ## Contributors
 
 - [Patricia Wollstadt](http://patriciawollstadt.de/), Brain Imaging Center, MEG Unit, Goethe-University, Frankfurt, Germany; Honda Research Institute Europe GmbH, Offenbach am Main, Germany
@@ -52,6 +49,7 @@ This project has been supported by funding through:
 - Universities Australia - Deutscher Akademischer Austauschdienst (German Academic Exchange Service) UA-DAAD Australia-Germany Joint Research Co-operation grant "Measuring neural information synthesis and its impairment", Wibral, Lizier, Priesemann, Wollstadt, Finn, 2016-17
 - Australian Research Council Discovery Early Career Researcher Award (DECRA) "Relating function of complex networks to structure using information theory", Lizier, 2016-19
 - Deutsche Forschungsgemeinschaft (DFG) Grant CRC 1193 C04, Wibral
+- Funding from the Ministry for Science and Education of Lower Saxony and the Volkswagen Foundation through the "Niedersächsisches Vorab" under the program "Big Data in den Lebenswissenschaften"-project "Deep learning techniques for association studies of transcriptome and systems dynamics in tissue morphogenesis".
 
 ## Key References
 + Multivariate transfer entropy: Lizier & Rubinov, 2012, Preprint, Technical Report 25/2012,
