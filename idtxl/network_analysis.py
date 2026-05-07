@@ -198,6 +198,7 @@ class NetworkAnalysis:
         candidate_set = self._remove_forced_conditionals(candidate_set)
         return candidate_set
 
+
     def _build_variable_list(self, processes, samples):
         """Build a list of variable tuples with (process index, sample index).
 
@@ -210,6 +211,10 @@ class NetworkAnalysis:
         Returns:
             a list of variable tuples
         """
+        
+        if type(samples) is not list:
+            samples = samples.tolist()
+
         var_list = []
         for idx in it.product(processes, samples):
             var_list.append(idx)

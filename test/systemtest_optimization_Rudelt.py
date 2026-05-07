@@ -186,7 +186,7 @@ def test_optimization_Rudelt_bbc_multiple_processes():
         else:
             ran = np.random.rand(len(spiketimes)) * 1000
             new = spiketimes + ran
-            sampl = int(np.random.uniform(low=0.5 * len(spiketimes), high=0.9 * len(spiketimes), size=(1,)))
+            sampl = int(np.random.uniform(low=0.5 * len(spiketimes), high=0.9 * len(spiketimes), size=(1,))[0])
             nr_spikes[i] = sampl
             spiketimedata[i] = new[0:sampl]
 
@@ -239,7 +239,7 @@ def test_optimization_Rudelt_shuffling_multiple_processes():
         else:
             ran = np.random.rand(len(spiketimes)) * 1000
             new = spiketimes + ran
-            sampl = int(np.random.uniform(low=0.5 * len(spiketimes), high=0.9 * len(spiketimes), size=(1,)))
+            sampl = int(np.random.uniform(low=0.5 * len(spiketimes), high=0.9 * len(spiketimes), size=(1,))[0])
             nr_spikes[i] = sampl
             spiketimedata[i] = new[0:sampl]
 
