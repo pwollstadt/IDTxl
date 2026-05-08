@@ -621,6 +621,6 @@ class CudaKraskovCMI(CudaKraskov):
             n_chunks, var1.shape[0] // n_chunks, count_cond, count_var1cond, count_condvar2)
 
         if self.settings['debug']:
-            return cmi_array, distances, count_cond, count_var1cond, count_condvar2
+            return cmi_array, distances, count_var1cond, count_condvar2, count_cond
         else:
             return cmi_array
