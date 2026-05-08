@@ -3,6 +3,8 @@
 from idtxl.data_spiketime import Data_spiketime
 from idtxl.embedding_optimization_ais_Rudelt import OptimizationRudelt
 
+import os
+
 print("\nTest optimization_Rudelt using bbc estimator on Rudelt data")
 data = Data_spiketime()  # initialise empty data object
 data.load_Rudelt_data()  # load Rudelt spike time data
@@ -27,7 +29,7 @@ settings = {
     "estimation_method": "bbc",
     "debug": True,
     "visualization": True,
-    "output_path": "./test_vis",
+    "output_path": os.getcwd(),
     "output_prefix": "systemtest_optimizationRudelt_image1",
 }
 

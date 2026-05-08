@@ -172,7 +172,10 @@ def _ft_fsample_2_float(file_name, ft_struct_name):
     ft_file = h5py.File(file_name, mode="r+")
     ft_struct = ft_file[ft_struct_name]
     FTfsample = ft_struct["fsample"]
-    fsample = int(FTfsample[0])
+    print(FTfsample[0][0])
+    print(type(FTfsample[0]))
+    
+    fsample = int(FTfsample[0][0])
     if VERBOSE:
         print("Converting FT fsample array (1x1) to numpy array (1x1)")
     return fsample
