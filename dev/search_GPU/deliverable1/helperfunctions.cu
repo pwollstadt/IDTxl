@@ -33,6 +33,7 @@ int gpuDeviceInit(int devID)
 {
     int deviceCount;
     checkCudaErrors(cudaGetDeviceCount(&deviceCount));
+    int deviceOverlap;
 
     if (deviceCount == 0)
     {
@@ -56,8 +57,9 @@ int gpuDeviceInit(int devID)
 
     cudaDeviceProp deviceProp;
     checkCudaErrors(cudaGetDeviceProperties(&deviceProp, devID));
+    cudaDeviceGetAttribute(&deviceOverlap, cudaDevAttrGpuOverlap, devID);
 
-    if(!deviceProp.deviceOverlap){
+    if(!deviceOverlap){
     	printf("\n Device will not handle overlaps, so no speed up from streams \n");
     }
     if (deviceProp.major < 1)
@@ -125,6 +127,8 @@ int gpuGetMaxGflopsDeviceId()
     int device_count       = 0, best_SM_arch      = 0;
     cudaDeviceProp deviceProp;
     cudaGetDeviceCount(&device_count);
+    int clockRate;
+
 
     // Find the best major SM Architecture GPU device
     while (current_device < device_count)
@@ -145,6 +149,7 @@ int gpuGetMaxGflopsDeviceId()
     while (current_device < device_count)
     {
         cudaGetDeviceProperties(&deviceProp, current_device);
+        cudaDeviceGetAttribute(&clockRate, cudaDevAttrClockRate, current_device);
 
         if (deviceProp.major == 9999 && deviceProp.minor == 9999)
         {
@@ -155,8 +160,8 @@ int gpuGetMaxGflopsDeviceId()
             sm_per_multiproc = _ConvertSMVer2Cores(deviceProp.major, deviceProp.minor);
         }
 
-        int compute_perf  = deviceProp.multiProcessorCount * sm_per_multiproc * deviceProp.clockRate;
-
+        int compute_perf  = deviceProp.multiProcessorCount * sm_per_multiproc * clockRate;
+        
         if (compute_perf  > max_compute_perf)
         {
             // If we find GPU with SM major > 2, search only these

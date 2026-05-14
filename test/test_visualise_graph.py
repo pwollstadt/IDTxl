@@ -103,7 +103,7 @@ def test_plot_network_comparison():
         data_set_b=np.array(list(it.repeat(data_1, 10))))
 
     graph, fig = plot_network_comparison(res_between)
-    plt.close(fig)
+    #plt.close(fig)
     graph, fig = plot_network_comparison(res_within)
     plt.close(fig)
 

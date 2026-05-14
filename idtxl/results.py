@@ -1313,8 +1313,36 @@ class ResultsNetworkComparison(ResultsNetworkAnalysis):
             adjacency_matrix = AdjacencyMatrix(self.data_properties.n_nodes, int)
             for t in self.targets_analysed:
                 sources = self.get_target_sources(t)
+                print("######################################################### DEBUG")
+                print(type(sources))
+                #print(self.ab)
+                #print(type(self.ab))
+                #print(self.ab[t][0])
+                #print(type(self.ab[t][0]))
+                #print(self.ab[t][0].size)
+                #print(self.ab[t][0].shape)
+                #print(self.ab[t][0].astype('int'))
+                
+                #print(int(self.ab[t][0][0]))
+                
                 for i, s in enumerate(sources):
-                    adjacency_matrix.add_edge(s, t, int(self.ab[t][i]))
+                    #print(self.ab[t][i])
+                    #print(type(self.ab[t][i]))
+                    #print(self.ab[t][i].size)
+                    #print(self.ab[t][i].shape)
+                    try:
+                        # numpy 1.26
+                        #print(int(self.ab[t][i]))
+                        adjacency_matrix.add_edge(s, t, int(self.ab[t][i]))
+                    except:
+                        # numpy 2.4
+                        #print(self.ab[t][i][0].astype('int'))
+                        adjacency_matrix.add_edge(int(s), int(t), self.ab[t][i][0].astype('int'))
+                        # adjacency_matrix.add_edge(int(s), t, self.ab[t][i])
+                    
+                    
+                    #print(adjacency_matrix)
+
         elif weights == "union":
             adjacency_matrix = AdjacencyMatrix(self.data_properties.n_nodes, int)
             for t in self.targets_analysed:
