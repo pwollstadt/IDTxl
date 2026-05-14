@@ -69,11 +69,11 @@ window_higth = 800
 
 # define available estimators for each analysis type
 MI_estimators = ["JidtKraskovMI", "JidtDiscreteMI", "JidtGaussianMI", 
-    "OpenCLKraskovMI", "RudeltNSBEstimatorSymbolsMI",
+    "OpenCLKraskovMI", "CudaKraskovMI", "RudeltNSBEstimatorSymbolsMI",
     "RudeltPluginEstimatorSymbolsMI", "RudeltBBCEstimator"]
 TE_estimators = ["JidtKraskovTE", "JidtDiscreteTE", "JidtGaussianTE"]
 CMI_estimators = ["JidtKraskovCMI", "JidtDiscreteCMI", "JidtGaussianCMI", 
-    "OpenCLKraskovCMI", "PythonKraskovCMI"]
+    "OpenCLKraskovCMI", "CudaKraskovCMI", "PythonKraskovCMI"]
 AIS_estimators = ["ActiveInformationStorage", "JidtKraskovAIS", 
     "JidtDiscreteAIS", "JidtGaussianAIS", "OptimizationRudelt", 
     "RudeltShufflingEstimator"]
@@ -89,11 +89,11 @@ Estimator_dict = {
     "I_sx(multivariate)": "SxPID",
 }
 Multivariate_estimators = ["JidtKraskovCMI", "JidtDiscreteCMI", 
-    "JidtGaussianCMI", "OpenCLKraskovCMI", "PythonKraskovCMI"]
+    "JidtGaussianCMI", "OpenCLKraskovCMI", "CudaKraskovCMI", "PythonKraskovCMI"]
 Nonlinear_analysis = ["JidtGaussianCMI"]
 Nonlinear_BiMulti_type = ["MultivariateTE", "BivariateTE"]
 Network_analysis = ["JidtKraskovCMI", "JidtDiscreteCMI", "JidtGaussianCMI", 
-    "OpenCLKraskovCMI", "PythonKraskovCMI"]
+    "OpenCLKraskovCMI", "CudaKraskovCMI", "PythonKraskovCMI"]
 BiMulti_type = ["MultivariateMI", "MultivariateTE", 
     "BivariateMI", "BivariateTE"]
 MPI_estimators = ["JidtKraskovMI", "JidtDiscreteMI", "JidtGaussianMI",
@@ -112,6 +112,7 @@ estimator_source = {
     "JidtDiscreteMI": "estimators_jidt",
     "JidtGaussianMI": "estimators_jidt",
     "OpenCLKraskovMI": "estimators_opencl",
+    "CudaKraskovMI": "estimators_cuda",
     "JidtKraskovTE": "estimators_jidt", 
     "JidtDiscreteTE": "estimators_jidt",
     "JidtGaussianTE": "estimators_jidt",
@@ -119,6 +120,7 @@ estimator_source = {
     "JidtDiscreteCMI": "estimators_jidt",
     "JidtGaussianCMI": "estimators_jidt",
     "OpenCLKraskovCMI": "estimators_opencl",
+    "CudaKraskovCMI": "estimators_cuda",
     "PythonKraskovCMI": "estimators_python",
     "JidtKraskovAIS": "estimators_jidt",
     "JidtDiscreteAIS": "estimators_jidt",
@@ -148,6 +150,7 @@ estimator_tooltips = {
     "JidtDiscreteMI": "Estimate MI with JIDT's discrete-variable implementation.\n Calculate the MI between two variables.",
     "JidtGaussianMI": "Estimate MI with JIDT's Gaussian implementation.\n Calculate the MI between two variables.",
     "OpenCLKraskovMI": "Estimate MI with OpenCL Kraskov implementation.\n Calculate the MI between two variables using OpenCL GPU-code.",
+    "CudaKraskovMI": "Estimate MI with Cuda Kraskov implementation.\n Calculate the MI between two variables using NVidia CUDA GPU-code.",
     "JidtKraskovTE": "Estimate TE with JIDT's Kraskov implementation.\n Calculate TE between a source and a target variable. TE is defined as the conditional mutual information between the source's past state and the target's current value, conditional on the target's past.", 
     "JidtDiscreteTE": "Estimate TE with JIDT's discrete-variable implementation.\n Calculate TE between a source and a target variable. TE is defined as the conditional mutual information between the source's past state and the target's current value, conditional on the target's past.", 
     "JidtGaussianTE": "Estimate TE with JIDT's Gaussian implementation.\n Calculate TE between a source and a target variable. TE is defined as the conditional mutual information between the source's past state and the target's current value, conditional on the target's past.", 
@@ -155,6 +158,7 @@ estimator_tooltips = {
     "JidtDiscreteCMI": "Estimate CMI with JIDT's discrete-variable implementation.\n Calculate the CMI between two variables given the third.",
     "JidtGaussianCMI": "Calculate CMI with JIDT's Gaussian implementation.\n Computes the differential CMI of two multivariate sets of observations, conditioned on another, assuming that the probability distribution function for these observations is a multivariate Gaussian distribution.",
     "OpenCLKraskovCMI": "Estimate CMI with OpenCL Kraskov implementation.\n Calculate the CMI between two variables given the third.",
+    "CudaKraskovCMI": "Estimate CMI with Cuda Kraskov implementation.\n Calculate the CMI between two variables given the third.",
     "PythonKraskovCMI": "Estimate CMI with Kraskov (1) implementation.\n Calculate the CMI between two variables given the third.",
     "JidtKraskovAIS": "Estimate AIS with JIDT's Kraskov implementation.\n Calculate AIS for some process using JIDT's implementation of the Kraskov type 1 estimator. AIS is defined as the MI between the processes' past state and current value.",
     "JidtDiscreteAIS": "Estimate AIS with JIDT's discrete-variable implementation.\n Calculate the AIS for some processes using JIDT's implementation of the discrtete estimator. AIS is defined as the mutual information between the processes' past state and current value.",
@@ -355,6 +359,16 @@ parameters["OpenCLKraskovMI"] = {
     "debug": False,
     "n_chunks": 0,
 }
+parameters["CudaKraskovMI"] = {
+    "gpuid": 0,
+    "kraskov_k" : 4,
+    "theiler_t": 0,
+    "lag_mi" : 0,
+    "noise_level": 1e-8,
+    "normalise": False,
+    "return_counts": False,
+    "debug": False,
+}
 parameters["JidtKraskovCMI"] = {
     "kraskov_k" : 4,
     "theiler_t": 1,
@@ -391,6 +405,15 @@ parameters["OpenCLKraskovCMI"] = {
     "return_counts": False,
     "debug": False,
     "n_chunks": 0,
+}
+parameters["CudaKraskovCMI"] = {
+    "gpuid": 0,
+    "kraskov_k" : 4,
+    "theiler_t": 0,
+    "noise_level": 1e-8,
+    "normalise": False,
+    "return_counts": False,
+    "debug": False,
 }
 parameters["PythonKraskovCMI"] = {
     "kraskov_k" : 4,
