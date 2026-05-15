@@ -7,6 +7,7 @@ from abc import ABCMeta, abstractmethod
 from pprint import pprint
 
 import numpy as np
+import importlib.util
 
 MODULE_EXTENSIONS = ".py"  # ('.py', '.pyc', '.pyo')
 ESTIMATOR_PREFIX = "estimators_"
@@ -53,11 +54,21 @@ def _find_estimator(est):
     if inspect.isclass(est):
         # Test if provided class implements the Estimator class. This
         # constraint may be relaxed in the future.
-        if not np.issubclass_(est, Estimator):
-            raise RuntimeError(
-                "Provided class should implement abstract class Estimator."
-            )
-        return est
+        try:
+            # numpy 1.26
+            if not np.issubclass_(est, Estimator):
+                raise RuntimeError(
+                    "Provided class should implement abstract class Estimator."
+                )
+            return est
+        except:
+            # numpy 2.4
+            if not issubclass(est, Estimator):
+                raise RuntimeError(
+                    "Provided class should implement abstract class Estimator."
+                )
+            return est
+
     if isinstance(est, str):
         module_list = _package_contents()
         estimator = None
@@ -299,7 +310,13 @@ class Estimator(metaclass=ABCMeta):
         if self.is_parallel():
             n_chunks = len(data[list(data.keys())[0]])
             # Concatenate all chunks into a single array for each variable
-            data = {k: np.concatenate(v, axis=0) for k, v in data.items()}
+            dd={}
+            for k,v in data.items():
+                if len(np.asarray(v).shape) > 1:
+                    dd[k] = np.concatenate(v, axis=0)
+                else:
+                    dd[k] = None
+            data = dd
             return self.estimate(n_chunks=n_chunks, **data)
 
         # If estimator does not support parallel estimation, loop over chunks
