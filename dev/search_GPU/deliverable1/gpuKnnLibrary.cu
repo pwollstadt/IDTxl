@@ -8,11 +8,9 @@ int cudaFindKnn(int* h_bf_indexes, float* h_bf_distances, float* h_pointset, flo
 	int *d_bf_indexes;
 	float *d_bf_distances;
 
-	unsigned int meminputsignalquerypointset= pointdim * signallength * sizeof(float);
+	size_t meminputsignalquerypointset= pointdim * (size_t) signallength * sizeof(float);
 	unsigned int mem_bfcl_outputsignaldistances= kth * signallength * sizeof(float);
 	unsigned int mem_bfcl_outputsignalindexes = kth * signallength * sizeof(int);
-
-	//fprintf(stderr,"\nValues:%d %d %d %d %d", kth, thelier, nchunks, pointdim, signallength);
 
 	checkCudaErrors( cudaMalloc( (void**) &(d_bf_query), meminputsignalquerypointset));
 	checkCudaErrors( cudaMalloc( (void**) &(d_bf_pointset), meminputsignalquerypointset));
@@ -55,7 +53,7 @@ int cudaFindKnn(int* h_bf_indexes, float* h_bf_distances, float* h_pointset, flo
 		fprintf(stderr,"%s",cudaGetErrorString(error));
 		return 0;
 	}
-//	//Add +1 to indexes this is only necessary for Matlab! 
+//	//Add +1 to indexes this is only necessary for Matlab!
 //	for(unsigned int i=0;i<kth*signallength;i++){
 //		h_bf_indexes[i]+=1;
 //	}
@@ -70,7 +68,7 @@ int cudaFindKnn(int* h_bf_indexes, float* h_bf_distances, float* h_pointset, flo
 		fprintf(stderr,"%s",cudaGetErrorString(error));
 		return 0;
 	}
-	
+
 	return 1;
 }
 }
@@ -83,14 +81,14 @@ int cudaFindKnnSetGPU(int* h_bf_indexes, float* h_bf_distances, float* h_pointse
 
 	cudaSetDevice(deviceid);
 
-	unsigned int meminputsignalquerypointset= pointdim * signallength * sizeof(float);
+	size_t meminputsignalquerypointset= pointdim * (size_t)signallength * sizeof(float);
 	unsigned int mem_bfcl_outputsignaldistances= kth * signallength * sizeof(float);
 	unsigned int mem_bfcl_outputsignalindexes = kth * signallength * sizeof(int);
 
-	//fprintf(stderr,"\nValues:%d %d %d %d %d", kth, thelier, nchunks, pointdim, signallength);
-
 	checkCudaErrors( cudaMalloc( (void**) &(d_bf_query), meminputsignalquerypointset));
 	checkCudaErrors( cudaMalloc( (void**) &(d_bf_pointset), meminputsignalquerypointset));
+
+
 	//GPU output
 	checkCudaErrors( cudaMalloc( (void**) &(d_bf_distances), mem_bfcl_outputsignaldistances ));
 	checkCudaErrors( cudaMalloc( (void**) &(d_bf_indexes), mem_bfcl_outputsignalindexes ));
@@ -101,9 +99,9 @@ int cudaFindKnnSetGPU(int* h_bf_indexes, float* h_bf_distances, float* h_pointse
 		return 0;
 	}
 
-	//Upload input data
 	checkCudaErrors( cudaMemcpy(d_bf_query, h_query, meminputsignalquerypointset, cudaMemcpyHostToDevice ));
 	checkCudaErrors( cudaMemcpy(d_bf_pointset, h_pointset, meminputsignalquerypointset, cudaMemcpyHostToDevice ));
+
 	error = cudaGetLastError();
 	if(error!=cudaSuccess){
 		fprintf(stderr,"%s",cudaGetErrorString(error));
@@ -117,10 +115,12 @@ int cudaFindKnnSetGPU(int* h_bf_indexes, float* h_bf_distances, float* h_pointse
 	int memkernel = kth*sizeof(float)*threads.x+\
 					kth*sizeof(int)*threads.x;
 	int triallength = signallength / nchunks;
+
 	kernelKNNshared<<< grid.x, threads.x, memkernel>>>(\
 			d_bf_query,d_bf_pointset,d_bf_indexes,d_bf_distances, \
 			pointdim,triallength, signallength,kth,thelier);
 
+	cudaDeviceSynchronize();
 
 	//Download result
 	checkCudaErrors( cudaMemcpy( h_bf_distances, d_bf_distances, mem_bfcl_outputsignaldistances, cudaMemcpyDeviceToHost) );
@@ -145,7 +145,7 @@ int cudaFindKnnSetGPU(int* h_bf_indexes, float* h_bf_distances, float* h_pointse
 		fprintf(stderr,"%s",cudaGetErrorString(error));
 		return 0;
 	}
-	
+
 	return 1;
 }
 }
@@ -159,16 +159,16 @@ int cudaFindRSAll(int* h_bf_npointsrange, float* h_pointset, float* h_query, flo
 	float *d_bf_pointset, *d_bf_query, *d_bf_vecradius;
 	int *d_bf_npointsrange;
 
-	unsigned int meminputsignalquerypointset= pointdim * signallength * sizeof(float);
+	size_t meminputsignalquerypointset= pointdim * (size_t)signallength * sizeof(float);
 	unsigned int mem_bfcl_outputsignalnpointsrange= signallength * sizeof(int);
     	unsigned int mem_bfcl_inputvecradius = signallength * sizeof(float);
 
 	checkCudaErrors( cudaMalloc( (void**) &(d_bf_query), meminputsignalquerypointset));
 	checkCudaErrors( cudaMalloc( (void**) &(d_bf_pointset), meminputsignalquerypointset));
 	checkCudaErrors( cudaMalloc( (void**) &(d_bf_npointsrange), mem_bfcl_outputsignalnpointsrange ));
-    checkCudaErrors( cudaMalloc( (void**) &(d_bf_vecradius), mem_bfcl_inputvecradius ));
+	checkCudaErrors( cudaMalloc( (void**) &(d_bf_vecradius), mem_bfcl_inputvecradius ));
 
-    cudaError_t error = cudaGetLastError();
+	cudaError_t error = cudaGetLastError();
 	if(error!=cudaSuccess){
 		fprintf(stderr,"%s",cudaGetErrorString(error));
 		return 0;
@@ -176,9 +176,9 @@ int cudaFindRSAll(int* h_bf_npointsrange, float* h_pointset, float* h_query, flo
 	//Upload input data
 	checkCudaErrors( cudaMemcpy(d_bf_query, h_query, meminputsignalquerypointset, cudaMemcpyHostToDevice ));
 	checkCudaErrors( cudaMemcpy(d_bf_pointset, h_pointset, meminputsignalquerypointset, cudaMemcpyHostToDevice ));
-    checkCudaErrors( cudaMemcpy(d_bf_vecradius, h_vecradius, mem_bfcl_inputvecradius, cudaMemcpyHostToDevice ));
+	checkCudaErrors( cudaMemcpy(d_bf_vecradius, h_vecradius, mem_bfcl_inputvecradius, cudaMemcpyHostToDevice ));
 
-    error = cudaGetLastError();
+        error = cudaGetLastError();
 	if(error!=cudaSuccess){
 		fprintf(stderr,"%s",cudaGetErrorString(error));
 		return 0;
@@ -209,13 +209,14 @@ int cudaFindRSAll(int* h_bf_npointsrange, float* h_pointset, float* h_query, flo
 	checkCudaErrors(cudaFree(d_bf_query));
 	checkCudaErrors(cudaFree(d_bf_pointset));
 	checkCudaErrors(cudaFree(d_bf_npointsrange));
-    checkCudaErrors(cudaFree(d_bf_vecradius));
+	checkCudaErrors(cudaFree(d_bf_vecradius));
+
 	cudaDeviceReset();
 	if(error!=cudaSuccess){
 		fprintf(stderr,"%s",cudaGetErrorString(error));
 		return 0;
 	}
-	
+
 	return 1;
 }
 }
@@ -225,7 +226,7 @@ int cudaFindRSAllSetGPU(int* h_bf_npointsrange, float* h_pointset, float* h_quer
 	float *d_bf_pointset, *d_bf_query, *d_bf_vecradius;
 	int *d_bf_npointsrange;
 
-	unsigned int meminputsignalquerypointset= pointdim * signallength * sizeof(float);
+	size_t meminputsignalquerypointset= pointdim * (size_t) signallength * sizeof(float);
 	unsigned int mem_bfcl_outputsignalnpointsrange= signallength * sizeof(int);
     	unsigned int mem_bfcl_inputvecradius = signallength * sizeof(float);
 
@@ -234,9 +235,9 @@ int cudaFindRSAllSetGPU(int* h_bf_npointsrange, float* h_pointset, float* h_quer
 	checkCudaErrors( cudaMalloc( (void**) &(d_bf_query), meminputsignalquerypointset));
 	checkCudaErrors( cudaMalloc( (void**) &(d_bf_pointset), meminputsignalquerypointset));
 	checkCudaErrors( cudaMalloc( (void**) &(d_bf_npointsrange), mem_bfcl_outputsignalnpointsrange ));
-    checkCudaErrors( cudaMalloc( (void**) &(d_bf_vecradius), mem_bfcl_inputvecradius ));
+	checkCudaErrors( cudaMalloc( (void**) &(d_bf_vecradius), mem_bfcl_inputvecradius ));
 
-    cudaError_t error = cudaGetLastError();
+	cudaError_t error = cudaGetLastError();
 	if(error!=cudaSuccess){
 		fprintf(stderr,"%s",cudaGetErrorString(error));
 		return 0;
@@ -244,9 +245,9 @@ int cudaFindRSAllSetGPU(int* h_bf_npointsrange, float* h_pointset, float* h_quer
 	//Upload input data
 	checkCudaErrors( cudaMemcpy(d_bf_query, h_query, meminputsignalquerypointset, cudaMemcpyHostToDevice ));
 	checkCudaErrors( cudaMemcpy(d_bf_pointset, h_pointset, meminputsignalquerypointset, cudaMemcpyHostToDevice ));
-    checkCudaErrors( cudaMemcpy(d_bf_vecradius, h_vecradius, mem_bfcl_inputvecradius, cudaMemcpyHostToDevice ));
+	checkCudaErrors( cudaMemcpy(d_bf_vecradius, h_vecradius, mem_bfcl_inputvecradius, cudaMemcpyHostToDevice ));
 
-    error = cudaGetLastError();
+	error = cudaGetLastError();
 	if(error!=cudaSuccess){
 		fprintf(stderr,"%s",cudaGetErrorString(error));
 		return 0;
@@ -263,6 +264,7 @@ int cudaFindRSAllSetGPU(int* h_bf_npointsrange, float* h_pointset, float* h_quer
 	kernelBFRSAllshared<<< grid.x, threads.x, memkernel>>>(\
 					d_bf_query,d_bf_pointset, d_bf_npointsrange, \
 					pointdim,triallength, signallength,thelier, d_bf_vecradius);
+	cudaDeviceSynchronize();
 
 	checkCudaErrors( cudaMemcpy( h_bf_npointsrange, d_bf_npointsrange,mem_bfcl_outputsignalnpointsrange, cudaMemcpyDeviceToHost) );
 
@@ -277,13 +279,14 @@ int cudaFindRSAllSetGPU(int* h_bf_npointsrange, float* h_pointset, float* h_quer
 	checkCudaErrors(cudaFree(d_bf_query));
 	checkCudaErrors(cudaFree(d_bf_pointset));
 	checkCudaErrors(cudaFree(d_bf_npointsrange));
-    checkCudaErrors(cudaFree(d_bf_vecradius));
+	checkCudaErrors(cudaFree(d_bf_vecradius));
+
 	cudaDeviceReset();
 	if(error!=cudaSuccess){
 		fprintf(stderr,"%s",cudaGetErrorString(error));
 		return 0;
 	}
-	
+
 	return 1;
 }
 }

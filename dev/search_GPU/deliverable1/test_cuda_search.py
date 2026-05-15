@@ -92,9 +92,7 @@ if __name__ == '__main__':
     npointsrange = np.zeros((signallengthpergpu), dtype=np.int32)
 
     start = time.time()
-    res = testRSAll_call_multiGPU(
-      npointsrange, pointset, queryset, distances, theiler, nchunkspergpu,
-      pointsdim, signallengthpergpu, gpuid)
+    res = testRSAll_call_multiGPU(npointsrange, pointset, queryset, distances, theiler, nchunkspergpu, pointsdim, signallengthpergpu, gpuid)
     end = time.time()
 
     if res == 0:

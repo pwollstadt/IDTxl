@@ -2,9 +2,34 @@
 import copy as cp
 import pprint
 import threading
-
+import ctypes
+import logging
+#import logging.config
 import numpy as np
 
+
+def setup_logging(config_path=None, logging_level=logging.INFO):
+    # if config_path is None:
+    #     config_path = resource_filename(__name__, 'logging.json')
+    # with open(config_path, 'rt') as f:
+    #     config = json.load(f)
+    # logging.config.dictConfig(config)
+    logging.basicConfig(
+        format='%(asctime)s - %(levelname)-4s  [%(filename)s:%(funcName)20s():l %(lineno)d] %(message)s',
+        datefmt='%Y-%m-%d:%H:%M:%S',
+        level=logging_level)
+
+def get_cuda_lib():
+    libnames = ('libcuda.so', 'libcuda.dylib', 'nvcuda.dll')
+    for libname in libnames:
+        try:
+            return ctypes.CDLL(libname)
+        except OSError:
+            continue
+        else:
+            break
+    else:
+        raise OSError("could not load any of: " + ' '.join(libnames))
 
 def swap_chars(s, i_1, i_2):
     """Swap to characters in a string.
