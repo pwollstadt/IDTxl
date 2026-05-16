@@ -417,11 +417,16 @@ class NetworkAnalysis:
                 links[i] = local_values.reshape(
                     data.n_replications, -1).T
             else:
-                links[i] = self._cmi_estimator.estimate(
+
+                cmi = self._cmi_estimator.estimate(
                     var1=current_value_realisations,
                     var2=source_realisations,
                     conditional=conditional_realisations,
                 )
+                if cmi.shape[0] == 1:
+                    links[i] = cmi[0]
+                else:
+                    links[i] = cmi
 
         return links
 
