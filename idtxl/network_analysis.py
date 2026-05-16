@@ -423,11 +423,11 @@ class NetworkAnalysis:
                     var2=source_realisations,
                     conditional=conditional_realisations,
                 )
-                if cmi.shape[0] == 1:
-                    links[i] = cmi[0]
-                else:
+                if isinstance(cmi, float):
                     links[i] = cmi
-
+                else:
+                    links[i] = cmi[0]
+                
         return links
 
     def _set_checkpointing_defaults(self, settings, data, sources, target):
