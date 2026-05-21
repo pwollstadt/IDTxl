@@ -2,16 +2,15 @@
 #define _TEMPLATE_KERNEL_H_
 
 //#include <cpugpuKnn_common.h>
-#ifndef INFINITY
-#define INFINITY 0x7F800000
-#endif
+#include <cmath>
+
 
 __device__ float
-insertPointKlist(int kth, float distance, int indexv,float* kdistances, int* kindexes){
-	int k=0;
+insertPointKlist(int kth, float distance, long indexv, float* kdistances, int* kindexes){
+	long k=0;
 	while( (distance>*(kdistances+k)) && (k<kth-1)){k++;}
 	//Move value to the next
-	for(int k2=kth-1;k2>k;k2--){
+	for(long k2=kth-1;k2>k;k2--){
 		*(kdistances+k2)=*(kdistances+k2-1);
 		*(kindexes+k2)=*(kindexes+k2-1);
 	}
@@ -24,13 +23,13 @@ insertPointKlist(int kth, float distance, int indexv,float* kdistances, int* kin
 }
 
 __device__ float
-maxMetricPoints(const float* g_uquery, const float* g_vpoint, int pointdim, int signallength){
+maxMetricPoints(const float* g_uquery, const float* g_vpoint, long pointdim, long signallength){
 	float	r_u1;
 	float	r_v1;
 	float	r_d1,r_dim=0;
 
 	r_dim=0;
-	for(int d=0; d<pointdim; d++){
+	for(long d=0; d<pointdim; d++){
 		r_u1 = *(g_uquery+d*signallength);
 		r_v1 = *(g_vpoint+d*signallength);
 		r_d1 = r_v1 - r_u1;
@@ -47,7 +46,7 @@ maxMetricPoints(const float* g_uquery, const float* g_vpoint, int pointdim, int 
 //extern __shared__ char array[];
 
 __global__ void
-kernelKNNshared(const float* g_uquery, const float* g_vpointset, int *g_indexes, float* g_distances, const int pointdim, const int triallength, const int signallength, const int kth, const int exclude)
+kernelKNNshared(const float* g_uquery, const float* g_vpointset, int *g_indexes, float* g_distances, const long pointdim, const long triallength, const long signallength, const int kth, const int exclude)
 {
 
     // shared memory
@@ -62,7 +61,7 @@ kernelKNNshared(const float* g_uquery, const float* g_vpointset, int *g_indexes,
 
 if(tid<signallength){
 
-	for(int k=0;k<kth;k++){
+	for(long k=0;k<kth;k++){
 		kdistances[threadIdx.x*kth+k] = INFINITY;
 	}
 
@@ -71,8 +70,7 @@ if(tid<signallength){
 	//int   r_index;
 	float r_kdist=INFINITY;
 	unsigned int indexi = tid-triallength*itrial;
-
-	for(int t=0; t<triallength; t++){
+	for(long t=0; t<triallength; t++){
 			int indexu = tid;
 			int indexv = (t + itrial*triallength);
 			int condition1=indexi-exclude;
@@ -89,7 +87,7 @@ if(tid<signallength){
 
 	__syncthreads();
 	//COPY TO GLOBAL MEMORY
-	for(int k=0;k<kth;k++){
+	for(long k=0;k<kth;k++){
 		g_indexes[tid+k*signallength] = kindexes[threadIdx.x*kth+k];
 		g_distances[tid+k*signallength]= kdistances[threadIdx.x*kth+k];//*(kdistances+k);
 	}
@@ -102,7 +100,7 @@ if(tid<signallength){
  */
 
 __global__ void
-kernelKNN(const float* g_uquery, const float* g_vpointset, int *g_indexes, float* g_distances, int pointdim, int triallength, int signallength, int kth, int exclude)
+kernelKNN(const float* g_uquery, const float* g_vpointset, int *g_indexes, float* g_distances, int pointdim, int triallength, long signallength, int kth, int exclude)
 {
 
    	const unsigned int tid = threadIdx.x + blockDim.x*blockIdx.x;
@@ -118,7 +116,7 @@ if(tid<signallength){
 	//int   r_index;
 	float r_kdist=INFINITY;
 	int indexi = tid-triallength*itrial;
-	for(int t=0; t<triallength; t++){
+	for(long t=0; t<triallength; t++){
 			int indexu = tid;
 			int indexv = (t + itrial*triallength);
 			int condition1=indexi-exclude;
@@ -135,7 +133,7 @@ if(tid<signallength){
 
 	__syncthreads();
 	//COPY TO GLOBAL MEMORY
-	for(int k=0;k<kth;k++){
+	for(long k=0;k<kth;k++){
 		g_indexes[tid+k*signallength] = *(kindexes+k);
 		g_distances[tid+k*signallength]= *(kdistances+k);
 	}
@@ -150,7 +148,7 @@ if(tid<signallength){
  */
 
 __global__ void
-kernelBFRSshared(const float* g_uquery, const float* g_vpointset, int *g_npoints, int pointdim, int triallength, int signallength, int exclude, float radius)
+kernelBFRSshared(const float* g_uquery, const float* g_vpointset, int *g_npoints, long pointdim, int triallength, long signallength, int exclude, float radius)
 {
 
     // shared memory
@@ -168,7 +166,7 @@ if(tid<signallength){
 
 
 	unsigned int indexi = tid-triallength*itrial;
-	for(int t=0; t<triallength; t++){
+	for(long t=0; t<triallength; t++){
 			int indexu = tid;
 			int indexv = (t + itrial*triallength);
 			int condition1=indexi-exclude;
@@ -210,14 +208,14 @@ if(tid<signallength){
 
     radius = *(vecradius+itrial);
 	unsigned int indexi = tid-triallength*itrial;
-	for(int t=0; t<triallength; t++){
+	for(long t=0; t<triallength; t++){
 			int indexu = tid;
 			int indexv = (t + itrial*triallength);
 			int condition1=indexi-exclude;
 			int condition2=indexi+exclude;
 			if((t<condition1)||(t>condition2)){
 				float temp_dist = maxMetricPoints(g_uquery+indexu, g_vpointset+indexv,pointdim, signallength);
-				if(temp_dist <= radius){
+				if(temp_dist < radius){
 					s_npointsrange[threadIdx.x]++;
 				}
 			}
@@ -234,7 +232,7 @@ if(tid<signallength){
 
 
 __global__ void
-kernelBFRSAllshared(const float* g_uquery, const float* g_vpointset, int *g_npoints, int pointdim, int triallength, int signallength, int exclude, const float* vecradius)
+kernelBFRSAllshared(const float* g_uquery, const float* g_vpointset, int *g_npoints, int pointdim, int triallength, long signallength, int exclude, const float* vecradius)
 {
 
     // shared memory
@@ -252,14 +250,14 @@ if(tid<signallength){
 
     radius = *(vecradius+tid);
 	unsigned int indexi = tid-triallength*itrial;
-	for(int t=0; t<triallength; t++){
+	for(long t=0; t<triallength; t++){
 			int indexu = tid;
 			int indexv = (t + itrial*triallength);
 			int condition1=indexi-exclude;
 			int condition2=indexi+exclude;
 			if((t<condition1)||(t>condition2)){
-				float temp_dist = maxMetricPoints(g_uquery+indexu, g_vpointset+indexv,pointdim, signallength);
-				if(temp_dist <= radius){
+				float temp_dist = maxMetricPoints(g_uquery+indexu, g_vpointset+indexv, pointdim, signallength);
+				if(temp_dist < radius){
 					s_npointsrange[threadIdx.x]++;
 				}
 			}

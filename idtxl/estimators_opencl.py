@@ -8,9 +8,12 @@ from . import idtxl_exceptions as ex
 try:
     import pyopencl as cl
 except ImportError as err:
-    ex.package_missing(err, 'PyOpenCl is not available on this system. Install'
-                            ' it using pip or the package manager to use '
-                            'OpenCL-powered CMI estimation.')
+    ex.package_missing(err, 'PyOpenCl is not available on this system.\n'
+                            'If you want to use the idtxl OpenCL CMI estimators:\n'
+                            '1. install your vendors OpenCl drivers (e.g. for Intel, NVidia)\n'
+                            '2. pip install pyopencl\n'
+                            'for more information: https://documen.tician.de/pyopencl/misc.html#installing-from-conda-forge')
+    sys.exit()
 
 logger = logging.getLogger(__name__)
 C = 1024**2

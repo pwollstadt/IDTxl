@@ -172,7 +172,13 @@ class SignificantSubgraphMining:
             if self.link_counts[i] >= self.min_freq
         ]
 
-        self.max_depth = np.infty
+        try:
+            # numpy 1.26
+            self.max_depth = np.infty
+        except:
+            # numpy 2.4
+            self.max_depth = np.inf
+
 
         # create ascending list of all possible p-values
         all_possible_p_values = set()
@@ -952,7 +958,7 @@ class SignificantSubgraphMining:
         wy_algorithm="simple_depth_first",
         verbose=True,
         num_perm=10000,
-        max_depth=np.infty,
+        max_depth=None,
     ):
         """
         This is the main function carrying out significant subgraph mining
@@ -985,20 +991,39 @@ class SignificantSubgraphMining:
                 associated (uncorrected) p-value.
         """
 
-        self.max_depth = max_depth
+        if self.max_depth == None:
+            try:
+                # numpy 1.26
+                self.max_depth = np.infty
+            except:
+                # numpy 2.4
+                self.max_depth = np.inf
+                
 
         if method != "Hommel" and method != "Tarone" and method != "Westfall-Young":
             raise Exception("Method must be 'Hommel' or 'Tarone' or 'Westfall-Young'")
 
         if verbose is True:
-            if self.max_depth == np.infty:
-                print("Search Space: All possible subgraphs")
-            else:
-                print(
-                    "Search Space: Subgraphs consisting of up to",
-                    self.max_depth,
-                    "links",
-                )
+            try:
+                # numpy 1.26
+                if self.max_depth == np.infty:
+                    print("Search Space: All possible subgraphs")
+                else:
+                    print(
+                        "Search Space: Subgraphs consisting of up to",
+                        self.max_depth,
+                        "links",
+                    )
+            except:
+                # numpy 2.4
+                if self.max_depth == np.inf:
+                    print("Search Space: All possible subgraphs")
+                else:
+                    print(
+                        "Search Space: Subgraphs consisting of up to",
+                        self.max_depth,
+                        "links",
+                    )
 
             if self.design == "between":
                 print("Between-Subjects Design: Using Fishers Exact Test")

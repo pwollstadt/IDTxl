@@ -198,6 +198,7 @@ class NetworkAnalysis:
         candidate_set = self._remove_forced_conditionals(candidate_set)
         return candidate_set
 
+
     def _build_variable_list(self, processes, samples):
         """Build a list of variable tuples with (process index, sample index).
 
@@ -210,6 +211,10 @@ class NetworkAnalysis:
         Returns:
             a list of variable tuples
         """
+        
+        if type(samples) is not list:
+            samples = samples.tolist()
+
         var_list = []
         for idx in it.product(processes, samples):
             var_list.append(idx)
@@ -412,12 +417,17 @@ class NetworkAnalysis:
                 links[i] = local_values.reshape(
                     data.n_replications, -1).T
             else:
-                links[i] = self._cmi_estimator.estimate(
+
+                cmi = self._cmi_estimator.estimate(
                     var1=current_value_realisations,
                     var2=source_realisations,
                     conditional=conditional_realisations,
                 )
-
+                if isinstance(cmi, float):
+                    links[i] = cmi
+                else:
+                    links[i] = cmi[0]
+                
         return links
 
     def _set_checkpointing_defaults(self, settings, data, sources, target):
