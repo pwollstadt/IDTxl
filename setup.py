@@ -18,7 +18,7 @@ setup(
     name="idtxl",
     packages=["idtxl", "idtxl/knn"],
     include_package_data=True,
-    version="1.8.1",
+    version="1.8.3",
     description="Information Dynamics Toolkit xl",
     author="Patricia Wollstadt, Joseph T. Lizier, Raul Vicente, Conor Finn, Mario Martinez-Zarzuela, Pedro Mediano, Leonardo Novelli, Michael Wibral",
     author_email="p.wollstadt@gmail.com",

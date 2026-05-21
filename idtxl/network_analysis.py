@@ -417,12 +417,17 @@ class NetworkAnalysis:
                 links[i] = local_values.reshape(
                     data.n_replications, -1).T
             else:
-                links[i] = self._cmi_estimator.estimate(
+
+                cmi = self._cmi_estimator.estimate(
                     var1=current_value_realisations,
                     var2=source_realisations,
                     conditional=conditional_realisations,
                 )
-
+                if isinstance(cmi, float):
+                    links[i] = cmi
+                else:
+                    links[i] = cmi[0]
+                
         return links
 
     def _set_checkpointing_defaults(self, settings, data, sources, target):

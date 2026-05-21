@@ -64,7 +64,7 @@ def cudaFindRSAllSetGPU(npointsrange, pointset, queryset, vecradius, thelier, nc
     vecradius_p = vecradius.ctypes.data_as(POINTER(c_float))
 
     bool = __cudaFindRSAllSetGPU(npointsrange_p, pointset_p, queryset_p, vecradius_p, thelier, nchunkspergpu, pointsdim, datalengthpergpu, gpuid)
-    
+
     return bool
 
 '''
